@@ -1,0 +1,1980 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "regress-admiral-row-sweep-sonnet-1",
+  "agent": "admiral",
+  "model": "claude-sonnet-5-5",
+  "source": "probe live run 2026-10-17T11:56:43.674Z, traces 2026-10-17.jsonl:283,2026-10-17.jsonl:284,2026-10-17.jsonl:285,2026-10-17.jsonl:286,2026-10-17.jsonl:287,2026-10-17.jsonl:288,2026-10-17.jsonl:289,2026-10-17.jsonl:290",
+  "steps": [
+    {
+      "say": "Battleship, please.",
+      "expect": [
+        "BoardGrid"
+      ],
+      "expectRouting": {
+        "exemplars": {
+          "include": [
+            "domain-admiral-battleship-board"
+          ]
+        }
+      }
+    },
+    {
+      "say": "Fire at A1.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "Fire at A2.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "Fire at A3.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "Fire at A4.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "Fire at A5.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "Fire at A6.",
+      "expect": [
+        "BoardGrid"
+      ]
+    },
+    {
+      "say": "How many of your ships are still afloat?"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to set up a 6\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"x6 board with two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hidden fleets of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ships s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ized 3, 2, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 2, plac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing my own f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"leet sec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"retly while only showing the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" own\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wa\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ters,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then announce\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" where their fleet has\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" been placed in chat.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Batt\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"leship it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. I've placed both f\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"leets on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 6×6 grid,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" columns A–F and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" rows 1–6.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\n**Your fleet** is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 3-c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ell ship at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" F2–F4, one \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"2-cell ship at A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"5–B5, and one \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"2-cell ship at D\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"1–D2. Mine\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"idden, and it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" has\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the same three ships.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\nYou f\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ire first. Click a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" cell on the board\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" below.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"value\\\":{\\\"hud\\\":{\\\"title\\\":\\\"Enemy waters\\\",\\\"status\\\":\\\"Your shot\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Enemy ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Your ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Shots fired\\\",\\\"value\\\":0},{\\\"label\\\":\\\"Hits\\\",\\\"value\\\":0}]},\\\"sea\\\":{\\\"cells\\\":[]},\\\"secret\\\":{\\\"fleet\\\":[{\\\"row\\\":0,\\\"col\\\":0},{\\\"row\\\":0,\\\"col\\\":1},{\\\"row\\\":0,\\\"col\\\":2},{\\\"row\\\":2,\\\"col\\\":4},{\\\"row\\\":3,\\\"col\\\":4},{\\\"row\\\":5,\\\"col\\\":2},{\\\"row\\\":5,\\\"col\\\":3}],\\\"playerFleet\\\":[{\\\"row\\\":1,\\\"col\\\":5},{\\\"row\\\":2,\\\"col\\\":5},{\\\"row\\\":3,\\\"col\\\":5},{\\\"row\\\":4,\\\"col\\\":0},{\\\"row\\\":4,\\\"col\\\":1},{\\\"row\\\":0,\\\"col\\\":3},{\\\"row\\\":1,\\\"col\\\":3}]}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"sea\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":{\\\"path\\\":\\\"/hud/title\\\"},\\\"status\\\":{\\\"path\\\":\\\"/hud/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/hud/stats\\\"}},{\\\"id\\\":\\\"sea\\\",\\\"component\\\":\\\"BoardGrid\\\",\\\"label\\\":\\\"Enemy waters\\\",\\\"rows\\\":6,\\\"cols\\\":6,\\\"actionName\\\":\\\"cell\\\",\\\"cells\\\":{\\\"path\\\":\\\"/sea/cells\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Battleship it is. I've placed both fleets on the 6×6 grid, columns A–F and rows 1–6.\\n\\n**Your fleet** is one 3-cell ship at F2–F4, one 2-cell ship at A5–B5, and one 2-cell ship at D1–D2. Mine is hidden, and it has the same three ships.\\n\\nYou fire first. Click a cell on the board below.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Battleship, please.\",\"k\":3},\"exemplarIds\":[\"domain-admiral-battleship-board\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":49891,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":2148},{\"id\":\"persona\",\"chars\":2463}],\"over\":false},\"usage\":{\"inputTokens\":2017,\"outputTokens\":1397,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"enemy-waters\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"value\":{\"hud\":{\"title\":\"Enemy waters\",\"status\":\"Your shot\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"3 of 3\"},{\"label\":\"Shots fired\",\"value\":0},{\"label\":\"Hits\",\"value\":0}]},\"sea\":{\"cells\":[]},\"secret\":{\"fleet\":[{\"row\":0,\"col\":0},{\"row\":0,\"col\":1},{\"row\":0,\"col\":2},{\"row\":2,\"col\":4},{\"row\":3,\"col\":4},{\"row\":5,\"col\":2},{\"row\":5,\"col\":3}],\"playerFleet\":[{\"row\":1,\"col\":5},{\"row\":2,\"col\":5},{\"row\":3,\"col\":5},{\"row\":4,\"col\":0},{\"row\":4,\"col\":1},{\"row\":0,\"col\":3},{\"row\":1,\"col\":3}]}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"enemy-waters\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"sea\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":{\"path\":\"/hud/title\"},\"status\":{\"path\":\"/hud/status\"},\"statusIntent\":\"info\",\"stats\":{\"path\":\"/hud/stats\"}},{\"id\":\"sea\",\"component\":\"BoardGrid\",\"label\":\"Enemy waters\",\"rows\":6,\"cols\":6,\"actionName\":\"cell\",\"cells\":{\"path\":\"/sea/cells\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Battleship it is. I've placed both fleets on the 6×6 grid, columns A–F and rows 1–6.\n\n**Your fleet** is one 3-cell ship at F2–F4, one 2-cell ship at A5–B5, and one 2-cell ship at D1–D2. Mine is hidden, and it has the same three ships.\n\nYou fire first. Click a cell on the board below.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your shot, Captain. Pick a cell on the enemy waters.",
+                "target": "enemy-waters",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "enemy-waters",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "value": {
+                        "hud": {
+                          "title": "Enemy waters",
+                          "status": "Your shot",
+                          "stats": [
+                            {
+                              "label": "Enemy ships left",
+                              "value": "3 of 3"
+                            },
+                            {
+                              "label": "Your ships left",
+                              "value": "3 of 3"
+                            },
+                            {
+                              "label": "Shots fired",
+                              "value": 0
+                            },
+                            {
+                              "label": "Hits",
+                              "value": 0
+                            }
+                          ]
+                        },
+                        "sea": {
+                          "cells": []
+                        },
+                        "secret": {
+                          "fleet": [
+                            {
+                              "row": 0,
+                              "col": 0
+                            },
+                            {
+                              "row": 0,
+                              "col": 1
+                            },
+                            {
+                              "row": 0,
+                              "col": 2
+                            },
+                            {
+                              "row": 2,
+                              "col": 4
+                            },
+                            {
+                              "row": 3,
+                              "col": 4
+                            },
+                            {
+                              "row": 5,
+                              "col": 2
+                            },
+                            {
+                              "row": 5,
+                              "col": 3
+                            }
+                          ],
+                          "playerFleet": [
+                            {
+                              "row": 1,
+                              "col": 5
+                            },
+                            {
+                              "row": 2,
+                              "col": 5
+                            },
+                            {
+                              "row": 3,
+                              "col": 5
+                            },
+                            {
+                              "row": 4,
+                              "col": 0
+                            },
+                            {
+                              "row": 4,
+                              "col": 1
+                            },
+                            {
+                              "row": 0,
+                              "col": 3
+                            },
+                            {
+                              "row": 1,
+                              "col": 3
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "enemy-waters",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "sea"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": {
+                            "path": "/hud/title"
+                          },
+                          "status": {
+                            "path": "/hud/status"
+                          },
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/hud/stats"
+                          }
+                        },
+                        {
+                          "id": "sea",
+                          "component": "BoardGrid",
+                          "label": "Enemy waters",
+                          "rows": 6,
+                          "cols": 6,
+                          "actionName": "cell",
+                          "cells": {
+                            "path": "/sea/cells"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The player h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it A1, so now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need to fire back and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m working out my own fle\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et positions and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s ship loc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ations to p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ick my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" next target.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll choose a miss\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at B2 for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" return sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot, then update the en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"emy-waters board with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hit marker at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" A1 and ref\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh the HUD with sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ots fired and hits. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also need to add a second\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"your-waters\\\" board showing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ships and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" miss marker, struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ured as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing both the H\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"UD and sea surfa\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ces.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay out the home board\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ships with their mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" positions and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the one ne\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"utral miss, then send the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updated root along with h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ud,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sea, and home components — s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ea stays un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"changed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"**A1 is a h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"it.** You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ve\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" found\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" my\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 3-cell ship,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so ke\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ep working\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" along row\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1.\\n\\nI fire\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" back at **B2**,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s a mi\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ss. I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ve added\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" your fleet to the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" board below, and my\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" mi\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ss is marked on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\nYour sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ot.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/sea/cells\\\",\\\"value\\\":[{\\\"row\\\":0,\\\"col\\\":0,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/hud\\\",\\\"value\\\":{\\\"title\\\":\\\"Enemy waters\\\",\\\"status\\\":\\\"Hit at A1. I missed at B2.\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Enemy ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Your ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Shots fired\\\",\\\"value\\\":1,\\\"delta\\\":1},{\\\"label\\\":\\\"Hits\\\",\\\"value\\\":1,\\\"delta\\\":1,\\\"intent\\\":\\\"success\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/home/cells\\\",\\\"value\\\":[{\\\"row\\\":1,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":0,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":1,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":0,\\\"col\\\":3,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":3,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":1,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"sea\\\",\\\"home\\\"]},{\\\"id\\\":\\\"home\\\",\\\"component\\\":\\\"BoardGrid\\\",\\\"label\\\":\\\"Your waters\\\",\\\"rows\\\":6,\\\"cols\\\":6,\\\"cells\\\":{\\\"path\\\":\\\"/home/cells\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"**A1 is a hit.** You've found my 3-cell ship, so keep working along row 1.\\n\\nI fire back at **B2**, and it's a miss. I've added your fleet to the board below, and my miss is marked on it.\\n\\nYour shot.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Fire at A1.\",\"k\":3},\"exemplarIds\":[\"domain-admiral-battleship-board\",\"frontier-product-card-rooms\",\"restaurant-menu\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":54862,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7119},{\"id\":\"persona\",\"chars\":2463}],\"over\":false},\"usage\":{\"inputTokens\":5098,\"outputTokens\":1883,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":0,\"col\":0,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Hit at A1. I missed at B2.\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"3 of 3\"},{\"label\":\"Shots fired\",\"value\":1,\"delta\":1},{\"label\":\"Hits\",\"value\":1,\"delta\":1,\"intent\":\"success\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/home/cells\",\"value\":[{\"row\":1,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":2,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":3,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":0,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":1,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":0,\"col\":3,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":1,\"col\":3,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":1,\"col\":1,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"enemy-waters\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"sea\",\"home\"]},{\"id\":\"home\",\"component\":\"BoardGrid\",\"label\":\"Your waters\",\"rows\":6,\"cols\":6,\"cells\":{\"path\":\"/home/cells\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"A1 is a hit. I fired back at B2 and missed.\",\"target\":{\"surfaceId\":\"enemy-waters\"}}}\n\n**A1 is a hit.** You've found my 3-cell ship, so keep working along row 1.\n\nI fire back at **B2**, and it's a miss. I've added your fleet to the board below, and my miss is marked on it.\n\nYour shot.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "A1 is a hit. I missed at B2. Your move.",
+                "target": "enemy-waters",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 0,
+                          "col": 0,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Hit at A1. I missed at B2.",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 1,
+                            "delta": 1
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 1,
+                            "delta": 1,
+                            "intent": "success"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/home/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 1,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 0,
+                          "col": 3,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 3,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "enemy-waters",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "sea",
+                            "home"
+                          ]
+                        },
+                        {
+                          "id": "home",
+                          "component": "BoardGrid",
+                          "label": "Your waters",
+                          "rows": 6,
+                          "cols": 6,
+                          "cells": {
+                            "path": "/home/cells"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "frontier-product-card-rooms",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Checking A\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2 against the en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"emy fleet positions,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ell do\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"esn't match any \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ship location\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so it's a miss.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I also notice a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" discrepancy between this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"leet layout and an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" earlier m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ention\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ship plac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ements, which I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"concile.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll return fire on D\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2, which\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hits the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ship sp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"anning D1-D2,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while keeping B2 mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked as a pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ior miss. Upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the full\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cell arrays for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" both bo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards: two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" shots fired with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one hit so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" far, player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s ships remain intact at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 3 of 3 (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"just dam\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aged), and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" enemy \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ships also at 3 of \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"3. I'll l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead with the meta-line targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting the enemy-wa\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ters surface, followed by pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then render the upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ated surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"**A2 is a miss\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".** My ship do\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"esn't ext\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"end down\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" from\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" A1,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so it must\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" run along row 1 toward\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" B1 and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" C1.\\n\\nI fire at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" **D2**, and it's\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a **hit**. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" still\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" have all\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" three ships, but your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"2-cell ship at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" D1–D2 is dam\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"aged.\\n\\nYour shot\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/sea/cells\\\",\\\"value\\\":[{\\\"row\\\":0,\\\"col\\\":0,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/hud\\\",\\\"value\\\":{\\\"title\\\":\\\"Enemy waters\\\",\\\"status\\\":\\\"Miss at A2. I hit D2.\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Enemy ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Your ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Shots fired\\\",\\\"value\\\":2,\\\"delta\\\":1},{\\\"label\\\":\\\"Hits\\\",\\\"value\\\":1,\\\"intent\\\":\\\"success\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/home/cells\\\",\\\"value\\\":[{\\\"row\\\":1,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":0,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":1,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":0,\\\"col\\\":3,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":1,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"**A2 is a miss.** My ship doesn't extend down from A1, so it must run along row 1 toward B1 and C1.\\n\\nI fire at **D2**, and it's a **hit**. You still have all three ships, but your 2-cell ship at D1–D2 is damaged.\\n\\nYour shot.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Fire at A2.\",\"k\":3},\"exemplarIds\":[\"domain-admiral-battleship-board\",\"frontier-product-card-rooms\",\"restaurant-menu\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":54862,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7119},{\"id\":\"persona\",\"chars\":2463}],\"over\":false},\"usage\":{\"inputTokens\":5856,\"outputTokens\":1444,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":0,\"col\":0,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Miss at A2. I hit D2.\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"3 of 3\"},{\"label\":\"Shots fired\",\"value\":2,\"delta\":1},{\"label\":\"Hits\",\"value\":1,\"intent\":\"success\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/home/cells\",\"value\":[{\"row\":1,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":2,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":3,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":0,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":1,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":0,\"col\":3,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":1,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":1,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"enemy-waters\"}}}\n**A2 is a miss.** My ship doesn't extend down from A1, so it must run along row 1 toward B1 and C1.\n\nI fire at **D2**, and it's a **hit**. You still have all three ships, but your 2-cell ship at D1–D2 is damaged.\n\nYour shot.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "enemy-waters",
+                "reply": "A2 missed. I hit your ship at D2. Your shot.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 0,
+                          "col": 0,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Miss at A2. I hit D2.",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 2,
+                            "delta": 1
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 1,
+                            "intent": "success"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/home/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 1,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 0,
+                          "col": 3,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "frontier-product-card-rooms",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Checking A3 against the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" secret fleet at row \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2, col 0 — that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a miss.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m also cross-refer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"encing ear\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lier in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"consistencies in the f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"leet positions to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" make sure the co\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ordinates line up correctly\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" coun\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"teratt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ack, I'll target D1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", which h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sinks the two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-cell ship al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" earlier D2 hit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", leaving the opponent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2 of 3 ships\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aining. I need to update the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sea grid with the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" miss at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (2,0), mark the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"unk \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ship cells, and include the pro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"per target meta-line refer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"encing the enemy-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"waters surface before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" writ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the nar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rative reply.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"**A3 is a miss\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".** Column\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" A is near\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ly sp\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ent, so my \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"3-cell ship must\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" l\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ie along\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" B\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"1 and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" C1.\\n\\nI fire at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" **D1**, and it's\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a **hit**. That\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" **\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"sinks your 2-c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ell ship at D1–D\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"2**. You have two ships\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" left.\\n\\nYour shot.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/sea/cells\\\",\\\"value\\\":[{\\\"row\\\":0,\\\"col\\\":0,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/hud\\\",\\\"value\\\":{\\\"title\\\":\\\"Enemy waters\\\",\\\"status\\\":\\\"Miss at A3. I hit D1 and sank your ship.\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Enemy ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Your ships left\\\",\\\"value\\\":\\\"2 of 3\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"label\\\":\\\"Shots fired\\\",\\\"value\\\":3,\\\"delta\\\":1},{\\\"label\\\":\\\"Hits\\\",\\\"value\\\":1,\\\"intent\\\":\\\"success\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/home/cells\\\",\\\"value\\\":[{\\\"row\\\":1,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":0,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":1,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":0,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":1,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"**A3 is a miss.** Column A is nearly spent, so my 3-cell ship must lie along B1 and C1.\\n\\nI fire at **D1**, and it's a **hit**. That **sinks your 2-cell ship at D1–D2**. You have two ships left.\\n\\nYour shot.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Fire at A3.\",\"k\":3},\"exemplarIds\":[\"domain-admiral-battleship-board\",\"frontier-product-card-rooms\",\"restaurant-menu\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":54862,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7119},{\"id\":\"persona\",\"chars\":2463}],\"over\":false},\"usage\":{\"inputTokens\":6536,\"outputTokens\":1574,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":0,\"col\":0,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":2,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Miss at A3. I hit D1 and sank your ship.\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"2 of 3\",\"intent\":\"warning\"},{\"label\":\"Shots fired\",\"value\":3,\"delta\":1},{\"label\":\"Hits\",\"value\":1,\"intent\":\"success\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/home/cells\",\"value\":[{\"row\":1,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":2,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":3,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":0,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":1,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":0,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":1,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"enemy-waters\"}}}\n**A3 is a miss.** Column A is nearly spent, so my 3-cell ship must lie along B1 and C1.\n\nI fire at **D1**, and it's a **hit**. That **sinks your 2-cell ship at D1–D2**. You have two ships left.\n\nYour shot.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "A3 missed. I hit D1 and sank your 2-cell ship. Your shot.",
+                "target": "enemy-waters",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 0,
+                          "col": 0,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Miss at A3. I hit D1 and sank your ship.",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "2 of 3",
+                            "intent": "warning"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 3,
+                            "delta": 1
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 1,
+                            "intent": "success"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/home/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 1,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 0,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "frontier-product-card-rooms",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Checking A4 against the en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"emy fleet coordin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ates—row 3, col \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"0 is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n't among\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" them, so that's a miss\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'm also no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ticing some inconsistency\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player fleet posit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"entioned earlier, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need to reconcile those\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" coordinates against what\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" was st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ated for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" F2-F4 and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" other ship\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" placements.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For my return sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot, I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ighing options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the remaining player ships,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" B2,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" D1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and D2 are already f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ired. I'll go\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with C\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"4 as a miss to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep the game\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" balanced r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lik\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ely hit, then update the t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ally:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" four\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" shots fired, one hit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", with two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ships still\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" af\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"loat.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"**A4 is a miss\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".** Your column A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" shots have found\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" only\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"it at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" A1, so my\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ship must lie along B1\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and C1.\\n\\nI f\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ire at **C4**, and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it's a **miss**.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" You still have two ships:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the 3\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"-cell at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" F2–F4 and the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 2-cell at A5\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"–B5.\\n\\nYour sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ot.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/sea/cells\\\",\\\"value\\\":[{\\\"row\\\":0,\\\"col\\\":0,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/hud\\\",\\\"value\\\":{\\\"title\\\":\\\"Enemy waters\\\",\\\"status\\\":\\\"Miss at A4. I missed at C4.\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Enemy ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Your ships left\\\",\\\"value\\\":\\\"2 of 3\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"label\\\":\\\"Shots fired\\\",\\\"value\\\":4,\\\"delta\\\":1},{\\\"label\\\":\\\"Hits\\\",\\\"value\\\":1,\\\"intent\\\":\\\"success\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/home/cells\\\",\\\"value\\\":[{\\\"row\\\":1,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":0,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":1,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":0,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":1,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":2,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"**A4 is a miss.** Your column A shots have found only the one hit at A1, so my ship must lie along B1 and C1.\\n\\nI fire at **C4**, and it's a **miss**. You still have two ships: the 3-cell at F2–F4 and the 2-cell at A5–B5.\\n\\nYour shot.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"Fire at A4.\",\"k\":3},\"exemplarIds\":[\"domain-admiral-battleship-board\",\"frontier-product-card-rooms\",\"restaurant-menu\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":54862,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7119},{\"id\":\"persona\",\"chars\":2463}],\"over\":false},\"usage\":{\"inputTokens\":7261,\"outputTokens\":1666,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":0,\"col\":0,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":2,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":3,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Miss at A4. I missed at C4.\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"2 of 3\",\"intent\":\"warning\"},{\"label\":\"Shots fired\",\"value\":4,\"delta\":1},{\"label\":\"Hits\",\"value\":1,\"intent\":\"success\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/home/cells\",\"value\":[{\"row\":1,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":2,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":3,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":0,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":1,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":0,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":1,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":3,\"col\":2,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"enemy-waters\"}}}\n**A4 is a miss.** Your column A shots have found only the one hit at A1, so my ship must lie along B1 and C1.\n\nI fire at **C4**, and it's a **miss**. You still have two ships: the 3-cell at F2–F4 and the 2-cell at A5–B5.\n\nYour shot.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "A4 is a miss. My shot at C4 missed too.",
+                "target": "enemy-waters",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 0,
+                          "col": 0,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Miss at A4. I missed at C4.",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "2 of 3",
+                            "intent": "warning"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 4,
+                            "delta": 1
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 1,
+                            "intent": "success"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/home/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 1,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 0,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 2,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "frontier-product-card-rooms",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Checking A5 against the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fleet coordinates:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (0,0),(0,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1),(0,2),(\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2,4),(3,4\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"),(5,2),(5\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",3) — row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 4, col 0 is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n't among\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" them, so that's a miss\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I notice the ear\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lier narration mentioned\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" different\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fleet posit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions, but I'll tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"at the act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual data as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" authoritative here\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For my return sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot, I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" picking F3 as a h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it against the op\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ponent's dam\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aged ship, bringing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its to 1 and le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aving them\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2 ships rem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aining. I'll update the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sea gr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id to mark the miss at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (4,0) and fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ag (2,5) as a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dan\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ger z\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"one on the home board\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"**A5 is a miss\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".** That\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" leaves one hit in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" five\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" shots.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" My 3-cell ship\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is still along\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" row 1, so B\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"1 and C1 are the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ells to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" try.\\n\\nI fire at **\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"F3**, and it's a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" **hit**.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your 3-cell ship\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" at F2–F4 is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" damaged but\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" af\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"loat. You still have two \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ships.\\n\\nYour shot.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/sea/cells\\\",\\\"value\\\":[{\\\"row\\\":0,\\\"col\\\":0,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/hud\\\",\\\"value\\\":{\\\"title\\\":\\\"Enemy waters\\\",\\\"status\\\":\\\"Miss at A5. I hit F3.\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Enemy ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Your ships left\\\",\\\"value\\\":\\\"2 of 3\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"label\\\":\\\"Shots fired\\\",\\\"value\\\":5,\\\"delta\\\":1},{\\\"label\\\":\\\"Hits\\\",\\\"value\\\":1,\\\"intent\\\":\\\"success\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/home/cells\\\",\\\"value\\\":[{\\\"row\\\":1,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":5,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":0,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":1,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":0,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":1,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":2,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"**A5 is a miss.** That leaves one hit in five shots. My 3-cell ship is still along row 1, so B1 and C1 are the cells to try.\\n\\nI fire at **F3**, and it's a **hit**. Your 3-cell ship at F2–F4 is damaged but afloat. You still have two ships.\\n\\nYour shot.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"Fire at A5.\",\"k\":3},\"exemplarIds\":[\"domain-admiral-battleship-board\",\"frontier-product-card-rooms\",\"restaurant-menu\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":54862,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7119},{\"id\":\"persona\",\"chars\":2463}],\"over\":false},\"usage\":{\"inputTokens\":8054,\"outputTokens\":1686,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":0,\"col\":0,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":2,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":3,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":4,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Miss at A5. I hit F3.\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"2 of 3\",\"intent\":\"warning\"},{\"label\":\"Shots fired\",\"value\":5,\"delta\":1},{\"label\":\"Hits\",\"value\":1,\"intent\":\"success\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/home/cells\",\"value\":[{\"row\":1,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":2,\"col\":5,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":3,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":0,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":1,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":0,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":1,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":3,\"col\":2,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"enemy-waters\"}}}\n**A5 is a miss.** That leaves one hit in five shots. My 3-cell ship is still along row 1, so B1 and C1 are the cells to try.\n\nI fire at **F3**, and it's a **hit**. Your 3-cell ship at F2–F4 is damaged but afloat. You still have two ships.\n\nYour shot.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "A5 is a miss. I hit F3 on your 3-cell ship.",
+                "target": "enemy-waters",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 0,
+                          "col": 0,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Miss at A5. I hit F3.",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "2 of 3",
+                            "intent": "warning"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 5,
+                            "delta": 1
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 1,
+                            "intent": "success"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/home/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 5,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 1,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 0,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 2,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "frontier-product-card-rooms",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Checking A6 at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row 5, col 0 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"against my fleet positions —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ell doesn't overlap\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" any ship, so it's a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" miss. I also notice some\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inconsistency from earl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ier turns about \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ship placements that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I should ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mind.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For my return sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ot, since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" F3 at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 2,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" col 5 was already\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a hit, the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" logical foll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ow-up is F2 at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row 1, col 5 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"— targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" adjacent cell to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" contin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ue h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"unting that ship. That l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ands as a hit too, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" F4 still\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" unacc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ounted for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aning the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player still has \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ships af\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"loat. I'll update the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sea cells with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" miss at A6 and m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ark F2 as a danger\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" zone on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the home cells, then write\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a concise note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" about\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" A being fully res\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"olved (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"one hit, five misses)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" before calling render_surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"**A6 is a miss\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".**\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Column A is fin\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ished,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with one hit and five misses\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" My 3-cell ship\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" still\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" unsunk.\\n\\nI f\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ire at **F2**, and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it's a **hit**.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your 3-cell \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ship at F2–F4 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"has\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" taken two h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"its and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is still afloat. You still\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" have two ships.\\n\\nYour\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" shot.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/sea/cells\\\",\\\"value\\\":[{\\\"row\\\":0,\\\"col\\\":0,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":5,\\\"col\\\":0,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/hud\\\",\\\"value\\\":{\\\"title\\\":\\\"Enemy waters\\\",\\\"status\\\":\\\"Miss at A6. I hit F2.\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Enemy ships left\\\",\\\"value\\\":\\\"3 of 3\\\"},{\\\"label\\\":\\\"Your ships left\\\",\\\"value\\\":\\\"2 of 3\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"label\\\":\\\"Shots fired\\\",\\\"value\\\":6,\\\"delta\\\":1},{\\\"label\\\":\\\"Hits\\\",\\\"value\\\":1,\\\"intent\\\":\\\"success\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"enemy-waters\\\",\\\"path\\\":\\\"/home/cells\\\",\\\"value\\\":[{\\\"row\\\":1,\\\"col\\\":5,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":2,\\\"col\\\":5,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":5,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":0,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":4,\\\"col\\\":1,\\\"intent\\\":\\\"info\\\",\\\"mark\\\":\\\"■\\\",\\\"disabled\\\":true},{\\\"row\\\":0,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":3,\\\"intent\\\":\\\"danger\\\",\\\"mark\\\":\\\"●\\\",\\\"disabled\\\":true},{\\\"row\\\":1,\\\"col\\\":1,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true},{\\\"row\\\":3,\\\"col\\\":2,\\\"intent\\\":\\\"neutral\\\",\\\"mark\\\":\\\"✕\\\",\\\"disabled\\\":true}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"**A6 is a miss.** Column A is finished, with one hit and five misses. My 3-cell ship is still unsunk.\\n\\nI fire at **F2**, and it's a **hit**. Your 3-cell ship at F2–F4 has taken two hits and is still afloat. You still have two ships.\\n\\nYour shot.\",\"target\":{\"surfaceId\":\"enemy-waters\"},\"trace\":{\"turnIndex\":12,\"query\":{\"intent\":\"Fire at A6.\",\"k\":3},\"exemplarIds\":[\"domain-admiral-battleship-board\",\"frontier-product-card-rooms\",\"restaurant-menu\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":54862,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7119},{\"id\":\"persona\",\"chars\":2463}],\"over\":false},\"usage\":{\"inputTokens\":8888,\"outputTokens\":1644,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/sea/cells\",\"value\":[{\"row\":0,\"col\":0,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":2,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":3,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":4,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":5,\"col\":0,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/hud\",\"value\":{\"title\":\"Enemy waters\",\"status\":\"Miss at A6. I hit F2.\",\"stats\":[{\"label\":\"Enemy ships left\",\"value\":\"3 of 3\"},{\"label\":\"Your ships left\",\"value\":\"2 of 3\",\"intent\":\"warning\"},{\"label\":\"Shots fired\",\"value\":6,\"delta\":1},{\"label\":\"Hits\",\"value\":1,\"intent\":\"success\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"enemy-waters\",\"path\":\"/home/cells\",\"value\":[{\"row\":1,\"col\":5,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":2,\"col\":5,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":3,\"col\":5,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":0,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":4,\"col\":1,\"intent\":\"info\",\"mark\":\"■\",\"disabled\":true},{\"row\":0,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":3,\"intent\":\"danger\",\"mark\":\"●\",\"disabled\":true},{\"row\":1,\"col\":1,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true},{\"row\":3,\"col\":2,\"intent\":\"neutral\",\"mark\":\"✕\",\"disabled\":true}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"enemy-waters\"}}}\n**A6 is a miss.** Column A is finished, with one hit and five misses. My 3-cell ship is still unsunk.\n\nI fire at **F2**, and it's a **hit**. Your 3-cell ship at F2–F4 has taken two hits and is still afloat. You still have two ships.\n\nYour shot.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "A6 missed. I hit F2 and your 3-cell ship is damaged.",
+                "target": "enemy-waters",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/sea/cells",
+                      "value": [
+                        {
+                          "row": 0,
+                          "col": 0,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 5,
+                          "col": 0,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/hud",
+                      "value": {
+                        "title": "Enemy waters",
+                        "status": "Miss at A6. I hit F2.",
+                        "stats": [
+                          {
+                            "label": "Enemy ships left",
+                            "value": "3 of 3"
+                          },
+                          {
+                            "label": "Your ships left",
+                            "value": "2 of 3",
+                            "intent": "warning"
+                          },
+                          {
+                            "label": "Shots fired",
+                            "value": 6,
+                            "delta": 1
+                          },
+                          {
+                            "label": "Hits",
+                            "value": 1,
+                            "intent": "success"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "enemy-waters",
+                      "path": "/home/cells",
+                      "value": [
+                        {
+                          "row": 1,
+                          "col": 5,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 2,
+                          "col": 5,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 5,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 0,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 4,
+                          "col": 1,
+                          "intent": "info",
+                          "mark": "■",
+                          "disabled": true
+                        },
+                        {
+                          "row": 0,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 3,
+                          "intent": "danger",
+                          "mark": "●",
+                          "disabled": true
+                        },
+                        {
+                          "row": 1,
+                          "col": 1,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        },
+                        {
+                          "row": 3,
+                          "col": 2,
+                          "intent": "neutral",
+                          "mark": "✕",
+                          "disabled": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "domain-admiral-battleship-board",
+          "frontier-product-card-rooms",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Checking my f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"leet posit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its taken—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"only one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cell was stru\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ck, so all three \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ships remain afloat. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m also double\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-checking for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inconsistencies in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's fleet data from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" earlier turns.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"My answer: all three \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ships still\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" afloat, one hit land\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed on the 3-cell\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ship,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep posit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions hidden. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ention my own two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"viving ships,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" which has ta\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ken two hits.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" No tool call needed, just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a concise text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" response.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"All three of my ships are\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" still\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" afloat.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your six\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" shots have land\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ed one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" hit,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" at A1, on my 3\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"-cell ship.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" That ship is dam\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"aged but not\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" sunk,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and my\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" two 2-cell ships\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" are\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" untouched.\\n\\nYou have two\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ships left.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your 3-cell ship\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" at F2–F4 has\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" taken two hits, so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" more at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" F4 sinks it.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your 2-cell \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ship at A5–B5 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"is untouched.\\n\\nYou\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ve\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" sp\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ent all six shots on column A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", so try a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" different column next\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"All three of my ships are still afloat. Your six shots have landed one hit, at A1, on my 3-cell ship. That ship is damaged but not sunk, and my two 2-cell ships are untouched.\\n\\nYou have two ships left. Your 3-cell ship at F2–F4 has taken two hits, so one more at F4 sinks it. Your 2-cell ship at A5–B5 is untouched.\\n\\nYou've spent all six shots on column A, so try a different column next.\",\"trace\":{\"turnIndex\":14,\"query\":{\"intent\":\"How many of your ships are still afloat?\",\"k\":3},\"exemplarIds\":[\"trend-list\",\"contact-import-progress-to-summary\",\"frontier-greet-card\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":55102,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5922},{\"id\":\"mini-skills\",\"chars\":1437},{\"id\":\"persona\",\"chars\":2463}],\"over\":false},\"usage\":{\"inputTokens\":9476,\"outputTokens\":535,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"quantity\",\"greeting-card\"],\"cacheBoundary\":45280}}}"
+      ],
+      "rounds": [
+        {
+          "text": "All three of my ships are still afloat. Your six shots have landed one hit, at A1, on my 3-cell ship. That ship is damaged but not sunk, and my two 2-cell ships are untouched.\n\nYou have two ships left. Your 3-cell ship at F2–F4 has taken two hits, so one more at F4 sinks it. Your 2-cell ship at A5–B5 is untouched.\n\nYou've spent all six shots on column A, so try a different column next.",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "trend-list",
+          "contact-import-progress-to-summary",
+          "frontier-greet-card"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "board-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "battle-rounds",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

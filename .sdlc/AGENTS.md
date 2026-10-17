@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:8db2162f8aab -->
+<!-- sdlc-lite:managed:start v1 sha256:a6683f9bfb3e -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,7 +9,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 11
+- proposed: 13
   - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (0187-split-pane-narrow-fit)
   - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (0188-line-chart-projected-dash)
   - T-0189 playing-card corner index: a type floor or a ruled pictorial exemption (0189-playing-card-type-floor)
@@ -21,40 +21,43 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
-- ready: 21
+  - T-0329 Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) (0329-r9-blackjack-opening-wording)
+  - T-0338 product-card icon header: 2n icon box or a ruled exemption (icon-box debt) (0338-product-card-icon-box)
+- ready: 22
   - T-0160 Agent content as files: extract preset and pack seeds to .md manifests with a generated, drift-gated registry (0160-agent-content-files)
   - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
   - T-0163 One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace (0163-agent-content-compiler)
-  - T-0168 Lint rules for the 2026-10 rulings: disabled recipe fleet-wide, 3:1 field outline, icon vs glyph, calendar cap, table pager, pill coverage, round-3 proposals (0168-lint-rulings-coverage)
+  - T-0168 Lint rules for the 2026-10 rulings: disabled recipe fleet-wide, 3:1 field outline, icon vs glyph, calendar cap, table pager, pill coverage, round-3 proposals (0168-lint-rulings-coverage), branch feat/0168-lint-rulings-coverage
   - T-0169 Remove dead lint plumbing: adr_ratify, docs-grammar S8, census lane code, ADR wording in gates, [scale]/[density] bridge (0169-lint-dead-plumbing)
   - T-0176 Agent eval framework 1: scenario format, replay in CI, runs.jsonl signal store, 15 persona smoke scenarios (0176-eval-scenarios-store)
   - T-0177 Agent eval framework 2: report page (matrix heatmap, failure codes, digest trends, links to trace and screenshots) (0177-eval-report)
   - T-0178 Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (0178-eval-judged-checks)
   - T-0179 Agent eval framework 4: live matrix (personas x models x efforts x N) under a $5 cap, baselines, pass-rate floors, digest-affected selection (0179-eval-matrix-baselines)
   - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (0203-composer-model-controls)
-  - T-0205 Context archaeology: how the a2ui producer builds context and routes (0205-context-archaeology)
-  - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source)
-  - T-0247 validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (0247-validate-payload-persona-ids)
-  - T-0318 Replace two corpus records that teach what the rulings forbid (frontier-booking-receipt, frontier-greet-card) (0318-corpus-records-rulings)
-  - T-0320 Root-cause the render_surface messages strings that are one brace short (ours or the model's?) (0320-messages-brace-root-cause)
-  - T-0321 Force render_surface on a SURFACE_DROPPED repair round; the fallback never ships a round a check already failed (0321-force-surface-dropped-repair)
-  - T-0322 Check gaps: uncovered prose answers (word-game opening, Concierge form edit) and the ProductCard check missing a priced DescriptionList (0322-check-gaps-r8)
-  - T-0323 Poker phases: a post-deal betting round is phase playing; the BET_CONTROL_DUPLICATE repair must not strip the moves (0323-poker-phase-wording)
-  - T-0324 A blackjack deal that settles needs a two-card 21 (natural); otherwise phase playing with Hit and Stand (0324-croupier-natural-check)
-  - T-0325 The texas-holdem scenario assumes a showdown: no fixed click after a move that can end the hand (0325-holdem-scenario-fold)
+  - T-0209 One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (0209-context-single-source), branch chore/0209-context-single-source
+  - T-0318 Replace two corpus records that teach what the rulings forbid (frontier-booking-receipt, frontier-greet-card) (0318-corpus-records-rulings), branch chore/0318-corpus-records
+  - T-0328 A same-turn repair that rebuilds a flagged surface under a new id must not halt (round 9 cluster A) (0328-r9-rename-after-repair)
+  - T-0330 Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) (0330-r9-dropped-surface-finding)
+  - T-0331 BookingForm read-back check matches booking verbs and the confirm_booking action (round 9 cluster D) (0331-r9-bookingform-readback-cue)
+  - T-0332 NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) (0332-r9-narration-hint-no-change)
+  - T-0333 BOOKING_CONFIRMATION_MISSING fires on a confirm turn or a read-back, not caption words (round 9 cluster G) (0333-r9-booking-confirmation-caption)
+  - T-0334 BANKROLL_MISMATCH and NATURAL_ACTIONS price a pontoon at 2:1 (round 9 cluster H) (0334-r9-pontoon-payout)
+  - T-0335 Replace confirmation-view and backable-wizard, which read back a booking before confirming (0335-corpus-readback-records)
+  - T-0336 Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) (0336-figure-parity-demos)
+  - T-0337 Column-chart highlight callout ink meets 4.5:1 on its pill in dark mode (chip-opaque debt) (0337-column-chart-callout-contrast)
 - claimed: 0
 - paused: 0
 - blocked: 0
-- done: 289
+- done: 298
 - dropped: 4
 
 ## Procedures
 
 Folder layout:
-- The top of `.sdlc` holds only ticket and task folders (a folder with a `handoff.md` or `plan-doc.md`), `AGENTS.md`, `CLAUDE.md`, `config`, `roadmap.md`, `board.md`, `notes.md`, `notes/`, `fleet.json`, `gate-ledger.jsonl`, `messages/`, `runtime/`, `supervisor/`, `evals/`, `proposals/`, `goals/`, `tickets/`, `work/`, `archive/`, and `_`- or `.`-prefixed entries. A `top_level_allow: <glob>, ...` line in `.sdlc/config` allows more.
-- Run records (role results, attempts, `runs.jsonl`, `skips.md`) go in the git-ignored records dir `.sdlc/runtime/tasks/<folder>/` (`<plugin-root>/scripts/order.py records-dir .sdlc/tickets/<folder>` prints it). Notes go to `.sdlc/notes/notes.md`, an answer to another agent goes by `messages.py send`, anything else into `archive/`.
-- `python3 <plugin-root>/scripts/tickets.py --root .sdlc check` warns on any other top-level entry; `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy` lists its move into `archive/` and `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy --apply` makes it. Move nothing under `.sdlc` while a `*.running` marker exists: a role is using it.
+- The top of `.sdlc` holds only `AGENTS.md`, `CLAUDE.md`, `config`, `layout.md`, `board.md`, `tickets/`, `work/`, `notes/`, `messages/`, `runtime/`, `supervisor/`, `evals/`, `proposals/`, `dogfood/`, and `_`- or `.`-prefixed entries; ticket folders go in `tickets/`, task folders in `work/`. A `top_level_allow:` line only keeps `tidy` from moving a name; `check` still reports it.
+- Run records (role results, attempts, `runs.jsonl`, `skips.md`) go in the git-ignored records dir `.sdlc/runtime/tasks/<folder>/` (`<plugin-root>/scripts/order.py records-dir .sdlc/tickets/<folder>` prints it). Notes go to `.sdlc/notes/notes.md`, an answer to another agent goes by `messages.py send`, anything else into `work/archive/`.
+- `python3 <plugin-root>/scripts/tickets.py --root .sdlc check` warns on any other top-level entry; `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy` lists its move into `work/archive/` and `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy --apply` makes it. Move nothing under `.sdlc` while a `*.running` marker exists: a role is using it.
 
 Create a ticket:
 1. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc new <feature|bug|chore|spike|idea> <slug> "<title>"`. Never pick an id by hand: `new` stamps the next id above every worktree's.
@@ -68,7 +71,7 @@ status: proposed | ready | claimed | paused | blocked | done | dropped
 
 Claim a ticket:
 1. Open its `handoff.md`. A `claimed_by:` front matter line means another agent holds it: pick another ticket or ask the user.
-2. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc claim <id> --by <agent>`, the agent one lowercase word (`claude`, `codex`, `astra`). It sets `status: claimed`, writes `claimed_by: <agent> <YYYY-MM-DD>` directly after `created:`, and runs `roadmap`. To take over a stale claim, add `--handover --reason "<why>"`.
+2. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc claim <id>`; `--by <agent>` names the claimant and wins, else it takes `$SDLC_HOST`, else the host (`claude:<session8>`, `codex:<thread>`). In git it first reserves `refs/sdlc/claims/<id>`, so a claim from any worktree refuses naming the holder. It sets `status: claimed`, writes `claimed_by: <agent> <YYYY-MM-DD>` directly after `created:`, and runs `roadmap`. To take over a stale claim, add `--handover --reason "<why>"`.
 3. Start the work through `run.sh`, which puts it in progress: `<plugin-root>/scripts/run.sh planner <level> .sdlc/tickets/<folder>/handoff.md`, or `/sdlc-lite:chain .sdlc/tickets/<folder>`. Progress shows on `/board`.
 4. Release: `python3 <plugin-root>/scripts/tickets.py --root .sdlc release <id>`. Pause: set `status: paused` and add a one-line `paused_reason:`, then rerun `roadmap`.
 

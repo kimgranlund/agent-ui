@@ -106,3 +106,17 @@
 - P6: catalog type names in persona text are a modality leak; the lint flags them and the Croupier persona is reworded.
 - L1 (T-0314, 2026-10-16): the turn-scoped invariant wins over the T-0172 design: a surface that existed in the turn is kept or explicitly deleted; a later round that omits it is sent back, or the earlier version ships. The property test is the gate.
 - T-0323 (2026-10-16, after the proposer and adversary debate): poker stays on a Card frame; CardTable is the blackjack family's table. Scope the CardTable mini-skills and persona entries to the blackjack family, poker checks skip the blackjack strip rules and get DEALT_IN_BETTING, and the ACTION_NOT_APPLIED repair text gets a poker branch.
+- T-0321 (2026-10-16): accepted that a turn with no clean round halts or degrades rather than shipping a check-failed surface; round 9 counts halts against round 8 and the choice is revisited if halts rise.
+- Kim 2026-10-17: every lane gets a local Claude code review (/code-review medium on the lane branch against main) after its verifier passes and before it ships. Confirmed bugs go back to the solo once, then a reverify; low-severity items go to notes and never block.
+- 2026-10-17: closed-loop-run skill upserted with the live series lessons (experiment-series, live-evaluation, diagnosis, records references; updates-log). Verifier fable L3 pass; fix-now applied. Record: .sdlc/runtime/tasks/closed-loop-run-series/.
+- 2026-10-17: Kim: install sdlc-lite 0.24.3 after round 9 closes (then tickets.py roadmap once, drop the lane-open reset workaround).
+
+## T-0247: validate-payload --catalog cannot load persona catalog ids (<base>--<persona>) (2026-10-17)
+
+- note: redck.py deviations printed no process deviation lines.
+- note: packages/agent-ui/a2ui/tools/catalog-files.test.ts the two-domain test calls heal and validateA2ui directly rather than the CLI, since no domain pair ships in the real tree; it mirrors the CLI path.
+- 2026-10-17 Kim rulings (round 9): (1) T-0317 drop rule: a surface rebuilt under a new id within the same turn is not a drop; only shipped surfaces count (fixes cluster A). (2) Blackjack opening regression from T-0323 wording: debate a wording fix (Opus proposal, other-family challenge), Kim rules. (3) confirmation-view and backable-wizard corpus records get replaced like T-0318; grammar.md example stays for now.
+
+## T-0326: Live round 9: full matrix after the round 8 fixes ($42 cap) (2026-10-17)
+
+- decide: `.sdlc/tickets/0326-live-round-9/handoff.md` criterion 5 names plugin 0.24.0, whose `tickets.py check` now reports the roadmap stale against the 0.24.3 roadmap. Point it at the current plugin.
