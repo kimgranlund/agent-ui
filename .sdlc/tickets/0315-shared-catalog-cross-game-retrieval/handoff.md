@@ -2,7 +2,7 @@
 id: T-0315
 title: "Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -18,3 +18,6 @@ Found by the T-0313 solo (2026-10-16): the Admiral and the Lexicographer share t
 
 ## Process
 Per Kim's debate rule (2026-10-16): a proposer writes the options with costs, an adversary on another model family challenges them, Kim decides, then build. Status stays proposed until then.
+
+## Debate
+Proposal: .sdlc/runtime/tasks/0315-shared-catalog-cross-game-retrieval/architect-L1.md (Opus). Challenge: plan-reviewer-L1.md (fable, pass). Kim 2026-10-17: parse the /secret keys from personaSystem now, with the coupling pin; exclusion only. Build notes from the challenge: committedSecretKeys reads a2uiOutput and priorOutput; the Mentalist re-pin is a defensible prefix with a known-poor comment (T-0318 style), not three new ranks; state the live target per opening phrasing (every Admiral 'New game...' variant frames no /secret/word record), attributed by runId prefix.
