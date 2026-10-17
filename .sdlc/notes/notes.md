@@ -105,3 +105,4 @@
 - P7: the dev trace may store prompt text in a local, git-ignored content-addressed store beside it (reverses `tools/agent/trace-log.ts:19`).
 - P6: catalog type names in persona text are a modality leak; the lint flags them and the Croupier persona is reworded.
 - L1 (T-0314, 2026-10-16): the turn-scoped invariant wins over the T-0172 design: a surface that existed in the turn is kept or explicitly deleted; a later round that omits it is sent back, or the earlier version ships. The property test is the gate.
+- T-0323 (2026-10-16, after the proposer and adversary debate): poker stays on a Card frame; CardTable is the blackjack family's table. Scope the CardTable mini-skills and persona entries to the blackjack family, poker checks skip the blackjack strip rules and get DEALT_IN_BETTING, and the ACTION_NOT_APPLIED repair text gets a poker branch.
