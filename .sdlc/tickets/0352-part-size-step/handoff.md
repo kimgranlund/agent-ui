@@ -24,3 +24,9 @@ GH #1940 (closed into this ticket). Found in lane a06 (T-0099) of the ADR-0245 c
 
 ## Constraints
 The foundations census gate stays green; no one-off heights.
+
+## Acceptance criteria
+- `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/service-card packages/agent-ui/components/src/controls/product-card packages/agent-ui/components/src/controls/board-grid` exits 0, including the three T-0352 describes (action or cell height at the root and in a `data-tier="widget"` region equals scale.mjs's step: service-card sm, product-card md, board-grid md 6n).
+- `npx vitest run packages/agent-ui/components/src/controls/service-card packages/agent-ui/components/src/controls/product-card packages/agent-ui/components/src/controls/board-grid` exits 0.
+- `npm run check` exits 0.
+- Before and after screenshots in the artifacts dir (`before-widget.png`, `after-widget.png`).
