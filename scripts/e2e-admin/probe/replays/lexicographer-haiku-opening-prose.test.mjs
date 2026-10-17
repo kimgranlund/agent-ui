@@ -6,17 +6,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: round 8 cluster C (T-0319, 2026-10-16-r8-matrix :101, Haiku 5.5). "New word game, please." is answered
-// with a meta-line that names ask-1 and no render_surface call, so the game exists only in prose; no check covers a word
-// game opening (only Battleship and the Croupier games have one), so round 1 passes. Pinned to today's behavior; an
-// opening SURFACE_MISSING for the word game makes this turn a repair round.
+// T-0322 C1 (round 8 :101, Haiku 5.5). "New word game, please." is answered with a meta-line that names ask-1 and no
+// render_surface call, so the game exists only in prose. The word-game opening check now sends it back with
+// SURFACE_MISSING. The fixture records no repaired round, so the turn ships uncorrected and still has no board here.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
 const surfaceLines = (record) => record.lines.map((l) => JSON.parse(l)).filter((m) => m.createSurface ?? m.updateComponents ?? m.updateDataModel)
 
-it('lexicographer-haiku-opening-prose: a word game opened in prose passes every producer check and ships no board', async () => {
+it('lexicographer-haiku-opening-prose: a word game opened in prose gets SURFACE_MISSING', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-opening-prose.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed).toEqual([])
-  expect(trace(report.records[0])).toMatchObject({ rounds: 1, failureCodes: [] })
+  expect(trace(report.records[0]).failureCodes).toEqual(['SURFACE_MISSING', 'SEMANTIC_UNCORRECTED'])
   expect(surfaceLines(report.records[0])).toEqual([])
 })

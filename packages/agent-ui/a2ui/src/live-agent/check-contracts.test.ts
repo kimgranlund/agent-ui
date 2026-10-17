@@ -99,6 +99,7 @@ const bookingForm = (path: (key: string) => string): A2uiOutput =>
     ],
     { booking: BOOKING },
   )
+const bookingSession = [{ say: 'A table at Vela for four on 20 October at 20:00, please.', out: bookingForm((k) => k) }]
 const confirmation = surface(
   'confirm-1',
   CONCIERGE,
@@ -346,6 +347,11 @@ const CONTRACTS: Record<string, Contract> = {
     pass: { catalog: CONCIERGE, intent: 'What spa services can I book?', output: services },
     fail: { catalog: CONCIERGE, intent: 'What spa services can I book?', output: [] },
   },
+  'concierge-edit-applied': {
+    code: 'ACTION_NOT_APPLIED',
+    pass: { catalog: CONCIERGE, session: bookingSession, intent: 'Make it 21:00 instead, same day.', target: 'booking-1', output: [data('booking-1', { booking: { ...BOOKING, time: '21:00' } })] },
+    fail: { catalog: CONCIERGE, session: bookingSession, intent: 'Make it 21:00 instead, same day.', target: 'booking-1', output: [] },
+  },
   'concierge-booking-field-paths': {
     code: 'BOOKING_FIELD_PATH',
     pass: { catalog: CONCIERGE, output: bookingForm((k) => k) },
@@ -543,10 +549,39 @@ const PROBES: Record<string, readonly Fixture[]> = {
     },
   ],
   'fleet-shot-applied': [{ catalog: UI, intent: "Let's play Battleship.", output: [] }],
+  // T-0324: a deal that settles a two-card 20 (round 8 :9).
+  'croupier-action-applied': [
+    {
+      catalog: CROUPIER,
+      session: tableSession,
+      action: deal,
+      output: [
+        data('table-1', {
+          bankroll: 950,
+          bet: 50,
+          phase: 'settled',
+          dealerHand: [{ rank: '7', suit: 'diamonds' }, { rank: 'K', suit: 'clubs', faceDown: true }],
+          playerHand: [{ rank: 'A', suit: 'hearts' }, { rank: '9', suit: 'spades' }],
+        }),
+      ],
+    },
+  ],
   'word-move-applied': [
     { catalog: UI, session: wordSession, intent: 'I give up.', target: 'word-1', output: [] },
     { catalog: UI, session: wordSession, intent: 'I give up.', target: 'word-1', output: [data('word-1', { ...WORD_OPEN, status: 'The word was SLAIN' })] },
     { catalog: UI, session: wordSession, intent: 'Play again.', output: [] },
+    { catalog: UI, intent: 'New word game, please.', output: [] },
+  ],
+  'composite-moment-product-card': [
+    {
+      catalog: CONCIERGE,
+      intent: 'What services could I add for the rest of my stay?',
+      output: surface('spa-treatments', CONCIERGE, [
+        { id: 'root', component: 'Card', children: ['title', 'list'] },
+        { id: 'title', component: 'Text', text: 'Spa treatments', variant: 'h4' },
+        { id: 'list', component: 'DescriptionList', rows: [{ label: 'Swedish massage', value: '60 min, €120' }, { label: 'Hydrating facial', value: '50 min, €110' }] },
+      ]),
+    },
   ],
   'fleet-concede': [{ catalog: UI, session: fleetSession, intent: 'I concede.', target: 'waters-1', output: [] }],
 }

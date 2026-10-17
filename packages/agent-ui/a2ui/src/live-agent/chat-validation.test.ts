@@ -146,7 +146,7 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
     expect(ids(semanticChecksDeps(catalogs.get('agent-ui--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('agent-ui--croupier')!), ...GAMES, ...FRAMED])
     expect(ids(semanticChecksDeps(catalogs.get('a2ui-basic--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('a2ui-basic--croupier')!), ...FRAMED])
     expect(ids(semanticChecksDeps(catalog))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES, ...FRAMED])
-    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--concierge')!))).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths', ...HIDDEN_STATE_CHECKS.map((c) => c.id), ...BOOKING, ...GAMES, ...FRAMED])
+    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--concierge')!))).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths', 'concierge-edit-applied', ...HIDDEN_STATE_CHECKS.map((c) => c.id), ...BOOKING, ...GAMES, ...FRAMED])
     expect(ids(semanticChecksDeps(basicCatalog))).toEqual([...hidden(basicCatalog), ...FRAMED])
     expect(semanticChecksDeps(catalog).semanticChecks!.slice(HIDDEN_STATE_CHECKS.length, -1).every((c) => compositeMomentChecks.includes(c))).toBe(true)
     expect(semanticChecksDeps(catalog).semanticChecks!.at(-1)).toBe(framedChoiceCheck)

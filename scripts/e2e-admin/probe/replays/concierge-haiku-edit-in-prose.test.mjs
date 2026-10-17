@@ -6,17 +6,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: round 8 cluster C (T-0319, 2026-10-16-r8-matrix :165-:167, Haiku 5.5). "Make it 16:00 instead, same day."
-// targets spa-booking with a meta-line and sends it no update; no Concierge check judges an edit to an open form, so the
-// turn passes in one round and the form keeps 15:00. Pinned to today's behavior; a Concierge applied-edit check makes
-// turn 1 a repair round and flips action-updates-surface:1.
+// T-0322 C2 (round 8 :165-:167, Haiku 5.5). "Make it 16:00 instead, same day." targets spa-booking with a meta-line
+// and sends it no update, so the form keeps 15:00. The Concierge edit check now sends it back with ACTION_NOT_APPLIED.
+// The fixture records no repaired round, so the turn ships uncorrected and action-updates-surface:1 stays red here.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
 const surfaceLines = (record) => record.lines.map((l) => JSON.parse(l)).filter((m) => m.createSurface ?? m.updateComponents ?? m.updateDataModel)
 
-it('concierge-haiku-edit-in-prose: a typed edit to the open booking form ships no update and no check fires', async () => {
+it('concierge-haiku-edit-in-prose: a typed edit to the open booking form that ships no update gets ACTION_NOT_APPLIED', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-edit-in-prose.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['action-updates-surface:1'])
-  expect(trace(report.records[1])).toMatchObject({ rounds: 1, failureCodes: [] })
+  expect(trace(report.records[1]).failureCodes).toEqual(['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'])
   expect(surfaceLines(report.records[1])).toEqual([])
 })

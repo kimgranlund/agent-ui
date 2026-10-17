@@ -17,8 +17,13 @@
 // ask for the moment and the surface that answers it; the Concierge SURFACE_MISSING check reads them through
 // `askedCompositeMoment` instead of keeping its own regexes. The facility ask stays in that check: its answer, a Card
 // holding a DescriptionList, is no composite.
+//
+// T-0322: a row's `pricedRows` reads the turn's words too: on a services ask (the row's `ask.cue`), priced rows in a
+// DescriptionList or a List are the ProductCard moment, while the facility hours list (no price, no services ask)
+// stays clean.
 
 import type { A2uiComponent } from '../protocol.ts'
+import { readPointer } from './semantic-check.ts'
 import type { SemanticCheck, SemanticFinding, SurfaceView } from './semantic-check.ts'
 
 export interface CompositeMoment {
@@ -52,6 +57,9 @@ export interface CompositeMoment {
   readonly notInside?: readonly string[]
   /** T-0279: a Table with a column whose key or label matches `cue`, while the surface words match `words`. */
   readonly tableColumn?: { readonly cue: RegExp }
+  /** T-0322: on a turn whose words match `ask.cue`, a component of `types` that lists a row matching `cue` (a priced
+   *  DescriptionList row, a priced List item), while the surface words match `words`. */
+  readonly pricedRows?: { readonly types: readonly string[]; readonly cue: RegExp }
   /** T-0313: the turn words that ask for this moment (`cue`), its short name (the SURFACE_MISSING path), the surface that
    *  answers it, and its precedence when one turn's words ask for two moments (lowest first). */
   readonly ask?: { readonly moment: string; readonly cue: RegExp; readonly surface: string; readonly rank: number }
@@ -133,10 +141,12 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     moment: 'one product, room or offer to buy or book',
     repair:
       'per item, templated in a Grid over the list in the data model (title, price, the duration or unit as priceNote, and one ' +
-      'action with the item id in its context), and drop the priced Table.',
+      'action with the item id in its context), and drop the hand-built priced rows.',
     // Not `requires: ['Table']`: required types' props never count as words, and the Table's label carries them.
     lacks: ['BookingForm', 'BookingConfirmation', 'CardTable'],
     tableColumn: { cue: /\b(price|prices|cost|rate|fee)\b/i },
+    // T-0322: a services ask answered with priced DescriptionList rows (round 8 :90) or a priced List is this moment too.
+    pricedRows: { types: ['DescriptionList', 'List'], cue: /[€$£¥]\s?\d|\d\s?(?:€|eur|usd|gbp)\b/i },
     words: /\b(book|bookable|treatment|treatments|service|services|spa|massage|room|rooms|offer|offers)\b/i,
     ask: { moment: 'services', cue: SERVICES_ASK, rank: 1, surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' },
   },
@@ -156,8 +166,23 @@ const boundPath = (v: unknown): string =>
 const upperSnake = (type: string): string => type.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()
 const kebab = (type: string): string => type.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
 
+/** T-0322: the row texts a DescriptionList (its literal or bound `rows`) or a List (its children's words) lists. */
+function rowTexts(c: A2uiComponent, view: SurfaceView): string[] {
+  if (c.component === 'DescriptionList') {
+    const raw = c['rows']
+    const path = boundPath(raw)
+    const rows = Array.isArray(raw) ? raw : path.startsWith('/') ? readPointer(view.dataModel, path) : undefined
+    if (!Array.isArray(rows)) return []
+    return rows.map((r) => (typeof r === 'object' && r !== null ? ['label', 'value'].map((k) => String((r as Record<string, unknown>)[k] ?? '')).join(' ') : ''))
+  }
+  return childIds(c).map((id) => {
+    const child = view.components.get(id)
+    return child === undefined ? '' : [wordsOf(child), ...childIds(child).map((g) => wordsOf(view.components.get(g) ?? { id: g, component: '' }))].join(' ')
+  })
+}
+
 /** The components of `view` that hand-build `m`'s moment, or `[]` when the row does not fire. */
-function strays(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
+function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefined): A2uiComponent[] {
   const comps = [...view.components.values()]
   const types = new Set(comps.map((c) => c.component))
   if ([m.composite, ...m.lacks].some((t) => types.has(t))) return []
@@ -183,7 +208,7 @@ function strays(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
   if (m.words !== undefined && !m.words.test(surfaceWords)) return []
   if (m.tableColumn !== undefined) {
     const { cue } = m.tableColumn
-    return comps.filter(
+    const tables = comps.filter(
       (c) =>
         c.component === 'Table' &&
         Array.isArray(c['columns']) &&
@@ -192,6 +217,10 @@ function strays(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
           return typeof v === 'string' && cue.test(v)
         })),
     )
+    const { pricedRows, ask } = m
+    const asked = pricedRows !== undefined && ask !== undefined && intent !== undefined && ask.cue.test(intent)
+    const priced = asked ? comps.filter((c) => pricedRows.types.includes(c.component) && rowTexts(c, view).some((t) => pricedRows.cue.test(t))) : []
+    return [...tables, ...priced]
   }
   if (m.inputs !== undefined) {
     const inputs = comps.filter((c) => m.inputs!.types.includes(c.component))
@@ -234,7 +263,7 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
   return {
     id: `composite-moment-${kebab(m.composite)}`,
     requires: [m.composite, ...(m.requires ?? [])],
-    check({ surfaces }): readonly SemanticFinding[] {
+    check({ surfaces, intent }): readonly SemanticFinding[] {
       const findings: SemanticFinding[] = []
       for (const view of surfaces) {
         const wrapped = wrappers(m, view)
@@ -248,7 +277,7 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
           })
           continue
         }
-        const found = strays(m, view)
+        const found = strays(m, view, intent)
         if (found.length === 0) continue
         findings.push({
           code,

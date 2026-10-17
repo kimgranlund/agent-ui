@@ -384,3 +384,31 @@ describe('T-0296: fleet-concede', () => {
     expect(wordMoveAppliedCheck.check({ surfaces: semanticSurfaceViews(session, revealed), intent: 'I give up.', target: 'enemy-waters', open })).toEqual([])
   })
 })
+
+// T-0322 C1 (live round 8 :101, Haiku 5.5, regress-lexicographer-invalid-then-replay): "New word game, please." was
+// answered with a meta-line naming ask-1 and no render_surface call, so the game existed only in prose and no check
+// fired (only Battleship and the Croupier games had an opening SURFACE_MISSING).
+describe('T-0322: a word game asked for with no surface', () => {
+  const said = (intent: string, out: A2uiOutput = [], open: SemanticTurnLog = { turns: [] }, target?: string) =>
+    wordMoveAppliedCheck.check({ surfaces: semanticSurfaceViews(open, out), intent, open: sessionSurfaceViews(open), ...(target !== undefined ? { target } : {}) })
+
+  it('the recorded prose-only "New word game, please." is SURFACE_MISSING, framed as a check result', () => {
+    const findings = said('New word game, please.')
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', 'opening:word-game']])
+    expect(findings[0]!.message).toMatch(/^The word-game check found/)
+    expect(findings[0]!.message).toMatch(/createSurface for the word board/)
+    expect(said("Let's play Wordle.").map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('with a word game open, a prose "New word game" is the replay ACTION_NOT_APPLIED', () => {
+    const session: SemanticTurnLog = { turns: [assistant([...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [], draft: '' })])] }
+    expect(said('New word game, please.', [], session).map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'word-forge:play-again']])
+  })
+
+  it('a drawn board, a question about the game, another game or a click passes', () => {
+    expect(said('New word game, please.', board('word-forge'))).toEqual([])
+    expect(said('How does the word game work?')).toEqual([])
+    expect(said('Battleship, please.')).toEqual([])
+    expect(wordMoveAppliedCheck.check({ surfaces: [], action: { name: 'guess', surfaceId: 'word-forge', context: {}, dataModel: {} } })).toEqual([])
+  })
+})

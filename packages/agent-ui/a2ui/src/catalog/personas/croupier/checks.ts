@@ -599,6 +599,12 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
     const after = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
     // A round that settles on this action is judged by the payout, never by the plain deal arithmetic.
     if (phaseOf(table, view.dataModel) === 'settled') {
+      // T-0324: a deal settles only on a natural; otherwise the payout repair would endorse a round that never ended.
+      const early = deal ? settledWithoutNatural(view, table) : undefined
+      if (early !== undefined) {
+        findings.push(early)
+        continue
+      }
       const settled = settleFinding(view, table, action, deal)
       if (settled !== undefined) findings.push(settled)
       continue
@@ -641,6 +647,25 @@ function payout(player: readonly Card[], dealer: readonly Card[], stake: number)
   if (p > d) return { amount: stake * 2, result: `a win (${p} over ${d})` }
   if (p === d) return { amount: stake, result: `a push (${p})` }
   return { amount: 0, result: `a loss (${p} under ${d})` }
+}
+
+/** T-0324 (live round 8 :9, Haiku 5.5): the 25 deal dealt A and 9 against 7 and a hole K, called it "Natural
+ *  blackjack!" and settled with only Deal again, and BANKROLL_MISMATCH then priced the false settle as a win. A deal
+ *  settles the round only when the player or the dealer holds a two-card 21; any other settled deal is
+ *  SETTLED_WITHOUT_NATURAL. Hands the check cannot resolve, and a table that names another game (T-0276), are never
+ *  judged. */
+function settledWithoutNatural(view: SurfaceView, table: A2uiComponent): SemanticFinding | undefined {
+  if (namesOtherGame([...view.components.values()])) return undefined
+  const player = cardsAt(view.dataModel, bindingPath(table['playerHand']))
+  const dealer = cardsAt(view.dataModel, bindingPath(table['dealerHand']))
+  if (player === undefined || dealer === undefined || player.length !== 2 || isNatural(player) || isNatural(dealer)) return undefined
+  return {
+    code: 'SETTLED_WITHOUT_NATURAL',
+    path: `${view.surfaceId}:${table.id}`,
+    message:
+      `The deal settles ${table.id}, but the player's ${describeCards(player)} (${bestTotal(player)}) is not a natural and neither is the dealer's hand: only a two-card 21 (an ace and a ten-value card) settles on the deal. ` +
+      `Write phase "playing" with Hit and Stand Buttons, keep the dealer's hole card face down, leave the bankroll at the bet taken out, and state the totals without a result.`,
+  }
 }
 
 /** T-0172 (the live probe on afc073a3): a round that settles on this action must pay out from the click-time
