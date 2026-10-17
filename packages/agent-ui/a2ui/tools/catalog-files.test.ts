@@ -10,6 +10,8 @@ import { dirname, join } from 'node:path'
 import { BASE_CATALOG_IDS, CATALOG_FILES, CATALOG_IDS, createCatalogResolver, isCatalogId, loadCatalogById, loadDerivedCatalogById, loadShippedManifests } from './catalog-files.ts'
 import type { ShippedManifests } from './catalog-files.ts'
 import { loadCatalogFragment } from '../src/catalog/compose.ts'
+import { heal } from '../src/corpus/heal.ts'
+import { validateA2ui } from '../src/corpus/validate.ts'
 
 declare const process: { cwd(): string }
 
@@ -139,5 +141,35 @@ describe('catalog-files: loadDerivedCatalogById derives only what the hosts deri
     expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--games+design', shipped)).toBeUndefined()
     expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--design+hospitality', shipped)).toBeUndefined()
     expect(loadDerivedCatalogById(REAL_ROOT, 'agent-ui--design+games', await loadShippedManifests()), 'none ships in the real tree').toBeUndefined()
+  })
+
+  it('a payload using both domains\' types validates clean against the pair (the validate-payload path: heal, then validateA2ui at finalize) and gets CATALOG findings against one domain alone', async () => {
+    const shipped = injected(await loadShippedManifests())
+    const payload = JSON.stringify([
+      { version: 'v1.0', createSurface: { surfaceId: 's', catalogId: 'agent-ui--design+games' } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 's',
+          components: [
+            { id: 'root', component: 'Column', children: ['a', 'b'] },
+            { id: 'a', component: 'PaletteChip', label: 'x' },
+            { id: 'b', component: 'Token', label: 'y' },
+          ],
+        },
+      },
+    ])
+    const verdictAgainst = (id: string) => {
+      const catalog = loadDerivedCatalogById(REAL_ROOT, id, shipped)!
+      const healed = heal(payload, { protocolVersion: catalog.protocolVersion })
+      if (!healed.ok) throw new Error('payload did not parse')
+      return validateA2ui(healed.messages, catalog, undefined, { atFinalize: true })
+    }
+    expect(verdictAgainst('agent-ui--design+games').valid).toBe(true)
+    const design = verdictAgainst('agent-ui--design')
+    expect(design.valid).toBe(false)
+    const failures = design.valid ? [] : design.failures
+    expect(failures.length).toBeGreaterThan(0)
+    expect(failures.every((f) => f.code === 'CATALOG')).toBe(true)
   })
 })
