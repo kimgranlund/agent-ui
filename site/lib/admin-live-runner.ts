@@ -32,6 +32,12 @@ import { readGenuiLine } from '../../packages/agent-ui/a2ui/src/agent/genui-line
 // (never an A2uiClientMessage); frameClientMessage/nextTurn accept the union of both.
 import type { GenuiActionMessage } from '../../packages/agent-ui/a2ui/src/agent/genui-line.ts'
 import { readNdjsonLines } from './ndjson-lines.ts'
+// T-0163 (agent-content SPEC ACS-R13): every request body carries its bundle digest and resolution, which
+// the dev proxy recomputes and records per turn.
+import { turnStamp, type TurnContent } from './agent-compile.ts'
+// T-0163: each surface turn's raw lines also feed a devtools capture (ADR-0200 clause 7), through the
+// package's one event producer (`recordTurn`), so the debug bundle's `captures/` family is filled.
+import { recordTurn, DEVTOOLS_CAPTURE_KIND, DEVTOOLS_CAPTURE_VERSION, type DevtoolsCapture, type DevtoolsEvent } from '@agent-ui/devtools'
 // T-0016 (ADR-0159 amendment, proposed): the A2UI adapter that turns this turn's stages, trace and lines
 // into the neutral activity steps `ui-agent-admin` forwards to the conversation's step mode.
 import { createA2uiActivity } from './a2ui-activity.ts'
@@ -47,11 +53,18 @@ const ENDPOINT = '/__a2ui/agent/chat'
 // conversation's fail() path re-enables the composer. AbortSignal.timeout is a plain platform primitive.
 const TIMEOUT_MS = 120_000
 
+/** T-0163: the content a turn runs with, per session (`'test'` or `'authoring'`), for the request's stamp.
+ *  The page supplies it; absent, a request carries the digest alone. */
+export type TurnContentFor = (session: string) => TurnContent | undefined
+
 /** Build the injectable live-turn runner. Assigned to `admin.agentTurn` ONLY when a live key is present
  *  (ALM-C8), so an unavailable overlay simply never replaces the stub. */
-export function createAdminAgentTurn(): AdminAgentTurn {
+export function createAdminAgentTurn(contentFor?: TurnContentFor): AdminAgentTurn {
   return async (req: AdminTurnRequest): Promise<string> => {
     const messages: AdminTurn[] = [...req.history, { role: 'user', content: req.text }]
+    // T-0163: the stamp describes the turn's own driving store (the Builder interview's, or the test chat's);
+    // it is trace-only, so a failed digest sends the turn without one.
+    const stamp = await turnStamp({ system: req.system, model: req.model, ...(req.modelSettings !== undefined ? { modelSettings: req.modelSettings } : {}), ...(req.integrations !== undefined ? { integrations: req.integrations } : {}) }, contentFor?.(req.session ?? 'test'))
     const res = await fetch(ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -60,7 +73,7 @@ export function createAdminAgentTurn(): AdminAgentTurn {
       // body byte-identical to the pre-amendment one (SPEC-R19's absent-field requirement) with no
       // conditional spread. The host route intersects the labels with its own registry; nothing here knows
       // which ones are real.
-      body: JSON.stringify({ system: req.system, model: req.model, messages, effort: req.effort, integrations: req.integrations, ...(req.modelSettings !== undefined && Object.keys(req.modelSettings).length > 0 ? { modelSettings: req.modelSettings } : {}) }),
+      body: JSON.stringify({ system: req.system, model: req.model, messages, effort: req.effort, integrations: req.integrations, ...(req.modelSettings !== undefined && Object.keys(req.modelSettings).length > 0 ? { modelSettings: req.modelSettings } : {}), ...(stamp !== undefined ? { bundleDigest: stamp.digest, resolution: stamp.resolution } : {}) }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
     })
     if (!res.ok) {
@@ -188,7 +201,13 @@ export async function fetchLiveServices(): Promise<LiveServiceRow[] | undefined>
  *  page re-creates it per persona switch, so each persona's game/transcript starts clean. Streams typed
  *  events (the peeled ADR-0088 note + validated wire lines); appends the session turns only after a turn
  *  fully streams (a thrown turn leaves the transcript unchanged, matching a2ui-chat's failed-turn law). */
-export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
+/** The surface runner plus the devtools captures of the turns it ran, one per session (`test-chat`,
+ *  `builder-interview`), for the debug bundle (T-0163). */
+export type AdminSurfaceRunner = AdminAgentSurfaceTurn & { captures(): { id: string; capture: DevtoolsCapture }[] }
+
+const CAPTURE_IDS: Readonly<Record<string, string>> = { test: 'test-chat', authoring: 'builder-interview' }
+
+export function createAdminSurfaceTurn(contentFor?: TurnContentFor): AdminSurfaceRunner {
   // ADR-0178 cl.5 — ONE `Session` PER CONTEXT, not one per closure. The guided-authoring flow runs two
   // conversations over a single draft persona (the Builder interview and the draft's own test chat), and
   // they are different agents' transcripts: a shared session would replay the interview to the draft as
@@ -196,13 +215,31 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
   // makes every pre-authoring caller land on the same single 'test' history it always had.
   // Per-persona re-arming (the page re-creates this closure on a persona switch) still resets both.
   const sessions = new Map<string, Session>()
-  return async function* (req: AdminSurfaceTurnRequest): AsyncIterable<AdminSurfaceTurnEvent> {
+  const timelines = new Map<string, DevtoolsEvent[]>()
+  // One turn's events, replayed from its raw lines through `recordTurn` (the one producer of the shape) and
+  // re-stamped so a session's timeline keeps the capture's contiguous `seq`.
+  const record = async (sessionKey: string, input: TurnInput, raw: readonly string[], failure?: unknown): Promise<void> => {
+    const timeline = timelines.get(sessionKey) ?? []
+    timelines.set(sessionKey, timeline)
+    const transport = {
+      async *turn(): AsyncIterable<string> {
+        yield* raw
+        if (failure !== undefined) throw failure
+      },
+    }
+    // The turn-start event keeps the turn's own input, not the transcript before it (the capture's `session`
+    // holds that once), so a long session's capture grows linearly.
+    const own: TurnInput = { ...input, session: { turns: [] } }
+    for await (const event of recordTurn(transport, own, { backend: 'proxy' })) timeline.push({ ...event, seq: timeline.length })
+  }
+  const run = async function* (req: AdminSurfaceTurnRequest): AsyncIterable<AdminSurfaceTurnEvent> {
     const sessionKey = req.session ?? 'test'
     const session: Session = sessions.get(sessionKey) ?? { turns: [] }
     const input: TurnInput =
       req.turn.kind === 'intent'
         ? { kind: 'intent', text: req.turn.text, session }
         : nextTurn(session, req.turn.message as A2uiClientMessage | GenuiActionMessage)
+    const stamp = await turnStamp({ system: req.personaSystem, model: req.model, ...(req.modelSettings !== undefined ? { modelSettings: req.modelSettings } : {}), ...(req.integrations !== undefined ? { integrations: req.integrations } : {}) }, contentFor?.(sessionKey))
     const res = await fetch(PRODUCE_ENDPOINT, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -222,6 +259,9 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         model: req.model,
         personaSystem: req.personaSystem,
         integrations: req.integrations,
+        // T-0163: the bundle digest of exactly what this body sends, and the resolution behind it; absent when
+        // the digest could not be taken (no Web Crypto on an insecure origin), never blocking the turn.
+        ...(stamp !== undefined ? { bundleDigest: stamp.digest, resolution: stamp.resolution } : {}),
         progressDetail: 'source',
         progressReasoning: true,
         // GH #270's additive precedent (`live-proxy-transport.ts`'s `sel.effort`) — absent ⇒ the POST
@@ -275,10 +315,12 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
       throw new Error(`Live agent proxy error (${detail}).`)
     }
     const turnLines: string[] = []
+    const rawLines: string[] = [] // T-0163: every streamed line, for the turn's capture
     let note: string | undefined
     const activity = createA2uiActivity() // T-0016: one adapter per turn
     try {
       for await (const line of readNdjsonLines(res.body)) {
+        rawLines.push(line)
         const meta = readMetaLine(line)
         if (meta) {
           // GH #144: a transport-composed terminal `error` meta-line (`formatErrorLine`, worker/index.ts /
@@ -362,11 +404,13 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
         activity.line(line)
         yield { kind: 'line', line }
       }
+      await record(sessionKey, input, rawLines)
       // T-0016: the stream ended cleanly: the counted output steps, the one raw block, and the footer.
       const end = activity.end()
       for (const step of end.steps) yield { kind: 'step', step }
       if (end.footer !== undefined) yield { kind: 'footer', footer: end.footer }
     } catch (err) {
+      await record(sessionKey, input, rawLines, err)
       // T-0016: the running step settles failed (keeping the last candidate as the raw block) before the
       // failure surfaces through the component's fail() path.
       for (const step of activity.fail()) yield { kind: 'step', step }
@@ -392,5 +436,12 @@ export function createAdminSurfaceTurn(): AdminAgentSurfaceTurn {
     )
     sessions.set(sessionKey, appendAssistantTurn(withUser, turnLines.join('\n'), note))
   }
+  return Object.assign(run, {
+    captures: (): { id: string; capture: DevtoolsCapture }[] =>
+      [...timelines].map(([key, timeline]) => ({
+        id: CAPTURE_IDS[key] ?? key,
+        capture: { kind: DEVTOOLS_CAPTURE_KIND, version: DEVTOOLS_CAPTURE_VERSION, createdAt: new Date().toISOString(), backend: 'proxy' as const, session: sessions.get(key) ?? { turns: [] }, timeline: [...timeline] },
+      })),
+  })
 }
 

@@ -48,16 +48,22 @@ function pad(text: string, width: number): string {
   return text.length >= width ? text.slice(0, width) : text + ' '.repeat(width - text.length)
 }
 
+/** T-0163: a bundle digest as the table shows it, its first 12 hex digits; `-` when the turn named no agent. */
+export function shortDigest(digest: string | undefined): string {
+  return digest === undefined ? '-' : digest.replace(/^sha256:/, '').slice(0, 12)
+}
+
 /** The table of the last `count` turns, newest first; `#` is the number `--full` takes. */
 export function formatTable(lines: readonly AgentTraceLine[], count: number): string {
   const rows = lines.slice(-count).reverse()
-  const header = ['#', 'time (UTC)', 'route', 'agent', 'model', 'outcome', 'retries', 'ms', 'first error or warning']
+  const header = ['#', 'time (UTC)', 'route', 'agent', 'model', 'bundle', 'outcome', 'retries', 'ms', 'first error or warning']
   const body = rows.map((l, i) => [
     String(i + 1),
     l.at.slice(5, 19).replace('T', ' '),
     l.route,
     l.agent ?? '-',
     l.model,
+    shortDigest(l.bundle?.digest),
     l.outcome,
     String(l.retries?.length ?? 0),
     String(l.ms),
@@ -74,6 +80,12 @@ export function formatFull(l: AgentTraceLine): string {
   const out: string[] = []
   out.push(`${l.at}  ${l.route}  ${l.outcome}  ${l.ms} ms`)
   out.push(`agent: ${l.agent ?? '-'}  provider: ${l.provider}  model: ${l.model}${l.effort ? `  effort: ${l.effort}` : ''}${l.mode ? `  mode: ${l.mode}` : ''}${l.catalogId ? `  catalog: ${l.catalogId}` : ''}`)
+  if (l.bundle !== undefined) {
+    // T-0163 (ACS-R13): the bundle digest this host recomputed, the client's claim when it differs, and
+    // every content item the turn ran with.
+    out.push(`bundle: ${l.bundle.digest}${l.bundle.claimed !== undefined && l.bundle.claimed !== l.bundle.digest ? `  (claimed ${l.bundle.claimed})` : ''}`)
+    for (const r of l.bundle.resolution ?? []) out.push(`  ${r.kind} ${r.id}${r.version !== null ? `@${r.version}` : ''}  ${r.source}  ${shortDigest(r.digest)}`)
+  }
   out.push('', 'user:', l.user)
   if (l.steps.length > 0) {
     out.push('', 'steps:')

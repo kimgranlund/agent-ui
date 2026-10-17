@@ -240,7 +240,7 @@ This SPEC adds nothing to that contract.
 
 ### 3.5 Composition
 
-*Planned change (T-0163, [agent-content](./agent-content.spec.md) ACS-R11 to R13):* one compiler,
+*Landed change (T-0163, [agent-content](./agent-content.spec.md) ACS-R11 to R13):* one compiler,
 `compile(agentManifest, overlay) -> { bundle, digest, resolution }`, becomes the only assembly path for Test Chat,
 the dev proxy, the Worker and the CLI. It wraps SPEC-R20 to R22 unchanged (`bundle.system` is byte-identical to
 `composeLiveSystemPrompt` for the same inputs) and adds a bundle digest and a resolution trace to every turn.
@@ -555,7 +555,8 @@ Added 2026-10-14 (T-0182, against main `968a02d7`): the content-model drift the
 10. The settings forms are hand-written (`agentConfigSchema`, SPEC-R11) beside the data they edit. Planned: T-0162
     (ACS-R10). Landed 2026-10-17: they derive from the persona kind schema, with provenance, diff and reset per row.
 11. No turn trace or debug bundle records which content versions a turn ran with, and the debug bundle's
-    `captures/` slot is never filled. Planned: T-0163 (ACS-R13).
+    `captures/` slot is never filled. Planned: T-0163 (ACS-R13). Landed 2026-10-17: the trace line's `bundle`,
+    the debug bundle's `content/` and `captures/` families.
 12. The agent manifests' digests are hand-refreshed by an armed writer (persona-catalog-composition SPEC-R7);
     T-0160 derives them from the registry, which amends that clause when it lands. Landed 2026-10-17 in part:
     `seedVersion` is generated from the registry; `seedDigest` stays the assembled-seed digest the writer

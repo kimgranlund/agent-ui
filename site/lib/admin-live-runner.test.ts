@@ -72,8 +72,11 @@ describe('createAdminAgentTurn', () => {
     const body = JSON.parse(init.body) as Record<string, unknown>
     expect('integrations' in body).toBe(false)
     // The WHOLE body, not just the absent key: `effort` is undefined here too, so this is exactly the
-    // shape the route saw before SPEC-R19 existed.
-    expect(Object.keys(body).sort()).toEqual(['messages', 'model', 'system'])
+    // shape the route saw before SPEC-R19 existed, plus T-0163's content stamp (a runner given no content
+    // sends the digest with an empty resolution).
+    expect(Object.keys(body).sort()).toEqual(['bundleDigest', 'messages', 'model', 'resolution', 'system'])
+    expect(body['bundleDigest']).toMatch(/^sha256:[0-9a-f]{64}$/)
+    expect(body['resolution']).toEqual([])
   })
 })
 
@@ -811,5 +814,63 @@ describe('reply note in history', () => {
 
   it('a turn with no note stores the lines alone, as before', async () => {
     expect(await storedAssistantTurn([SURFACE_LINE])).toBe(SURFACE_LINE)
+  })
+})
+
+// T-0163 review findings 1 and 5: the content stamp is trace-only and describes the turn's own driving store.
+describe('the request content stamp (T-0163)', () => {
+  const manifest = (id: string) => ({ id, version: 1, source: 'seed' as const })
+  const store = { get: (): unknown => undefined }
+
+  it('without Web Crypto (an insecure origin) both arms send the turn unstamped instead of failing it', async () => {
+    vi.stubGlobal('crypto', {})
+    const bodies: Record<string, unknown>[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init: { body: string }) => {
+        bodies.push(JSON.parse(init.body) as Record<string, unknown>)
+        return url.endsWith('/chat')
+          ? new Response(JSON.stringify({ text: 'still answered' }), { status: 200 })
+          : new Response(streamOfLines(['{"a2uiMeta":{"note":"still answered"}}']), { status: 200 })
+      }),
+    )
+    await expect(createAdminAgentTurn(() => ({ manifest: manifest('a'), store }))(REQUEST)).resolves.toBe('still answered')
+    const events: AdminSurfaceTurnEvent[] = []
+    for await (const ev of createAdminSurfaceTurn(() => ({ manifest: manifest('a'), store }))(SURFACE_REQUEST)) events.push(ev)
+    expect(events).toContainEqual({ kind: 'note', note: 'still answered' })
+    expect(bodies).toHaveLength(2)
+    for (const body of bodies) {
+      expect('bundleDigest' in body).toBe(false)
+      expect('resolution' in body).toBe(false)
+    }
+  })
+
+  it('the prose arm stamps the resolution of the Builder store when the Builder drives the turn', async () => {
+    const fetchSpy = vi.fn(async () => new Response(JSON.stringify({ text: 'ok' }), { status: 200 }))
+    vi.stubGlobal('fetch', fetchSpy)
+    const asked: string[] = []
+    const turn = createAdminAgentTurn((session) => {
+      asked.push(session)
+      return { manifest: manifest(session === 'authoring' ? 'builder' : 'concierge'), store }
+    })
+    await turn({ ...REQUEST, session: 'authoring' })
+    await turn(REQUEST)
+    expect(asked).toEqual(['authoring', 'test'])
+    const ids = fetchSpy.mock.calls.map((c) => ((JSON.parse(((c as unknown[])[1] as { body: string }).body) as { resolution: { id: string }[] }).resolution[0]!.id))
+    expect(ids).toEqual(['builder', 'concierge'])
+  })
+})
+
+describe('the surface runner capture (T-0163 review finding 7)', () => {
+  it('each turn-start keeps the turn input without the transcript; the capture session holds it once', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(streamOfLines(['{"a2uiMeta":{"note":"ok"}}']), { status: 200 })))
+    const runner = createAdminSurfaceTurn()
+    for (let i = 0; i < 2; i++) for await (const ev of runner(SURFACE_REQUEST)) void ev
+    const [only] = runner.captures()
+    const starts = only!.capture.timeline.filter((e) => e.kind === 'turn-start') as { input: { kind: string; session: { turns: unknown[] } } }[]
+    expect(starts).toHaveLength(2)
+    expect(starts.map((s) => s.input.session.turns.length)).toEqual([0, 0])
+    expect(starts.map((s) => s.input.kind)).toEqual(['intent', 'intent'])
+    expect(only!.capture.session.turns.length).toBe(4)
   })
 })

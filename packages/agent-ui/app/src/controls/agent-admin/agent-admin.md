@@ -24,6 +24,10 @@ attributes:              # attributes-as-API — mirrors agent-admin.ts `agentAd
     type: json             # a function (AdminAgentSurfaceTurn: (req) => AsyncIterable<event>) — the agentTurn discipline verbatim (attribute:false, the codec never runs)
     default: undefined     # undefined ⇒ the prose arms run unchanged; SET (DEV-only, TKT-0076/ADR-0138) it takes PRECEDENCE — turns stream validated A2UI wire lines into ingestLine (REAL inline surfaces, ADR-0129) and surface action clicks run the next turn via onClientMessage
     reflect: false
+  - name: contentManifest
+    type: json             # a JS object (ContentManifest, agent-compile.ts; T-0163): too structured to reflect (the schema/store precedent; attribute:false, the codec never runs)
+    default: undefined     # undefined ⇒ the Context view's agent item shows no content stamp; SET (by the page, from its content registry) it shows the bundle digest and the resolution
+    reflect: false
   - name: libraries
     type: json             # a JS object (Record<kind, EntryLibraryPack[]>, entries.ts; GH #47/#48) — too structured to reflect (the schema/store precedent; attribute:false, the codec never runs)
     default: undefined     # undefined/empty ⇒ no add-from-library affordance renders anywhere (byte-identical sections); the section SHELL is still compose-time-once, but the MENU inside it is reactive (GH #143) — a post-connect reassignment (new object reference) rebuilds it per kind
@@ -42,6 +46,8 @@ properties:
     description: An OPTIONAL injectable live-turn runner (`AdminAgentTurn` — `(req) => Promise<string>`, agent-admin-schema.ts) that, when set, replaces the deterministic stub with a real live model turn (TKT-0052/ADR-0136). Default `undefined` ⇒ the stub arm runs and the packaged component carries NO fetch/env/proxy code — the static docs build's "no external runtime dependency" guarantee (ADR-0131 cl.4/7) holds unchanged. The docs site page assigns a real runner ONLY under `import.meta.env.DEV` through the reused `dev-proxy-plugin.ts` trust boundary (ADR-0073), so a live call happens only in a local `vite dev` session with a configured provider key; a thrown/rejected runner degrades visibly via the conversation's `fail()` path, never a crash.
   - name: agentSurfaceTurn
     description: An OPTIONAL injectable SURFACE-turn runner (`AdminAgentSurfaceTurn` — `(req) => AsyncIterable<{kind:'line'}|{kind:'note'}>`, agent-admin-schema.ts; TKT-0076/ADR-0138). When set it takes precedence over `agentTurn` — each turn streams the a2ui producer's VALIDATED wire lines into `AgentTurnHandle.ingestLine` (real inline `ui-surface-host`s per surfaceId, ADR-0129) with the peeled ADR-0088 note rendered at finalize, and `onClientMessage` runs the next turn from a surface action click (the playable-game loop). The composed persona rides the producer's ADR-0138 persona seam. Same DEV-only injection + SPEC-N1 fence as `agentTurn`: the runner owns everything transport-shaped (the a2ui Session, the meta-line peel, provider pairing); the component never imports the fenced machinery.
+  - name: contentManifest
+    description: OPTIONAL content manifest of the active agent (`ContentManifest`, agent-compile.ts; T-0163, agent-content SPEC ACS-R13): its id, seed version, provenance (`seed`, `imported`, ...) and the seed version of each content item it refs, injected by the page from its registry. With it, the Context view's agent item carries `content`, the bundle digest and the resolution (every composed item with its version, digest and source; an item the user's overlay changed reads `user`), computed by the one compiler off the render path. Absent, the item shows neither; nothing else reads it.
   - name: libraries
     description: OPTIONAL entry-library packs keyed by entry kind (`Record<string, EntryLibraryPack[]>`, entries.ts; GH #47/#48) — each kind's packs render as that section's add-from-library menu, whose commits route through the SAME validated `onAdd` path as hand-authored entries (slug-dedup, order, enabled, deletable). Non-reflected pure type-carrier (the `schema`/`store` precedent). Reactive (GH #143, same identity-change law as `schema`/`store`) — a real reassignment (a new object reference) rebuilds each kind's add-from-library MENU in place via the `connected()` effect, letting a caller re-scope which packs a persona/preset sees without recreating the element; the section shell itself and its rendered entries are unaffected. Absent/empty ⇒ the affordance renders nowhere (byte-identical sections). Packs may also arrive from the imported-shelf store (ADR-0208 — `skill-packs:*` snapshots the page projects into this same prop), same commit path.
 
@@ -396,6 +402,18 @@ already are.
 listener and never forwarded to `onAgentSelect`. A consumer must not use either string as a roster
 entry's id. (Non-colliding by construction with the shipped page's slug-minted `[a-z0-9-]` ids — a colon
 cannot survive the slug.)
+
+### T-0163: the turn bundle accessor
+
+```ts
+turnBundle(store: SettingsStore | undefined, agentId: string): AgentBundle
+```
+
+A read-only accessor: the bundle a live turn on `store` would send for roster agent `agentId`, compiled by the
+one agent compiler (`agent-compile.ts`) with the inputs the live arms use: the composer's effort when
+`agentId` is the active agent (any other agent starts from its own default effort), and the team section when
+that agent is its team's GM. The page's debug export stamps each roster agent with it, so the stamped digest
+is the one a turn sends. It writes nothing.
 
 ### GH #889 — the dev-debug export: one FOURTH overflow item + two read-only transcript accessors
 

@@ -42,6 +42,8 @@
   latency per turn, section digests), and churn against a baseline round; `--floor <tag>=<rate>` and
   `--max-drop <delta>` exit 1 on a miss. Each archived round also gets them as `signals.md`. Home:
   `scripts/e2e-admin/probe/signals.ts`, README Live rounds, SPEC CL-R4 and CL-R9 (T-0342).
+- `node scripts/agent-content.mjs compile <persona> [--overlay <file>] [--json]`: the one agent compiler over the
+  seed files, printing the bundle digest and resolution Test Chat stamps and the trace line records (T-0163).
 - `npm run traces`: the last live agent turns from the dev proxy's git-ignored trace log
   (`.agent-traces/YYYY-MM-DD.jsonl`, one redacted line per turn, on under `npm run dev`, `A2UI_AGENT_TRACES=0`
   turns it off); `-- --full 1` prints the newest turn in full (T-0151). The prompt text each line's digests name

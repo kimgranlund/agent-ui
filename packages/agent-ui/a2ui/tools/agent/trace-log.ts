@@ -44,6 +44,8 @@ import { parseDomainCatalogId } from '../../src/catalog/catalog-id.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../../src/catalog/personas/manifests.ts'
 import type { TokenUsage, TurnProgress, TurnTrace } from '../../src/agent/meta-line.ts'
 import type { AgentProvider, ProviderEvent } from '../../src/agent/agent-transport.ts'
+import { bundleDigest, bundleFromWire, readBundleStamp } from '../../src/agent/agent-bundle.ts'
+import type { ResolutionEntry } from '../../src/agent/agent-bundle.ts'
 
 declare const process: { env: Record<string, string | undefined> }
 
@@ -203,6 +205,34 @@ export interface TraceEvents {
   complete?: true
 }
 
+/** T-0163 (agent-content SPEC ACS-R13): the agent content a turn ran with. `digest` is the bundle digest this
+ *  host recomputed from the request body (`agent-bundle.ts`), so it names what was actually sent; `claimed`
+ *  is the digest the client stamped, present only when the body carried one; `resolution` is the client's
+ *  list of every content item with its version, digest and source. */
+export interface TraceBundle {
+  digest: string
+  claimed?: string
+  resolution?: ResolutionEntry[]
+}
+
+/** The bundle a request body names: the digest recomputed over the fields the body carries (`system` is
+ *  the produce route's `personaSystem`), plus the client's stamp, validated fail-closed. */
+export async function traceBundle(body: {
+  system?: unknown
+  model?: unknown
+  modelSettings?: unknown
+  integrations?: unknown
+  bundleDigest?: unknown
+  resolution?: unknown
+}): Promise<TraceBundle> {
+  const stamp = readBundleStamp(body.bundleDigest, body.resolution)
+  return {
+    digest: await bundleDigest(bundleFromWire(body)),
+    ...(stamp.digest !== undefined ? { claimed: stamp.digest } : {}),
+    ...(stamp.resolution !== undefined ? { resolution: stamp.resolution } : {}),
+  }
+}
+
 /** One line of `.agent-traces/YYYY-MM-DD.jsonl`. */
 export interface AgentTraceLine {
   v: typeof TRACE_LINE_VERSION
@@ -226,6 +256,9 @@ export interface AgentTraceLine {
   runId?: string
   trace?: Pick<TurnTrace, 'rounds' | 'healed' | 'failureCodes' | 'exemplarIds'> & { promptChars?: number; promptOver?: boolean }
   routing?: TraceRouting
+  /** T-0163: the agent content the turn ran with; absent on a turn whose body named no agent (no stamp, and
+   *  no persona on the produce route or agent label on the chat route). */
+  bundle?: TraceBundle
   /** T-0259: retrieval, framing and tool-result ids; absent on a `/chat` turn and on a turn rejected before retrieval. */
   events?: TraceEvents
   reply?: string
@@ -508,6 +541,7 @@ export class TurnTraceCollector {
   #system: string | undefined
   #roundUser: Array<string | undefined> = []
   #promptFiles = new Map<string, string>()
+  #bundle: TraceBundle | undefined
 
   constructor(start: TurnTraceStart, now: () => number = Date.now) {
     this.#start = start
@@ -666,6 +700,11 @@ export class TurnTraceCollector {
 
   /** T-0239: the host-known routing: the effective catalog, the persona section's index lines, and the
    *  entries framed whole into this message or an earlier user turn. Only names and kinds are kept. */
+  /** T-0163: the turn's agent content (`traceBundle`). */
+  noteBundle(bundle: TraceBundle): void {
+    this.#bundle = bundle
+  }
+
   noteRouting(catalogId: string, personaSystem: string | undefined, history: readonly unknown[] = []): void {
     const references = [
       ...indexedReferences(personaSystem ?? ''),
@@ -726,6 +765,8 @@ export class TurnTraceCollector {
     if (t?.prompt?.over) warnings.push(`prompt over budget: ${t.prompt.total} > ${t.prompt.limit} chars`)
     if (t !== undefined && t.healed > 0) warnings.push(`healer corrected ${t.healed} line(s)`)
     for (const r of this.#rounds) if (r.error !== undefined && error === undefined) warnings.push(`round ${r.round}: ${r.error}`)
+    const bundle = this.#bundle
+    if (bundle?.claimed !== undefined && bundle.claimed !== bundle.digest) warnings.push(`bundle digest mismatch: the request claimed ${bundle.claimed}, the body digests to ${bundle.digest}`)
     this.#promptFiles = new Map()
     const routing = this.#routingFor(t, secrets)
     return {
@@ -759,6 +800,7 @@ export class TurnTraceCollector {
           }
         : {}),
       ...(routing !== undefined ? { routing } : {}),
+      ...(bundle !== undefined ? { bundle } : {}),
       ...(this.#context !== undefined ? { events: this.#eventsFor(t !== undefined) } : {}),
       ...(reply !== undefined ? { reply: cap(reply) } : {}),
       warnings,

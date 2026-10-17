@@ -180,9 +180,10 @@ export type FlowOutcome =
   | { kind: 'crash'; message: string }
   | { kind: 'timeout'; message: string }
 
-/** Red the flow when its wire log holds an unmatched or exhausted entry or a scripted turn stayed unused. */
+/** Red the flow when its wire log holds an unmatched, exhausted or drifted (T-0163, an `agent@digest` pin the
+ *  request missed) entry or a scripted turn stayed unused. */
 export function assertWireClean(wire: WireLog): void {
-  const bad = wire.entries.filter((e) => e.outcome === 'unmatched' || e.outcome === 'exhausted')
+  const bad = wire.entries.filter((e) => e.outcome === 'unmatched' || e.outcome === 'exhausted' || e.outcome === 'drifted')
   if (bad.length > 0) {
     const list = bad.map((e) => `${e.outcome} ${e.endpoint} #${e.seq}${e.turnIndex !== undefined ? ` (turns[${e.turnIndex}])` : ''}`)
     throw new FlowAssertion(`wire log holds ${list.join(', ')}`)

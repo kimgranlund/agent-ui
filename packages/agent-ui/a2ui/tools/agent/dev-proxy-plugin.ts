@@ -105,7 +105,7 @@ import {
 import type { ChatDispatch } from './chat-validation.ts'
 // T-0151: the per-turn trace log (`.agent-traces/YYYY-MM-DD.jsonl`), Node-only and dev-only like this file.
 import { readRunId, RUN_ID_HEADER } from './run-id.ts'
-import { TurnTraceCollector, agentLabel, appendTraceLine, defaultTracing, devFailureReason, TRACE_DIR_NAME } from './trace-log.ts'
+import { TurnTraceCollector, agentLabel, appendTraceLine, defaultTracing, devFailureReason, traceBundle, TRACE_DIR_NAME } from './trace-log.ts'
 export { validateMode, validateGenuiSurface, validateA2uiEnabled, validateAuthoringSurface, validateEffort, isChatBody, resolveChatDispatch }
 export type { ChatDispatch }
 
@@ -355,7 +355,11 @@ export function a2uiDevProxyPlugin(opts?: {
                 effort?: unknown
                 integrations?: unknown
                 modelSettings?: unknown
+                bundleDigest?: unknown
+                resolution?: unknown
               }
+              // T-0163: the client's content stamp, read before the guard narrows the body's type.
+              const chatStamp = { bundleDigest: body.bundleDigest, resolution: body.resolution }
               // ADR-0168 cl.5 (GH #402) — read BEFORE the guard: `isChatBody`'s predicate deliberately does
               // not mention `integrations` (the field is optional and fail-closed downstream, so it is no
               // part of the 400 contract), and narrowing to that predicate type drops the key.
@@ -379,6 +383,12 @@ export function a2uiDevProxyPlugin(opts?: {
                 ...(chatAgent !== undefined ? { agent: chatAgent } : {}),
                 ...(effort !== undefined ? { effort } : {}),
               })
+              // T-0163 (ACS-R13): a turn that names an agent (an agent label or a stamp; every /chat body carries
+              // a system prompt, so that alone names none) records its bundle digest, recomputed from this body,
+              // beside the client's stamp.
+              if (chatAgent !== undefined || chatStamp.bundleDigest !== undefined) {
+                trace.noteBundle(await traceBundle({ system, model, modelSettings: chatModelSettings, integrations: chatIntegrations, ...chatStamp }))
+              }
               if (!dispatch.ok) {
                 trace.reject(dispatch.status, dispatch.error)
                 writeTrace(trace)
@@ -453,7 +463,7 @@ export function a2uiDevProxyPlugin(opts?: {
 
             // POST — run one turn and stream validated A2UI JSONL back.
             if (req.method === 'POST') {
-              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, modelSettings, responsePreference, prefers, catalogId, agent } = JSON.parse(await readBody(req)) as {
+              const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, modelSettings, responsePreference, prefers, catalogId, agent, bundleDigest, resolution } = JSON.parse(await readBody(req)) as {
                 input: TurnInput
                 provider: string
                 model: string
@@ -474,6 +484,9 @@ export function a2uiDevProxyPlugin(opts?: {
                 responsePreference?: unknown
                 prefers?: unknown
                 catalogId?: unknown
+                /** T-0163: the client's content stamp (the bundle digest and the resolution), for the trace only. */
+                bundleDigest?: unknown
+                resolution?: unknown
               }
               const turnAgent = agentLabel(agent, catalogId)
               const turnEffort = validateEffort(effort)
@@ -490,6 +503,11 @@ export function a2uiDevProxyPlugin(opts?: {
                 ...(turnMode !== undefined ? { mode: turnMode } : {}),
                 ...(typeof catalogId === 'string' ? { catalogId } : {}),
               })
+              // T-0163 (ACS-R13): a turn that names an agent (a persona or a stamp) records its bundle digest,
+              // recomputed from this body, beside the client's stamp.
+              if (typeof personaSystem === 'string' || bundleDigest !== undefined) {
+                trace.noteBundle(await traceBundle({ system: personaSystem, model, modelSettings, integrations, bundleDigest, resolution }))
+              }
               const rejectTurn = (status: number, error: string): void => {
                 trace.reject(status, error)
                 writeTrace(trace)

@@ -138,7 +138,7 @@ Gates are opt-in flags and reuse the `floorMet` reading of [`lld/genui-b3-judged
 
 ### CL-R10: digest-affected selection (planned, T-0179; depends T-0163)
 
-`--affected` runs only the scenarios whose persona bundle digest differs from the one recorded in the baseline. Until T-0163 ships `compile()` digests, `--affected` is refused with a usage error rather than approximated.
+`--affected` runs only the scenarios whose persona bundle digest differs from the one recorded in the baseline. T-0163 shipped the digests (each trace line's `bundle.digest`, and `node scripts/agent-content.mjs compile <persona> --json` for the current tree); the flag itself lands with `probe/scenarios/plan.ts` (T-0343), and until then it is refused with a usage error rather than approximated.
 
 ### CL-R11: the live round (shipped, T-0184, T-0225, T-0241)
 

@@ -988,6 +988,9 @@ export interface AdminTurnRequest {
   integrations?: readonly string[]
   /** Prior completed turns only — NOT including `text` (the runner appends the user message itself). */
   history: readonly AdminTurn[]
+  /** T-0163: `'authoring'` when the Builder interview's store drives this turn, so the runner stamps the
+   *  resolution of that agent; absent for the test context (the surface arm's `session` convention). */
+  session?: 'authoring'
 }
 
 // ── the SURFACE-capable live turn (TKT-0076/ADR-0138) ────────────────────────────────────────────────

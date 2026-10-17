@@ -22,6 +22,7 @@
 // edit, the default), `builder` (an applied Builder `personaPatch`) or `pack` (an entry added from a
 // library pack). `user` is stored as no `source` member, so a user op keeps its pre-T-0162 shape. A place
 // with no op reads `seed`. `provenanceAt` answers one place's provenance.
+import { canonicalJson } from '@agent-ui/a2ui/agent/agent-bundle'
 import type { SettingsStore } from '../settings/store.ts'
 
 /** The surface an op was written by (ACS-R8). */
@@ -100,17 +101,11 @@ export interface OverlayAddress {
 
 // ── value helpers ────────────────────────────────────────────────────────────────────────────────────
 
-/** JSON with object keys sorted: the equality and fingerprint basis (JSON drops `undefined` members,
- *  exactly as the StorageAdapter encoding does, so equal here means equal after a reload). */
+/** The repo's one canonical JSON (T-0163, `@agent-ui/a2ui/agent/agent-bundle`): the equality and fingerprint
+ *  basis (it drops `undefined` members, exactly as the StorageAdapter encoding does, so equal here means
+ *  equal after a reload). An absent value reads `undefined`, distinct from `null`. */
 function canonical(value: unknown): string {
-  if (value === undefined) return 'undefined'
-  if (value === null || typeof value !== 'object') return JSON.stringify(value) ?? 'undefined'
-  if (Array.isArray(value)) return `[${value.map((v) => (v === undefined ? 'null' : canonical(v))).join(',')}]`
-  const record = value as Record<string, unknown>
-  const keys = Object.keys(record)
-    .filter((k) => record[k] !== undefined)
-    .sort()
-  return `{${keys.map((k) => `${JSON.stringify(k)}:${canonical(record[k])}`).join(',')}}`
+  return value === undefined ? 'undefined' : canonicalJson(value)
 }
 
 const same = (a: unknown, b: unknown): boolean => a === b || canonical(a) === canonical(b)

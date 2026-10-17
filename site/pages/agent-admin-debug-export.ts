@@ -19,6 +19,7 @@ import type { ZipEntryInput } from '../lib/zip-writer.ts'
 // second writer of the shape (ADR-0200 Consequences' one-format-module law).
 import { serializeCapture } from '@agent-ui/devtools'
 import type { DevtoolsCapture } from '@agent-ui/devtools'
+import type { BundleStamp } from '@agent-ui/a2ui/agent/agent-bundle'
 
 /** The format this build writes. Bumped only if the manifest/layout shape changes in a way a consumer of
  *  the bundle would need to know about — the `PERSONA_FILE_VERSION` precedent, scoped to this bundle.
@@ -50,6 +51,9 @@ export interface DebugBundleManifest {
      *  captures — a bundle without any is byte-identical to the pre-extension shape, so every
      *  pre-existing reader parses unchanged (the additive proof in this module's test suite). */
     captures?: string[]
+    /** T-0163 (agent-content SPEC ACS-R13), ADDITIVE-optional by the same law: one `content/<agent-id>.json`
+     *  per agent, its bundle digest and resolution (which content versions it runs with, from where). */
+    content?: string[]
   }
 }
 
@@ -72,6 +76,9 @@ export interface DebugBundleInput {
    *  under a caller-named id (`captures/<id>.json`). Absent/empty ⇒ the family is omitted ENTIRELY
    *  (no folder, no manifest field) — the additive-optional law. */
   captures?: readonly { id: string; capture: DevtoolsCapture }[]
+  /** T-0163: each agent's content stamp (the compiler's bundle digest and resolution). Absent/empty ⇒ the
+   *  family is omitted entirely, as `captures` is. */
+  content?: readonly { agentId: string; stamp: BundleStamp }[]
   now?: Date
 }
 
@@ -125,6 +132,17 @@ export function buildDebugBundle(input: DebugBundleInput): { entries: ZipEntryIn
     captureFiles.push(path)
   }
 
+  // T-0163: the content family, the captures family's additive law: no stamps ⇒ no entries, no manifest field.
+  const contentFiles: string[] = []
+  for (const { agentId, stamp } of input.content ?? []) {
+    if (!/^[A-Za-z0-9._-]+$/.test(agentId) || agentId === '.' || agentId === '..') {
+      throw new Error(`debug-export: invalid agent id ${JSON.stringify(agentId)}: expected [A-Za-z0-9._-]+`)
+    }
+    const path = `content/${agentId}.json`
+    entries.push({ path, data: prettyJson(stamp) })
+    contentFiles.push(path)
+  }
+
   const manifest: DebugBundleManifest = {
     kind: 'agent-ui-dev-debug-bundle',
     version: DEBUG_BUNDLE_VERSION,
@@ -136,6 +154,7 @@ export function buildDebugBundle(input: DebugBundleInput): { entries: ZipEntryIn
       testChat: [testChatPath],
       builderInterview: [builderInterviewPath],
       ...(captureFiles.length > 0 ? { captures: captureFiles } : {}),
+      ...(contentFiles.length > 0 ? { content: contentFiles } : {}),
     },
   }
   entries.push({ path: 'manifest.json', data: prettyJson(manifest) })

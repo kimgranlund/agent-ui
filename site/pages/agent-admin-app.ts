@@ -85,6 +85,7 @@ import { effect, signal } from '@agent-ui/components'
 import { createStore, mutation, resource, type SourceContext, type Store } from '@agent-ui/data'
 import { applyRosterOrder, type AgentRosterView } from '@agent-ui/app/agent-admin-roster-source'
 import {
+  builderPersona,
   builderStore,
   loadModifiedAt,
   personaInstantiated,
@@ -94,6 +95,10 @@ import {
   rosterSource,
   type Persona,
 } from './agent-admin-presets.ts'
+// T-0163 (agent-content SPEC ACS-R11 to R13): the one compiler's site side, for the Context view's content
+// stamp and every live turn's bundle digest and resolution.
+import { contentManifestFor, turnStamp, type TurnContent } from '../lib/agent-compile.ts'
+import type { AdminSurfaceRunner } from '../lib/admin-live-runner.ts'
 import { duplicatePersonaFrom, exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
 import { buildDebugBundle, debugBundleFileName } from './agent-admin-debug-export.ts'
 import { buildZip } from '../lib/zip-writer.ts'
@@ -649,6 +654,7 @@ function applyPersona(persona: Persona): void {
   // BEFORE the store swap, makes the ordering deterministic (exit the flow → GH #145's reset → optionally
   // re-enter), so switching personas can never leave a previous draft's interview armed over a new one.
   admin.authoringStore = undefined
+  admin.contentManifest = contentManifestFor(persona) // T-0163: set before the store, so its first Context render has it
   admin.store = personaStore(persona)
   // GH #1537 — the name-unify subscription FOLLOWS the active persona: tear down the previous persona's
   // listener before arming this one (a rename on persona A must never rename persona B), and re-arm even
@@ -730,8 +736,22 @@ async function exportDebugBundle(): Promise<void> {
   )
   let built: ReturnType<typeof buildDebugBundle>
   try {
+    // T-0163 (ACS-R13): every agent's content stamp, compiled from its own store with the inputs a live turn
+    // uses (`turnBundle`: the composer's effort, the team section), and the live session's devtools captures
+    // (the slot this export never filled before). A stamp that cannot be taken is left out, never fatal.
+    const content = (
+      await Promise.all(
+        currentRoster().map(async (persona) => {
+          const store = personaStore(persona)
+          const stamp = await turnStamp(admin.turnBundle(store, persona.id), { manifest: contentManifestFor(persona), store: store as TurnContent['store'] })
+          return stamp === undefined ? [] : [{ agentId: persona.id, stamp }]
+        }),
+      )
+    ).flat()
     built = buildDebugBundle({
       agents,
+      content,
+      captures: surfaceRunner?.captures() ?? [],
       activeAgentId: activeAgent().id,
       testChatTranscript: admin.testChatTranscript(),
       builderInterviewTranscript: admin.builderInterviewTranscript(),
@@ -1721,19 +1741,34 @@ listReorder(drawer, {
 // work (its trailing console.info + live-overlay reads) instead of letting it land during environment
 // teardown. It never rejects: the whole body is in the try/catch below. Zero production cost — the same
 // one promise the page already started, now with a name.
+/** T-0163: the armed surface runner, whose devtools captures the debug bundle carries. */
+let surfaceRunner: AdminSurfaceRunner | undefined
+
+/** T-0163: the content a live turn runs with, for its stamp: the Builder interview's own persona and store,
+ *  or the active agent's. Read at turn time, so a persona switch is never stale. */
+function turnContentFor(session: string): TurnContent | undefined {
+  if (session === 'authoring') {
+    const store = admin.authoringStore
+    return store === undefined ? undefined : { manifest: contentManifestFor(builderPersona()), store }
+  }
+  const active = activeAgent()
+  return { manifest: contentManifestFor(active), store: personaStore(active) as TurnContent['store'] }
+}
+
 export const bootProbeSettled: Promise<void> = (async () => {
   try {
     const overlay = await import('../lib/admin-live-runner.ts')
     const probe = await overlay.probeLive()
     if (probe.available) {
-      admin.agentTurn = overlay.createAdminAgentTurn()
+      admin.agentTurn = overlay.createAdminAgentTurn(turnContentFor)
       // The SURFACE arm (TKT-0076/ADR-0138) — takes precedence over the text runner above: turns run
       // through the a2ui producer (persona riding the ADR-0138 seam) and stream REAL surfaces into the
       // conversation. A fresh runner per persona switch = a fresh producer session per persona.
       armSurfaceTurn = () => {
         // ADR-0198 — every armed runner rides the page's flow-chrome wrapper (flowEnd → the shared
         // end-of-flow affordance; the event is filtered before the component sees it).
-        admin.agentSurfaceTurn = withFlowChrome(overlay.createAdminSurfaceTurn())
+        surfaceRunner = overlay.createAdminSurfaceTurn(turnContentFor)
+        admin.agentSurfaceTurn = withFlowChrome(surfaceRunner)
       }
       armSurfaceTurn()
       console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s)) — surface turns armed`)
