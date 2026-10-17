@@ -3,15 +3,17 @@
 // `runs/<name>/report.json` by `out` and their trace lines by `traces` ranges, in memory, never stored. A round with
 // no ledger (r1, r2, t0208) is read from its reports alone, cost and turns unknown.
 //
-// usage: npm run eval:signals -- --round <folder>... [--all] [--against <folder>] [--floor <tag>=<rate>]...
-//          [--max-drop <delta>] [--min-samples <n>] [--rounds-dir <dir>] [--json]
+// usage: npm run eval:signals -- (--round <folder> [--round <folder>]... | --all) [--against <folder>]
+//          [--floor <tag>=<rate>]... [--max-drop <delta>] [--min-samples <n>] [--rounds-dir <dir>] [--json]
 //
-// `--round` names a folder under `.sdlc/evals/rounds/` (`2026-10-17-r9-matrix`) or a path; several are read as one.
+// `--round` names one folder under `.sdlc/evals/rounds/` (`2026-10-17-r9-matrix`) or a path; repeat the flag to read
+// several as one. A stray argument, an unknown flag or an unknown floor tag exits 2.
 // `--against <folder>` prints the churn of every cell against that round, the baseline (CL-R9). Gates are opt-in:
 // `--floor <tag>=<rate>` (tag regression, routing, long, other or all) and `--max-drop <delta>` exit 1 on a cell
 // under its floor or one whose pass rate fell by more than the delta, reading per cell as `floorMet` does in
 // `tools/corpus-genui/legs/report.ts`: a missing report counts as a fail, a baseline cell with zero samples now
-// fails, and a cell with fewer than `--min-samples` (default 3) samples is reported, not gated. Exit 2 on usage.
+// fails its floor and counts as a drop to 0, and a cell with fewer than `--min-samples` (default 3) samples on a side
+// it is read from is reported, not gated. Rates compare with a 1e-9 slack, so a drop of exactly the delta passes.
 //
 // A cell is scenario x model family x effort. Its state for churn is pass only when every sample passed, so a mixed
 // cell counts as a fail.
@@ -40,7 +42,6 @@ export interface Turn {
   model: string
   outcome: string
   ms: number | null
-  costUsd: number
   rounds: TraceRound[]
   failureCodes: string[]
   sections: Array<{ id: string; digest: string }>
@@ -92,7 +93,6 @@ function toTurn(d: Record<string, unknown>): Turn {
     model,
     outcome: str(d.outcome),
     ms: typeof d.ms === 'number' ? d.ms : null,
-    costUsd: usageCost(model, d.usage as TraceUsage | undefined),
     rounds: Array.isArray(d.rounds) ? (d.rounds as TraceRound[]) : [],
     failureCodes: ((d.trace as { failureCodes?: unknown[] } | undefined)?.failureCodes ?? []).filter((c): c is string => typeof c === 'string'),
     sections: (routing?.sections ?? []).filter((s) => typeof s.id === 'string' && typeof s.digest === 'string').map((s) => ({ id: s.id as string, digest: s.digest as string })),
@@ -111,8 +111,9 @@ export function readRound(dir: string): SignalRun[] {
     }
     return days.get(file) ?? []
   }
-  const run = (name: string, report: Record<string, unknown> | undefined, row: Record<string, unknown> | undefined): SignalRun => {
-    const { scenario, sample } = runNameParts(name)
+  const run = (name: string, siblings: string[], report: Record<string, unknown> | undefined, row: Record<string, unknown> | undefined): SignalRun => {
+    // The ledger's own `scenario` predates T-0342 on older rounds (T-0329 bucketed every sample), so it is rederived.
+    const { scenario, sample } = runNameParts(name, siblings)
     const v = (row !== undefined && 'verdict' in row ? row.verdict : report?.verdict) as unknown
     const turns: Turn[] = []
     for (const t of (row?.traces as Array<{ file?: string; from?: number; to?: number }> | undefined) ?? []) {
@@ -126,7 +127,7 @@ export function readRound(dir: string): SignalRun[] {
       round,
       name,
       scenario,
-      sample: typeof row?.sample === 'number' ? row.sample : sample,
+      sample,
       agent: str(row?.agent) || str(report?.agent),
       model: str(row?.model) || str(report?.model),
       effort: str(row?.effort) || 'default',
@@ -138,20 +139,17 @@ export function readRound(dir: string): SignalRun[] {
   }
   const ledger = join(dir, 'ledger.jsonl')
   if (existsSync(ledger)) {
-    return jsonLines(ledger)
-      .filter((row) => typeof row.out === 'string')
-      .map((row) => {
-        const name = basename(row.out as string)
-        return run(str(row.name) || name, readJson(join(dir, 'runs', name, 'report.json')), row)
-      })
+    const rows = jsonLines(ledger).filter((row) => typeof row.out === 'string')
+    const names = rows.map((row) => str(row.name) || basename(row.out as string))
+    return rows.map((row, i) => run(names[i], names, readJson(join(dir, 'runs', basename(row.out as string), 'report.json')), row))
   }
   const runs = join(dir, 'runs')
   if (!existsSync(runs)) return []
-  return readdirSync(runs, { withFileTypes: true })
+  const names = readdirSync(runs, { withFileTypes: true })
     .filter((e) => e.isDirectory() && existsSync(join(runs, e.name, 'report.json')))
     .map((e) => e.name)
     .sort()
-    .map((name) => run(name, readJson(join(runs, name, 'report.json')), undefined))
+  return names.map((name) => run(name, names, readJson(join(runs, name, 'report.json')), undefined))
 }
 
 /** Several round folders read as one. */
@@ -361,35 +359,39 @@ export interface GateMiss {
   reason: string
 }
 
-/** The cells that miss a floor or drop past the delta. Cells are the current round's plus the baseline's, so a
- *  baseline cell with no sample now fails its floor rather than being skipped. */
+/** Rates are compared with this slack, so a drop of exactly the delta (9 of 10 to 7 of 10 at 0.2) is not a miss. */
+const EPS = 1e-9
+
+/** The cells that miss a floor or drop past the delta. Cells are the current round's plus the baseline's. A cell is
+ *  gated only with at least `minSamples` samples on each side it is read from; a baseline cell with no sample now
+ *  is the exception both gates catch: it fails its floor and counts as a drop to 0, never skipped. */
 export function gate(current: SignalRun[], base: SignalRun[] | undefined, o: GateOptions): { misses: GateMiss[]; ungated: string[] } {
   const now = new Map(cellsOf(current).map((c) => [c.key, c]))
   const before = new Map(cellsOf(base ?? []).map((c) => [c.key, c]))
   const keys = [...new Set([...now.keys(), ...before.keys()])].sort()
   const misses: GateMiss[] = []
-  const ungated: string[] = []
+  const ungated = new Set<string>()
+  const enough = (x: Cell): boolean => x.runs >= o.minSamples
   for (const key of keys) {
     const c = now.get(key)
     const b = before.get(key)
     const tag = (c ?? b)!.tag
     const floor = o.floors[tag] ?? o.floors.all
-    if (c === undefined) {
-      if (floor !== undefined) misses.push({ cell: key, reason: `no sample (the ${tag} floor is ${floor})` })
-      continue
+    if (floor !== undefined) {
+      if (c === undefined) misses.push({ cell: key, reason: `no sample (the ${tag} floor is ${floor})` })
+      else if (!enough(c)) ungated.add(key)
+      else if (c.pass < floor * c.runs - EPS) misses.push({ cell: key, reason: `${c.pass} of ${c.runs} under the ${tag} floor ${floor}` })
     }
-    if (c.runs < o.minSamples) {
-      if (floor !== undefined || o.maxDrop !== undefined) ungated.push(key)
-      continue
-    }
-    const rate = c.pass / c.runs
-    if (floor !== undefined && rate < floor) misses.push({ cell: key, reason: `${c.pass} of ${c.runs} under the ${tag} floor ${floor}` })
-    if (o.maxDrop !== undefined && b !== undefined && b.runs >= o.minSamples) {
-      const was = b.pass / b.runs
-      if (was - rate > o.maxDrop) misses.push({ cell: key, reason: `dropped ${was.toFixed(2)} to ${rate.toFixed(2)} (more than ${o.maxDrop})` })
+    if (o.maxDrop !== undefined && b !== undefined) {
+      if (!enough(b) || (c !== undefined && !enough(c))) ungated.add(key)
+      else {
+        const was = b.pass / b.runs
+        const rate = c === undefined ? 0 : c.pass / c.runs
+        if (was - rate > o.maxDrop + EPS) misses.push({ cell: key, reason: `dropped ${was.toFixed(2)} to ${rate.toFixed(2)}${c === undefined ? ' (no sample now)' : ''} (more than ${o.maxDrop})` })
+      }
     }
   }
-  return { misses, ungated }
+  return { misses, ungated: [...ungated] }
 }
 
 const usd = (n: number | null): string => (n === null ? 'unknown' : n.toFixed(2))
@@ -487,7 +489,10 @@ export function writeSignals(roundDir: string): string {
 }
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
-const USAGE = 'usage: npm run eval:signals -- --round <folder>... [--all] [--against <folder>] [--floor <tag>=<rate>]... [--max-drop <delta>] [--min-samples <n>] [--rounds-dir <dir>] [--json]\n'
+export const FLOOR_TAGS = ['regression', 'routing', 'long', 'other', 'all'] as const
+const VALUE_FLAGS = ['--round', '--against', '--floor', '--max-drop', '--min-samples', '--rounds-dir']
+const BARE_FLAGS = ['--all', '--json']
+const USAGE = 'usage: npm run eval:signals -- (--round <folder> [--round <folder>]... | --all) [--against <folder>] [--floor <tag>=<rate>]... [--max-drop <delta>] [--min-samples <n>] [--rounds-dir <dir>] [--json]\n'
 
 /** The CLI; returns the exit code. */
 export function main(argv: string[], write: (s: string) => void = (s) => void process.stdout.write(s)): number {
@@ -497,9 +502,12 @@ export function main(argv: string[], write: (s: string) => void = (s) => void pr
   }
   const values = (flag: string): string[] => argv.flatMap((a, i) => (a === flag && argv[i + 1] !== undefined ? [argv[i + 1]] : []))
   const one = (flag: string): string | undefined => values(flag).at(-1)
-  const known = new Set(['--round', '--all', '--against', '--floor', '--max-drop', '--min-samples', '--rounds-dir', '--json'])
-  const unknown = argv.find((a, i) => a.startsWith('--') && !known.has(a) && !['--round', '--against', '--floor', '--max-drop', '--min-samples', '--rounds-dir'].includes(argv[i - 1] ?? ''))
-  if (unknown !== undefined) return fail(`unknown flag ${unknown}`)
+  for (let i = 0; i < argv.length; i += 1) {
+    if (VALUE_FLAGS.includes(argv[i])) {
+      if (argv[i + 1] === undefined || argv[i + 1].startsWith('--')) return fail(`${argv[i]} needs a value`)
+      i += 1
+    } else if (!BARE_FLAGS.includes(argv[i])) return fail(argv[i].startsWith('--') ? `unknown flag ${argv[i]}` : `unexpected argument ${argv[i]} (one value per --round; repeat the flag)`)
+  }
   const roundsDir = one('--rounds-dir') ?? join(ROOT, EVALS_ROUNDS)
   const locate = (r: string): string | undefined => [isAbsolute(r) ? r : join(roundsDir, r), resolve(r)].find((p) => existsSync(p))
 
@@ -515,6 +523,7 @@ export function main(argv: string[], write: (s: string) => void = (s) => void pr
   for (const f of values('--floor')) {
     const m = /^([a-z]+)=(0(?:\.\d+)?|1(?:\.0+)?)$/.exec(f)
     if (m === null) return fail(`--floor takes <tag>=<rate between 0 and 1>, got ${f}`)
+    if (!(FLOOR_TAGS as readonly string[]).includes(m[1])) return fail(`--floor tag ${m[1]} is not one of ${FLOOR_TAGS.join(', ')}`)
     floors[m[1]] = Number(m[2])
   }
   const num = (flag: string, fallback?: number): number | undefined | null => {

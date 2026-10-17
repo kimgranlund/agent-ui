@@ -22,8 +22,7 @@ export interface TraceUsage {
 
 /** The estimated USD of one usage block at the PRICES table; cache reads priced as input, cache writes at 1.25x. */
 export function usageCost(model: unknown, u: TraceUsage = {}): number {
-  const m = String(model ?? '')
-  const [inPrice, outPrice] = PRICES[Object.keys(PRICES).find((k) => m.includes(k)) ?? FALLBACK]
+  const [inPrice, outPrice] = PRICES[modelFamily(String(model ?? ''))] ?? PRICES[FALLBACK]
   const input = (u.inputTokens ?? 0) + (u.cacheReadInputTokens ?? 0) + 1.25 * (u.cacheCreationInputTokens ?? 0)
   return (input * inPrice + (u.outputTokens ?? 0) * outPrice) / 1e6
 }
@@ -33,10 +32,15 @@ export function modelFamily(model: string): string {
   return Object.keys(PRICES).find((k) => model.includes(k)) ?? (model === '' ? 'default' : model)
 }
 
-/** The scenario and sample a probe run name encodes: `<scenario>-<model family>-<n>` (the round generators) or
- *  `<scenario>-<n>` (T-0329's samples, `t0329-mix-7`). A name with no numeric tail is its own scenario, sample 1
- *  (`t0329-mix-pontoon`). The family is matched first, so `spanish-21-haiku-1` keeps its `21`. */
-export function runNameParts(name: string): { scenario: string; sample: number } {
-  const m = /^(.+?)(?:-(?:haiku|sonnet|opus))?-(\d+)$/.exec(name)
-  return m === null ? { scenario: name, sample: 1 } : { scenario: m[1], sample: Number(m[2]) }
+/** The scenario and sample a probe run name encodes. `<scenario>-<model family>-<n>` (the round generators) always
+ *  ends in its sample, and the family is matched first, so `spanish-21-haiku-1` keeps its `21`. A bare `-<n>` tail
+ *  with no family before it is a sample only when another of `siblings` (the round's other run names) shares the
+ *  stem with a different number: T-0329's `t0329-mix-1` to `-30`. A lone one is part of the scenario
+ *  (`regress-croupier-spanish-21`), and a name with no numeric tail is its own scenario (`t0329-mix-pontoon`). */
+export function runNameParts(name: string, siblings: readonly string[] = []): { scenario: string; sample: number } {
+  const family = /^(.+)-(?:haiku|sonnet|opus)-(\d+)$/.exec(name)
+  if (family !== null) return { scenario: family[1], sample: Number(family[2]) }
+  const bare = /^(.+)-(\d+)$/.exec(name)
+  if (bare !== null && siblings.some((s) => s !== name && /^(.+)-\d+$/.exec(s)?.[1] === bare[1])) return { scenario: bare[1], sample: Number(bare[2]) }
+  return { scenario: name, sample: 1 }
 }

@@ -20,8 +20,8 @@
 // the round folder (the one holding `runs/`) gets `traces/` (the `.agent-traces` lines inside the round window, per
 // day file), `ledger.jsonl` (one row per run with its trace line ranges, tokens and estimated cost) and `round.json`
 // (the manifest). Writing after every run is what survives a kill, since `spawnSync` blocks signal handlers. It also
-// writes `signals.md` (the round's tables, `signals.ts`, T-0342) and `README.md`, the entry file that explains every
-// file present; `--describe <round dir>` writes only that
+// writes `README.md`, the entry file that explains every file present, and the final archive writes `signals.md`
+// (the round's tables, `signals.ts`, T-0342); `--describe <round dir>` writes only the
 // README for an existing folder (a round backfilled by hand), inventorying what is actually there.
 //
 // T-0260: `--describe <live-commands.sh>` (and `--dry-run`) parse every probe command as the probe would, keyless,
@@ -266,6 +266,9 @@ export interface ArchiveOptions {
   liveCommands: string
   cap: number
   stop: 'done' | 'cap' | 'crash'
+  /** T-0342: the last archive of this invocation, which also writes `signals.md` (it rereads every report, so it is
+   *  not rewritten after each run). */
+  final?: boolean
 }
 
 /** A run's trace lines: 1-based, inclusive, in the archived day file. */
@@ -307,7 +310,10 @@ export function archiveRound(o: ArchiveOptions): { runs: number; tokens: Tokens;
 
   const totals = noTokens()
   let costUsd = 0
+  // A bare numeric tail is a sample only beside a sibling with the same stem, so scenarios are derived over all rows.
+  const names = [...byOut.values()].map((r) => r.name)
   const rows = [...byOut.values()]
+    .map((r) => ({ ...r, ...runNameParts(r.name, names) }))
     .sort((a, b) => (a.startedAt < b.startedAt ? -1 : 1))
     .map((r) => {
       const tokens = noTokens()
@@ -347,7 +353,7 @@ export function archiveRound(o: ArchiveOptions): { runs: number; tokens: Tokens;
     },
   }
   writeFileSync(join(o.roundDir, 'round.json'), `${JSON.stringify(round, null, 2)}\n`)
-  writeSignals(o.roundDir)
+  if (o.final === true) writeSignals(o.roundDir)
   writeRoundReadme(o.roundDir)
   const evals = dirname(dirname(o.roundDir))
   if (basename(dirname(o.roundDir)) === 'rounds' && basename(evals) === 'evals') writeEvalsIndex(evals)
@@ -355,12 +361,12 @@ export function archiveRound(o: ArchiveOptions): { runs: number; tokens: Tokens;
 }
 
 /** The RunRecord fields of a ledger row (drops the derived ones so they are recomputed); a row written before
- *  T-0342 gets its scenario and sample from its name and the default effort. */
+ *  T-0342 gets the default effort, and `archiveRound` rederives every scenario and sample over the round's names. */
 function runRecordOf(row: RunRecord): RunRecord {
   const { out, name, agent, model, startedAt, endedAt, exitCode, verdict, runId } = row
   const { scenario, sample } = runNameParts(name)
   const effort = typeof row.effort === 'string' ? row.effort : 'default'
-  return { out, name, scenario, sample: typeof row.sample === 'number' ? row.sample : sample, agent, model, effort, startedAt, endedAt, exitCode, verdict, ...(typeof runId === 'string' ? { runId } : {}) }
+  return { out, name, scenario, sample, agent, model, effort, startedAt, endedAt, exitCode, verdict, ...(typeof runId === 'string' ? { runId } : {}) }
 }
 
 /** Every file under a round folder, relative, sorted; folders are walked, dotfiles included. */
@@ -447,7 +453,7 @@ export function describeRound(roundDir: string): string {
   lines.push(`- Runs: ${runs.length} (${runs.filter((r) => r.verdict === 'pass').length} pass, ${runs.filter((r) => r.verdict === 'fail').length} fail, ${runs.filter((r) => r.verdict === 'no report').length} no report)`)
   lines.push(`- Agents: ${uniq(runs.map((r) => r.agent))}`)
   lines.push(`- Models: ${uniq(runs.map((r) => r.model))}`)
-  lines.push(`- Scenarios: ${uniq(runs.map((r) => runNameParts(r.name).scenario))}`)
+  lines.push(`- Scenarios: ${uniq(runs.map((r) => runNameParts(r.name, runNames).scenario))}`)
   if (manifest !== undefined) {
     const w = manifest.window as { since?: string; until?: string } | undefined
     const t = manifest.totals as { costUsd?: number; traceLines?: number } | undefined
@@ -585,8 +591,8 @@ export function runRound(o: RoundOptions): CappedResult {
   const roundDir = join(o.root, commands[0]?.out ? dirname(runsDir) : runsDir)
   const since = o.since ?? roundStart(join(o.root, runsDir, '.capped-start'), now)
   const runs: RunRecord[] = []
-  const archive = (stop: ArchiveOptions['stop']): void => {
-    archiveRound({ root: o.root, roundDir, since, until: now(), runs, commit: o.commit, liveCommands, cap: o.cap, stop })
+  const archive = (stop: ArchiveOptions['stop'], final = false): void => {
+    archiveRound({ root: o.root, roundDir, since, until: now(), runs, commit: o.commit, liveCommands, cap: o.cap, stop, final })
   }
   let stop: ArchiveOptions['stop'] = 'crash'
   try {
@@ -607,7 +613,7 @@ export function runRound(o: RoundOptions): CappedResult {
     stop = result.capped ? 'cap' : 'done'
     return result
   } finally {
-    archive(stop)
+    archive(stop, true)
   }
 }
 

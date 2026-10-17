@@ -25,8 +25,12 @@ describe('signals', () => {
   it('derives the scenario and sample from a run name, keeping a number that is part of the scenario', () => {
     expect(runNameParts('regress-croupier-spanish-21-haiku-1')).toEqual({ scenario: 'regress-croupier-spanish-21', sample: 1 })
     expect(runNameParts('routing-long-session-opus-3')).toEqual({ scenario: 'routing-long-session', sample: 3 })
-    expect(runNameParts('t0329-mix-17')).toEqual({ scenario: 't0329-mix', sample: 17 })
-    expect(runNameParts('t0329-mix-pontoon')).toEqual({ scenario: 't0329-mix-pontoon', sample: 1 })
+    // No model family before the number: it is the scenario's own, unless a sibling shares the stem.
+    expect(runNameParts('regress-croupier-spanish-21')).toEqual({ scenario: 'regress-croupier-spanish-21', sample: 1 })
+    expect(runNameParts('regress-croupier-spanish-21', ['regress-croupier-spanish-21', 'regress-croupier-omaha-haiku-1'])).toEqual({ scenario: 'regress-croupier-spanish-21', sample: 1 })
+    expect(runNameParts('t0329-mix-17')).toEqual({ scenario: 't0329-mix-17', sample: 1 })
+    expect(runNameParts('t0329-mix-17', ['t0329-mix-1', 't0329-mix-17', 't0329-mix-pontoon'])).toEqual({ scenario: 't0329-mix', sample: 17 })
+    expect(runNameParts('t0329-mix-pontoon', ['t0329-mix-1', 't0329-mix-pontoon'])).toEqual({ scenario: 't0329-mix-pontoon', sample: 1 })
   })
 
   it('reads a ledger round with its reports and trace lines, and a round with no ledger from its reports alone', () => {
@@ -121,12 +125,27 @@ describe('signals', () => {
     // 3 of 3 down to 1 of 3 is a 0.67 drop.
     expect(gate(next, base, { floors: {}, maxDrop: 0.5, minSamples: 3 }).misses.map((m) => [m.cell, m.reason])).toEqual([['regress-a-haiku', 'dropped 1.00 to 0.33 (more than 0.5)']])
     expect(gate(next, base, { floors: {}, maxDrop: 0.7, minSamples: 3 }).misses).toEqual([])
+    // A baseline cell with no sample now is a drop to 0 (regress-e-haiku), under the same sample minimum both sides.
+    expect(gate(next, base, { floors: {}, maxDrop: 0.5, minSamples: 1 }).misses.map((m) => m.cell)).toEqual(['regress-a-haiku', 'regress-e-haiku', 'routing-c-sonnet'])
+    expect(gate(next, base, { floors: {}, maxDrop: 0.5, minSamples: 3 }).ungated).toContain('regress-e-haiku')
 
     expect(cli('--round', '2026-01-02-next', '--floor', 'regression=0.66').code).toBe(1)
     expect(cli('--round', '2026-01-02-next', '--against', '2026-01-01-base', '--max-drop', '0.5').code).toBe(1)
     expect(cli('--round', '2026-01-02-next', '--floor', 'all=0.3').code).toBe(0)
     expect(cli('--round', 'no-such-round').code).toBe(2)
     expect(cli('--round', '2026-01-02-next', '--floor', 'regression').code).toBe(2)
+    expect(cli('--round', '2026-01-02-next', '--floor', 'regresion=0.5').code).toBe(2)
+    // One value per --round: a second folder after it is a stray argument, not silently dropped.
+    expect(cli('--round', '2026-01-02-next', '2026-01-01-base').code).toBe(2)
+    expect(cli('--round', '2026-01-02-next', '--round', '2026-01-01-base').code).toBe(0)
+  })
+
+  it('compares rates at the boundary: a drop of exactly the delta, or a rate exactly at the floor, passes', () => {
+    const runs = (round, pass, n) => Array.from({ length: n }, (_, i) => ({ round, name: `regress-x-haiku-${i + 1}`, scenario: 'regress-x', sample: i + 1, agent: 'croupier', model: 'claude-haiku-5-5', effort: 'default', verdict: i < pass ? 'pass' : 'fail', checks: [], costUsd: 0, turns: [] }))
+    expect(gate(runs('b', 7, 10), runs('a', 9, 10), { floors: {}, maxDrop: 0.2, minSamples: 3 }).misses).toEqual([])
+    expect(gate(runs('b', 6, 10), runs('a', 9, 10), { floors: {}, maxDrop: 0.2, minSamples: 3 }).misses).toHaveLength(1)
+    expect(gate(runs('b', 7, 10), undefined, { floors: { regression: 0.7 }, minSamples: 3 }).misses).toEqual([])
+    expect(gate(runs('b', 6, 10), undefined, { floors: { regression: 0.7 }, minSamples: 3 }).misses).toHaveLength(1)
   })
 
   it('renders signals.md deterministically, every section present', () => {
