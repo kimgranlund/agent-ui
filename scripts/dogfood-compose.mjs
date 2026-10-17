@@ -455,7 +455,7 @@ function selftest() {
   check('gate: an exempt path leaves the findings, and one that finds nothing is stale', gate(new Map([['a#inline-geometry', {}]]), { 'a#inline-geometry': 'T-0190' }, new Map([['b#inline-geometry', 'T-0170']])).stale.join() === 'b#inline-geometry' && owned.unlisted.length === 0)
   check('exempt: every exemption in dogfood-rules.json names a path and a reason', COMPOSE.every((r) => (r.exempt ?? []).every((e) => typeof e.path === 'string' && e.path !== '' && hasOwner(e.reason))))
   check(`rules: every compose rule in dogfood-rules.json has a selftest case (${RULES.join(', ')})`, RULES.length > 0 && RULES.every((r) => tested.has(r)))
-  check('rules: every compose rule carries id, adr, use, not and detect', JSON.parse(readFileSync(new URL('./dogfood-rules.json', import.meta.url), 'utf8')).compose.every((r) => ['id', 'adr', 'use', 'not', 'detect'].every((k) => typeof r[k] === 'string' && r[k] !== '')))
+  check('rules: every compose rule carries id, source, use, not and detect', JSON.parse(readFileSync(new URL('./dogfood-rules.json', import.meta.url), 'utf8')).compose.every((r) => ['id', 'source', 'use', 'not', 'detect'].every((k) => typeof r[k] === 'string' && r[k] !== '')))
   console.log(failures === 0 ? 'selftest: all green' : `selftest: ${failures} failure(s)`)
   if (failures) process.exit(1)
 }

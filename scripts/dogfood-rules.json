@@ -2,35 +2,35 @@
   "render": [
     {
       "id": "register",
-      "adr": "ADR-0245 clause 2: one n per element, from data-tier, data-scale, size and data-density",
+      "source": "ADR-0245 clause 2: one n per element, from data-tier, data-scale, size and data-density",
       "selector": "ui-button, ui-toggle, ui-text-field, ui-select, ui-combo-box, ui-card",
       "measure": "the element's cascade n (its --md-sys-height / 4)",
       "expect": "resolve(register).n, the register read from the element's own and its ancestors' attributes"
     },
     {
       "id": "pill-radius",
-      "adr": "ADR-0245 Amendment 5 items 1 and 2 (Amendment 3 for button and toggle); a square entry cell (otp-field) is not a pill: see entry-cell-radius (Amendment 6); the segmented control joined in T-0144 (T-0138: single-line controls in one row share h/2)",
+      "source": "ADR-0245 Amendment 5 items 1 and 2 (Amendment 3 for button and toggle); a square entry cell (otp-field) is not a pill: see entry-cell-radius (Amendment 6); the segmented control joined in T-0144 (T-0138: single-line controls in one row share h/2)",
       "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger'], ui-combo-box > [data-part='editor'], ui-badge, ui-segmented-control, ui-suggestions [data-part='chip'], ui-file-drop [data-part='chip']",
       "measure": "border-start-start-radius against the box height",
       "expect": "radius >= box height / 2 (a pill)"
     },
     {
       "id": "icon-square",
-      "adr": "ADR-0245 Amendment 3 (geometry.md: icon-only, no label, is square)",
+      "source": "ADR-0245 Amendment 3 (geometry.md: icon-only, no label, is square)",
       "selector": "ui-button with an icon and no label text",
       "measure": "box width against box height",
       "expect": "width == height"
     },
     {
       "id": "type-floor",
-      "adr": "ADR-0245 M5: no type below CFG.floor",
+      "source": "ADR-0245 M5: no type below CFG.floor",
       "selector": "every element with its own visible text",
       "measure": "font-size; a glyph is not text (ADR-0245 Amendment 6): ui-glyph and the glyph parts are skipped here and checked by glyph-box",
       "expect": "font-size >= CFG.floor (9px)"
     },
     {
       "id": "column",
-      "adr": "T-0130: nothing past the content column at 400px",
+      "source": "T-0130: nothing past the content column at 400px",
       "selector": "every element inside the content column",
       "measure": "box right edge against the column's right edge + 4px, unless an overflow-x frame holds it",
       "expect": "no escapee",
@@ -38,175 +38,175 @@
     },
     {
       "id": "nested-card",
-      "adr": "ADR-0046 and the dogfood rule: a card is never the direct content of a card",
+      "source": "ADR-0046 and the dogfood rule: a card is never the direct content of a card",
       "selector": "ui-card",
       "measure": "the nearest ancestor ui-card",
       "expect": "none"
     },
     {
       "id": "control-height",
-      "adr": "ADR-0245 clause 3: a single-line control is 4n tall",
+      "source": "ADR-0245 clause 3: a single-line control is 4n tall",
       "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger']",
       "measure": "box height",
       "expect": "resolve(register).h"
     },
     {
       "id": "text-edge",
-      "adr": "ADR-0245 Amendment 4: the text edge is 2n - c (margin n plus label inset n - c)",
+      "source": "ADR-0245 Amendment 4: the text edge is 2n - c (margin n plus label inset n - c)",
       "selector": "ui-button:not([icon-only]) > [data-part='label'], ui-text-field:not([multiline]) > [data-part='editor'], ui-toggle",
       "measure": "host padding-inline-start + the text slot's padding-inline-start",
       "expect": "2 * resolve(register).n - resolve(register).c"
     },
     {
       "id": "card-radius",
-      "adr": "ADR-0245 clause 3: a card takes its level radius",
+      "source": "ADR-0245 clause 3: a card takes its level radius",
       "selector": "ui-card",
       "measure": "border-start-start-radius",
       "expect": "resolve(register).card.radius"
     },
     {
       "id": "panel-radius",
-      "adr": "ADR-0245 Amendment 5 item 3: a listbox panel is concentric, the row pill 2n plus the inset c",
+      "source": "ADR-0245 Amendment 5 item 3: a listbox panel is concentric, the row pill 2n plus the inset c",
       "selector": "ui-select [data-part='listbox'], ui-multi-select, ui-combo-box [data-part='listbox']",
       "measure": "border-start-start-radius (only when the panel has a box)",
       "expect": "2 * resolve(register).n + resolve(register).c"
     },
     {
       "id": "badge-hug",
-      "adr": "T-0140 (dogfood review part B): a badge is a display atom and hugs its label; a stretching column parent never widens it into a bar",
+      "source": "T-0140 (dogfood review part B): a badge is a display atom and hugs its label; a stretching column parent never widens it into a bar",
       "selector": "ui-badge",
       "measure": "box width against the badge's max-content width",
       "expect": "width <= max-content width + 1px"
     },
     {
       "id": "option-indicator",
-      "adr": "T-0140 (dogfood review part B): a multi-select option shows its toggle in both states, so the control reads as choosable before the first click",
+      "source": "T-0140 (dogfood review part B): a multi-select option shows its toggle in both states, so the control reads as choosable before the first click",
       "selector": "ui-multi-select > [role='option']",
       "measure": "the option's ::before box (the indicator)",
       "expect": "width > 0 in the unselected and the selected state"
     },
     {
       "id": "inline-text",
-      "adr": "T-0140 (dogfood review part B): a ui-text link or span nested in running text shares the paragraph's line box",
+      "source": "T-0140 (dogfood review part B): a ui-text link or span nested in running text shares the paragraph's line box",
       "selector": "p > ui-text[as='a'], p > ui-text[as='span'], ui-text > ui-text[as='a'], ui-text > ui-text[as='span']",
       "measure": "computed display (truncate excepted)",
       "expect": "inline"
     },
     {
       "id": "adornment-gap",
-      "adr": "T-0140 (dogfood review part B): adjacent trailing adornments (a suffix and the step cells) never glue; ADR-0245 Amendment 4's control gap c",
+      "source": "T-0140 (dogfood review part B): adjacent trailing adornments (a suffix and the step cells) never glue; ADR-0245 Amendment 4's control gap c",
       "selector": "ui-text-field > [slot='trailing']:is([data-role='stepper'], [data-role='numeric'])",
       "measure": "the gap between each pair of adjacent visible children of the trailing cell",
       "expect": ">= resolve(register).c"
     },
     {
       "id": "entry-cell-radius",
-      "adr": "ADR-0245 Amendment 6: a square entry cell is a round square at radius n, never the pill h/2 (a circle)",
+      "source": "ADR-0245 Amendment 6: a square entry cell is a round square at radius n, never the pill h/2 (a circle)",
       "selector": "ui-otp-field [data-part='cell']",
       "measure": "border-start-start-radius",
       "expect": "resolve(register).n"
     },
     {
       "id": "glyph-box",
-      "adr": "ADR-0245 Amendment 6: icon and glyph are distinct; a glyph sits in its own glyph box 2n - 2c",
+      "source": "ADR-0245 Amendment 6: icon and glyph are distinct; a glyph sits in its own glyph box 2n - 2c",
       "selector": "ui-glyph svg, ui-board-grid [data-part='intent'], ui-game-hud [data-part='glyph'], ui-result-card [data-part='glyph']",
       "measure": "the visible glyph box, both axes",
       "expect": "max(8px, 2 * resolve(register).n - 2 * resolve(register).c) (the 8px floor: T-0143)"
     },
     {
       "id": "dash-scale",
-      "adr": "T-0141 (review part-c, gauge): under non-scaling-stroke the browser reads a dash pattern in screen px, so a viewBox-unit pattern repeats as scattered dashes",
+      "source": "T-0141 (review part-c, gauge): under non-scaling-stroke the browser reads a dash pattern in screen px, so a viewBox-unit pattern repeats as scattered dashes",
       "selector": "every svg shape",
       "measure": "computed vector-effect and stroke-dasharray",
       "expect": "never non-scaling-stroke together with a dasharray other than none"
     },
     {
       "id": "link-ink",
-      "adr": "T-0141 (review part-c, breadcrumb): an anchor inside a fleet control takes the control's ink, never the browser's default link colour",
+      "source": "T-0141 (review part-c, breadcrumb): an anchor inside a fleet control takes the control's ink, never the browser's default link colour",
       "selector": "a[href] inside a ui-* host",
       "measure": "the anchor's computed color",
       "expect": "not a UA link colour: rgb(0, 0, 238), rgb(85, 26, 139), rgb(158, 158, 255) or rgb(208, 173, 240)"
     },
     {
       "id": "disabled-ink",
-      "adr": "T-0139 (the fleet disabled recipe, review part-a): a disabled control is always quieter than the same control enabled; the entry fields joined fleet-wide in T-0168 (T-0148)",
+      "source": "T-0139 (the fleet disabled recipe, review part-a): a disabled control is always quieter than the same control enabled; the entry fields joined fleet-wide in T-0168 (T-0148)",
       "selector": "ui-button[disabled], ui-toggle[disabled], ui-text-field[disabled] > [data-part='editor'], ui-textarea[disabled] > [data-part='editor'], ui-otp-field[disabled] > [data-part='cell'], ui-select[disabled] > [data-part='trigger'], ui-combo-box[disabled] > [data-part='editor']",
       "measure": "the ink's contrast against the control's composited fill, disabled and with the disabled attribute lifted",
       "expect": "disabled ratio < enabled ratio"
     },
     {
       "id": "disabled-ghost",
-      "adr": "T-0139 (review part-c, pagination): a disabled ghost stays unfilled; a grey pill beside the current page reads as pressed",
+      "source": "T-0139 (review part-c, pagination): a disabled ghost stays unfilled; a grey pill beside the current page reads as pressed",
       "selector": "ui-button[variant='ghost'][disabled]",
       "measure": "the computed background (colour and image)",
       "expect": "transparent: alpha 0 and no image"
     },
     {
       "id": "disabled-edge",
-      "adr": "T-0139 (review part-b, switch): a disabled track, box or ring keeps its silhouette against the surface; the entry fields' frames joined fleet-wide in T-0168 (T-0148)",
+      "source": "T-0139 (review part-b, switch): a disabled track, box or ring keeps its silhouette against the surface; the entry fields' frames joined fleet-wide in T-0168 (T-0148)",
       "selector": "ui-switch[disabled], ui-checkbox[disabled], ui-radio[disabled], ui-text-field[disabled], ui-textarea[disabled], ui-otp-field[disabled] > [data-part='cell'], ui-select[disabled] > [data-part='trigger'], ui-combo-box[disabled] > [data-part='editor']",
       "measure": "the box (a switch, checkbox or radio's ::before; a field's own frame): the better of the fill and the border (over the fill), each composited over the surface, against the surface",
       "expect": ">= 1.3:1"
     },
     {
       "id": "disabled-toggle-fill",
-      "adr": "T-0139 (review part-b, toggle): a disabled unpressed toggle keeps the enabled unpressed fill, so it never reads as pressed",
+      "source": "T-0139 (review part-b, toggle): a disabled unpressed toggle keeps the enabled unpressed fill, so it never reads as pressed",
       "selector": "ui-toggle[disabled]:not([pressed])",
       "measure": "the composited background, disabled and with the disabled attribute lifted",
       "expect": "equal (each channel within 2/255)"
     },
     {
       "id": "button-text-ink",
-      "adr": "T-0139 (button.css): a ui-text label inside a button takes the button's ink, so the variant and the disabled recipe show",
+      "source": "T-0139 (button.css): a ui-text label inside a button takes the button's ink, so the variant and the disabled recipe show",
       "selector": "ui-button ui-text",
       "measure": "the ui-text's computed color against its ui-button's",
       "expect": "equal"
     },
     {
       "id": "avatar-disc",
-      "adr": "T-0140 (review part-b, avatar): the initials disc separates from the page",
+      "source": "T-0140 (review part-b, avatar): the initials disc separates from the page",
       "selector": "ui-avatar without an img",
       "measure": "the disc (its flat gradient plane over its base, over the surface) against the surface behind the avatar",
       "expect": ">= 1.3:1"
     },
     {
       "id": "badge-overlay",
-      "adr": "T-0142 (review part-a, product-card): a badge over an image has its own opaque pill and readable ink, whatever the photo",
+      "source": "T-0142 (review part-a, product-card): a badge over an image has its own opaque pill and readable ink, whatever the photo",
       "selector": "an absolutely positioned ui-badge whose box overlaps an img, ui-image or [data-part='image']",
       "measure": "the badge's own layers, flattened without the backdrop, and its ink against them",
       "expect": "alpha 1 and ink >= 4.5:1"
     },
     {
       "id": "button-identity",
-      "adr": "T-0142 (review part-a, composer pickers): a button with no visible glyph and no visible label looks broken",
+      "source": "T-0142 (review part-a, composer pickers): a button with no visible glyph and no visible label looks broken",
       "selector": "ui-button",
       "measure": "the painted boxes of its icons, glyphs and svgs, and the rendered width of its text",
       "expect": "an icon box or a text run wider than 0"
     },
     {
       "id": "action-group",
-      "adr": "T-0142 (review part-a, CardTable): the buttons of one action group share a line or wrap together, never one at a time",
+      "source": "T-0142 (review part-a, CardTable): the buttons of one action group share a line or wrap together, never one at a time",
       "selector": "a flex row holding two or more ui-buttons and at least one other visible child",
       "measure": "the buttons' top edges, and which line each shares with a non-button sibling",
       "expect": "every button on one line, or no button on a line with a non-button sibling"
     },
     {
       "id": "prose-gap",
-      "adr": "T-0142 (review part-a, containers.css): a note under a specimen or a button never sits flush against it",
+      "source": "T-0142 (review part-a, containers.css): a note under a specimen or a button never sits flush against it",
       "selector": "p after a visible element sibling that is not a text block",
       "measure": "the p's top edge against the sibling's bottom edge",
       "expect": ">= resolve(register).n"
     },
     {
       "id": "glyph-gap",
-      "adr": "T-0138 (review part-a, game-hud and result-card): a stat glyph sits n clear of its label (the chip gap)",
+      "source": "T-0138 (review part-a, game-hud and result-card): a stat glyph sits n clear of its label (the chip gap)",
       "selector": "ui-game-hud [data-part='glyph'], ui-result-card [data-part='glyph'], ui-product-card [data-part='rating-stars'] (the rating to its number, T-0146), with a visible next sibling, outside a ui-badge (a status badge's mark keeps the badge rhythm 2c, Amendment 4; T-0170)",
       "measure": "the inline gap from the glyph to its next sibling",
       "expect": ">= the glyph's cascade n (its --md-sys-height / 4)"
     },
     {
       "id": "scroll-clip",
-      "adr": "T-0138 (review part-b, icon demo): at 400px no demo card is cut by its scroller with no scroll cue",
+      "source": "T-0138 (review part-b, icon demo): at 400px no demo card is cut by its scroller with no scroll cue",
       "selector": "ui-card inside an overflow-x frame that is neither a ui-* control nor one of its parts",
       "measure": "the card's right edge against the frame's right edge",
       "expect": "card right <= frame right + 4px",
@@ -214,7 +214,7 @@
     },
     {
       "id": "field-outline",
-      "adr": "ADR-0245 Amendment 7 (T-0143, the 2026-10-14 field boundary ruling): an entry field's resting edge holds at least 3:1 against the page it sits on (SC 1.4.11), in situ on every page, not only in the token test (T-0168)",
+      "source": "ADR-0245 Amendment 7 (T-0143, the 2026-10-14 field boundary ruling): an entry field's resting edge holds at least 3:1 against the page it sits on (SC 1.4.11), in situ on every page, not only in the token test (T-0168)",
       "selector": "ui-text-field, ui-textarea, ui-otp-field > [data-part='cell'], ui-select > [data-part='trigger'], ui-combo-box > [data-part='editor'], at rest: not disabled, not focused, not user-invalid, not the active OTP cell",
       "measure": "the top border colour composited over the surface behind the field, against that surface",
       "expect": ">= boundaryMin (3:1)",
@@ -222,21 +222,21 @@
     },
     {
       "id": "slider-disabled",
-      "adr": "T-0139 and T-0148 (the fleet disabled recipe on the slider, 2026-10-14): a disabled slider keeps its reading, so its fill separates from its rail, and the recipe never grows the thumb",
+      "source": "T-0139 and T-0148 (the fleet disabled recipe on the slider, 2026-10-14): a disabled slider keeps its reading, so its fill separates from its rail, and the recipe never grows the thumb",
       "selector": "ui-slider[disabled]",
       "measure": "the resolved --ui-slider-fill and --ui-slider-rail, each composited over the surface, against each other; the thumb (.rail::after) block size, disabled and with the disabled attribute lifted",
       "expect": "fill against rail >= 1.3:1, and the disabled thumb no taller than the enabled one"
     },
     {
       "id": "switch-off-edge",
-      "adr": "T-0148 (Kim 2026-10-14): the switch off track gets lighter than the on track while its edge keeps at least 3:1 (the field outline role, ADR-0245 Amendment 7)",
+      "source": "T-0148 (Kim 2026-10-14): the switch off track gets lighter than the on track while its edge keeps at least 3:1 (the field outline role, ADR-0245 Amendment 7)",
       "selector": "ui-switch:not([disabled]), not checked",
       "measure": "the track (::before) border composited over the surface, against the surface; the off fill's and the on fill's (--md-sys-color-primary) contrast against the surface",
       "expect": "edge >= field-outline boundaryMin (3:1), and the off fill quieter than the on fill"
     },
     {
       "id": "icon-box",
-      "adr": "ADR-0245 Amendment 6 and 7 item 3 (Kim's ruling 2026-10-14, icon versus glyph): an icon inside a control or a data-tier region is the 2n icon box; in prose it follows the text (1em). It replaces T-0138's 0.875 x font-size proposal",
+      "source": "ADR-0245 Amendment 6 and 7 item 3 (Kim's ruling 2026-10-14, icon versus glyph): an icon inside a control or a data-tier region is the 2n icon box; in prose it follows the text (1em). It replaces T-0138's 0.875 x font-size proposal",
       "selector": "ui-icon (a glyph is checked by glyph-box)",
       "measure": "the icon's box, both axes; inside means a [data-tier] ancestor or a ui-* control host (not a layout container named in `layout`)",
       "expect": "inside: resolve(register).icon (2n); in prose: its own font-size (1em)",
@@ -244,7 +244,7 @@
     },
     {
       "id": "calendar-cap",
-      "adr": "ADR-0105 Amendment 2 as T-0143 capped it and T-0149 start-aligned it (Kim's 2026-10-14 ruling): a stretched calendar grows only until each of its 7 tracks reaches trackFactor x the 4n cell, then keeps to the host's start edge",
+      "source": "ADR-0105 Amendment 2 as T-0143 capped it and T-0149 start-aligned it (Kim's 2026-10-14 ruling): a stretched calendar grows only until each of its 7 tracks reaches trackFactor x the 4n cell, then keeps to the host's start edge",
       "selector": "ui-calendar [data-part='panel']",
       "measure": "the grid's inline size against tracks x trackFactor x the cell (the host's cascade 4n) plus (tracks - 1) column gaps; the panel's start edge against the host's content start, on the side its direction names",
       "expect": "inline size <= the cap, start edge within 0.5px of the host's",
@@ -253,35 +253,35 @@
     },
     {
       "id": "table-pager",
-      "adr": "ADR-0163 cl.6 (Kim's ruling 2026-10-14): a table's pager sits outside its scroll frame, so paging never scrolls away with a wide row",
+      "source": "ADR-0163 cl.6 (Kim's ruling 2026-10-14): a table's pager sits outside its scroll frame, so paging never scrolls away with a wide row",
       "selector": "ui-pagination a control composes (its nearest ui-* host is not a layout container named in icon-box's `layout`, so a page's own pager is out)",
       "measure": "every ancestor between the pager and its nearest ui-* host",
       "expect": "none scrolls on the inline axis (overflow-x auto or scroll)"
     },
     {
       "id": "table-scroll-cue",
-      "adr": "T-0149 (round-3 data review): a ui-table whose columns run past its frame shows the edge-fade cue, so a cut column never reads as a complete table",
+      "source": "T-0149 (round-3 data review): a ui-table whose columns run past its frame shows the edge-fade cue, so a cut column never reads as a complete table",
       "selector": "ui-table [data-part='scroll'] whose scroll width exceeds its client width",
       "measure": "computed mask-image (and -webkit-mask-image)",
       "expect": "a mask other than none"
     },
     {
       "id": "ring-parity",
-      "adr": "T-0149 (round-3 data review, stat): sibling ring tiles in one row draw one ring diameter",
+      "source": "T-0149 (round-3 data review, stat): sibling ring tiles in one row draw one ring diameter",
       "selector": "ui-stat[variant='ring'] [data-part='ring'], grouped by the nearest ancestor holding two or more rings, on one line",
       "measure": "each ring's box width",
       "expect": "every ring on a line within 0.5px of the first"
     },
     {
       "id": "legend-gap",
-      "adr": "T-0149 (round-3 data review, gauge): the legend starts just past the outer ring, so rings and legend read as one group",
+      "source": "T-0149 (round-3 data review, gauge): the legend starts just past the outer ring, so rings and legend read as one group",
       "selector": "ui-gauge [data-part='legend'] rows beside (on the line of) the rings",
       "measure": "the gap between the first legend row and the outer ring's painted box, on whichever side of the rings the row sits (so LTR and RTL both read)",
       "expect": "0 <= gap <= 2 * resolve(register).n (one icon box)"
     },
     {
       "id": "series-separation",
-      "adr": "T-0149 (round-3 data review, chart-axis cl.6): series 1 and 2 of a chart sit far enough apart to tell apart in a stacked chart",
+      "source": "T-0149 (round-3 data review, chart-axis cl.6): series 1 and 2 of a chart sit far enough apart to tell apart in a stacked chart",
       "selector": "ui-bar-chart, ui-column-chart, ui-line-chart, ui-pie-chart",
       "measure": "--ui-chart-series-1-ink against --ui-chart-series-2-ink, each resolved for the chart's colour scheme",
       "expect": ">= seriesMin (1.5:1)",
@@ -289,7 +289,7 @@
     },
     {
       "id": "chip-opaque",
-      "adr": "T-0149 (round-3 data review, chart chips): a chart chip over a bar keeps its own opaque fill and readable ink",
+      "source": "T-0149 (round-3 data review, chart chips): a chart chip over a bar keeps its own opaque fill and readable ink",
       "selector": "the tick-label, category-label and callout chips of ui-column-chart and ui-line-chart that paint a fill (a border-only or shadow-only chip has none)",
       "measure": "the chip's own layers flattened without the backdrop, and its ink against them",
       "expect": "alpha 1 and ink >= inkMin (4.5:1)",
@@ -297,42 +297,42 @@
     },
     {
       "id": "chart-empty-mark",
-      "adr": "T-0149 (round-3 data review): a chart with no data still draws an empty frame or track, never a blank box that reads as a failed render",
+      "source": "T-0149 (round-3 data review): a chart with no data still draws an empty frame or track, never a blank box that reads as a failed render",
       "selector": "ui-bar-chart, ui-column-chart, ui-gauge whose data is an empty array",
       "measure": "the painted boxes of the host's ::before (with content) and its descendants (a fill, a border or an svg stroke)",
       "expect": "at least one painted box"
     },
     {
       "id": "diverging-zero",
-      "adr": "T-0149 (round-3 data review, bar chart): a chart with a negative value draws its zero rule",
+      "source": "T-0149 (round-3 data review, bar chart): a chart with a negative value draws its zero rule",
       "selector": "ui-bar-chart [data-origin] (a track the chart marks as diverging)",
       "measure": "the track's ::before (the zero rule)",
       "expect": "generated (content not none or normal) and displayed, with a border wider than 0"
     },
     {
       "id": "placeholder-dots",
-      "adr": "T-0147 (round-3 app review, composer placeholder): an ellipsis is three dots or none, never two",
+      "source": "T-0147 (round-3 app review, composer placeholder): an ellipsis is three dots or none, never two",
       "selector": "a ui-* host or element with a placeholder",
       "measure": "the placeholder text",
       "expect": "never ends in exactly two periods"
     },
     {
       "id": "picker-dash",
-      "adr": "T-0147 (round-3 app review, Mode picker) and the no-em-dash house rule: picker and control labels carry no em dash",
+      "source": "T-0147 (round-3 app review, Mode picker) and the no-em-dash house rule: picker and control labels carry no em dash",
       "selector": "[role='option'], [role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox'], [role='tab'], [role='radio'], ui-tab, ui-radio, ui-segment, ui-choice-card, ui-button, ui-toggle, ui-segmented-control, ui-select > [data-part='trigger']",
       "measure": "the visible text",
       "expect": "no U+2014"
     },
     {
       "id": "caption-in-specimen",
-      "adr": "T-0150 (round-3 demo review): the mono .demo-caption labels the [attr] a figure demonstrates; product text inside a specimen never wears it",
+      "source": "T-0150 (round-3 demo review): the mono .demo-caption labels the [attr] a figure demonstrates; product text inside a specimen never wears it",
       "selector": ".demo-caption",
       "measure": "its ancestors up to the column",
       "expect": "no ui-* host"
     },
     {
       "id": "figure-parity",
-      "adr": "T-0150 (round-3 demo review): sibling captioned figures on one line share their top edge, so a size row compares the specimens",
+      "source": "T-0150 (round-3 demo review): sibling captioned figures on one line share their top edge, so a size row compares the specimens",
       "selector": ".demo-figure siblings on one line",
       "measure": "each figure's top edge against the first figure's on that line",
       "expect": "within edgeTol (1px)",
@@ -340,14 +340,14 @@
     },
     {
       "id": "overline-gap",
-      "adr": "T-0150 (round-3 demo review): an overline labels the block after it, so it sits closer to that block than to the one before",
+      "source": "T-0150 (round-3 demo review): an overline labels the block after it, so it sits closer to that block than to the one before",
       "selector": "ui-text[variant='overline'] with a visible previous and next sibling",
       "measure": "the gap to the next sibling against the gap to the previous",
       "expect": "next gap < previous gap"
     },
     {
       "id": "avatar-cluster",
-      "adr": "T-0150 (round-3 demo review, avatar cluster): overlapping avatars wear a ring and cover at most a quarter of their neighbour",
+      "source": "T-0150 (round-3 demo review, avatar cluster): overlapping avatars wear a ring and cover at most a quarter of their neighbour",
       "selector": "adjacent ui-avatar siblings whose boxes overlap",
       "measure": "the overlap against the earlier avatar's width; the later avatar's box-shadow, outline or border",
       "expect": "overlap <= width / widthDivisor (a quarter), and a ring painted",
@@ -355,14 +355,14 @@
     },
     {
       "id": "supporting-ink",
-      "adr": "T-0150 (round-3 demo review): a supporting line reads quieter than the name it supports",
+      "source": "T-0150 (round-3 demo review): a supporting line reads quieter than the name it supports",
       "selector": ".demo-supporting after a visible text block sibling (its title)",
       "measure": "its ink contrast against its backdrop, and the previous sibling's",
       "expect": "supporting ratio < the title's"
     },
     {
       "id": "board-letter",
-      "adr": "T-0146 (round-3 widget review, word board): a board letter's cap height fills at least a third of its cell",
+      "source": "T-0146 (round-3 widget review, word board): a board letter's cap height fills at least a third of its cell",
       "selector": "ui-board-grid [data-part='cell'] holding one letter",
       "measure": "the cap height of the letter's computed font (canvas actualBoundingBoxAscent of H) against the cell's block size",
       "expect": ">= cell / cellDivisor (a third)",
@@ -370,7 +370,7 @@
     },
     {
       "id": "unframed-inset",
-      "adr": "T-0146 (round-3 widget review, board frame): a control that paints no frame starts its first painted box on its own start edge, so it lines up with the text edge around it",
+      "source": "T-0146 (round-3 widget review, board frame): a control that paints no frame starts its first painted box on its own start edge, so it lines up with the text edge around it",
       "selector": "ui-board-grid that paints no background, border or shadow",
       "measure": "its first visible cell's start edge against the host's start edge, on the side its direction names",
       "expect": "within edgeTol (1px)",
@@ -380,28 +380,28 @@
   "compose": [
     {
       "id": "date-field",
-      "adr": "T-0135: a date is a real input",
+      "source": "T-0135: a date is a real input",
       "use": "ui-text-field type=date (A2UI: a TextField of type date)",
       "not": "a ui-calendar inside a ui-popover, or beside a calendar-icon ui-button, standing in for a date field (A2UI: a Calendar inside a Popover or FormPopover)",
       "detect": "a file that creates ui-calendar and also ui-popover, ui-form-popover or an icon=calendar ui-button; a payload whose Popover or FormPopover lists a Calendar child"
     },
     {
       "id": "board-grid",
-      "adr": "ADR-0243: a board of cells is ui-board-grid",
+      "source": "ADR-0243: a board of cells is ui-board-grid",
       "use": "ui-board-grid (A2UI: BoardGrid)",
       "not": "a ui-grid of cell ui-buttons (A2UI: a Grid whose children are all Buttons)",
       "detect": "a payload Grid with three or more explicit children that are all Buttons, or a template child that is a Button; a file that appends ui-buttons into a ui-grid inside a loop"
     },
     {
       "id": "lone-button-frame",
-      "adr": "T-0172 (Kim's ruling, 2026-10-14): a choice is a plain Button in a row, never a framed box per Button",
+      "source": "T-0172 (Kim's ruling, 2026-10-14): a choice is a plain Button in a row, never a framed box per Button",
       "use": "one Row of plain Buttons (A2UI: a Row whose children are the Buttons), or a ChoicePicker or SegmentedControl",
       "not": "a Card whose only content is one Button, directly or through a lone CardContent or CardFooter (a bordered box around each choice)",
       "detect": "a payload Card whose sole child, or sole CardContent or CardFooter child, is a Button"
     },
     {
       "id": "caret-glyph",
-      "adr": "ADR-0245 Amendment 6 (Kim's ruling 2026-10-14, icon versus glyph): a control's caret or chevron is a glyph in its glyph box, never an icon (T-0148 and T-0149 moved them to ui-glyph)",
+      "source": "ADR-0245 Amendment 6 (Kim's ruling 2026-10-14, icon versus glyph): a control's caret or chevron is a glyph in its glyph box, never an icon (T-0148 and T-0149 moved them to ui-glyph)",
       "use": "a ui-glyph with symbol caret-* (glyph-paths.ts)",
       "not": "setIcon(host, 'caret-*'), or a ui-icon named caret-*, inside a control's source",
       "detect": "setIcon( with a caret-* name, a name attribute or key set to caret-*, or <ui-icon name=\"caret-*\"> markup, in a control source",
@@ -409,14 +409,14 @@
     },
     {
       "id": "star-run",
-      "adr": "T-0146 (round-3 widget review, ProductCard rating): a rating is ui-rating (A2UI: the ProductCard rating or a Rating), never a run of star characters inside a ui-* host",
+      "source": "T-0146 (round-3 widget review, ProductCard rating): a rating is ui-rating (A2UI: the ProductCard rating or a Rating), never a run of star characters inside a ui-* host",
       "use": "ui-rating readonly (A2UI: a ProductCard rating, a Rating)",
       "not": "a string of two or more U+2605 or U+2606 star characters",
       "detect": "a run of two or more U+2605 or U+2606 in a composition source, comments excluded"
     },
     {
       "id": "inline-geometry",
-      "adr": "ADR-0245 clause 1: every margin, gutter, radius, height and type size derives from n",
+      "source": "ADR-0245 clause 1: every margin, gutter, radius, height and type size derives from n",
       "use": "the derived tokens and the control's own size or the container's data-* register",
       "not": "an inline style that sets padding, margin, gap, radius, height or font-size to a literal length",
       "detect": ".style.<prop> = '<length>', .style.cssText, .style.setProperty('<prop>', '<length>'), a style=\"...\" attribute or a style: '...' key, for a geometry property with a px, rem or em literal other than 0 and the 1px hairline",

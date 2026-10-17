@@ -26,7 +26,7 @@ export const LEGACY_TO_DERIVED = [
   [/--md-sys-widget-inset(?![\w-])/, '--md-sys-c'],
 ]
 
-/** Every derived token foundations.gen.css declares (generate-foundations.mjs). */
+/** Every derived token foundations.gen.css declares (generate-foundations.mjs); foundations.test.ts fails when they drift. */
 export const DERIVED = new Set([
   'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
   'checkbox-radius',

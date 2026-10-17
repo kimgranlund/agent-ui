@@ -1349,10 +1349,10 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number; rule?:
 }
 
 describe('render lint: one injected violation per rule turns it red (negative controls)', () => {
-  it('every render rule has a plant, and every rule carries id, adr, selector, measure and expect', () => {
+  it('every render rule has a plant, and every rule carries id, source, selector, measure and expect', () => {
     for (const r of RULES.render) {
       expect(PLANTS[r.id], `rule ${r.id} has no negative control`).toBeDefined()
-      for (const k of ['id', 'adr', 'selector', 'measure', 'expect'] as const) expect(typeof r[k] === 'string' && r[k] !== '', `rule ${r.id} carries ${k}`).toBe(true)
+      for (const k of ['id', 'source', 'selector', 'measure', 'expect'] as const) expect(typeof r[k] === 'string' && r[k] !== '', `rule ${r.id} carries ${k}`).toBe(true)
     }
   })
   for (const [name, plant] of Object.entries(PLANTS)) {
