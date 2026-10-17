@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:8fe5ef5c2fd3 -->
+<!-- sdlc-lite:managed:start v1 sha256:51f6910dbc57 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -35,7 +35,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0179 Agent eval framework 4: live matrix (personas x models x efforts x N) under a $5 cap, baselines, pass-rate floors, digest-affected selection (0179-eval-matrix-baselines)
   - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (0203-composer-model-controls)
   - T-0328 A same-turn repair that rebuilds a flagged surface under a new id must not halt (round 9 cluster A) (0328-r9-rename-after-repair), branch fix/0328-rename-after-repair
-  - T-0329 Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) (0329-r9-blackjack-opening-wording)
+  - T-0329 Haiku blackjack openings back on the CardTable after the T-0323 wording (round 9 cluster B) (0329-r9-blackjack-opening-wording), branch fix/0329-blackjack-opening-wording
   - T-0330 Feed a dropped surface's bound composite finding with SURFACE_DROPPED (round 9 cluster C) (0330-r9-dropped-surface-finding)
   - T-0331 BookingForm read-back check matches booking verbs and the confirm_booking action (round 9 cluster D) (0331-r9-bookingform-readback-cue), branch fix/0331-readback-cue
   - T-0332 NARRATION_HINT leaves the surface as it is when the reply needs no change (round 9 cluster E) (0332-r9-narration-hint-no-change)
