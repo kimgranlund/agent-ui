@@ -121,13 +121,17 @@ family-agnostic intermediates; all the mode/state logic below reads only the int
 
 ```css
 ui-button[family=primary] {
-  --_fill-idle: var(--md-sys-color-primary);  --_fill-hover: var(--md-sys-color-primary-dim);  --_fill-sel: var(--md-sys-color-primary-high);
+  --_fill-idle: var(--md-sys-color-primary-fill);  --_fill-hover: var(--md-sys-color-primary-fill-hover);  --_fill-sel: var(--md-sys-color-primary-fill-active);
   --_on-fill:   var(--md-sys-color-primary-on-primary);
   --_tonal-idle: var(--md-sys-color-primary-container-low); --_tonal-hover: var(--md-sys-color-primary-container); --_tonal-sel: var(--md-sys-color-primary-container-high);
   --_on-tonal:  var(--md-sys-color-primary-on-surface);
 }
 /* …one row per supported family, identical shape, swapping the family token */
 ```
+
+For `primary`, a fill that carries on-primary text reads the FILL ladder (`-fill` / `-fill-hover` / `-fill-active`,
+T-0340): dark 600 / 700 / 750 clear 4.5:1 under on-primary, where the `primary` role's dark 450 does not. `primary`
+itself stays the ink and indicator role (links, rings, tracks, underlines).
 
 **2. mode × state → shared, family-agnostic logic** over the intermediates (`disabled` is an override,
 so the authored matrix is 2 modes × 3 states):

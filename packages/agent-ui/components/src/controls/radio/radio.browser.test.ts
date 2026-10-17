@@ -259,6 +259,37 @@ describe('ui-radio browser smoke — checked dot contrast (2026-07-07 fix, SC 1.
   })
 })
 
+// ── T-0340: the checked circle reads the primary FILL role by default; a set --ui-radio-ink still recolours it ──
+
+describe('ui-radio browser smoke: checked fill role and the ink hook (T-0340)', () => {
+  const resolve = (el: HTMLElement, value: string): string => {
+    const probe = document.createElement('span')
+    probe.style.background = value
+    el.append(probe)
+    const c = getComputedStyle(probe).backgroundColor
+    probe.remove()
+    return c
+  }
+
+  it('default: the checked ring and fill are both --md-sys-color-primary-fill (one solid circle)', () => {
+    const el = mount(document.createElement('ui-radio') as UIRadioElement)
+    el.checked = true
+    const before = getComputedStyle(el, '::before')
+    const fill = resolve(el, 'var(--md-sys-color-primary-fill)')
+    expect(before.backgroundColor).toBe(fill)
+    expect(before.borderTopColor).toBe(fill)
+  })
+
+  it('a set --ui-radio-ink recolours BOTH the checked ring and the fill', () => {
+    const el = mount(document.createElement('ui-radio') as UIRadioElement)
+    el.style.setProperty('--ui-radio-ink', 'rgb(200, 30, 40)')
+    el.checked = true
+    const before = getComputedStyle(el, '::before')
+    expect(before.backgroundColor).toBe('rgb(200, 30, 40)')
+    expect(before.borderTopColor).toBe('rgb(200, 30, 40)')
+  })
+})
+
 // ── S3 browser smoke: C10 zero-residue ───────────────────────────────────────────────────────────
 
 describe('ui-radio browser smoke — C10 zero-residue', () => {

@@ -31,6 +31,13 @@ describe('column-chart.css — structure + token hygiene', () => {
     for (const token of consumed) expect(declared, `${token} consumed in @scope but never declared in :where()`).toContain(token)
   })
 
+  it('the callout fill defaults to the primary FILL role and follows a set --ui-column-chart-highlight-ink (T-0340)', () => {
+    expect(tokenBlock).toMatch(/--ui-column-chart-callout-bg:\s*var\(--ui-column-chart-highlight-ink,\s*var\(--md-sys-color-primary-fill\)\)/)
+    expect(tokenBlock).toMatch(/--ui-column-chart-highlight-outline:\s*var\(--ui-column-chart-highlight-ink,\s*var\(--md-sys-color-primary\)\)/)
+    expect(tokenBlock, 'highlight-ink must stay an unset hook, or the fill fallback never applies').not.toMatch(/--ui-column-chart-highlight-ink\s*:/)
+    expect(tokenBlock).not.toMatch(/color-mix/)
+  })
+
   it('aliases the shared six-step series ramp from _chart/chart-axis.css by name (the family-tunnel pattern)', () => {
     for (let i = 1; i <= 6; i++) {
       const m = tokenBlock.match(new RegExp(`--ui-column-chart-series-${i}-ink:\\s*var\\(--ui-chart-series-${i}-ink\\)`))

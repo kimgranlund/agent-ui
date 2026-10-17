@@ -58,7 +58,7 @@ function pair(caption: string, surface: string, onSurface: string): HTMLElement 
   )
 }
 const pairs = row(
-  pair('primary / on-primary', '--md-sys-color-primary', '--md-sys-color-primary-on-primary'),
+  pair('primary-fill / on-primary', '--md-sys-color-primary-fill', '--md-sys-color-primary-on-primary'),
   pair('primary-surface / on-surface', '--md-sys-color-primary-surface', '--md-sys-color-primary-on-surface'),
   pair('secondary / on-secondary', '--md-sys-color-secondary', '--md-sys-color-secondary-on-secondary'),
 )

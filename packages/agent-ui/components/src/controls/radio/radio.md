@@ -123,7 +123,7 @@ the group's form value.
 The host is an **inline-flex row**: a circular `::before` pseudo-element (the ring, sized to
 `--md-sys-compact-{size}`), a circular `::after` pseudo-element (the checked **dot**, absolutely positioned and
 centred on `::before`), then any default-slot content (the optional label text). When checked, the ring
-**fills solid primary** (`::before` border `--ui-radio-ink`, background `--ui-radio-fill`, which is the ink while enabled) and the dot reads the bright
+**fills solid primary** (`::before` border and background `--md-sys-color-primary-fill`, T-0340; a set `--ui-radio-ink` recolours both, and `--ui-radio-fill` follows it) and the dot reads the bright
 `--md-sys-color-primary-on-primary` role — the same ring-fills / bright-glyph pairing `ui-switch` uses for its
 checked track + thumb, so the dot reads as a distinct indicator instead of disappearing into a same-hue ring.
 Disabled takes the fleet disabled recipe (T-0139): the ring at `-outline-variant`, the checked fill at

@@ -141,6 +141,12 @@
   --md-sys-color-primary-high: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-400));
   --md-sys-color-primary-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-350));
   --md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-250));
+  /* T-0340: the FILL ladder under on-primary text (ui-button solid, checked checkbox/radio, badges). Dark legs clear
+     4.5:1 and darken rest -> hover -> pressed; light legs match primary / -dim / -high. `primary` stays the ink and
+     indicator role. Theme packs derive theirs (wrap-pack.ts repointFill). */
+  --md-sys-color-primary-fill: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-600));
+  --md-sys-color-primary-fill-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-700));
+  --md-sys-color-primary-fill-active: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-750));
   --md-sys-color-primary-disabled: light-dark(var(--md-sys-color-primary-scrim-600), var(--md-sys-color-primary-scrim-600));
   --md-sys-color-primary-on-primary: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-050));
   --md-sys-color-primary-on-primary-variant: light-dark(var(--md-sys-color-primary-200), var(--md-sys-color-primary-200));
@@ -1074,7 +1080,8 @@
 
   /* ③ Persistent-SELECTED accent fill (ADR-0048) — the calendar selected-day + segmented-control
         selected-segment fill. Both legs clear WCAG-AA (≥4.5:1) against on-primary WHITE text, which
-        the plain `primary` anchor (500) does NOT in dark. The generated ladder has no "selected" rung
+        the plain `primary` anchor (450) does NOT in dark; T-0340's `primary-fill` roles also do. The
+        generated ladder has no "selected" rung
         (hover/active shift the wrong way for a fill that always bears white text). Pinned by tokens.test.ts.
         RE-DERIVED for the new ramp (was 550/600): the regenerated primary mid-tones are lighter, so
         primary-550 fell to 3.85:1 vs white — below AA. primary-600 is the lightest stop clearing 4.5:1

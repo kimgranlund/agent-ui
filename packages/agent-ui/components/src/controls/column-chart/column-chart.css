@@ -73,9 +73,12 @@
   --ui-column-chart-now-ink: var(--ui-chart-now-ink);
   --ui-column-chart-projected-ink: var(--ui-chart-projected-ink);
   --ui-column-chart-projected-dash: var(--ui-chart-projected-dash);
-  --ui-column-chart-highlight-ink: var(--md-sys-color-primary);
+  /* --ui-column-chart-highlight-ink is an author hook, unset by default: set, it recolours the highlight outline and
+     the callout fill; unset, the outline is the primary indicator role and the callout the primary FILL role, which
+     carries the on-primary callout text at 4.5:1+ (T-0340). */
   --ui-column-chart-callout-ink: var(--md-sys-color-primary-on-primary);
-  --ui-column-chart-callout-bg: light-dark(var(--ui-column-chart-highlight-ink), color-mix(in oklch, var(--ui-column-chart-highlight-ink), black 25%)); /* follows the highlight outline; dark dims it one step, since on-primary ink on plain primary is 3.25:1 in dark (T-0337) and 6:1 on the dimmed step */
+  --ui-column-chart-callout-bg: var(--ui-column-chart-highlight-ink, var(--md-sys-color-primary-fill));
+  --ui-column-chart-highlight-outline: var(--ui-column-chart-highlight-ink, var(--md-sys-color-primary));
   --ui-column-chart-series-1-ink: var(--ui-chart-series-1-ink);
   --ui-column-chart-series-2-ink: var(--ui-chart-series-2-ink);
   --ui-column-chart-series-3-ink: var(--ui-chart-series-3-ink);
@@ -212,7 +215,7 @@
   }
 
   :scope [data-part='category'][data-highlight] [data-part='segment'] {
-    outline: 2px solid var(--ui-column-chart-highlight-ink);
+    outline: 2px solid var(--ui-column-chart-highlight-outline);
     outline-offset: -1px;
   }
 

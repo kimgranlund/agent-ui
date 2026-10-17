@@ -23,16 +23,15 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-button) declares --ui-button-* ════════════════ */
 
 :where(ui-button) {
-  /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). Per-state bg from
-     the generic accent-ladder role steps (--md-sys-color-primary · -dim · -high) — a role step NOT a color-mix
-     (ADR-0008's original Decision table, restored by the 2026-08-22 reversal amendment; the dedicated
-     `-hover`/`-active` roles the interim `tok-states` amendment added are UNUSED by this control again — kept in
-     tokens.css for any other consumer, per the ADR's own note). KNOWN REGRESSION (see the amendment): -dim and
-     -high both resolve to --md-sys-color-primary-650 in the LIGHT scheme, so a hovered solid button is visually
-     indistinguishable from a pressed one in light mode — the exact collapse the tok-states amendment fixed. */
-  --ui-button-bg: var(--md-sys-color-primary);
-  --ui-button-bg-hover: var(--md-sys-color-primary-dim);
-  --ui-button-bg-active: var(--md-sys-color-primary-high);
+  /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). Per-state bg from the
+     primary FILL ladder (T-0340: --md-sys-color-primary-fill · -fill-hover · -fill-active), the role that carries
+     on-primary text: dark 600 -> 700 -> 750, each at 4.5:1 or better. Its light legs equal the generic accent ladder
+     ADR-0008 Amendment 2 restored (primary · -dim · -high), so light is unchanged, including the KNOWN regression:
+     hover and pressed both resolve to --md-sys-color-primary-650 in light, so a hovered solid button looks like a
+     pressed one there. */
+  --ui-button-bg: var(--md-sys-color-primary-fill);
+  --ui-button-bg-hover: var(--md-sys-color-primary-fill-hover);
+  --ui-button-bg-active: var(--md-sys-color-primary-fill-active);
   --ui-button-ink: var(--md-sys-color-primary-on-primary);
   --ui-button-border: transparent;
 

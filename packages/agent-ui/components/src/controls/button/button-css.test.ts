@@ -120,11 +120,11 @@ const variantBlock = (marker: string): string => {
 }
 
 describe('button.css — interaction states from role ladders (ADR-0008)', () => {
-  it('solid (default) steps the generic accent ladder: idle --md-sys-color-primary · hover -dim · active -high', () => {
+  it('solid (default) steps the primary FILL ladder (T-0340): idle -fill · hover -fill-hover · active -fill-active', () => {
     const b = variantBlock(':where(ui-button) {')
-    expect(b).toMatch(/--ui-button-bg:\s*var\(--md-sys-color-primary\)/)
-    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--md-sys-color-primary-dim\)/) // ADR-0008 Amendment 2 (reversion, 2026-08-22)
-    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--md-sys-color-primary-high\)/)
+    expect(b).toMatch(/--ui-button-bg:\s*var\(--md-sys-color-primary-fill\)/)
+    expect(b).toMatch(/--ui-button-bg-hover:\s*var\(--md-sys-color-primary-fill-hover\)/) // light leg = -dim (ADR-0008 Amendment 2)
+    expect(b).toMatch(/--ui-button-bg-active:\s*var\(--md-sys-color-primary-fill-active\)/) // light leg = -high
   })
 
   it('soft steps the CONTAINER ladder: idle -container-low · hover -container · active -container-high', () => {

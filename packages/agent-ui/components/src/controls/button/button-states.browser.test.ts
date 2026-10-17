@@ -136,6 +136,11 @@ describe('ui-button states — RISK-1 solid idle→hover→active ladder per col
     expect(hover, `dark solid hover==active (ladder collapsed in dark): ${hover}`).not.toBe(active)
     expect(hover, 'dark idle did not lift on hover').not.toBe(idle)
     expect(active, 'dark idle did not lift on active').not.toBe(idle)
+    // T-0340: the solid states read the FILL ladder (AA under on-primary), never the ink roles' dark legs.
+    expect(idle, 'dark solid rest is not --md-sys-color-primary-fill').toBe(resolveToken(btn, '--md-sys-color-primary-fill', 'dark'))
+    expect(idle, 'dark solid rest still reads the --md-sys-color-primary ink role').not.toBe(resolveToken(btn, '--md-sys-color-primary', 'dark'))
+    expect(active, 'dark solid pressed is not --md-sys-color-primary-fill-active').toBe(resolveToken(btn, '--md-sys-color-primary-fill-active', 'dark'))
+    expect(active, 'dark solid pressed still reads --md-sys-color-primary-high').not.toBe(resolveToken(btn, '--md-sys-color-primary-high', 'dark'))
   })
 
   it('LIGHT: solid hover and active COLLAPSE onto the same step (ADR-0008 Amendment 2, KNOWN regression)', () => {

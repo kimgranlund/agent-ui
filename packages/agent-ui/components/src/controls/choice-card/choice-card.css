@@ -32,7 +32,7 @@
      color alone). */
   --ui-choice-card-border-selected: var(--md-sys-color-primary);
   --ui-choice-card-bg-selected: var(--md-sys-color-primary-surface);
-  --ui-choice-card-badge-bg: var(--md-sys-color-primary);
+  --ui-choice-card-badge-bg: var(--md-sys-color-primary-fill); /* T-0340: the fill role under on-primary ink */
   --ui-choice-card-badge-ink: var(--md-sys-color-primary-on-primary);
 
   /* Padding — the container/layout spacing law (geometry.md "Container/layout" band): off the
