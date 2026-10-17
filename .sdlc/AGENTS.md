@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:73bf2fe8700f -->
+<!-- sdlc-lite:managed:start v1 sha256:d2e4ee08fb00 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -30,7 +30,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0315 Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (0315-shared-catalog-cross-game-retrieval)
   - T-0340 Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA (0340-dark-primary-on-primary-contrast)
   - T-0343 Smoke scenarios for every preset, planned from tags, replayed in CI (0343-eval-smoke-scenarios)
-  - T-0344 A PARSE failure on a string messages asks for an array of objects (round 10 cluster A) (0344-r10-parse-ask-array)
+  - T-0344 A PARSE failure on a string messages asks for an array of objects (round 10 cluster A) (0344-r10-parse-ask-array), branch fix/0344-parse-ask-array
   - T-0346 A poker showdown reveals the opponent hand and settles in the same turn (round 10 cluster C) (0346-r10-omaha-showdown-settles)
   - T-0347 Scripted card scenarios skip the rest of a hand when a natural settles it (round 10 cluster D) (0347-r10-probe-natural-skip)
   - T-0348 The surface override does not read a playing card as a UI card (round 10 cluster E) (0348-r10-override-playing-card)
