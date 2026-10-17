@@ -5,7 +5,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
-| T-0161 | [0161-agent-content-overlays](0161-agent-content-overlays/handoff.md) | Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind | feature | L3 | P2 | T-0160 | 🔵 ready |
+| T-0161 | [0161-agent-content-overlays](0161-agent-content-overlays/handoff.md) | Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind | feature | L3 | P2 | T-0160 | 🔵 ready (branch feat/0161-agent-content-overlays) |
 | T-0162 | [0162-agent-content-schema-forms](0162-agent-content-schema-forms/handoff.md) | Settings pane forms generated from each content kind's schema, with provenance, diff and reset | feature | L3 | P2 | T-0160, T-0161 | 🔵 ready |
 | T-0163 | [0163-agent-content-compiler](0163-agent-content-compiler/handoff.md) | One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace | feature | L3 | P2 | T-0160, T-0161 | 🔵 ready |
 | T-0187 | [0187-split-pane-narrow-fit](0187-split-pane-narrow-fit/handoff.md) | split-pane demo stacks or scrolls at 400px instead of overflowing the column | chore | L2 | P2 | none | ⏳ proposed |

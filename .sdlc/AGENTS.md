@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:25bff9d8bb03 -->
+<!-- sdlc-lite:managed:start v1 sha256:7aee71dedc8a -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -22,7 +22,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0345 Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) (0345-r10-poker-opens-with-cards)
 - ready: 13
-  - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays)
+  - T-0161 Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (0161-agent-content-overlays), branch feat/0161-agent-content-overlays
   - T-0162 Settings pane forms generated from each content kind's schema, with provenance, diff and reset (0162-agent-content-schema-forms)
   - T-0163 One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace (0163-agent-content-compiler)
   - T-0178 Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (0178-eval-judged-checks)
