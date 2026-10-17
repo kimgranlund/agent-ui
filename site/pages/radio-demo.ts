@@ -87,7 +87,7 @@ const giftNote = el('p', {}, [
 
 // ── size + state specimens ─────────────────────────────────────────────────────────────────────────────────
 const specimenRow = (...figures: HTMLElement[]): HTMLElement =>
-  el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-space-lg); align-items:flex-end;' }, figures)
+  el('div', { style: 'display:flex; flex-wrap:wrap; gap:var(--md-sys-space-lg);' }, figures)
 
 const sizes = specimenRow(
   captioned('size="sm"', el('ui-radio', { size: 'sm', checked: '' }, [text('Small')])),

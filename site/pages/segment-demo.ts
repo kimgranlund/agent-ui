@@ -91,7 +91,7 @@ const scaledControl = (scale: string): HTMLElement =>
       el('ui-segment', { value: 'roomy' }, [text('Roomy')]),
     ]),
   ])
-const scaleRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); align-items:center; flex-wrap:wrap;' }, [
+const scaleRow = el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); flex-wrap:wrap;' }, [
   captioned('data-scale="sm"', scaledControl('sm')),
   captioned('data-scale="md"', scaledControl('md')),
   captioned('data-scale="lg"', scaledControl('lg')),
