@@ -292,7 +292,7 @@ function naturalFinding(view: SurfaceView, hand: HandContainer, dealer: readonly
     path: `${view.surfaceId}:${moves[0]?.id ?? hole!.id}`,
     message:
       `The player's cards in ${hand.id} (${describeCards(hand.cards)}) are a natural blackjack, which ends the round on the deal, but the surface ${faults.join(' and ')}. ` +
-      `Settle the round in this same turn: turn the dealer's hole card face up, state the result (the player wins 3:2 unless the dealer also has 21, then a push) with the chip delta and the updated bankroll, ` +
+      `Settle the round in this same turn: turn the dealer's hole card face up, state the result (the player wins ${isPontoon(view) ? '2:1' : '3:2'} unless the dealer also has 21, then a push) with the chip delta and the updated bankroll, ` +
       `and leave only the Deal again Button in the actions row, with no Hit, Stand or Double.`,
   }
 }
@@ -647,7 +647,7 @@ function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction)
         path: `${view.surfaceId}:${path ?? table.id}`,
         message:
           `The bankroll reads ${after} after a bet of ${bet} from ${before}. The deal takes the bet out of the bankroll: write ${before - bet}. ` +
-          `Settlement later pays the bet back with the winnings (2x the bet for a win, 2.5x for a natural, 1x for a push).`,
+          `Settlement later pays the bet back with the winnings (2x the bet for a win, 2.5x for a natural or 3x for a pontoon, 1x for a push).`,
       })
   }
   return findings
@@ -667,13 +667,16 @@ function cardsAt(dataModel: unknown, path: string | undefined): Card[] | undefin
   return cards.every((c): c is Card => c !== undefined) ? cards : undefined
 }
 
-/** What a settled round pays back on a stake already taken out at the deal: 2x on a win, 2.5x on a natural,
- *  the stake on a push, nothing on a loss, with the result in words for the repair sentence. */
-function payout(player: readonly Card[], dealer: readonly Card[], stake: number): { amount: number; result: string } {
+/** T-0334: a surface whose words name pontoon, whose natural pays 2:1 where blackjack and Spanish 21 pay 3:2. */
+const isPontoon = (view: SurfaceView): boolean => /\bpontoon\b/i.test(literalWords(view.components.values()))
+
+/** What a settled round pays back on a stake already taken out at the deal: 2x on a win, 2.5x on a natural (3x in
+ *  pontoon, 2:1), the stake on a push, nothing on a loss, with the result in words for the repair sentence. */
+function payout(player: readonly Card[], dealer: readonly Card[], stake: number, pontoon = false): { amount: number; result: string } {
   const p = bestTotal(player)
   const d = bestTotal(dealer)
   if (p > 21) return { amount: 0, result: `a bust (${p})` }
-  if (isNatural(player) && !isNatural(dealer)) return { amount: stake * 2.5, result: 'a natural' }
+  if (isNatural(player) && !isNatural(dealer)) return pontoon ? { amount: stake * 3, result: 'a pontoon (2:1)' } : { amount: stake * 2.5, result: 'a natural' }
   if (isNatural(dealer) && !isNatural(player)) return { amount: 0, result: 'a loss to the dealer\'s natural' }
   if (d > 21) return { amount: stake * 2, result: `a win (the dealer bust on ${d})` }
   if (p > d) return { amount: stake * 2, result: `a win (${p} over ${d})` }
@@ -718,7 +721,7 @@ function settleFinding(view: SurfaceView, table: A2uiComponent, action: Semantic
   const doubled = /^double/i.test(action.name)
   const stake = doubled ? bet * 2 : bet
   const takenNow = deal ? bet : doubled ? bet : 0 // the stake leaves the bankroll at the deal; a double adds one more
-  const { amount, result } = payout(player, dealer, stake)
+  const { amount, result } = payout(player, dealer, stake, isPontoon(view))
   const expected = before - takenNow + amount
   if (after === expected) return undefined
   return {

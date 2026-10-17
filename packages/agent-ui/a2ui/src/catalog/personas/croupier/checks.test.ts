@@ -696,6 +696,23 @@ describe('croupier action check: settlement pays out from the click-time bankrol
     expect(run(settle(1025, [C('A'), C('K')], [C('9'), C('7')]), 'deal', { bankroll: 1000, bet: 50, phase: 'betting' }, { bet: 50 }).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
   })
 
+  // T-0334 (live round 9 :27): a pontoon (an ace and a ten-card) pays 2:1, so the deal on 50 from 1,000 reads 1,100.
+  it('T-0334: a pontoon natural pays 2:1 (1,000 to 1,100 on 50); blackjack and Spanish 21 stay at 3:2', () => {
+    const titled = (title: string, bankroll: number): A2uiOutput => {
+      const out = settle(bankroll, [C('A'), C('K')], [C('9'), C('7')])
+      ;(out[1] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components = [{ ...table, title }]
+      return out
+    }
+    const deal = (output: A2uiOutput) => run(output, 'deal', { bankroll: 1000, bet: 50, phase: 'betting' }, { bet: 50 })
+    expect(deal(titled('Pontoon', 1100))).toEqual([])
+    const wrong = deal(titled('Pontoon', 1075))
+    expect(wrong.map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+    expect(wrong[0]!.message).toMatch(/a pontoon \(2:1\) on a stake of 50, so the bankroll goes from 1000 to 1100/)
+    expect(deal(titled('Blackjack', 1075))).toEqual([])
+    expect(deal(titled('Spanish 21', 1075))).toEqual([])
+    expect(deal(titled('Blackjack', 1100)).map((f) => f.code)).toEqual(['BANKROLL_MISMATCH'])
+  })
+
   it('a double takes one more stake and pays on twice the bet (950 to 1,100 on a doubled 50 win)', () => {
     expect(run(settle(1100, [C('6'), C('5'), C('K')], dealer17, 100), 'double', playing(950))).toEqual([])
   })
