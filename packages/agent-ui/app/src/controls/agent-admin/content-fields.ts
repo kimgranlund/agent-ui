@@ -11,7 +11,8 @@
 // - the pane coverage test pins every pane-edited row to a rendered `[data-field]`, and the reverse.
 //
 // It imports nothing, so Node loads it under type stripping (the generator and the CLI) as readily as
-// the browser does. Labels and help text here are the pane's own, moved, not reworded.
+// the browser does. Labels and help text here are the pane's own, moved, not reworded: the Agent and Model
+// sections and the surface, bankroll and response-type rows read them from here.
 
 /** A field's value shape. `flags` is an object of booleans; `entries` an id-keyed entry list; `refs` a list
  *  of `<id>@<version>` refs; `true` and `false` a literal that is the only admitted value. */
@@ -186,7 +187,7 @@ export const PERSONA_FIELDS: readonly ContentField[] = [
   { key: 'a2uiCatalog', type: 'string', home: 'catalog', state: true, label: 'Catalog' },
   { key: 'a2uiLocalPatterns', file: 'localPatterns', type: 'string', home: 'seed', state: true, label: 'Local patterns' },
   { key: 'bankrollCapable', file: 'bankroll', type: 'boolean', fileType: 'true', home: 'seed', state: true, label: 'Bankroll' },
-  { key: 'bankroll', type: 'number', min: 0, home: 'bankroll', state: true, label: 'Bankroll figure' },
+  { key: 'bankroll', type: 'number', min: 0, home: 'bankroll', state: true, label: 'Stored bankroll' },
   ...PANE_ENTRY_KINDS.map(
     (kind): ContentField => ({
       key: `entries:${kind}`,

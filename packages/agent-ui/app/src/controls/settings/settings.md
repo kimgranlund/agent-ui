@@ -113,7 +113,8 @@ Each `SettingsField.type` maps to a fleet control: `text`/`number`/`date` → `u
 `type`), `boolean` → `ui-switch`, `select` → `ui-select`, `slider` → `ui-slider`. Every field renders inside
 a `ui-field` (label/description from the schema) inside one `ui-form-provider` per section — validation
 (`Field.validation`) wires onto the generated control's **own** validity, so errors render through its
-existing `user-invalid` timing, never a second observation path (ADR-0051).
+existing `user-invalid` timing, never a second observation path (ADR-0051). Each generated `ui-field` carries
+`data-field="<key>"` (T-0162), so a host can find the row a store key renders in.
 
 ## Persistence — the `SettingsStore` seam
 

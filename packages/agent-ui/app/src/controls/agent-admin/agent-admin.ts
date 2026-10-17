@@ -264,6 +264,7 @@ import {
 import { mountEntryList, showAddError, type EntryListSection, type EntryRowMark } from '../entry-list/entry-list.ts'
 // T-0162: the per-place provenance an overlay store (or a whole-record store) answers (ACS-R8).
 import type { OverlayPath, Provenance, ProvenanceReader } from './agent-overlay.ts'
+import { PERSONA_FIELD_BY_KEY } from './content-fields.ts'
 import { lintPromptSections } from './prompt-lint.ts'
 // GH #1197 (ADR-0203 cl.1/cl.2 / req-agent-teams.md R5) — the Team pane (list/create/edit/delete,
 // validation-closed) plus the compose-side wiring: `#teams` is this element's own cache of the pane's
@@ -1309,7 +1310,7 @@ export class UIAgentAdminElement extends UIElement {
       return { group, detail }
     }
 
-    const markdown = surfaceRow('markdown', 'Markdown', 'markdown')
+    const markdown = surfaceRow('markdown', fieldLabel(SURFACE_MARKDOWN_KEY), 'markdown')
     markdown.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_MARKDOWN_KEY, markdown.toggle.checked)
       this.#applyMasterStates(this.store)
@@ -1317,7 +1318,7 @@ export class UIAgentAdminElement extends UIElement {
     })
     this.#surfaceMarkdownSwitch = markdown.toggle
 
-    const a2ui = surfaceRow('a2ui', 'A2UI', 'a2ui')
+    const a2ui = surfaceRow('a2ui', fieldLabel(SURFACE_A2UI_KEY), 'a2ui')
     a2ui.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_A2UI_KEY, a2ui.toggle.checked)
       this.#applyMasterStates(this.store)
@@ -1339,7 +1340,7 @@ export class UIAgentAdminElement extends UIElement {
     // opts in, `isGenuiSurfaceEnabled`) replaces the PRD-gated `disabled` lock. The pattern-source PICK
     // itself lives in the "Pattern sources" capability section below (CAPABILITY_KINDS, D4's "From
     // library" affordance) — this row is only the modality's own on/off switch, mirroring markdown/a2ui.
-    const genui = surfaceRow('genui', 'GenUI', 'genui')
+    const genui = surfaceRow('genui', fieldLabel(SURFACE_GENUI_KEY), 'genui')
     genui.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
     genui.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_GENUI_KEY, genui.toggle.checked)
@@ -1365,7 +1366,7 @@ export class UIAgentAdminElement extends UIElement {
     // one grammar is the file's own convention (`surface-label` names every modality row's label alike).
     // The old name was referenced by nothing — no CSS, no test, not the descriptor's parts block.
     genuiDogfoodLabel.setAttribute('data-part', 'surface-detail-label')
-    genuiDogfoodLabel.textContent = 'Use agent-ui components'
+    genuiDogfoodLabel.textContent = fieldLabel(SURFACE_GENUI_DOGFOOD_KEY)
     const genuiDogfoodSwitch = document.createElement('ui-switch') as HTMLElement & { checked: boolean; disabled: boolean }
     genuiDogfoodSwitch.setAttribute('data-part', 'surface-genui-dogfood-toggle')
     genuiDogfoodSwitch.setAttribute('aria-label', 'Use agent-ui components in the GenUI frame')
@@ -1399,7 +1400,7 @@ export class UIAgentAdminElement extends UIElement {
     // DELIBERATELY independent of the A2UI master (no dim, no disable): the planner is a turn-SHAPE knob
     // the host loop reads, not an output modality — planner-ON + A2UI-OFF is legal here; the future
     // admin-side runner slice owns deciding whether that combo degrades or dims (review note, 2026-08-08).
-    const planner = surfaceRow('planner', 'Planner', 'planner')
+    const planner = surfaceRow('planner', fieldLabel(SURFACE_PLANNER_KEY), 'planner')
     planner.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the real stored value below
     planner.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_PLANNER_KEY, planner.toggle.checked)
@@ -1418,7 +1419,7 @@ export class UIAgentAdminElement extends UIElement {
     // The gate governs TEACHING (the composed prompt's personaPatch arm) and is ONE conjunct of
     // consumption; it never authorizes a write on its own. A patch declared outside the dedicated
     // authoring context is ignored with this switch ON — see `#runSurfaceTurn`'s apply loop.
-    const authoring = surfaceRow('authoring', 'Authoring', 'authoring')
+    const authoring = surfaceRow('authoring', fieldLabel(SURFACE_AUTHORING_KEY), 'authoring')
     authoring.toggle.checked = false // the inverse default (OFF) — applyMasterStates re-applies the stored value
     authoring.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_AUTHORING_KEY, authoring.toggle.checked)
@@ -1433,7 +1434,7 @@ export class UIAgentAdminElement extends UIElement {
     // must render byte-identical to today's shipped chat look (the ticket's own "zero visual change
     // unset" requirement). Threads into `ui-conversation`'s own reflected `bubbles` prop below
     // (`#applyMasterStates`) — never a bare component prop on its own, per Kim's ruling 1.
-    const bubbles = surfaceRow('bubbles', 'Chat bubbles', 'bubbles')
+    const bubbles = surfaceRow('bubbles', fieldLabel(SURFACE_BUBBLES_KEY), 'bubbles')
     bubbles.toggle.addEventListener('change', () => {
       this.store?.set(SURFACE_BUBBLES_KEY, bubbles.toggle.checked)
       this.#applyMasterStates(this.store)
@@ -1464,7 +1465,7 @@ export class UIAgentAdminElement extends UIElement {
     })
     const prefersLabel = document.createElement('span')
     prefersLabel.setAttribute('data-part', 'surface-label')
-    prefersLabel.textContent = 'Response type'
+    prefersLabel.textContent = fieldLabel(PREFERS_KEY)
     const prefersSpacer = document.createElement('span')
     prefersSpacer.setAttribute('data-part', 'surface-spacer')
     prefersRow.append(prefersLabel, prefersSpacer, prefersPicker)
@@ -1481,7 +1482,7 @@ export class UIAgentAdminElement extends UIElement {
     bankrollRow.setAttribute('data-part', 'bankroll-row')
     const bankrollLabel = document.createElement('span')
     bankrollLabel.setAttribute('data-part', 'bankroll-label')
-    bankrollLabel.textContent = 'Stored bankroll'
+    bankrollLabel.textContent = fieldLabel(BANKROLL_KEY)
     const bankrollSpacer = document.createElement('span')
     bankrollSpacer.setAttribute('data-part', 'surface-spacer')
     const bankrollReset = document.createElement('ui-button') as UIButtonElement
@@ -5160,6 +5161,11 @@ function splitModelSection(schema: SettingsSchema | undefined): [SettingsSchema 
   const model = schema?.version === 1 ? schema.sections.find((section) => section.id === 'model') : undefined
   if (schema === undefined || model === undefined) return [schema, undefined]
   return [{ ...schema, sections: schema.sections.filter((section) => section !== model) }, { ...schema, sections: [model] }]
+}
+
+/** T-0162: a pane row's label, from its persona kind schema row (ACS-R10: one field definition). */
+function fieldLabel(key: string): string {
+  return PERSONA_FIELD_BY_KEY.get(key)?.label ?? key
 }
 
 /** T-0162: what one provenance strip shows (`#stripFor`). */

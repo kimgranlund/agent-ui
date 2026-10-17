@@ -15,7 +15,7 @@ import './agent-admin.ts'
 import type { UIAgentAdminElement } from './agent-admin.ts'
 import '@agent-ui/icons/phosphor'
 import { BANKROLL_CAPABLE_KEY, SURFACE_AUTHORING_KEY } from './agent-admin-schema.ts'
-import { PANE_HOMES, PERSONA_FIELDS } from './content-fields.ts'
+import { PANE_HOMES, PERSONA_FIELDS, PERSONA_FIELD_BY_KEY } from './content-fields.ts'
 import { createOverlayStore, emptyOverlay, rebaseOverlay, setOverlayKey, type OverlayStore, type Provenance } from './agent-overlay.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import { entriesStoreKey, readEntries, type Entry } from '../entry-list/entry-data.ts'
@@ -77,6 +77,19 @@ describe('ACS-R10: the pane renders exactly the schema', () => {
     const expected = new Set(PERSONA_FIELDS.filter((f) => f.key !== undefined && PANE_HOMES.includes(f.home)).map((f) => f.key!))
     for (const key of expected) expect(rendered.has(key), `no control for schema field ${key}`).toBe(true)
     for (const key of rendered) expect(expected.has(key), `control ${key} has no pane-homed schema row`).toBe(true)
+    // The label a row shows is its schema row's label, never a second copy: each surface, detail, response
+    // type and bankroll row, each kind fold's switch and the settings form's own fields.
+    const labelOf = (key: string): string => PERSONA_FIELD_BY_KEY.get(key)!.label
+    for (const row of pane.querySelectorAll<HTMLElement>('[data-part="surface-row"][data-field], [data-part="surface-detail-row"][data-field], [data-part="prefers-row"], [data-part="bankroll-row"]')) {
+      const label = row.querySelector('[data-part="surface-label"], [data-part="surface-detail-label"], [data-part="bankroll-label"]')
+      expect(label?.textContent, row.getAttribute('data-field')!).toBe(labelOf(row.getAttribute('data-field')!))
+    }
+    for (const toggle of pane.querySelectorAll<HTMLElement>('[data-part="kind-enabled"][data-field]')) {
+      expect(toggle.getAttribute('aria-label')).toBe(`${labelOf(toggle.getAttribute('data-field')!)} enabled`)
+    }
+    for (const field of pane.querySelectorAll<HTMLElement & { label: string }>('ui-field[data-field]')) {
+      expect(field.label).toBe(labelOf(field.getAttribute('data-field')!))
+    }
   })
 })
 
