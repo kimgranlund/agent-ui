@@ -2,13 +2,11 @@
 id: T-0161
 title: "Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0160]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-14
-branch: feat/0161-agent-content-overlays
-worktree: ../agent-ui.worktrees/wave-w161
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
 ---
 
@@ -40,3 +38,18 @@ A user's edits to a seeded agent survive seed updates: edits are stored as a dif
 - [ ] `npx vitest run packages/agent-ui/app/src/controls/agent-admin/agent-team.test.ts site/pages/agent-admin-app-team.test.ts` exits 0: the Team pane and `handleTeamDeclared` both write through the one save mutation, and the teams list has a live leg.
 - [ ] `npx vitest run site/pages/agent-admin- packages/agent-ui/app/src/controls/agent-admin packages/agent-ui/data` exits 0.
 - [ ] `npm run e2e:admin` exits 0.
+
+## Outcome
+
+2026-10-17 · lane: full L3 · verdict: pass · verifier: none · base: 7b9382202d30
+- Changed: User edits stored as overlays over seeds, 3-way merge on seed update, one write path per kind (#2111)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `agent-overlay.test.ts` exits 0: pass
+- Check: 3 `agent-admin-presets.test.ts` exits 0: pass
+- Check: 4 `agent-team.test.ts` and `agent-admin-app-team.test.ts` exit 0: pass
+- Check: 5 `npx vitest run site/pages/agent-admin- packages/agent-ui/app/src/controls/agent-admin packages/a...: pass
+- Check: 6 `npm run e2e:admin` exits 0: pass
+- Follow-up: decide: Kim, the old-version migration ACS-R7 now keeps a user's old stored... -> notes.md
+- Follow-up: note: ACS-R8 per-op source provenance is not recorded yet -> notes.md
+- Follow-up: note: agent-roster-source.ts:4 is one line longer than the surrounding... -> notes.md

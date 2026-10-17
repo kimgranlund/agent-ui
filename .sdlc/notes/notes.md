@@ -224,3 +224,32 @@
 - note: `scripts/e2e-admin/probe/signals.ts:547` The gates default to `--min-samples 3`, and every real archived round has 1 sample per cell. So `--floor all=1 --max-drop 0.1` on r9 against r8 exits 0 with all 87 cells listed as "Not gated (too few samples)". That is declared, listed in the output and passes the criteria, but the gate bites on real rounds only when a caller passes `--min-samples 1`.
 - note: The retry table differs from r9 `report.md` on IDGRAPH (signals 6 fires, report.md 13); the builder explains that report.md counted failure entries rather than failed rounds. I did not recompute the retry table independently.
 - note: Scratch files remain in /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0342-verifier-L2 (mk.py, recompute.py, rd/); `rm -rf` was denied in this session. The throwaway git worktree itself is removed.
+
+## T-0315: Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening (2026-10-17)
+
+- note: `packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts:46` reads the preset foundations from `site/agent-content/registry.gen.ts` while the shipped presets read `registry.runtime.gen.ts` (`site/agent-content/registry.ts:8`); both are held to the same `.md` source by `site/agent-content/registry-freshness.test.ts:32-33`, so they agree today, but a reword of one generated file alone reds only one of the two T-0315 pins.
+- note: handoff `## Acceptance criteria` #6: the live-round count (every `regress-admiral-` "New game..." opening, 0 `/secret/word` records in `trace.exemplarIds`) is still to be measured on the next live round; the replay above is the pre-round evidence.
+- note: `.sdlc/runtime/tasks/0315-shared-catalog-cross-game-retrieval/red-checkpoint.jsonl` records the three controls as `retrospective` at 985976d62 against the earlier criterion wording (before the hyphenated-key, opaque-key and Foundation-only additions); the controls in this report re-run the final spans at the merge base 0e70ecea1.
+
+## T-0344: A PARSE failure on a string messages asks for an array of objects (round 10 cluster A) (2026-10-17)
+
+- note: `packages/agent-ui/a2ui/src/agent/response-type.ts:102` the position-form `messagesParseNote` now fences the quoted text in backticks and ends with a period (pinned at `response-type.test.ts:74` and `produce-response-type.test.ts:930`, named in the spec REV); no criterion names it, it keeps the ask-then-note hint from running into the next sentence.
+- decide: `.sdlc/evals/rounds/2026-10-17-r10-targeted/report.md:86` asks for a replay pinned from :193 under `scripts/e2e-admin/probe/replays/`; this ticket's criteria did not require one and none was added (criterion 3 runs the existing T-0304 replay).
+- note: `.sdlc/runtime/tasks/0344-r10-parse-ask-array/red-checkpoint.jsonl` records the control as `retrospective` against the earlier, shorter criterion text (`criterion_sha256` differs from the final line); the throwaway red run above is the failing-first evidence.
+- note: the solo report's Open item stands: whether Haiku and Sonnet switch to an array after the new ask is unmeasured until the next live round.
+- note: the Done-when's "one short different-family challenge before build" is described in `solo-report.md` (Sonnet, two edits taken) with no artifact in the task dir; it sits outside `## Acceptance criteria`, so it is recorded as the builder's claim, not checked.
+
+## T-0346: A poker showdown reveals the opponent hand and settles in the same turn (round 10 cluster C) (2026-10-17)
+
+- note: the redck.py deviations run printed no process-deviation lines.
+
+## T-0348: The surface override does not read a playing card as a UI card (round 10 cluster E) (2026-10-17)
+
+- decide: side effects, from a probe that runs detectUserOverride per persona catalog in CATALOG_LAYER_MAP (default types plus each home's types). croupier (owns card, table) loses "show me a summary card", "show me the cards", "as a card", "as a table" and "show me a table of results" (surface to none), and "no card please" (text to none). quizmaster (QuestionCard, owns card) loses "show me a summary card", "show me the cards" and "as a card" (surface to none), and "no card please" (text to none). concierge (BookingForm, owns form) loses "build me a form" and "show me the form" (surface to none). default and stylist show no change. lexicographer and admiral have no CATALOG_LAYER_MAP home, so they own no nouns and keep the plain lexicon. The responsePreference toggle still forces a surface in all of these.
+- note: the probe scratch dir /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0348-verifier-L1 could not be fully removed (rm -rf was denied); the base worktree itself was removed with git worktree remove.
+
+## T-0161: Agent content overlays: user edits as diffs over seeds, 3-way merge on seed update, one write path per kind (2026-10-17)
+
+- decide: Kim, the old-version migration (ACS-R7) now keeps a user's old stored seed values under a `seedChanged` flag instead of wiping them. A user on Quizmaster v1 keeps `claude-haiku-4-5` (a retired model default) until T-0162 offers "take seed". The old behavior, which Kim chose in the Quizmaster v2 comment, is gone. Alternatives are to ship per-version field digests in the generator, or to accept the flag as is. The solo already listed the digest idea as undone.
+- note: ACS-R8 per-op `source` provenance is not recorded yet. The solo flagged this and left it to T-0162. The Goal does not need it.
+- note: `agent-roster-source.ts:4` is one line longer than the surrounding comment wrap. This is cosmetic.
