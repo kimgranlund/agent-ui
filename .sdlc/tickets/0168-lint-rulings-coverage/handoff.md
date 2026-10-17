@@ -33,3 +33,12 @@ Every standing dogfood ruling from 2026-10-13/14 has a lint rule with a negative
 
 ## Constraints
 - Rules derive thresholds from the ramp or named JSON fields, never repeated literals. No em dashes.
+
+## Acceptance criteria
+verifier: L3
+
+- `npm run check` exits 0.
+- `node scripts/dogfood-compose.mjs selftest` exits 0, with cases for `caret-glyph` and `star-run`.
+- `node scripts/dogfood-compose.mjs --gate` exits 0.
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts` exits 0 in Chromium and WebKit, every new render rule measured at least once in the sweep, and every new negative control red on its plant and green on its twin.
+- `node -e "const r=require('./scripts/dogfood-rules.json');const d=require('fs').readFileSync('.claude/docs/references/dogfood-lint.md','utf8');const q=String.fromCharCode(96);const miss=[...r.render,...r.compose].map(x=>x.id).filter(id=>!d.includes(q+id+q));if(miss.length){console.error(miss);process.exit(1)}"` exits 0 (the reference lists every rule).

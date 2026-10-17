@@ -2,9 +2,10 @@
 // dogfood-compose.mjs: the composition lint (T-0136, layer 2 of .claude/docs/references/dogfood-lint.md). It
 // reads the A2UI factories, the A2UI example payloads (the seeds), the agent-admin presets and the site demos,
 // and finds a composition the library already has a control for: the "use X, not Y" table is the `compose`
-// array of scripts/dogfood-rules.json (date-field, board-grid, inline-geometry). Detection is textual over
-// source with comments blanked, like foundations-census.mjs; the payload rules read the `{ id, component }`
-// objects of a file and resolve child ids within that file.
+// array of scripts/dogfood-rules.json. Detection is textual over source with comments blanked, like
+// foundations-census.mjs; the payload rules read the `{ id, component }` objects of a file and resolve child ids
+// within that file. A rule with a `scan` list (caret-glyph, T-0168) reads only those roots, the control sources,
+// and the composition rules never read them.
 //
 // The gate reads scripts/dogfood-compose-allowlist.json: one `"<path>#<rule>": "<why>"` entry per line in
 // sorted order. It fails on a finding whose key is not listed, on a listed key that finds nothing (stale), and on a
@@ -41,6 +42,10 @@ const SCAN = [
   ['site/pages', (p) => p.endsWith('-demo.ts') || p.endsWith('/agent-admin-presets.ts')],
 ]
 const SKIP_FILE = /\.test\.ts$|\.gen\.|__fixtures__/
+/** A rule's own scan roots (its `scan` field), for a rule that reads source outside the composition set (T-0168). */
+const SCOPED = new Map(COMPOSE.filter((r) => r.scan).map((r) => [r.id, r.scan]))
+/** True when `rule` reads the file at `path`: a scoped rule its own roots, every other rule the composition set. */
+export const reads = (rule, path) => (SCOPED.has(rule) ? SCOPED.get(rule).some((dir) => path.startsWith(`${dir}/`)) : SCAN.some(([dir, keep]) => path.startsWith(`${dir}/`) && keep(path)))
 
 /** Blank every comment to spaces (indices and line numbers survive), leaving strings intact. */
 export function stripComments(src) {
@@ -132,6 +137,23 @@ export function createdTags(src) {
   return out
 }
 
+// setIcon(host, <name>), a name attribute, key or property set to <name> (an icon's name; a glyph's is `symbol`), or
+// <ui-icon name="caret-*">, where <name> is any expression on that statement naming a caret-* string, so a
+// conditional (`open ? 'caret-up' : 'caret-down'`) or a template counts too
+const CARET_NAME = String.raw`[^;\n]*?['"\`]caret-`
+const CARET_ICON = new RegExp(
+  [
+    String.raw`\bsetIcon\(\s*[^,()]+,${CARET_NAME}`,
+    String.raw`setAttribute\(\s*['"]name['"]\s*,${CARET_NAME}`,
+    String.raw`\bname['"]?\s*:[^,;\n}]*?['"\`]caret-`,
+    String.raw`\.name\s*=(?!=)${CARET_NAME}`,
+    String.raw`<ui-icon\b[^>]*\bname=\\?['"]caret-`,
+  ].join('|'),
+  'g',
+)
+// a star as text: the character, a JS escape or an HTML entity, for U+2605 and U+2606
+const STAR = String.raw`(?:[\u2605\u2606]|\\u260[56]|\\u\{260[56]\}|&#(?:9733|9734|x260[56]);)`
+const STAR_RUN = new RegExp(String.raw`${STAR}{2,}|${STAR}['"\`]\s*\)?\.repeat\(`, 'gi')
 const CALENDAR_ICON = /\b(?:icon|name)['"]?\s*(?:[:=]|,)\s*\\?['"]calendar[\w-]*\\?['"]/g
 const LOOP = /\bfor\s*\(|\.forEach\(|\.map\(|Array\.from\(/
 
@@ -212,6 +234,12 @@ export function findingsIn(path, raw) {
   }
   for (const c of comps) if (c.component === 'Card' && loneButton(c, 0)) res['lone-button-frame'].push({ index: c.index, text: snippet(c.index) })
 
+  // caret-glyph (T-0168): a caret drawn as an icon in a control source
+  for (const m of src.matchAll(CARET_ICON)) res['caret-glyph'].push({ index: m.index, text: snippet(m.index) })
+
+  // star-run (T-0168): stars as text instead of a ui-rating
+  for (const m of src.matchAll(STAR_RUN)) res['star-run'].push({ index: m.index, text: snippet(m.index) })
+
   // inline-geometry
   for (const f of inlineGeometry(src)) res['inline-geometry'].push({ index: f.index, text: snippet(f.index) })
   for (const r of RULES) res[r].sort((a, b) => a.index - b.index)
@@ -278,12 +306,16 @@ function walk(dir, root, keep, out) {
 /** Every finding under `root`, keyed `<path>#<rule>`, with its count and first line. */
 export function compose(root) {
   const found = new Map()
-  for (const [dir, keep] of SCAN) {
+  const roots = [...SCAN, ...[...new Set([...SCOPED.values()].flat())].map((dir) => [dir, (p) => p.endsWith('.ts')])]
+  const seen = new Set()
+  for (const [dir, keep] of roots) {
     for (const path of walk(join(root, dir), root, keep, [])) {
+      if (seen.has(path)) continue
+      seen.add(path)
       const src = readFileSync(join(root, path), 'utf8')
       const res = findingsIn(path, src)
       for (const rule of RULES) {
-        if (res[rule].length) found.set(`${path}#${rule}`, { count: res[rule].length, line: lineOf(src, res[rule][0].index), text: res[rule][0].text })
+        if (res[rule].length && reads(rule, path)) found.set(`${path}#${rule}`, { count: res[rule].length, line: lineOf(src, res[rule][0].index), text: res[rule][0].text })
       }
     }
   }
@@ -366,6 +398,19 @@ function selftest() {
   rule('board-grid', 'a Grid of cards and one button passes', n(F, `const p = [{ id: 'g', component: 'Grid', children: ['a', 'b', 'c'] }, { id: 'a', component: 'Card' }, { id: 'b', component: 'Button' }, { id: 'c', component: 'Card' }]`, 'board-grid') === 0)
   rule('board-grid', 'ui-buttons made in a loop into a ui-grid are found', n(F, `function f() { const g = el('ui-grid'); for (let i = 0; i < 9; i++) g.append(el('ui-button')) }`, 'board-grid') === 1)
   rule('board-grid', 'a ui-grid beside one ui-button with no loop passes', n(F, `function f() { const g = el('ui-grid'); const b = el('ui-button') }`, 'board-grid') === 0)
+
+  // caret-glyph: an icon caret in a control; a ui-glyph caret and a caret in a demo stay legal
+  const C = 'packages/agent-ui/components/src/controls/x/x.ts'
+  rule('caret-glyph', 'setIcon(host, caret-down) is found', n(C, `setIcon(this.#trigger, 'caret-down')`, 'caret-glyph') === 1)
+  rule('caret-glyph', 'a ui-icon named caret-right is found, as markup, a key and an attribute', n(C, `h('<ui-icon name="caret-right">'); el('ui-icon', { name: 'caret-up' }); icon.setAttribute('name', 'caret-left')`, 'caret-glyph') === 3)
+  rule('caret-glyph', 'a conditional or variable caret name is found', n(C, `setIcon(this.#toggle, open ? 'caret-up' : 'caret-down'); icon.setAttribute('name', \`caret-\${dir}\`); icon.name = expanded ? 'caret-down' : 'caret-right'`, 'caret-glyph') === 3)
+  rule('caret-glyph', 'a ui-glyph caret, a non-caret icon and a name comparison pass', n(C, `glyph.setAttribute('symbol', 'caret-down'); setIcon(trigger, 'dots-three'); if (icon.name === 'caret-down') flip()`, 'caret-glyph') === 0)
+  rule('caret-glyph', 'the rule reads control sources only', reads('caret-glyph', C) && !reads('caret-glyph', 'site/pages/x-demo.ts') && !reads('inline-geometry', C) && reads('inline-geometry', 'site/pages/x-demo.ts'))
+
+  // star-run: stars as text
+  rule('star-run', 'a run of five stars in a payload string is found', n(F, `const d = { stars: '\u2605\u2605\u2605\u2605\u2606' }`, 'star-run') === 1)
+  rule('star-run', 'escaped stars and a repeated star are found', n(F, `const a = '\\u2605\\u2605\\u2606'; const b = '&#9733;&#9733;'; const c = '\u2605'.repeat(n)`, 'star-run') === 3)
+  rule('star-run', 'one star beside a number, and stars in a comment, pass', n(F, `const d = { label: '\u2605 4.8' } // \u2605\u2605\u2605`, 'star-run') === 0)
 
   // inline-geometry
   // lone-button-frame: the Sonnet 5.5 game picker of 2026-10-14 (a bordered Card per game Button)

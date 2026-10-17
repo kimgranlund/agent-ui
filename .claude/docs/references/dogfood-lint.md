@@ -10,8 +10,8 @@ up to a human look; each layer catches what the one before cannot see.
 
 | Layer | Reads | Catches | Gate | Allowlist |
 |---|---|---|---|---|
-| 1 Render lint | `getComputedStyle` of every docs demo page, every browsable A2UI catalog widget and every persona seed that renders a persona widget (BookingForm, BookingConfirmation, CardTable, QuestionCard, ContrastPair; T-0144), at 400 and 1000px, light and dark, Chromium and WebKit | radius by role, square icon buttons, the type floor, the 400px column, nested cards, the height ramp, the text edge, hugging badges, option indicators, inline links, adornment gaps, disabled contrast, avatar and badge contrast, button identity, split action groups, prose gaps, glyph gaps, clipped demo cards | `site/pages/dogfood-render.browser.test.ts` (the `site` shard of `npm run test:browser`) | `scripts/dogfood-render-allowlist.json` |
-| 2 Composition lint | the A2UI factories, the A2UI example payloads, the agent-admin presets and the site demos, as text | a composition the library has a control for: a calendar standing in for a date field, a grid of buttons standing in for a board, inline literal geometry | `node scripts/dogfood-compose.mjs selftest` and `--gate` (both in `check:scripts`) | `scripts/dogfood-compose-allowlist.json` |
+| 1 Render lint | `getComputedStyle` of every docs demo page, every browsable A2UI catalog widget and every persona seed that renders a persona widget (BookingForm, BookingConfirmation, CardTable, QuestionCard, ContrastPair; T-0144), at 400 and 1000px, light and dark, Chromium and WebKit | radius by role, square icon buttons, the type floor, the 400px column, nested cards, the height ramp, the text edge, hugging badges, option indicators, inline links, adornment gaps, disabled contrast, avatar and badge contrast, button identity, split action groups, prose gaps, glyph gaps, clipped demo cards, the 3:1 field boundary, the icon box, the calendar cap, the table pager and scroll cue, chart rings, legends, series, chips and empty or diverging marks, placeholder dots, picker em dashes, demo captions, figures, overlines, avatar clusters, supporting lines, board letters and the unframed board edge | `site/pages/dogfood-render.browser.test.ts` (the `site` shard of `npm run test:browser`) | `scripts/dogfood-render-allowlist.json` |
+| 2 Composition lint | the A2UI factories, the A2UI example payloads, the agent-admin presets and the site demos, as text | a composition the library has a control for: a calendar standing in for a date field, a grid of buttons standing in for a board, a lone framed button, stars as text, inline literal geometry; and in control sources, a caret drawn as an icon | `node scripts/dogfood-compose.mjs selftest` and `--gate` (both in `check:scripts`) | `scripts/dogfood-compose-allowlist.json` |
 | 3 Foundations census | every stylesheet and source file under `packages/` and `site/` | a hand-tabled ramp read, a px geometry literal, the retired `glyph` prop and `[scale]` / `[density]` axes | `node scripts/foundations-census.mjs --gate` (in `check:scripts`) | `scripts/foundations-allowlist.json` |
 | 4 Review | a screenshot of the real widget beside its approved mockup | what no rule measures yet: balance, hierarchy, a wrong control for the job | a `ui-designer` review (or Kim's look check) | none; a finding becomes a rule or a ticket |
 
@@ -33,7 +33,7 @@ ratio or a comparison with the same control enabled, and `glyph-gap` reads the g
 | Render rule | Expected |
 |---|---|
 | `register` | the element's cascade n (its `--md-sys-height` / 4) equals the register's n |
-| `pill-radius` | a single-line control or chip has radius at least h/2, the segmented control's track outline (its `::after`) included (T-0144); a square entry cell is exempt (see `entry-cell-radius`) |
+| `pill-radius` | a single-line control or chip has radius at least h/2, the segmented control's track outline (its `::after`) included (T-0144), the suggestion and file-drop chips too (T-0168); a square entry cell is exempt (see `entry-cell-radius`); `ui-multi-select` has no trigger (its descriptor), so its panel is `panel-radius`'s |
 | `icon-square` | a `ui-button` with an icon and no text is as wide as it is tall |
 | `type-floor` | no visible text under `CFG.floor` (9px); a glyph is not text (Amendment 6), so glyphs are exempt and checked by `glyph-box` |
 | `column` | at 400px nothing ends past the content column unless an overflow-x frame inside it holds it |
@@ -50,9 +50,9 @@ ratio or a comparison with the same control enabled, and `glyph-gap` reads the g
 | `glyph-box` | a glyph (`ui-glyph`'s mark, the board-grid intent mark, the HUD and result-card stat marks) is exactly its glyph box max(8px, 2n - 2c) (Amendment 6; the 8px floor is T-0143) |
 | `dash-scale` | no svg shape is non-scaling-stroke with a dasharray other than none (the browser reads such a pattern in screen px; T-0141) |
 | `link-ink` | an `a[href]` inside a `ui-*` host is never the browser's default link colour (T-0141) |
-| `disabled-ink` | a disabled `ui-button` or `ui-toggle`'s ink contrast against its fill is below the same control's with `disabled` lifted (T-0144) |
+| `disabled-ink` | a disabled `ui-button`, `ui-toggle` or entry field part (text-field and textarea editor, OTP cell, select trigger, combo-box editor; T-0168) has ink contrast against its fill below the same control's with `disabled` lifted (T-0144) |
 | `disabled-ghost` | a disabled ghost `ui-button` paints no background (T-0144) |
-| `disabled-edge` | a disabled switch track, checkbox box or radio ring keeps at least 1.3:1 against its surface, fill or border (T-0144) |
+| `disabled-edge` | a disabled switch track, checkbox box, radio ring or entry field frame (T-0168) keeps at least 1.3:1 against its surface, fill or border (T-0144) |
 | `disabled-toggle-fill` | a disabled unpressed `ui-toggle` paints the enabled unpressed fill (T-0144) |
 | `button-text-ink` | a `ui-text` inside a `ui-button` takes the button's colour (T-0144) |
 | `avatar-disc` | an initials or icon `ui-avatar` disc is at least 1.3:1 against the surface behind it (T-0144) |
@@ -60,23 +60,68 @@ ratio or a comparison with the same control enabled, and `glyph-gap` reads the g
 | `button-identity` | every visible `ui-button` paints an icon or a label wider than 0 (T-0144) |
 | `action-group` | the buttons of a flex row that also holds other content share one line, or none shares a line with that content (T-0144) |
 | `prose-gap` | a `p` under a box (a specimen, a card, a button) sits at least n below it (T-0144) |
-| `glyph-gap` | a game-hud or result-card stat glyph sits at least its cascade n from its label (T-0144) |
+| `glyph-gap` | a game-hud or result-card stat glyph, and a product-card rating's stars (T-0168), sit at least the cascade n from the label after them (T-0144) |
 | `scroll-clip` | at 400px no `ui-card` runs past a demo's overflow-x frame (a `ui-*` control's own scroller is exempt) (T-0144) |
+| `field-outline` | a resting entry field (not disabled, focused, user-invalid or the active OTP cell) has an edge at least `boundaryMin` (3:1) against the surface behind it (T-0168) |
+| `slider-disabled` | a disabled slider's fill keeps 1.3:1 against its rail, and its thumb is no taller than enabled (T-0168) |
+| `switch-off-edge` | an enabled unchecked switch's track edge is at least 3:1 against its surface and its off fill quieter than the on fill (T-0168) |
+| `icon-box` | a `ui-icon` inside a control or a `[data-tier]` region is `resolve().icon` (2n); in prose (no region, its nearest `ui-*` host a `layout` container) it is 1em (T-0168) |
+| `calendar-cap` | a calendar's grid is at most `tracks` x `trackFactor` x the 4n cell plus its gaps, and its panel starts on the host's start edge (T-0168) |
+| `table-pager` | a pager a control composes sits in no overflow-x frame inside that control (T-0168) |
+| `table-scroll-cue` | a `ui-table` whose columns overflow paints its edge-fade mask (T-0168) |
+| `ring-parity` | sibling ring stats on one line draw one diameter (T-0168) |
+| `legend-gap` | a gauge legend beside its rings starts 0 to 2n past the outer ring (T-0168) |
+| `series-separation` | chart series 1 and 2 inks are at least `seriesMin` (1.5:1) apart (T-0168) |
+| `chip-opaque` | a column or line chart chip that paints a fill (a border-only chip has none) paints it opaque, with ink at least `inkMin` (4.5:1) (T-0168) |
+| `chart-empty-mark` | a bar chart, column chart or gauge with no data still paints a frame or track (T-0168) |
+| `diverging-zero` | a bar chart track marked diverging draws its zero rule (T-0168) |
+| `placeholder-dots` | no placeholder ends in exactly two periods (T-0168) |
+| `picker-dash` | no option, menu item, tab, radio, segment, choice card, button, toggle or select trigger label carries an em dash; `ui-tab`, `ui-radio`, `ui-segment` and `ui-choice-card` set their role through `ElementInternals`, so they match by tag (T-0168) |
+| `caption-in-specimen` | a `.demo-caption` never sits inside a `ui-*` specimen (T-0168) |
+| `figure-parity` | sibling `.demo-figure`s on one line share their top edge within `edgeTol` (1px) (T-0168) |
+| `overline-gap` | an overline sits closer to the block after it than to the one before (T-0168) |
+| `avatar-cluster` | an avatar overlapping its neighbour covers at most 1 / `widthDivisor` (a quarter) of it and wears a ring (T-0168) |
+| `supporting-ink` | a `.demo-supporting` line has lower ink contrast than the text block before it (T-0168) |
+| `board-letter` | a board letter's cap height is at least 1 / `cellDivisor` (a third) of its cell (T-0168) |
+| `unframed-inset` | a `ui-board-grid` that paints no frame starts its first cell within `edgeTol` (1px) of its own start edge (T-0168) |
 
 The contrast rules (`disabled-*`, `avatar-disc`, `badge-overlay`) read `site/lib/dogfood-contrast.ts`: each painted
 layer (a computed background colour, a flat gradient layer, a border, an ink) resolves to sRGB channels, flattens
 source-over down to an opaque colour, and the pair gives the WCAG 2.x ratio. A real image in the stack has no single
 colour, so a rule that meets one skips the element, except `badge-overlay`, whose fill must be opaque on its own.
 The field-boundary 3:1 role landed with T-0143 (ADR-0245 Amendment 7): `--md-sys-color-neutral-field-outline` holds at
-least 3:1 on every plane, gated by `tokens.test.ts` and `field-outline.browser.test.ts` rather than a render rule here.
+least 3:1 on every plane, gated by `tokens.test.ts` and `field-outline.browser.test.ts`; since T-0168 the `field-outline`
+render rule also holds every resting field on every swept page to it, so a local override that fades the edge reds too.
 The standalone-icon floor is ruled out: an icon inside a `[data-tier]` region stays 2n (Amendment 7, item 3), so no
-0.875-of-font-size rule exists, and `glyph-box` carries the only floor (8px).
+0.875-of-font-size rule exists; `icon-box` checks the two homes (2n inside, 1em in prose) and `glyph-box` carries the
+only floor (8px). A start or end edge is read on the side the element's direction names, so RTL is checked too. A
+pseudo-element with content none or normal paints nothing, whatever its other styles say. A rule's threshold or factor lives on its row as a named number (`boundaryMin`, `seriesMin`,
+`inkMin`, `edgeTol`, `widthDivisor`, `cellDivisor`, `tracks`, `trackFactor`) or comes from `resolve()`, never a literal repeated in the check.
 
 | Compose rule | Use | Not |
 |---|---|---|
 | `date-field` | `ui-text-field type=date` | a `ui-calendar` in a `ui-popover` or beside a calendar-icon `ui-button` (a Calendar in a Popover in a payload) |
 | `board-grid` | `ui-board-grid` (BoardGrid) | a `ui-grid` of cell `ui-button`s (a Grid whose children are all Buttons) |
+| `lone-button-frame` | one Row of plain Buttons, a ChoicePicker or a SegmentedControl | a Card whose only content is one Button (T-0172) |
+| `caret-glyph` | a `ui-glyph` caret | `setIcon(host, 'caret-*')` or a `ui-icon` named `caret-*` in a control source (its own `scan` roots, T-0168) |
+| `star-run` | `ui-rating` readonly (A2UI: a ProductCard rating) | a run of two or more U+2605 or U+2606 characters (T-0168) |
 | `inline-geometry` | the derived tokens, a control's `size`, a container's `data-*` register | an inline style setting padding, margin, gap, radius, height or font-size to a literal length |
+
+A compose rule reads the composition set (factories, payloads, presets, demos) unless its row names its own `scan`
+roots; `caret-glyph` reads only the control sources, and no composition rule reads them.
+
+## The round-3 proposals (T-0168)
+
+The T-0138 and T-0142 to T-0150 lanes proposed rules in `.sdlc/notes/notes.md`; T-0168 built the mechanical ones.
+Two already existed: the demo card clipped at 400px is `scroll-clip` and prose after a box is `prose-gap` (T-0144).
+Not built, with the reason:
+
+- Sibling figure widths: T-0150 sizes each figure from its specimen, so a size row's figures differ in width by
+  design; `figure-parity` checks the shared top edge only.
+- An unframed control's edge, fleet-wide: no measure tells a control's deliberate inner inset (a ghost button's text
+  edge, a checkbox's label gap) from a stray one, so `unframed-inset` covers the reviewed case, `ui-board-grid`.
+- `prose-gap` widened to any block under a specimen (T-0150): a block sibling of a specimen is most often the next
+  specimen, whose gap is the layout's, not a note's; it stays a review item.
 
 ## The allowlists
 
