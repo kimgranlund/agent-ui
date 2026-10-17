@@ -203,8 +203,7 @@ they stack:
 { "id": "actions", "component": "Row", "gap": "md", "justify": "end", "children": ["b1", "b2", "b3"] }
 ```
 Real: `examples/patterns.ts:76-78` (`card_footer` -> `actions` Row -> `btn_save`), `examples/patterns.ts:108-112`
-(the confirm/decline pair, same shape); `examples/catalog-frontier.ts`'s `frontier-greet-card` seed carried
-the WRONG bare shape until GH #1475 caught it live and it was upgraded to match.
+(the confirm/decline pair, same shape).
 
 ## Tabs / Tab / TabPanel
 `catalog.json:154-172`. Tabs: `value: { prop:"selected", event:"select" }`, `selected` bindable (`string|number`),
@@ -324,7 +323,7 @@ that idiom is deliberately MORE than a bare fact list.
 ```json
 { "id": "specs", "component": "DescriptionList", "rows": { "path": "/product/specs" } }
 ```
-Real: `examples/catalog-frontier.ts:320` (`frontier-booking-receipt`, DescriptionList),
+Real: `examples/catalog-frontier.ts:339` (`frontier-booking-receipt`, an expense-claim DescriptionList),
 `examples/high-frequency-patterns.ts:67-75` (`comparison-pricing-table`, Table).
 
 ## Variant-picker — SegmentedControl vs Select (GH #1377)

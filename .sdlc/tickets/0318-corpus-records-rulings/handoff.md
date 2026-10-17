@@ -18,3 +18,9 @@ Per skill `a2ui-corpus-curation`: author the replacement, a fresh judged review 
 
 ## Done when
 - Both records replaced through the judged quarantine exit with their verdict files; the corpus tests and `npm run check` exit 0.
+
+## Acceptance criteria
+- `node --experimental-strip-types packages/agent-ui/a2ui/tools/corpus/import-seeds.ts` exits 0 as the all-E_DUP no-op (96 already present): both replaced records are admitted and judged.
+- `npx vitest run packages/agent-ui/a2ui/src/corpus packages/agent-ui/a2ui/tools/corpus packages/agent-ui/a2ui/src/examples` exits 0 (corpus shard gate and the re-pinned retrieval ranks).
+- `node scripts/dogfood-compose.mjs --gate` exits 0 with the `catalog-frontier.ts#lone-button-frame` allowlist line removed.
+- `npm run check` exits 0.
