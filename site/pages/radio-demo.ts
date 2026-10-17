@@ -45,7 +45,7 @@ function methodRadio(m: Method, checked: boolean): HTMLElement {
   if (checked) attrs.checked = ''
   const radio = el('ui-radio', attrs, [
     el('span', { style: 'display:inline-flex; flex-direction:column; gap:2px;' }, [
-      el('span', {}, [text(`${m.label} — ${m.price}`)]),
+      el('span', {}, [text(`${m.label}, ${m.price}`)]),
       el('span', { style: 'font-size:0.85em; opacity:0.75;' }, [text(m.eta)]),
     ]),
   ])

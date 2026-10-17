@@ -40,7 +40,7 @@ const PLANS: readonly Plan[] = [
 
 function planCard(p: Plan): HTMLElement {
   return el('ui-choice-card', { value: p.value }, [
-    el('strong', {}, [text(`${p.label} — ${p.price}`)]),
+    el('strong', {}, [text(`${p.label}, ${p.price}`)]),
     document.createElement('br'),
     el('span', { style: 'font-size:0.85em; opacity:0.75;' }, [text(p.blurb)]),
   ])
