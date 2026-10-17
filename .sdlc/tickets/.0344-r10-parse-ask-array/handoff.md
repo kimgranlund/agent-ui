@@ -2,7 +2,7 @@
 id: T-0344
 title: "A PARSE failure on a string messages asks for an array of objects (round 10 cluster A)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -32,3 +32,18 @@ verifier: L3
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0.
 - `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-sonnet-messages-string.test.mjs` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 7b9382202d30
+- Changed: PARSE repair asks for an array on any string messages, with an escalation line (#2110)
+- Commits: none
+- Check: 1 (red) `npx vitest run packages/agent-ui/a2ui/src/live-agent/produce-response-type.test.ts -t "T-0...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent` exits 0: pass
+- Check: 3 `npx vitest run --project scripts scripts/e2e-admin/probe/replays/croupier-sonnet-messages-string...: pass
+- Check: 4 `npm run check` exits 0: pass
+- Follow-up: note: packages/agent-ui/a2ui/src/agent/response-type.ts:102 the... -> notes.md
+- Follow-up: decide: .sdlc/evals/rounds/2026-10-17-r10-targeted/report.md:86 asks for a... -> notes.md
+- Follow-up: note: .sdlc/runtime/tasks/0344-r10-parse-ask-array/red-checkpoint.jsonl... -> notes.md
+- Follow-up: note: the solo report's Open item stands: whether Haiku and Sonnet switch... -> notes.md
+- Follow-up: note: the Done-when's "one short different-family challenge before build"... -> notes.md

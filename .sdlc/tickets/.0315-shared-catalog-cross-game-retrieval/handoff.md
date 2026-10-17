@@ -2,7 +2,7 @@
 id: T-0315
 title: "Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,17 @@ verifier: L3
 - `npx vitest run --project site site/pages/agent-admin-presets.test.ts` exits 0, including the coupling pin: every `/secret/<key>` a shipped exemplar commits is named by its own preset's foundation, through the shared helpers. Green at base by construction (the shipped data already agrees), so it is a guard, not a red control.
 - `npm run check` exits 0.
 - Live target, not a gate: on the next live round every Admiral "New game..." opening (traces attributed by `runId` prefix `regress-admiral-`) frames no `/secret/word` record in `trace.exemplarIds`; baseline 12 of 12 "New game of Battleship." openings framed `domain-lexicographer-word-board` (2026-10-14 to 10-17).
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 985976d62a7b
+- Changed: Retrieval scoped by the persona's declared hidden-state keys (#2106)
+- Commits: none
+- Check: 1 (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/corpus/retrieve.test.ts` exit...: pass
+- Check: 2 (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/corpus/retrieve-presets.test....: pass
+- Check: 3 (red) `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/produce-loop.test....: pass
+- Check: 4 `npx vitest run --project site site/pages/agent-admin-presets.test.ts` exits 0 incl. the coupling...: pass
+- Check: 5 `npm run check` exits 0: pass
+- Follow-up: note: packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts:46 reads... -> notes.md
+- Follow-up: note: handoff ## Acceptance criteria #6: the live-round count every... -> notes.md
+- Follow-up: note: .sdlc/runtime/tasks/0315-shared-catalog-cross-game-retrieval/red-ch... -> notes.md
