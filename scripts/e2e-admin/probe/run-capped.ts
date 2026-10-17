@@ -15,6 +15,8 @@
 //
 // Runs go in file order (the generated script lists Haiku, then Sonnet, then Opus). A run whose `--out` folder
 // already holds `report.json` is skipped. A probe that exits 1 (a failed check) does not stop the round.
+// T-0341: a `# est $<usd>` line right before a command is that run's estimate; when the spend so far plus it would
+// pass the cap, the run is not started, is recorded in `round.json` `capSkipped`, and the round stops as `cap`.
 //
 // The round archives itself (T-0241): after every run and once more when the round ends, on a cap stop or a crash,
 // the round folder (the one holding `runs/`) gets `traces/` (the `.agent-traces` lines inside the round window, per
@@ -100,13 +102,27 @@ export function traceSpend(root: string, since: string): number {
     .reduce((sum, f) => sum + estimateSpend(readFileSync(join(dir, f), 'utf8'), since), 0)
 }
 
-/** The probe commands of a `live-commands.sh`, in file order, with each one's `--out` folder. */
-export function parseCommands(text: string): Array<{ cmd: string; out: string }> {
-  return text
-    .split('\n')
-    .map((l) => l.trim())
-    .filter((l) => l !== '' && !l.startsWith('#') && l.includes('chat:probe'))
-    .map((cmd) => ({ cmd, out: /--out (\S+)/.exec(cmd)?.[1] ?? '' }))
+/** One probe command: its line, its `--out` folder and, when the line before it is `# est $<usd>` (T-0341), the
+ *  generator's cost estimate for the run. */
+export interface ProbeCommand {
+  cmd: string
+  out: string
+  est?: number
+}
+
+/** The probe commands of a `live-commands.sh`, in file order, with each one's `--out` folder and estimate. */
+export function parseCommands(text: string): ProbeCommand[] {
+  const commands: ProbeCommand[] = []
+  let est: number | undefined
+  for (const l of text.split('\n').map((x) => x.trim())) {
+    const m = /^# est \$(\d+(?:\.\d+)?)$/.exec(l)
+    if (m !== null) est = Number(m[1])
+    else if (l !== '' && !l.startsWith('#') && l.includes('chat:probe')) {
+      commands.push({ cmd: l, out: /--out (\S+)/.exec(l)?.[1] ?? '', ...(est !== undefined ? { est } : {}) })
+      est = undefined
+    } else if (l !== '') est = undefined
+  }
+  return commands
 }
 
 /** T-0260: split one generated command line into words, undoing `quote` (`scenarios/croupier.ts`): a bare word, or
@@ -158,14 +174,16 @@ export function describeCommands(text: string): string[] {
 }
 
 export interface CappedOptions {
-  commands: Array<{ cmd: string; out: string }>
+  commands: ProbeCommand[]
   cap: number
   /** The round's spend so far. */
   spend: () => number
   /** Run one command; returns its exit code. */
   exec: (cmd: string) => number
   /** Called after each run with its start and end time (ISO) and exit code. */
-  onRun?: (c: { cmd: string; out: string }, rc: number, startedAt: string, endedAt: string) => void
+  onRun?: (c: ProbeCommand, rc: number, startedAt: string, endedAt: string) => void
+  /** Called for a run the cap skips: its estimate would take the spend past the cap (T-0341). */
+  onCapSkip?: (c: ProbeCommand, spend: number) => void
   now?: () => string
   /** True when a run's out folder already holds a report. */
   done: (out: string) => boolean
@@ -178,20 +196,31 @@ export interface CappedResult {
   skipped: number
   capped: boolean
   spend: number
+  /** The `--out` of each run not started because spend plus its estimate would pass the cap (T-0341). */
+  capSkipped: string[]
 }
 
-/** Run the commands in order until the spend reaches the cap; a run already reported is skipped. */
+/** Run the commands in order until the spend reaches the cap; a run already reported is skipped, and a run with an
+ *  estimate is skipped as a cap skip when the spend so far plus its estimate would pass the cap (T-0341). A cap skip
+ *  marks the round capped. */
 export function runCapped(o: CappedOptions): CappedResult {
   const log = o.log ?? (() => {})
   const now = o.now ?? (() => new Date().toISOString())
   const todo = o.commands.filter((c) => !o.done(c.out))
   const skipped = o.commands.length - todo.length
   let ran = 0
+  const capSkipped: string[] = []
   for (const c of todo.slice(0, o.max ?? todo.length)) {
     const before = o.spend()
     if (before >= o.cap) {
       log(`CAP reached at $${before.toFixed(2)} after ${ran}/${todo.length} runs`)
-      return { ran, skipped, capped: true, spend: before }
+      return { ran, skipped, capped: true, spend: before, capSkipped }
+    }
+    if (c.est !== undefined && before + c.est > o.cap) {
+      capSkipped.push(c.out)
+      o.onCapSkip?.(c, before)
+      log(`CAP SKIP at $${before.toFixed(2)}: estimate $${c.est.toFixed(2)} would pass $${o.cap} :: ${c.out}`)
+      continue
     }
     const startedAt = now()
     const rc = o.exec(c.cmd)
@@ -200,8 +229,8 @@ export function runCapped(o: CappedOptions): CappedResult {
     log(`[${ran}/${todo.length}] rc=${rc} $${o.spend().toFixed(2)} :: ${c.out}`)
   }
   const spend = o.spend()
-  log(`done ${ran}/${todo.length} runs (${skipped} already reported), estimated spend $${spend.toFixed(2)}`)
-  return { ran, skipped, capped: false, spend }
+  log(`done ${ran}/${todo.length} runs (${skipped} already reported, ${capSkipped.length} cap skips), estimated spend $${spend.toFixed(2)}`)
+  return { ran, skipped, capped: capSkipped.length > 0, spend, capSkipped }
 }
 
 /** The round's start time, written once beside the runs so a restart keeps the baseline. */
@@ -269,6 +298,8 @@ export interface ArchiveOptions {
   /** T-0342: the last archive of this invocation, which also writes `signals.md` (it rereads every report, so it is
    *  not rewritten after each run). */
   final?: boolean
+  /** T-0341: the `--out` of each run the cap skipped on its estimate. */
+  capSkipped?: string[]
 }
 
 /** A run's trace lines: 1-based, inclusive, in the archived day file. */
@@ -340,6 +371,7 @@ export function archiveRound(o: ArchiveOptions): { runs: number; tokens: Tokens;
     liveCommands: o.liveCommands,
     cap: o.cap,
     stop: o.stop,
+    capSkipped: o.capSkipped ?? [],
     window: { since: o.since, until: o.until },
     prices: { source: PRICES_SOURCE, table: PRICES, fallback: FALLBACK, note: 'USD per million tokens, input and output; cache reads priced as input, cache writes at 1.25x input' },
     totals: { runs: rows.length, traceLines: kept.length, tokens: totals, costUsd: Math.round(costUsd * 1e6) / 1e6 },
@@ -400,7 +432,7 @@ function readJson(file: string): Record<string, unknown> | undefined {
 function describeFile(rel: string, archived: boolean, commit: string, roundDir: string): string | undefined {
   const by = archived ? `\`scripts/e2e-admin/probe/run-capped.ts\` at commit \`${commit}\`` : ''
   if (rel === 'README.md') return 'This entry file. Written by `run-capped.ts` (with the archive, or `--describe <round dir>` for a folder backfilled by hand); regenerate it rather than editing it.'
-  if (rel === 'round.json') return `The round manifest: commit, live-commands file, cap, \`stop\` (done, cap or crash), the trace window, the price table and its source, totals. Written by ${by} after every run and at the end. Read: \`jq '{commit, cap, stop, window, totals}' round.json\`.`
+  if (rel === 'round.json') return `The round manifest: commit, live-commands file, cap, \`stop\` (done, cap or crash), \`capSkipped\` (runs not started because their \`# est\` would pass the cap, T-0341), the trace window, the price table and its source, totals. Written by ${by} after every run and at the end. Read: \`jq '{commit, cap, stop, window, totals}' round.json\`.`
   if (rel === 'ledger.jsonl') return `One JSON row per run: \`name\`, \`scenario\`, \`sample\` and \`effort\` (T-0342; older rows have neither, and \`signals.ts\` derives the scenario and sample from \`name\`), \`agent\`, \`model\`, \`startedAt\`, \`endedAt\`, \`exitCode\`, \`verdict\` (null when the probe wrote no report), \`runId\` (T-0259, live runs: the id the probe sent as \`x-a2ui-run-id\`, also in \`report.json\` and on each of the run's trace lines; \`traces\` are matched on it, else on the run's time window), \`traces\` (1-based inclusive line ranges into \`traces/<day>.jsonl\`), \`tokens\`, \`costUsd\` (estimated at the \`PRICES\` table). Written by ${by} from the runner's own timings and the trace lines. Read: \`jq -c '{name, verdict, costUsd, traces}' ledger.jsonl\`; a run's turns: \`sed -n '<from>,<to>p' traces/<day>.jsonl\`.`
   if (rel === 'live-commands.sh') {
     // The generator is the one the file's own header names (each round has its own, T-0261).
@@ -540,10 +572,10 @@ export function roundFolder(root: string, slug: string, now: () => string = () =
 }
 
 /** Point every command's `--out` at `<round>/runs/<its folder name>`. */
-export function retarget(commands: Array<{ cmd: string; out: string }>, round: string): Array<{ cmd: string; out: string }> {
+export function retarget(commands: ProbeCommand[], round: string): ProbeCommand[] {
   return commands.map((c) => {
     const out = `${round}/runs/${basename(c.out)}`
-    return { cmd: c.cmd.replace(`--out ${c.out}`, `--out ${out}`), out }
+    return { ...c, cmd: c.cmd.replace(`--out ${c.out}`, `--out ${out}`), out }
   })
 }
 
@@ -557,7 +589,7 @@ export function writeRoundReadme(roundDir: string): string {
 export interface RoundOptions {
   root: string
   liveCommands: string
-  commands: Array<{ cmd: string; out: string }>
+  commands: ProbeCommand[]
   cap: number
   /** The round start; defaults to `<round>/runs/.capped-start` (written on the first call). */
   since?: string
@@ -591,8 +623,9 @@ export function runRound(o: RoundOptions): CappedResult {
   const roundDir = join(o.root, commands[0]?.out ? dirname(runsDir) : runsDir)
   const since = o.since ?? roundStart(join(o.root, runsDir, '.capped-start'), now)
   const runs: RunRecord[] = []
+  const capSkipped: string[] = []
   const archive = (stop: ArchiveOptions['stop'], final = false): void => {
-    archiveRound({ root: o.root, roundDir, since, until: now(), runs, commit: o.commit, liveCommands, cap: o.cap, stop, final })
+    archiveRound({ root: o.root, roundDir, since, until: now(), runs, commit: o.commit, liveCommands, cap: o.cap, stop, final, capSkipped })
   }
   let stop: ArchiveOptions['stop'] = 'crash'
   try {
@@ -605,6 +638,7 @@ export function runRound(o: RoundOptions): CappedResult {
       max: o.max,
       log: o.log,
       now,
+      onCapSkip: (c) => void capSkipped.push(c.out),
       onRun: (c, rc, startedAt, endedAt) => {
         runs.push(runRecord(c.cmd, rc, startedAt, endedAt, reportVerdict(join(o.root, c.out, 'report.json')), reportRunId(join(o.root, c.out, 'report.json'))))
         archive('crash') // a kill before the final write leaves the round marked as not finished

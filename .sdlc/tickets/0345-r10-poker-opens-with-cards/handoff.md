@@ -1,0 +1,25 @@
+---
+id: T-0345
+title: "Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B)"
+type: bug             # feature | bug | chore | spike | idea
+status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
+priority: P1         # P1 | P2 | P3
+depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
+created: 2026-10-17
+router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
+---
+
+## Goal
+Haiku hold'em openings deal cards on turn 0 and Haiku blackjack openings render a CardTable in round 1 at round 8's rate.
+
+## Intent
+- Do: the fix in Context, one cause.
+- Non-goals: other round 10 clusters.
+- Done when: Haiku N=10 on 'Let's play blackjack.' and 'Let's play Texas hold'em.' with old and new text: round 1 CardTable and turn 0 PlayingCard at round 8's rate or better. `npm run check` plus the touched folders' tests exit 0.
+
+## Context
+Round 10: 1 of 6 Haiku poker openings asked for a stake first (round 9: 0 of 12); BET_TABLE_MISSING on 7 of 15 Haiku blackjack openings, all repaired. The T-0323 phrase 'betting is the stake pick before the deal' (site/pages/agent-admin-presets.ts:224, :234) is implicated again. T-0329 closed as noise at N=30 on the mini-skill text; this points at the persona text. Needs Kim's go before build (debate rule; model-read text). Round 10 report .sdlc/evals/rounds/2026-10-17-r10-targeted/report.md cluster B.
+
+## Constraints
+None beyond AGENTS.md.

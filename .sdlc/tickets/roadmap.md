@@ -21,11 +21,16 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | ⏳ proposed |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | ⏳ proposed |
 | T-0203 | [0203-composer-model-controls](0203-composer-model-controls/handoff.md) | Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header | feature | L2 | P2 | T-0185 | 🔵 ready |
-| T-0315 | [0315-shared-catalog-cross-game-retrieval](0315-shared-catalog-cross-game-retrieval/handoff.md) | Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening | bug | L2 | P2 | none | ⏳ proposed |
+| T-0315 | [0315-shared-catalog-cross-game-retrieval](0315-shared-catalog-cross-game-retrieval/handoff.md) | Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening | bug | L2 | P2 | none | 🔵 ready |
 | T-0340 | [0340-dark-primary-on-primary-contrast](0340-dark-primary-on-primary-contrast/handoff.md) | Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA | bug | L2 | P2 | none | 🔵 ready |
-| T-0341 | [0341-live-round-10](0341-live-round-10/handoff.md) | Live round 10: targeted rerun of round 9 failures and the runs each fix touches ($10 cap) | chore | L2 | P2 | none | 🔵 ready |
 | T-0342 | [0342-eval-signals](0342-eval-signals/handoff.md) | Eval signals over the round archive: one command for pass rates, churn, check fires and spend, with --against | feature | L3 | P1 | none | 🔵 ready |
 | T-0178 | [0178-eval-judged-checks](0178-eval-judged-checks/handoff.md) | Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts | feature | L2 | P2 | T-0342 | 🔵 ready |
 | T-0343 | [0343-eval-smoke-scenarios](0343-eval-smoke-scenarios/handoff.md) | Smoke scenarios for every preset, planned from tags, replayed in CI | feature | L3 | P2 | none | 🔵 ready |
+| T-0344 | [0344-r10-parse-ask-array](0344-r10-parse-ask-array/handoff.md) | A PARSE failure on a string messages asks for an array of objects (round 10 cluster A) | bug | L2 | P1 | none | 🔵 ready |
+| T-0345 | [0345-r10-poker-opens-with-cards](0345-r10-poker-opens-with-cards/handoff.md) | Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) | bug | L2 | P1 | none | ⏳ proposed |
+| T-0346 | [0346-r10-omaha-showdown-settles](0346-r10-omaha-showdown-settles/handoff.md) | A poker showdown reveals the opponent hand and settles in the same turn (round 10 cluster C) | bug | L1 | P2 | none | 🔵 ready |
+| T-0347 | [0347-r10-probe-natural-skip](0347-r10-probe-natural-skip/handoff.md) | Scripted card scenarios skip the rest of a hand when a natural settles it (round 10 cluster D) | chore | L1 | P2 | none | 🔵 ready |
+| T-0348 | [0348-r10-override-playing-card](0348-r10-override-playing-card/handoff.md) | The surface override does not read a playing card as a UI card (round 10 cluster E) | bug | L1 | P2 | none | 🔵 ready |
+| T-0349 | [0349-signals-gaps-r10](0349-signals-gaps-r10/handoff.md) | eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table | chore | L2 | P3 | none | 🔵 ready |
 
-Closed: 316 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 317 done, 4 dropped (git log or .NNNN-* folders)

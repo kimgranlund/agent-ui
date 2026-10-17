@@ -1,0 +1,20 @@
+{
+  "round": "2026-10-17-r10-targeted",
+  "ticket": "T-0341",
+  "reportId": "9820686a2b185ae91da27724",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "1999c4dd1cdcc857672d0f0773828353efd6c6f1ca231109f0864dc32a38aed1",
+  "mappingNote": "the manifest changed since round 9 (2dff31b70205), so detector coverage compares with round 9 only as qualified",
+  "bundleFingerprint": "bb1d003a37aed7cfef46f526e73db5a42b8ad04e785c07f5506ef168d788f745",
+  "engineeringRun": "run-61938d94af692a93ef0d3d32",
+  "events": 794,
+  "sources": 246,
+  "decisions": 6,
+  "findings": 5,
+  "diagnosticFindings": 0,
+  "excluded": "none: the 239 trace lines are 239 completed produce turns (no halt, no provider-error line), so nothing was blanked",
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-17-r10-targeted --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/final.json",
+  "analysis": "T-0341 decision analysis: d1 to d5 are clusters A to E of report.md (a string messages that does not balance its brackets exhausts the PARSE repairs; a Haiku hold'em opening asks for a stake before the deal; an Omaha showdown ships unsettled with no finding; scripted card scenarios fail on a correct natural; the surface override reads a playing card as a UI card), d6 is the T-0332 and T-0328 mechanism measurement, with 13 guidance edges and 5 reviewed findings.",
+  "hydrate": "decisions, guidanceEdges and findings added to the ingested session.json with exact excerpts and event ids, then diagnostics.py --data --out, fog.py validate and library.py publish (references/investigation.md)"
+}
