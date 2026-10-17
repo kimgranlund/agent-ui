@@ -3,6 +3,9 @@
 // the presets and models ship, `routing-pack.sh` is exactly the generated script, and the capped runner describes it.
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+// T-0160: the presets are content files; read them through the agent-content registry.
+import { AGENT_CONTENT } from '../../../../site/agent-content/registry.gen.ts'
+import { personaSections } from '../../../../site/agent-content/schema.ts'
 import { parseProbeCli } from '../cli.ts'
 import { routingMisses } from '../model.ts'
 import { describeCommands } from '../run-capped.ts'
@@ -64,9 +67,8 @@ describe('routing pressure pack', () => {
     for (const step of scenario('doc-only').steps) expect(routingMisses(step.expectRouting, seen)).toEqual([])
     expect(routingMisses({ references: [{ name: 'property-knowledge-base', load: 'full' }] }, seen)).toEqual(['reference property-knowledge-base loaded index-only, not full'])
     // The facts the turn answers from are the Concierge preset's house facts, which the persona section carries.
-    const presets = read('site/pages/agent-admin-presets.ts')
-    const concierge = presets.slice(presets.indexOf("    id: 'concierge',"))
-    expect(concierge.slice(concierge.indexOf('houseFacts:'), concierge.indexOf('resources:'))).toMatch(/late check-out to 14:00/)
+    const concierge = AGENT_CONTENT.find((r) => r.kind === 'persona' && r.id === 'concierge')
+    expect(personaSections(concierge.body).sections['House facts']).toMatch(/late check-out to 14:00/)
   })
 
   it('every expected type is in the preset catalog', () => {
@@ -77,8 +79,8 @@ describe('routing pressure pack', () => {
   })
 
   it('every preset ships and every model is in the admin picker', () => {
-    const presets = read('site/pages/agent-admin-presets.ts')
-    for (const s of ROUTING_SCENARIOS) expect(presets).toMatch(new RegExp(`^ {4}id: '${s.agent}',`, 'm'))
+    const shipped = AGENT_CONTENT.filter((r) => r.kind === 'persona' && r.frontmatter.roster !== false).map((r) => r.id)
+    for (const s of ROUTING_SCENARIOS) expect(shipped).toContain(s.agent)
     const schema = read('packages/agent-ui/app/src/controls/agent-admin/agent-admin-schema.ts')
     for (const m of ROUTING_MODELS) expect(schema).toContain(`{ id: '${m.id}',`)
   })

@@ -4,6 +4,8 @@
 // is exactly the generated script, in spend order (Haiku, Sonnet, Opus).
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+// T-0160: the presets are content files; their ids come from the agent-content registry.
+import { AGENT_CONTENT } from '../../../../site/agent-content/registry.gen.ts'
 import { parseProbeCli } from '../cli.ts'
 import { ADMIRAL_SCENARIOS } from './admiral.ts'
 import { CONCIERGE_SCENARIOS } from './concierge.ts'
@@ -110,8 +112,8 @@ describe('live round 2 scenarios', () => {
   })
 
   it('every preset id is a shipped preset', () => {
-    const presets = read('site/pages/agent-admin-presets.ts')
-    for (const p of ROUND_PRESETS) expect(presets).toMatch(new RegExp(`^ {4}id: '${p.agent}',`, 'm'))
+    const shipped = AGENT_CONTENT.filter((r) => r.kind === 'persona' && r.frontmatter.roster !== false).map((r) => r.id)
+    for (const p of ROUND_PRESETS) expect(shipped).toContain(p.agent)
   })
 
   it('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh is the generated script', () => {
