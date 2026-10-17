@@ -28,5 +28,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0315 | [0315-shared-catalog-cross-game-retrieval](0315-shared-catalog-cross-game-retrieval/handoff.md) | Admiral and Lexicographer share the agent-ui catalog: 'New game' ranks the word board first on the Admiral's opening | bug | L2 | P2 | none | ⏳ proposed |
 | T-0338 | [0338-product-card-icon-box](0338-product-card-icon-box/handoff.md) | product-card icon header: 2n icon box or a ruled exemption (icon-box debt) | chore | L1 | P3 | none | 🔵 ready |
 | T-0340 | [0340-dark-primary-on-primary-contrast](0340-dark-primary-on-primary-contrast/handoff.md) | Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA | bug | L2 | P2 | none | 🔵 ready |
+| T-0341 | [0341-live-round-10](0341-live-round-10/handoff.md) | Live round 10: targeted rerun of round 9 failures and the runs each fix touches ($10 cap) | chore | L2 | P2 | none | 🔵 ready |
 
 Closed: 312 done, 4 dropped (git log or .NNNN-* folders)
