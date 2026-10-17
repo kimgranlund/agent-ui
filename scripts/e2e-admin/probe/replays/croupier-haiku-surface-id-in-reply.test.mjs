@@ -9,13 +9,14 @@ import { offlineReplay } from '../trace.ts'
 // T-0297: live round 6 (2026-10-15-r6-matrix :3-:11, Haiku 5.5; Sonnet five-card draw :244 and :246 did the same).
 // The third deal's reply opened "Table-3 is dealt." and the producer's NARRATED_MECHANICS check matched the surface id
 // case-sensitively, so only the probe's no-internal-leak check caught it. The check now matches the id in any case.
-// Turn 8's third round is AUTHORED (the live turn had two): round 2 with "Table-3 is dealt. " cut, so the replay
-// shows the repaired turn. Without the finding round 2 ships and no-internal-leak:8 fails.
+// Turn 8 is AUTHORED to the T-0332 flow (the live turn answered round 1 in prose and repaired with a payload): round 1
+// is the live payload with the narrated reply, round 2 the reply alone with "Table-3 is dealt. " cut, which the narration
+// repair asks for with the round's surfaces held. Without the finding round 1 ships and no-internal-leak:8 fails.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
 
 it('croupier-haiku-surface-id-in-reply: "Table-3" in the reply is sent back with NARRATED_MECHANICS and every probe check is green', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-haiku-surface-id-in-reply.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
-  expect(trace(report.records[8])).toMatchObject({ rounds: 3, failureCodes: ['NARRATED_MECHANICS'] })
+  expect(trace(report.records[8])).toMatchObject({ rounds: 2, failureCodes: ['NARRATED_MECHANICS'] })
 })

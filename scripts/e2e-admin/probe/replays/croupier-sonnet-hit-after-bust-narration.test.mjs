@@ -6,22 +6,23 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// T-0332: live round 9 (2026-10-17-r9-matrix :182, Sonnet 5.5, cluster E). "Hit me again." after a bust: round 1 rightly
-// said there was no hand to hit but named table-2 (NARRATED_MECHANICS), and the repair round, told "a fix is made
-// silently on the surface", opened table-3 in betting, so the scripted "Deal again" found no button. Turn 6's second
-// round is AUTHORED (the live one dealt table-3): the same reply with the id cut and no surface change, the repair the
-// reworded NARRATION_HINT asks for. The replay keeps table-2 settled; the hint wording itself is pinned in
-// packages/agent-ui/a2ui/src/live-agent/produce-narration.test.ts.
+// T-0332: live round 9 (2026-10-17-r9-matrix :182, Sonnet 5.5, cluster E). "Hit me again." after a bust on the settled
+// table-2: round 1 rightly said there was no hand to hit but named table-2 (NARRATED_MECHANICS), and the repair round
+// answered with a render_surface call that opened table-3 in betting, so the scripted "Deal again" found no button.
+// The fixture is the recorded live turn, unedited. A narration-only repair now holds round 1's surfaces (none here) and
+// asks for the reply alone with no tool offered, so the recorded repair round's table-3 call has nothing to land on:
+// only its text is read, as the reply. Without the held path the call opens table-3 and the shipped-lines asserts fail.
+// The probe's no-surface-loss check still reads that recorded call as a surface "created in a round but never shipped":
+// that is the fixture answering a prompt the producer no longer sends, and it is the one failure expected here.
 const shipped = (record) => record.lines.map((l) => JSON.parse(l))
 
 it('croupier-sonnet-hit-after-bust-narration: the narration repair on a settled hand opens no new surface', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-sonnet-hit-after-bust-narration.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  expect(report.failed.map((c) => `${c.check}:${c.turn}:${c.detail}`)).toEqual(['no-surface-loss:6:created in a round but never shipped: table-3'])
   const turn = shipped(report.records[6])
   expect(turn.find((m) => m.a2uiMeta?.trace !== undefined)?.a2uiMeta.trace).toMatchObject({ rounds: 2, failureCodes: ['NARRATED_MECHANICS'] })
-  expect(turn.filter((m) => m.createSurface !== undefined)).toEqual([])
-  expect(turn.filter((m) => m.updateComponents !== undefined || m.updateDataModel !== undefined)).toEqual([])
+  expect(turn.filter((m) => m.createSurface !== undefined || m.updateComponents !== undefined || m.updateDataModel !== undefined)).toEqual([])
   const created = report.records.flatMap((r) => shipped(r)).filter((m) => m.createSurface !== undefined).map((m) => m.createSurface.surfaceId)
   expect(created).toEqual(['table-1', 'table-2'])
 })

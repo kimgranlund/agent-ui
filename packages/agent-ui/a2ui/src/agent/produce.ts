@@ -667,6 +667,44 @@ const SURFACE_REQUESTED_FEEDBACK =
 const repairOpening = (summary: string): string =>
   `Check result from this app's automated checks on your last answer (not a message from the user): INVALID (${summary}).`
 
+/** The session's turns then this turn's user message. T-0206: a turn offering `render_surface` names the open
+ *  surfaces here, after the cached prefix. */
+function baseTurns(input: TurnInput, surfacesNote: string): Turn[] {
+  const content = surfacesNote !== '' ? `${userContent(input)}\n\n${surfacesNote}` : userContent(input)
+  return [...input.session.turns, { role: 'user', content }]
+}
+
+/** T-0332: the repair for a NARRATED_MECHANICS round that is the round's only failure. The round's surfaces are held
+ *  fixed in code, so the model is asked for the reply alone: no tool, no A2UI line, so a repair cannot open a new
+ *  surface (round 9 :182 dealt a table-3 to a "Hit me again." that needed no change). Not the `Re-emit the COMPLETE`
+ *  trailer, which asks for the surfaces again. */
+const NARRATION_REPLY_REPAIR =
+  ' Your surfaces are accepted and ship exactly as you sent them (or unchanged, if you sent none). Do not call a tool ' +
+  'and send no A2UI lines. Send only your reply to the user again: state only where things stand now (the cards, ' +
+  'totals, options, the booking details); never name a surface id, never say you built, removed, replaced or corrected ' +
+  'something, and never apologize for an earlier turn.'
+
+function narrationReplyMessages(input: TurnInput, lastRaw: string, narrated: RoundFailure, surfacesNote: string): Turn[] {
+  const turns = baseTurns(input, surfacesNote)
+  turns.push({ role: 'assistant', content: lastRaw })
+  turns.push({ role: 'user', content: `${repairOpening(`${narrated.code}${narrated.path ? ` at ${narrated.path}` : ''}`)}${NARRATION_REPLY_REPAIR}` })
+  return turns
+}
+
+/** T-0332: the reply a narration repair round wrote: the text after any meta-line, minus wire lines and meta-lines, else
+ *  the meta-line's note. Undefined when the round wrote neither (the original reply then ships tallied). */
+function narrationReplyOf(raw: string): string | undefined {
+  const peeled = peelMetaLine(raw)
+  const text = peeled.rest
+    .split('\n')
+    .filter((l) => !isWireLine(l.trim()) && readMetaLine(l.trim()) === undefined)
+    .join('\n')
+    .replace(/```(?:jsonl?)?[ \t]*\n(?:[ \t]*\n)*[ \t]*```/g, '')
+    .trim()
+  const reply = text !== '' ? text : peeled.note?.trim()
+  return reply === undefined || reply === '' ? undefined : reply
+}
+
 function messagesFor(
   input: TurnInput,
   failures: RoundFailure[] | undefined,
@@ -679,9 +717,7 @@ function messagesFor(
   keep: readonly string[] = [],
   droppedNote = '',
 ): Turn[] {
-  // T-0206: a turn offering `render_surface` names the open surfaces here, after the cached prefix.
-  const content = surfacesNote !== '' ? `${userContent(input)}\n\n${surfacesNote}` : userContent(input)
-  const turns: Turn[] = [...input.session.turns, { role: 'user', content }]
+  const turns = baseTurns(input, surfacesNote)
   if (failures && failures.length > 0 && lastRaw !== undefined) {
     turns.push({ role: 'assistant', content: lastRaw })
     if (failures.every((f) => f.code === 'SURFACE_REQUESTED')) {
@@ -1134,13 +1170,13 @@ const SEMANTIC_HINT =
   ' Those findings are contradictions inside your content, not schema errors: change the values so ' +
   'what the surface states agrees with what it shows, and keep every other line as it was.'
 
-/** T-0234: the self-correct sentence for a NARRATED_MECHANICS round. */
+/** T-0234: the self-correct sentence for a NARRATED_MECHANICS round that is sent through the full repair message. T-0332: a
+ *  narration-only round takes `NARRATION_REPLY_REPAIR` instead; this one rides only a round that also holds a NET_NOOP group. */
 const NARRATION_HINT =
   ' NARRATED_MECHANICS means your reply talked about the surfaces or an earlier turn instead of the game or the ' +
   'booking: state only where things stand now (the cards, totals, options, the booking details). Never name a ' +
   'surface id, never say you built, removed, replaced or corrected something, and never apologize for an earlier ' +
-  'turn; if the turn needs no surface change, leave every surface as it is and reword only your reply, and if it does, ' +
-  'make the fix silently on the surface.'
+  'turn; a fix is made silently on the surface.'
 
 /** T-0234: a reply opening a correction of an earlier turn ("I need to correct my last turn", "Last turn I described
  *  round 2 but never actually built its table", "correction: Q♦ Q♣"), as the live round 2 traces recorded it. */
@@ -1487,8 +1523,38 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     return undefined
   }
+  // T-0332: a round whose only failure is NARRATED_MECHANICS keeps its surfaces (held in code) and asks the model for
+  // the reply alone: one provider call with no tool, whose reply text replaces the narrated one. Returns that reply, or
+  // undefined when the call wrote none; the caller re-judges it and ships tallied if it still narrates.
+  const narrationReplyRound = async function* (round: number, narrated: RoundFailure): AsyncGenerator<string, string | undefined> {
+    roundModel = model
+    let roundEffort = opts.effort
+    const patch = opts.onRepairRound?.({ round: round + 2, failures: [narrated] })
+    if (patch?.model !== undefined) roundModel = patch.model
+    if (patch?.effort !== undefined) roundEffort = patch.effort
+    if (emitProgress) {
+      yield formatProgressLine({ stage: 'retry', round: round + 2, codes: [narrated.code] })
+      yield formatProgressLine({ stage: 'sent' })
+    }
+    let text = ''
+    for await (const frag of deps.provider.stream({
+      model: roundModel,
+      system,
+      ...(systemCacheBoundary > 0 ? { systemCacheBoundary } : {}),
+      messages: narrationReplyMessages(input, lastRaw ?? '', narrated, surfacesNote),
+      effort: roundEffort,
+      ...(opts.modelSettings !== undefined ? { modelSettings: opts.modelSettings } : {}),
+      onEvent: (ev: ProviderEvent) => {
+        if (ev.kind === 'usage' && ev.usage !== undefined) addUsage(ev.usage)
+      },
+      signal: opts.signal,
+    }))
+      text += frag
+    return narrationReplyOf(text)
+  }
   for (let round = 0; round < opts.maxRounds; round++) {
-    const failuresFedBack = failures // what THIS round's prompt carried back — the trace's failureCodes
+    let failuresFedBack = failures // what THIS round's prompt carried back, the trace's failureCodes (T-0332: plus a held narration repair)
+    let narrationRound = 0 // T-0332: 1 once this round's reply was rewritten by a text-only narration repair call
     const forceSurface = forceSurfaceRound
     forceSurfaceRound = false
     const namedBy = lastOutput !== undefined ? failureAttribution(lastOutput) : undefined // once a round
@@ -1839,12 +1905,16 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (semantic.errored.length > 0) actionSemanticTally.push('SEMANTIC_CHECK_ERROR')
       }
       // T-0234: a reply that narrates the surfaces gets one targeted round, then ships tallied.
-      const narrated = narratedMechanics(note, sessionKnownSurfaceIds(input.session))
+      // T-0332: no surface message to hold fixed, so the repair asks for the reply alone and a surface cannot be opened.
+      let narrated = narratedMechanics(note, sessionKnownSurfaceIds(input.session))
       if (narrated !== undefined && !narrationFedBack && round < opts.maxRounds - 1) {
         narrationFedBack = true
-        failures = [narrated]
-        lastCaptureRound = offeredTools !== undefined
-        continue
+        const firstNarrated = narrated
+        const reply = yield* narrationReplyRound(round, firstNarrated)
+        failuresFedBack = [...(failuresFedBack ?? []), firstNarrated]
+        narrationRound = 1
+        if (reply !== undefined) note = reply
+        narrated = narratedMechanics(note, sessionKnownSurfaceIds(input.session))
       }
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
       failureCodes.push(...actionSemanticTally)
@@ -1864,7 +1934,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if (messagesStringDecoded) failureCodes.push('MESSAGES_STRING_DECODED') // T-0304: a factual tally, never a retry trigger
       if (surfaceUnmet) failureCodes.push('SURFACE_REQUESTED_UNMET') // RTS-R6: the override asked for a surface and none came
       if (emitProgress) yield formatProgressLine({ stage: 'done' }) // before the final (note-only/genui-only) yield
-      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1, 0, failureCodes), undefined, plan, personaPatch, flowEnd, team, target)
+      if (note !== undefined) yield formatMetaLine(note, traceFor(round + 1 + narrationRound, 0, failureCodes), undefined, plan, personaPatch, flowEnd, team, target)
       if (genuiLine !== undefined) yield genuiLine // SPEC-R1 AC2 — ships intact, the model's own line verbatim
       return
     }
@@ -1952,11 +2022,23 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (semantic.errored.length > 0) semanticTally.push('SEMANTIC_CHECK_ERROR')
       }
       // T-0234: a reply that narrates the surfaces (the session's, or this payload's own) gets one targeted round.
-      const narrated = narratedMechanics(note, new Set([...sessionKnownSurfaceIds(input.session), ...assembled.output.map(messageSurfaceId).filter((sid): sid is string => sid !== undefined)]))
+      // T-0332: when narration is the round's only failure (every surface message valid, no net-no-op group to repair),
+      // the round's surfaces are held fixed and the repair asks for the reply alone; otherwise today's full repair round.
+      const narratedIds = new Set([...sessionKnownSurfaceIds(input.session), ...assembled.output.map(messageSurfaceId).filter((sid): sid is string => sid !== undefined)])
+      let narrated = narratedMechanics(note, narratedIds)
       if (narrated !== undefined && !narrationFedBack && round < opts.maxRounds - 1) {
         narrationFedBack = true
-        failures = [narrated]
-        continue
+        if (netNoOpSurfaceIds(assembled.output, input.session).size === 0) {
+          const firstNarrated = narrated
+          const reply = yield* narrationReplyRound(round, firstNarrated)
+          failuresFedBack = [...(failuresFedBack ?? []), firstNarrated]
+          narrationRound = 1
+          if (reply !== undefined) note = reply
+          narrated = narratedMechanics(note, narratedIds)
+        } else {
+          failures = [narrated]
+          continue
+        }
       }
       if (narrated !== undefined) semanticTally.push('NARRATION_UNCORRECTED') // T-0234: a factual tally, never a halt
       // GH #1142 — the net-no-op dodge (a surface created AND deleted in this same turn, closing GH
@@ -2009,7 +2091,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         // RTS-R1: the tool's `target` (the open surface this payload updates) states the ADR-0206 target arm
         // when the meta-line declared none.
         const shippedTarget = target ?? capturedTarget
-        yield formatMetaLine(note, traceFor(round + 1, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd, team, shippedTarget) // meta-line FIRST
+        yield formatMetaLine(note, traceFor(round + 1 + narrationRound, assembled.healedCount, failureCodes), finalAsk, plan, personaPatch, flowEnd, team, shippedTarget) // meta-line FIRST
       }
       // genui-surface SPEC-R1 — a genui structural failure on an OTHERWISE-valid A2UI round is DROPPED
       // silently here (never manufactures an extra round purely to fix it: "degrade, never halt" — the
