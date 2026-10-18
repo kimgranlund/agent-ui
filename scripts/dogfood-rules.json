@@ -396,8 +396,8 @@
       "id": "lone-button-frame",
       "source": "T-0172 (Kim's ruling, 2026-10-14): a choice is a plain Button in a row, never a framed box per Button",
       "use": "one Row of plain Buttons (A2UI: a Row whose children are the Buttons), or a ChoicePicker or SegmentedControl",
-      "not": "a Card whose only content is one Button, directly or through a lone CardContent or CardFooter (a bordered box around each choice)",
-      "detect": "a payload Card whose sole child, or sole CardContent or CardFooter child, is a Button"
+      "not": "a Card whose only content is one Button, directly or through one-child CardContent, CardFooter, Row or Column wrappers (a bordered box around each choice)",
+      "detect": "a payload Card whose sole child, or sole child of a chain of one-child CardContent, CardFooter, Row or Column wrappers, is a Button"
     },
     {
       "id": "caret-glyph",

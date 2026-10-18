@@ -90,6 +90,26 @@ describe('LONE_BUTTON_FRAME (T-0300)', () => {
     expect(findings([{ id: 'c', component: 'Card', child: 'cc' }, { id: 'cc', component: 'CardContent', children: ['b'] }, button('b', 'Stand')]).map((f) => f.code)).toEqual(['LONE_BUTTON_FRAME'])
   })
 
+  // T-0369 (round 11 :164, Haiku 5.5 seven-card stud): actionCard > actionFooter > actionRow (Row) > againBtn. The probe
+  // render lint reads the DOM (one ui-button and no other text in the ui-card), so a one-child Row or Column is seen through.
+  it('a lone Button inside a one-child Row or Column wrapper is LONE_BUTTON_FRAME', () => {
+    const framed = findings([
+      { id: 'actionCard', component: 'Card', child: 'actionFooter' },
+      { id: 'actionFooter', component: 'CardFooter', child: 'actionRow' },
+      { id: 'actionRow', component: 'Row', children: ['againBtn'] },
+      button('againBtn', 'Deal again'),
+    ])
+    expect(framed.map((f) => `${f.code} ${f.path}`)).toEqual(['LONE_BUTTON_FRAME greet-1:actionCard'])
+    expect(framed[0]!.message).toContain('"Deal again" (againBtn)')
+    expect(framed[0]!.message).toContain('CardFooter and Row')
+    expect(findings([{ id: 'c', component: 'Card', children: ['col'] }, { id: 'col', component: 'Column', children: ['b'] }, button('b', 'Go')]).map((f) => f.code)).toEqual(['LONE_BUTTON_FRAME'])
+  })
+
+  it('a Row of two Buttons in a Card footer, and a Row beside header text, pass', () => {
+    expect(findings([{ id: 'c', component: 'Card', child: 'f' }, { id: 'f', component: 'CardFooter', child: 'r' }, { id: 'r', component: 'Row', children: ['a', 'b'] }, button('a', 'A'), button('b', 'B')])).toEqual([])
+    expect(findings([{ id: 'c', component: 'Card', children: ['h', 'r'] }, { id: 'h', component: 'CardHeader', children: [] }, { id: 'r', component: 'Row', children: ['a'] }, button('a', 'A')])).toEqual([])
+  })
+
   it('Cards already named by FRAMED_CHOICE are not named again', () => {
     expect(findings(RECORDED).map((f) => f.code)).toEqual(['FRAMED_CHOICE'])
   })

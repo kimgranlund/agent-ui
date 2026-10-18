@@ -225,12 +225,12 @@ export function findingsIn(path, raw) {
     }
   }
 
-  // lone-button-frame (T-0172): a Card whose only content is one Button, directly or through a lone CardContent or CardFooter
+  // lone-button-frame (T-0172): a Card whose only content is one Button, directly or through one-child CardContent, CardFooter, Row or Column wrappers (T-0369)
   const soleChild = (c) => (c.children.length === 1 ? c.children[0] : c.children.length === 0 && c.template === null ? c.child : null)
   const loneButton = (c, depth) => {
     const kid = byId.get(soleChild(c))
     if (kid === undefined) return false
-    return kid.component === 'Button' || ((kid.component === 'CardContent' || kid.component === 'CardFooter') && depth < 2 && loneButton(kid, depth + 1))
+    return kid.component === 'Button' || (['CardContent', 'CardFooter', 'Row', 'Column'].includes(kid.component) && depth < 3 && loneButton(kid, depth + 1))
   }
   for (const c of comps) if (c.component === 'Card' && loneButton(c, 0)) res['lone-button-frame'].push({ index: c.index, text: snippet(c.index) })
 
@@ -417,6 +417,8 @@ function selftest() {
   rule('lone-button-frame', 'a Card whose only child is a Button is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['b1'] }, { id: 'b1', component: 'Button', label: 'Blackjack' }]`, 'lone-button-frame') === 1)
   rule('lone-button-frame', 'a Card holding one Button through a lone CardContent is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['c1'] }, { id: 'c1', component: 'CardContent', child: 'b1' }, { id: 'b1', component: 'Button', label: 'Poker' }]`, 'lone-button-frame') === 1)
   rule('lone-button-frame', 'a bare Card around a CardFooter with one Button is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['f1'] }, { id: 'f1', component: 'CardFooter', children: ['b1'] }, { id: 'b1', component: 'Button', label: 'Hold em' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'a Card footer holding one Button through a one-child Row is found (T-0369)', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['f1'] }, { id: 'f1', component: 'CardFooter', children: ['r1'] }, { id: 'r1', component: 'Row', children: ['b1'] }, { id: 'b1', component: 'Button', label: 'Deal again' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'a Card footer Row of two Buttons passes (T-0369)', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['f1'] }, { id: 'f1', component: 'CardFooter', children: ['r1'] }, { id: 'r1', component: 'Row', children: ['b1', 'b2'] }, { id: 'b1', component: 'Button' }, { id: 'b2', component: 'Button' }]`, 'lone-button-frame') === 0)
   rule('lone-button-frame', 'a Row of Buttons, and a Card with a header and a Button, pass', n(F, `const p = [{ id: 'r', component: 'Row', children: ['a', 'b'] }, { id: 'a', component: 'Button' }, { id: 'b', component: 'Button' }, { id: 'k', component: 'Card', children: ['h', 'a'] }, { id: 'h', component: 'CardHeader', children: [] }]`, 'lone-button-frame') === 0)
 
   rule('inline-geometry', 'style.padding = 12px is found', n(F, `function f() { x.style.padding = '12px' }`, 'inline-geometry') === 1)
