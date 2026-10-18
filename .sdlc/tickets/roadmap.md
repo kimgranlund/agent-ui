@@ -5,38 +5,20 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
-| T-0187 | [0187-split-pane-narrow-fit](0187-split-pane-narrow-fit/handoff.md) | split-pane demo stacks or scrolls at 400px instead of overflowing the column | chore | L2 | P2 | none | 🔵 ready |
-| T-0188 | [0188-line-chart-projected-dash](0188-line-chart-projected-dash/handoff.md) | line-chart projected dash: user-unit dash or a ruled screen-px exemption | chore | L2 | P2 | none | 🔵 ready |
-| T-0189 | [0189-playing-card-type-floor](0189-playing-card-type-floor/handoff.md) | playing-card corner index: a type floor or a ruled pictorial exemption | chore | L2 | P2 | none | 🔵 ready |
-| T-0190 | [0190-site-demo-inline-literals](0190-site-demo-inline-literals/handoff.md) | site demos: inline type sizes and off-ramp spacing literals move to tokens | chore | L2 | P2 | none | 🔵 ready |
 | T-0193 | [0193-option-deck](0193-option-deck/handoff.md) | OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card | feature | L3 | P2 | T-0172 | 🔵 ready |
 | T-0195 | [0195-confirm-receipt](0195-confirm-receipt/handoff.md) | Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state | feature | L3 | P2 | none | 🔵 ready |
 | T-0196 | [0196-amount-picker](0196-amount-picker/handoff.md) | Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit | feature | L3 | P2 | none | 🔵 ready |
 | T-0197 | [0197-bookingform-kinds](0197-bookingform-kinds/handoff.md) | BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' | feature | L2 | P2 | T-0196 | 🔵 ready |
 | T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | 🔵 ready |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | 🔵 ready |
-| T-0203 | [0203-composer-model-controls](0203-composer-model-controls/handoff.md) | Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header | feature | L2 | P2 | T-0185 | 🔵 ready |
-| T-0178 | [0178-eval-judged-checks](0178-eval-judged-checks/handoff.md) | Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts | feature | L2 | P2 | T-0342 | 🔵 ready |
-| T-0343 | [0343-eval-smoke-scenarios](0343-eval-smoke-scenarios/handoff.md) | Smoke scenarios for every preset, planned from tags, replayed in CI | feature | L3 | P2 | none | 🔵 ready |
 | T-0345 | [0345-r10-poker-opens-with-cards](0345-r10-poker-opens-with-cards/handoff.md) | Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) | bug | L2 | P1 | none | 🔵 ready |
-| T-0349 | [0349-signals-gaps-r10](0349-signals-gaps-r10/handoff.md) | eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table | chore | L2 | P3 | none | 🔵 ready |
-| T-0350 | [0350-r10-settled-table-no-way-forward](0350-r10-settled-table-no-way-forward/handoff.md) | A settled card table ships with no way forward (no Deal again), and no check names it | bug | L1 | P2 | none | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
-| T-0354 | [0354-override-explicit-format](0354-override-explicit-format/handoff.md) | Explicit format asks ('as a card', 'as a table', 'build me a form') force a surface even where the catalog owns the noun | bug | L1 | P2 | none | 🔵 ready |
-| T-0355 | [0355-seed-version-digests](0355-seed-version-digests/handoff.md) | Per-version seed field digests so a migration tells an untouched old seed value from a user edit | feature | L2 | P2 | none | 🔵 ready |
-| T-0356 | [0356-create-glyph-rest](0356-create-glyph-rest/handoff.md) | The other seven controls build their glyphs through createGlyph, with no host aria-hidden | chore | L2 | P2 | none | 🔵 ready |
-| T-0357 | [0357-poker-stake-ask-check](0357-poker-stake-ask-check/handoff.md) | A poker opening that asks for the stake instead of dealing gets a deterministic check and repair | bug | L2 | P2 | none | 🔵 ready |
-| T-0358 | [0358-gamehud-moment-board-only](0358-gamehud-moment-board-only/handoff.md) | GameHud composite moment fires only beside a BoardGrid, so board-less game personas hand-build their score panels | bug | L2 | P2 | none | 🔵 ready |
 | T-0359 | [0359-stylist-palette-prose](0359-stylist-palette-prose/handoff.md) | The Stylist answers a palette ask in prose with no token surface | bug | L2 | P2 | none | 🔵 ready |
-| T-0360 | [0360-live-round-11](0360-live-round-11/handoff.md) | Live round 11: measure the round 10 fixes (PARSE array ask, showdown settles, natural skip, playing-card override, deal-again, poker deal) with fog analysis | chore | L2 | P2 | none | 🔵 ready |
-| T-0361 | [0361-quest-log-timeline-unchecked](0361-quest-log-timeline-unchecked/handoff.md) | A quest log with no Timeline gets no repair round | bug | L2 | P3 | T-0358 | 🔵 ready |
-| T-0362 | [0362-rerecord-boardless-smoke](0362-rerecord-boardless-smoke/handoff.md) | Re-record the board-less game smoke replays after T-0358 | chore | L2 | P2 | T-0358 | 🔵 ready |
 | T-0363 | [0363-gamehud-feed-scope](0363-gamehud-feed-scope/handoff.md) | GameHud is outside the feed scope, so an ask-surface game cannot answer GAME_HUD_MISSING in place | bug | L2 | P2 | T-0358 | 🔵 ready |
-| T-0364 | [0364-resultcard-moment-board-only](0364-resultcard-moment-board-only/handoff.md) | ResultCard composite moment fires only beside a BoardGrid | bug | L2 | P3 | T-0358 | 🔵 ready |
 | T-0367 | [0367-r11-hole-card-oracle](0367-r11-hole-card-oracle/handoff.md) | The guidance-conflict hole-card step expects a table update a correct refusal never sends (round 11 cluster G) | bug | L1 | P2 | none | ⏳ proposed |
 | T-0368 | [0368-r11-poker-deal-template](0368-r11-poker-deal-template/handoff.md) | POKER_DEAL_MISSING judges a PlayingCard template over an empty hand as undealt (round 11 cluster H) | bug | L2 | P2 | none | ⏳ proposed |
 | T-0369 | [0369-r11-lone-button-row](0369-r11-lone-button-row/handoff.md) | LONE_BUTTON_FRAME sees through a one-child Row as the probe render lint does (round 11 cluster I) | bug | L1 | P3 | none | ⏳ proposed |
 | T-0370 | [0370-r11-pontoon-stick-under-15](0370-r11-pontoon-stick-under-15/handoff.md) | The pontoon scenario does not stick under 15 (round 11 cluster J) | bug | L1 | P2 | none | ⏳ proposed |
 | T-0371 | [0371-r11-poker-chip-check](0371-r11-poker-chip-check/handoff.md) | A Croupier check reads poker pot and bankroll arithmetic (round 11 cluster K) | feature | L2 | P2 | none | ⏳ proposed |
 
-Closed: 331 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 351 done, 4 dropped (git log or .NNNN-* folders)

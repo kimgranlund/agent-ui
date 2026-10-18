@@ -2,7 +2,7 @@
 id: T-0362
 title: "Re-record the board-less game smoke replays after T-0358"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0358]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -38,3 +38,16 @@ Recorded rounds are never hand-edited. Spend under the round cap the conductor s
 - No pin names T-0362: every still-red turn carries `// expectedFail: T-0365` (no GAME_HUD_MISSING on a board-less stat strip) or `// expectedFail: T-0366` (a board-less move answered in prose alone), and each new ticket names its live cause.
 - `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 1f6873fcae34
+- Changed: Re-recorded the board-less game smoke replays after T-0358 (#2139)
+- Commits: f776bde T-0362: Re-record the board-less game smoke replays after T-0358 (#2139)
+- Check: 1 Three smoke replays exit 0 and each fixture `source` names the new round's traces (lines 1 to 6),...: pass
+- Check: 2 No pin names T-0362; every still-red turn carries T-0365 or T-0366 and each ticket names its live...: pass
+- Check: 3 `npx vitest run --project scripts scripts/e2e-admin/probe` exits 0: pass
+- Check: 4 `npm run check` exits 0: pass
+- Follow-up: note: The source field in each fixture names 2026-10-18.jsonl:N with no... -> notes.md
+- Follow-up: note: T-0365 and T-0366 were stamped in this worktree and may need... -> notes.md
+- Follow-up: note: .sdlc/tickets/.0366-boardless-move-prose-only/handoff.md says... -> notes.md

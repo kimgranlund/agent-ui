@@ -2,7 +2,7 @@
 id: T-0360
 title: "Live round 11: measure the round 10 fixes (PARSE array ask, showdown settles, natural skip, playing-card override, deal-again, poker deal) with fog analysis"
 type: chore           # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,19 @@ Live spend only under the cap; keys checked by HTTP status only; never read or p
 3. `grep -q 2b3686ac6ec777c349cb5600 .sdlc/evals/rounds/2026-10-18-r11-targeted/report.md`
 4. `npm run check`
 5. No earlier round archive changes: `git diff --quiet 8421bba99 HEAD -- .sdlc/evals/rounds/2026-10-17-r10-targeted .sdlc/evals/rounds/2026-10-18-smoke`
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 8421bba9988a
+- Changed: Live round 11 measured the round 10 fixes; archive 2026-10-18-r11-targeted (#2140)
+- Commits: none
+- Check: 1 round folder has signals.md, judged/, report.md: pass
+- Check: 2 ledger under the $10 cap: pass
+- Check: 3 fog id in report.md: pass
+- Check: 4 `npm run check`: pass
+- Check: 5 no earlier round archive changed: pass
+- Check: 6 Goal: new clusters spot-checked: pass
+- Check: 7 Goal: tickets T-0367 to T-0371: pass
+- Check: 8 Goal: cleanup of the 3 stray smoke runs touched nothing of round 11: pass
+- Follow-up: note: .sdlc/evals/rounds/2026-10-18-r11-targeted/report.md says "PARSE... -> notes.md
+- Follow-up: note: tickets.py check warns that T-0189, T-0349, T-0350, T-0354 and... -> notes.md
