@@ -22,7 +22,7 @@
 //   <ui-form-popover>
 //     <button data-part="trigger" type="button" aria-expanded="…" aria-controls="ui-form-popover-panel-N">
 //       <span data-part="label">…the `label` prop text…</span>
-//       <span data-part="caret" aria-hidden="true"><svg>…caret-down…</svg></span>
+//       <ui-glyph data-part="caret" symbol="caret-down"><svg>…</svg></ui-glyph>  (createGlyph; decorative, hidden through its own internals)
 //     </button>
 //     <div data-part="panel" data-box tabindex="-1" id="ui-form-popover-panel-N">
 //       <!-- ALL author children, moved here at connect time -->

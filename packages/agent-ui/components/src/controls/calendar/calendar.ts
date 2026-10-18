@@ -92,11 +92,6 @@ let _nextCalendarId = 0
  * input. Does NOT use new Date('YYYY-MM-DD'), which parses as UTC midnight and can shift the
  * calendar day by ±1 in negative-offset timezones.
  */
-/** A decorative caret mark for a nav button: a ui-glyph (empty label, so aria-hidden; the button carries the name). */
-function caretGlyph(symbol: 'caret-left' | 'caret-right'): HTMLElement {
-  return createGlyph(symbol)
-}
-
 function parseDateStr(s: string): { y: number; m: number; d: number } | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
   if (!match) return null
@@ -616,7 +611,7 @@ export class UICalendarElement extends UIFormElement {
     prev.setAttribute('data-part', 'prev')
     prev.setAttribute('type', 'button')
     prev.setAttribute('aria-label', 'Previous month')
-    prev.append(caretGlyph('caret-left'))
+    prev.append(createGlyph('caret-left')) // decorative; the button carries the name
 
     // Stable title id so [data-part=grid] can reference it via aria-labelledby.
     const titleId = `ui-calendar-title-${++_nextCalendarId}`
@@ -630,7 +625,7 @@ export class UICalendarElement extends UIFormElement {
     next.setAttribute('data-part', 'next')
     next.setAttribute('type', 'button')
     next.setAttribute('aria-label', 'Next month')
-    next.append(caretGlyph('caret-right'))
+    next.append(createGlyph('caret-right')) // decorative; the button carries the name
 
     nav.appendChild(prev)
     nav.appendChild(title)

@@ -55,7 +55,7 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui
 // measured +945 B gz on the reactive+dom foundation row every consumer pays for (7442 → 8387 against a
 // 7680 B gz budget, GH #368). Same shape as the `controls/menu` import below.
 import { overlay } from '@agent-ui/components/traits/overlay'
-import '@agent-ui/components/controls/glyph' // the trigger chevron, a caret-down functional mark (ADR-0245 cl.5)
+import { createGlyph } from '@agent-ui/components/controls/glyph' // the trigger chevron, a caret-down functional mark (ADR-0245 cl.5)
 import type { UIMenuElement } from '@agent-ui/components/controls/menu'
 import { SHELL_NARROW_BREAKPOINT_REM } from '../../shell-breakpoint.ts'
 import './nav-rail-group.ts'
@@ -176,8 +176,7 @@ export class UINavRailElement extends UIElement {
     trigger.setAttribute('data-part', 'trigger')
     const label = document.createElement('span')
     label.setAttribute('data-part', 'trigger-label')
-    const chevron = document.createElement('ui-glyph')
-    chevron.setAttribute('symbol', 'caret-down')
+    const chevron = createGlyph('caret-down') // decorative: ui-glyph hides itself through its own internals
     chevron.setAttribute('data-part', 'trigger-chevron')
     trigger.append(label, chevron)
     this.#triggerLabel = label

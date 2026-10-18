@@ -305,6 +305,15 @@ describe('ui-combo-box — control-created parts (combo-parts-idempotent · comb
     }
     el.remove()
   })
+
+  it('combo-caret-decorative: the caret is a ui-glyph hidden through its own internals, no host aria-hidden (T-0356)', () => {
+    const { el } = makeCombo()
+    const caret = el.querySelector<HTMLElement>('[data-part="caret"]')!
+    expect(caret.localName).toBe('ui-glyph')
+    expect(caret.hasAttribute('aria-hidden')).toBe(false)
+    expect((caret as unknown as { internals: ElementInternals }).internals.ariaHidden).toBe('true')
+    el.remove()
+  })
 })
 
 // ── Dynamic options (TKT-0026 — late-added Option adoption) ────────────────────────────────────
