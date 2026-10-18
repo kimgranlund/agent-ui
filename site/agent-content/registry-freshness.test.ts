@@ -99,11 +99,19 @@ describe('agent-content registry: freshness and schema', () => {
     expect(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded: ['claude-haiku-4-0'] } } } }), 'a history edit changes the module').not.toBe(committedRuntime)
   })
 
-  it('T-0355 (ACS-R7 item 6): without a ruling only the final in-version seed value takes the new seed; a ruling admits the earlier ones', () => {
-    const plain = digestsIn(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded: ['claude-haiku-4-5-20251001', 'claude-haiku-5-5'] } } } }))
-    expect(plain['quizmaster']!['1']!['model']).toEqual([valueDigest('claude-haiku-5-5')])
-    const ruled = digestsIn(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded: ['claude-haiku-4-5-20251001', 'claude-haiku-5-5'], ruling: 'test' } } } }))
-    expect(ruled['quizmaster']!['1']!['model']).toEqual([valueDigest('claude-haiku-4-5-20251001'), valueDigest('claude-haiku-5-5')])
+  it('T-0355 (ACS-R7 item 6, option C): an unmarked earlier in-version value is kept and flagged; an untouchedWins row migrates it', () => {
+    const seed = { model: 'claude-opus-5-5' }
+    const stored = { model: 'claude-haiku-4-5-20251001' }
+    const seeded = ['claude-haiku-4-5-20251001', 'claude-haiku-5-5']
+    const plain = digestsIn(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded } } } }))['quizmaster']!['1']!
+    expect(plain['model']).toEqual([valueDigest('claude-haiku-5-5')])
+    expect(modifiedPaths(diffOverlay('quizmaster', quizmasterVersion(), seed, stored, { baseUnknown: true, baseDigests: plain })), 'unmarked: kept, flagged').toEqual([
+      { key: 'model', seedChanged: { seed: 'claude-opus-5-5', user: 'claude-haiku-4-5-20251001' } },
+    ])
+    const marked = digestsIn(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded, untouchedWins: 'Kim 2026-10-17, T-0355 (option C)' } } } }))['quizmaster']!['1']!
+    expect(marked['model']).toEqual([valueDigest('claude-haiku-4-5-20251001'), valueDigest('claude-haiku-5-5')])
+    expect(modifiedPaths(diffOverlay('quizmaster', quizmasterVersion(), seed, stored, { baseUnknown: true, baseDigests: marked })), 'marked: takes the new seed').toEqual([])
+    expect(SEED_HISTORY['quizmaster']?.['1']?.['model']?.untouchedWins).toBe('Kim 2026-10-17, T-0355 (option C)')
   })
 
   it('T-0355: a value seeded at v1 and again at v3 is listed under both, so a v1 copy and a v3 copy each take the new seed', () => {
@@ -126,7 +134,7 @@ describe('agent-content registry: freshness and schema', () => {
       quizmaster: {
         [String(current)]: { model: { seeded: ['x'] } },
         v2: { model: { seeded: ['x'] } },
-        '2': { 'entries:skill': { seeded: [[]] }, name: { seeded: [] }, toolsEnabled: { seeded: ['yes'] } },
+        '2': { 'entries:skill': { seeded: [[]] }, name: { seeded: [] }, toolsEnabled: { seeded: ['yes'] }, model: { seeded: ['a', 'b'], untouchedWins: 'because' } },
       },
     }).join('\n')
     expect(problems).toContain('ghost names no persona')
@@ -135,6 +143,7 @@ describe('agent-content registry: freshness and schema', () => {
     expect(problems).toContain('quizmaster@2 key entries:skill is no scalar persona store key')
     expect(problems).toContain('quizmaster@2 name has no seeded values')
     expect(problems).toContain('quizmaster@2 toolsEnabled value "yes"')
+    expect(problems).toContain('quizmaster@2 model untouchedWins cites no ruling ticket (T-NNNN)')
   })
 
   it('bites: a planted body byte changes the generated module', () => {

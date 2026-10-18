@@ -83,7 +83,7 @@ export function discoverAgentContent(root = process.cwd()) {
 }
 
 /** The per-version field digests of a seed history table (ACS-R7 item 6): per key, the digest of the
- *  version's final seed value, plus every earlier value's when the row carries a ruling. Object key order
+ *  version's final seed value, plus every earlier value's when the row is marked `untouchedWins`. Object key order
  *  is the table's (integer-like version keys enumerate ascending). */
 function seedDigests(history) {
   const out = {}
@@ -92,8 +92,8 @@ function seedDigests(history) {
     for (const [version, keys] of Object.entries(history[id])) {
       out[id][version] = {}
       for (const key of Object.keys(keys).sort()) {
-        const { seeded, ruling } = keys[key]
-        out[id][version][key] = (ruling === undefined ? seeded.slice(-1) : seeded).map(valueDigest)
+        const { seeded, untouchedWins } = keys[key]
+        out[id][version][key] = (untouchedWins === undefined ? seeded.slice(-1) : seeded).map(valueDigest)
       }
     }
   }

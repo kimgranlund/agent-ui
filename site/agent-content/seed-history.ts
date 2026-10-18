@@ -12,13 +12,15 @@
 //   each version's row stands alone.
 // - Only scalar store keys (a persona field with a store key that is not an entry list). Entry lists and
 //   retired keys are not recorded.
-// - `ruling` is set only when a ruling says every listed value is an untouched seed, earlier ones included.
+// - `untouchedWins` marks a row whose earlier in-version values also take the new seed, and must cite the
+//   ruling that says so (Kim 2026-10-17, T-0355 option C). An unmarked row admits only the final value: an
+//   earlier one may be a value a user picked over the later seed, so it is kept and flagged.
 
 export interface SeededValues {
   /** The values this key held as the version's seed, oldest first; the last is its final seed. */
   readonly seeded: readonly unknown[]
-  /** The ruling (ticket and reason) under which an earlier in-version value also takes the new seed. */
-  readonly ruling?: string
+  /** The cited ruling (who, date, ticket) under which an earlier in-version value also takes the new seed. */
+  readonly untouchedWins?: string
 }
 
 export type SeedHistory = Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, SeededValues>>>>>>
@@ -30,7 +32,7 @@ export const SEED_HISTORY: SeedHistory = {
     '1': {
       model: {
         seeded: ['claude-haiku-4-5-20251001', 'claude-haiku-5-5'],
-        ruling: 'T-0036 and T-0355 (Kim 2026-10-08, 2026-10-17): saved Quizmasters on Haiku 4.5 move to Haiku 5.5',
+        untouchedWins: 'Kim 2026-10-17, T-0355 (option C)',
       },
     },
   },

@@ -169,7 +169,7 @@ export function runtimeRecord(record: ContentRecord): RuntimeRecord {
 
 /** The browser's per-version field digests (`SEED_DIGESTS`, T-0355): persona id, then past seed version,
  *  then store key to the `valueDigest`s of the values that take the new seed there (ACS-R7 item 6: the
- *  version's final seed value, plus its earlier values when the history row carries a ruling). */
+ *  version's final seed value, plus its earlier values when the history row is marked `untouchedWins`). */
 export type SeedDigests = Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>>>
 
 // ── canonical form and digests ──────────────────────────────────────────────────────────────────────
@@ -284,7 +284,8 @@ export function findRef<R extends RuntimeRecord>(records: readonly R[], ref: str
 /** Every problem in the committed seed history table (`seed-history.ts`, T-0355), as `<path>: <problem>`
  *  lines: a persona the registry lacks, a version key that is not a positive integer below the persona's
  *  current version, a key that is no scalar persona store key (an entry list is not recorded yet), an empty
- *  or missing `seeded` list, or a value of the wrong shape for its field. `[]` means valid. */
+ *  or missing `seeded` list, a value of the wrong shape for its field, or an `untouchedWins` mark that cites
+ *  no ticket. `[]` means valid. */
 export function validateSeedHistory(records: readonly ContentRecord[], history: SeedHistory): string[] {
   const out: string[] = []
   const at = `${CONTENT_ROOT}/seed-history.ts`
@@ -308,6 +309,8 @@ export function validateSeedHistory(records: readonly ContentRecord[], history: 
           out.push(`${at}: ${id}@${version} ${key} has no seeded values`)
           continue
         }
+        if (row.untouchedWins !== undefined && !/T-\d{4}/.test(String(row.untouchedWins)))
+          out.push(`${at}: ${id}@${version} ${key} untouchedWins cites no ruling ticket (T-NNNN)`)
         for (const value of row.seeded) {
           const problem = checkFieldValue(field, value)
           if (problem !== undefined) out.push(`${at}: ${id}@${version} ${key} value ${JSON.stringify(value)}: ${problem}`)

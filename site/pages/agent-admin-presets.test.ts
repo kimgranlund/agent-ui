@@ -315,7 +315,7 @@ describe('the Quizmaster seedVersion bump (T-0036, T-0355): an untouched saved m
 
   // T-0161 (ACS-R7): a bump never wipes. T-0355 (ACS-R7 item 6): a pre-overlay store at an older version is
   // diffed against the digests site/agent-content/seed-history.ts lists for that version. v1 seeded the dated
-  // Haiku 4.5 id and then, unbumped (T-0030), Haiku 5.5; the row's ruling admits the earlier value, so an
+  // Haiku 4.5 id and then, unbumped (T-0030), Haiku 5.5; the row is marked untouchedWins (Kim 2026-10-17, T-0355 option C), so an
   // untouched v1 model takes the new seed unflagged, while a model no v1 seed held is kept, flagged.
   it('a pre-bump store (seedVersion 1) holding the v1 default claude-haiku-4-5-20251001 migrates to claude-haiku-5-5, unflagged', () => {
     const persona = quizmaster()
