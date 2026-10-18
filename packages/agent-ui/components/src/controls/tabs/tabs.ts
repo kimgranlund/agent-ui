@@ -43,7 +43,7 @@ import { rovingFocus } from '../../traits/roving-focus.ts'
 import { UITabElement } from './tab.ts'
 import { UITabPanelElement } from './tab-panel.ts'
 import { UIMenuElement } from '../menu/menu.ts' // sanctioned sibling-control import — self-defines ui-menu
-import '../glyph/glyph.ts' // registers <ui-glyph>: the overflow trigger's `more` mark (ADR-0245 cl.5, T-0351)
+import { createGlyph } from '../glyph/glyph.ts' // the overflow trigger's `more` mark (ADR-0245 cl.5, T-0351)
 
 // GH #221 — TYPE-only re-exports of the sub-elements: a composing consumer (ui-super-shell's panel-less
 // strips) needs the PUBLIC coordination API's type (`link`, `key`) to drive tabs it creates itself.
@@ -330,9 +330,7 @@ export class UITabsElement extends UIContainerElement {
       const trigger = document.createElement('button')
       trigger.type = 'button'
       trigger.setAttribute('aria-label', 'More tabs') // literal English label — control-created, sanctioned
-      const mark = document.createElement('ui-glyph') // GH #168: the fleet's one horizontal overflow mark
-      mark.setAttribute('symbol', 'more')
-      trigger.append(mark)
+      trigger.append(createGlyph('more')) // GH #168: the fleet's one horizontal overflow mark
       menu.append(trigger)
       this.#overflowMenu = menu
     }

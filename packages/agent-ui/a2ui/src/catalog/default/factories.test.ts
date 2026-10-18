@@ -602,11 +602,12 @@ describe('default catalog factories — Badge (SPEC-R11..R13)', () => {
     const el = badgeFactory.create()
     badgeFactory.applyProp(el, 'label', 'Dealer wins')
     badgeFactory.applyProp(el, 'intent', 'danger')
-    document.body.append(el) // connect — the one-time glyph+label build runs in connected()
+    document.body.append(el) // connect: connected() builds the label and, for a non-neutral intent, the ui-glyph mark
     try {
       const glyph = el.querySelector('[data-part="glyph"]')
       expect(glyph, 'the × mark is the constant glyph part').not.toBeNull()
-      expect(glyph!.getAttribute('aria-hidden')).toBe('true')
+      expect(glyph!.localName, 'the mark is a decorative ui-glyph, hidden through ElementInternals').toBe('ui-glyph')
+      expect((glyph as HTMLElement & { label: string }).label, 'no label: the mark stays decorative').toBe('')
       // No close affordance exists anywhere in the badge: nothing focusable, no button, no close part.
       expect(el.querySelector('button, [role="button"], [tabindex], [data-part="close"]')).toBeNull()
       expect((el as HTMLElement).tabIndex).toBeLessThan(0) // the host itself is not focusable either

@@ -8,8 +8,8 @@
  *       ratio game-hud.ts writes on the progress fill, the stat `--_ring-pct` idiom). The host is a quiet
  *       surface strip: header row, optional progress bar, then the stat tiles in a wrapping grid.
  *
- * Intent never tints a tile. A stat with an intent carries a shape glyph (the badge clip-paths, copied
- * verbatim, ADR-0057's non-color signifier) and an intent ink on its glyph and delta; the delta's sign is
+ * Intent never tints a tile. A stat with an intent carries a shape glyph (a ui-glyph mark from the badge's
+ * intent table, ADR-0057's non-color signifier, T-0351) and an intent ink on its glyph and delta; the delta's sign is
  * text and never picks the color. No interaction states: the HUD is a read-out with no focus or hover.
  */
 
@@ -17,6 +17,7 @@
 
 /* uses: synced from game-hud.md by scripts/codemod-uses.mjs */
 @import '../badge/badge.css';
+@import '../glyph/glyph.css';
 
 :where(ui-game-hud) {
   /* Host surface. The spacing is the ADR-0046 container box model (fixed rem, no density scaling, ADR-0046
@@ -196,40 +197,14 @@
   :scope [data-part='stat'] [data-part='glyph'] {
     display: none;
     flex: none;
+    padding: 0; /* the part is the glyph box itself, the svg fills it (outranks glyph.css's slot inset) */
     inline-size: var(--ui-game-hud-glyph-size);
     block-size: var(--ui-game-hud-glyph-size);
-    background-color: var(--ui-game-hud-intent-ink);
+    color: var(--ui-game-hud-intent-ink);
   }
-  :scope [data-part='stat'][data-intent='success'] [data-part='glyph'] {
-    /* tick, badge.css verbatim */
-    display: inline-block;
-    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-  }
-  :scope [data-part='stat'][data-intent='danger'] [data-part='glyph'] {
-    /* cross, badge.css verbatim */
-    display: inline-block;
-    clip-path: polygon(
-      20% 8%,
-      8% 20%,
-      38% 50%,
-      8% 80%,
-      20% 92%,
-      50% 62%,
-      80% 92%,
-      92% 80%,
-      62% 50%,
-      92% 20%,
-      80% 8%,
-      50% 38%
-    );
-  }
-  :scope [data-part='stat'][data-intent='warning'] [data-part='glyph'] {
-    display: inline-block;
-    clip-path: polygon(50% 0, 100% 100%, 0 100%); /* triangle, badge.css verbatim */
-  }
-  :scope [data-part='stat'][data-intent='info'] [data-part='glyph'] {
-    display: inline-block;
-    clip-path: circle(50%); /* disc, badge.css verbatim */
+  /* The shapes are the ui-glyph marks of the shared intent table (game-hud.ts, badge/intent-mark.ts; T-0351). */
+  :scope [data-part='stat']:is([data-intent='success'], [data-intent='danger'], [data-intent='warning'], [data-intent='info']) [data-part='glyph'] {
+    display: inline-flex;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -238,8 +213,8 @@
     }
   }
 
-  /* Forced colors: a background-painted fill or clip-path glyph would otherwise flatten to Canvas and
-     vanish (the badge.css note), so both paint in a system ink. */
+  /* Forced colors: a background-painted fill would otherwise flatten to Canvas and vanish, so it paints in a
+     system ink; the stat glyph strokes in currentColor, so it takes the same ink as its color. */
   @media (forced-colors: active) {
     :scope {
       border-color: CanvasText;
@@ -247,10 +222,13 @@
     :scope [data-part='progress-track'] {
       border: 1px solid CanvasText;
     }
-    :scope [data-part='progress-fill'],
-    :scope [data-part='stat'] [data-part='glyph'] {
+    :scope [data-part='progress-fill'] {
       forced-color-adjust: none;
       background-color: CanvasText;
+    }
+    :scope [data-part='stat'] [data-part='glyph'] {
+      forced-color-adjust: none;
+      color: CanvasText;
     }
   }
 }

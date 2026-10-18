@@ -15,6 +15,9 @@
 
 /* ════════════════ [1] TOKEN BLOCK: :where(ui-result-card) declares --ui-result-card-* ════════════════ */
 
+/* uses: synced from result-card.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
 :where(ui-result-card) {
   /* Host surface. The spacing is the ADR-0046 container box model (fixed rem, no density scaling, ADR-0046
      Amendment 7): the card's content is one region, so its ink sits the 6px box inset plus the region padding
@@ -226,44 +229,18 @@
   :scope [data-part='stat'] [data-part='glyph'] {
     display: none;
     flex: none;
+    padding: 0; /* the part is the glyph box itself, the svg fills it (outranks glyph.css's slot inset) */
     inline-size: var(--ui-result-card-glyph-size);
     block-size: var(--ui-result-card-glyph-size);
-    background-color: var(--ui-result-card-intent-ink);
+    color: var(--ui-result-card-intent-ink);
   }
-  :scope [data-part='stat'][data-intent='success'] [data-part='glyph'] {
-    /* tick, badge.css verbatim */
-    display: inline-block;
-    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-  }
-  :scope [data-part='stat'][data-intent='danger'] [data-part='glyph'] {
-    /* cross, badge.css verbatim */
-    display: inline-block;
-    clip-path: polygon(
-      20% 8%,
-      8% 20%,
-      38% 50%,
-      8% 80%,
-      20% 92%,
-      50% 62%,
-      80% 92%,
-      92% 80%,
-      62% 50%,
-      92% 20%,
-      80% 8%,
-      50% 38%
-    );
-  }
-  :scope [data-part='stat'][data-intent='warning'] [data-part='glyph'] {
-    display: inline-block;
-    clip-path: polygon(50% 0, 100% 100%, 0 100%); /* triangle, badge.css verbatim */
-  }
-  :scope [data-part='stat'][data-intent='info'] [data-part='glyph'] {
-    display: inline-block;
-    clip-path: circle(50%); /* disc, badge.css verbatim */
+  /* The shapes are the ui-glyph marks of the shared intent table (result-card.ts, badge/intent-mark.ts; T-0351). */
+  :scope [data-part='stat']:is([data-intent='success'], [data-intent='danger'], [data-intent='warning'], [data-intent='info']) [data-part='glyph'] {
+    display: inline-flex;
   }
 
-  /* Forced colors: the pill tint would flatten to Canvas, so the pill gains a system border; a clip-path stat
-     glyph paints in a system ink (the badge.css note). The outcome glyph strokes in currentColor already. */
+  /* Forced colors: the pill tint would flatten to Canvas, so the pill gains a system border; the stat glyph
+     strokes in currentColor, pinned to a system ink. The outcome glyph strokes in currentColor already. */
   @media (forced-colors: active) {
     :scope {
       border-color: CanvasText;
@@ -273,7 +250,7 @@
     }
     :scope [data-part='stat'] [data-part='glyph'] {
       forced-color-adjust: none;
-      background-color: CanvasText;
+      color: CanvasText;
     }
   }
 }

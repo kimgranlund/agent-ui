@@ -133,15 +133,16 @@ describe('ui-game-hud: intent glyphs', () => {
     })
     await el.updateComplete
     const glyphs = intents.map((intent) => el.querySelector(`[data-intent="${intent}"] [data-part="glyph"]`) as HTMLElement)
-    const clips = glyphs.map((g) => getComputedStyle(g).clipPath)
+    // the shapes are the ui-glyph marks of the shared intent table (T-0351): drawn paths, pairwise distinct
+    const marks = glyphs.map((g) => g.querySelector('svg path')?.getAttribute('d'))
     for (const [i, g] of glyphs.entries()) {
       expect(getComputedStyle(g).display, `${intents[i]} glyph is not painted`).not.toBe('none')
       expect(g.getBoundingClientRect().width).toBeGreaterThan(0)
-      expect(clips[i]).not.toBe('none')
+      expect(marks[i], `${intents[i]} glyph draws no mark`).toBeTruthy()
     }
-    expect(new Set(clips).size).toBe(intents.length)
+    expect(new Set(marks).size).toBe(intents.length)
     const delta = el.querySelector('[data-intent="success"] [data-part="delta"]') as HTMLElement
-    expect(getComputedStyle(delta).color).toBe(getComputedStyle(glyphs[0]!).backgroundColor)
+    expect(getComputedStyle(delta).color, 'the glyph strokes in the same intent ink as the delta').toBe(getComputedStyle(glyphs[0]!).color)
   })
 
   it('a stat glyph is its own glyph box 2n - 2c, n clear of its label (ADR-0245 Amendment 6)', async () => {

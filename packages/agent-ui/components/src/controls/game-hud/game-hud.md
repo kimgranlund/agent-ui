@@ -9,6 +9,7 @@ tier: pattern           # geometry size-class: container spacing, no control-hei
 extends: UIElement      # a display primitive with data-props: not a container, not form-associated (no value)
 uses:
   - ui-badge
+  - ui-glyph
 # marginal: not yet measured; measured at the fleet size gate (npm run size)
 
 attributes:             # attributes-as-API, the generation source for game-hud.props.gen.ts
@@ -73,7 +74,7 @@ parts:
   - name: stat
     description: One stat tile, reused by index across updates. Carries `data-intent` only when the stat has an intent; an intent never tints the tile.
   - name: glyph
-    description: The `aria-hidden` intent shape inside a stat (tick, cross, triangle, disc, the badge.css clip-paths). Present only when the stat has an intent, sized to the glyph box 2n - 2c and n clear of its label (ADR-0245 Amendment 6).
+    description: The intent shape inside a stat, a `<ui-glyph data-part="glyph">` whose mark comes from the badge's shared intent table (info `info`, success `check`, warning `warning`, danger `x`; T-0351, ADR-0245 cl.5). Decorative: ui-glyph hides itself through ElementInternals. Present only when the stat has an intent, sized to the glyph box 2n - 2c and n clear of its label (ADR-0245 Amendment 6).
   - name: label
     description: The stat label, small uppercase text.
   - name: value
@@ -104,7 +105,7 @@ geometry:
   radius: var(--ui-game-hud-radius)               # = --md-sys-shape-corner-base
   note: Container spacing only, no control-height row (no action part). The spacing is the ADR-0046 box model in fixed rem (no scale-axis scaling outside the derived foundations), the shared --ui-box-* tokens, so the ink sits 19px inline and 13px block from the outer edge like a stock card region. As a surface root the HUD fills the canvas width (applyRootStretch, ADR-0046 Amendment 7). Block-level fill by default (ADR-0223); the `inline` boolean flips the host to inline-grid. Stat tiles wrap in an auto-fit grid with an 84px tile floor, so the HUD never overflows its container.
 
-forcedColors: The host keeps its outline as a CanvasText border; the progress track gains a CanvasText border and the progress fill and stat glyphs paint in CanvasText (a background-painted shape would otherwise flatten to Canvas and vanish, the badge.css note). The composed status badge carries its own forced-colors treatment.
+forcedColors: The host keeps its outline as a CanvasText border; the progress track gains a CanvasText border and the progress fill paints in CanvasText (a background-painted shape would otherwise flatten to Canvas and vanish) and the stat glyphs stroke in CanvasText. The composed status badge carries its own forced-colors treatment.
 ---
 
 # ui-game-hud

@@ -66,7 +66,7 @@
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIMenuElement } from '../menu/menu.ts' // sanctioned sibling-control import — self-defines ui-menu
-import '../glyph/glyph.ts' // registers <ui-glyph>: the overflow trigger's `more` mark (ADR-0245 cl.5, T-0351)
+import { createGlyph } from '../glyph/glyph.ts' // the overflow trigger's `more` mark (ADR-0245 cl.5, T-0351)
 
 const COLLAPSE_VALUES = ['none', 'menu'] as const
 
@@ -297,9 +297,7 @@ export class UIBreadcrumbElement extends UIElement {
     const trigger = document.createElement('button')
     trigger.type = 'button'
     trigger.setAttribute('aria-label', 'Show hidden breadcrumbs') // literal English label — control-created, the tabs "More tabs" sanction
-    const mark = document.createElement('ui-glyph')
-    mark.setAttribute('symbol', 'more')
-    trigger.append(mark)
+    trigger.append(createGlyph('more'))
     menu.append(trigger)
 
     for (const [i, crumb] of folded.entries()) {

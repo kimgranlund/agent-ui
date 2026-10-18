@@ -47,12 +47,12 @@ properties: []          # no manual accessors beyond the two typed props
 events: []              # display-only — emits nothing (SPEC-R11: no events, no keyboard contract)
 
 slots: []               # no author-slotted content model — `label` is a PROP (plain text), not a slot;
-                         # the inherited render() no-op path is unused: connected() builds two
-                         # component-owned spans once (`replaceChildren`), never author-slotted children
+                         # the inherited render() no-op path is unused: connected() builds the label span
+                         # once (`replaceChildren`) and a ui-glyph mark for a non-neutral intent, never author-slotted children
 
 parts:
   - name: glyph
-    description: The `<ui-glyph data-part="glyph" aria-hidden="true">`, a CONSTANT node whose library mark follows `[intent]` (info `info`, success `check`, warning `warning`, danger `x`; pairwise-distinct, ADR-0057, ADR-0245 cl.5). Hidden entirely (`display:none`) for `intent="neutral"`; absence is neutral's own non-color signifier. Decorative only; never carries the announced message.
+    description: The `<ui-glyph data-part="glyph">` whose library mark follows `[intent]` (info `info`, success `check`, warning `warning`, danger `x`; the shared table in intent-mark.ts; pairwise-distinct, ADR-0057, ADR-0245 cl.5). Built on the first non-neutral intent and kept, so an intent change flips its symbol; absent for `intent="neutral"`, where absence is the non-color signifier. Decorative only: ui-glyph hides itself through ElementInternals (no host aria attribute), and it never carries the announced message.
   - name: label
     description: The `<span data-part="label">` — real text mirroring the `label` prop; the host's accessible name (no internals ARIA is minted — SPEC-R12 AC3).
 
@@ -68,7 +68,7 @@ aria:
   roleSource: none        # never internals, never a host role/aria-* attribute (FACE — FACE controls that
                           # need no ARIA mint none, rather than a placebo role)
   labelSource: the rendered label span's text content  # `label` prop → `[data-part=label]` textContent;
-                          # the glyph is aria-hidden and text-free (SPEC-R12 AC3) — colour/shape carry
+                          # the glyph is hidden (ui-glyph's own internals) and text-free (SPEC-R12 AC3); colour/shape carry
                           # visual-only redundancy, never assistive-tech meaning
 
 keyboard: []             # NOT interactive and NOT focusable — no tabindex, no keyboard contract (SPEC-R11)
@@ -111,10 +111,11 @@ bound value at runtime.
 
 ## Anatomy
 
-The host is an `inline-flex` pill: a constant `[data-part=glyph]` `ui-glyph` (its `symbol` follows the
-intent, its visibility is keyed on `[intent]`) followed by a `[data-part=label]` text node mirroring the
-`label` prop. Neither node is ever replaced: an intent change flips the host attribute and the glyph's
-symbol; a label change updates only the label span's text.
+The host is an `inline-flex` pill: a `[data-part=glyph]` `ui-glyph` (present for a non-neutral intent,
+its `symbol` following the intent) followed by a `[data-part=label]` text node mirroring the `label` prop.
+Neither node is ever replaced: the glyph is built on the first non-neutral intent and kept, so an intent
+change flips the host attribute and the glyph's symbol (a neutral intent detaches it); a label change
+updates only the label span's text.
 
 ## Geometry
 
@@ -128,8 +129,9 @@ still floors at `min-inline-size = box` — a filled dot/pill, never a collapsed
 ## Accessibility
 
 No `ElementInternals` ARIA is minted at all — the host is a generic element whose own text content (the
-label span) is its accessible name via the platform accname algorithm. The glyph is `aria-hidden` and
-carries no text; it is pure visual redundancy, never assistive-tech meaning.
+label span) is its accessible name via the platform accname algorithm. The glyph is a decorative
+`ui-glyph`, hidden through its own `ElementInternals` (no host `aria-hidden`), and carries no text; it is
+pure visual redundancy, never assistive-tech meaning.
 
 ## Forced colors
 

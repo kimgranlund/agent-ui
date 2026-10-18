@@ -46,6 +46,7 @@
   --ui-breadcrumb-link-ink-hover: var(--md-sys-color-neutral-on-surface);
   --ui-breadcrumb-trigger-bg: var(--md-sys-color-neutral-container-low); /* the overflow trigger's resting fill: a shape at rest (T-0149) */
   --ui-breadcrumb-trigger-bg-hover: var(--md-sys-color-neutral-container); /* the overflow trigger's hover wash, one step up */
+  --ui-breadcrumb-trigger-icon: var(--md-sys-icon-box, 1em); /* the overflow trigger's glyph slot (2n), the tabs.css twin; the trigger never drops below it */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-breadcrumb) consumes ONLY --ui-breadcrumb-* ════════════════ */
@@ -108,15 +109,16 @@
   }
 
   /* The overflow trigger: a compact round square (a circle) keyed to the CRUMB'S OWN line box (`1lh`, not a new control-
-     height token — the intake's Geometry row: ui-breadcrumb owns no geometry row of its own), a padded hit
-     area, the shared ink + focus ring. The mark is a `<ui-glyph symbol="more">` child (breadcrumb.ts, T-0351)
-     that inherits `color` here and sizes itself in its 2n slot (the tabs.css trigger precedent, minus the grid-area assignment; the
-     composed `<ui-menu>` wrapper is `display:contents`, so this button is simply the next flex item at the
-     fold's DOM position). */
+     height token; the intake's Geometry row: ui-breadcrumb owns no geometry row of its own), floored at the
+     glyph slot so the mark always fits, a padded hit area, the shared ink + focus ring. The mark is a
+     `<ui-glyph symbol="more">` child (breadcrumb.ts, T-0351) that inherits `color` here, its slot
+     `--ui-breadcrumb-trigger-icon` with the glyph box centred in it (the tabs.css trigger precedent, minus the
+     grid-area assignment; the composed `<ui-menu>` wrapper is `display:contents`, so this button is simply the
+     next flex item at the fold's DOM position). */
   :scope > [data-part='overflow'] > [data-part='trigger'] {
     box-sizing: border-box;
-    inline-size: 1lh;
-    block-size: 1lh;
+    inline-size: max(1lh, var(--ui-breadcrumb-trigger-icon));
+    block-size: max(1lh, var(--ui-breadcrumb-trigger-icon));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -128,7 +130,8 @@
     cursor: pointer;
   }
   :scope > [data-part='overflow'] > [data-part='trigger'] > ui-glyph {
-    flex: none; /* the 2n slot never shrinks to a 1lh trigger narrower than it, so the glyph box holds */
+    inline-size: var(--ui-breadcrumb-trigger-icon);
+    block-size: var(--ui-breadcrumb-trigger-icon);
   }
   :scope > [data-part='overflow'] > [data-part='trigger']:hover {
     color: var(--ui-breadcrumb-current-ink);

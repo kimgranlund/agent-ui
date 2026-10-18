@@ -150,21 +150,22 @@ describe('ui-badge intent glyph — pairwise-distinct shapes, colour-independent
 
   it('"neutral" renders NO glyph at all — absence is its own signifier (SPEC-R12)', () => {
     const el = mount('<ui-badge intent="neutral" label="x"></ui-badge>')
-    const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement
-    expect(getComputedStyle(glyph).display).toBe('none')
+    expect(el.querySelector('[data-part="glyph"]'), 'a neutral badge carries no mark node (T-0351)').toBeNull()
   })
 
   it('an out-of-enum [intent] ATTRIBUTE (a plain-author typo, not a bound-property write) renders NO glyph — never a stray shapeless square (component-review finding: the base glyph rule must be default-off, since a raw attribute mismatch is reachable and outside what the property-level hardening effect can catch)', () => {
     const el = mount('<ui-badge intent="neutral" label="x"></ui-badge>')
     el.setAttribute('intent', 'bogus') // bypasses the typed property setter entirely — a literal attribute write
-    const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement
-    expect(getComputedStyle(glyph).display, 'an unrecognized [intent] attribute must degrade to no-glyph, matching the neutral/unknown fallback').toBe('none')
+    const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement | null
+    expect(glyph === null || getComputedStyle(glyph).display === 'none', 'an unrecognized [intent] attribute must degrade to no-glyph, matching the neutral/unknown fallback').toBe(true)
   })
 
-  it('the glyph is aria-hidden and text-free — the label alone carries the announced message (SPEC-R12 AC3)', () => {
+  it('the glyph is decorative and text-free; the label alone carries the announced message (SPEC-R12 AC3)', () => {
     const el = mount('<ui-badge intent="danger" label="3 failing"></ui-badge>')
-    const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement
-    expect(glyph.getAttribute('aria-hidden')).toBe('true')
+    const glyph = el.querySelector('[data-part="glyph"]') as HTMLElement & { label: string }
+    expect(glyph.localName).toBe('ui-glyph')
+    expect(glyph.label, 'no label: ui-glyph hides itself through ElementInternals').toBe('')
+    expect(glyph.hasAttribute('aria-hidden'), 'no ARIA host attribute (T-0351)').toBe(false)
     expect(glyph.textContent).toBe('')
     expect(el.textContent).toBe('3 failing') // the WHOLE host's announced text is exactly the label
   })

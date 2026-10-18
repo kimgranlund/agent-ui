@@ -179,8 +179,8 @@ are a fenced separate component class; ADR-0111 fork F3).
 
 `intent` is **bindable status data** (`neutral` default, `info` / `success` / `warning` / `danger`) —
 unlike a structural `variant`, it is expected to change live as the status it reports changes. Every
-non-neutral intent renders a **pairwise-distinct**, component-drawn glyph (a CSS `clip-path` — tick /
-cross / triangle / disc) alongside its colour repoint, so hue is never the only channel carrying the
+non-neutral intent renders a **pairwise-distinct** library mark (a `ui-glyph`: `check` for success, `x` for
+danger, `warning` for warning, `info` for info) alongside its colour repoint, so hue is never the only channel carrying the
 status (ADR-0057). `neutral` renders no glyph at all — absence is its own signifier. An out-of-enum
 runtime value (e.g. a data-model bind resolving to something unexpected) is hardened back to `neutral`
 by the component itself; the shared catalog validator only checks literal membership at parse time, not a
@@ -188,10 +188,11 @@ bound value at runtime.
 
 ## Anatomy
 
-The host is an `inline-flex` pill: a constant `[data-part=glyph]` node (shape/visibility keyed on
-`[intent]`) followed by a `[data-part=label]` text node mirroring the `label` prop. Neither node is ever
-replaced — an intent change is a zero-DOM-churn attribute flip; a label change updates only the label
-span's text.
+The host is an `inline-flex` pill: a `[data-part=glyph]` `ui-glyph` (present for a non-neutral intent,
+its `symbol` following the intent) followed by a `[data-part=label]` text node mirroring the `label` prop.
+Neither node is ever replaced: the glyph is built on the first non-neutral intent and kept, so an intent
+change flips the host attribute and the glyph's symbol (a neutral intent detaches it); a label change
+updates only the label span's text.
 
 ## Geometry
 
@@ -205,14 +206,14 @@ still floors at `min-inline-size = box` — a filled dot/pill, never a collapsed
 ## Accessibility
 
 No `ElementInternals` ARIA is minted at all — the host is a generic element whose own text content (the
-label span) is its accessible name via the platform accname algorithm. The glyph is `aria-hidden` and
-carries no text; it is pure visual redundancy, never assistive-tech meaning.
+label span) is its accessible name via the platform accname algorithm. The glyph is a decorative
+`ui-glyph`, hidden through its own `ElementInternals` (no host `aria-hidden`), and carries no text; it is
+pure visual redundancy, never assistive-tech meaning.
 
 ## Forced colors
 
 Under `forced-colors: active` the host repaints to `Canvas` fill / `CanvasText` ink and border (the boxed
-identity survives), and the glyph repaints to `CanvasText` (a `currentColor`/background-drawn clip-path
-glyph would otherwise vanish under WHCM's flattening).
+identity survives), and the glyph's `currentColor` stroke follows the host to `CanvasText`.
 
 ---
 
@@ -411,7 +412,7 @@ between different crumb pairs) is not supported — a consumer needing that auth
 
 `collapse="menu"` pins the FIRST crumb and the LAST `collapse-keep-trailing` crumbs (default 2, clamped ≥1
 — inclusive of the auto-stamped current/last crumb); a non-empty middle folds behind a composed overflow
-`ui-menu`, a `dots-three`-glyph trigger placed at the fold's position. The folded crumbs never leave the
+`ui-menu`, a `more`-mark trigger placed at the fold's position. The folded crumbs never leave the
 DOM (`display:none` only) — selecting a proxy row in the opened menu relays activation to the real hidden
 crumb (a real `<a>`, or a composed `<ui-router-link>`'s own inner anchor once upgraded) rather than
 reparenting it. The overflow menu's own `select`/`toggle`/`close` never surface as `ui-breadcrumb` events —
@@ -6444,7 +6445,7 @@ becomes a pinned, internally-scrolling column, and the visible panel keeps its e
 ## Overflow
 
 `<ui-tabs overflow="menu">` collects the tabs that don't fit the strip's available space behind a square,
-tab-height `dots-three` trigger that opens a composed [`ui-menu`](../menu/menu.md) of **proxy** rows — never a
+tab-height `more` trigger (a `ui-glyph` mark) that opens a composed [`ui-menu`](../menu/menu.md) of **proxy** rows; never a
 reparented `ui-tab` (`role="tab"` must stay inside `role="tablist"`; a moved tab would also churn DOM identity
 under roving/focus). The shell becomes a CSS grid so the trigger stays its own child, outside `role="tablist"`
 (a non-tab tablist child is an ARIA required-owned-children violation), without absolute positioning.

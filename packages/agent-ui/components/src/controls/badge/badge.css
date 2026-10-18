@@ -155,8 +155,8 @@ ui-badge:not([data-size]) {
   /* Per-intent visibility. The pairwise-distinct SHAPES are the ui-glyph marks badge.ts picks per intent
      (check, x, warning, info; SPEC-R12 AC1/AC2). Shape is the meaning channel; the [intent] colour repoints
      above are the REDUNDANT hue channel (ADR-0057), so removing colour never collapses two intents together.
-     `neutral` (and any unrecognized [intent]) keeps the base rule's `display: none`: absence IS neutral's
-     signifier, and the safe fallback for anything outside the closed set. */
+     badge.ts detaches the glyph for `neutral` (absence IS neutral's signifier); the base rule's `display: none`
+     still covers any unrecognized [intent] attribute in the window before the hardening effect runs. */
   :scope:is([intent='success'], [intent='danger'], [intent='warning'], [intent='info']) [data-part='glyph'] {
     display: inline-flex;
   }

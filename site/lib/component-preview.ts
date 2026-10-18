@@ -1632,7 +1632,7 @@ const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
 // exact defect class this partition exists to prevent); most of the rest now ALSO get real sample content
 // (COMPONENT_SAMPLE_CHILDREN, batch B) so their specimen is representative, not merely non-throwing.
 export const NO_SLOT_TEXT = new Set([
-  'ui-badge', // connected() builds the glyph+label spans once (replaceChildren) — `label` is a PROP, not a slot at all (slots: [] — badge.md)
+  'ui-badge', // connected() builds the label span once (replaceChildren) and a ui-glyph mark for a non-neutral intent; `label` is a PROP, not a slot at all (slots: [], badge.md)
   'ui-bar-chart', // component-built rows (replaceChildren) — one role=listitem row per datum, never author-slotted (slots: [] — bar-chart.md)
   'ui-calendar', // #ensureShell() builds the whole nav+grid panel unconditionally
   'ui-file-drop', // ADR-0210: connected() builds the whole dropzone/hint/browse/chips shell unconditionally (composed parts, never author-slotted text)

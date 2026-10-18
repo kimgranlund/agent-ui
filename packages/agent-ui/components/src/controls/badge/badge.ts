@@ -17,10 +17,10 @@
 // — AC2's second half). It converges in at most one extra microtask (bad → 'neutral' → no further write)
 // and uses only the public `this.effect`/`this.intent` surface — no reach into the props.ts internals.
 //
-// The glyph node is CONSTANT DOM, built once in connected() and never replaced: a `<ui-glyph>` whose
-// `symbol` follows the intent (success check, danger x, warning warning, info info; T-0351, ADR-0245 cl.5,
-// the library marks rather than clip-path polygons). Colour and visibility stay CSS keyed off the reflected
-// `[intent]` host attribute, so an intent change is a symbol flip on the same node, never a re-render.
+// The glyph is a `<ui-glyph>` whose `symbol` follows the intent (INTENT_MARK, intent-mark.ts; T-0351, ADR-0245 cl.5,
+// the library marks rather than clip-path polygons). It exists only for a non-neutral intent: built on the
+// first one, then kept, so an intent change flips the symbol on the same node and a neutral intent detaches
+// it. Colour stays CSS keyed off the reflected `[intent]` host attribute.
 
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 // Generated from badge.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs badge` to
@@ -28,24 +28,19 @@ import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 // specimen — the SAME exported tuple backs both the `intent` prop's enum codec AND this file's own
 // runtime hardening guard below (the closed intent set is now single-sourced in the generated file).
 import { INTENTS, props } from './badge.props.gen.ts'
-import '../glyph/glyph.ts' // registers <ui-glyph>: the intent marks are library marks, not pack art (ADR-0245 cl.5)
+import { createGlyph, type UIGlyphElement } from '../glyph/glyph.ts' // the intent marks are library marks, not pack art (ADR-0245 cl.5)
+import { intentMark } from './intent-mark.ts'
 
-/** The intent to mark table; neutral draws none (absence is its signifier, SPEC-R12). */
-const INTENT_MARK: Record<(typeof INTENTS)[number], string> = {
-  neutral: '',
-  info: 'info',
-  success: 'check',
-  warning: 'warning',
-  danger: 'x',
-}
+export { INTENT_MARK, intentMark } from './intent-mark.ts'
 
 export interface UIBadgeElement extends ReactiveProps<typeof props> {}
 export class UIBadgeElement extends UIElement {
   static props = props
 
-  // The glyph part (a ui-glyph) and the label part; held so the build below is genuinely once-EVER (TKT-0067): light-DOM children
-  // persist across a disconnect, so a reconnect reuses the SAME nodes instead of re-minting them.
-  #glyph: HTMLElement | undefined
+  // The glyph part (a ui-glyph, built on the first non-neutral intent) and the label part; held so each is
+  // built once EVER (TKT-0067): light-DOM children persist across a disconnect, so a reconnect reuses the
+  // SAME nodes instead of re-minting them.
+  #glyph: UIGlyphElement | undefined
   #label: HTMLSpanElement | undefined
 
   protected override connected(): void {
@@ -59,31 +54,31 @@ export class UIBadgeElement extends UIElement {
       if (!(INTENTS as readonly string[]).includes(this.intent)) this.intent = 'neutral'
     })
 
-    // One-time DOM build (LLD-C7), now genuinely once-EVER behind an idempotent guard (TKT-0067: the
-    // prior code re-minted both nodes on every connect despite this comment's own "neither node is ever
-    // replaced" claim — true within a connection, false across reconnect; the parts-once canon): the
-    // glyph is decorative-only (aria-hidden; its symbol follows the intent, visibility rides CSS off
-    // `[intent]`), the label carries the announced text. Only the glyph's symbol and the label's textContent
-    // update; only the host's `[intent]` flips.
-    const firstBuild = this.#glyph === undefined || this.#label === undefined
-    if (firstBuild) {
-      this.#glyph = document.createElement('ui-glyph')
-      this.#glyph.dataset.part = 'glyph'
-      this.#glyph.setAttribute('aria-hidden', 'true')
+    // One-time DOM build (LLD-C7), once-EVER behind an idempotent guard (TKT-0067, the parts-once canon): the
+    // label carries the announced text and is the one node always present.
+    if (this.#label === undefined) {
       this.#label = document.createElement('span')
       this.#label.dataset.part = 'label'
+      this.replaceChildren(this.#label)
     }
-    const glyph = this.#glyph as HTMLElement
-    const label = this.#label as HTMLSpanElement
+    const label = this.#label
 
-    // The mark follows the (already hardened) intent: the same ui-glyph node, only its symbol changes. The
-    // first run happens before the glyph is connected (on the first build), so it draws in that same pass.
+    // The mark follows the (already hardened) intent. A non-neutral intent places the glyph before the label,
+    // building it on first need with its symbol already set (so it draws on connect); a neutral one detaches
+    // it, so a plain tag carries no mark node at all. The glyph is decorative: ui-glyph hides itself through
+    // ElementInternals, the label alone is announced.
     this.effect(() => {
-      const mark = INTENT_MARK[this.intent as keyof typeof INTENT_MARK] ?? ''
-      if (mark) glyph.setAttribute('symbol', mark)
-      else glyph.removeAttribute('symbol')
+      const mark = intentMark(this.intent)
+      if (mark === undefined) {
+        this.#glyph?.remove()
+        return
+      }
+      if (this.#glyph === undefined) {
+        this.#glyph = createGlyph(mark)
+        this.#glyph.dataset.part = 'glyph'
+      } else if (this.#glyph.getAttribute('symbol') !== mark) this.#glyph.setAttribute('symbol', mark)
+      if (this.#glyph.parentNode !== this) this.prepend(this.#glyph)
     })
-    if (firstBuild) this.replaceChildren(glyph, label)
 
     // The one render effect: real text is the whole announcement (SPEC-R12 AC3) — no internals ARIA is
     // minted at all (no role, no aria-label); the host's accessible name is its own text content.

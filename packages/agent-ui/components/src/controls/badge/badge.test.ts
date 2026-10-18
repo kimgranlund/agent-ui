@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { UIBadgeElement } from './badge.ts'
+import { UIBadgeElement, intentMark } from './badge.ts'
 import {
   splitFrontmatter,
   parseDescriptor,
@@ -57,43 +57,68 @@ describe('UIBadgeElement — upgrade + typed props', () => {
 })
 
 describe('UIBadgeElement — DOM shape (LLD-C7)', () => {
-  it('connect builds exactly a glyph (a ui-glyph) + a label span, once', () => {
+  it('a neutral badge builds only the label span: no glyph node at all (T-0351)', () => {
     const el = make()
     document.body.append(el)
+    expect(el.children.length).toBe(1)
+    expect((el.children[0] as HTMLElement).dataset.part).toBe('label')
+    expect(el.querySelector('ui-glyph'), 'a neutral badge must not build a mark it never paints').toBeNull()
+    el.remove()
+  })
+
+  it('a non-neutral badge builds a ui-glyph mark + a label span; the mark carries no host aria attribute', () => {
+    const el = make()
+    el.intent = 'danger'
+    document.body.append(el)
     expect(el.children.length).toBe(2)
-    const glyph = el.children[0] as HTMLElement
-    const label = el.children[1] as HTMLElement
+    const glyph = el.children[0] as HTMLElement & { symbol: string; label: string }
     expect(glyph.dataset.part).toBe('glyph')
     expect(glyph.localName).toBe('ui-glyph')
-    expect(glyph.getAttribute('aria-hidden')).toBe('true')
-    expect(label.dataset.part).toBe('label')
+    expect(glyph.symbol).toBe('x')
+    expect(glyph.label, 'decorative: ui-glyph hides itself through ElementInternals').toBe('')
+    expect(glyph.hasAttribute('aria-hidden'), 'no ARIA host attribute').toBe(false)
+    expect((el.children[1] as HTMLElement).dataset.part).toBe('label')
     el.remove()
   })
 
   it('the glyph + label nodes are NEVER replaced across a label/intent change (identity holds)', async () => {
     const el = make()
+    el.intent = 'danger'
     document.body.append(el)
-    const glyph = el.children[0]
+    const glyph = el.children[0] as HTMLElement & { symbol: string }
     const label = el.children[1]
     el.label = 'first'
-    el.intent = 'danger'
-    await el.updateComplete
-    el.label = 'second'
     el.intent = 'success'
     await el.updateComplete
-    expect(el.children[0]).toBe(glyph)
+    expect(glyph.symbol).toBe('check')
+    el.intent = 'neutral'
+    await el.updateComplete
+    expect(el.children.length, 'a neutral intent detaches the mark').toBe(1)
+    el.label = 'second'
+    el.intent = 'warning'
+    await el.updateComplete
+    expect(el.children[0], 'the same glyph node comes back').toBe(glyph)
+    expect(glyph.symbol).toBe('warning')
     expect(el.children[1]).toBe(label)
     expect(el.children.length).toBe(2)
     el.remove()
   })
 
+  it('a prototype key never resolves to a mark (own-key lookup)', () => {
+    expect(intentMark('toString')).toBeUndefined()
+    expect(intentMark('constructor')).toBeUndefined()
+    expect(intentMark('neutral')).toBeUndefined()
+    expect(intentMark('danger')).toBe('x')
+  })
+
   it('the label span textContent mirrors the label prop, reactively', async () => {
     const el = make()
     document.body.append(el)
-    expect((el.children[1] as HTMLElement).textContent).toBe('')
+    const label = el.querySelector('[data-part="label"]') as HTMLElement
+    expect(label.textContent).toBe('')
     el.label = '3 failing'
     await el.updateComplete
-    expect((el.children[1] as HTMLElement).textContent).toBe('3 failing')
+    expect(label.textContent).toBe('3 failing')
     el.remove()
   })
 })
@@ -185,6 +210,7 @@ describe('UIBadgeElement — zero residue across connect/disconnect', () => {
     // disconnect/reconnect — the parts-once canon the in-file "neither node is ever replaced" comment
     // always claimed but the code didn't honor until TKT-0067.
     const el = make()
+    el.intent = 'info'
     document.body.append(el)
     expect(el.children.length).toBe(2)
     const glyph = el.querySelector('[data-part="glyph"]')
