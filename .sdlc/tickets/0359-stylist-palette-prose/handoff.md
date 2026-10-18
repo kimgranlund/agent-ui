@@ -29,5 +29,7 @@ Found by T-0343's smoke round. Guess, not yet checked: no producer check covers 
 ## Constraints
 The failing test lands before or with the fix, never after. Re-pin the replay to green in the fix's change (`scripts/e2e-admin/README.md`, Fixtures and regressions). A prompt-stack edit follows skill `a2ui-prompt-authoring`.
 
-## Kim ruling (2026-10-18, close-out round)
-Narrow the Swatch ask row to the first palette ask only; later turns stay unchecked (every verifier misfire came from a later turn).
+## Acceptance criteria
+- `npx vitest run --project scripts scripts/e2e-admin/probe/replays/smoke-stylist-palette-haiku.test.mjs` exits 0, and the test carries no `expectedFail` pin: the prose palette turn is sent back and the repaired turn ships a token surface with every probe check green.
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts scripts/e2e-admin/probe/trace.test.mjs` exits 0: the palette ask is a `COMPOSITE_MOMENTS` row (the Swatch row's ask), riding every catalog that holds Swatch and Ramp. Per Kim's 2026-10-18 close-out ruling it judges the first palette ask only: with no Swatch or Ramp shown yet in the session, a palette request whose turn writes neither is flagged, while a command or tool palette, a palette knife, a product color option, a question about an answer, a read-back, a thanks or a dismissal is not; once a palette is shown, no later turn is flagged (every later-turn phrasing the three verifier passes named is a negative).
+- `npm run check` exits 0.

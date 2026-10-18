@@ -6,8 +6,8 @@
 // surface ONE composite. A row's `notInside` also sends back a composite wrapped in a card of its own (T-0262,
 // `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
 // keeps a row on exactly the catalogs that can emit it: the booking rows ride `<base>--concierge`, the games rows
-// ride `agent-ui` until the games types move to a domain, the ProductCard row rides `agent-ui`, and `a2ui-basic`
-// gets none.
+// ride `agent-ui` until the games types move to a domain, the ProductCard and Swatch rows ride `agent-ui`, and
+// `a2ui-basic` gets none.
 //
 // The link to the sidecar is a test, not an import (`composite-moments.test.ts`: every `moment` is one of its
 // composite's intents): the module imports no JSON, so plain Node (`scripts/e2e-admin/probe/trace.ts`) and both
@@ -57,6 +57,13 @@
 // the GameHud gate also takes round and turn (the Negotiator's "Round 3, your turn"), as T-0358 did, since its two-stat
 // strip guards it; and "new quest", "new adventure" or "new game" end a game only on a surface with no live play control
 // left (a mid-game "Start a new quest" side button beside the choices is no ending).
+//
+// T-0359 (smoke round 2026-10-18-smoke :9, Haiku 5.5): "Propose a calm blue palette for a banking app." was answered in
+// prose with no surface. The Swatch row's `ask.surfaceRequired` turns its ask into a second, generic check
+// (`compositeAskCheck`): on every catalog holding Swatch and Ramp (agent-ui and every domain over it, the Stylist's
+// included), the first palette ask of a session, while no Swatch or Ramp has been shown, is SURFACE_MISSING when its turn
+// writes neither (Kim, 2026-10-18: later turns stay unchecked). The Concierge rows leave it off: their asks are read by
+// the persona check.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -133,7 +140,15 @@ export interface CompositeMoment {
   readonly standsAsideForReadBack?: boolean
   /** T-0313: the turn words that ask for this moment (`cue`), its short name (the SURFACE_MISSING path), the surface that
    *  answers it, and its precedence when one turn's words ask for two moments (lowest first). */
-  readonly ask?: { readonly moment: string; readonly cue: RegExp; readonly surface: string; readonly rank: number }
+  readonly ask?: {
+    readonly moment: string
+    readonly cue: RegExp
+    readonly surface: string
+    readonly rank: number
+    /** T-0359: the generic ask check (`compositeAskCheck`) sends the first such ask of a session back as SURFACE_MISSING
+     *  when its turn writes no composite or `requires` type; off where a persona check reads the ask itself. */
+    readonly surfaceRequired?: boolean
+  }
 }
 
 /** T-0333: the past-state words of a settled booking ("Booked" Badge, "Spa booking confirmed" title); the noun
@@ -161,6 +176,17 @@ const HUD_GAME_WORDS = new RegExp(`\\b(round|rounds|turn|turns)\\b|${GAME_WORDS.
 const PLAY_CONTROLS: readonly string[] = ['Button', ...BOOKING_INPUTS]
 
 const BOOKING_READ_BACK: NonNullable<CompositeMoment['readBack']> = { types: ['DescriptionList'], action: /^confirm/i, cue: /\bconfirm\b/i }
+
+/** T-0359: the token types that show a palette to the eye, a Swatch per anchor and a Ramp per graded family. */
+export const PALETTE_TYPES = ['Swatch', 'Ramp'] as const
+/** T-0359: the user asks for colors ("Propose a calm blue palette", "a colour-scheme for my app", "What colors should I
+ *  use?", "our brand color"), in the color sense only: a command or tool palette, or a palette knife, is no palette ask. */
+const PALETTE_ASK =
+  /(?<!\b(command|tool|tools|style|component)[- ])\bpalettes?\b(?! knives?\b| knife\b)|\bcolou?r[- ]?(schemes?|system|tokens)\b|\b(what|which) colou?rs?\b|\bbrand colou?rs?\b/i
+/** T-0359: hex color values written out as words: a hex code with a letter, or an all-digit one beside a color word, so an
+ *  order or issue number ("Order #482913") is none. */
+const HEX_WORDS =
+  /#(?=[0-9a-f]{0,5}[a-f])[0-9a-f]{3}(?:[0-9a-f]{3})?\b|\b(colou?rs?|palette|primary|secondary|accent|gr[ae]y|neutral)\b[^.]*#[0-9a-f]{6}\b|#[0-9a-f]{6}\b[^.]*\b(colou?rs?|palette|gr[ae]y|neutral)\b/i
 
 export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
   {
@@ -274,6 +300,24 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     pricedRows: { types: ['DescriptionList', 'List'], cue: /[€$£¥]\s?\d|\d\s?(?:€|eur|usd|gbp)\b/i },
     words: /\b(book|bookable|treatment|treatments|service|services|spa|massage|room|rooms|offer|offers)\b/i,
     ask: { moment: 'services', cue: SERVICES_ASK, rank: 1, surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' },
+  },
+  {
+    // T-0359: a palette is shown, never listed: hex values written in Text are the hand-built moment, and a palette ask
+    // answered with no Swatch or Ramp is sent back by the row's ask check.
+    composite: 'Swatch',
+    moment: 'show one color value',
+    repair: 'per anchor color with its label and value, and one Ramp per color family, and drop the hex values written as text.',
+    requires: PALETTE_TYPES.slice(1),
+    lacks: [...PALETTE_TYPES.slice(1), 'ColorPicker'],
+    wordTypes: ['Text'],
+    words: HEX_WORDS,
+    ask: {
+      moment: 'palette',
+      cue: PALETTE_ASK,
+      rank: 3,
+      surface: 'one Swatch per anchor color with its label and value, and one Ramp per color family',
+      surfaceRequired: true,
+    },
   },
 ]
 
@@ -589,7 +633,58 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
   }
 }
 
-export const compositeMomentChecks: readonly SemanticCheck[] = COMPOSITE_MOMENTS.map(compositeMomentCheck)
+/** T-0359: the verbs of an explicit request for colors or a change to them ("suggest", "propose", "make it warmer"); "pick"
+ *  and "choose" only before what is picked, so "Which palette did you pick?" is none. */
+const REQUEST_VERB =
+  /\b(suggest|propose|recommend|build|make|create|design|generate|give me|show me|change|swap|adjust|tweak|redo|update|warm up|cool down)\b|\b(pick|choose) (a|an|some|me|out|new)\b/i
+/** T-0359: a read-back: a request verb after "did you", "have you", "were you" and the like asks about the answer
+ *  ("How did you make this palette?"), never for one. */
+const READ_BACK = /\b(did|didn't|have|haven't|was|wasn't|were|weren't) you\b/i
+/** T-0359: a dismissal ("close the palette"), or a thanks or praise with no request verb ("Great palette, thanks."). */
+const DISMISS = /\b(close|remove|delete|dismiss|hide|clear)\b/i
+/** T-0359 (ruling): a product's color options ("What colors does this jacket come in?", "Which colours do you have?") are
+ *  an availability question, never a palette ask. */
+const PRODUCT_OPTIONS = /\b(comes?|came) in\b|\bavailable in\b|\bdo you (have|carry|stock|sell)\b|\bin stock\b/i
+const PRAISE = /\b(thanks|thank you|cheers|great|perfect|love|lovely|nice|beautiful|awesome)\b/i
+/** T-0359: a question is an ask only as a request ("What colors should I use?", "Can you suggest a
+ *  palette?"); "Why is the palette blue?" or "What colors did you use?" asks about an answer, not for one. */
+const REQUEST_QUESTION = /^\s*(what|which) colou?rs? (should|could|would|go|work|suit|fit)\b/i
+
+/** T-0359: a row's ask with `surfaceRequired` as a check, on the FIRST ask only (Kim, 2026-10-18 close-out): a say turn
+ *  whose words ask for the moment, in a session that shows no surface holding the composite or a `requires` type yet,
+ *  and whose own payload writes none, is SURFACE_MISSING. Once one is shown, later turns (a follow-up question, a thanks,
+ *  an edit) are never judged: every misfire the three T-0359 verifier passes found was such a later turn. */
+export function compositeAskCheck(m: CompositeMoment): SemanticCheck {
+  const ask = m.ask!
+  const types = new Set([m.composite, ...(m.requires ?? [])])
+  const holds = (v: SurfaceView): boolean => [...v.components.values()].some((c) => types.has(c.component))
+  return {
+    id: `composite-ask-${kebab(m.composite)}`,
+    requires: [m.composite, ...(m.requires ?? [])],
+    check({ surfaces, action, intent, open }): readonly SemanticFinding[] {
+      if (action !== undefined || intent === undefined || !ask.cue.test(intent) || DISMISS.test(intent) || PRODUCT_OPTIONS.test(intent)) return []
+      if (open?.some(holds) === true || surfaces.some(holds)) return []
+      const request = REQUEST_VERB.test(intent) && !READ_BACK.test(intent)
+      if (PRAISE.test(intent) && !request) return []
+      if (/\?\s*$/.test(intent.trim()) && !request && !REQUEST_QUESTION.test(intent)) return []
+      return [
+        {
+          code: 'SURFACE_MISSING',
+          path: `intent:${ask.moment}`,
+          message:
+            `The user asked "${intent.trim()}" and this turn writes no ${[m.composite, ...(m.requires ?? [])].join(' or ')}, so the ${ask.moment} exists only in words. ` +
+            `Call render_surface with a createSurface holding ${ask.surface}, and keep the reply to one short paragraph.`,
+        },
+      ]
+    },
+  }
+}
+
+/** Every row's check, then (T-0359) the ask check of each row whose ask is `surfaceRequired`. */
+export const compositeMomentChecks: readonly SemanticCheck[] = [
+  ...COMPOSITE_MOMENTS.map(compositeMomentCheck),
+  ...COMPOSITE_MOMENTS.filter((m) => m.ask?.surfaceRequired === true).map(compositeAskCheck),
+]
 
 /** T-0313: the rows that carry an ask cue, in precedence order. */
 const ASKED = COMPOSITE_MOMENTS.filter((m) => m.ask !== undefined).sort((a, b) => a.ask!.rank - b.ask!.rank)

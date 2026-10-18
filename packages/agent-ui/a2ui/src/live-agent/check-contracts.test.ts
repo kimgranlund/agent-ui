@@ -76,6 +76,13 @@ const UI = 'agent-ui'
 const CONCIERGE = 'agent-ui--concierge'
 const CROUPIER = 'agent-ui--croupier'
 
+// Palette (T-0359).
+const palette = surface('palette-1', UI, [
+  { id: 'root', component: 'Column', children: ['navy', 'blues'] },
+  { id: 'navy', component: 'Swatch', label: 'Primary', value: '#1f3a5f' },
+  { id: 'blues', component: 'Ramp', label: 'Blue', steps: [{ label: '300', value: '#7ea6cf' }, { label: '700', value: '#1f3a5f' }] },
+])
+
 // Booking (Concierge).
 const BOOKING = { date: '2026-10-20', time: '20:00', party: 4 }
 const bookingForm = (path: (key: string) => string): A2uiOutput =>
@@ -334,6 +341,17 @@ const CONTRACTS: Record<string, Contract> = {
         { id: 'root', component: 'Table', label: 'Spa treatments', columns: [{ key: 'treatment', label: 'Treatment' }, { key: 'price', label: 'Price' }], rows: [{ treatment: 'Swedish massage', price: '€95' }] },
       ]),
     },
+  },
+  // T-0359: a palette is shown on a Swatch and a Ramp, never written out, and a palette ask is answered on one.
+  'composite-moment-swatch': {
+    code: 'SWATCH_MISSING',
+    pass: { catalog: UI, output: palette },
+    fail: { catalog: UI, output: surface('palette-1', UI, [{ id: 'root', component: 'Text', text: 'Primary navy #1f3a5f, accent sky #9cc3e0' }]) },
+  },
+  'composite-ask-swatch': {
+    code: 'SURFACE_MISSING',
+    pass: { catalog: UI, intent: 'Propose a calm blue palette for a banking app.', output: palette },
+    fail: { catalog: UI, intent: 'Propose a calm blue palette for a banking app.', output: [] },
   },
   'framed-choice': {
     code: 'FRAMED_CHOICE',
@@ -711,6 +729,7 @@ const ROW_PROPS: Record<string, readonly string[]> = {
   ResultCard: ['outcome', 'title', 'summary', 'stats'],
   Timeline: ['label'],
   ProductCard: ['title', 'price', 'priceNote', 'action'],
+  Swatch: ['label', 'value'],
 }
 
 /** A composite's declared props, with the item props of its array props (`rows[].label`). */

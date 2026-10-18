@@ -3,11 +3,11 @@
 // where its types live, and every row's moment is one of its composite's selection intents.
 
 import { describe, expect, it } from 'vitest'
-import { COMPOSITE_MOMENTS, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
+import { COMPOSITE_MOMENTS, PALETTE_TYPES, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
 import type { CompositeMoment } from './composite-moments.ts'
-import { gateChecksOnCatalog, runSemanticChecks } from './semantic-check.ts'
+import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
 import type { SurfaceView } from './semantic-check.ts'
-import type { A2uiComponent } from '../protocol.ts'
+import type { A2uiComponent, A2uiOutput } from '../protocol.ts'
 import { loadCatalog } from './catalog.ts'
 import { composeCatalog, loadCatalogFragment } from './compose.ts'
 import { validateCatalogConformance } from './conformance.ts'
@@ -63,6 +63,11 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
   ProductCard: [
     { id: 'root', component: 'Table', label: 'Spa treatments', columns: [{ key: 'treatment', label: 'Treatment' }, { key: 'price', label: 'Price' }], rows: [] },
   ],
+  Swatch: [
+    { id: 'root', component: 'Column', children: ['title', 'list'] },
+    { id: 'title', component: 'Text', text: 'A calm blue palette', variant: 'h4' },
+    { id: 'list', component: 'Text', text: 'Primary navy #1f3a5f, secondary steel blue #4a6f8a, accent sky #9cc3e0' },
+  ],
 }
 
 const COMPOSED: Record<string, A2uiComponent[]> = {
@@ -88,6 +93,12 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
   ProductCard: [
     { id: 'root', component: 'Grid', children: { path: '/treatments', componentId: 'tile' } },
     { id: 'tile', component: 'ProductCard', title: { path: 'name' }, price: { path: 'price' }, actionLabel: 'Book' },
+  ],
+  Swatch: [
+    { id: 'root', component: 'Column', children: ['note', 'navy', 'blues'] },
+    { id: 'note', component: 'Text', text: 'Navy #1f3a5f anchors the palette.' },
+    { id: 'navy', component: 'Swatch', label: 'Primary navy', value: '#1f3a5f' },
+    { id: 'blues', component: 'Ramp', label: 'Navy', steps: [{ label: '500', value: '#3d5f86' }] },
   ],
 }
 
@@ -1051,7 +1062,7 @@ describe('composite moment checks (T-0208)', () => {
     const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
     const basic = loadCatalog(basicCatalogRaw)
     const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
-    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card']
+    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-swatch', 'composite-ask-swatch']
     expect(ids(base)).toEqual(games)
     expect(concierge.catalogId).toBe('agent-ui--concierge')
     expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', ...games])
@@ -1072,8 +1083,10 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-result-card',
       'composite-moment-timeline',
       'composite-moment-product-card',
+      'composite-moment-swatch',
+      'composite-ask-swatch',
     ])
-    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING'])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'SWATCH_MISSING'])
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })
@@ -1083,11 +1096,12 @@ describe('composite moment checks (T-0208)', () => {
 describe('the rows carry the ask cue of each Concierge composite moment (T-0313)', () => {
   const asked = () => COMPOSITE_MOMENTS.filter((m) => m.ask !== undefined).sort((a, b) => a.ask!.rank - b.ask!.rank)
 
-  it('the ask cue rows, in precedence order, are the confirm, the services list and the booking', () => {
+  it('the ask cue rows, in precedence order, are the confirm, the services list, the booking and (T-0359) the palette', () => {
     expect(asked().map((m) => [m.ask!.moment, m.composite])).toEqual([
       ['confirm', 'BookingConfirmation'],
       ['services', 'ProductCard'],
       ['booking', 'BookingForm'],
+      ['palette', 'Swatch'],
     ])
   })
 
@@ -1243,5 +1257,167 @@ describe('BOOKING_CONFIRMATION_MISSING reads settled-status signals, not caption
   it('the BookingForm row still fires on an unsettled read-back (no Badge)', () => {
     const unsettled = R9_85.filter((c) => c.id !== 'settled').map((c) => (c.id === 'footer' ? { ...c, children: ['bookBtn'] } : c))
     expect(findings(unsettled)).toEqual(['BOOKING_FORM_MISSING'])
+  })
+})
+
+// T-0359 (smoke round 2026-10-18-smoke :9, Haiku 5.5): "Propose a calm blue palette for a banking app." shipped the
+// palette in prose with no surface. The Swatch row's ask check sends the first palette ask of a session back unless its
+// turn writes a Swatch or a Ramp; once one is shown, later turns are never judged (Kim, 2026-10-18 close-out).
+describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-0359)', () => {
+  const askCheck = compositeMomentChecks.find((c) => c.id === 'composite-ask-swatch')!
+  const ASK = 'Propose a calm blue palette for a banking app.'
+  const msgs = (sid: string, components: A2uiComponent[], create = true): A2uiOutput => [
+    ...(create ? [{ version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui' } }] : []),
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components } },
+  ] as A2uiOutput
+  const PALETTE = msgs('palette-1', COMPOSED['Swatch']!)
+  const prior = (out: A2uiOutput) => ({ turns: [{ role: 'assistant', content: out.map((m) => JSON.stringify(m)).join('\n') }] })
+  const said = (intent: string, out: A2uiOutput = [], session: A2uiOutput = [], target?: string) => {
+    const log = session.length === 0 ? { turns: [] } : prior(session)
+    return askCheck.check({
+      surfaces: out.length === 0 ? [] : semanticSurfaceViews(log, out),
+      intent,
+      open: sessionSurfaceViews(log),
+      ...(target !== undefined ? { target } : {}),
+    })
+  }
+  const opened = (turn: string) => said(turn, [], PALETTE)
+
+  it('the recorded prose palette turn is SURFACE_MISSING, asking for a new surface of Swatches and Ramps', () => {
+    const [f, ...rest] = said(ASK)
+    expect(rest).toEqual([])
+    expect([f!.code, f!.path]).toEqual(['SURFACE_MISSING', 'intent:palette'])
+    expect(f!.message).toContain('createSurface holding one Swatch per anchor color with its label and value, and one Ramp per color family')
+  })
+
+  it.each(['What colors should I use for a meditation app?', 'Suggest a colour-scheme for my recipe site.', 'Pick a brand color for a bakery.', 'Can you build a palette for dark mode?'])(
+    'the cue catches "%s"',
+    (turn) => expect(said(turn).map((f) => f.code)).toEqual(['SURFACE_MISSING']),
+  )
+
+  it.each(['Open the command palette.', 'Add a tool palette to the editor.', 'Why is the palette blue?', 'Thanks, I love the palette.', 'Close the palette.', 'Does white text on navy pass AA?'])(
+    'negative control: "%s" yields none',
+    (turn) => expect(said(turn)).toEqual([]),
+  )
+
+  it('a turn that writes a Swatch or a Ramp passes; a Text-only surface does not', () => {
+    expect(said(ASK, PALETTE)).toEqual([])
+    expect(said(ASK, msgs('ramp-1', [{ id: 'root', component: 'Ramp', label: 'Blue', steps: [{ label: '500', value: '#3b6ea5' }] }]))).toEqual([])
+    expect(said(ASK, msgs('text-1', [{ id: 'root', component: 'Text', text: 'Navy, steel blue and sky' }])).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('a later turn is never judged: with a palette shown, a change request answered with no Swatch or Ramp yields none', () => {
+    const touched = msgs('palette-1', [{ id: 'note', component: 'Text', text: 'A warmer take.' }], false)
+    expect(said('Now propose a warmer palette.', touched, PALETTE)).toEqual([])
+    expect(said('Now propose a warmer palette.', [], PALETTE, 'palette-1')).toEqual([])
+    expect(opened(ASK)).toEqual([])
+  })
+
+  // The first ask (no palette shown yet): a request is sent back for a new surface; a question about an answer, a
+  // read-back, a thanks or a dismissal is none. Every one of these with a palette shown is a later turn: none.
+  const FIRST_ASK: readonly (readonly [string, boolean])[] = [
+    ['What colors should I use for my brand?', true],
+    ['Can you suggest a warmer palette?', true],
+    ['Now propose a warmer palette.', true],
+    ['Make the palette warmer.', true],
+    ['Could you swap the accent colour in the palette?', true],
+    ['Give me a darker palette.', true],
+    ['Propose a calm blue palette for a banking app.', true],
+    ['Great palette, but can you swap the accent?', true],
+    ['Can you build a palette for dark mode?', true],
+    ['Great palette, thanks.', false],
+    ['Perfect, love the palette!', false],
+    ['Thanks, I love the palette.', false],
+    ['Which palette did you pick?', false],
+    ['Which palette did you choose?', false],
+    ['Can you tell me more about this palette?', false],
+    ['Can you explain the palette?', false],
+    ['What colors did you use here?', false],
+    ['Why is the palette blue?', false],
+    ['Is this palette accessible?', false],
+    ['What colors are in the palette?', false],
+    ['Does this palette pass AA?', false],
+    ['How did you make this palette?', false],
+    ['Why did you make the palette blue?', false],
+    ['How did you build this palette?', false],
+    ['Did you make the palette darker?', false],
+    ['How did you generate the palette?', false],
+    ['How did you create this palette?', false],
+    ['How did you design the palette?', false],
+    ['Close the palette.', false],
+    ['Hide the palette.', false],
+    ['Open the command palette.', false],
+    ['Add a tool palette to the editor.', false],
+    ['Build a component palette for the sidebar.', false],
+    ['Which palette knife should I buy?', false],
+  ]
+  it.each(FIRST_ASK)('as a first ask, "%s" fires: %s; with a palette shown, none', (turn, fires) => {
+    expect(said(turn).map((f) => f.code)).toEqual(fires ? ['SURFACE_MISSING'] : [])
+    expect(opened(turn)).toEqual([])
+  })
+
+  // The third verifier pass (verifier-L3-3.md): later turns on a shown palette, each none.
+  it.each([
+    'Would you recommend this palette for a bank?',
+    'Can you show me the palette again?',
+    'Can you brighten the palette?',
+    'Can you give me a palette with more contrast?',
+    'Can you give me the hex values from this palette?',
+    'Can you remind me what the accent colour in the palette is?',
+    'Can you show me a warmer version of the palette?',
+    'Can you show me where the accent is used in the palette?',
+    'Can you walk me through the palette?',
+    'Could you add a green to the palette?',
+    'Could you explain why you made the accent sky blue in the palette?',
+    'Could you make the palette work for dark mode?',
+    'Could you please generate a palette for a fintech brand?',
+    'Could you show me the contrast ratios of the palette?',
+    'Could you tell me why you chose navy for the palette?',
+    'Did you design the palette with accessibility in mind?',
+    'Did you update the palette after my last message?',
+    'Does the palette you built include a neutral?',
+    'Have you changed the palette since last time?',
+    'Have you shown me the whole palette?',
+    "Haven't you used this palette before?",
+    'How did you pick the accent for the palette?',
+    'How does this palette handle contrast?',
+    'Is the palette you made WCAG compliant?',
+    'Is this the palette you proposed earlier?',
+    'Was the palette designed for dark mode too?',
+    'Were you going for a calm feel with this palette?',
+    'What did you base this palette on?',
+    "What's the hex of the accent in this palette?",
+    'Which of these colours is the primary in the palette?',
+    'Why did you go with navy as the primary in this palette?',
+    'Will this palette work on a white background?',
+    'Will you tweak the accent in the palette?',
+    'Would you change anything about this palette?',
+    'Would you mind making the palette a bit warmer?',
+    'Would you redo the palette in green?',
+    'Would you say this palette suits a bank?',
+    'Would you suggest this palette for dark mode too?',
+  ])('with a palette shown, "%s" yields none', (turn) => expect(opened(turn)).toEqual([]))
+
+  // T-0359 ruling: a product's color options are an availability question, not a palette ask.
+  it.each(['What colors does this jacket come in?', 'Is it available in red?', 'Which colours do you have?', 'What jacket colors do you have?'])(
+    'the product availability question "%s" yields none',
+    (turn) => expect(said(turn)).toEqual([]),
+  )
+
+  it('a brand color question still fires', () => {
+    expect(said('What colors should I use for my brand?').map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('SWATCH_MISSING reads hex color values, never an order or issue number', () => {
+    const text = (t: string) => codes([{ id: 'root', component: 'Text', text: t }])
+    expect(text('Order #482913 is confirmed, see issue #969')).toEqual([])
+    expect(text('Accent #9cc3e0')).toEqual(['SWATCH_MISSING'])
+    expect(text('Neutral grey #333333 for body text')).toEqual(['SWATCH_MISSING'])
+  })
+
+  it('a client turn passes, and the check rides agent-ui only where Swatch and Ramp live', () => {
+    expect(askCheck.check({ surfaces: [], action: { name: 'pick', surfaceId: 'palette-1', context: {}, dataModel: undefined } })).toEqual([])
+    expect(askCheck.requires).toEqual([...PALETTE_TYPES])
+    expect(gateChecksOnCatalog([askCheck], loadCatalog(basicCatalogRaw))).toEqual([])
   })
 })
