@@ -172,6 +172,47 @@ describe('a noun a catalog domain type owns is not a surface noun there (T-0348)
     'default catalog: surface for %s',
     (t) => expect(detectUserOverride(intent(t), base)).toBe('surface'),
   )
+  const concierge = ['Card', 'Text', 'BookingForm', 'BookingConfirmation']
+  it.each([
+    ['as a card', croupier],
+    ['Show me the cards as a table.', croupier],
+    ['as a table', croupier],
+    ['build me a form', concierge],
+    ['make me a summary card', croupier],
+    ['show me a summary card', croupier],
+    ['show me a pricing table', croupier],
+    ['show me a booking form', concierge],
+    ['build me a card', croupier],
+  ])('explicit format phrasing forces a surface where the catalog owns the noun (T-0354): %s', (t, types) =>
+    expect(detectUserOverride(intent(t), types)).toBe('surface'))
+  it.each([
+    'show me a card',
+    'show me a hole card',
+    'show me the summary card',
+    'show me the cards',
+    'build the cards',
+    'make me a table of contents',
+    'build me a deck of cards',
+    'make me a pair of cards',
+    'make me a lucky card',
+    'I worked as a card dealer',
+    'seat me as a table captain',
+    'render it as a form',
+  ])('croupier: an owned noun without a format signal is no override (T-0354): %s', (t) =>
+    expect(detectUserOverride(intent(t), croupier)).toBeUndefined())
+  it.each([
+    'show me a form',
+    'show me the form',
+    'make me a lucky form',
+    'I work as a form designer',
+    'render it as a form',
+  ])('concierge: an owned noun without a format signal is no override (T-0354): %s', (t) =>
+    expect(detectUserOverride(intent(t), concierge)).toBeUndefined())
+  it('owning a noun never makes a phrase more surface-forcing than the default catalog (T-0354)', () => {
+    for (const t of ['render it as a form', 'I worked as a card dealer', 'make me a table of contents', 'build me a deck of cards']) {
+      expect(detectUserOverride(intent(t), base)).toBeUndefined()
+    }
+  })
   it('no catalog types keeps the plain lexicon', () => {
     expect(detectUserOverride(intent('show me the cards'))).toBe('surface')
     expect(detectUserOverride(intent('no card please'))).toBe('text')
