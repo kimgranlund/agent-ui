@@ -24,3 +24,10 @@ GH #1940 (closed into this ticket). Found in lane a06 (T-0099) of the ADR-0245 c
 
 ## Constraints
 The foundations census gate stays green; no one-off heights.
+
+## Acceptance criteria
+- `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/service-card packages/agent-ui/components/src/controls/product-card packages/agent-ui/components/src/controls/board-grid` exits 0, including the T-0352 describes: the service-card and product-card action holds scale.mjs's md step at the root and in product and widget regions at scales sm, md and lg, with and without a card-level `data-size="lg"`, and a host or ancestor token override still reaches the button.
+- `npx vitest run packages/agent-ui/components/src/controls/service-card packages/agent-ui/components/src/controls/product-card packages/agent-ui/components/src/controls/board-grid` exits 0.
+- `npm run check` exits 0.
+- Before and after screenshots in the artifacts dir (`before-widget.png`, `after-widget.png`).
+- Kim's ruling 2026-10-17: both actions are md (no visual change at the default card size); board-grid cells scaling with the board is correct, so board-grid is out of scope beyond its stale cell-size comment.

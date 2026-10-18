@@ -88,7 +88,7 @@ geometry:
   paddingInline: var(--ui-service-card-pad-inline)     # = --md-sys-space-md
   paddingBlock: var(--ui-service-card-pad-block)       # = --md-sys-space-md
   rowGap: var(--ui-service-card-row-gap)               # = --md-sys-space-xs — heading → path → description → action
-  actionHeight: var(--ui-service-card-action-height)   # = --md-sys-height (4n) inside a data-tier region, else --md-sys-height-sm (ADR-0245 cl.10a) — the ONE control-height row a pattern-tier card owns (ADR-0224 cl.5)
+  actionHeight: var(--ui-service-card-action-height)   # unset by default (a host or ancestor override wins); the fallback is --md-sys-height (4n) at the action part's own md step (data-size="md" on the part, resolved on the part whatever the card's own size, T-0352), else --md-sys-height-sm (ADR-0245 cl.10a), the ONE control-height row a pattern-tier card owns (ADR-0224 cl.5)
   radius: var(--ui-service-card-radius)                # = --md-sys-shape-corner-base, the shared fleet radius (ui-card/ui-toast/ui-menu precedent)
   note: Block-level FILL by default, no intrinsic width (ADR-0223 cl.1, adopted at birth — ADR-0224 cl.5); the `inline` boolean (R2) flips to inline-grid with no hug-state floor — the card's own content already gives it a meaningful shrink-to-fit width, so a floor here would be an out-of-role min-width (sizing-gates.test.ts).
 

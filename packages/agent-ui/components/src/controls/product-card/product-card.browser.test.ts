@@ -169,13 +169,57 @@ const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside
 describe('ui-product-card: ADR-0245 derived foundations, dark launch', () => {
   it('reads today\'s value outside a data-tier region and the derived value inside', () => {
     const { out, inside } = foundationsPair('ui-product-card', 'title="Suite" price="$312" selected')
-    expect(lengthOf(out, '--ui-product-card-action-height')).toBe(36)
-    expect(lengthOf(inside, '--ui-product-card-action-height')).toBe(SM.h)
     expect(lengthOf(out, '--ui-product-card-icon-size')).toBe(36) // T-0142: media, the 4n control height
     expect(lengthOf(inside, '--ui-product-card-icon-size')).toBe(SM.h)
     expect(lengthOf(inside, '--ui-product-card-rating-gap')).toBe(SM.n) // T-0146: stars n clear of the number
     for (const el of [out, inside]) {
       expect(lengthOf(el, '--ui-product-card-selected-outline-width')).toBe(2)
     }
+  })
+})
+
+// T-0352: the action part declares its own step (`data-size="md"`, the card's control step), so its height
+// and font resolve on the part against the region's ramp like any control, never the card's own n. The
+// legacy opt-out keeps the old large step (36px); every region (the root, product and widget at scales sm /
+// md / lg) gives scale.mjs's md step there; a card carrying its own data-size moves nothing; a host or
+// ancestor override of the token still reaches the button.
+const REGIONS = [
+  ['root', '', resolve('product', 'md', 'md')],
+  ['product-sm', 'data-tier="product" data-scale="sm"', resolve('product', 'sm', 'md')],
+  ['product-lg', 'data-tier="product" data-scale="lg"', resolve('product', 'lg', 'md')],
+  ['widget-sm', 'data-tier="widget" data-scale="sm"', resolve('widget', 'sm', 'md')],
+  ['widget-md', 'data-tier="widget" data-scale="md"', resolve('widget', 'md', 'md')],
+  ['widget-lg', 'data-tier="widget" data-scale="lg"', resolve('widget', 'lg', 'md')],
+] as const
+const offer = (extra = ''): string => `<ui-product-card title="Suite" price="$312" action-label="Book" action='{"action":"book"}' ${extra}></ui-product-card>`
+
+describe('ui-product-card: the action part declares its own size step (T-0352)', () => {
+  it('holds the md step in every region, whatever the card\'s own size', async () => {
+    const { wrap } = await mount(`<div data-foundations="legacy">${offer()}</div>` + REGIONS.map(([id, attrs]) => `<div id="${id}" ${attrs}>${offer()}${offer('data-size="lg"')}</div>`).join(''))
+    const legacy = part(wrap.querySelector('[data-foundations] ui-product-card')!, 'action')
+    expect(legacy.getBoundingClientRect().height).toBe(36)
+    expect(getComputedStyle(legacy).fontSize).toBe('16px') // the legacy font, through --ui-product-card-action-font-legacy
+    for (const [id, , step] of REGIONS) {
+      const hosts = wrap.querySelectorAll(`#${id} ui-product-card`)
+      expect(hosts.length, id).toBe(2)
+      for (const host of hosts) {
+        const action = part(host, 'action')
+        const label = `${id} ${host.getAttribute('data-size') ?? 'bare'}`
+        expect(action.getAttribute('data-size')).toBe('md')
+        expect(action.getBoundingClientRect().height, label).toBe(step.h)
+        expect(getComputedStyle(action).fontSize, label).toBe(`${step.type.control}px`)
+      }
+    }
+  })
+
+  it('a host or ancestor override of the action tokens still reaches the button', async () => {
+    const { wrap } = await mount(
+      offer('id="host" style="--ui-product-card-action-height: 40px; --ui-product-card-action-font: 17px"') +
+        `<div style="--ui-product-card-action-height: 44px">${offer('id="ancestor"')}</div>`,
+    )
+    const host = part(wrap.querySelector('#host')!, 'action')
+    expect(host.getBoundingClientRect().height).toBe(40)
+    expect(getComputedStyle(host).fontSize).toBe('17px')
+    expect(part(wrap.querySelector('#ancestor')!, 'action').getBoundingClientRect().height).toBe(44)
   })
 })

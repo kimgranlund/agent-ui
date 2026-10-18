@@ -201,6 +201,7 @@ export class UIProductCardElement extends UIElement {
     this.#priceNote = part<HTMLSpanElement>('span', 'price-note')
     this.#action = part<HTMLButtonElement>('button', 'action')
     this.#action.type = 'button'
+    this.#action.setAttribute('data-size', 'md') // the part's own step: md in any register, whatever the card's size (T-0352)
 
     this.#body.append(this.#title)
     this.prepend(this.#body)

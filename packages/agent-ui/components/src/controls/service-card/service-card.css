@@ -5,8 +5,9 @@
  *       chain from the colour roles (`--md-sys-color-{family}-{role}`; the available/default state reads
  *       the SUCCESS family) + the type matrix (`--md-sys-typescale-*` for title/description, the
  *       ui-card-header `format='structured'` kicker-mono precedent for the path line) + the space ladder
- *       + the control ramp (the action row's height, ADR-0224 cl.5's "control height" clause — this is
- *       the pattern tier's one control-height row, geometry.md). `:where(ui-service-card:not([available]))`
+ *       + the control ramp (the action row's height, ADR-0224 cl.5's "control height" clause, the pattern
+ *       tier's one control-height row, geometry.md; left unset there and read with its ramp default in
+ *       the styles block so it resolves on the action part's own md step, T-0352). `:where(ui-service-card:not([available]))`
  *       repoints the whole chain to the muted/neutral roles — the plain reflected-attribute idiom
  *       (button.css's own `[disabled]` shape); service-card.ts's file banner explains the one twist this
  *       control needs to make the attribute trustworthy at every connect (a self-reflect guard — the
@@ -83,12 +84,13 @@
   --ui-service-card-dot-gap: var(--md-sys-space-sm); /* dot ↔ title, inside the heading row */
   --ui-service-card-menu-gap: var(--md-sys-space-sm); /* body ↔ the optional menu column */
 
-  /* The action row — takes the CONTROL height (ADR-0224 cl.5's "pattern tier" clause: the one
-     control-height row a pattern-tier surface owns), the button.css `sm` ramp (a trailing pill, not the
-     card's own full-height lever). */
-  --ui-service-card-action-height: var(--md-sys-height, var(--md-sys-height-sm));
-  --ui-service-card-action-font: var(--md-sys-type-control, var(--md-sys-font-sm));
-  --ui-service-card-action-gap: var(--md-sys-inset, var(--md-sys-gap-sm)); /* the → glyph ↔ label gap */
+  /* The action row: takes the CONTROL height (ADR-0224 cl.5's "pattern tier" clause: the one
+     control-height row a pattern-tier surface owns) at the md step the action part declares itself
+     (`data-size="md"`, service-card.ts). Its height, font and glyph gap are left UNSET here on purpose: the
+     styles block reads each with its ramp default as the var() fallback, so the default resolves ON the
+     part against the region's ramp, never the card's own n, while a host or ancestor override of
+     --ui-service-card-action-height / -font / -gap still reaches the button (T-0352). */
+  --ui-service-card-action-font-legacy: var(--md-sys-type-control, var(--md-sys-font-sm)); /* read by the action only under the legacy opt-out, where --md-sys-type-control is unset (13px there on host and part alike); the part's own type-control wins everywhere else */
   --ui-service-card-action-bg: var(--md-sys-color-neutral-surface-higher); /* neutral TONAL chip (Amendment cl.A3) — status colour stays on the dot alone */
   --ui-service-card-action-bg-hover: var(--md-sys-color-neutral-surface-highest);
   --ui-service-card-action-bg-active: var(--md-sys-color-neutral-surface-highest);
@@ -255,20 +257,20 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: var(--ui-service-card-action-gap);
+    gap: var(--ui-service-card-action-gap, var(--md-sys-inset, var(--md-sys-gap-sm)));
     box-sizing: border-box;
 
-    block-size: var(--ui-service-card-action-height);
-    padding-inline: calc(var(--ui-service-card-action-height) / 2);
+    block-size: var(--ui-service-card-action-height, var(--md-sys-height, var(--md-sys-height-sm)));
+    padding-inline: calc(var(--ui-service-card-action-height, var(--md-sys-height, var(--md-sys-height-sm))) / 2);
 
     font: inherit;
-    font-size: var(--ui-service-card-action-font);
+    font-size: var(--ui-service-card-action-font, var(--md-sys-type-control, var(--ui-service-card-action-font-legacy)));
     line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard — ADR-0036, one of the three sanctioned direct reads */
 
     background: var(--ui-service-card-action-bg);
     color: var(--ui-service-card-action-ink);
     border: none;
-    border-radius: calc(var(--ui-service-card-action-height) / 2); /* pill radius = h/2, the button.css action-family precedent */
+    border-radius: calc(var(--ui-service-card-action-height, var(--md-sys-height, var(--md-sys-height-sm))) / 2); /* pill radius = h/2, the button.css action-family precedent */
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;

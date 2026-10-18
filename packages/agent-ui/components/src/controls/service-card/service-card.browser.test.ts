@@ -3,9 +3,6 @@ import { server, cdp, userEvent } from 'vitest/browser'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import type { UIServiceCardElement } from '@agent-ui/components/controls/service-card'
 
-/** The derived root register (product / sm / md, ADR-0245). */
-const ROOT = resolve('product', 'sm', 'md')
-
 // service-card.browser.test.ts — the cross-engine (Chromium + WebKit) browser-truth probes for
 // ui-service-card (ADR-0224). jsdom cannot prove paint/geometry/WHCM (service-card.test.ts pins the
 // DECLARED rules) — this is the authoritative rendered-px + rendered-colour proof: the availability
@@ -220,32 +217,61 @@ describe('ui-service-card forced-colors (ADR-0224 cl.6)', () => {
   })
 })
 
-// ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
-// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 6,
-// height 24, c 2, icon box 12, radius 6. Lengths are read through layout (`inline-size: var(<token>)`).
-const lengthOf = (host: HTMLElement, token: string): number => {
+// ADR-0245 geometry pin (clause 10c), part-level since T-0352: the action part declares its own md step
+// (`data-size="md"`), so its height, font and glyph gap resolve on the part against the region's ramp like
+// any control, never the card's own n. The legacy opt-out keeps today's 24px; every region (the root, product
+// and widget at scales sm / md / lg) gives scale.mjs's md step there; a card carrying its own data-size moves
+// nothing; a host or ancestor override of the token still reaches the button. The legacy gap is read
+// through layout (`inline-size: var(<token>)`) on the action itself.
+const lengthOf = (el: HTMLElement, token: string): number => {
   const probe = document.createElement('span')
   probe.style.cssText = `position:absolute;block-size:1px;inline-size:var(${token});`
-  host.append(probe)
+  el.append(probe)
   const width = Number.parseFloat(getComputedStyle(probe).inlineSize)
   probe.remove()
   return width
 }
-const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside: HTMLElement } => {
-  const wrap = document.createElement('div')
-  wrap.innerHTML = `<div data-foundations="legacy"><${tag} ${attrs}></${tag}></div><div data-tier="product" data-scale="sm"><${tag} ${attrs}></${tag}></div>`
-  document.body.append(wrap)
-  mounted.push(wrap)
-  const [out, inside] = Array.from(wrap.querySelectorAll<HTMLElement>(tag)) as [HTMLElement, HTMLElement]
-  return { out, inside }
-}
+const actionOf = (card: Element): HTMLElement => card.querySelector<HTMLElement>("[data-part='action']")!
+const REGIONS = [
+  ['root', '', resolve('product', 'md', 'md')],
+  ['product-sm', 'data-tier="product" data-scale="sm"', resolve('product', 'sm', 'md')],
+  ['product-lg', 'data-tier="product" data-scale="lg"', resolve('product', 'lg', 'md')],
+  ['widget-sm', 'data-tier="widget" data-scale="sm"', resolve('widget', 'sm', 'md')],
+  ['widget-md', 'data-tier="widget" data-scale="md"', resolve('widget', 'md', 'md')],
+  ['widget-lg', 'data-tier="widget" data-scale="lg"', resolve('widget', 'lg', 'md')],
+] as const
 
-describe('ui-service-card: ADR-0245 derived foundations, dark launch', () => {
-  it('reads today\'s value outside a data-tier region and the derived value inside', () => {
-    const { out, inside } = foundationsPair('ui-service-card', 'name="Claims Agent" available')
-    expect(lengthOf(out, '--ui-service-card-action-height')).toBe(24)
-    expect(lengthOf(inside, '--ui-service-card-action-height')).toBe(ROOT.h)
-    expect(lengthOf(out, '--ui-service-card-action-gap')).toBe(lengthOf(out, '--md-sys-gap-sm'))
-    expect(lengthOf(inside, '--ui-service-card-action-gap')).toBe(ROOT.n)
+describe('ui-service-card: the action part declares its own size step (T-0352)', () => {
+  it('holds the md step in every region, whatever the card\'s own size', () => {
+    const card = '<ui-service-card name="Claims Agent" available></ui-service-card>'
+    const big = '<ui-service-card name="Claims Agent" available data-size="lg"></ui-service-card>'
+    const { wrap } = mount(`<div data-foundations="legacy">${card}</div>` + REGIONS.map(([id, attrs]) => `<div id="${id}" ${attrs}>${card}${big}</div>`).join(''))
+    const legacy = actionOf(wrap.querySelector('[data-foundations] ui-service-card')!)
+    expect(legacy.getBoundingClientRect().height).toBe(24)
+    expect(getComputedStyle(legacy).fontSize).toBe('13px') // the legacy font, through --ui-service-card-action-font-legacy
+    expect(Number.parseFloat(getComputedStyle(legacy).columnGap)).toBe(lengthOf(legacy, '--md-sys-gap-sm'))
+    for (const [id, , step] of REGIONS) {
+      const hosts = wrap.querySelectorAll(`#${id} ui-service-card`)
+      expect(hosts.length, id).toBe(2)
+      for (const host of hosts) {
+        const action = actionOf(host)
+        const label = `${id} ${host.getAttribute('data-size') ?? 'bare'}`
+        expect(action.getAttribute('data-size')).toBe('md')
+        expect(action.getBoundingClientRect().height, label).toBe(step.h)
+        expect(getComputedStyle(action).fontSize, label).toBe(`${step.type.control}px`)
+        expect(getComputedStyle(action).columnGap, label).toBe(`${step.n}px`)
+      }
+    }
+  })
+
+  it('a host or ancestor override of the action tokens still reaches the button', () => {
+    const { wrap } = mount(
+      '<ui-service-card id="host" name="Claims Agent" available style="--ui-service-card-action-height: 40px; --ui-service-card-action-font: 17px"></ui-service-card>' +
+        '<div style="--ui-service-card-action-height: 44px"><ui-service-card id="ancestor" name="Claims Agent" available></ui-service-card></div>',
+    )
+    const host = actionOf(wrap.querySelector('#host')!)
+    expect(host.getBoundingClientRect().height).toBe(40)
+    expect(getComputedStyle(host).fontSize).toBe('17px')
+    expect(actionOf(wrap.querySelector('#ancestor')!).getBoundingClientRect().height).toBe(44)
   })
 })

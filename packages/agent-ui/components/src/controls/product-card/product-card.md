@@ -155,7 +155,7 @@ parts:
   - name: price-note
     description: The muted price qualifier, present only when `priceNote` is non-empty.
   - name: action
-    description: The real native `<button type="button" data-part="action">`, present only when `action` is non-null. Visible text `actionLabel`; aria-label `{actionLabel} {title}`. At the derived control height of the card's own n (`--md-sys-height`, 4n: 32px at the root, ADR-0245 Amendment 8, and 24px on an A2UI canvas, Amendment 3; the old large step, 36px, under the legacy opt-out); a ghost when `selected`, natively disabled when `disabled`.
+    description: The real native `<button type="button" data-part="action">`, present only when `action` is non-null. Visible text `actionLabel`; aria-label `{actionLabel} {title}`. At the derived control height of its own md step (`data-size="md"` on the part, resolved on the part whatever the card's own size, T-0352; `--md-sys-height`, 4n: 32px at the root, ADR-0245 Amendment 8, and 24px on an A2UI canvas, Amendment 3; the old large step, 36px, under the legacy opt-out); a ghost when `selected`, natively disabled when `disabled`.
 
 customStates: []        # no custom state; presence is DOM add/remove, never a state flag
 
@@ -176,7 +176,7 @@ geometry:
   paddingInline: calc(var(--ui-product-card-inset) + var(--ui-product-card-pad-inline))  # the body: 6px box inset + 12px region inline padding (ADR-0046 Amendment 7)
   paddingBlock: calc(var(--ui-product-card-inset) + var(--ui-product-card-pad-block))    # the body: 6px box inset + 6px region block padding
   rowGap: var(--ui-product-card-row-gap)               # = --ui-box-gap (8px) between the body's rows
-  actionHeight: var(--ui-product-card-action-height)   # = --md-sys-height (4n) inside a data-tier region, else --md-sys-height-lg (ADR-0243 Amendment 2, ADR-0245 cl.10a), the one control-height row a pattern-tier card owns
+  actionHeight: var(--ui-product-card-action-height)   # unset by default (a host or ancestor override wins); the fallback is --md-sys-height (4n) at the action part's own md step (resolved on the part, T-0352), else --md-sys-height-lg (ADR-0243 Amendment 2, ADR-0245 cl.10a), the one control-height row a pattern-tier card owns
   radius: var(--ui-product-card-radius)                # = --md-sys-shape-corner-base
   mediaAspect: 16 / 10
   note: Block-level fill by default, no intrinsic width (ADR-0223); `inline` flips to inline-flex and hugs. The body spacing is the ADR-0046 box model in fixed rem (no scale-axis scaling outside the derived foundations), the shared --ui-box-* tokens, so the body ink sits 19px inline from the outer edge like a stock card region; the icon header aligns to it. As a surface root the card fills the canvas width (applyRootStretch, ADR-0046 Amendment 7).
