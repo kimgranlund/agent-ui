@@ -27,3 +27,11 @@ Kim's ruling 2026-10-18 (T-0345 debate): a sibling ticket, built beside the T-03
 
 ## Constraints
 The failing test lands before or with the fix. No repair-line or persona wording changes (debate rule). Croupier replays stay green.
+
+verifier: L3
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier` exits 0: the recorded round 10 `:81` round 0 payload gets exactly `POKER_DEAL_MISSING` at `ask-1:stake` with a Card-frame repair naming no CardTable; a dealt hold'em hand (on the surface or on another surface the turn touches), a settled hold'em Card with a next-stake Slider and a Deal again forward, a game picker, stud or Omaha prose that mentions hold'em, an off-screen Slider and a rules card get none; every hold'em spelling and the "Texas Hold'em: your buy-in" step fire; stud, Omaha, draw and roulette bet steps keep their Card with no finding.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0: the new repair text names only croupier catalog types.
+- `npx vitest run scripts/e2e-admin/probe/replays` exits 0: every croupier replay stays green.
+- `npm run check` exits 0.
