@@ -90,6 +90,7 @@
      styles block reads each with its ramp default as the var() fallback, so the default resolves ON the
      part against the region's ramp, never the card's own n, while a host or ancestor override of
      --ui-service-card-action-height / -font / -gap still reaches the button (T-0352). */
+  --ui-service-card-action-font-legacy: var(--md-sys-type-control, var(--md-sys-font-sm)); /* read by the action only under the legacy opt-out, where --md-sys-type-control is unset (13px there on host and part alike); the part's own type-control wins everywhere else */
   --ui-service-card-action-bg: var(--md-sys-color-neutral-surface-higher); /* neutral TONAL chip (Amendment cl.A3) — status colour stays on the dot alone */
   --ui-service-card-action-bg-hover: var(--md-sys-color-neutral-surface-highest);
   --ui-service-card-action-bg-active: var(--md-sys-color-neutral-surface-highest);
@@ -263,7 +264,7 @@
     padding-inline: calc(var(--ui-service-card-action-height, var(--md-sys-height, var(--md-sys-height-sm))) / 2);
 
     font: inherit;
-    font-size: var(--ui-service-card-action-font, var(--md-sys-type-control, var(--md-sys-font-sm)));
+    font-size: var(--ui-service-card-action-font, var(--md-sys-type-control, var(--ui-service-card-action-font-legacy)));
     line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard — ADR-0036, one of the three sanctioned direct reads */
 
     background: var(--ui-service-card-action-bg);

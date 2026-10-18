@@ -196,7 +196,9 @@ const offer = (extra = ''): string => `<ui-product-card title="Suite" price="$31
 describe('ui-product-card: the action part declares its own size step (T-0352)', () => {
   it('holds the md step in every region, whatever the card\'s own size', async () => {
     const { wrap } = await mount(`<div data-foundations="legacy">${offer()}</div>` + REGIONS.map(([id, attrs]) => `<div id="${id}" ${attrs}>${offer()}${offer('data-size="lg"')}</div>`).join(''))
-    expect(part(wrap.querySelector('[data-foundations] ui-product-card')!, 'action').getBoundingClientRect().height).toBe(36)
+    const legacy = part(wrap.querySelector('[data-foundations] ui-product-card')!, 'action')
+    expect(legacy.getBoundingClientRect().height).toBe(36)
+    expect(getComputedStyle(legacy).fontSize).toBe('16px') // the legacy font, through --ui-product-card-action-font-legacy
     for (const [id, , step] of REGIONS) {
       const hosts = wrap.querySelectorAll(`#${id} ui-product-card`)
       expect(hosts.length, id).toBe(2)

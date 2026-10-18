@@ -248,6 +248,7 @@ describe('ui-service-card: the action part declares its own size step (T-0352)',
     const { wrap } = mount(`<div data-foundations="legacy">${card}</div>` + REGIONS.map(([id, attrs]) => `<div id="${id}" ${attrs}>${card}${big}</div>`).join(''))
     const legacy = actionOf(wrap.querySelector('[data-foundations] ui-service-card')!)
     expect(legacy.getBoundingClientRect().height).toBe(24)
+    expect(getComputedStyle(legacy).fontSize).toBe('13px') // the legacy font, through --ui-service-card-action-font-legacy
     expect(Number.parseFloat(getComputedStyle(legacy).columnGap)).toBe(lengthOf(legacy, '--md-sys-gap-sm'))
     for (const [id, , step] of REGIONS) {
       const hosts = wrap.querySelectorAll(`#${id} ui-service-card`)

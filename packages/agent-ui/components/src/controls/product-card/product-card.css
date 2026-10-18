@@ -80,6 +80,7 @@
      reads each with that default as the var() fallback, so it resolves ON the part, never the card's own
      n, while a host or ancestor override of --ui-product-card-action-height / -font still reaches the
      button (T-0352). */
+  --ui-product-card-action-font-legacy: var(--md-sys-type-control, var(--md-sys-font-lg)); /* read by the action only under the legacy opt-out, where --md-sys-type-control is unset (16px there on host and part alike); the part's own type-control wins everywhere else */
   --ui-product-card-action-bg: var(--md-sys-color-primary-fill); /* T-0340: the fill ladder under on-primary ink */
   --ui-product-card-action-bg-hover: var(--md-sys-color-primary-fill-hover);
   --ui-product-card-action-bg-active: var(--md-sys-color-primary-fill-active);
@@ -278,7 +279,7 @@
     padding-inline: calc(var(--ui-product-card-action-height, var(--md-sys-height, var(--md-sys-height-lg))) / 2);
 
     font: inherit;
-    font-size: var(--ui-product-card-action-font, var(--md-sys-type-control, var(--md-sys-font-lg)));
+    font-size: var(--ui-product-card-action-font, var(--md-sys-type-control, var(--ui-product-card-action-font-legacy)));
     line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard, a sanctioned direct read */
     white-space: nowrap;
 
