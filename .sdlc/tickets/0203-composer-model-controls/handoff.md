@@ -43,4 +43,6 @@ verifier: L3
 - `npx vitest run packages/agent-ui/app/src/controls/agent-admin packages/agent-ui/app/src/controls/conversation packages/agent-ui/a2ui/src/live-agent` exits 0: the effort menu offers "Thinking off" only where the model allows it at the current effort and "Show reasoning" where the row has a display choice, both reach the request; a server tool row appears only when the agent enables the tool, and switching it off drops the tool from the next request without writing the store.
 - `npm run e2e:admin` exits 0.
 - Screenshots of the composer effort menu, the capabilities panel with the server tool rows, and the settings Model section, viewed (`.sdlc/runtime/tasks/0203-composer-model-controls/evidence/`).
-- A live probe with web search on shows a cited answer [owner: conductor] [needs: key, after merge].
+
+## After merge
+- The conductor runs a live probe with web search on and confirms a cited answer, and that the surface arm accepts server tools beside the forced render_surface tool.
