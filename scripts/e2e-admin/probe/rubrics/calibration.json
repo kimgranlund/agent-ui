@@ -1,0 +1,13 @@
+{
+  "about": "T-0178 calibration set: committed round runs, cited by round folder and run name under .sdlc/evals/rounds/. Good cases are runs that passed every probe check; bad cases are failed runs whose transcript visibly misses the named criterion. `npm run eval:judge -- selftest` scores each against its persona's rubric.",
+  "cases": [
+    { "rubric": "croupier", "round": "2026-10-17-r10-targeted", "run": "regress-croupier-blackjack-moves-haiku-1", "expect": "good", "why": "passed; every move answered, impossible moves (hit after a bust, split without a pair) explained, every round settled by the dealer" },
+    { "rubric": "croupier", "round": "2026-10-15-r2-presets", "run": "croupier-blackjack-moves-haiku-1", "expect": "bad", "why": "C1: turns 5, 8 and 9 show raw a2uiMeta JSON and an updateComponents line in the reply (no-json-as-prose failed)" },
+    { "rubric": "croupier", "round": "2026-10-17-r10-targeted", "run": "regress-croupier-omaha-haiku-1", "expect": "bad", "why": "C3: turn 4 reaches showdown and asks the player whether to deal the opponent's hand instead of settling the pot (round 10 cluster C)" },
+    { "rubric": "concierge", "round": "2026-10-17-r10-targeted", "run": "regress-concierge-facilities-then-tour-haiku-1", "expect": "good", "why": "passed; hours and late check-out answered, the tour prepared for one confirmation and booked when the guest confirmed" },
+    { "rubric": "concierge", "round": "2026-10-16-r8-matrix", "run": "long-concierge-booking-haiku-1", "expect": "bad", "why": "C3 and C1: turn 3 refuses the guest's chat confirmation with every detail stated and explains that its change never reached the form" },
+    { "rubric": "concierge", "round": "2026-10-15-r2-presets", "run": "concierge-dinner-at-vela-haiku-1", "expect": "bad", "why": "C3 and C1: the guest named this Friday, yet the Concierge asks them to pick it on a calendar, refuses the confirmation, and turn 2 shows raw a2uiMeta JSON" },
+    { "rubric": "lexicographer", "round": "2026-10-17-r9-matrix", "run": "regress-lexicographer-invalid-then-replay-haiku-1", "expect": "good", "why": "passed; the three-letter guess explained, each guess marked, the word revealed on give-up and a fresh game started" },
+    { "rubric": "lexicographer", "round": "2026-10-15-r2-presets", "run": "lexicographer-invalid-then-replay-haiku-1", "expect": "bad", "why": "C3 and C1: turn 3 admits no secret word was fixed, turn 4 says the marks were made up and refuses to reveal the word, and raw a2uiMeta JSON shows in the reply" }
+  ]
+}
