@@ -37,6 +37,11 @@
 // gold", a sales dashboard, a receipt or a booking that says "you won" stays clean, a croupier hand settles on its own
 // table, and a round result Toast is never read.
 //
+// T-0365: the T-0362 re-record (round 2026-10-18-t0362-smoke) hand-built two strips that row missed. A question, round,
+// turn, guess or attempt counter ("Q1 of 20", "Round 2 of 5") is a game-stat cue, while a bare "3 of 6" (an inventory
+// count, an order line) is none; and the strip's `rowTypes` (Text) count only from a Row that holds `min` or more cued
+// ones (the Dungeon Master's "HP 12 / 12" and "Gold 0"), so cued narration lines or a lone HP Text stay clean.
+//
 // T-0361: the Timeline row reads a quest log built by hand: on a surface whose words name a game, a Column or List of
 // parallel entries (Texts, or Rows of Texts: a number and a name) under its nearest heading. Under a log heading (scenes,
 // a journal, a quest log: a label Text, the list's own label, or the title or CardHeader of the Card around it) one
@@ -69,13 +74,14 @@ export interface CompositeMoment {
   readonly has?: readonly string[]
   /** T-0358, T-0364: with none of `has` present (or no `has` at all, T-0361), the row still runs on a surface whose words name a game (`game`, read with
    *  any `end` phrase taken out, so "game over" alone names none) unless it holds a `standAside` type, reading no words from
-   *  `skipWordTypes`. Then either `statStrip`: at least `min` stat items (a component of `types`, or a DescriptionList row)
-   *  whose words name game state (`cue`), the hand-built score strip of a game with no board; or the row's `words` path,
+   *  `skipWordTypes`. Then either `statStrip`: at least `min` stat items (a component of `types`, a DescriptionList row,
+   *  or a `rowTypes` component in a Row holding `min` or more cued ones, T-0365) whose words name game state (`cue`), the
+   *  hand-built score strip of a game with no board; or the row's `words` path,
    *  with an `end` signal on the surface, or a `restart` signal with no live play control left on it (T-0361 review).
    *  Every other gate of the row still applies. */
   readonly boardless?: {
     readonly game: RegExp
-    readonly statStrip?: { readonly types: readonly string[]; readonly cue: RegExp; readonly min: number }
+    readonly statStrip?: { readonly types: readonly string[]; readonly rowTypes?: readonly string[]; readonly cue: RegExp; readonly min: number }
     readonly end?: RegExp
     readonly restart?: RegExp
     readonly standAside?: readonly string[]
@@ -205,7 +211,10 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       game: HUD_GAME_WORDS,
       statStrip: {
         types: ['Badge', 'Stat', 'Progress'],
-        cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries)\b/i,
+        // T-0365: the Dungeon Master's HP and Gold as two Texts in a Row.
+        rowTypes: ['Text'],
+        // T-0365: a "Q1 of 20" or "Round 2 of 5" counter is a cue; a bare "3 of 6" is none.
+        cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries|q\d+ of \d+|(question|round|turn|guess|attempt|try) \d+ of \d+)\b/i,
         min: 2,
       },
     },
@@ -320,13 +329,23 @@ function submitsReadBack(c: A2uiComponent, view: SurfaceView, rb: NonNullable<Co
 }
 
 /** T-0358: the components holding at least `min` game-stat items (a `types` component's label, title or text, literal or
- *  bound, or a DescriptionList row), or `[]`. */
+ *  bound, a DescriptionList row, or T-0365 a `rowTypes` component in a Row holding `min` or more cued ones), or `[]`. */
 function statStrays(strip: NonNullable<NonNullable<CompositeMoment['boardless']>['statStrip']>, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
   let items = 0
   const found: A2uiComponent[] = []
+  const textOf = (c: A2uiComponent): string => ['label', 'title', 'text'].map((k) => stringOf(c[k], view)).join(' ')
+  // T-0365: the `rowTypes` components that sit in a Row beside `min` - 1 or more other cued ones.
+  const rowed = new Set<A2uiComponent>()
+  for (const row of comps) {
+    if (row.component !== 'Row') continue
+    const cued = childIds(row)
+      .map((id) => view.components.get(id))
+      .filter((k): k is A2uiComponent => k !== undefined && strip.rowTypes?.includes(k.component) === true && strip.cue.test(textOf(k)))
+    if (cued.length >= strip.min) for (const k of cued) rowed.add(k)
+  }
   for (const c of comps) {
-    const texts = strip.types.includes(c.component)
-      ? [['label', 'title', 'text'].map((k) => stringOf(c[k], view)).join(' ')]
+    const texts = strip.types.includes(c.component) || rowed.has(c)
+      ? [textOf(c)]
       : c.component === 'DescriptionList' ? rowTexts(c, view) : []
     const hits = texts.filter((t) => strip.cue.test(t)).length
     if (hits === 0) continue

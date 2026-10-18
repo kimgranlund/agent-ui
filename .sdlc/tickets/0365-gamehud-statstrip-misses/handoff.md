@@ -30,3 +30,8 @@ Found by T-0362's live re-record (Haiku 5.5, $0.04). Cause class (d), a check ga
 
 ## Constraints
 The failing test lands before or with the fix, never after. Recorded rounds are never hand-edited.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the recorded Mentalist ("Q1 of 20" Badge, "Questions spent" Progress) and Dungeon Master (HP and Gold Texts in a Row) strips yield GAME_HUD_MISSING and none with a GameHud; the bare "3 of 6" count, cued narration Texts in a Column, a lone cued Text in a Row, and the KPI, loyalty, receipt and survey strips yield none; the T-0358 negative controls and the CardTable stand-aside stay green.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0: the Mentalist smoke replay is flipped to `toEqual([])` through an appended authored round 3 per turn (recorded rounds untouched), and the Dungeon Master pin keeps its list with its comment updated.
+- `npm run check` exits 0.

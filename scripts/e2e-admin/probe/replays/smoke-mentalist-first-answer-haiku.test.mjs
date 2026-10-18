@@ -9,15 +9,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0365. Haiku 5.5 built the Twenty Questions board as a Card with a "Q1 of 20" Badge, a "Questions spent"
-// Progress and a confidence Text, with no GameHud, on both turns. The GameHud row's board-less stat strip needs two
-// cued Badge, Stat or Progress parts and finds one, so GAME_HUD_MISSING never fires; each turn's only retry is
-// FEED_SCOPE on the ask surface's Progress, and turn 1 opens a new ask-2 rather than updating ask-1.
-it('smoke-mentalist-first-answer-haiku: no turn gets GAME_HUD_MISSING, so neither ships a GameHud', async () => {
+// T-0365: Haiku 5.5 built the Twenty Questions board as a Card with a "Q1 of 20" Badge, a "Questions spent" Progress
+// and a confidence Text, with no GameHud, on both turns. The GameHud row now reads the counter Badge as a cue, so each
+// turn's first round is sent back with GAME_HUD_MISSING and so is its recorded second round. Each turn's round 3 is
+// AUTHORED to that repair: the recorded round 2 with the counter Badge, the Progress and the confidence Text replaced by
+// ONE GameHud (status, a confidence stat, the questions as progress). Turn 1 still opens ask-2 rather than updating ask-1.
+it('smoke-mentalist-first-answer-haiku: each turn repairs GAME_HUD_MISSING and ships a GameHud', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-mentalist-first-answer-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['expect-component', 1], ['expect-component', null]])
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([])
   const trace = (i) => report.records[i].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace(0)).toMatchObject({ rounds: 2, failureCodes: ['FEED_SCOPE'] })
-  expect(trace(1)).toMatchObject({ rounds: 2, failureCodes: ['FEED_SCOPE', 'TEXT_JSONL_ROUTED'] })
+  expect(trace(0)).toMatchObject({ rounds: 3, failureCodes: ['GAME_HUD_MISSING'] })
+  expect(trace(1)).toMatchObject({ rounds: 3, failureCodes: ['GAME_HUD_MISSING', 'TEXT_JSONL_ROUTED'] })
 })
