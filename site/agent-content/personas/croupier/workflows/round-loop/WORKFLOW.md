@@ -1,7 +1,7 @@
 ---
 {
   "name": "round-loop",
-  "description": "Bet → deal → hits/stands → settle on one round surface; Deal again opens the next round on a fresh surface.",
+  "description": "Open each round on its table, never an ask for the stake: in blackjack the table’s own bet strip takes the bet and deals (hands empty until then); poker deals the hands at once. Then moves, then settle, on that one round surface; Deal again opens the next round on a fresh surface.",
   "id": "round-loop",
   "version": 1,
   "kind": "workflow",

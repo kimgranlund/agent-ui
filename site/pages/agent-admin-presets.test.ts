@@ -39,6 +39,7 @@ import {
 import { ROSTER_ORDER_KEY } from '@agent-ui/app/agent-admin-roster-source'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (capability-registry.test.ts precedent)
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { compileAgent } from '../lib/agent-compile.ts'
 import {
   COMMERCE_SKILLS,
   CORE_PLAYBOOKS,
@@ -585,7 +586,27 @@ describe('the Croupier table entries scope the CardTable to blackjack (T-0323)',
   })
 
   it('the bump migrates saved Croupier stores', () => {
-    expect(croupier.seedVersion).toBe(15)
+    expect(croupier.seedVersion).toBe(16)
+  })
+})
+
+// T-0345 (round 10 cluster B, Kim's ruling 2026-10-18): the opening rule lived only in index-only entry content, so
+// the always-loaded round-loop index line now says each round opens on its table, never an ask for the stake.
+// Measured on Haiku 5.5: blackjack round 1 CardTable 30 of 30 against 22 of 30 for "Bet → deal → ...".
+describe('the Croupier round-loop index line opens each round on its table (T-0345)', () => {
+  it('the compiled system prompt carries the opening rule and no bare bet step', async () => {
+    const system = (await compileAgent('croupier')).bundle.system
+    expect(system).toContain('never an ask for the stake')
+    expect(system).toContain('bet strip takes the bet and deals')
+    expect(system).toContain('poker deals the hands at once')
+    expect(system).not.toContain('Bet → deal')
+  })
+
+  it('the round-loop workflow description is the measured NEW line', () => {
+    const croupier = AGENT_PRESETS.find((p) => p.id === 'croupier')!
+    expect(croupier.workflows.find((w) => w.id === 'round-loop')?.description).toBe(
+      'Open each round on its table, never an ask for the stake: in blackjack the table’s own bet strip takes the bet and deals (hands empty until then); poker deals the hands at once. Then moves, then settle, on that one round surface; Deal again opens the next round on a fresh surface.',
+    )
   })
 })
 
