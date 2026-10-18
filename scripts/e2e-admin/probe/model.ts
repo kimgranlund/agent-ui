@@ -668,6 +668,8 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
     // flow on to a surface it creates (a Deal again that opens the next round's table). A click answered by
     // prose alone (the Haiku 5.5 deal of 2026-10-14 narrated the cards and sent no update) fails. T-0214: a say turn
     // whose meta-line targets an open surface is judged the same way ("Bet 50." settled in prose, 2026-10-15.jsonl:48).
+    // T-0363: a click on an answered ask that settles the open surface its meta-line targets (a game's HUD at its end)
+    // passes: the ask stays history and the flow moved to that target.
     const sayTarget = 'say' in t.step ? meta.target : undefined
     const clicked = 'click' in t.step ? t.request?.actionSurface : sayTarget
     if (!('click' in t.step) && sayTarget === undefined) out.push({ check: 'action-updates-surface', turn: t.index, status: 'skip', detail: 'not a click turn or a targeted say turn' })
@@ -682,7 +684,9 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
           ? { check: 'action-updates-surface', turn: t.index, status: 'pass', detail: `${clicked} updated` }
           : created.length > 0
             ? { check: 'action-updates-surface', turn: t.index, status: 'pass', detail: `${clicked} left as history; the flow moved to ${created.join(', ')}` }
-            : { check: 'action-updates-surface', turn: t.index, status: 'fail', detail: `the ${sayTarget !== undefined ? 'say turn targeting' : 'click on'} ${clicked} was answered with no update to it and no new surface` },
+            : 'click' in t.step && meta.target !== undefined && touched.includes(meta.target)
+              ? { check: 'action-updates-surface', turn: t.index, status: 'pass', detail: `${clicked} left as history; the turn settled its target ${meta.target}` }
+              : { check: 'action-updates-surface', turn: t.index, status: 'fail', detail: `the ${sayTarget !== undefined ? 'say turn targeting' : 'click on'} ${clicked} was answered with no update to it and no new surface` },
       )
     }
     // expect-component, per turn (T-0222): a step that names its component (`--expect-turn`) updates a surface

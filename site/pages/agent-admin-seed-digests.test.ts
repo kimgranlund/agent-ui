@@ -22,17 +22,17 @@ const PERSONA_DIGESTS: Record<string, string> = {
   stylist: 'sha256:5be5c45f741dd489178106991cf29bd19acc06721e592b446c7f3d95954a4226',
   shopkeeper: 'sha256:93981648c73274a73868863b09298d5c9f3aad7c72457d54d973a296b21ec545',
   quizmaster: 'sha256:03f652e96ca7b556fe3eedea06e544c011a4f47ab911c01aa91b7f6572ec84f8',
-  mentalist: 'sha256:c175289e67ec6c68420f830124c064fed401fd589187dbdabbb28c85c09ccade',
-  negotiator: 'sha256:6ad3855268538e74cd8ccf13a92fc3defe460e3e11158bb3ab4a686662c8d654',
+  mentalist: 'sha256:0175a300c2e3a6a1f0d50f9067ca8d6e0a696e9ae9c27edbbdb4dc6224c654f5',
+  negotiator: 'sha256:450396502a798daae8204f4eb2b2e1465611e1305cb7ce61f97f0841b561d6cf',
   lexicographer: 'sha256:b499f4485ad8fc7d067163ddd8c7a0de0f983766062f0c8b77b39dc1aa1a835c',
   admiral: 'sha256:43c67aee742c8e13f9091d28aa25d94aef76d34f3a07fb85491c4af420c4461c',
   alchemist: 'sha256:82635280f88abbbb9f9035e3193694d3ab47e619378192ad2b7bce3d17ece26c',
   'dungeon-master': 'sha256:28338295337eb41790cef55fb3cec257ff2bf3d3bca165cc4fac072280add2c8',
 }
 const BUILDER_DIGEST = 'sha256:3127b77df486f0a96fec2cd99ec93fbeacade3aac9545b5e66f689925eac94c6'
-const PRESETS_DIGEST = 'sha256:3e7377e1da19a986b9f5944d3be175f804c8948e32c453c3bb090f497fcf2d2a'
+const PRESETS_DIGEST = 'sha256:0baedd0dd221af5463e5d4f93fbaafc7351e666b9970dc452e0519898057825a'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
-const LIBRARIES_DIGEST = 'sha256:92084a34e9b30496cabab8b6f58577e6fc3d9f11df4e7a46fbdce3f103ea100a'
+const LIBRARIES_DIGEST = 'sha256:76b1cf9e0a743616b7cf6b089d42b94e19d298541ca54600e3eef6a0acb340e1'
 
 describe('agent-admin seeds: byte-identical across the T-0160 move to content files', () => {
   it('every roster preset assembles to its pinned digest', () => {

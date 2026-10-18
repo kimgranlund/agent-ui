@@ -1,0 +1,252 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "mentalist-ask-hud-beside",
+  "agent": "mentalist",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "T-0363 authored: turn 0 round 1 is smoke-mentalist-first-answer-haiku turn 0 round 0 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "Let's play Twenty Questions. I'm thinking of something.",
+      "expect": [
+        "GameHud"
+      ]
+    },
+    {
+      "click": "answer_question",
+      "expect": [
+        "GameHud"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "draft": {
+                          "answer": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "count"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Twenty Questions",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "count",
+                          "component": "Badge",
+                          "label": "Q1 of 20",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "q_text",
+                            "prog",
+                            "conf",
+                            "ans"
+                          ]
+                        },
+                        {
+                          "id": "q_text",
+                          "component": "Text",
+                          "text": "Is it a living thing?",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "prog",
+                          "component": "Progress",
+                          "value": 1,
+                          "max": 20,
+                          "label": "Questions spent"
+                        },
+                        {
+                          "id": "conf",
+                          "component": "Text",
+                          "text": "Confidence: low, the net is wide open.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "ans",
+                          "component": "RadioGroup",
+                          "value": {
+                            "path": "/draft/answer"
+                          },
+                          "name": "answer",
+                          "orientation": "horizontal",
+                          "children": [
+                            "r_yes",
+                            "r_no",
+                            "r_sort"
+                          ]
+                        },
+                        {
+                          "id": "r_yes",
+                          "component": "Radio",
+                          "value": "yes",
+                          "label": "Yes"
+                        },
+                        {
+                          "id": "r_no",
+                          "component": "Radio",
+                          "value": "no",
+                          "label": "No"
+                        },
+                        {
+                          "id": "r_sort",
+                          "component": "Radio",
+                          "value": "sort_of",
+                          "label": "Sort of"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "commit"
+                          ]
+                        },
+                        {
+                          "id": "commit",
+                          "component": "Button",
+                          "label": "Answer",
+                          "variant": "solid",
+                          "action": {
+                            "action": "answer_question",
+                            "context": {
+                              "questionId": 1
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"draft\":{\"answer\":\"\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"q_text\",\"ans\",\"commit\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Is it a living thing?\",\"variant\":\"h5\"},{\"id\":\"ans\",\"component\":\"SegmentedControl\",\"value\":{\"path\":\"/draft/answer\"},\"name\":\"answer\",\"children\":[\"s_yes\",\"s_no\",\"s_sort\"]},{\"id\":\"s_yes\",\"component\":\"Segment\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"s_no\",\"component\":\"Segment\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"s_sort\",\"component\":\"Segment\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Answer\",\"variant\":\"solid\",\"action\":{\"action\":\"answer_question\",\"context\":{\"questionId\":1}}}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"hud\",\"log\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Question 1 of 20\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"low\"}],\"progress\":{\"value\":1,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"children\":[\"q1\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Is it a living thing?\"}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### twenty-questions (workflow)\nGuessing-game domain — the 20-questions loop: one question per turn, HUD-tracked, honest reveal by 20.\n\nThink of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when confidence is high; always reveal by question 20 via the Modal.\n\nLet's play Twenty Questions. I'm thinking of something."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "trivia-round-resume",
+          "frontier-result-card-win",
+          "five-day-weather"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "guess-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"A living thing, then. Question 2 of 20: is it an animal?\",\"ask\":{\"surfaceId\":\"ask-2\"},\"target\":{\"surfaceId\":\"hud-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-2\",\"value\":{\"draft\":{\"answer\":\"\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"q_text\",\"ans\",\"commit\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Is it an animal?\",\"variant\":\"h5\"},{\"id\":\"ans\",\"component\":\"SegmentedControl\",\"value\":{\"path\":\"/draft/answer\"},\"name\":\"answer\",\"children\":[\"s_yes\",\"s_no\",\"s_sort\"]},{\"id\":\"s_yes\",\"component\":\"Segment\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"s_no\",\"component\":\"Segment\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"s_sort\",\"component\":\"Segment\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Answer\",\"variant\":\"solid\",\"action\":{\"action\":\"answer_question\",\"context\":{\"questionId\":2}}}]}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"hud\",\"log\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Question 2 of 20\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"medium\",\"delta\":\"+1\"}],\"progress\":{\"value\":2,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"children\":[\"q1\",\"q2\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"done\",\"label\":\"Is it a living thing? Yes\"},{\"id\":\"q2\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Is it an animal?\"}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "ask-1",
+            "actionId": "a2ui-action-1",
+            "name": "answer_question",
+            "sourceComponentId": "commit",
+            "timestamp": "2026-10-18T09:00:00.000Z",
+            "context": {
+              "questionId": 1
+            },
+            "dataModel": {
+              "draft": {
+                "answer": "yes"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "components": [
+      "GameHud"
+    ]
+  }
+}

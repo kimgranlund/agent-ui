@@ -1,0 +1,117 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "negotiator-ask-hud-beside",
+  "agent": "negotiator",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "T-0363 authored (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "I'd like to buy your brass lantern. What's your price?",
+      "expect": [
+        "GameHud"
+      ]
+    },
+    {
+      "say": "I offer 200.",
+      "expect": [
+        "GameHud"
+      ]
+    },
+    {
+      "click": "make_move",
+      "expect": [
+        "ResultCard"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Ah, the brass lantern! My asking price is 240 gold. Set your number below and send it, or accept my price.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"draft\":{\"offer\":200,\"move\":\"offer\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"q_text\",\"offer\",\"move\",\"send\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Your move\",\"variant\":\"h5\"},{\"id\":\"offer\",\"component\":\"Slider\",\"label\":\"Your offer (gold)\",\"name\":\"offer\",\"min\":1,\"max\":240,\"step\":5,\"value\":{\"path\":\"/draft/offer\"}},{\"id\":\"move\",\"component\":\"SegmentedControl\",\"name\":\"move\",\"value\":{\"path\":\"/draft/move\"},\"children\":[\"m_offer\",\"m_accept\",\"m_walk\"]},{\"id\":\"m_offer\",\"component\":\"Segment\",\"value\":\"offer\",\"label\":\"Offer\"},{\"id\":\"m_accept\",\"component\":\"Segment\",\"value\":\"accept\",\"label\":\"Accept\"},{\"id\":\"m_walk\",\"component\":\"Segment\",\"value\":\"walk\",\"label\":\"Walk away\"},{\"id\":\"send\",\"component\":\"Button\",\"label\":\"Send\",\"variant\":\"solid\",\"action\":{\"action\":\"make_move\"}}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"deal-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"deal-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"item\",\"hud\",\"hist\"]},{\"id\":\"item\",\"component\":\"Card\",\"children\":[\"item_ct\"]},{\"id\":\"item_ct\",\"component\":\"CardContent\",\"children\":[\"item_name\"]},{\"id\":\"item_name\",\"component\":\"Text\",\"text\":\"Brass lantern\",\"variant\":\"h4\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal sheet\",\"status\":\"Negotiating\",\"stats\":[{\"label\":\"Asking price\",\"value\":\"240 gold\"},{\"label\":\"On the table\",\"value\":\"none yet\"},{\"label\":\"Mood\",\"value\":\"Amused\"}]},{\"id\":\"hist\",\"component\":\"Sparkline\",\"values\":[240],\"label\":\"Price history\"}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "I'd like to buy your brass lantern. What's your price?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "travel-itinerary",
+          "five-day-weather",
+          "comparison-pricing-table"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "deal-sheet",
+            "load": "index-only"
+          },
+          {
+            "name": "negotiation-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Two hundred? You wound me, friend. I come down to 220 gold, and not a copper less today.\",\"ask\":{\"surfaceId\":\"ask-2\"},\"target\":{\"surfaceId\":\"deal-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-2\",\"value\":{\"draft\":{\"offer\":210,\"move\":\"offer\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"q_text\",\"offer\",\"move\",\"send\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Your move\",\"variant\":\"h5\"},{\"id\":\"offer\",\"component\":\"Slider\",\"label\":\"Your offer (gold)\",\"name\":\"offer\",\"min\":1,\"max\":240,\"step\":5,\"value\":{\"path\":\"/draft/offer\"}},{\"id\":\"move\",\"component\":\"SegmentedControl\",\"name\":\"move\",\"value\":{\"path\":\"/draft/move\"},\"children\":[\"m_offer\",\"m_accept\",\"m_walk\"]},{\"id\":\"m_offer\",\"component\":\"Segment\",\"value\":\"offer\",\"label\":\"Offer\"},{\"id\":\"m_accept\",\"component\":\"Segment\",\"value\":\"accept\",\"label\":\"Accept\"},{\"id\":\"m_walk\",\"component\":\"Segment\",\"value\":\"walk\",\"label\":\"Walk away\"},{\"id\":\"send\",\"component\":\"Button\",\"label\":\"Send\",\"variant\":\"solid\",\"action\":{\"action\":\"make_move\"}}]}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"deal-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"item\",\"hud\",\"hist\"]},{\"id\":\"item\",\"component\":\"Card\",\"children\":[\"item_ct\"]},{\"id\":\"item_ct\",\"component\":\"CardContent\",\"children\":[\"item_name\"]},{\"id\":\"item_name\",\"component\":\"Text\",\"text\":\"Brass lantern\",\"variant\":\"h4\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal sheet\",\"status\":\"Negotiating\",\"stats\":[{\"label\":\"Asking price\",\"value\":\"220 gold\"},{\"label\":\"On the table\",\"value\":\"200 gold\"},{\"label\":\"Mood\",\"value\":\"Wounded\",\"delta\":\"-1\"}]},{\"id\":\"hist\",\"component\":\"Sparkline\",\"values\":[240,220],\"label\":\"Price history\"}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "I offer 200."
+      }
+    },
+    {
+      "lines": [],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Done! The lantern is yours for 220 gold. May it light many happy evenings.\",\"flowEnd\":true,\"target\":{\"surfaceId\":\"deal-1\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"deal-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"item\",\"hud\",\"hist\",\"result\"]},{\"id\":\"item\",\"component\":\"Card\",\"children\":[\"item_ct\"]},{\"id\":\"item_ct\",\"component\":\"CardContent\",\"children\":[\"item_name\"]},{\"id\":\"item_name\",\"component\":\"Text\",\"text\":\"Brass lantern\",\"variant\":\"h4\"},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal sheet\",\"status\":\"Deal struck\",\"stats\":[{\"label\":\"Asking price\",\"value\":\"220 gold\"},{\"label\":\"On the table\",\"value\":\"220 gold\"},{\"label\":\"Mood\",\"value\":\"Delighted\",\"delta\":\"+2\"}]},{\"id\":\"hist\",\"component\":\"Sparkline\",\"values\":[240,220],\"label\":\"Price history\"},{\"id\":\"result\",\"component\":\"ResultCard\",\"outcome\":\"win\",\"title\":\"Deal struck\",\"summary\":\"You bought the brass lantern for 220 gold.\",\"stats\":[{\"label\":\"Price\",\"value\":\"220 gold\"},{\"label\":\"Saved\",\"value\":\"20 gold\"}],\"children\":[\"again\"]},{\"id\":\"again\",\"component\":\"Button\",\"label\":\"Play again\",\"action\":{\"action\":\"new_game\",\"context\":{\"newGame\":true}}}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "ask-2",
+            "actionId": "a2ui-action-1",
+            "name": "make_move",
+            "sourceComponentId": "send",
+            "timestamp": "2026-10-18T09:00:00.000Z",
+            "context": {},
+            "dataModel": {
+              "draft": {
+                "offer": 220,
+                "move": "accept"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "expect": {
+    "components": [
+      "GameHud"
+    ]
+  }
+}

@@ -197,7 +197,7 @@ The arc's ordering, cheapest-correct-first:
    `grammar.md` says "let the USER take the final action" (cluster A, T-0289), and shipped no surface on a
    word-game give-up because, in its own words, "flow-ending turns emit no UI" (its reading of `grammar.md:92`, "no UI change"; cluster C, T-0291); Sonnet read the same lines
    as intended. Kim's ruling (2026-10-16): fix it in the persona text and the repair messages, never in the
-   byte-pinned grammar, which stays the same for every persona. Persona text (`surfaceStyle`, `foundation`,
+   byte-pinned grammar, which stays the same for every persona. Exception (Kim 2026-10-18, T-0363): the ask mechanics admit a game's ONE HUD surface, the surface holding its GameHud, and a game's end-state HUD update is its closing turn's settle update. Persona text (`surfaceStyle`, `foundation`,
    `houseFacts`) may not name a compound catalog type: the modality lint in
    `site/pages/agent-admin-presets.test.ts` reads `COMPOUND_CATALOG_TYPES` from
    `packages/agent-ui/app/src/controls/agent-admin/prompt-lint.ts`, so state the intent ("a compact info

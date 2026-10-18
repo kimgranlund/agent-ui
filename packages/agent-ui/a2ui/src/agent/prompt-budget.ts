@@ -26,8 +26,11 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  T-0207: the 16 KB persona above is the proxies' runaway cap, not a real preset. The site leg
  *  `site/pages/agent-admin-prompt-budget.test.ts` composes each shipped preset's real persona on its own catalog
  *  under the same matrix: MEASURED 2026-10-14, largest persona 4 516 chars (croupier), worst 130 097 chars
- *  (`agent-ui--croupier`, DERIVED headroom 11 903), worst base preset 126 792 (travel, BASE headroom 14 308). */
-export const PROMPT_CHAR_BUDGET_BASE = 141_100
+ *  (`agent-ui--croupier`, DERIVED headroom 11 903), worst base preset 126 792 (travel, BASE headroom 14 308).
+ *  RE-MEASURED 2026-10-18 (T-0363, Kim's grammar ruling): the worst case is 141 949 chars (`agent-ui`, mode default),
+ *  +955 from grammar.md's game HUD surface clauses (the ask mechanics, the answered-ask note and the game-end settle).
+ *  Budget 142 300 by the same formula. */
+export const PROMPT_CHAR_BUDGET_BASE = 142_300
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -45,8 +48,10 @@ export const PROMPT_CHAR_BUDGET_BASE = 141_100
  *  BASE is untouched (139 883 against 140 000).
  *  RE-MEASURED 2026-10-12 (T-0089, ADR-0244): the worst case is 141 653 chars (`agent-ui--croupier`, mode default;
  *  140 801 before), +852 from the `ResultCard` default row, the same rows BASE pays. Budget 142 000 by the same
- *  formula; BASE is re-measured above in the same change. */
-export const PROMPT_CHAR_BUDGET_DERIVED = 142_000
+ *  formula; BASE is re-measured above in the same change.
+ *  RE-MEASURED 2026-10-18 (T-0363): the worst case is 142 936 chars (`agent-ui--croupier`, mode default), the same
+ *  grammar.md clauses BASE pays. Budget 143 300 by the same formula. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 143_300
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

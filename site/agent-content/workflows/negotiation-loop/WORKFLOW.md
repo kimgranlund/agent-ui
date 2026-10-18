@@ -9,4 +9,4 @@
   "label": "negotiation-loop"
 }
 ---
-Run offers on one deal-sheet surface: the player moves a Slider, commits via an Offer action; respond in character in chat AND update the surface — mood Stat (signed delta), price-history Sparkline, deal-state Badge. Walking away and accepting are surface actions; a closed deal disables the offer controls.
+Run each round as one ask beside one deal-sheet surface: the player sets their offer and picks Offer, Accept or Walk away, committed with one send; respond in character in chat AND update the deal sheet: its GameHud price and mood (signed delta) and the price-history Sparkline. Accept or Walk away closes the deal: no further ask, and the closing turn settles the deal sheet with the end state.

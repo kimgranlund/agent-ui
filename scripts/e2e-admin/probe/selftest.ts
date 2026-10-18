@@ -137,6 +137,13 @@ export async function runProbeSelftest(): Promise<number> {
   expectThat(caseVerdict(prose, ['action-updates-surface']) === undefined, `checks: a click answered with prose alone fails action-updates-surface (${caseVerdict(prose, ['action-updates-surface'])})`)
   const NEXT_ROUND = ['{"version":"v1.0","createSurface":{"surfaceId":"table-2","catalogId":"agent-ui"}}', '{"version":"v1.0","updateComponents":{"surfaceId":"table-2","components":[{"id":"root","component":"Text","text":"Round 2"}]}}']
   expectThat(statusOf(runChecks([record(), click(NEXT_ROUND)], opts), 'action-updates-surface') === 'skip,pass', 'checks: a click that opens the next surface passes action-updates-surface')
+  // T-0363: a click on an ask answered by an update to the open surface its meta-line targets passes; the same update
+  // with no target does not.
+  const HUD_UPDATE = '{"version":"v1.0","updateComponents":{"surfaceId":"hud-1","components":[{"id":"root","component":"Text","text":"Won"}]}}'
+  const settled = (meta: string): TurnRecord =>
+    record({ index: 1, step: { click: 'Go' }, request: { model: 'm', effort: 'medium', inputKind: 'client', actionSurface: 'canvas' }, lines: [meta, HUD_UPDATE], rounds: [{ text: HUD_UPDATE, tools: [] }] })
+  expectThat(statusOf(runChecks([record(), settled('{"a2uiMeta":{"note":"Done.","target":{"surfaceId":"hud-1"}}}')], opts), 'action-updates-surface') === 'skip,pass', 'checks: a click that settles its targeted open surface passes action-updates-surface')
+  expectThat(statusOf(runChecks([record(), settled('{"a2uiMeta":{"note":"Done."}}')], opts), 'action-updates-surface') === 'skip,fail', 'checks: a click that updates another surface with no target fails action-updates-surface')
   // T-0214: a say turn whose meta-line targets an open surface is judged like a click on it.
   const typed = (lines: string[]): TurnRecord =>
     record({ index: 1, step: { say: 'Bet 50.' }, lines: ['{"a2uiMeta":{"note":"You win.","target":{"surfaceId":"canvas"}}}', ...lines], rounds: [{ text: lines.join('\n'), tools: [] }] })

@@ -540,6 +540,20 @@ describe('buildSystemPrompt feed-ask mechanics — mode-invariant (ADR-0097 §4)
     expect(prompt).toMatch(/at most\s+the one retire-update the surface-reuse rule below requires/)
   })
 
+  // T-0363 (Kim 2026-10-18): an ask turn may also create or update a game's ONE HUD surface, the surface holding its
+  // GameHud, and a game's end settles that HUD. Each pin is red on the pre-T-0363 grammar.
+  it("T-0363: the ask mechanics admit a game's ONE HUD surface and its end-state settle", () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toMatch(/except\s+a\s+game's\s+ONE\s+HUD\s+surface/)
+    expect(prompt).toMatch(/plus,\s+in\s+a\s+game,\s+that\s+ONE\s+HUD\s+surface,\s+nothing\s+else/)
+    expect(prompt).toMatch(/a\s+game\s+with\s+no\s+GameHud\s+has\s+none/)
+    expect(prompt).toMatch(/A\s+GameHud\s+never\s+goes\s+on\s+the\s+ask\s+surface/)
+    expect(prompt).toMatch(/update\s+that\s+SAME\s+id\s+on\s+every\s+later\s+turn,\s+ask\s+turns\s+included/)
+    expect(prompt).toMatch(/In\s+a\s+game\s+whose\s+stats\s+live\s+on\s+a\s+GameHud,\s+every\s+stat,\s+score\s+and\s+progress\s+stays\s+on\s+its\s+HUD\s+surface/)
+    expect(prompt).toMatch(/reply\s+with\s+the\s+note\s+alone\s+\(in\s+a\s+game,\s+plus\s+the\s+update\s+to\s+its\s+HUD\s+surface\)/)
+    expect(prompt).toMatch(/its\s+ONE\s+settle\s+update\s+is\s+the\s+end-state\s+update\s+to\s+its\s+HUD\s+surface/)
+  })
+
   it('the note-standalone rule is present — the note must ALWAYS carry the full question in prose', () => {
     const prompt = buildSystemPrompt(defaultCatalog, [])
     expect(prompt).toMatch(/note MUST ALWAYS carry the full question in plain prose/)

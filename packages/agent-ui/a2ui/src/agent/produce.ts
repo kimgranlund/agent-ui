@@ -757,7 +757,7 @@ function messagesFor(
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT + droppedNote : '') + // T-0281: resend a dropped surface; T-0330: fixed
       (failures.some((f) => f.code === 'SURFACE_NOT_CREATED') ? SURFACE_NOT_CREATED_HINT : '') + // T-0305: create before update
-      (failures.some((f) => f.code === 'FEED_SCOPE') ? FEED_SCOPE_HINT : '') + // T-0290: keep the surface, drop the ask
+      (failures.some((f) => f.code === 'FEED_SCOPE') ? (hudOnAsk(failures) ? FEED_SCOPE_HUD_HINT : FEED_SCOPE_HINT) : '') + // T-0290: keep the surface, drop the ask; T-0363: a game moves its HUD beside the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(keep) // T-0172: never lose a surface the failed round created
     turns.push({
@@ -1185,6 +1185,24 @@ const FEED_SCOPE_HINT =
   ' FEED_SCOPE means the surface your meta-line names as "ask" can hold only simple question parts, never the type ' +
   'named. Resend that SAME surface with the same components and data as an ordinary surface: leave "ask" out of your ' +
   'meta-line and keep every component, rather than dropping the surface or rebuilding it from simpler parts.'
+
+/** T-0363: the HUD types a game keeps on its HUD surface (all FEED_EXCLUDED; TimelineItem rides with its Timeline). */
+const HUD_TYPES: ReadonlySet<string> = new Set(['GameHud', 'Timeline', 'TimelineItem', 'Sparkline', 'Progress', 'Stat'])
+
+/** T-0363: the FEED_SCOPE sentence for an ask holding a GameHud whose every out-of-scope type is a HUD type. It replaces
+ *  FEED_SCOPE_HINT there: a game keeps its ask and moves the HUD beside it (grammar.md's one HUD surface). Any other
+ *  out-of-scope type (the Alchemist's ColorPicker beside its GameHud) keeps the generic hint. */
+const FEED_SCOPE_HUD_HINT =
+  ' FEED_SCOPE means the surface your meta-line names as "ask" can hold only simple question parts, never the type ' +
+  "named. In a game, keep the ask: move the GameHud and every other type named to the game's HUD surface beside " +
+  'the ask (its own id, created once and updated after), and leave only the question, the answer control and its ' +
+  'ONE commit Button on the ask.'
+
+/** T-0363: true when the round's FEED_SCOPE types include GameHud and are all HUD types. */
+function hudOnAsk(failures: readonly RoundFailure[]): boolean {
+  const types = failures.filter((f) => f.code === 'FEED_SCOPE').map((f) => f.path.slice(f.path.lastIndexOf(':') + 1))
+  return types.includes('GameHud') && types.every((t) => HUD_TYPES.has(t))
+}
 
 /** ADR-0238: the self-correct sentence for a round with semantic findings (the NET_NOOP_HINT
  *  shape: one appended sentence, no new round kind). The payload was structurally valid; what it states

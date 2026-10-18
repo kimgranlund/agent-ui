@@ -1520,6 +1520,7 @@ describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-
     const round2 = reqs()[1]!.messages
     expect(round2.some((m) => m.role === 'user' && /FEED_SCOPE/.test(m.content))).toBe(true)
     expect(round2.some((m) => m.role === 'user' && /Modal/.test(m.content))).toBe(true)
+    expect(round2.some((m) => m.role === 'user' && m.content.includes("In a game, keep the ask"))).toBe(false) // T-0363: no GameHud, no HUD hint
   })
 
   // T-0281 (live round 4, 2026-10-15-r4-fixes :23-:24, Haiku 5.5): the FEED_SCOPE retry answered in prose only and
@@ -1617,6 +1618,81 @@ describe('produce() feed-embedded ask — the FEED_SCOPE self-correct gate (ADR-
     for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
     expect(calls()).toBe(1) // no FEED_SCOPE round — Modal lives on "main", not the ask surface
     expect(readMetaLine(lines[0]!)!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+  })
+})
+
+// T-0363 (Kim 2026-10-18): an ask turn may also create or update a game's ONE HUD surface (grammar.md), and a FEED_SCOPE
+// round whose every out-of-scope type is a HUD type with a GameHud gets the HUD hint (keep the ask, move the HUD) in place
+// of the generic one (drop the ask).
+describe("produce() a game's HUD surface beside its ask (T-0363)", () => {
+  const ASK_META = (sid: string, extra = ''): string => `{"a2uiMeta":{"note":"Is it alive?","ask":{"surfaceId":"${sid}"}${extra}}}`
+  const askSurface = (sid: string): string =>
+    `{"version":"v1.0","createSurface":{"surfaceId":"${sid}","catalogId":"agent-ui","sendDataModel":true}}\n` +
+    `{"version":"v1.0","updateComponents":{"surfaceId":"${sid}","components":[{"id":"root","component":"Column","children":["q","ans","go"]},{"id":"q","component":"Text","text":"Is it alive?"},{"id":"ans","component":"SegmentedControl","name":"answer","children":["y","n"]},{"id":"y","component":"Segment","value":"yes","label":"Yes"},{"id":"n","component":"Segment","value":"no","label":"No"},{"id":"go","component":"Button","label":"Answer","action":{"action":"answer"}}]}}`
+  const HUD_COMPONENTS =
+    '[{"id":"root","component":"Column","children":["hud","log"]},{"id":"hud","component":"GameHud","title":"Twenty Questions","stats":[{"label":"Confidence","value":"40%"}]},{"id":"log","component":"Timeline","children":["q1"]},{"id":"q1","component":"TimelineItem","status":"active","label":"Is it alive?"}]'
+  const HUD_CREATE =
+    '{"version":"v1.0","createSurface":{"surfaceId":"hud-1","catalogId":"agent-ui"}}\n' +
+    `{"version":"v1.0","updateComponents":{"surfaceId":"hud-1","components":${HUD_COMPONENTS}}}`
+  const HUD_HINT = 'In a game, keep the ask'
+
+  it('case 1: ask-1 plus hud-1 created in one round ship with the ask intact', async () => {
+    const { provider, calls } = stubProvider([`${ASK_META('ask-1')}\n${askSurface('ask-1')}\n${HUD_CREATE}`])
+    const lines: string[] = []
+    for await (const line of produce(intent, { provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1)
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+    expect(lines.some((l) => l.includes('"createSurface":{"surfaceId":"hud-1"'))).toBe(true)
+  })
+
+  it('case 2: with hud-1 and an answered ask-1 in the session, ask-2 plus a hud-1 update under target ship in one round', async () => {
+    const session = {
+      turns: [
+        { role: 'user' as const, content: "let's play" },
+        { role: 'assistant' as const, content: `${askSurface('ask-1')}\n${HUD_CREATE}` },
+        { role: 'user' as const, content: 'yes' },
+      ],
+    }
+    const hudUpdate = `{"version":"v1.0","updateComponents":{"surfaceId":"hud-1","components":${HUD_COMPONENTS.replace('40%', '55%')}}}`
+    const { provider, calls } = stubProvider([`${ASK_META('ask-2', ',"target":{"surfaceId":"hud-1"}')}\n${askSurface('ask-2')}\n${hudUpdate}`])
+    const lines: string[] = []
+    for await (const line of produce({ kind: 'intent', text: 'yes', session }, { provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(1)
+    const meta = readMetaLine(lines[0]!)!.a2uiMeta
+    expect(meta.ask).toEqual({ surfaceId: 'ask-2' })
+    expect(meta.target).toEqual({ surfaceId: 'hud-1' })
+    expect(lines.some((l) => l.includes('"updateComponents":{"surfaceId":"hud-1"') && l.includes('55%'))).toBe(true)
+  })
+
+  it('case 3: a GameHud and a Timeline with its TimelineItem on ask-1 get the HUD hint, never "leave ask out"', async () => {
+    const onAsk =
+      '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui","sendDataModel":true}}\n' +
+      `{"version":"v1.0","updateComponents":{"surfaceId":"ask-1","components":${HUD_COMPONENTS.replace('"children":["hud","log"]', '"children":["hud","log","go"]').replace(/\]$/, ',{"id":"go","component":"Button","label":"Answer","action":{"action":"answer"}}]')}}}`
+    const { provider, calls, reqs } = stubProvider([`${ASK_META('ask-1')}\n${onAsk}`, `${ASK_META('ask-1')}\n${askSurface('ask-1')}\n${HUD_CREATE}`])
+    const lines: string[] = []
+    for await (const line of produce(intent, { provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(2)
+    const repair = reqs()[1]!.messages.at(-1)!.content
+    expect(repair).toContain('FEED_SCOPE at ask-1:GameHud')
+    expect(repair).toContain('FEED_SCOPE at ask-1:TimelineItem')
+    expect(repair).toContain(HUD_HINT)
+    expect(repair).not.toContain('leave "ask" out')
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
+  })
+
+  it('case 4: a GameHud beside a ColorPicker on ask-1 (the Alchemist shape) keeps the generic hint, and the ordinary-surface retry ships', async () => {
+    const alchemist =
+      '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui","sendDataModel":true}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"ask-1","components":[{"id":"root","component":"Column","children":["hud","pick","go"]},{"id":"hud","component":"GameHud","title":"Round 1"},{"id":"pick","component":"ColorPicker","name":"mix"},{"id":"go","component":"Button","label":"Mix","action":{"action":"mix"}}]}}'
+    const { provider, calls, reqs } = stubProvider([`${ASK_META('ask-1')}\n${alchemist}`, `{"a2uiMeta":{"note":"Mix it."}}\n${alchemist}`])
+    const lines: string[] = []
+    for await (const line of produce(intent, { provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds: 3 })) lines.push(line)
+    expect(calls()).toBe(2)
+    const repair = reqs()[1]!.messages.at(-1)!.content
+    expect(repair).toContain('leave "ask" out of your meta-line')
+    expect(repair).not.toContain(HUD_HINT)
+    expect(readMetaLine(lines[0]!)!.a2uiMeta.ask).toBeUndefined()
+    expect(lines.some((l) => l.includes('"component":"ColorPicker"'))).toBe(true)
   })
 })
 
