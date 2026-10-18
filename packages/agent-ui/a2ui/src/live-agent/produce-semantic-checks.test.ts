@@ -226,8 +226,10 @@ describe('produce() + croupier action check: a table created without sendDataMod
   const deal = pressOn([{ role: 'user', content: 'Blackjack, please.' }, { role: 'assistant', content: TABLE_TURN }], 'deal', { bet: 250 })
   // T-0233: a playing table offers the moves, so a write that leaves it playing carries Hit and Stand.
   const MOVES = JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [{ ...JSON.parse(TABLE), children: ['hit', 'stand'] }, { id: 'hit', component: 'Button', label: 'Hit', action: { event: { name: 'hit' } } }, { id: 'stand', component: 'Button', label: 'Stand', action: { event: { name: 'stand' } } }] } })
+  // T-0350: a table this turn settles offers Deal again, so a settling write carries it.
+  const AGAIN = JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [{ ...JSON.parse(TABLE), children: ['again'] }, { id: 'again', component: 'Button', label: 'Deal again', action: { event: { name: 'deal_again', context: { newRound: true } } } }] } })
   const write = (value: Record<string, unknown>) =>
-    `{"a2uiMeta":{"note":"Dealt."}}\n${JSON.stringify({ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value } })}${value['phase'] === 'playing' ? `\n${MOVES}` : ''}`
+    `{"a2uiMeta":{"note":"Dealt."}}\n${JSON.stringify({ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value } })}${value['phase'] === 'playing' ? `\n${MOVES}` : value['phase'] === 'settled' ? `\n${AGAIN}` : ''}`
   const C = (rank: string, faceDown = false) => ({ rank, suit: 'clubs', ...(faceDown ? { faceDown } : {}) })
   const dealt = (bankroll: number) => write({ bankroll, bet: 250, phase: 'playing', dealerHand: [C('9'), C('K', true)], playerHand: [C('10'), C('7')] })
 

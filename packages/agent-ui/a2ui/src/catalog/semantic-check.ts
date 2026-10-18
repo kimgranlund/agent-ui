@@ -62,6 +62,10 @@ export interface SurfaceView {
   /** T-0230: the data model the session's prior turns left, before this round (`undefined` when this round creates
    *  the surface, or no earlier turn wrote it), so a check can see a committed value change. */
   readonly priorDataModel?: unknown
+  /** T-0350: the component graph the session's prior turns left, before this round (`undefined` when this round creates
+   *  the surface or no earlier turn touched it), so a check can tell a surface new this turn and see a committed prop
+   *  change (a phase that turns literal). */
+  readonly priorComponents?: ReadonlyMap<string, A2uiComponent>
 }
 
 /** T-0172: the user action a client turn answers: its name, the surface it came from, its resolved context, and
@@ -91,6 +95,9 @@ export interface SemanticCheckInput {
    *  so a check can find the open table a move typed with no `target` was meant for, or see a form whose required
    *  field is still blank. Absent on a client turn. */
   readonly open?: readonly SurfaceView[]
+  /** T-0350: the 0-based round of the turn being judged; above 0, an earlier answer of this turn was rejected and
+   *  never reached the player. Absent when the caller does not track rounds. */
+  readonly round?: number
 }
 
 /** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined.
@@ -230,7 +237,7 @@ function replaySession(session: SemanticTurnLog): Map<string, MutableView> {
 /** T-0286, T-0278: every surface the session's prior ASSISTANT turns leave open, in the order the session first wrote
  *  them; the say turn's `open` input. */
 export function sessionSurfaceViews(session: SemanticTurnLog): SurfaceView[] {
-  return [...replaySession(session)].map(([surfaceId, view]) => ({ surfaceId, components: view.components, dataModel: view.dataModel, priorDataModel: view.dataModel }))
+  return [...replaySession(session)].map(([surfaceId, view]) => ({ surfaceId, components: view.components, dataModel: view.dataModel, priorDataModel: view.dataModel, priorComponents: view.components }))
 }
 
 /**
@@ -241,6 +248,8 @@ export function sessionSurfaceViews(session: SemanticTurnLog): SurfaceView[] {
 export function semanticSurfaceViews(session: SemanticTurnLog, output: A2uiOutput): SurfaceView[] {
   const views = replaySession(session)
   const prior = new Map([...views].map(([sid, view]) => [sid, view.dataModel] as const))
+  // A copy: a component batch upserts into the live map.
+  const priorComponents = new Map([...views].map(([sid, view]) => [sid, new Map(view.components)] as const))
   const created = new Set<string>()
   const touched: string[] = []
   for (const msg of output) {
@@ -251,7 +260,14 @@ export function semanticSurfaceViews(session: SemanticTurnLog, output: A2uiOutpu
   const out: SurfaceView[] = []
   for (const sid of touched) {
     const view = views.get(sid)
-    if (view !== undefined) out.push({ surfaceId: sid, components: view.components, dataModel: view.dataModel, priorDataModel: created.has(sid) ? undefined : prior.get(sid) })
+    if (view !== undefined)
+      out.push({
+        surfaceId: sid,
+        components: view.components,
+        dataModel: view.dataModel,
+        priorDataModel: created.has(sid) ? undefined : prior.get(sid),
+        priorComponents: created.has(sid) ? undefined : priorComponents.get(sid),
+      })
   }
   return out
 }
