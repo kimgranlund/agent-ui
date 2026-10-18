@@ -1,13 +1,13 @@
 {
   "kind": "live-round",
-  "commit": "45dcca581087775d6348a89c1390887362f1def2",
+  "commit": "619adfe615e0fb2fba9c867ff308b8adaeb3b138",
   "liveCommands": ".sdlc/evals/rounds/2026-10-18-t0345-old/live-commands.sh",
   "cap": 3,
   "stop": "done",
   "capSkipped": [],
   "window": {
     "since": "2026-10-18T04:16:44.413Z",
-    "until": "2026-10-18T04:30:41.369Z"
+    "until": "2026-10-18T04:57:23.014Z"
   },
   "prices": {
     "source": "claude-api skill price table, 2026-10-06",
@@ -29,15 +29,15 @@
     "note": "USD per million tokens, input and output; cache reads priced as input, cache writes at 1.25x input"
   },
   "totals": {
-    "runs": 20,
-    "traceLines": 50,
+    "runs": 60,
+    "traceLines": 135,
     "tokens": {
-      "input": 107261,
-      "output": 61548,
-      "cacheRead": 385154,
-      "cacheCreation": 17507
+      "input": 339371,
+      "output": 191140,
+      "cacheRead": 1207983,
+      "cacheCreation": 52519
     },
-    "costUsd": 0.082204
+    "costUsd": 0.25687
   },
   "files": {
     "traces": "traces/<day>.jsonl: the .agent-traces lines inside the window, same shape as the dev proxy log",
