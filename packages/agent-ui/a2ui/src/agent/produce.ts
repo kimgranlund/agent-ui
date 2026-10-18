@@ -2036,7 +2036,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
         const surfaces = semanticSurfaceViews(input.session, assembled.output)
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, round, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
         const findings = withBoundComposites(semantic.findings, boundComposites, surfaces) // T-0299
         compositeFindings.push(...semantic.findings.filter((f) => missingCompositeMoment(f.code) !== undefined)) // T-0330
         if (findings.length > 0 && round < opts.maxRounds - 1) {

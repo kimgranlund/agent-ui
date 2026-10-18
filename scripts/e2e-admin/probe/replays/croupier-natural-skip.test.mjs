@@ -8,6 +8,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseProbeFixture, stepSkip, TablePhase } from '../model.ts'
 import { CROUPIER_ROUND_SCENARIOS } from '../scenarios/croupier.ts'
+import { offlineReplay } from '../trace.ts'
 
 const fixtureOf = (name) => parseProbeFixture(readFileSync(new URL(`./${name}.json`, import.meta.url), 'utf8'))
 const stepsOf = (scenario) => CROUPIER_ROUND_SCENARIOS.find((s) => s.name === scenario).steps
@@ -48,4 +49,13 @@ describe.each([
     expect(skipped).toEqual([])
     expect(played).toBeGreaterThan(fixture.turns.length)
   })
+})
+
+// T-0350: turn 5 is :101, whose round-2 repair sent only updateDataModel, so table-2 settled with no Deal again.
+// DEAL_AGAIN_MISSING now sends it back; the fixture records no clean round, so the replay ships it tallied.
+it('croupier-pontoon-natural-skip: the settled natural with no Deal again gets DEAL_AGAIN_MISSING', async () => {
+  const report = await offlineReplay(fixtureOf('croupier-pontoon-natural-skip'), process.cwd())
+  expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
+  const trace = report.records[5].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(trace.failureCodes).toEqual(['DEAL_AGAIN_MISSING', 'SEMANTIC_UNCORRECTED'])
 })

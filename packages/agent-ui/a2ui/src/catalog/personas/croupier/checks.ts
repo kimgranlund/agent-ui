@@ -598,11 +598,79 @@ function movesMissing(view: SurfaceView): SemanticFinding[] {
   return findings
 }
 
-/** T-0172: one bet, one set of bet controls (the CardTable's own strip); T-0233: a playing table offers the moves. */
+/** T-0350: a press opens the next round when its context says `newRound: true` or its name is a new round; the one
+ *  predicate the forward a settled table offers and the next turn's checks of that press share. */
+const isNewRound = (name: string, context: unknown): boolean =>
+  (typeof context === 'object' && context !== null && (context as { newRound?: unknown }).newRound === true) || NEW_ROUND_ACTION.test(name)
+
+/** A Button whose press is a new round (`isNewRound`), in either action form. */
+function offersNextRound(comp: A2uiComponent): boolean {
+  if (comp.component !== 'Button') return false
+  const a = comp['action'] as { context?: unknown; event?: { context?: unknown } } | undefined
+  return isNewRound(actionName(comp), a?.context ?? a?.event?.context)
+}
+
+/** The components a surface shows: those reachable from `root` through `children` (a list, or a template's
+ *  `componentId`) and `child`. An orphan in the merged map is not on screen. */
+function reachable(view: SurfaceView): A2uiComponent[] {
+  const seen = new Set<string>()
+  const out: A2uiComponent[] = []
+  const queue = ['root']
+  while (queue.length > 0) {
+    const id = queue.shift()!
+    const comp = view.components.get(id)
+    if (seen.has(id) || comp === undefined) continue
+    seen.add(id)
+    out.push(comp)
+    const kids = comp['children']
+    if (Array.isArray(kids)) queue.push(...kids.filter((k): k is string => typeof k === 'string'))
+    else if (isRecord(kids) && typeof kids['componentId'] === 'string') queue.push(kids['componentId'])
+    if (typeof comp['child'] === 'string') queue.push(comp['child'])
+  }
+  return out
+}
+
+/** T-0350 (round 10 :101): round 1 settled a pontoon on table-2 with its Deal again Button, the checks rejected it,
+ *  and the repair sent only `updateDataModel`, so the bare CardTable (no bet strip once settled) shipped with no way
+ *  to the next round. A table this turn settles (it reads settled now, and the surface or the table is new this turn
+ *  or read another phase before, literal or bound) needs a forward: a new-round Button reachable on a surface this
+ *  turn touches, or another touched blackjack-family surface whose CardTable has opened the next round (its phase
+ *  resolves to betting or playing, as a Deal again answer that closes table-1 and opens table-2 does). */
+function dealAgainMissing(surfaces: readonly SurfaceView[], round: number | undefined): SemanticFinding[] {
+  if (surfaces.some((view) => reachable(view).some(offersNextRound))) return []
+  const opened = (view: SurfaceView): boolean =>
+    !namesOtherGame([...view.components.values()]) &&
+    reachable(view).some((c) => c.component === 'CardTable' && ['betting', 'playing'].includes(stringProp(view, c, 'phase')))
+  const findings: SemanticFinding[] = []
+  for (const view of surfaces) {
+    if (namesOtherGame([...view.components.values()]) || surfaces.some((other) => other !== view && opened(other))) continue
+    for (const table of reachable(view)) {
+      if (table.component !== 'CardTable' || phaseOf(table, view.dataModel) !== 'settled') continue
+      const before = view.priorComponents?.get(table.id)
+      if (before !== undefined && phaseOf(before, view.priorDataModel) === 'settled') continue
+      findings.push({
+        code: 'DEAL_AGAIN_MISSING',
+        path: `${view.surfaceId}:${table.id}`,
+        message:
+          `${view.surfaceId}'s ${table.id} is settled, and the surface holds no Deal again Button, so the player has no way to the next round. ` +
+          `${round !== undefined && round > 0 ? 'Components sent only in an answer the checks rejected never reached the player. ' : ''}` +
+          `Send updateComponents for ${view.surfaceId} in this answer: the CardTable with one Deal again Button child whose action carries "context":{"newRound":true}, ` +
+          `with the settled updateDataModel (phase "settled" and the bankroll) beside it.`,
+      })
+    }
+  }
+  return findings
+}
+
+/** T-0172: one bet, one set of bet controls (the CardTable's own strip); T-0233: a playing table offers the moves.
+ *  T-0350: a table this turn settles offers Deal again. */
 export const croupierBetControls: SemanticCheck = {
   id: 'croupier-bet-controls',
   requires: ['CardTable'],
-  check: (input) => input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view), ...movesMissing(view)]),
+  check: (input) => [
+    ...input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view), ...movesMissing(view)]),
+    ...dealAgainMissing(input.surfaces, input.round),
+  ],
 }
 
 const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
@@ -672,7 +740,7 @@ function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticActi
  *  the bankroll. Haiku 5.5 answered a 50 press with prose ("dealt you 9 and 7 for 16") and no update, so the
  *  table stayed in betting; Sonnet 5.5 dealt and wrote a bankroll of 500 from 1,000 after a 50 bet. */
 function actionApplied(surfaces: readonly SurfaceView[], action: SemanticAction): SemanticFinding[] {
-  if (action.context['newRound'] === true || NEW_ROUND_ACTION.test(action.name)) return newRoundFindings(surfaces, action)
+  if (isNewRound(action.name, action.context)) return newRoundFindings(surfaces, action)
   const deal = DEAL_ACTION.test(action.name)
   const view = surfaces.find((v) => v.surfaceId === action.surfaceId)
   const pontoonMove = view !== undefined && gameRules(view).game === 'pontoon' && PONTOON_MOVE_ACTION.test(action.name)
@@ -972,7 +1040,7 @@ function duplicateCards(view: SurfaceView): SemanticFinding[] {
  *  keeps its rank and suit, face down or turned up (Haiku 5.5 Omaha swapped its hole cards mid-hand and settled on
  *  the swap). A draw game's redraw and a new round replace cards, so neither is judged. */
 function changedHoleCards(view: SurfaceView, action: SemanticAction): SemanticFinding[] {
-  if (view.surfaceId !== action.surfaceId || action.context['newRound'] === true || NEW_ROUND_ACTION.test(action.name)) return []
+  if (view.surfaceId !== action.surfaceId || isNewRound(action.name, action.context)) return []
   if (DRAW_GAMES.test(literalWords(view.components.values()))) return []
   const findings: SemanticFinding[] = []
   for (const before of deckCards(action.dataModel, '', [])) {

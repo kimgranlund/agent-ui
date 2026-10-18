@@ -20,6 +20,7 @@ import {
   personaCroupierCardTableBettingSeed,
   personaCroupierCardTableSeed,
   personaCroupierCardTableSettledSeed,
+  personaBasicCroupierCardTableSettledSeed,
 } from '../../../examples/persona-exemplars.ts'
 
 const catalog = composeCatalog(defaultCatalog, croupierFragment, 'croupier')
@@ -598,10 +599,126 @@ describe('croupier bet controls: a playing table offers the moves (T-0233)', () 
   })
 
   it('a settled, betting, natural or bust table has no moves to offer and passes', () => {
-    expect(run(payload([table([])], { phase: 'settled', playerHand: [C('9'), C('7')] }))).toEqual([])
+    // T-0350: a table this payload settles still offers Deal again.
+    expect(run(payload([table(['again']), { ...button('again', 'Deal again'), action: { action: 'deal', context: { newRound: true } } }], { phase: 'settled', playerHand: [C('9'), C('7')] }))).toEqual([])
     expect(run(payload([table([])], { phase: 'betting', playerHand: [], dealerHand: [] }))).toEqual([])
     expect(run(payload([table([])], { phase: 'playing', playerHand: [C('A'), C('K')] }))).toEqual([])
     expect(run(payload([table([])], { phase: 'playing', playerHand: [C('K'), C('8'), C('5')] }))).toEqual([])
+  })
+})
+
+// T-0350: round 10 :101 (regress-croupier-pontoon-haiku-1). Round 1 settled a pontoon on table-2 with dealAgainBtn2;
+// the round-2 repair sent only updateDataModel, so the bare CardTable (no bet strip once settled) shipped with no way on.
+describe('croupier bet controls: a table this turn settles offers Deal again (T-0350)', () => {
+  const C = (rank: string, suit = 'hearts') => ({ rank, suit })
+  const binds = { dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, dealerTotal: { path: '/dealerTotal' }, playerTotal: { path: '/playerTotal' }, bankroll: { path: '/bankroll' }, bet: { path: '/bet' }, phase: { path: '/phase' }, status: { path: '/status' } }
+  const table = (children?: string[], title = 'Pontoon') => ({ id: 'root', component: 'CardTable', title, ...binds, betAction: 'deal', ...(children ? { children } : {}) })
+  const betting = () => ({ bankroll: 1100, bet: 0, dealerHand: [], dealerTotal: '', playerHand: [], playerTotal: 0, phase: 'betting', status: 'Place your stake to deal' })
+  const settledData = { bankroll: 1300, bet: 0, dealerHand: [C('7'), C('9', 'clubs')], dealerTotal: 16, playerHand: [C('A', 'spades'), C('Q', 'diamonds')], playerTotal: 21, phase: 'settled', status: "Pontoon! Your A and Q beat the dealer's 16. You win 200, bankroll 1,300." }
+  const open = (sid: string, components: Record<string, unknown>[], value: Record<string, unknown>): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: sid, value } },
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components } },
+  ] as A2uiOutput
+  const data = (sid: string, value: Record<string, unknown>) => ({ version: 'v1.0', updateDataModel: { surfaceId: sid, value } })
+  const comps = (sid: string, components: Record<string, unknown>[]) => ({ version: 'v1.0', updateComponents: { surfaceId: sid, components } })
+  const again = (id: string, action: Record<string, unknown> = { action: 'deal', context: { newRound: true } }) => ({ id, component: 'Button', label: 'Deal again', variant: 'solid', action })
+  const session = (...turns: A2uiOutput[]): Session => ({ turns: turns.flatMap((t) => [{ role: 'user', content: 'go' }, { role: 'assistant', content: toJsonl(t) }]) })
+  const run = (sess: Session, output: readonly unknown[]) =>
+    croupierBetControls.check({ surfaces: semanticSurfaceViews(sess, output as A2uiOutput) }).filter((f) => f.code === 'DEAL_AGAIN_MISSING').map((f) => [f.code, f.path])
+  // The :100 turn: table-2 opens in betting, a bare CardTable root whose bet strip deals.
+  const turn100 = session(open('table-2', [table()], betting()))
+
+  it('the :101 shipped round 2 (only updateDataModel, phase settled) is DEAL_AGAIN_MISSING', () => {
+    const findings = croupierBetControls.check({ surfaces: semanticSurfaceViews(turn100, [data('table-2', settledData)] as A2uiOutput) })
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['DEAL_AGAIN_MISSING', 'table-2:root']])
+    expect(findings[0]!.message).toMatch(/no Deal again Button/)
+    expect(findings[0]!.message).toMatch(/"newRound":true/)
+  })
+
+  it('the repair names the rejected answer only on a round after one was rejected', () => {
+    const message = (round?: number) =>
+      croupierBetControls.check({ surfaces: semanticSurfaceViews(turn100, [data('table-2', settledData)] as A2uiOutput), ...(round !== undefined ? { round } : {}) })[0]!.message
+    expect(message(1)).toMatch(/an answer the checks rejected never reached the player/)
+    expect(message(0)).not.toMatch(/rejected/)
+    expect(message()).not.toMatch(/rejected/)
+  })
+
+  it('the repair asks for the settled data model with the components: a components-only repair is BET_CONTROL_DUPLICATE, the full one passes every check', () => {
+    expect(croupierBetControls.check({ surfaces: semanticSurfaceViews(turn100, [data('table-2', settledData)] as A2uiOutput) })[0]!.message).toMatch(/updateDataModel \(phase "settled" and the bankroll\)/)
+    const all = (output: unknown[]) => croupierSemanticChecks.flatMap((c) => c.check({ surfaces: semanticSurfaceViews(turn100, output as A2uiOutput) })).map((f) => f.code)
+    const button = comps('table-2', [table(['dealAgainBtn2']), again('dealAgainBtn2')])
+    expect(all([button])).toContain('BET_CONTROL_DUPLICATE')
+    expect(all([data('table-2', settledData), button])).toEqual([])
+  })
+
+  it('the :101 round 1 shape (dealAgainBtn2 a child of the table) passes', () => {
+    expect(run(turn100, [data('table-2', settledData), comps('table-2', [table(['dealAgainBtn2']), again('dealAgainBtn2')])])).toEqual([])
+  })
+
+  it('a table settled in a turn before this one is not judged again, literal or bound, with or without a prior data model', () => {
+    const settledBare = session(open('table-2', [table()], betting()), [data('table-2', settledData)] as A2uiOutput)
+    expect(run(settledBare, [data('table-2', { ...settledData, status: 'Bankroll 1,300.' })])).toEqual([])
+    const literal = { ...table([]), phase: 'settled' }
+    const noData = session([{ version: 'v1.0', createSurface: { surfaceId: 'table-2', catalogId: 'agent-ui--croupier' } }, comps('table-2', [literal])] as A2uiOutput)
+    expect(run(noData, [comps('table-2', [literal])])).toEqual([])
+  })
+
+  it('a table that turns from a bound phase to a literal settled this turn is judged', () => {
+    expect(run(turn100, [comps('table-2', [{ ...table([]), phase: 'settled' }])])).toEqual([['DEAL_AGAIN_MISSING', 'table-2:root']])
+  })
+
+  it('the r10 :38 shape: table-2 settles with its Deal again beside the prior-settled table-1 resent with children []', () => {
+    const prior = session(open('table-1', [table([])], settledData))
+    const out = [...open('table-2', [table(['again2']), again('again2')], settledData), comps('table-1', [table([])])]
+    expect(run(prior, out)).toEqual([])
+  })
+
+  it('the r9 :190 shape: table-1 resent settled and bare beside table-3 playing is handed on', () => {
+    // table-1's earlier turn played (no new-round Button anywhere), so only the handed-on rule can pass it.
+    const prior = session(open('table-1', [table(['hit']), { id: 'hit', component: 'Button', label: 'Hit', action: { action: 'hit' } }], { ...settledData, phase: 'playing' }))
+    const playing = { ...settledData, phase: 'playing', playerHand: [C('9'), C('7')], dealerHand: [C('10'), { ...C('6'), faceDown: true }] }
+    const handedOn = [data('table-1', settledData), comps('table-1', [table([])]), ...open('table-3', [table(['hit3']), { id: 'hit3', component: 'Button', label: 'Hit', action: { action: 'hit' } }], playing)]
+    expect(run(prior, handedOn)).toEqual([])
+    expect(run(prior, [data('table-1', settledData), comps('table-1', [table([])])])).toEqual([['DEAL_AGAIN_MISSING', 'table-1:root']])
+  })
+
+  it('a Deal again answer that closes table-1 and opens table-2 in betting passes', () => {
+    const prior = session(open('table-1', [table(['hit']), { id: 'hit', component: 'Button', label: 'Hit', action: { action: 'hit' } }], { ...settledData, phase: 'playing' }))
+    expect(run(prior, [data('table-1', settledData), comps('table-1', [table([])]), ...open('table-2', [table()], betting())])).toEqual([])
+  })
+
+  it('a table beside it whose phase is unbound or absent, or a poker table, has not opened the next round', () => {
+    const settle = [data('table-2', settledData)]
+    const { phase: _phase, ...noPhase } = table()
+    expect(run(turn100, [...settle, ...open('table-3', [{ ...noPhase, title: 'Pontoon' }], betting())])).toEqual([['DEAL_AGAIN_MISSING', 'table-2:root']])
+    expect(run(turn100, [...settle, ...open('table-3', [{ ...table(), phase: { path: '/nowhere' } }], betting())])).toEqual([['DEAL_AGAIN_MISSING', 'table-2:root']])
+    expect(run(turn100, [...settle, ...open('table-3', [table(undefined, "Texas hold'em")], { ...betting(), phase: 'playing' })])).toEqual([['DEAL_AGAIN_MISSING', 'table-2:root']])
+    expect(run(turn100, [...settle, ...open('table-3', [{ ...table(), phase: 'betting' }], {})])).toEqual([])
+  })
+
+  it('a Deal again orphaned off the root does not count; one on another surface this turn touches does', () => {
+    expect(run(turn100, [data('table-2', settledData), comps('table-2', [table(), again('stray')])])).toEqual([['DEAL_AGAIN_MISSING', 'table-2:root']])
+    const elsewhere = [data('table-2', settledData), ...open('next-1', [{ id: 'root', component: 'Column', children: ['go'] }, again('go')], {})]
+    expect(run(turn100, elsewhere)).toEqual([])
+  })
+
+  it('the settled seeds (action dealAgain; a2ui-basic event deal_again with a Text child label) pass', () => {
+    expect(run({ turns: [] }, personaCroupierCardTableSettledSeed.messages)).toEqual([])
+    expect(run({ turns: [] }, personaBasicCroupierCardTableSettledSeed.messages)).toEqual([])
+  })
+
+  it('a forward is a press the next turn treats as a new round: a newRound context or a new-round action name, never a label alone', () => {
+    const settle = (button: Record<string, unknown>) => run(turn100, [data('table-2', settledData), comps('table-2', [table(['b']), { id: 'b', component: 'Button', ...button }])])
+    expect(settle({ label: 'Go', action: { action: 'new_round' } })).toEqual([])
+    expect(settle({ label: 'Go', action: { event: { name: 'go', context: { newRound: true } } } })).toEqual([])
+    expect(settle({ label: 'Next hand', action: { action: 'go' } })).toEqual([['DEAL_AGAIN_MISSING', 'table-2:root']])
+    expect(settle({ label: 'History', action: { action: 'history' } })).toEqual([['DEAL_AGAIN_MISSING', 'table-2:root']])
+  })
+
+  it('a surface that names a poker game is never judged', () => {
+    const poker = session(open('table-2', [table(undefined, "Texas hold'em")], betting()))
+    expect(run(poker, [data('table-2', settledData)])).toEqual([])
   })
 })
 

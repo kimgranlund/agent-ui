@@ -605,10 +605,15 @@ const PROBES: Record<string, readonly Fixture[]> = {
   ],
   'fleet-concede': [{ catalog: UI, session: fleetSession, intent: 'I concede.', target: 'waters-1', output: [] }],
   // T-0323: DEALT_IN_BETTING's two arms (round 8 :61 round 2 keeps the moves, :65 round 1 asks for them) and the
-  // poker arms of the new-round and opening repair texts.
+  // poker arms of the new-round and opening repair texts. T-0350: DEAL_AGAIN_MISSING, a table settled by data alone.
   'croupier-bet-controls': [
     { catalog: CROUPIER, output: dealtPoker(['checkBtn', 'betBtn', 'foldBtn']) },
     { catalog: CROUPIER, output: dealtPoker() },
+    {
+      catalog: CROUPIER,
+      session: tableSession,
+      output: [data('table-1', { ...BETTING, bankroll: 1100, bet: 0, phase: 'settled', dealerHand: [{ rank: '7', suit: 'hearts' }, { rank: '9', suit: 'clubs' }], playerHand: [{ rank: 'A', suit: 'spades' }, { rank: 'Q', suit: 'diamonds' }] })],
+    },
   ],
 }
 
