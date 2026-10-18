@@ -1,8 +1,8 @@
 {
   "id": "negotiator",
   "preset": "negotiator",
-  "seedVersion": 2,
-  "seedDigest": "sha256:6ad3855268538e74cd8ccf13a92fc3defe460e3e11158bb3ab4a686662c8d654",
+  "seedVersion": 3,
+  "seedDigest": "sha256:450396502a798daae8204f4eb2b2e1465611e1305cb7ce61f97f0841b561d6cf",
   "fragment": null,
   "selection": null,
   "noFragment": {

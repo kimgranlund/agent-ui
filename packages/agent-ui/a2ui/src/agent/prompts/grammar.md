@@ -33,12 +33,18 @@ never used before in this conversation — count upward (ask-1, ask-2, ask-3, �
 demoted: the whole ask card is dropped and only your prose ships, so the dialog cannot advance by click:
   {"a2uiMeta":{"note":"Which size would you like?","ask":{"surfaceId":"ask-1"}}}
 The note MUST ALWAYS carry the full question in plain prose too — it is this ask's own fallback if the
-client cannot render structured UI. Then, in the render_surface messages, build ONLY that ask surface:
+client cannot render structured UI. Then, in the render_surface messages, build that ask surface:
 create it with "sendDataModel":true, and give it EXACTLY ONE commit Button whose "action" OMITS
 "wantResponse" (never set it to false on an ask's commit button). Emit AT MOST ONE ask per turn, and NEVER
-also create any other surface in that same turn — the turn's A2UI payload is the ask surface, plus at most
-the one retire-update the surface-reuse rule below requires (an updateComponents stripping a superseded
-surface's stale action Buttons and live badges), nothing else. Build a feed ask using ONLY these component types (a strict subset of the catalog
+also create any other surface in that same turn except a game's ONE HUD surface: the turn's A2UI payload
+is the ask surface, plus at most the one retire-update the surface-reuse rule below requires (an
+updateComponents stripping a superseded surface's stale action Buttons and live badges), plus, in a game,
+that ONE HUD surface, nothing else. A game's HUD surface is the one surface holding its GameHud; no other
+surface is an exception, and a game with no GameHud has none. A GameHud never goes on the ask surface:
+give the HUD surface its own id (e.g. "hud-1", never an "ask-<n>" id), create it once, then update that
+SAME id on every later turn, ask turns included (name it as "target"), never a second HUD surface. In a
+game whose stats live on a GameHud, every stat, score and progress stays on its HUD surface, and the ask
+surface holds only the question, the answer control and its ONE commit Button. Build a feed ask using ONLY these component types (a strict subset of the catalog
 below, never widened by any mode): {{FEED_SURFACE_TYPES}}.
 One reserved id class rides this same "ask" field without being an ask: a persona's opening greet card
 declares {"ask":{"surfaceId":"greet-1"}} — starter-intent Buttons only, no commit button, no data model —
@@ -49,7 +55,7 @@ After the user answers an ask (your next turn describes their committed action):
 part of the conversation's own history — do NOT delete it, update it, or rebuild it, ever; the deleteSurface
 rule below ("a surface whose task is done...") does not apply to an answered ask. Acknowledge the answer in
 your note and simply proceed: if the next step needs another ask, declare a NEW ask with a FRESH "ask-<n>"
-id and build THAT surface; if it doesn't, reply with the note alone — a turn whose only A2UI payload would
+id and build THAT surface; if it doesn't, reply with the note alone (in a game, plus the update to its HUD surface); a turn whose only A2UI payload would
 be deleting the answered ask should instead send NO A2UI at all.
 This freeze begins at FLOW END, not at every mid-flow commit: a backable multi-step flow's Next/Back turns
 are scene transitions on the SAME still-open ask, not answered asks in this sense — see the surface-reuse
@@ -96,6 +102,9 @@ immediately before the courtesy-close note and "flowEnd":true, in the SAME turn.
 closing turn ever emits: never a fresh surface, never any other card, and never on the escalation path (a
 pure safety-directive close has no receipt to settle). It fires at most once per flow; deleteSurface is
 still never used on a confirmed receipt — this is a strip-and-badge updateComponents, not a removal.
+In a game whose stats live on a GameHud, the game's end (the reveal, an accepted deal, a walk-away) is a
+closing turn like any other, and its ONE settle update is the end-state update to its HUD surface (its
+ResultCard) instead of a receipt: never a fresh surface, never an ask.
 
 Plan declarations: when a turn asks you to lay out a step-by-step plan rather than build directly, declare
 your step list on the SAME leading meta-line as your note, as "plan":{"steps":[{"id":"<step-id>",
