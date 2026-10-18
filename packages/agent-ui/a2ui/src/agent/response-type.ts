@@ -137,12 +137,19 @@ const TEXT_PHRASES = ['just tell me', 'no card', 'text only', "don't show", 'ski
 const SURFACE_PHRASES = ['as a card', 'as a table', 'as a chart']
 /** These count only when a surface noun heads the phrase ("show me a pricing table"): optional article, up to two modifiers. */
 const GATED_SURFACE_VERBS = ['show me', 'build me', 'build', 'make me']
+/** The verbs that make a build ask: with these an owned noun needs no modifier ("build me a form"). */
+const BUILD_VERBS = ['build me', 'build', 'make me']
+/** T-0354: the modifiers that make "show me a <modifier> card" an explicit format ask where a catalog owns the noun. */
+const FORMAT_MODIFIERS = [
+  'summary', 'status', 'profile', 'info', 'stats', 'pricing', 'comparison', 'score', 'report', 'contact',
+  'signup', 'login', 'feedback', 'settings',
+]
 const SURFACE_NOUNS = [
   'form', 'card', 'table', 'chart', 'dashboard', 'panel', 'survey', 'calculator',
   'checklist', 'widget', 'page', 'screen', 'list', 'plans', 'tabs', 'wizard', 'diagram',
 ]
-/** Words that open a question or clause, never a modifier of the surface noun ("show me how a table join works"). */
-const NON_MODIFIERS = ['how', 'what', 'why', 'where', 'when', 'a', 'an', 'the', 'some', 'my', 'your', 'our']
+/** Words that open a question or clause, never a modifier of the surface noun ("show me how a table join works", "a deck of cards"). */
+const NON_MODIFIERS = ['how', 'what', 'why', 'where', 'when', 'a', 'an', 'the', 'some', 'my', 'your', 'our', 'of']
 /** What may follow the head noun: the end, punctuation, or a preposition; "list of" and "of contents" never. */
 const NOUN_END = "(?=\\s*(?:$|[.,!?;:])|\\s+(?:of|for|with|to|that|which|as|from|in|on|about|please|and|so|using|showing)\\b)"
 
@@ -167,6 +174,19 @@ export function domainSurfaceNouns(catalogTypes: readonly string[]): readonly st
   return [...nouns].sort()
 }
 
+/** The words that lead an owned noun inside a domain type's own name ("booking" in BookingForm, "playing" in PlayingCard). */
+function domainLeadWords(catalogTypes: readonly string[]): readonly string[] {
+  const words = new Set<string>()
+  for (const type of catalogTypes) {
+    const row = Object.hasOwn(CATALOG_LAYER_MAP, type) ? CATALOG_LAYER_MAP[type]! : undefined
+    if (row?.layer !== 'domain' || row.home === 'default') continue
+    const parts = (type.match(/[A-Z][a-z]+|[A-Z]+(?![a-z])|[a-z]+/g) ?? []).map((p) => p.toLowerCase())
+    const at = parts.findIndex((p) => SURFACE_NOUNS.includes(p))
+    for (const part of at > 0 ? parts.slice(0, at) : []) words.add(part)
+  }
+  return [...words].sort()
+}
+
 interface Lexicon {
   text: RegExp
   surface: RegExp
@@ -174,10 +194,19 @@ interface Lexicon {
 
 const lexicons = new Map<string, Lexicon>()
 
-/** The text and surface lexicons with `owned` nouns removed: out of the gated rule, out of the "as a ..." phrases and out of "no card".
- *  A phrase that opens on an owned noun may still lead into another surface ask ("show me the hole card and a pricing chart"). */
-function lexiconFor(owned: readonly string[]): Lexicon {
-  const key = owned.join(',')
+/** The head noun and what may follow it, shared by every gated branch: plural allowed, "list of" and "of contents" never. */
+function nounTail(nouns: readonly string[]): string {
+  const rest = nouns.filter((n) => n !== 'list')
+  return `(?:${nouns.includes('list') ? 'list(?!\\s+of\\b)|' : ''}${alt(rest)})s?(?!\\s+of\\s+contents)${NOUN_END}`
+}
+
+/** The text and surface lexicons. An `owned` noun (one the catalog's domain types name) leaves the open gated rule and
+ *  the "no card" text phrase; it still counts as a surface only under an explicit format signal: a build verb with
+ *  "a" or "an" ("build me a form"), or "show me a" plus a format modifier ("show me a summary card", "show me a
+ *  booking form"). A phrase that opens on an owned noun may still lead into another surface ask ("show me the hole
+ *  card and a pricing chart"). */
+function lexiconFor(owned: readonly string[], leads: readonly string[]): Lexicon {
+  const key = `${owned.join(',')}|${leads.join(',')}`
   let lex = lexicons.get(key)
   if (lex === undefined) {
     const nouns = SURFACE_NOUNS.filter((n) => !owned.includes(n))
@@ -185,12 +214,21 @@ function lexiconFor(owned: readonly string[]): Lexicon {
     const article = '(?:(?:a|an|the|some)\\s+)?'
     const lead =
       owned.length === 0 ? '' : `(?:${article}${modifiers}{0,2}${alt(owned)}s?\\s+and\\s+)?`
-    const gated =
-      `${alt(GATED_SURFACE_VERBS)}\\s+${lead}${article}${modifiers}{0,2}` +
-      `(?:${nouns.includes('list') ? 'list(?!\\s+of\\b)|' : ''}${alt(nouns.filter((n) => n !== 'list'))})s?(?!\\s+of\\s+contents)${NOUN_END}`
-    const phrases = SURFACE_PHRASES.filter((p) => !owned.some((n) => p.endsWith(` ${n}`)))
+    const branches = [
+      `${alt(GATED_SURFACE_VERBS)}\\s+${lead}${article}${modifiers}{0,2}${nounTail(nouns)}`,
+    ]
+    if (owned.length > 0) {
+      const format = `(?:(?:${alt([...FORMAT_MODIFIERS, ...leads])})\\s+)`
+      branches.push(
+        `${alt(BUILD_VERBS)}\\s+an?\\s+${format}{0,2}${nounTail(owned)}`,
+        `show me\\s+an?\\s+${format}{1,2}${nounTail(owned)}`,
+      )
+    }
     const textPhrases = TEXT_PHRASES.filter((p) => !owned.some((n) => p === `no ${n}`))
-    lex = { text: lexicon(alt(textPhrases)), surface: lexicon(`(?:${alt(phrases)}|${gated})`) }
+    lex = {
+      text: lexicon(alt(textPhrases)),
+      surface: lexicon(`(?:${alt(SURFACE_PHRASES)}${NOUN_END}|${branches.join('|')})`),
+    }
     lexicons.set(key, lex)
   }
   return lex
@@ -201,7 +239,7 @@ function lexiconFor(owned: readonly string[]): Lexicon {
 export function detectUserOverride(input: TurnInput, catalogTypes?: readonly string[]): 'text' | 'surface' | undefined {
   if (input.kind !== 'intent') return undefined
   const text = input.text.replace(/’/g, "'")
-  const lex = lexiconFor(catalogTypes === undefined ? [] : domainSurfaceNouns(catalogTypes))
+  const lex = catalogTypes === undefined ? lexiconFor([], []) : lexiconFor(domainSurfaceNouns(catalogTypes), domainLeadWords(catalogTypes))
   if (lex.text.test(text)) return 'text'
   if (lex.surface.test(text)) return 'surface'
   return undefined
