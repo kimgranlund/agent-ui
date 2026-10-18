@@ -25,6 +25,10 @@
 // T-0333: the BookingConfirmation row reads its settled words only from status signals (`settledSignals`), so a caption
 // that says "confirmed" or "booked" is no hand-built confirmation (round 9 cluster G), and the BookingForm row stands aside
 // for a surface that already holds one.
+//
+// T-0358: the GameHud row's `statStrip` reads a surface with no BoardGrid: two or more game-stat items (HP, gold, mood,
+// asking price, confidence, questions) in Badges, Stats, Progress labels or DescriptionList rows are a hand-built HUD
+// (the Mentalist, the Negotiator and the Dungeon Master, smoke round 2026-10-18-smoke).
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -43,6 +47,9 @@ export interface CompositeMoment {
   readonly lacks: readonly string[]
   /** The surface must hold one of these types. */
   readonly has?: readonly string[]
+  /** T-0358: or, with none of `has` present, at least `min` stat items (a component of `types`, or a DescriptionList row)
+   *  whose words name game state (`cue`): the hand-built score strip of a game with no board. */
+  readonly statStrip?: { readonly types: readonly string[]; readonly cue: RegExp; readonly min: number }
   /** Over the surface words. */
   readonly words?: RegExp
   /** Read words only from components of these types. */
@@ -148,6 +155,8 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     requires: ['BoardGrid'],
     lacks: [],
     has: ['BoardGrid'],
+    // T-0358: the Mentalist, the Negotiator and the Dungeon Master play with no board (smoke round 2026-10-18-smoke).
+    statStrip: { types: ['Badge', 'Stat', 'Progress'], cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries)\b/i, min: 2 },
     wordTypes: ['Text', 'Badge', 'Stat'],
     words: /\b(guess|guesses|shot|shots|ship|ships|remaining|score|attempt|attempts|tries)\b/i,
   },
@@ -238,12 +247,29 @@ function submitsReadBack(c: A2uiComponent, view: SurfaceView, rb: NonNullable<Co
   return name !== 'start_intent' && rb.cue.test(buttonWords(c, view))
 }
 
+/** T-0358: the components holding at least `min` game-stat items (a `types` component's label, title or text, literal or
+ *  bound, or a DescriptionList row), or `[]`. */
+function statStrays(strip: NonNullable<CompositeMoment['statStrip']>, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
+  let items = 0
+  const found: A2uiComponent[] = []
+  for (const c of comps) {
+    const texts = strip.types.includes(c.component)
+      ? [['label', 'title', 'text'].map((k) => stringOf(c[k], view)).join(' ')]
+      : c.component === 'DescriptionList' ? rowTexts(c, view) : []
+    const hits = texts.filter((t) => strip.cue.test(t)).length
+    if (hits === 0) continue
+    items += hits
+    found.push(c)
+  }
+  return items >= strip.min ? found : []
+}
+
 /** The components of `view` that hand-build `m`'s moment, or `[]` when the row does not fire. */
 function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefined): A2uiComponent[] {
   const comps = [...view.components.values()]
   const types = new Set(comps.map((c) => c.component))
   if ([m.composite, ...m.lacks].some((t) => types.has(t))) return []
-  if (m.has !== undefined && !m.has.some((t) => types.has(t))) return []
+  if (m.has !== undefined && !m.has.some((t) => types.has(t))) return m.statStrip === undefined ? [] : statStrays(m.statStrip, comps, view)
   if (m.noInputs !== undefined && m.noInputs.some((t) => types.has(t))) return []
   // The composite's and the required types' own props never count as words.
   const own = new Set([m.composite, ...(m.requires ?? [])])

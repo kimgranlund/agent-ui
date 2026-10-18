@@ -9,12 +9,17 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0358. Haiku 5.5 built the deal sheet from a Card and a DescriptionList with no GameHud, which the
-// `deal-sheet` skill names for the asking price, offer and mood. The GameHud composite moment fires only on a surface
-// holding a BoardGrid (`has`, `composite-moments.ts`), so no producer check sends the turn back.
-it('smoke-negotiator-first-offer-haiku: a hand-built deal sheet with no GameHud fails expect-component on both turns', async () => {
+// T-0358 (fixed). Haiku 5.5 built the deal sheet from a Card and a DescriptionList with no GameHud, which the
+// `deal-sheet` skill names for the asking price, offer and mood. The GameHud composite moment now fires on a board-less
+// game-stat strip (`statStrip`, `composite-moments.ts`) and sends turn 0 back with GAME_HUD_MISSING; turn 0's second
+// round is AUTHORED to that repair (the live turn never reached it): the sheet as ONE GameHud with the asking price,
+// offer and mood as stats, its ask dropped. Turn 1's recorded rounds are fed IDGRAPH twice; its third round is AUTHORED
+// to keep the GameHud in place of the re-sent DescriptionList.
+it('smoke-negotiator-first-offer-haiku: GAME_HUD_MISSING sends the deal sheet back and the GameHud ships', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-negotiator-first-offer-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['expect-component', 1], ['expect-component', null]])
-  expect(report.failed.at(-1).detail).toBe('missing GameHud (shipped Card, CardHeader, Text, Badge, CardContent, DescriptionList, Field, TextField, CardFooter, Button, Row)')
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([])
+  const lines = report.records[0].lines.map((l) => JSON.parse(l))
+  expect(lines.map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)).toMatchObject({ rounds: 2, failureCodes: ['GAME_HUD_MISSING'] })
+  expect(lines.flatMap((l) => l.updateComponents?.components ?? []).map((c) => c.component)).toContain('GameHud')
 })

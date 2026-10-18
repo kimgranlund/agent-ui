@@ -9,12 +9,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0358. Haiku 5.5 built the quest log from a Card, Rows and Badges with no GameHud or Timeline, which
-// the `quest-log` skill names. The GameHud composite moment fires only on a surface holding a BoardGrid (`has`,
-// `composite-moments.ts`), so no producer check sends the turn back.
-it('smoke-dungeon-master-first-scene-haiku: a hand-built quest log with no GameHud fails expect-component on both turns', async () => {
+// T-0358 (fixed). Haiku 5.5 built the quest log from a Card, Rows and Badges with no GameHud or Timeline, which the
+// `quest-log` skill names. The GameHud composite moment now fires on a board-less game-stat strip (`statStrip`,
+// `composite-moments.ts`) and sends turn 0 back with GAME_HUD_MISSING. Turn 0's second round is AUTHORED to that repair
+// as the skill reads (the live turn never reached it): the HP and Gold Badges as ONE GameHud and the scene list as a
+// Timeline. Turn 1 replays as recorded.
+it('smoke-dungeon-master-first-scene-haiku: GAME_HUD_MISSING sends the quest log back and the GameHud ships', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-dungeon-master-first-scene-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['expect-component', 1], ['expect-component', null]])
-  expect(report.failed.at(-1).detail).toBe('missing GameHud, Timeline (shipped Card, CardHeader, Text, CardContent, Row, Badge, Column, CardFooter, Button)')
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([])
+  const lines = report.records[0].lines.map((l) => JSON.parse(l))
+  expect(lines.map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)).toMatchObject({ rounds: 2, failureCodes: ['GAME_HUD_MISSING'] })
+  expect(lines.flatMap((l) => l.updateComponents?.components ?? []).map((c) => c.component)).toEqual(expect.arrayContaining(['GameHud', 'Timeline']))
 })

@@ -28,3 +28,10 @@ Found by T-0343's smoke round. Cause (read from the code, not yet proven by a te
 
 ## Constraints
 The failing test lands before or with the fix, never after. Re-pin the three replays to green in the fix's change (`scripts/e2e-admin/README.md`, Fixtures and regressions). A prompt-stack edit follows skill `a2ui-prompt-authoring`.
+
+## Acceptance criteria
+verifier: L3
+
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the recorded Mentalist, Negotiator and Dungeon Master score strips with no BoardGrid each yield exactly `GAME_HUD_MISSING`, the same strip beside a GameHud yields none, and one game-stat Badge, a KPI strip and inventory Badges yield none.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0, with the three smoke replays asserting `report.failed` empty and their `expectedFail: T-0358` pins removed; each header names its AUTHORED round.
+- `npm run check` exits 0.

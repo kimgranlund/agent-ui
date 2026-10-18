@@ -353,7 +353,7 @@
           ]
         },
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
+          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
           "tools": [
             {
               "name": "render_surface",
@@ -377,7 +377,18 @@
                           "spent": 0,
                           "spentLabel": "0 of 20",
                           "confidence": "Low, casting wide",
-                          "live": "Q1: Is it a living thing?"
+                          "live": "Q1: Is it a living thing?",
+                          "stats": [
+                            {
+                              "label": "Confidence",
+                              "value": "Low, casting wide"
+                            }
+                          ],
+                          "progress": {
+                            "value": 0,
+                            "max": 20,
+                            "label": "Questions used"
+                          }
                         },
                         "draft": {
                           "answer": ""
@@ -392,71 +403,27 @@
                       "components": [
                         {
                           "id": "root",
-                          "component": "Card",
-                          "elevation": "1",
+                          "component": "Column",
+                          "gap": "md",
                           "children": [
-                            "hd",
-                            "ct",
-                            "ft"
+                            "hud",
+                            "answer",
+                            "commit"
                           ]
                         },
                         {
-                          "id": "hd",
-                          "component": "CardHeader",
-                          "children": [
-                            "title",
-                            "spent_badge"
-                          ]
-                        },
-                        {
-                          "id": "title",
-                          "component": "Text",
-                          "text": "Twenty Questions",
-                          "variant": "h4"
-                        },
-                        {
-                          "id": "spent_badge",
-                          "component": "Badge",
-                          "label": {
-                            "path": "/hud/spentLabel"
-                          },
-                          "intent": "neutral",
-                          "slot": "trailing"
-                        },
-                        {
-                          "id": "ct",
-                          "component": "CardContent",
-                          "children": [
-                            "progress",
-                            "conf",
-                            "live",
-                            "answer"
-                          ]
-                        },
-                        {
-                          "id": "progress",
-                          "component": "Progress",
-                          "value": {
-                            "path": "/hud/spent"
-                          },
-                          "max": 20,
-                          "label": "Questions spent"
-                        },
-                        {
-                          "id": "conf",
-                          "component": "Stat",
-                          "label": "Confidence",
-                          "value": {
-                            "path": "/hud/confidence"
-                          }
-                        },
-                        {
-                          "id": "live",
-                          "component": "Text",
-                          "text": {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Twenty Questions",
+                          "status": {
                             "path": "/hud/live"
                           },
-                          "variant": "h5"
+                          "stats": {
+                            "path": "/hud/stats"
+                          },
+                          "progress": {
+                            "path": "/hud/progress"
+                          }
                         },
                         {
                           "id": "answer",
@@ -488,11 +455,6 @@
                           "component": "Segment",
                           "value": "sort_of",
                           "label": "Sort of"
-                        },
-                        {
-                          "id": "ft",
-                          "component": "CardFooter",
-                          "child": "commit"
                         },
                         {
                           "id": "commit",

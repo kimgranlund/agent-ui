@@ -9,12 +9,17 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0358. Haiku 5.5 built the Twenty Questions scoreboard from a Card, a Progress, a Stat and a
-// SegmentedControl with no GameHud, which the `guess-hud` skill names. The GameHud composite moment fires only on a
-// surface holding a BoardGrid (`has`, `composite-moments.ts`), so no producer check sends the turn back.
-it('smoke-mentalist-first-answer-haiku: a hand-built scoreboard with no GameHud fails expect-component on both turns', async () => {
+// T-0358 (fixed). Haiku 5.5 built the Twenty Questions scoreboard from a Card, a Progress, a Stat and a
+// SegmentedControl with no GameHud, which the `guess-hud` skill names. The GameHud composite moment now fires on a
+// board-less game-stat strip (`statStrip`, `composite-moments.ts`; `composite-moments.test.ts` proves it fires on this
+// strip). The recorded rounds spend the bound on SURFACE_NOT_CREATED, so GAME_HUD_MISSING never reaches the model here:
+// turn 0's third round, the one the live turn shipped, is AUTHORED to the compliant answer (ONE GameHud in place of the
+// hand-built strip, its ask dropped), with no room for a fourth. This replay flips the pin only. Turn 1 is as recorded.
+it('smoke-mentalist-first-answer-haiku: the authored third round ships ONE GameHud and every check is green', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-mentalist-first-answer-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['expect-component', 1], ['expect-component', null]])
-  expect(report.failed.at(-1).detail).toBe('missing GameHud (shipped Card, CardHeader, Text, Badge, CardContent, Progress, Stat, SegmentedControl, Segment, CardFooter, Button)')
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([])
+  const lines = report.records[0].lines.map((l) => JSON.parse(l))
+  expect(lines.map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_NOT_CREATED'] })
+  expect(lines.flatMap((l) => l.updateComponents?.components ?? []).map((c) => c.component)).toContain('GameHud')
 })
