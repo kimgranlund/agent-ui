@@ -35,3 +35,12 @@ The parts of T-0185 split out when its core shipped: Kim's composer split (2026-
 
 ## Constraints
 - No em dashes.
+
+## Acceptance criteria
+verifier: L3
+- `npm run check` exits 0.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/anthropic-request-body.test.ts packages/agent-ui/a2ui/src/live-agent/model-capabilities.test.ts` exits 0: web search and web fetch tool definitions (max uses, allowed or blocked domains, user location), the forced tool_choice guard, the per-message effort marker and the `mid-conversation-output-config-2026-07-01` beta header (body and wire).
+- `npx vitest run packages/agent-ui/app/src/controls/agent-admin packages/agent-ui/app/src/controls/conversation packages/agent-ui/a2ui/src/live-agent` exits 0: the effort menu offers "Thinking off" only where the model allows it at the current effort and "Show reasoning" where the row has a display choice, both reach the request; a server tool row appears only when the agent enables the tool, and switching it off drops the tool from the next request without writing the store.
+- `npm run e2e:admin` exits 0.
+- Screenshots of the composer effort menu, the capabilities panel with the server tool rows, and the settings Model section, viewed (`.sdlc/runtime/tasks/0203-composer-model-controls/evidence/`).
+- Conductor: a live probe with web search on shows a cited answer.

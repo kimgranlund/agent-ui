@@ -3,8 +3,8 @@
 // the `anthropic-sse.test.ts`/`parseAnthropicSSE` precedent, applied to the Effort dial (the Figma
 // chat-input refactor). The impure `stream()`/fetch arm stays MANUAL live acceptance only (SPEC-R3).
 
-import { describe, it, expect } from 'vitest'
-import { buildRequestBody } from '../agent/providers/anthropic.ts'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { buildRequestBody, anthropicBetas, anthropicProvider, MID_CONVERSATION_EFFORT_BETA } from '../agent/providers/anthropic.ts'
 import { MODEL_CAPABILITIES } from '../agent/model-capabilities.ts'
 
 const BASE = { model: 'claude-sonnet-5-5', system: 'be helpful', messages: [] }
@@ -148,5 +148,131 @@ describe('buildRequestBody — the Effort dial → Anthropic extended-thinking m
     expect(body['system']).toBe('a prompt')
     expect(body['messages']).toEqual([{ role: 'user', content: 'hi' }])
     expect(body['stream']).toBe(true)
+  })
+})
+
+describe('T-0203: server tools and the mid-conversation effort beta', () => {
+  const TOOL = { name: 'render_surface', description: 'r', input_schema: { type: 'object', properties: {} } }
+
+  it('web search rides the request with max uses, allowed domains and user location; no tool means no tools key', () => {
+    expect(buildRequestBody(BASE)['tools']).toBeUndefined()
+    const body = buildRequestBody({
+      ...BASE,
+      modelSettings: { webSearch: { maxUses: 3, allowedDomains: ['example.com'], blockedDomains: ['x.com'], userLocation: { city: 'Helsinki', country: 'FI' } } },
+    })
+    expect(body['tools']).toEqual([
+      {
+        type: 'web_search_20260318',
+        name: 'web_search',
+        allowed_callers: ['direct'],
+        max_uses: 3,
+        allowed_domains: ['example.com'],
+        user_location: { type: 'approximate', city: 'Helsinki', country: 'FI' },
+      },
+    ])
+  })
+
+  it('web fetch rides the request with blocked domains and citations on, after the client tools', () => {
+    const body = buildRequestBody({ ...BASE, tools: [TOOL], modelSettings: { webFetch: { maxUses: 2, blockedDomains: ['bad.example'] } } })
+    expect(body['tools']).toEqual([
+      TOOL,
+      { type: 'web_fetch_20260318', name: 'web_fetch', allowed_callers: ['direct'], max_uses: 2, blocked_domains: ['bad.example'], citations: { enabled: true } },
+    ])
+  })
+
+  it('both tools together, in a fixed order; an unknown model drops them (no capability row)', () => {
+    const settings = { webSearch: {}, webFetch: {} }
+    const names = (buildRequestBody({ ...BASE, modelSettings: settings })['tools'] as { name: string }[]).map((t) => t.name)
+    expect(names).toEqual(['web_search', 'web_fetch'])
+    expect(buildRequestBody({ ...BASE, model: 'gpt-x', modelSettings: settings })['tools']).toBeUndefined()
+  })
+
+  it('a server tool alone never carries a forced tool_choice for a client tool that is not in the body', () => {
+    const body = buildRequestBody({ ...BASE, model: 'claude-haiku-5-5', effort: 'low', toolChoice: { name: 'render_surface' }, modelSettings: { webSearch: {} } })
+    expect(body['tool_choice']).toBeUndefined()
+  })
+
+  const history = (efforts: ('low' | 'medium' | 'high' | undefined)[]) =>
+    efforts.flatMap((effort, i) => [
+      { role: 'user' as const, content: `q${i}`, ...(effort !== undefined ? { effort } : {}) },
+      { role: 'assistant' as const, content: `a${i}` },
+    ])
+
+  it('an effort change mid-conversation keeps the opening top-level effort and adds an effort-only system message, with the beta', () => {
+    const messages = [...history(['high']), { role: 'user' as const, content: 'q1' }]
+    const body = buildRequestBody({ ...BASE, messages, effort: 'low' })
+    expect(body['output_config']).toEqual({ effort: 'high' })
+    expect(body['thinking']).toEqual({ type: 'adaptive', display: 'summarized' })
+    expect(body['messages']).toEqual([
+      { role: 'user', content: 'q0' },
+      { role: 'assistant', content: 'a0' },
+      { role: 'system', content: [], output_config: { effort: 'low' } },
+      { role: 'user', content: 'q1' },
+    ])
+    expect(anthropicBetas(body)).toEqual([MID_CONVERSATION_EFFORT_BETA])
+  })
+
+  it('a second change keeps the first marker in place, so the earlier request stays a prefix (the cache survives)', () => {
+    const first = buildRequestBody({ ...BASE, messages: [...history(['high']), { role: 'user', content: 'q1' }], effort: 'low' })
+    const second = buildRequestBody({ ...BASE, messages: [...history(['high', 'low']), { role: 'user', content: 'q2' }], effort: 'medium' })
+    const firstMessages = first['messages'] as unknown[]
+    expect((second['messages'] as unknown[]).slice(0, firstMessages.length)).toEqual(firstMessages)
+    expect((second['messages'] as unknown[]).slice(firstMessages.length)).toEqual([
+      { role: 'assistant', content: 'a1' },
+      { role: 'system', content: [], output_config: { effort: 'medium' } },
+      { role: 'user', content: 'q2' },
+    ])
+    expect(second['output_config']).toEqual({ effort: 'high' })
+  })
+
+  it('no beta and the plain body when nothing changed, no turn is stamped, the model has no per-message effort, or thinking is off', () => {
+    const same = buildRequestBody({ ...BASE, messages: [...history(['high']), { role: 'user', content: 'q1' }], effort: 'high' })
+    expect(anthropicBetas(same)).toEqual([])
+    expect(same['output_config']).toEqual({ effort: 'high' })
+    const unstamped = buildRequestBody({ ...BASE, messages: [...history([undefined]), { role: 'user', content: 'q1' }], effort: 'low' })
+    expect(anthropicBetas(unstamped)).toEqual([])
+    expect(unstamped['output_config']).toEqual({ effort: 'low' })
+    const fable = buildRequestBody({ ...BASE, model: 'claude-fable-5', messages: [...history(['high']), { role: 'user', content: 'q1' }], effort: 'medium' })
+    expect(anthropicBetas(fable)).toEqual([])
+    const haikuOff = buildRequestBody({ ...BASE, model: 'claude-haiku-5-5', modelSettings: { thinking: 'disabled' }, messages: [...history(['high']), { role: 'user', content: 'q1' }], effort: 'medium' })
+    expect(anthropicBetas(haikuOff)).toEqual([])
+    expect(haikuOff['output_config']).toEqual({ effort: 'medium' })
+  })
+})
+
+describe('T-0203: the anthropic-beta header on the wire (fetch stubbed, no network)', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  async function sent(req: Parameters<ReturnType<typeof anthropicProvider>['stream']>[0]): Promise<{ headers: Headers; body: Record<string, unknown> }> {
+    const fetchMock = vi.fn(async (_url: unknown, _init?: RequestInit) => {
+      const stream = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('event: message_stop\ndata: {"type":"message_stop"}\n\n'))
+          controller.close()
+        },
+      })
+      return new Response(stream, { status: 200 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    for await (const _ of anthropicProvider({ apiKey: 'k' }).stream(req) as AsyncIterable<string>) void _
+    const init = fetchMock.mock.calls[0]?.[1]
+    return { headers: new Headers(init?.headers), body: JSON.parse(String(init?.body)) as Record<string, unknown> }
+  }
+
+  it('a mid-conversation effort change sends the beta header; an unchanged effort sends none', async () => {
+    const messages = [
+      { role: 'user' as const, content: 'q0', effort: 'high' as const },
+      { role: 'assistant' as const, content: 'a0' },
+      { role: 'user' as const, content: 'q1' },
+    ]
+    const changed = await sent({ model: 'claude-opus-5-5', system: 's', messages, effort: 'low' })
+    expect(changed.headers.get('anthropic-beta')).toBe(MID_CONVERSATION_EFFORT_BETA)
+    expect(changed.body['output_config']).toEqual({ effort: 'high' })
+    const same = await sent({ model: 'claude-opus-5-5', system: 's', messages, effort: 'high' })
+    expect(same.headers.has('anthropic-beta')).toBe(false)
+  })
+
+  it('web search reaches the wire body on the text path (no client tools)', async () => {
+    const { body } = await sent({ model: 'claude-sonnet-5-5', system: 's', messages: [{ role: 'user', content: 'news?' }], modelSettings: { webSearch: { maxUses: 1 } } })
+    expect(body['tools']).toEqual([{ type: 'web_search_20260318', name: 'web_search', allowed_callers: ['direct'], max_uses: 1 }])
   })
 })

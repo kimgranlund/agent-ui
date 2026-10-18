@@ -20,7 +20,7 @@
 // tool loop sends them back unmodified with the tool results; that replay is request-side only.
 
 import type { AgentProvider, Turn, Effort, ProviderEvent, ToolDef } from '../agent-transport.ts'
-import type { CacheTtl, ModelSettings } from '../model-capabilities.ts'
+import type { CacheTtl, ModelSettings, ServerToolSettings, WebSearchSettings } from '../model-capabilities.ts'
 import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY } from '../model-capabilities.ts'
 import type { TokenUsage } from '../meta-line.ts'
 import { AgentTimeoutError } from '../deadlines.ts'
@@ -430,6 +430,77 @@ const HAIKU_55_MAX_TOKENS = { default: 5376, medium: 5376, high: 5376, xhigh: 81
  *  `normalizeModelSettings`, so a field the model's capability row rejects (thinking off at xhigh on Haiku
  *  5.5, `between_tools` on Opus 5.5, a max tokens over the ceiling) is dropped before the call, never sent.
  *  No sampling param (temperature, top_p, top_k) is ever sent: the 5.5 rows accept none. */
+/** T-0203: the server tool versions sent (web search `web_search_20260318`, web fetch `web_fetch_20260318`). */
+export const WEB_SEARCH_TOOL_TYPE = 'web_search_20260318'
+export const WEB_FETCH_TOOL_TYPE = 'web_fetch_20260318'
+/** T-0203: the beta that admits a per-message `output_config` (the mid-conversation effort change). */
+export const MID_CONVERSATION_EFFORT_BETA = 'mid-conversation-output-config-2026-07-01'
+
+/** T-0203: the server tool definitions `settings` asks for. `allowed_callers: ['direct']` on both: the
+ *  2026 versions default to calling from code execution (dynamic filtering), which a model without
+ *  programmatic tool calling (Haiku 4.5) rejects with a 400, so every model gets the one shape that runs
+ *  everywhere. Web fetch asks for citations, which are off by default there and always on for search. */
+function serverToolDefs(settings: ModelSettings): Record<string, unknown>[] {
+  const common = (t: ServerToolSettings): Record<string, unknown> => ({
+    allowed_callers: ['direct'],
+    ...(t.maxUses !== undefined ? { max_uses: t.maxUses } : {}),
+    ...(t.allowedDomains !== undefined ? { allowed_domains: [...t.allowedDomains] } : t.blockedDomains !== undefined ? { blocked_domains: [...t.blockedDomains] } : {}),
+  })
+  const search = (t: WebSearchSettings): Record<string, unknown> => ({
+    type: WEB_SEARCH_TOOL_TYPE,
+    name: 'web_search',
+    ...common(t),
+    ...(t.userLocation !== undefined ? { user_location: { type: 'approximate', ...t.userLocation } } : {}),
+  })
+  return [
+    ...(settings.webSearch !== undefined ? [search(settings.webSearch)] : []),
+    ...(settings.webFetch !== undefined ? [{ type: WEB_FETCH_TOOL_TYPE, name: 'web_fetch', ...common(settings.webFetch), citations: { enabled: true } }] : []),
+  ]
+}
+
+const isEffort = (v: unknown): v is Effort => v === 'low' || v === 'medium' || v === 'high' || v === 'xhigh'
+
+/** T-0203: the mid-conversation effort plan, or `undefined` when the plain body applies. It applies on a
+ *  model whose row takes per-message effort, with adaptive thinking (Haiku 5.5 thinking off and Sonnet 5.5
+ *  `between_tools` return a 400 on a per-message effort that differs), when the history's first user turn
+ *  carries its effort stamp and some later user turn (the new one at `effort`) differs from it. The top-level
+ *  effort stays at the opening level and an effort-only `system` message sits before each user turn whose
+ *  level changed, so every earlier request's messages stay a prefix of this one and the cache survives. */
+function perMessageEffortPlan(
+  req: { model: string; messages: Turn[]; effort?: Effort },
+  settings: ModelSettings,
+): { opening: Effort; messages: Record<string, unknown>[] } | undefined {
+  const row = capabilitiesFor(req.model)
+  if (!row?.perMessageEffort || req.effort === undefined) return undefined
+  if (settings.thinking !== undefined && settings.thinking !== 'adaptive') return undefined
+  const users = req.messages.map((t, i) => (t.role === 'user' ? i : -1)).filter((i) => i >= 0)
+  const last = users[users.length - 1]
+  const levelAt = (i: number): Effort | undefined => {
+    const stamped = i === last ? req.effort : req.messages[i]!.effort
+    return isEffort(stamped) && row.efforts.includes(stamped) ? stamped : undefined
+  }
+  const opening = users.length > 0 ? levelAt(users[0]!) : undefined
+  if (opening === undefined || users.every((i) => (levelAt(i) ?? opening) === opening)) return undefined
+  let running = opening
+  const messages: Record<string, unknown>[] = []
+  req.messages.forEach((t, i) => {
+    const level = t.role === 'user' ? levelAt(i) : undefined
+    if (level !== undefined && level !== running) {
+      messages.push({ role: 'system', content: [], output_config: { effort: level } })
+      running = level
+    }
+    messages.push({ role: t.role, content: t.content })
+  })
+  return { opening, messages }
+}
+
+/** T-0203: the `anthropic-beta` values a built body needs: the mid-conversation effort beta when a message
+ *  carries its own `output_config`. Read from the body, so the request-body tests cover the header too. */
+export function anthropicBetas(body: Record<string, unknown>): string[] {
+  const messages = Array.isArray(body['messages']) ? (body['messages'] as Record<string, unknown>[]) : []
+  return messages.some((m) => m['output_config'] !== undefined) ? [MID_CONVERSATION_EFFORT_BETA] : []
+}
+
 export function buildRequestBody(req: {
   model: string
   system: string
@@ -448,9 +519,14 @@ export function buildRequestBody(req: {
    *  model that rejects a forced choice outright (T-0172, `rejectsForcedToolChoice`); otherwise omitted. */
   toolChoice?: { name: string }
 }): Record<string, unknown> {
-  const body = buildArmBody(req)
+  // T-0203: a mid-conversation effort change builds the body at the opening level (thinking and output_config
+  // stay as the cached prefix saw them), with the new turn's max_tokens and the effort-marked messages.
+  const plan = perMessageEffortPlan(req, normalizeModelSettings(req.model, req.modelSettings, req.effort))
+  const plain = buildArmBody(req)
+  const body = plan === undefined ? plain : { ...buildArmBody({ ...req, effort: plan.opening }), max_tokens: plain['max_tokens'], messages: [...plan.messages, ...(req.extraMessages ?? [])] }
   const thinking = body.thinking as { type?: string } | undefined
-  if (req.toolChoice === undefined || body.tools === undefined || (thinking !== undefined && thinking.type !== 'disabled') || rejectsForcedToolChoice(req.model)) return body
+  // A server tool alone never makes a forced client tool legal: the named tool must be a client tool.
+  if (req.toolChoice === undefined || (req.tools?.length ?? 0) === 0 || (thinking !== undefined && thinking.type !== 'disabled') || rejectsForcedToolChoice(req.model)) return body
   return { ...body, tool_choice: { type: 'tool', name: req.toolChoice.name } }
 }
 
@@ -481,12 +557,14 @@ function buildArmBody(req: {
   const row = capabilitiesFor(req.model)
   const settings = normalizeModelSettings(req.model, req.modelSettings, req.effort)
   const system = systemField(req.system, req.systemCacheBoundary, settings.cacheTtl)
+  // T-0203: the server tools the settings ask for ride after the client tools, with or without them.
+  const tools = [...(req.tools ?? []), ...serverToolDefs(settings)]
   const base = {
     model: req.model,
     system,
     messages: [...toAnthropicMessages(req.messages), ...(req.extraMessages ?? [])],
     stream: true,
-    ...(req.tools && req.tools.length > 0 ? { tools: req.tools } : {}),
+    ...(tools.length > 0 ? { tools } : {}),
   }
   /** The tier max_tokens unless the agent set one (already clamped to the row's ceiling by normalize). */
   const maxTokens = (tier: number): number => settings.maxTokens ?? tier
@@ -736,13 +814,14 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
     // so the timer is cleared once headers arrive: the fetch signal also governs the body stream, and a
     // deadline left armed would abort a healthy long turn mid-stream. A caller abort keeps its own error
     // unrelabelled. GH #1797 (d): `fetchWithRetry` wraps each attempt; a first-byte timeout is never retried.
+    const betas = anthropicBetas(body) // T-0203
     const attempt = async (): Promise<Response> => {
       const deadline = new AbortController()
       const deadlineTimer = setTimeout(() => deadline.abort(), ANTHROPIC_FIRST_BYTE_TIMEOUT_MS)
       try {
         return await fetch(endpoint, {
           method: 'POST',
-          headers: { ...anthropicHeaders(opts.apiKey, opts.workspaceId), 'content-type': 'application/json' },
+          headers: { ...anthropicHeaders(opts.apiKey, opts.workspaceId), ...(betas.length > 0 ? { 'anthropic-beta': betas.join(',') } : {}), 'content-type': 'application/json' },
           body: JSON.stringify(body),
           signal: signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal,
         })

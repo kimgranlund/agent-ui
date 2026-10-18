@@ -147,6 +147,8 @@ import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import {
+  agentServerToolOn,
+  type ComposerModelOverrides,
   AGENT_ENABLED_KEY,
   A2UI_CATALOG_KEY,
   DEFAULT_A2UI_CATALOG_ID,
@@ -205,7 +207,8 @@ import {
 // `ui-icon` tag registrations; the COPY it projects lives in `agent-admin-schema.ts` above, shared with
 // the rows' own native `title` hints.
 import { buildAdminHelp, buildAdminHelpForSummary } from './admin-help.ts'
-import { EFFORT_LEVELS, type EffortLevel, type TurnReference, type ContextItem } from '../conversation/composer-options.ts'
+import { EFFORT_LEVELS, type EffortLevel, type TurnReference, type ContextItem, type PickerOption, type CapabilityRow } from '../conversation/composer-options.ts'
+import { capabilitiesFor, effortsAllowing, DEFAULT_DISPLAY } from '@agent-ui/a2ui/agent/model-capabilities'
 // GH #1211 — the ingest handler's rejection toast (req-doc-ingestion.md R1's "visible reason" AC): a
 // `ui-toast-region` this element mounts and owns itself (toast-region.md's "v1 ownership is
 // consumer-mounted" law — there is no static singleton to reach for instead).
@@ -559,6 +562,16 @@ export interface AgentCatalogSource {
   instantiate(entryId: string): Promise<AgentRosterEntry | undefined>
 }
 export type { TeamCatalogEntry }
+
+/** T-0203: the Chat composer's effort menu toggle ids (never effort levels). */
+const EFFORT_TOGGLE_THINKING_OFF = 'thinking-off'
+const EFFORT_TOGGLE_SHOW_REASONING = 'show-reasoning'
+/** T-0203: the capabilities panel's server tool rows; the id prefix keeps them apart from entry rows. */
+const SERVER_TOOL_ROW_PREFIX = 'server-tool:'
+const SERVER_TOOL_ROWS = [
+  { key: 'webSearch', label: 'Web search', icon: 'magnifying-glass' },
+  { key: 'webFetch', label: 'Web fetch', icon: 'file-text' },
+] as const
 
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
@@ -916,6 +929,10 @@ export class UIAgentAdminElement extends UIElement {
   // the settings pane either. Written into `#conversation.effort` imperatively whenever it changes — see
   // `#syncConversationConfig`.
   #effort: EffortLevel = 'medium'
+  /** T-0203: the Chat composer's model overrides (thinking off, show reasoning, the web search and web fetch
+   *  toggles): element-local per conversation like `#effort`, cleared when the agent changes, so the composer
+   *  starts from the agent's settings. */
+  #modelOverrides: ComposerModelOverrides = {}
   /** T-0185: true while `schema` is this element's own generated default (never an author-set schema), so a
    *  model change may regenerate its Model section. */
   #schemaGenerated = false
@@ -930,9 +947,46 @@ export class UIAgentAdminElement extends UIElement {
   /** T-0185: the composer's effort starts from the agent's default effort for its model. */
   #syncEffortFromAgent(): void {
     const effort = resolveAgentEffort(this.store, this.#modelFor(this.store))
-    if (effort === undefined) return
-    this.#effort = effort
-    if (this.#conversation) this.#conversation.effort = effort
+    if (effort !== undefined) {
+      this.#effort = effort
+      if (this.#conversation) this.#conversation.effort = effort
+    }
+    this.#syncEffortOptions()
+  }
+
+  /** T-0203: the Chat composer's effort menu: the levels, then "Thinking off" where the model's row allows
+   *  thinking off at the current effort (Haiku 5.5 at high or below), then "Show reasoning" where the row has
+   *  a display choice. Each toggle reads the composer override first, else the agent's setting. */
+  #effortOptions(): readonly PickerOption[] {
+    const store = this.store
+    const model = this.#modelFor(store)
+    const row = capabilitiesFor(model)
+    const thinkingOff = this.#modelOverrides.thinkingOff ?? store?.get(MODEL_SETTING_KEYS.thinking) === 'disabled'
+    const stored = store?.get(MODEL_SETTING_KEYS.showReasoning)
+    const showReasoning = this.#modelOverrides.showReasoning ?? (typeof stored === 'boolean' ? stored : DEFAULT_DISPLAY === 'summarized')
+    return [
+      ...EFFORT_LEVELS,
+      ...(effortsAllowing(model, 'disabled').includes(this.#effort) ? [{ id: EFFORT_TOGGLE_THINKING_OFF, label: 'Thinking off', checked: thinkingOff }] : []),
+      ...(row !== undefined && row.displays.length > 0 ? [{ id: EFFORT_TOGGLE_SHOW_REASONING, label: 'Show reasoning', checked: showReasoning }] : []),
+    ]
+  }
+
+  /** T-0203: hand the Chat composer its effort menu (the levels and the two toggles) afresh. */
+  #syncEffortOptions(): void {
+    if (this.#conversation) this.#conversation.efforts = this.#effortOptions()
+  }
+
+  /** T-0203: the capabilities panel's server tool rows: one per tool the agent's settings turn on for its
+   *  model, `included` while the composer has not switched it off for this conversation. */
+  #serverToolRows(): CapabilityRow[] {
+    const model = this.#modelFor(this.store)
+    return SERVER_TOOL_ROWS.filter((t) => agentServerToolOn(this.store, model, t.key)).map((t) => ({
+      id: `${SERVER_TOOL_ROW_PREFIX}${t.key}`,
+      label: t.label,
+      kind: 'server tool',
+      icon: t.icon,
+      included: this.#modelOverrides[t.key] !== false,
+    }))
   }
   // GH #145 — the store-swap effect's own "was this a real reassignment or a bare reconnect" memory
   // (the #modelGridUnsub precedent, generalized): a REAL reassignment (a persona switch — a different
@@ -990,6 +1044,9 @@ export class UIAgentAdminElement extends UIElement {
         // T-0185: the Model section follows the model's capability row; the composer follows the default effort.
         if (key === 'model') this.#syncModelSchema()
         if (key === MODEL_SETTING_KEYS.effort || key === 'model') this.#syncEffortFromAgent()
+        // T-0203: the effort menu's toggles and the server tool rows follow the agent's settings.
+        if (key === MODEL_SETTING_KEYS.thinking || key === MODEL_SETTING_KEYS.showReasoning) this.#syncEffortOptions()
+        if (key === 'model' || (SERVER_TOOL_ROWS as readonly { key: string }[]).some((t) => key === t.key)) this.#syncEntryRosters()
       })
       this.#syncModelSchema()
       this.#syncEffortFromAgent()
@@ -1154,8 +1211,15 @@ export class UIAgentAdminElement extends UIElement {
     // Effort picker → ephemeral element state only (no persisted counterpart) — write-then-reflect
     // immediately, since nothing external can also change it the way another tab's store write could.
     conversation.onEffortChange((id) => {
-      this.#effort = id as EffortLevel
-      conversation.effort = this.#effort
+      // T-0203: the two toggles flip their override; a level sets the effort. Either changes the menu.
+      if (id === EFFORT_TOGGLE_THINKING_OFF || id === EFFORT_TOGGLE_SHOW_REASONING) {
+        const current = this.#effortOptions().find((o) => o.id === id)?.checked === true
+        this.#modelOverrides = { ...this.#modelOverrides, [id === EFFORT_TOGGLE_THINKING_OFF ? 'thinkingOff' : 'showReasoning']: !current }
+      } else {
+        this.#effort = id as EffortLevel
+        conversation.effort = this.#effort
+      }
+      this.#syncEffortOptions()
       this.#renderContextSystem() // T-0163: the effort bounds the model settings the Context view's digest covers
     })
     // Surface client messages (an action click inside a mounted ui-surface-host, bubbled per LLD-C4) run
@@ -2902,6 +2966,9 @@ export class UIAgentAdminElement extends UIElement {
       // is the truth. Emptying it is what stops a pick from re-applying to a LATER arm (leave the flow, come
       // back, and the card starts neutral again) — the same no-leak law GH #145's reset carries.
       this.#preArm = {}
+    // T-0203: the composer's model overrides belong to this agent's conversation; the next starts from its settings.
+    this.#modelOverrides = {}
+    this.#syncEffortOptions()
     }
     this.#syncAuthoringConversationConfig(authoringStore)
     // LLD §16.2 — arming the flow lands Co-pilot visible AND primary, at the one choke point every arm
@@ -3640,7 +3707,7 @@ export class UIAgentAdminElement extends UIElement {
   #syncConversationConfig(store: SettingsStore | undefined): void {
     const conversation = this.#conversation
     if (!conversation) return
-    conversation.efforts = EFFORT_LEVELS
+    conversation.efforts = this.#effortOptions()
     conversation.effort = this.#effort
     const renderModel = (): void => {
       // The picker offers the INCLUDED roster only (the Model grid's switches, 2026-07-19 rev.2); the
@@ -4232,7 +4299,13 @@ export class UIAgentAdminElement extends UIElement {
    *  composed prompt, the model settings and the integrations every live arm sends. The authoring context's
    *  draft block is turn context, not agent content, so `#personaSystemFor` adds it after. */
   #compileFor(store: SettingsStore | undefined, model: string, invokedToolIds?: readonly string[]): CompiledBundle {
-    return compileStore(store, { model, effort: this.#effort, team: this.#teamPromptContextFor(), ...(invokedToolIds === undefined ? {} : { invokedToolIds }) })
+    return compileStore(store, { model, effort: this.#effort, team: this.#teamPromptContextFor(), ...(invokedToolIds === undefined ? {} : { invokedToolIds }), ...this.#overridesFor(store) })
+  }
+
+  /** T-0203: the composer's model overrides, for the Chat context's store only (the Co-pilot composer has no
+   *  toggles). */
+  #overridesFor(store: SettingsStore | undefined): { overrides?: ComposerModelOverrides } {
+    return store !== undefined && store === this.store ? { overrides: this.#modelOverrides } : {}
   }
 
   /** GH #1197 (ADR-0203 cl.2 — the honest minimal wiring `#1194` deliberately deferred) — the team-prompt
@@ -4308,6 +4381,14 @@ export class UIAgentAdminElement extends UIElement {
    *     malformed id or a kind outside the four, and an id no entry carries transforms to the identical
    *     list (no write of a phantom row). */
   #toggleCapability(rowId: string, included: boolean): void {
+    // T-0203: a server tool row flips this conversation's override, never the agent's stored setting.
+    const tool = SERVER_TOOL_ROWS.find((t) => rowId === `${SERVER_TOOL_ROW_PREFIX}${t.key}`)
+    if (tool !== undefined) {
+      this.#modelOverrides = { ...this.#modelOverrides, [tool.key]: included }
+      this.#syncEntryRosters()
+      this.#renderContextSystem()
+      return
+    }
     const parsed = parseCapabilityRowId(rowId)
     if (parsed === undefined) return
     this.#updateEntries(parsed.kind, (entries) => entries.map((e) => (e.id === parsed.id ? { ...e, enabled: included } : e)))
@@ -4343,7 +4424,7 @@ export class UIAgentAdminElement extends UIElement {
     }
     apply(this.#conversation, this.store)
     apply(this.#authoringConversation, this.authoringStore)
-    if (this.#conversation) this.#conversation.capabilities = buildCapabilityRows(this.#capabilityRowGroups(this.store))
+    if (this.#conversation) this.#conversation.capabilities = [...buildCapabilityRows(this.#capabilityRowGroups(this.store)), ...this.#serverToolRows()]
   }
 
   // ── vision rev.5: master-state application + the Context tabs' renderers ────────────────────────────
@@ -4464,7 +4545,7 @@ export class UIAgentAdminElement extends UIElement {
           name: typeof store?.get('name') === 'string' ? (store.get('name') as string) : 'Untitled agent',
           model: this.#modelFor(store), // the DRAFT's store ⇒ `DEFAULT_MODEL_ID` (GH #880 leaves this read unchanged)
           effort: this.#effort,
-          modelSettings: resolveModelSettings(store, this.#modelFor(store), this.#effort),
+          modelSettings: resolveModelSettings(store, this.#modelFor(store), this.#effort, this.#overridesFor(store).overrides),
           active: isEnabledFlag(store?.get(AGENT_ENABLED_KEY)),
           surface: {
             markdown: isEnabledFlag(store?.get(SURFACE_MARKDOWN_KEY)),
@@ -4557,7 +4638,7 @@ export class UIAgentAdminElement extends UIElement {
     const active = this.#pendingRoster?.activeId === agentId
     const model = this.#modelFor(store)
     const team = this.#teamPromptContextFor(agentId)
-    const bundle = compileStore(store, { model, ...(active ? { effort: this.#effort } : {}), ...(team === undefined ? {} : { team }) })
+    const bundle = compileStore(store, { model, ...(active ? { effort: this.#effort, ...this.#overridesFor(store) } : {}), ...(team === undefined ? {} : { team }) })
     return { ...bundle, system: this.#personaSystemFor(store, bundle) }
   }
 
@@ -4606,14 +4687,16 @@ export class UIAgentAdminElement extends UIElement {
    *  directly, so a turn always lands in the transcript it was actually composed from. */
   #recordTurn(history: AdminTurn[], text: string, reply: string): void {
     const turns: AdminTurn[] = [
-      { role: 'user', content: text },
+      // T-0203: the user turn keeps the effort it was sent at, so a later effort change can ride a
+      // per-message marker that leaves the cached prefix intact.
+      { role: 'user', content: text, effort: this.#effort },
       { role: 'assistant', content: reply },
     ]
     history.push(...turns)
     // GH #1154 — every prose exchange that enters model memory is ALSO a transcript fact; the export
     // transcript is picked by the same context identity `#contextFor` used to pick `history`.
     const transcript = history === this.#authoringHistory ? this.#authoringTranscript : this.#testTranscript
-    transcript.push(...turns)
+    transcript.push({ role: 'user', content: text }, { role: 'assistant', content: reply })
   }
 
   /** GH #1154 — append one completed SURFACE-arm exchange to the export transcript ONLY (never to

@@ -12,6 +12,10 @@
 //     the default on the 5.x models)
 //   https://platform.claude.com/docs/en/build-with-claude/structured-outputs  (strict tools)
 //   https://platform.claude.com/docs/en/build-with-claude/prompt-caching  (cache_control ttl 5m or 1h)
+//   https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool  (T-0203, read 2026-10-17:
+//     `web_search_20260318`, max uses, allowed or blocked domains never both, user location; billed per search)
+//   https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-fetch-tool  (`web_fetch_20260318`, no
+//     extra charge beyond tokens; citations off unless enabled)
 // The 5.5 models take temperature 1.0 only and reject top_p and top_k, so none of them lists a sampling
 // param; forced tool_choice returns a 400 on Sonnet 5.5 and Opus 5.5 (T-0172). The `max` effort level
 // exists on the 5.5 models but the dial stops at `xhigh` (the `Effort` union).
@@ -120,19 +124,44 @@ export function capabilitiesFor(model: string): ModelCapabilities | undefined {
 /** The app's display default: reasoning shown (T-0172, the 5.x API default `omitted` streamed empty text). */
 export const DEFAULT_DISPLAY: ThinkingDisplay = 'summarized'
 
+/** T-0203: one server tool's options. Present on `ModelSettings` means the tool rides the request. Allowed
+ *  domains win over blocked ones (the API rejects a tool that names both). */
+export interface ServerToolSettings {
+  maxUses?: number
+  allowedDomains?: readonly string[]
+  blockedDomains?: readonly string[]
+}
+/** The web search tool's approximate user location (at least one field; `country` is ISO 3166-1 alpha-2). */
+export interface UserLocation {
+  city?: string
+  region?: string
+  country?: string
+  timezone?: string
+}
+export interface WebSearchSettings extends ServerToolSettings {
+  userLocation?: UserLocation
+}
+
 /** The model settings an agent carries (agent settings plus the composer's per-turn overrides). Every field
- *  is optional: absent means the request builder's default for that model. */
+ *  is optional: absent means the request builder's default for that model. T-0203: `webSearch` and `webFetch`
+ *  present send that server tool (web search is billed per search on top of tokens; web fetch costs tokens
+ *  only). */
 export interface ModelSettings {
   thinking?: ThinkingMode
   display?: ThinkingDisplay
   maxTokens?: number
   cacheTtl?: CacheTtl
+  webSearch?: WebSearchSettings
+  webFetch?: ServerToolSettings
 }
 
 export interface SettingsIssue {
   key: keyof ModelSettings | 'effort'
   message: string
 }
+
+/** The `ModelSettings` key of each server tool. */
+const SERVER_TOOL_KEY = { web_search: 'webSearch', web_fetch: 'webFetch' } as const satisfies Record<ServerTool, keyof ModelSettings>
 
 /** Every setting the model's row rejects, as plain-words issues (empty when the combination is legal). An
  *  unknown model accepts nothing optional, so any set field is an issue. */
@@ -157,6 +186,9 @@ export function validateModelSettings(model: string, settings: ModelSettings, ef
     issues.push({ key: 'maxTokens', message: `${model} takes max tokens from 1 to ${row.maxOutputTokens}` })
   }
   if (settings.cacheTtl !== undefined && !row.cacheTtls.includes(settings.cacheTtl)) issues.push({ key: 'cacheTtl', message: `${model} does not take cache TTL ${settings.cacheTtl}` })
+  for (const [tool, key] of Object.entries(SERVER_TOOL_KEY) as [ServerTool, 'webSearch' | 'webFetch'][]) {
+    if (settings[key] !== undefined && !row.serverTools.includes(tool)) issues.push({ key, message: `${model} does not take the ${tool} tool` })
+  }
   return issues
 }
 
@@ -170,9 +202,42 @@ export function normalizeModelSettings(model: string, raw: unknown, effort?: Eff
     ...(r['display'] === 'summarized' || r['display'] === 'omitted' ? { display: r['display'] } : {}),
     ...(typeof r['maxTokens'] === 'number' ? { maxTokens: r['maxTokens'] } : {}),
     ...(r['cacheTtl'] === '5m' || r['cacheTtl'] === '1h' ? { cacheTtl: r['cacheTtl'] } : {}),
+    ...serverToolField('webSearch', r['webSearch'], true),
+    ...serverToolField('webFetch', r['webFetch'], false),
   }
   const bad = new Set(validateModelSettings(model, typed, effort).map((i) => i.key))
   return Object.fromEntries(Object.entries(typed).filter(([k]) => !bad.has(k as keyof ModelSettings))) as ModelSettings
+}
+
+/** A clean list of non-empty domain strings, or `undefined` when none survive. */
+function domainList(raw: unknown): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined
+  const list = raw.filter((d): d is string => typeof d === 'string' && d.trim() !== '').map((d) => d.trim())
+  return list.length > 0 ? list : undefined
+}
+
+/** T-0203: an untrusted server tool value typed field by field; anything that is not an object drops the
+ *  tool. `withLocation` admits the web search `userLocation`. */
+function serverToolField<K extends 'webSearch' | 'webFetch'>(key: K, raw: unknown, withLocation: boolean): Partial<Record<K, WebSearchSettings>> {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {}
+  const r = raw as Record<string, unknown>
+  const maxUses = r['maxUses']
+  const allowedDomains = domainList(r['allowedDomains'])
+  const blockedDomains = allowedDomains === undefined ? domainList(r['blockedDomains']) : undefined
+  const loc = r['userLocation']
+  let userLocation: UserLocation | undefined
+  if (withLocation && typeof loc === 'object' && loc !== null) {
+    const l = loc as Record<string, unknown>
+    const fields = (['city', 'region', 'country', 'timezone'] as const).filter((f) => typeof l[f] === 'string' && (l[f] as string).trim() !== '')
+    if (fields.length > 0) userLocation = Object.fromEntries(fields.map((f) => [f, (l[f] as string).trim()])) as UserLocation
+  }
+  const tool: WebSearchSettings = {
+    ...(typeof maxUses === 'number' && Number.isInteger(maxUses) && maxUses >= 1 ? { maxUses } : {}),
+    ...(allowedDomains !== undefined ? { allowedDomains } : {}),
+    ...(blockedDomains !== undefined ? { blockedDomains } : {}),
+    ...(userLocation !== undefined ? { userLocation } : {}),
+  }
+  return { [key]: tool } as Partial<Record<K, WebSearchSettings>>
 }
 
 /** T-0310: whether `model` takes a forced tool choice with thinking off at `effort` (absent: the row's default), the

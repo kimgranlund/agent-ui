@@ -315,6 +315,29 @@ describe('ui-conversation-composer — the opt-in composer capabilities', () => 
     expect(received).toEqual(['high'])
   })
 
+  it('T-0203: an option with `checked` renders as a menuitemcheckbox, fires onEffortChange with its id, and never labels the trigger', async () => {
+    const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
+    el.efforts = [{ id: 'low', label: 'Low' }, { id: 'show-reasoning', label: 'Show reasoning', checked: true }]
+    el.effort = 'low'
+    await whenFlushed()
+    const menu = el.querySelector('[data-part="effort-menu"]') as HTMLElement
+    const toggle = menu.querySelector('[data-value="show-reasoning"]') as HTMLElement
+    expect(toggle.getAttribute('role')).toBe('menuitemcheckbox')
+    expect(toggle.getAttribute('aria-checked')).toBe('true')
+    expect(toggle.hasAttribute('data-selected')).toBe(false)
+    expect((menu.querySelector('[data-value="low"]') as HTMLElement).getAttribute('role')).toBe('menuitem')
+    const received: string[] = []
+    el.onEffortChange((id) => received.push(id))
+    toggle.dispatchEvent(new Event('click', { bubbles: true }))
+    expect(received).toEqual(['show-reasoning'])
+    el.effort = 'show-reasoning'
+    await whenFlushed()
+    expect((el.querySelector('[data-picker="effort"]') as HTMLElement).textContent).toBe('Effort')
+    el.efforts = [{ id: 'low', label: 'Low' }, { id: 'show-reasoning', label: 'Show reasoning', checked: false }]
+    await whenFlushed()
+    expect((menu.querySelector('[data-value="show-reasoning"]') as HTMLElement).getAttribute('aria-checked')).toBe('false')
+  })
+
   it('contextItems is empty/hidden by default; setting it renders one dismissable chip per entry, firing onContextDismiss with that item\'s id', async () => {
     const el = mount(document.createElement('ui-conversation-composer') as UIConversationComposerElement)
     const row = el.querySelector('[data-part="context-chips"]') as HTMLElement

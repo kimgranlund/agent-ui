@@ -116,3 +116,27 @@ describe('buildRequestBody per model: only accepted params are sent (T-0185)', (
     expect(body['system']).toEqual([{ type: 'text', text: 'be helpful', cache_control: { type: 'ephemeral', ttl: '1h' } }])
   })
 })
+
+describe('T-0203: server tool settings against the capability table', () => {
+  it('normalize keeps a well-formed tool, types each field, and prefers allowed over blocked domains', () => {
+    const out = normalizeModelSettings('claude-opus-5-5', {
+      webSearch: { maxUses: 2.5, allowedDomains: [' a.com ', '', 3], blockedDomains: ['b.com'], userLocation: { city: 'Oslo', country: 7 } },
+      webFetch: { maxUses: 4, blockedDomains: ['c.com'] },
+    })
+    expect(out.webSearch).toEqual({ allowedDomains: ['a.com'], userLocation: { city: 'Oslo' } })
+    expect(out.webFetch).toEqual({ maxUses: 4, blockedDomains: ['c.com'] })
+  })
+
+  it('a non-object value drops the tool, and a model whose row lacks the tool is an issue', () => {
+    expect(normalizeModelSettings('claude-opus-5-5', { webSearch: true, webFetch: ['x'] })).toEqual({})
+    const row = MODEL_CAPABILITIES['claude-opus-5-5']!
+    const saved = row.serverTools
+    ;(row as { serverTools: readonly string[] }).serverTools = []
+    try {
+      expect(validateModelSettings('claude-opus-5-5', { webSearch: {} }).map((i) => i.key)).toEqual(['webSearch'])
+      expect(normalizeModelSettings('claude-opus-5-5', { webSearch: {} })).toEqual({})
+    } finally {
+      ;(row as { serverTools: readonly string[] }).serverTools = saved
+    }
+  })
+})

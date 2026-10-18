@@ -643,12 +643,12 @@ describe('the PROSE arm keeps per-context history — agentSurfaceTurn unarmed, 
     expect(testOne!.history).toEqual([])
     // The authoring context's SECOND turn replays only ITS OWN first exchange — never the test chat's.
     expect(interviewTwo!.history).toEqual([
-      { role: 'user', content: 'interview one' },
+      { role: 'user', content: 'interview one', effort: 'medium' },
       { role: 'assistant', content: 'ack:interview one' },
     ])
     // Symmetrically, the test context's second turn carries only its own first exchange.
     expect(testTwo!.history).toEqual([
-      { role: 'user', content: 'test one' },
+      { role: 'user', content: 'test one', effort: 'medium' },
       { role: 'assistant', content: 'ack:test one' },
     ])
   })
@@ -677,7 +677,7 @@ describe('the PROSE arm keeps per-context history — agentSurfaceTurn unarmed, 
     expect(interviewWithB.history).toEqual([])
     // The test chat's own history survived the authoring-store swap untouched (it belongs to the draft).
     expect(testTurnTwo.history).toEqual([
-      { role: 'user', content: 'test turn' },
+      { role: 'user', content: 'test turn', effort: 'medium' },
       { role: 'assistant', content: 'ack:test turn' },
     ])
   })

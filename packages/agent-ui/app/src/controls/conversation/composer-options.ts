@@ -12,6 +12,11 @@ export interface PickerOption {
    *  click/keydown delegation already skips it, menu.ts). The "coming soon" provider precedent
    *  (provider-switcher.ts's `implemented:false` roadmap entries) — optional, unused by Models/Effort today. */
   disabled?: boolean
+  /** T-0203: OPTIONAL, makes the entry an on/off toggle (`role="menuitemcheckbox"`, `aria-checked` from this
+   *  value) instead of a choice. Committing one fires the picker's change callback with its `id`, like a
+   *  choice; it never becomes the picker's selected value or its trigger label. The consumer flips the value
+   *  and hands a new list down. Absent on every plain choice. */
+  checked?: boolean
 }
 
 /** GH #257 — one selectable provider: its OWN model list (narrows the composer's Models picker while this
