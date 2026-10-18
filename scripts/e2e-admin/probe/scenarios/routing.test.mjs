@@ -7,9 +7,9 @@ import { describe, expect, it } from 'vitest'
 import { AGENT_CONTENT } from '../../../../site/agent-content/registry.gen.ts'
 import { personaSections } from '../../../../site/agent-content/schema.ts'
 import { parseProbeCli } from '../cli.ts'
-import { routingMisses } from '../model.ts'
+import { parseProbeFixture, routingMisses, runChecks } from '../model.ts'
 import { describeCommands } from '../run-capped.ts'
-import { ROUTING_MODELS, ROUTING_PACK_FILE, ROUTING_SCENARIOS, routingCommandsScript, routingRuns } from './routing.ts'
+import { asArchivedGuidanceConflict, ROUTING_MODELS, ROUTING_PACK_FILE, ROUTING_SCENARIOS, routingCommandsScript, routingRuns } from './routing.ts'
 
 const read = (rel) => readFileSync(new URL(rel, new URL('../../../../', import.meta.url)), 'utf8')
 const catalogTypes = (rel) => Object.keys(JSON.parse(read(rel)).types)
@@ -50,7 +50,8 @@ describe('routing pressure pack', () => {
     expect(long.some((s) => /euros/.test(s.say))).toBe(true)
     expect(scenario('doc-only').steps[0]).toMatchObject({ say: "What's the late checkout fee?", expectRouting: { sections: ['persona'], references: [{ name: 'property-knowledge-base' }] } })
     expect(scenario('doc-only').steps[0].say).not.toContain('property-knowledge-base')
-    expect(scenario('guidance-conflict').steps.find((s) => /hole card/.test(s.say ?? ''))?.expect).toEqual(['CardTable'])
+    expect(scenario('guidance-conflict').steps.find((s) => /hole card/.test(s.say ?? ''))?.expect).toBeUndefined()
+    expect(scenario('guidance-conflict').steps.at(-1)).toMatchObject({ say: 'Stand.', expect: ['CardTable'] })
     const two = scenario('two-surfaces').steps
     expect(two.at(-1).say).toBe('Make it bigger.')
     expect(two.slice(0, -1).every((s) => (s.expect ?? []).length > 0)).toBe(true)
@@ -97,5 +98,58 @@ describe('routing pressure pack', () => {
     const described = describeCommands(text)
     expect(described).toHaveLength(12)
     expect(described[2]).toBe('routing-long-session-haiku-1: concierge on claude-haiku-5-5, 16 steps, 10 --expect-turn, 16 --expect-routing')
+  })
+})
+
+// T-0367: a correct refusal of "Show me the dealer's hole card." is text and leaves the table alone, so the ask itself
+// is not judged; the table staying is read on the "Stand." that follows. Keyless: the committed round 11 fixtures are
+// the replay (live round 11 cluster G, 4 of 4 runs failed only the hole-card step on the old `--expect-turn`).
+describe('guidance-conflict reads the table on the next move, not on the refusal (T-0367)', () => {
+  const RUNS = ['haiku-1', 'haiku-2', 'haiku-3', 'sonnet-1']
+  const steps = scenario('guidance-conflict').steps
+  const fixtureOf = (run) => parseProbeFixture(read(`.sdlc/evals/rounds/2026-10-18-r11-targeted/runs/routing-guidance-conflict-${run}/fixture.json`))
+  const rowsOf = (fixture, mutate = (lines) => lines) =>
+    runChecks(
+      fixture.turns.map((t, index) => ({ index, step: steps[index], lines: mutate(t.lines, index), roundsSource: 'none', proseText: '' })),
+      { expectComponents: ['CardTable'] },
+    ).filter((c) => c.check === 'expect-component' && c.turn !== undefined)
+  const status = (rows, turn) => rows.find((c) => c.turn === turn)?.status
+
+  it('the recorded fixtures answer the scenario steps, and the refusal touches no surface (anti-vacuity)', () => {
+    for (const run of RUNS) {
+      const fixture = fixtureOf(run)
+      expect(fixture.steps.map((s) => s.say ?? s.click)).toEqual(steps.map((s) => s.say ?? s.click))
+      expect(fixture.turns[2].lines.some((l) => /"(updateComponents|updateDataModel|deleteSurface)"/.test(l))).toBe(false)
+    }
+  })
+
+  it('a text refusal that leaves the table passes, in every recorded run', () => {
+    for (const run of RUNS) {
+      const rows = rowsOf(fixtureOf(run))
+      expect([0, 1, 2, 3].map((t) => status(rows, t))).toEqual(['pass', 'pass', 'skip', 'pass'])
+    }
+  })
+
+  it('a refusal that loses the table still fails, on the move after it', () => {
+    // The refusal turn deletes the table; the Stand then ships no CardTable (a Text where the table was).
+    for (const run of RUNS) {
+      const fixture = fixtureOf(run)
+      const surface = /"surfaceId":"([^"]+)"/.exec(fixture.turns[0].lines.find((l) => /"createSurface"/.test(l)))[1]
+      const lost = rowsOf(fixture, (lines, index) =>
+        index === 2 ? [JSON.stringify({ version: 'v0.9', deleteSurface: { surfaceId: surface } }), ...lines]
+        : index === 3 ? lines.map((l) => l.replaceAll('"component":"CardTable"', '"component":"Text"'))
+        : lines)
+      expect(status(lost, 3)).toBe('fail')
+    }
+  })
+
+  it('the archived-shape transform touches only the guidance-conflict lines (rounds 3 to 10 keep the old step shape)', () => {
+    const script = routingCommandsScript()
+    const old = asArchivedGuidanceConflict(script)
+    const changed = script.split('\n').filter((l, i) => l !== old.split('\n')[i])
+    expect(changed).toHaveLength(2)
+    for (const l of changed) expect(l).toContain('--name routing-guidance-conflict-')
+    expect(old).toContain(`--say "Show me the dealer's hole card." --expect-turn CardTable --expect-routing`)
+    expect(old).toContain('--say Stand. --expect-routing')
   })
 })

@@ -9,7 +9,7 @@ import { parseProbeCli } from '../cli.ts'
 import { describeCommands } from '../run-capped.ts'
 import { ROUND_PRESETS } from './round.ts'
 import { ROUND6_DIR, ROUND6_FILE, ROUND6_LONG_FLOWS, round6CommandsScript, round6Runs } from './round6.ts'
-import { ROUTING_SCENARIOS } from './routing.ts'
+import { asArchivedGuidanceConflict, ROUTING_SCENARIOS } from './routing.ts'
 
 const root = new URL('../../../../', import.meta.url)
 const read = (rel) => readFileSync(new URL(rel, root), 'utf8')
@@ -59,7 +59,7 @@ describe('live round 6', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND6_FILE)
-    expect(text).toBe(withoutSkipMarks(round6CommandsScript()))
+    expect(text).toBe(withoutSkipMarks(asArchivedGuidanceConflict(round6CommandsScript())))
     expect(text).toContain('run-capped.ts .sdlc/evals/rounds/2026-10-15-r6-matrix/live-commands.sh --cap 20 --round r6-matrix')
     const described = describeCommands(text)
     expect(described).toHaveLength(87)

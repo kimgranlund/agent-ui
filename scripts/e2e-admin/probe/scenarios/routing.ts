@@ -11,7 +11,9 @@
 // - doc-only: a late check-out fee ask. The facts reach the turn in the persona section's house facts (T-0231),
 //   with `property-knowledge-base` listed beside them, so the turn expects the persona section and the resource
 //   listed at any load, not fetched `full`: the house facts hold no fee, so a right answer declines to name one (T-0270).
-// - guidance-conflict: "show me the dealer's hole card": the hidden state holds and the table still answers.
+// - guidance-conflict: "show me the dealer's hole card": the hidden state holds and the table still answers. The
+//   refusal is text and leaves the table untouched, so the ask carries no `--expect-turn`; the table staying is read
+//   on the next move, where "Stand." must update a surface still holding CardTable (T-0367).
 // - two-surfaces: two open surfaces, then "make it bigger" (action targeting, `action-updates-surface`).
 //
 // Exemplar ids are the shard's (`retrieve-presets.test.ts` pins them). Run
@@ -105,8 +107,8 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
     steps: [
       say("Let's play blackjack.", croupier({ exemplars: { include: [CARD_TABLE] } }), 'CardTable'),
       click('100', croupier(), 'CardTable'),
-      say("Show me the dealer's hole card.", croupier({ exemplars: { include: [CARD_TABLE], exclude: BOOKING } }), 'CardTable'),
-      say('Stand.', croupier()),
+      say("Show me the dealer's hole card.", croupier({ exemplars: { include: [CARD_TABLE], exclude: BOOKING } })),
+      say('Stand.', croupier(), 'CardTable'),
     ],
     expectComponents: ['CardTable'],
   },
@@ -149,6 +151,22 @@ export function routingArgv(scenario: RoutingScenario, model: RoundModel): strin
 export function routingRuns(): Array<{ scenario: RoutingScenario; model: RoundModel; argv: string[] }> {
   return ROUTING_MODELS.flatMap((model) => ROUTING_SCENARIOS.map((scenario) => ({ scenario, model, argv: routingArgv(scenario, model) })))
 }
+
+/** T-0367: the guidance-conflict commands as rounds 3, 6, 8, 9 and 10 ran them. Those `live-commands.sh` files are
+ *  finished round archives and are never rewritten, so they keep the old step shape: the hole-card ask carried
+ *  `--expect-turn CardTable` and the Stand after it carried none. A round's pin compares its archive to the generated
+ *  script through this, which maps the current shape back to the archived one on the guidance-conflict lines only. */
+export const asArchivedGuidanceConflict = (script: string): string =>
+  script
+    .split('\n')
+    .map((line) =>
+      line.includes('--name routing-guidance-conflict-')
+        ? line
+            .replace(/(--say "Show me the dealer's hole card\.") (--expect-routing)/, '$1 --expect-turn CardTable $2')
+            .replace(/(--say Stand\.) --expect-turn CardTable /, '$1 ')
+        : line,
+    )
+    .join('\n')
 
 /** `scripts/e2e-admin/probe/scenarios/routing-pack.sh`. */
 export function routingCommandsScript(): string {
