@@ -310,3 +310,7 @@
 - T-0161 migration: per-version seed digests (T-0355).
 - T-0352: both card actions are md; board-grid cells scale with the board (out of scope).
 - T-0352 follow-up for T-0353: the `--ui-*-action-font-legacy` tokens retire with the legacy bridge.
+
+## Debate rulings (Kim, 2026-10-18)
+- T-0350: ship Part A only (DEAL_AGAIN_MISSING check); hold Part B (the NATURAL_ACTIONS wording at checks.ts:370) until a live natural shows the misread with A in play.
+- T-0345: measure the Opus line change with the relative rule, ceiling fixed (+3 of 10, extend to +9 of 30; OLD >= 8 goes straight to N=30); the absolute "round 8 rate" bar is retired. Poker stake-ask check is the sibling T-0357.
