@@ -797,7 +797,7 @@ describe('croupier bet controls: a hold\'em opening that asks for the stake (T-0
   it('the recorded :81 round 0 payload is POKER_DEAL_MISSING, asking to deal on the Card frame', () => {
     const findings = run(stakeAsk())
     expect(findings.map((f) => [f.code, f.path])).toEqual([['POKER_DEAL_MISSING', 'ask-1:stake']])
-    expect(findings[0]!.message).toMatch(/stake \(a Slider\), deal \(a Button\)/)
+    expect(findings[0]!.message).toMatch(/stake \(a Slider\) and deal \(a Button\), and no hand is dealt/)
     expect(findings[0]!.message).toMatch(/one Card with the dealt PlayingCard hands/)
     expect(findings[0]!.message).not.toMatch(/CardTable/)
   })
@@ -820,6 +820,61 @@ describe('croupier bet controls: a hold\'em opening that asks for the stake (T-0
       { version: 'v1.0', createSurface: { surfaceId: 'rules', catalogId: 'agent-ui--croupier' } },
       { version: 'v1.0', updateComponents: { surfaceId: 'rules', components: [{ id: 'root', component: 'Text', text: "Texas hold'em: two hole cards, then the flop, turn and river." }] } },
     ] as A2uiOutput)).toEqual([])
+  })
+
+  it('every spelling of hold\'em fires, and the removed T-0212 "Texas Hold\'em: your buy-in" bet step is a stake ask', () => {
+    for (const title of ["Texas hold'em", 'Texas Holdem', 'Hold-em: place your stake', 'Hold em', 'Texas hold’em']) {
+      expect(run(stakeAsk(title)).map((f) => f.code), title).toEqual(['POKER_DEAL_MISSING'])
+    }
+    expect(run(stakeAsk("Texas Hold'em: your buy-in")).map((f) => [f.code, f.path])).toEqual([['POKER_DEAL_MISSING', 'ask-1:stake']])
+    const buyIn = stakeAsk("Texas Hold'em")
+    const ask = buyIn[2] as { updateComponents: { components: Record<string, unknown>[] } }
+    ask.updateComponents.components = ask.updateComponents.components.map((c) => (c['id'] === 'stake' ? { id: 'stake', component: 'TextField', label: 'Buy-in' } : c))
+    expect(run(buyIn).map((f) => f.code)).toEqual(['POKER_DEAL_MISSING'])
+  })
+
+  it('a settled hold\'em Card with a next-stake Slider and a Deal again forward passes', () => {
+    const settled: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 1100, bet: 50 } } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [
+        { id: 'root', component: 'Card', children: ['title', 'stake', 'again'] },
+        { id: 'title', component: 'Text', text: "Texas hold'em: you win the pot", variant: 'h4' },
+        { id: 'stake', component: 'Slider', value: { path: '/bet' }, min: 10, max: 500, name: 'bet', label: 'Next stake' },
+        { id: 'again', component: 'Button', label: 'Deal again', action: { action: 'deal', context: { newRound: true } } },
+      ] } },
+    ] as A2uiOutput
+    expect(run(settled)).toEqual([])
+    const byPhase = structuredClone(settled) as typeof settled
+    const comps = (byPhase[2] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components
+    comps[3] = { id: 'again', component: 'Button', label: 'Next hand', action: { action: 'next' } }
+    ;(byPhase[1] as { updateDataModel: { value: Record<string, unknown> } }).updateDataModel.value['phase'] = 'settled'
+    expect(run(byPhase)).toEqual([])
+  })
+
+  it('a game picker and stud prose that mention hold\'em are not judged', () => {
+    expect(run(stakeAsk("Pick a game: Texas hold'em, Omaha or seven-card stud"))).toEqual([])
+    expect(run(stakeAsk("Seven-card stud: ante up. No blinds, unlike hold'em."))).toEqual([])
+    expect(run(stakeAsk("Omaha: like hold'em, but four hole cards"))).toEqual([])
+  })
+
+  it('a turn whose other surface carries the dealt hand leaves a separate controls surface alone', () => {
+    const hand: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'hand-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'hand-1', value: { playerHand: [{ rank: 'A', suit: 'hearts' }, { rank: 'K', suit: 'clubs' }] } } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'hand-1', components: [
+        { id: 'root', component: 'Row', children: { path: '/playerHand', componentId: 'card' } },
+        { id: 'card', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' } },
+      ] } },
+    ] as A2uiOutput
+    expect(run([...hand, ...stakeAsk("Texas hold'em: your bet")])).toEqual([])
+  })
+
+  it('an orphan bet Slider, off screen, does not fire', () => {
+    const output = stakeAsk("Texas hold'em")
+    const ask = output[2] as { updateComponents: { components: Record<string, unknown>[] } }
+    ask.updateComponents.components = ask.updateComponents.components.map((c) => (c['id'] === 'body' ? { ...c, children: [] } : c))
+    expect(run(output)).toEqual([])
   })
 
   it('a hold\'em stake ask on a blackjack-family surface stays BET_TABLE_MISSING alone', () => {
