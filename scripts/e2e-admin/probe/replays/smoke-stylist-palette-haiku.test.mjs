@@ -10,9 +10,9 @@ import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
 // T-0359. Haiku 5.5 answered "Propose a calm blue palette" with the palette in prose and no surface at all, though the
-// persona says never a hex list in prose. The Swatch row's palette ask check (composite-moments.ts) now sends that turn
-// back with SURFACE_MISSING. The live turn never reached a repair, so the fixture's second round is authored (CL-R3):
-// Swatches for the anchors, a Ramp per family and ContrastPairs for the text pairings. It ships and every check is green.
+// persona says never a hex list in prose. The Swatch row's prose check (composite-moments.ts, judged on the reply, Kim
+// 2026-10-18) now sends that turn back with SURFACE_MISSING. The live turn never reached a repair, so the fixture's second
+// round is authored (CL-R3): Swatches for the anchors, a Ramp per family and ContrastPairs for the text pairings.
 it('smoke-stylist-palette-haiku: a palette answered in prose is sent back for a token surface and ships one', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-stylist-palette-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())

@@ -1562,7 +1562,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       const fb = fallbacks[i]!
       if (deps.semanticChecks === undefined || deps.semanticChecks.length === 0) return { fb, errored: false }
       const surfaces = semanticSurfaceViews(input.session, fb.output)
-      const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(fb.roundTarget !== undefined ? { target: fb.roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}) })
+      const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(fb.roundTarget !== undefined ? { target: fb.roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}), ...(fb.note !== undefined ? { reply: fb.note } : {}) })
       if (withBoundComposites(semantic.findings, boundComposites, surfaces).length === 0) return { fb, errored: semantic.errored.length > 0 }
     }
     return undefined
@@ -1916,7 +1916,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // for the missing value is never closed as a booking that was not made.
       const sayInput: SemanticCheckInput | undefined =
         turnAction === undefined && turnIntent !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0
-          ? { surfaces: [], intent: turnIntent, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}) }
+          ? { surfaces: [], intent: turnIntent, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}), ...(note !== undefined ? { reply: note } : {}) }
           : undefined
       const heldOpen = sayInput !== undefined && flowHeldOpen(deps.semanticChecks!, sayInput)
       const closeInferable =
@@ -2056,7 +2056,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
         const surfaces = semanticSurfaceViews(input.session, assembled.output)
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, round, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, round, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}), ...(note !== undefined ? { reply: note } : {}) })
         const findings = withBoundComposites(semantic.findings, boundComposites, surfaces) // T-0299
         compositeFindings.push(...semantic.findings.filter((f) => missingCompositeMoment(f.code) !== undefined)) // T-0330
         if (findings.length > 0 && round < opts.maxRounds - 1) {

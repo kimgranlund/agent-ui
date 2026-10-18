@@ -101,6 +101,9 @@ export interface SemanticCheckInput {
   /** T-0359: on a say turn, every component type any prior assistant turn of the session wrote, on surfaces since closed
    *  or rebuilt too (`sessionComponentTypes`), so a check can tell a first ask from a later one. Absent on a client turn. */
   readonly shownTypes?: ReadonlySet<string>
+  /** T-0359: the reply prose of the round being judged (its note), so a check can see a moment written out in words
+   *  instead of shown. Absent when the round wrote none. */
+  readonly reply?: string
 }
 
 /** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined.

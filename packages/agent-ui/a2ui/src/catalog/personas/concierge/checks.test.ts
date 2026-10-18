@@ -229,7 +229,7 @@ describe('a say turn that targets an open BookingForm and sends it no update (T-
     expect(edit('Book a deep-tissue massage instead.')).toEqual([]) // and a booking ask
     expect(edit('Can I bring a friend?')).toEqual([])
   })
-  // T-0359 code review: a palette word never shadows the edit (the palette ask is no askedCompositeMoment row).
+  // T-0359 code review: a palette word never shadows the edit (no palette row is an askedCompositeMoment row).
   it('an edit that mentions brand colours still reaches the edit check', () => {
     expect(edit('Make it 16:00 and use the brand colours for the table decor').map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
   })

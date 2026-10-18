@@ -51,6 +51,8 @@ interface Fixture {
   readonly intent?: string
   /** The open surface the say turn declares it changes. */
   readonly target?: string
+  /** T-0359: the round's reply prose. */
+  readonly reply?: string
 }
 
 interface Contract {
@@ -84,6 +86,7 @@ const PALETTE_NODES = [
   { id: 'blues', component: 'Ramp', label: 'Blue', steps: [{ label: '300', value: '#7ea6cf' }, { label: '700', value: '#1f3a5f' }] },
 ]
 const palette = surface('palette-1', UI, PALETTE_NODES)
+const PALETTE_REPLY = 'Primary: navy, Secondary: steel blue, Accent: sky.'
 
 // Booking (Concierge).
 const BOOKING = { date: '2026-10-20', time: '20:00', party: 4 }
@@ -350,11 +353,11 @@ const CONTRACTS: Record<string, Contract> = {
     pass: { catalog: UI, output: palette },
     fail: { catalog: UI, output: surface('palette-1', UI, [{ id: 'root', component: 'Text', text: 'Primary navy #1f3a5f, accent sky #9cc3e0' }]) },
   },
-  // Kim, 2026-10-18: the palette ask rides the Stylist alone.
-  'composite-ask-swatch': {
+  // Kim, 2026-10-18: judged on the reply, on the Stylist alone.
+  'composite-prose-swatch': {
     code: 'SURFACE_MISSING',
-    pass: { catalog: STYLIST, intent: 'Propose a calm blue palette for a banking app.', output: surface('palette-1', STYLIST, PALETTE_NODES) },
-    fail: { catalog: STYLIST, intent: 'Propose a calm blue palette for a banking app.', output: [] },
+    pass: { catalog: STYLIST, intent: 'Propose a calm blue palette for a banking app.', reply: PALETTE_REPLY, output: surface('palette-1', STYLIST, PALETTE_NODES) },
+    fail: { catalog: STYLIST, intent: 'Propose a calm blue palette for a banking app.', reply: PALETTE_REPLY, output: [] },
   },
   'framed-choice': {
     code: 'FRAMED_CHOICE',
@@ -504,6 +507,7 @@ function inputOf(f: Fixture): SemanticCheckInput {
     ...(target !== undefined ? { target } : {}),
     ...(open !== undefined ? { open } : {}),
     ...(shownTypes !== undefined ? { shownTypes } : {}),
+    ...(f.reply !== undefined ? { reply: f.reply } : {}),
   }
 }
 
