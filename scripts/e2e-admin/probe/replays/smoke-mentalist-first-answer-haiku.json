@@ -326,6 +326,151 @@
               }
             }
           ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "draft": {
+                          "answer": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Twenty Questions",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hud",
+                            "q_text",
+                            "ans"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Twenty Questions",
+                          "status": "Question 1 of 20",
+                          "stats": [
+                            {
+                              "label": "Confidence",
+                              "value": "low"
+                            }
+                          ],
+                          "progress": {
+                            "value": 1,
+                            "max": 20,
+                            "label": "Questions spent"
+                          }
+                        },
+                        {
+                          "id": "q_text",
+                          "component": "Text",
+                          "text": "Is it a living thing?",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "ans",
+                          "component": "RadioGroup",
+                          "value": {
+                            "path": "/draft/answer"
+                          },
+                          "name": "answer",
+                          "orientation": "horizontal",
+                          "children": [
+                            "r_yes",
+                            "r_no",
+                            "r_sort"
+                          ]
+                        },
+                        {
+                          "id": "r_yes",
+                          "component": "Radio",
+                          "value": "yes",
+                          "label": "Yes"
+                        },
+                        {
+                          "id": "r_no",
+                          "component": "Radio",
+                          "value": "no",
+                          "label": "No"
+                        },
+                        {
+                          "id": "r_sort",
+                          "component": "Radio",
+                          "value": "sort_of",
+                          "label": "Sort of"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "commit"
+                          ]
+                        },
+                        {
+                          "id": "commit",
+                          "component": "Button",
+                          "label": "Answer",
+                          "variant": "solid",
+                          "action": {
+                            "action": "answer_question",
+                            "context": {
+                              "questionId": 1
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {
@@ -465,6 +610,151 @@
                           "component": "Text",
                           "text": "Confidence: low, but the living-thing answer narrows the field.",
                           "variant": "caption"
+                        },
+                        {
+                          "id": "ans",
+                          "component": "RadioGroup",
+                          "value": {
+                            "path": "/draft/answer"
+                          },
+                          "name": "answer",
+                          "orientation": "horizontal",
+                          "children": [
+                            "r_yes",
+                            "r_no",
+                            "r_sort"
+                          ]
+                        },
+                        {
+                          "id": "r_yes",
+                          "component": "Radio",
+                          "value": "yes",
+                          "label": "Yes"
+                        },
+                        {
+                          "id": "r_no",
+                          "component": "Radio",
+                          "value": "no",
+                          "label": "No"
+                        },
+                        {
+                          "id": "r_sort",
+                          "component": "Radio",
+                          "value": "sort_of",
+                          "label": "Sort of"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "commit"
+                          ]
+                        },
+                        {
+                          "id": "commit",
+                          "component": "Button",
+                          "label": "Answer",
+                          "variant": "solid",
+                          "action": {
+                            "action": "answer_question",
+                            "context": {
+                              "questionId": 2
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Living, so we're in the big biological pile now. Question 2 of 20: is it an animal? Pick Yes, No, or Sort of below and hit Answer.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-2",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-2",
+                      "value": {
+                        "draft": {
+                          "answer": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Twenty Questions",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "hud",
+                            "q_text",
+                            "ans"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Twenty Questions",
+                          "status": "Question 2 of 20",
+                          "stats": [
+                            {
+                              "label": "Confidence",
+                              "value": "low"
+                            }
+                          ],
+                          "progress": {
+                            "value": 2,
+                            "max": 20,
+                            "label": "Questions spent"
+                          }
+                        },
+                        {
+                          "id": "q_text",
+                          "component": "Text",
+                          "text": "Is it an animal?",
+                          "variant": "h5"
                         },
                         {
                           "id": "ans",

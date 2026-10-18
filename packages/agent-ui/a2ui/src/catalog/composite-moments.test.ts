@@ -467,6 +467,174 @@ describe('composite moment checks (T-0208)', () => {
     ).toEqual([])
   })
 
+  // T-0365: the T-0362 re-record (round 2026-10-18-t0362-smoke, Haiku 5.5) hand-built two strips the T-0358 row missed:
+  // the Mentalist's "Q1 of 20" counter Badge beside a "Questions spent" Progress, and the Dungeon Master's HP and Gold as
+  // two Texts in a Row.
+  const STRIPS_T0362: Record<string, A2uiComponent[]> = {
+    mentalist: [
+      { id: 'root', component: 'Card', children: ['hd', 'ct'] },
+      { id: 'hd', component: 'CardHeader', children: ['title', 'count'] },
+      { id: 'title', component: 'Text', text: 'Twenty Questions', variant: 'h4' },
+      { id: 'count', component: 'Badge', label: 'Q1 of 20', intent: 'neutral' },
+      { id: 'ct', component: 'CardContent', children: ['q_text', 'prog', 'conf'] },
+      { id: 'q_text', component: 'Text', text: 'Is it a living thing?', variant: 'h5' },
+      { id: 'prog', component: 'Progress', value: 1, max: 20, label: 'Questions spent' },
+      { id: 'conf', component: 'Text', text: 'Confidence: low, the net is wide open.', variant: 'caption' },
+    ],
+    'dungeon-master': [
+      { id: 'root', component: 'Card', children: ['hd', 'ct'] },
+      { id: 'hd', component: 'CardHeader', children: ['title'] },
+      { id: 'title', component: 'Text', text: 'Quest log', variant: 'h4' },
+      { id: 'ct', component: 'CardContent', children: ['strip', 'invH', 'inv'] },
+      { id: 'strip', component: 'Row', gap: 'md', children: ['hp', 'gold'] },
+      { id: 'hp', component: 'Text', text: 'HP 12 / 12', variant: 'label', emphasis: true },
+      { id: 'gold', component: 'Text', text: 'Gold 0', variant: 'label', emphasis: true },
+      { id: 'invH', component: 'Text', text: 'Inventory (3 of 6)', variant: 'label' },
+      { id: 'inv', component: 'Row', gap: 'sm', children: ['i1', 'i2'] },
+      { id: 'i1', component: 'Badge', label: 'Dagger' },
+      { id: 'i2', component: 'Badge', label: 'Torch' },
+    ],
+  }
+
+  for (const [persona, components] of Object.entries(STRIPS_T0362)) {
+    it(`T-0365: the recorded ${persona} strip from the T-0362 re-record yields GAME_HUD_MISSING, and with a GameHud none`, () => {
+      expect(codes(components)).toEqual(['GAME_HUD_MISSING'])
+      expect(codes([...components, { id: 'hud', component: 'GameHud', title: 'Game' }])).toEqual([])
+    })
+  }
+
+  it('T-0365: the finding names the counter Badge, the Progress and the grouped Texts', () => {
+    const find = (cs: A2uiComponent[]) => runSemanticChecks(compositeMomentChecks, { surfaces: [view(cs, 'quest-log')] }).findings[0]!.message
+    expect(find(STRIPS_T0362['mentalist']!)).toContain('count (a Badge), prog (a Progress), conf (a Text)')
+    expect(find(STRIPS_T0362['dungeon-master']!)).toContain('hp (a Text), gold (a Text)')
+  })
+
+  // T-0365 review: the sibling group, not a Row, admits a stat Text; each distinct stat a component names counts.
+  const QUEST = { id: 'title', component: 'Text', text: 'Quest log', variant: 'h4' } as const
+  const STRIP_SHAPES: Record<string, A2uiComponent[]> = {
+    'a Badge and a Text side by side': [
+      { id: 'root', component: 'Column', children: ['title', 'hp', 'gold'] },
+      QUEST,
+      { id: 'hp', component: 'Badge', label: 'HP 12/12' },
+      { id: 'gold', component: 'Text', text: 'Gold 0' },
+    ],
+    'a stat Text in a single-child wrapper': [
+      { id: 'root', component: 'Row', children: ['title', 'hpBox', 'goldBox'] },
+      QUEST,
+      { id: 'hpBox', component: 'Card', child: 'hp' },
+      { id: 'hp', component: 'Text', text: 'HP 12 / 12' },
+      { id: 'goldBox', component: 'Card', child: 'gold' },
+      { id: 'gold', component: 'Text', text: 'Gold 0' },
+    ],
+    'one Text naming two stats': [
+      { id: 'root', component: 'Column', children: ['title', 'strip'] },
+      QUEST,
+      { id: 'strip', component: 'Row', children: ['s'] },
+      { id: 's', component: 'Text', text: 'HP 12/12, Gold 0' },
+    ],
+    'one Badge naming two stats': [
+      { id: 'root', component: 'Column', children: ['title', 's'] },
+      QUEST,
+      { id: 's', component: 'Badge', label: 'HP 12/12, Gold 0' },
+    ],
+  }
+  for (const [shape, components] of Object.entries(STRIP_SHAPES)) {
+    it(`T-0365 review: ${shape} on a quest yields GAME_HUD_MISSING`, () => {
+      expect(codes(components)).toEqual(['GAME_HUD_MISSING'])
+    })
+  }
+
+  it('T-0365 review: the slash and spaced counters count; a bare "3 of 6" or "3/6" does not', () => {
+    for (const label of ['Q1/20', 'Q 1 of 20', 'Round 2/5', 'Guess 3/6']) {
+      expect(codes([{ id: 'root', component: 'Row', children: ['title', 'c', 'hp'] }, QUEST, { id: 'c', component: 'Badge', label }, { id: 'hp', component: 'Badge', label: 'HP 12/12' }])).toEqual(['GAME_HUD_MISSING'])
+    }
+    for (const label of ['Inventory 3 of 6', 'Slots 3/6']) {
+      expect(codes([{ id: 'root', component: 'Row', children: ['title', 'c', 'hp'] }, QUEST, { id: 'c', component: 'Badge', label }, { id: 'hp', component: 'Badge', label: 'HP 12/12' }])).toEqual([])
+    }
+  })
+
+  // T-0365 negative controls, each on a surface whose words name a game (or, for the counter gate, whose only game word
+  // is the counter), so each reaches the widened strip and is kept quiet by one guard.
+  it('T-0365 negative control: narration that mentions gold and HP is no stat strip', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Column', children: ['title', 'a', 'b'] },
+        QUEST,
+        { id: 'a', component: 'Text', text: 'You pry 20 gold from the chest.' },
+        { id: 'b', component: 'Text', text: 'A potion restores your HP.' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0365 negative control: stat Texts in two groups that each hold one stat yield none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['title', 'a', 'b'] },
+        { id: 'title', component: 'Text', text: 'Dungeon: The Undervault', variant: 'h4' },
+        { id: 'a', component: 'Column', children: ['hp', 'lvl'] },
+        { id: 'hp', component: 'Text', text: 'HP 12 / 12' },
+        { id: 'lvl', component: 'Text', text: 'Level 3' },
+        { id: 'b', component: 'Column', children: ['gold', 'note'] },
+        { id: 'gold', component: 'Text', text: 'Gold 0' },
+        { id: 'note', component: 'Text', text: 'Found in the chest' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0365 negative control: game-studio KPI, loyalty and receipt strips of Texts yield none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['t', 'nps', 'conf'] },
+        { id: 't', component: 'Text', text: 'Game studio KPIs', variant: 'h4' },
+        { id: 'nps', component: 'Text', text: 'NPS score 62' },
+        { id: 'conf', component: 'Text', text: 'Model confidence 0.91' },
+      ]),
+    ).toEqual([])
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['t', 'tier', 'help'] },
+        { id: 't', component: 'Text', text: 'Game night rewards', variant: 'h4' },
+        { id: 'tier', component: 'Text', text: 'Gold tier' },
+        { id: 'help', component: 'Text', text: 'Questions? Ask at the counter' },
+      ]),
+    ).toEqual([])
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['t', 'item', 'paid'] },
+        { id: 't', component: 'Text', text: 'Quest shop receipt', variant: 'h4' },
+        { id: 'item', component: 'Text', text: 'Item 1 of 3' },
+        { id: 'paid', component: 'Text', text: 'Gold: 40' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0365 negative control: a counter alone names no game (hiring, workout and survey strips)', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['t', 'round', 'conf'] },
+        { id: 't', component: 'Text', text: 'Candidate: Jane Park', variant: 'h4' },
+        { id: 'round', component: 'Badge', label: 'Round 2 of 4' },
+        { id: 'conf', component: 'Text', text: 'Confidence: high' },
+      ]),
+    ).toEqual([])
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['t', 'round', 'score'] },
+        { id: 't', component: 'Text', text: 'Interval session', variant: 'h4' },
+        { id: 'round', component: 'Badge', label: 'Round 2 of 4' },
+        { id: 'score', component: 'Stat', label: 'Score', value: '4.2' },
+      ]),
+    ).toEqual([])
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['t', 'round', 'q'] },
+        { id: 't', component: 'Text', text: 'Customer survey', variant: 'h4' },
+        { id: 'round', component: 'Badge', label: 'Round 2 of 3' },
+        { id: 'q', component: 'Progress', label: 'Questions answered', value: 4, max: 10 },
+      ]),
+    ).toEqual([])
+  })
+
   // T-0364: the Mentalist, the Negotiator and the Dungeon Master end their game on ONE ResultCard (guess-hud, deal-sheet,
   // quest-log) with no board. A hand-built ending (an end signal beside the result words) on a surface whose words name a
   // game is RESULT_CARD_MISSING.

@@ -9,10 +9,11 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0365 (turn 0) and T-0366 (turn 1). Turn 0: Haiku 5.5 built the quest log with "HP 12 / 12" and
-// "Gold 0" as Texts and the scenes as a Column, so only TIMELINE_MISSING fires; round 2 sends just the Timeline nodes
-// (IDGRAPH root-missing, SURFACE_NOT_CREATED) and round 3 ships the Timeline with HP and Gold as Badges, which the
-// GameHud row would catch, but at the bound (SEMANTIC_UNCORRECTED), so no GameHud ships. Turn 1 ("I open the door and
+// expectedFail: T-0366 (turn 1); turn 0 needs a live re-record. Turn 0: Haiku 5.5 built the quest log with "HP 12 / 12"
+// and "Gold 0" as Texts in a Row and the scenes as a Column, so round 1 now gets GAME_HUD_MISSING (T-0365) beside
+// TIMELINE_MISSING; the trace carries only the last round's feedback, so neither shows here. The recorded round 2
+// answers neither (just the Timeline nodes: IDGRAPH root-missing, SURFACE_NOT_CREATED) and round 3 ships the Timeline
+// with HP and Gold as Badges at the bound (SEMANTIC_UNCORRECTED), so no GameHud ships; no round is left to author. Turn 1 ("I open the door and
 // step inside.") is answered in one round in prose with a meta-line targeting quest-log and no render_surface call.
 it('smoke-dungeon-master-first-scene-haiku: turn 0 ships no GameHud; turn 1 answers the move in prose alone', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-dungeon-master-first-scene-haiku.json', import.meta.url), 'utf8'))
