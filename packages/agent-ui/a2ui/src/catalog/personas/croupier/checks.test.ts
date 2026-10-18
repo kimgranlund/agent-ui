@@ -757,8 +757,8 @@ describe('croupier bet controls: a bet step with no CardTable (T-0172 live probe
     { id: 'btn_bet', component: 'Button', label: 'Deal', variant: 'solid', action: { action: 'place_bet' } },
   ])
 
-  it('T-0212: a bet step that names a game other than blackjack keeps its Card (the recorded stud opening, hold\'em, Omaha, five-card draw)', () => {
-    for (const title of ['Seven-card stud · Place your bet', "Texas Hold'em: your buy-in", 'Omaha · Place your bet', 'Five-card draw: ante up', 'Poker night']) {
+  it('T-0212: a bet step that names a game other than blackjack keeps its Card (the recorded stud opening, Omaha, five-card draw)', () => {
+    for (const title of ['Seven-card stud · Place your bet', 'Omaha · Place your bet', 'Five-card draw: ante up', 'Poker night', 'Roulette: place your bet']) {
       expect(run(betCard(title)), title).toEqual([])
     }
   })
@@ -772,6 +772,58 @@ describe('croupier bet controls: a bet step with no CardTable (T-0172 live probe
   it('passes a surface with no bet control (a rules card), and the CardTable betting table', () => {
     expect(run(surface([{ id: 'root', component: 'Text', text: 'Blackjack pays 3:2.' }]))).toEqual([])
     expect(run(surface([{ id: 'root', component: 'CardTable', phase: 'betting', bet: { path: '/bet' }, betAction: 'deal' }]))).toEqual([])
+  })
+})
+
+// T-0357 (round 10 :81, Haiku 5.5, "Let's play Texas hold'em."): round 0 asked for the stake on an ask-1 Card with a
+// bet Slider and a Deal Button and shipped, since BET_TABLE_MISSING skips poker. Hold'em deals the hands at once.
+describe('croupier bet controls: a hold\'em opening that asks for the stake (T-0357)', () => {
+  const stakeAsk = (title = "Texas hold'em: place your stake", extra: Record<string, unknown>[] = []): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'ask-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'ask-1', value: { bankroll: 1000, bet: 50 } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'ask-1', components: [
+      { id: 'root', component: 'Card', children: ['hdr', 'body', 'foot'] },
+      { id: 'hdr', component: 'CardHeader', children: ['title'] },
+      { id: 'title', component: 'Text', text: title, variant: 'h4' },
+      { id: 'body', component: 'CardContent', children: ['stake', ...extra.map((c) => c['id'] as string)] },
+      { id: 'stake', component: 'Slider', value: { path: '/bet' }, min: 10, max: 500, step: 10, name: 'bet', label: 'Bet amount', layout: 'standard' },
+      { id: 'foot', component: 'CardFooter', children: ['deal'] },
+      { id: 'deal', component: 'Button', label: 'Deal me in', variant: 'solid', action: { action: 'deal_hand' } },
+      ...extra,
+    ] } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput) => croupierBetControls.check({ surfaces: semanticSurfaceViews({ turns: [] }, output) })
+
+  it('the recorded :81 round 0 payload is POKER_DEAL_MISSING, asking to deal on the Card frame', () => {
+    const findings = run(stakeAsk())
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['POKER_DEAL_MISSING', 'ask-1:stake']])
+    expect(findings[0]!.message).toMatch(/stake \(a Slider\), deal \(a Button\)/)
+    expect(findings[0]!.message).toMatch(/one Card with the dealt PlayingCard hands/)
+    expect(findings[0]!.message).not.toMatch(/CardTable/)
+  })
+
+  it('a dealt hold\'em hand, a settled hold\'em Card with only Deal again, and a hold\'em rules card pass', () => {
+    expect(run(stakeAsk("Texas hold'em", [
+      { id: 'hole', component: 'Row', children: { path: '/playerHand', componentId: 'holeCard' } },
+      { id: 'holeCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' } },
+    ]))).toEqual([])
+    const settled: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [
+        { id: 'root', component: 'Card', children: ['title', 'again'] },
+        { id: 'title', component: 'Text', text: "Texas hold'em: you win the pot, bankroll 1,100", variant: 'h4' },
+        { id: 'again', component: 'Button', label: 'Deal again', action: { action: 'deal', context: { newRound: true } } },
+      ] } },
+    ] as A2uiOutput
+    expect(run(settled)).toEqual([])
+    expect(run([
+      { version: 'v1.0', createSurface: { surfaceId: 'rules', catalogId: 'agent-ui--croupier' } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'rules', components: [{ id: 'root', component: 'Text', text: "Texas hold'em: two hole cards, then the flop, turn and river." }] } },
+    ] as A2uiOutput)).toEqual([])
+  })
+
+  it('a hold\'em stake ask on a blackjack-family surface stays BET_TABLE_MISSING alone', () => {
+    expect(run(stakeAsk("Blackjack or hold'em: place your stake")).map((f) => f.code)).toEqual(['BET_TABLE_MISSING'])
   })
 })
 

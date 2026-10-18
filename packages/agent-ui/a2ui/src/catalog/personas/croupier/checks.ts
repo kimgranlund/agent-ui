@@ -536,14 +536,17 @@ const actionName = (c: A2uiComponent): string => {
  *  path says bet, stake or wager) or a Deal Button, and no dealt card yet, is sent back to be one CardTable in its betting phase. A
  *  false positive costs one repair round and ships tallied at the bound (ADR-0238), never a halt. T-0212: a surface
  *  that names another game (the recorded seven-card stud opening, sent back twice) keeps its Card; one that names
- *  no game at all is still judged as blackjack. */
+ *  no game at all is still judged as blackjack. T-0357: a hold'em stake ask gets POKER_DEAL_MISSING instead. */
+const isBetInput = (c: A2uiComponent): boolean =>
+  BET_INPUTS.has(c.component) && [c['label'], c['name'], c['value']].some((v) => BET_WORDS.test(textOf(v).replace(/[/_-]/g, ' ')))
+
 function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
   const comps = [...view.components.values()]
   // A dealt hand (any PlayingCard) is past the bet step: an older table shape is judged by the hand check alone.
   if (comps.some((c) => c.component === 'CardTable' || c.component === 'PlayingCard')) return []
   if (namesOtherGame(comps)) return []
   const strays = comps.filter((c) => {
-    if (BET_INPUTS.has(c.component)) return [c['label'], c['name'], c['value']].some((v) => BET_WORDS.test(textOf(v).replace(/[/_-]/g, ' ')))
+    if (BET_INPUTS.has(c.component)) return isBetInput(c)
     if (c.component === 'Button') return /^deal\b/i.test(textOf(c['label'])) || /^(deal|place_?bet|bet)$/i.test(actionName(c))
     return false
   })
@@ -556,6 +559,31 @@ function betStepWithoutTable(view: SurfaceView): SemanticFinding[] {
         `${view.surfaceId} takes a blackjack bet with ${strays.map((c) => `${c.id} (a ${c.component})`).join(', ')} and no CardTable. ` +
         `Make the surface ONE CardTable, phase "betting", bet and bankroll bound, "betAction":"deal": its own bet strip ` +
         `places the bet and deals, so drop those controls. (A game other than blackjack keeps its Card.)`,
+    },
+  ]
+}
+
+const HOLDEM = /\b(hold ?['’]?em|holdem)\b/i
+
+/** T-0357 (round 10 :81, Haiku 5.5): a hold'em opening that asks for the stake (a bet input, no dealt card) instead of
+ *  dealing. BET_TABLE_MISSING skips poker (T-0212), and hold'em deals the hands at once on its Card (T-0323), so the
+ *  repair asks for the deal. Only the bet input fires it: a Deal Button alone may be a settled hand's Deal again.
+ *  Stud and draw post an ante before the deal and are not judged (the recorded stud opening keeps its Card). */
+function pokerDealMissing(view: SurfaceView): SemanticFinding[] {
+  const comps = [...view.components.values()]
+  if (comps.some((c) => c.component === 'CardTable' || c.component === 'PlayingCard')) return []
+  if (!namesOtherGame(comps) || !HOLDEM.test(literalWords(comps))) return []
+  const inputs = comps.filter(isBetInput)
+  if (inputs.length === 0) return []
+  const strays = [...inputs, ...comps.filter((c) => c.component === 'Button' && (/^deal\b/i.test(textOf(c['label'])) || DEAL_ACTION.test(actionName(c))))]
+  return [
+    {
+      code: 'POKER_DEAL_MISSING',
+      path: `${view.surfaceId}:${inputs[0]!.id}`,
+      message:
+        `${view.surfaceId} asks for a hold'em stake with ${strays.map((c) => `${c.id} (a ${c.component})`).join(', ')} and deals no hand. ` +
+        `Hold'em deals the hands at once: make the surface one Card with the dealt PlayingCard hands, the bankroll and ` +
+        `the hand's moves as Buttons (Check, Bet and Fold), so drop those controls.`,
     },
   ]
 }
@@ -663,12 +691,12 @@ function dealAgainMissing(surfaces: readonly SurfaceView[], round: number | unde
 }
 
 /** T-0172: one bet, one set of bet controls (the CardTable's own strip); T-0233: a playing table offers the moves.
- *  T-0350: a table this turn settles offers Deal again. */
+ *  T-0350: a table this turn settles offers Deal again. T-0357: a hold'em opening deals instead of asking the stake. */
 export const croupierBetControls: SemanticCheck = {
   id: 'croupier-bet-controls',
   requires: ['CardTable'],
   check: (input) => [
-    ...input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view), ...movesMissing(view)]),
+    ...input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view), ...pokerDealMissing(view), ...movesMissing(view)]),
     ...dealAgainMissing(input.surfaces, input.round),
   ],
 }

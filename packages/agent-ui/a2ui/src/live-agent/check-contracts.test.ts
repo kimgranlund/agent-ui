@@ -606,7 +606,17 @@ const PROBES: Record<string, readonly Fixture[]> = {
   'fleet-concede': [{ catalog: UI, session: fleetSession, intent: 'I concede.', target: 'waters-1', output: [] }],
   // T-0323: DEALT_IN_BETTING's two arms (round 8 :61 round 2 keeps the moves, :65 round 1 asks for them) and the
   // poker arms of the new-round and opening repair texts. T-0350: DEAL_AGAIN_MISSING, a table settled by data alone.
+  // T-0357: POKER_DEAL_MISSING, the round 10 :81 hold'em stake ask.
   'croupier-bet-controls': [
+    {
+      catalog: CROUPIER,
+      output: surface('ask-1', CROUPIER, [
+        { id: 'root', component: 'Card', children: ['title', 'stake', 'deal'] },
+        { id: 'title', component: 'Text', text: "Texas hold'em: place your stake", variant: 'h4' },
+        { id: 'stake', component: 'Slider', value: { path: '/bet' }, min: 10, max: 500, step: 10, name: 'bet', label: 'Bet amount' },
+        { id: 'deal', component: 'Button', label: 'Deal me in', action: { action: 'deal_hand' } },
+      ], { bankroll: 1000, bet: 50 }),
+    },
     { catalog: CROUPIER, output: dealtPoker(['checkBtn', 'betBtn', 'foldBtn']) },
     { catalog: CROUPIER, output: dealtPoker() },
     {
