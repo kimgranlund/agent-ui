@@ -161,8 +161,8 @@ const dynamicNote = el('p', {}, [
 ])
 
 content.append(
-  exampleSection('initial · min · max — three bounded panes', el('div', { style: 'block-size:14rem; ' + FRAME }, [bounded]), boundedNote),
-  exampleSection('collapsible — fold a side panel with Enter', el('div', { style: 'block-size:12rem; ' + FRAME }, [collapsible]), collapsibleNote),
-  exampleSection('Dynamic panes — add / remove at runtime', dynamicControls, el('div', { style: 'block-size:14rem; ' + FRAME }, [workspace]), dynamicNote),
+  exampleSection('initial · min · max: three bounded panes', el('div', { style: 'block-size:14rem; ' + FRAME }, [bounded]), boundedNote),
+  exampleSection('collapsible: fold a side panel with Enter', el('div', { style: 'block-size:12rem; ' + FRAME }, [collapsible]), collapsibleNote),
+  exampleSection('Dynamic panes: add / remove at runtime', dynamicControls, el('div', { style: 'block-size:14rem; ' + FRAME }, [workspace]), dynamicNote),
   exampleSection('panel log', log),
 )

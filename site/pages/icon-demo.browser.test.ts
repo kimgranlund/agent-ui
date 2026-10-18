@@ -35,7 +35,7 @@ describe('icon-demo — real Phosphor icons in real contexts', () => {
     for (const b of iconOnly) expect(b.getAttribute('aria-label')).toBeTruthy()
   })
 
-  it('the ambient font-size ramp sizes the 1em cell — a display-role icon is wider than a body-role icon', async () => {
+  it('the ambient font-size ramp sizes the 1em cell: a display-role icon is wider than a body-role icon', async () => {
     await raf()
     const glyphs = [...document.querySelectorAll('ui-icon[symbol="calendar-check"]')] as HTMLElement[]
     const small = glyphs.find((g) => g.style.fontSize === 'var(--md-sys-type-body)')
