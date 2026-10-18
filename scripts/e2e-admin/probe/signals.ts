@@ -24,6 +24,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { readJudge } from './judge.ts'
 import { EVALS_ROUNDS, modelFamily, runNameParts, usageCost, type TraceUsage } from './ledger.ts'
 
 export interface Check {
@@ -62,7 +63,11 @@ export interface SignalRun {
   model: string
   effort: string
   verdict: 'pass' | 'fail' | null
+  /** The probe checks, then one `judge <rubric>.<criterion>` check per criterion of `judge.json` when the run was
+   *  judged (T-0178). */
   checks: Check[]
+  /** The run's `judge.json` verdict (T-0178), null when it was not judged. */
+  judge: { rubric: string; score: number; threshold: number; passed: boolean } | null
   /** null when the round has no ledger. */
   costUsd: number | null
   turns: Turn[]
@@ -117,7 +122,9 @@ export function readRound(dir: string): SignalRun[] {
     }
     return days.get(file) ?? []
   }
-  const run = (name: string, siblings: string[], report: Record<string, unknown> | undefined, row: Record<string, unknown> | undefined): SignalRun => {
+  const run = (name: string, siblings: string[], runDir: string, row: Record<string, unknown> | undefined): SignalRun => {
+    const report = readJson(join(runDir, 'report.json'))
+    const judged = readJudge(runDir)
     // The ledger's own `scenario` predates T-0342 on older rounds (T-0329 bucketed every sample), so it is rederived.
     const { scenario, sample } = runNameParts(name, siblings)
     const v = (row !== undefined && 'verdict' in row ? row.verdict : report?.verdict) as unknown
@@ -138,7 +145,11 @@ export function readRound(dir: string): SignalRun[] {
       model: str(row?.model) || str(report?.model),
       effort: str(row?.effort) || 'default',
       verdict: v === 'pass' || v === 'fail' ? v : null,
-      checks: Array.isArray(report?.checks) ? (report.checks as Check[]) : [],
+      checks: [
+        ...(Array.isArray(report?.checks) ? (report.checks as Check[]) : []),
+        ...(judged?.criteria ?? []).map((c) => ({ check: `judge ${judged!.rubric.id}.${c.id}`, status: c.passed ? 'pass' : 'fail', detail: `score ${c.score}, threshold ${judged!.threshold}` })),
+      ],
+      judge: judged === undefined ? null : { rubric: judged.rubric.id, score: judged.score, threshold: judged.threshold, passed: judged.passed },
       costUsd: row === undefined ? null : typeof row.costUsd === 'number' ? row.costUsd : 0,
       turns,
     }
@@ -147,7 +158,7 @@ export function readRound(dir: string): SignalRun[] {
   if (existsSync(ledger)) {
     const rows = jsonLines(ledger).filter((row) => typeof row.out === 'string')
     const names = rows.map((row) => str(row.name) || basename(row.out as string))
-    return rows.map((row, i) => run(names[i], names, readJson(join(dir, 'runs', basename(row.out as string), 'report.json')), row))
+    return rows.map((row, i) => run(names[i], names, join(dir, 'runs', basename(row.out as string)), row))
   }
   const runs = join(dir, 'runs')
   if (!existsSync(runs)) return []
@@ -155,7 +166,7 @@ export function readRound(dir: string): SignalRun[] {
     .filter((e) => e.isDirectory() && existsSync(join(runs, e.name, 'report.json')))
     .map((e) => e.name)
     .sort()
-  return names.map((name) => run(name, names, readJson(join(runs, name, 'report.json')), undefined))
+  return names.map((name) => run(name, names, join(runs, name), undefined))
 }
 
 /** Several round folders read as one. */
@@ -216,6 +227,8 @@ export interface Signals {
   retries: Array<{ code: string; fired: number; turns: number; saved: number; extraUsd: number }>
   spend: Array<{ model: string; runs: number; turns: number; usd: number | null; msP50: number | null; msP90: number | null }>
   digests: Array<{ agent: string; section: string; digest: string; turns: number }>
+  /** Judged runs (T-0178) per rubric x model family: runs judged, passed, and the mean of their lowest scores. */
+  judged: Array<{ rubric: string; model: string; runs: number; pass: number; meanScore: number }>
   /** Turns per persona with no `routing.sections` (a halted turn carries none). */
   noSections: Record<string, number>
   tally: Tally
@@ -384,6 +397,17 @@ export function aggregate(runs: SignalRun[]): Signals {
     }
   }
 
+  const judged = new Map<string, { rubric: string; model: string; runs: number; pass: number; sum: number }>()
+  for (const r of runs) {
+    if (!r.judge) continue
+    const k = `${r.judge.rubric}\u0000${modelFamily(r.model)}`
+    const j = judged.get(k) ?? { rubric: r.judge.rubric, model: modelFamily(r.model), runs: 0, pass: 0, sum: 0 }
+    j.runs += 1
+    j.sum += r.judge.score
+    if (r.judge.passed) j.pass += 1
+    judged.set(k, j)
+  }
+
   const byName = <T>(key: (x: T) => string) => (a: T, b: T): number => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)
   return {
     rounds: [...new Set(runs.map((r) => r.round))],
@@ -397,6 +421,7 @@ export function aggregate(runs: SignalRun[]): Signals {
     retries: w.retries,
     spend,
     digests: [...digests.values()].sort(byName((d) => `${d.agent}\u0000${d.section}\u0000${d.digest}`)),
+    judged: [...judged.values()].map(({ sum, ...j }) => ({ ...j, meanScore: Math.round((sum / j.runs) * 100) / 100 })).sort((a, b) => byName<{ rubric: string }>((x) => x.rubric)(a, b) || models.indexOf(a.model) - models.indexOf(b.model)),
     noSections,
     tally: w.tally,
   }
@@ -555,6 +580,12 @@ export function renderSignals(runs: SignalRun[], o: RenderOptions): string {
   else {
     L.push('| Check | Fails | Runs |', '| --- | --- | --- |')
     for (const c of s.checks) L.push(`| ${c.check} | ${c.fails} | ${c.runs} |`)
+  }
+
+  if (s.judged.length > 0) {
+    L.push('', '## Judged checks', '', 'Each judged run\'s `runs/<name>/judge.json` (`npm run eval:judge`, T-0178): a run passes when every rubric criterion scores at or over the threshold; the score is its lowest criterion. Each criterion is also a `judge <rubric>.<criterion>` row above.', '')
+    L.push('| Rubric | Model | Judged | Pass | Mean score |', '| --- | --- | --- | --- | --- |')
+    for (const j of s.judged) L.push(`| ${j.rubric} | ${j.model} | ${j.runs} | ${j.pass} | ${j.meanScore} |`)
   }
 
   L.push('', '## Producer retry codes', '', 'From the trace lines: fired counts failed rounds (turns), saved counts turns that did not halt and shipped with no `*_UNCORRECTED` or SURFACE_DEGRADED code, and extra USD is the repair round that answers each failed round, split across its codes.', '')

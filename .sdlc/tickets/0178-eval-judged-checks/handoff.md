@@ -32,3 +32,11 @@ Re-scope record .sdlc/runtime/tasks/0176-eval-scenarios-store/architect-L1.md.
 
 ## Constraints
 Keys only in the CLI's keyed arm, never devtools.
+
+## Acceptance criteria
+- `npm run check` exits 0 (it now runs the keyless `eval-judge.ts check`, which parses the three rubrics and resolves every calibration citation).
+- `npx vitest run --project scripts scripts/e2e-admin/probe/judge.test.mjs scripts/e2e-admin/probe/signals.test.mjs` exits 0: a scripted provider pins the `judge.json` keys, the pinned model, `temperature: null`, the verdict recomputed at the rubric threshold (one criterion under it fails the run), the strict reply parse, and `signals.ts` folding `judge.json` into `judge <rubric>.<criterion>` checks and a Judged checks table; a round with no `judge.json` renders no judged section.
+- Rubrics for croupier, concierge and lexicographer live in `scripts/e2e-admin/probe/rubrics/`, each body read verbatim as the judge prompt; `calibration.json` cites committed round runs only, good cases passed runs and bad cases failed ones.
+- The key is read only in `eval-judge.ts`'s `selftest` and `run` arms; `judge.ts` reads no key or `process.env`.
+- SPEC CL-R8 (and its check table row, the CL-R7 key boundary, the scope line and the acceptance summary), `scripts/e2e-admin/README.md` Live rounds and `.claude/docs/references/commands.md` describe the shipped judge.
+- `npm run eval:judge -- selftest` (live, keyed, manual) scores every bad case under its threshold and every good case at or over, and reports a cost under $5.

@@ -43,6 +43,12 @@
   retrieval), and churn (all samples and like samples) plus those tallies against a baseline round; `--floor <tag>=<rate>` and
   `--max-drop <delta>` exit 1 on a miss. Each archived round also gets them as `signals.md`. Home:
   `scripts/e2e-admin/probe/signals.ts`, README Live rounds, SPEC CL-R4 and CL-R9 (T-0342, T-0349).
+- `npm run eval:judge -- run --round <folder> [--only <run>] [--cap <usd>]`: judged checks on a committed round's
+  transcripts against the persona rubrics in `scripts/e2e-admin/probe/rubrics/`, by the pinned judge model; writes
+  `runs/<name>/judge.json`, which `eval:signals` reads. Needs a key (`--repo-root <main checkout>` from a lane),
+  stops at `--cap` (default $5), a manual measurement, never a gate or CI job. `-- selftest` (keyed) scores the
+  calibration set and prints its cost; `-- check` (keyless) rides `check:scripts`. Home: `probe/eval-judge.ts`,
+  README Live rounds, SPEC CL-R8 (T-0178).
 - `node scripts/agent-content.mjs compile <persona> [--overlay <file>] [--json]`: the one agent compiler over the
   seed files, printing the bundle digest and resolution Test Chat stamps and the trace line records (T-0163).
 - `npm run traces`: the last live agent turns from the dev proxy's git-ignored trace log
