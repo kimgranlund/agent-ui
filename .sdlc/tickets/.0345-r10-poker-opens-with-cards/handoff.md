@@ -2,7 +2,7 @@
 id: T-0345
 title: "Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -39,3 +39,17 @@ Ruling (Kim, 2026-10-18): measure the Opus proposal (architect-L1.md) with the r
 
 ## Kim ruling (2026-10-18, close-out round)
 Ship the NEW opening line: 30/30 vs OLD 22/30 is the most a 30-run set can show, so the +9 bar is waived as a ceiling effect.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 9f5d771cf51e
+- Changed: Croupier openings deal on the first turn; the NEW opening line ships per Kim's ruling (#2146)
+- Commits: 71e9224 T-0345: Ship the NEW opening line (#2146)
+- Check: 1 Ruling (Kim, 2026-10-18 close-out): ship NEW, +9 of 30 bar waived: pass
+- Check: 2 NEW text present as measured: pass
+- Check: 3 Touched folders' tests: pass
+- Check: 4 Arms archived: pass
+- Check: 5 `npm run check`: pass
+- Check: 6 README table matches a recount: pass
+- Follow-up: note: the seed-digest and manifest updates follow the... -> notes.md
+- Follow-up: note: the throwaway worktree is removed -> notes.md

@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:3619b2936fdf -->
+<!-- sdlc-lite:managed:start v1 sha256:cb8676013d26 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -10,26 +10,18 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 ## Stages
 
 - proposed: 0
-- ready: 14
+- ready: 6
   - T-0193 OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card (0193-option-deck)
   - T-0195 Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state (0195-confirm-receipt)
   - T-0196 Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit (0196-amount-picker)
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-  - T-0345 Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) (0345-r10-poker-opens-with-cards)
-  - T-0359 The Stylist answers a palette ask in prose with no token surface (0359-stylist-palette-prose)
-  - T-0363 GameHud is outside the feed scope, so an ask-surface game cannot answer GAME_HUD_MISSING in place (0363-gamehud-feed-scope)
-  - T-0367 The guidance-conflict hole-card step expects a table update a correct refusal never sends (round 11 cluster G) (0367-r11-hole-card-oracle)
-  - T-0368 POKER_DEAL_MISSING judges a PlayingCard template over an empty hand as undealt (round 11 cluster H) (0368-r11-poker-deal-template)
-  - T-0369 LONE_BUTTON_FRAME sees through a one-child Row as the probe render lint does (round 11 cluster I) (0369-r11-lone-button-row)
-  - T-0370 The pontoon scenario does not stick under 15 (round 11 cluster J) (0370-r11-pontoon-stick-under-15)
-  - T-0371 A Croupier check reads poker pot and bankroll arithmetic (round 11 cluster K) (0371-r11-poker-chip-check)
 - claimed: 0
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 351
+- done: 359
 - dropped: 4
 
 ## Procedures

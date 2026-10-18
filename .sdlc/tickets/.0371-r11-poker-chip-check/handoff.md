@@ -2,7 +2,7 @@
 id: T-0371
 title: "A Croupier check reads poker pot and bankroll arithmetic (round 11 cluster K)"
 type: feature        # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -22,3 +22,16 @@ Judged checks, round 11: croupier Haiku 26 of 33 pass, Sonnet 11 of 11; C4 (repl
 
 ## Kim ruling (2026-10-18, close-out round)
 Promoted to ready; run as a keyless solo lane with one verifier, no live spend.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 71e92246ca19
+- Changed: Croupier checks poker pot and bankroll arithmetic (#2148)
+- Commits: none
+- Check: 1 A croupier check test on the `regress-croupier-omaha-haiku-2` sequence (trace :139 to :146) fires...: pass
+- Check: 2 `npm run check` and the croupier checks tests exit 0: pass
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:1311... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:767... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:1335... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:1216... -> notes.md
+- Follow-up: decide: .sdlc/evals/rounds note: sweep of every recorded croupier round 20... -> notes.md
