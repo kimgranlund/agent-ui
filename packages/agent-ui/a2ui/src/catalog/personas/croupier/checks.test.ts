@@ -882,6 +882,124 @@ describe('croupier bet controls: a hold\'em opening that asks for the stake (T-0
   })
 })
 
+// T-0368 (round 11 :222 round 2, Haiku 5.5, "Let's play Texas hold'em."): after a SURFACE_MISSING repair the table
+// shipped stake-first, its PlayingCards only templates over empty hands, no game named on screen and a Deal Button
+// whose context says newRound. A template over an empty hand is not a dealt card.
+describe('croupier bet controls: a hold\'em table whose hands are empty templates (T-0368)', () => {
+  const card = (rank: string, suit: string) => ({ rank, suit, faceDown: false })
+  const table = (playerHand: unknown[] = []): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'holdem-table-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'holdem-table-1', value: { bankroll: 1000, bet: 0, pot: 0, dealerHand: [], playerHand, communityCards: [], status: 'Place your bet to start the hand', bet_amount: 50 } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'holdem-table-1', components: [
+      { id: 'root', component: 'Card', children: ['content', 'footer'] },
+      { id: 'content', component: 'CardContent', children: ['header', 'board', 'hand'] },
+      { id: 'header', component: 'Row', justify: 'between', children: ['bankrollText', 'potText'] },
+      { id: 'bankrollText', component: 'Text', variant: 'label', text: { path: '/bankroll' } },
+      { id: 'potText', component: 'Text', variant: 'label', text: { path: '/pot' } },
+      { id: 'board', component: 'Row', gap: 'sm', wrap: true, children: { path: '/communityCards', componentId: 'communityCard' } },
+      { id: 'communityCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+      { id: 'hand', component: 'Row', gap: 'sm', wrap: true, children: { path: '/playerHand', componentId: 'playerCard' } },
+      { id: 'playerCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+      { id: 'footer', component: 'CardFooter', children: ['statusText', 'actions'] },
+      { id: 'statusText', component: 'Text', variant: 'body', text: { path: '/status' } },
+      { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['dealBtn'] },
+      { id: 'dealBtn', component: 'Button', label: 'Deal', variant: 'solid', action: { action: 'deal', context: { newRound: true } } },
+    ] } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput, intent?: string, session: Session = { turns: [] }) =>
+    croupierBetControls.check({ surfaces: semanticSurfaceViews(session, output), ...(intent !== undefined ? { intent } : {}) })
+  const HOLDEM_ASK = "Let's play Texas hold'em."
+  const edit = (output: A2uiOutput, data: Record<string, unknown>, comps: Record<string, unknown>[] = []): A2uiOutput => {
+    const out = structuredClone(output) as A2uiOutput
+    const dm = (out[1] as { updateDataModel: { value: Record<string, unknown> } }).updateDataModel
+    dm.value = { ...dm.value, ...data }
+    const uc = (out[2] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents
+    uc.components = [...uc.components.map((c) => comps.find((n) => n['id'] === c['id']) ?? c), ...comps.filter((n) => !uc.components.some((c) => c['id'] === n['id']))]
+    return out
+  }
+  const stake = { id: 'stake', component: 'Slider', value: { path: '/bet' }, min: 10, max: 500, name: 'bet', label: 'Bet amount' }
+  const withStake = (output: A2uiOutput) => edit(output, {}, [{ id: 'actions', component: 'Row', children: ['stake', 'dealBtn'] }, stake])
+
+  it('the recorded :222 round 2 payload is POKER_DEAL_MISSING on its Deal Button, worded as a deal with no stake ask', () => {
+    const findings = run(table(), HOLDEM_ASK)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['POKER_DEAL_MISSING', 'holdem-table-1:dealBtn']])
+    expect(findings[0]!.message).toMatch(/opens hold'em with empty hands and only dealBtn \(a Button\) to deal them, so no hand is dealt/)
+    expect(findings[0]!.message).toMatch(/dealt in this answer, not behind a Deal press/)
+    expect(findings[0]!.message).not.toMatch(/stake/)
+    // With a bet Slider beside it the same table asks for the stake, and says so.
+    const asked = run(withStake(table()), HOLDEM_ASK)
+    expect(asked.map((f) => [f.code, f.path])).toEqual([['POKER_DEAL_MISSING', 'holdem-table-1:stake']])
+    expect(asked[0]!.message).toMatch(/asks for a hold'em stake with stake \(a Slider\) and dealBtn \(a Button\), and no hand is dealt/)
+    expect(asked[0]!.message).toMatch(/so drop those controls/)
+  })
+
+  it('a hand that holds cards, a stud turn, or a lowball or 2-7 turn passes', () => {
+    expect(run(table([card('A', 'hearts'), card('K', 'clubs')]), HOLDEM_ASK)).toEqual([])
+    const asks = ["Let's play seven-card stud.", "Let's play lowball, not hold'em.", "Let's play deuce-to-seven, not hold'em.", "Let's play 2-7 draw, not hold'em."]
+    for (const intent of [...asks, "Let's play lowball.", "Let's play 2-7 triple draw.", "Let's play badugi."]) {
+      expect(run(table(), intent), intent).toEqual([])
+      expect(run(withStake(table()), intent), `${intent} with a bet Slider`).toEqual([])
+    }
+    const lowball = edit(withStake(table()), {}, [{ id: 'content', component: 'CardContent', children: ['title', 'header', 'board', 'hand'] }, { id: 'title', component: 'Text', text: 'Lowball', variant: 'h4' }])
+    expect(run(lowball)).toEqual([])
+    expect(run(lowball, "Let's play lowball.")).toEqual([])
+  })
+
+  it('hands cleared after a fold or the showdown, beside a newRound Deal again, stay quiet with no /phase key', () => {
+    const folded = edit(table(), { status: 'You folded. The dealer wins the pot of 40.' }, [{ id: 'dealBtn', component: 'Button', label: 'Deal again', action: { action: 'deal', context: { newRound: true } } }])
+    expect(run(folded, HOLDEM_ASK)).toEqual([])
+    expect(run(folded)).toEqual([])
+    const showdown = edit(table(), { status: 'Showdown: your pair of kings takes it' })
+    expect(run(showdown, HOLDEM_ASK)).toEqual([])
+    const titled = edit(table(), {}, [{ id: 'content', component: 'CardContent', children: ['result', 'header', 'board', 'hand'] }, { id: 'result', component: 'Text', text: 'You won 80 chips' }])
+    expect(run(titled, HOLDEM_ASK)).toEqual([])
+  })
+
+  it('a table this session dealt a hand on before stays quiet when its hands are cleared', () => {
+    const before = table([card('A', 'hearts'), card('K', 'clubs')])
+    const session: Session = { turns: [{ role: 'user', content: HOLDEM_ASK }, { role: 'assistant', content: toJsonl(before) }] }
+    const cleared = table().slice(1) as A2uiOutput
+    expect(run(cleared, 'Deal again', session)).toEqual([])
+    expect(run(cleared, HOLDEM_ASK, session)).toEqual([])
+    expect(run(cleared, HOLDEM_ASK).map((f) => f.code)).toEqual(['POKER_DEAL_MISSING'])
+  })
+
+  it('hold\'em comes from the user\'s words only when they ask to play it', () => {
+    expect(run(withStake(table()), "is hold'em harder than this?").map((f) => f.code)).toEqual(['BET_TABLE_MISSING'])
+    expect(run(withStake(table()), "How do you play hold'em?").map((f) => f.code)).toEqual(['BET_TABLE_MISSING'])
+  })
+
+  it('a blackjack ask that mentions hold\'em still falls to the T-0172 blackjack arm', () => {
+    const unnamed: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'bet-1', catalogId: 'agent-ui--croupier' } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'bet-1', components: [
+        { id: 'root', component: 'Card', children: ['stake', 'deal'] },
+        { id: 'stake', component: 'Slider', value: { path: '/bet' }, min: 10, max: 500, name: 'bet', label: 'Bet amount' },
+        { id: 'deal', component: 'Button', label: 'Deal', action: { action: 'deal' } },
+      ] } },
+    ] as A2uiOutput
+    expect(run(unnamed, "Let's play blackjack, not hold'em.").map((f) => [f.code, f.path])).toEqual([['BET_TABLE_MISSING', 'bet-1:stake']])
+  })
+
+  it('the blackjack arm judges a Card of empty templates too, and never a CardTable', () => {
+    expect(run(withStake(table())).map((f) => [f.code, f.path])).toEqual([['BET_TABLE_MISSING', 'holdem-table-1:dealBtn']])
+    expect(run(withStake(table()), "Let's play blackjack.").map((f) => f.code)).toEqual(['BET_TABLE_MISSING'])
+    const cardTable: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 1000, bet: 50, phase: 'betting', dealerHand: [], playerHand: [] } } },
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: [
+        { id: 'root', component: 'CardTable', phase: { path: '/phase' }, bet: { path: '/bet' }, bankroll: { path: '/bankroll' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, betAction: 'deal' },
+      ] } },
+    ] as A2uiOutput
+    expect(run(cardTable, "Let's play blackjack.")).toEqual([])
+  })
+
+  it('an orphan PlayingCard template over an empty hand is off screen and counts as dealt', () => {
+    const orphan = edit(table(), {}, [{ id: 'ghost', component: 'Row', children: { path: '/dealerHand', componentId: 'ghostCard' } }, { id: 'ghostCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' } }])
+    expect(run(orphan, HOLDEM_ASK)).toEqual([])
+  })
+})
+
 // T-0172: the live probe on f6f94f7f. Haiku 5.5 answered a 50 press with prose and no update; Sonnet 5.5 dealt and
 // wrote a bankroll of 500 from 1,000.
 describe('croupier action check: a table action moves the table and a deal takes the bet (T-0172 live probe)', () => {

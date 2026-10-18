@@ -515,9 +515,13 @@ const BLACKJACK_GAMES = /\b(blackjack|black jack|twenty[- ]one|spanish 21|pontoo
 /** Hold'em in any spelling ("hold'em", "hold’em", "holdem", "hold-em", "hold em"); shared by every game pattern. */
 const HOLDEM_WORDS = "hold[- ]?['’]?em"
 const HOLDEM = new RegExp(`\\b(${HOLDEM_WORDS})\\b`, 'i')
-const OTHER_GAMES = new RegExp(`\\b(poker|stud|${HOLDEM_WORDS}|omaha|razz|five[- ]card draw|draw poker|baccarat|roulette|craps)\\b`, 'i')
+/** T-0368: the draw family, one list for every game pattern that names a game other than blackjack or hold'em. */
+const DRAW_FAMILY_WORDS = "five[- ]card draw|draw poker|triple draw|badugi|lowball|deuce[- ]to[- ]seven|2[- ]7( triple)? draw"
+const OTHER_GAMES = new RegExp(`\\b(poker|stud|${HOLDEM_WORDS}|omaha|razz|${DRAW_FAMILY_WORDS}|baccarat|roulette|craps)\\b`, 'i')
 /** A game other than hold'em that a hold'em mention can sit beside (a picker, or stud prose that says "not hold'em"). */
-const NOT_HOLDEM_GAMES = /\b(stud|omaha|razz|five[- ]card draw|draw poker|triple draw|badugi|baccarat|roulette|craps)\b/i
+const NOT_HOLDEM_GAMES = new RegExp(`\\b(stud|omaha|razz|${DRAW_FAMILY_WORDS}|baccarat|roulette|craps)\\b`, 'i')
+/** Words that name hold'em as the game and no other (a picker or stud prose that mentions hold'em does not). */
+const namesHoldemAlone = (words: string): boolean => HOLDEM.test(words) && !NOT_HOLDEM_GAMES.test(words) && !BLACKJACK_GAMES.test(words)
 const textOf = (v: unknown): string => (typeof v === 'string' ? v : bindingPath(v) ?? '')
 
 /** A surface's literal words: its text, label, title and status props. */
@@ -547,15 +551,55 @@ const isDealPress = (c: A2uiComponent): boolean =>
  *  false positive costs one repair round and ships tallied at the bound (ADR-0238), never a halt. T-0212: a surface
  *  that names another game (the recorded seven-card stud opening, sent back twice) keeps its Card; one that names
  *  no game at all is still judged as blackjack. T-0357 (round 10 :81, Haiku 5.5): a hold'em opening that asks for
- *  the stake instead of dealing gets POKER_DEAL_MISSING (`holdemStakeAsk`); hold'em deals at once on its Card (T-0323). */
+ *  the stake instead of dealing gets POKER_DEAL_MISSING (`holdemStakeAsk`); hold'em deals at once on its Card (T-0323).
+ *  T-0368 (round 11 :222 round 2): a PlayingCard reached only as a template over an empty hand is not a dealt card
+ *  (`undealtCards`), so such a Card is judged by both arms when it reads as a fresh opening (`freshOpening`), and a
+ *  surface that names no game is judged as hold'em when the user's words ask to play hold'em (`holdemAsked`), and keeps
+ *  its Card when they ask to play another game that is not blackjack (`otherAsked`). */
 const isBetInput = (c: A2uiComponent): boolean =>
   BET_INPUTS.has(c.component) && [c['label'], c['name'], c['value']].some((v) => BET_WORDS.test(textOf(v).replace(/[/_-]/g, ' ')))
 
-function betStepWithoutTable(view: SurfaceView, surfaces: readonly SurfaceView[]): SemanticFinding[] {
+/** T-0368: what the bet step reads across the turn, computed once per check. */
+interface BetStepTurn {
+  /** Each surface's undealt PlayingCards (`undealtCards`). */
+  undealt: ReadonlyMap<SurfaceView, ReadonlySet<string>>
+  /** A surface this turn touches shows a CardTable or a dealt PlayingCard. */
+  dealtSomewhere: boolean
+  /** The user's words ask to play hold'em and no other game (`asksToPlay`, `namesHoldemAlone`). */
+  holdemAsked: boolean
+  /** The user's words ask to play a game other than blackjack, so a surface that names no game keeps its Card (T-0212). */
+  otherAsked: boolean
+}
+
+function betStepTurn(surfaces: readonly SurfaceView[], intent: string | undefined): BetStepTurn {
+  const undealt = new Map(surfaces.map((view) => [view, undealtCards(view)] as const))
+  const dealtSomewhere = surfaces.some((view) =>
+    reachable(view).some((c) => c.component === 'CardTable' || (c.component === 'PlayingCard' && !undealt.get(view)!.has(c.id))),
+  )
+  const asked = intent !== undefined && asksToPlay(intent)
+  return {
+    undealt,
+    dealtSomewhere,
+    holdemAsked: asked && namesHoldemAlone(intent),
+    otherAsked: asked && OTHER_GAMES.test(intent) && !BLACKJACK_GAMES.test(intent),
+  }
+}
+
+function betStepWithoutTable(view: SurfaceView, turn: BetStepTurn): SemanticFinding[] {
   const comps = [...view.components.values()]
-  // A dealt hand (any PlayingCard) is past the bet step: an older table shape is judged by the hand check alone.
-  if (comps.some((c) => c.component === 'CardTable' || c.component === 'PlayingCard')) return []
-  if (namesOtherGame(comps)) return holdemStakeAsk(view, surfaces)
+  if (comps.some((c) => c.component === 'CardTable')) return []
+  // A dealt hand (a PlayingCard that is not a template over an empty hand) is past the bet step: an older table
+  // shape is judged by the hand check alone.
+  const undealt = turn.undealt.get(view)!
+  if (comps.some((c) => c.component === 'PlayingCard' && !undealt.has(c.id))) return []
+  const shown = reachable(view)
+  const emptyHands = comps.some((c) => c.component === 'PlayingCard')
+  if (emptyHands && !freshOpening(view, shown)) return []
+  if (namesOtherGame(comps)) return holdemStakeAsk(view, shown, literalWords(shown), emptyHands, turn.dealtSomewhere)
+  const words = literalWords(comps)
+  const unnamed = !OTHER_GAMES.test(words) && !BLACKJACK_GAMES.test(words)
+  if (unnamed && turn.holdemAsked) return holdemStakeAsk(view, shown, "hold'em", emptyHands, turn.dealtSomewhere)
+  if (unnamed && turn.otherAsked) return []
   const strays = comps.filter((c) => isBetInput(c) || isDealPress(c))
   if (strays.length === 0) return []
   return [
@@ -570,31 +614,68 @@ function betStepWithoutTable(view: SurfaceView, surfaces: readonly SurfaceView[]
   ]
 }
 
-/** T-0357: the hold'em arm of the bet step. It fires only when hold'em is the game being opened (the on-screen words
- *  name hold'em and no other game, so a picker or stud prose that mentions hold'em is not judged), the surface holds a
- *  bet input, nothing on a surface this turn touches shows a dealt card, and the surface offers no new-round forward
- *  and does not read settled (a settled hand's next-stake Slider beside its Deal again). Only the bet input fires it:
- *  a Deal Button alone may be a settled hand's Deal again. Stud and draw post an ante before the deal and are not
- *  judged (the recorded stud opening keeps its Card). */
-function holdemStakeAsk(view: SurfaceView, surfaces: readonly SurfaceView[]): SemanticFinding[] {
-  const shown = reachable(view)
-  const words = literalWords(shown)
-  if (!HOLDEM.test(words) || NOT_HOLDEM_GAMES.test(words) || BLACKJACK_GAMES.test(words)) return []
-  if (surfaces.some((other) => reachable(other).some((c) => c.component === 'CardTable' || c.component === 'PlayingCard'))) return []
-  if (shown.some(offersNextRound) || readPointer(view.dataModel, '/phase') === 'settled') return []
+/** T-0357: the hold'em arm of the bet step. It fires only when hold'em is the game being opened (`gameWords`: the
+ *  on-screen words name hold'em and no other game, so a picker or stud prose that mentions hold'em is not judged;
+ *  T-0368: or the user asked to play hold'em on a surface that names no game), the surface holds a bet input, nothing
+ *  on a surface this turn touches shows a dealt card, and the surface offers no new-round forward and does not read
+ *  settled (a settled hand's next-stake Slider beside its Deal again). A Deal Button alone may be a settled hand's Deal
+ *  again, so it fires only beside empty hands (T-0368: PlayingCard templates over empty lists on a `freshOpening`),
+ *  and there even a new-round Deal is the opening. Stud and draw post an ante before the deal and are not judged (the
+ *  recorded stud opening keeps its Card). */
+function holdemStakeAsk(view: SurfaceView, shown: readonly A2uiComponent[], gameWords: string, emptyHands: boolean, dealtSomewhere: boolean): SemanticFinding[] {
+  if (!namesHoldemAlone(gameWords) || dealtSomewhere) return []
+  if ((!emptyHands && shown.some(offersNextRound)) || readPointer(view.dataModel, '/phase') === 'settled') return []
   const inputs = shown.filter(isBetInput)
-  if (inputs.length === 0) return []
-  const strays = [...inputs, ...shown.filter(isDealPress)]
+  const deals = shown.filter(isDealPress)
+  if (inputs.length === 0 && !(emptyHands && deals.length > 0)) return []
+  const strays = listed([...inputs, ...deals].map((c) => `${c.id} (a ${c.component})`))
   return [
     {
       code: 'POKER_DEAL_MISSING',
-      path: `${view.surfaceId}:${inputs[0]!.id}`,
+      path: `${view.surfaceId}:${(inputs[0] ?? deals[0])!.id}`,
       message:
-        `${view.surfaceId} asks for a hold'em stake with ${listed(strays.map((c) => `${c.id} (a ${c.component})`))}, and no hand is dealt. ` +
+        (inputs.length > 0
+          ? `${view.surfaceId} asks for a hold'em stake with ${strays}, and no hand is dealt. `
+          : `${view.surfaceId} opens hold'em with empty hands and only ${strays} to deal them, so no hand is dealt. `) +
         `Hold'em deals the hands at once: make the surface one Card with the dealt PlayingCard hands, the bankroll and ` +
-        `the hand's moves as Buttons (Check, Bet and Fold), so drop those controls.`,
+        `the hand's moves as Buttons (Check, Bet and Fold), ` +
+        (inputs.length > 0 ? 'so drop those controls.' : 'dealt in this answer, not behind a Deal press.'),
     },
   ]
+}
+
+/** T-0368: the PlayingCards a surface deals no card from: each one reached on screen (`reachable`) only as a template
+ *  whose absolute path reads an empty list. A missing or unresolvable path stays indeterminate (dealt), as everywhere
+ *  in this file. The hand reader (`handContainers`) cannot answer this: it knows only dealer and player containers,
+ *  and a hold'em board's community cards are neither. */
+function undealtCards(view: SurfaceView): Set<string> {
+  const empty = new Set<string>()
+  const used = new Set<string>()
+  for (const c of reachable(view)) {
+    const kids = c['children']
+    if (Array.isArray(kids)) for (const k of kids) if (typeof k === 'string') used.add(k)
+    if (isRecord(kids) && typeof kids['componentId'] === 'string') {
+      const path = kids['path']
+      const list = typeof path === 'string' && path.startsWith('/') ? readPointer(view.dataModel, path) : undefined
+      ;(Array.isArray(list) && list.length === 0 ? empty : used).add(kids['componentId'])
+    }
+    if (typeof c['child'] === 'string') used.add(c['child'])
+  }
+  return new Set([...empty].filter((id) => !used.has(id)))
+}
+
+/** T-0368: a hand over: the phase, a result word, a fold or the showdown. */
+const SETTLED_WORDS = /\b(settled|fold(s|ed)?|showdown|hand over|game over|wins?|won|lose[sd]?|lost|beats?|split|ties?|tied|push|chop)\b/i
+
+/** T-0368: empty hands read as a fresh opening only when nothing says a hand is over (the data model's `/phase`,
+ *  `/status` or `/result`, or a text, title, status or result prop on screen, literal or bound; a Button's label is a
+ *  move, never a signal) and no earlier turn dealt a card on this surface (its prior data model lists none). A hand
+ *  cleared after a fold or a showdown, beside its Deal again, is not an opening. */
+function freshOpening(view: SurfaceView, shown: readonly A2uiComponent[]): boolean {
+  if (deckCards(view.priorDataModel, '', []).length > 0) return false
+  const said = (v: unknown): boolean => typeof v === 'string' && SETTLED_WORDS.test(v)
+  if (['/phase', '/status', '/result'].some((p) => said(readPointer(view.dataModel, p)))) return false
+  return !shown.some((c) => c.component !== 'Button' && ['text', 'title', 'status', 'result'].some((k) => said(stringProp(view, c, k))))
 }
 
 /** T-0233: the player's move words across the blackjack family (pontoon twists, sticks and buys). Wider than
@@ -704,10 +785,13 @@ function dealAgainMissing(surfaces: readonly SurfaceView[], round: number | unde
 export const croupierBetControls: SemanticCheck = {
   id: 'croupier-bet-controls',
   requires: ['CardTable'],
-  check: (input) => [
-    ...input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view, input.surfaces), ...movesMissing(view)]),
-    ...dealAgainMissing(input.surfaces, input.round),
-  ],
+  check: (input) => {
+    const turn = betStepTurn(input.surfaces, input.intent)
+    return [
+      ...input.surfaces.flatMap((view) => [...betControls(view), ...betStepWithoutTable(view, turn), ...movesMissing(view)]),
+      ...dealAgainMissing(input.surfaces, input.round),
+    ]
+  },
 }
 
 const DEAL_ACTION = /^(deal|place_?bet|bet|deal_blackjack)$/i
@@ -986,14 +1070,16 @@ function typedMoveFindings(surfaces: readonly SurfaceView[], intent: string, tar
 
 /** T-0265: the words of a say turn that starts a card game ("Let's play Texas hold'em.", "Deal me in"). */
 const PLAY_WORDS = /\b(play|deal|start|let'?s|another (game|round|hand))\b/i
+/** A say turn that asks to play, not a question about the game (T-0265; T-0368 routes hold'em by it too). */
+const asksToPlay = (intent: string): boolean => !/\?\s*$/.test(intent.trim()) && PLAY_WORDS.test(intent)
 
 /** T-0265 (the recorded Haiku 5.5 openings, round 3 texas-holdem and five-card-draw turn 0): "Let's play Texas
  *  hold'em." was dealt in prose ("Your hole cards are A♥ K♦") with no table. A say turn that asks to play a card game,
  *  not a question about one, and declares no target must open a surface; an answer with none is SURFACE_MISSING. */
 function openingMissing(surfaces: readonly SurfaceView[], intent: string, target: string | undefined): SemanticFinding[] {
-  if (surfaces.length > 0 || target !== undefined || /\?\s*$/.test(intent.trim())) return []
+  if (surfaces.length > 0 || target !== undefined || !asksToPlay(intent)) return []
   const game = BLACKJACK_GAMES.exec(intent)?.[1] ?? POKER_GAMES.exec(intent)?.[1]
-  if (game === undefined || !PLAY_WORDS.test(intent)) return []
+  if (game === undefined) return []
   return [
     {
       code: 'SURFACE_MISSING',
