@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:ed29a92d3825 -->
+<!-- sdlc-lite:managed:start v1 sha256:2cc86f0880a3 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -10,28 +10,14 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 ## Stages
 
 - proposed: 0
-- ready: 27
-  - T-0178 Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (0178-eval-judged-checks)
-  - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (0187-split-pane-narrow-fit)
-  - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (0188-line-chart-projected-dash)
-  - T-0189 playing-card corner index: a type floor or a ruled pictorial exemption (0189-playing-card-type-floor)
-  - T-0190 site demos: inline type sizes and off-ramp spacing literals move to tokens (0190-site-demo-inline-literals)
+- ready: 13
   - T-0193 OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card (0193-option-deck)
   - T-0195 Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state (0195-confirm-receipt)
   - T-0196 Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit (0196-amount-picker)
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-  - T-0203 Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (0203-composer-model-controls)
-  - T-0343 Smoke scenarios for every preset, planned from tags, replayed in CI (0343-eval-smoke-scenarios)
   - T-0345 Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) (0345-r10-poker-opens-with-cards)
-  - T-0349 eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table (0349-signals-gaps-r10)
-  - T-0350 A settled card table ships with no way forward (no Deal again), and no check names it (0350-r10-settled-table-no-way-forward)
-  - T-0354 Explicit format asks ('as a card', 'as a table', 'build me a form') force a surface even where the catalog owns the noun (0354-override-explicit-format)
-  - T-0355 Per-version seed field digests so a migration tells an untouched old seed value from a user edit (0355-seed-version-digests)
-  - T-0356 The other seven controls build their glyphs through createGlyph, with no host aria-hidden (0356-create-glyph-rest)
-  - T-0357 A poker opening that asks for the stake instead of dealing gets a deterministic check and repair (0357-poker-stake-ask-check)
-  - T-0358 GameHud composite moment fires only beside a BoardGrid, so board-less game personas hand-build their score panels (0358-gamehud-moment-board-only)
   - T-0359 The Stylist answers a palette ask in prose with no token surface (0359-stylist-palette-prose)
   - T-0360 Live round 11: measure the round 10 fixes (PARSE array ask, showdown settles, natural skip, playing-card override, deal-again, poker deal) with fog analysis (0360-live-round-11)
   - T-0361 A quest log with no Timeline gets no repair round (0361-quest-log-timeline-unchecked)
@@ -42,7 +28,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 331
+- done: 345
 - dropped: 4
 
 ## Procedures

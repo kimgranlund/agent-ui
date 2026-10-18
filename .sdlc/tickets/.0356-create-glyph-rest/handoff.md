@@ -2,7 +2,7 @@
 id: T-0356
 title: "The other seven controls build their glyphs through createGlyph, with no host aria-hidden"
 type: chore           # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -30,3 +30,16 @@ Follow-up from T-0351 (closed, #2117), which added createGlyph and moved six con
 
 ## Constraints
 No golden re-mint; ARIA via ElementInternals only.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: ecad202386a5
+- Changed: Every control builds glyphs through createGlyph (#2130)
+- Commits: none
+- Check: 1 `git grep -n "createElement('ui-glyph')" packages/` lists only glyph.ts and glyph's own tests: pass
+- Check: 2 No host aria-hidden on a ui-glyph in the seven folders or nav-rail; select and combo-box tests as...: pass
+- Check: 3 Dogfood bundle rebuilt and freshness test passes: pass
+- Check: 4 `npm run check`, the folders' jsdom and browser tests, `npm run test:visual`, no golden change: pass
+- Follow-up: note: packages/agent-ui/components/src/controls/swiper/swiper-paddles.ts:... -> notes.md
+- Follow-up: note: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/wave-w356/sit... -> notes.md
+- Follow-up: note: the npm run check exit code was not captured directly the pipe hid... -> notes.md

@@ -2,7 +2,7 @@
 id: T-0203
 title: "Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0185]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -46,3 +46,18 @@ verifier: L3
 
 ## After merge
 - The conductor runs a live probe with web search on and confirms a cited answer, and that the surface arm accepts server tools beside the forced render_surface tool.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: skipped (verifier-L3 (fable) and verifier-L2 (sonnet) both passed criteria 1 to 5 on unchanged code (ebd06da39)) · verifier: verifier-L2 (sonnet) · base: aa20d07c6fa2
+- Changed: Composer thinking, reasoning, web tools and mid-conversation effort; live web-search probe is a conductor after-merge step (#2123)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/live-agent/anthropic-request-body.test.ts packages/age...: pass
+- Check: 3 `npx vitest run packages/agent-ui/app/src/controls/agent-admin packages/agent-ui/app/src/controls...: pass
+- Check: 4 `npm run e2e:admin` exits 0: pass
+- Check: 5 Screenshots of the composer effort menu, capabilities panel with server tool rows, settings Model...: pass
+- Deviation: verifier skipped: verifier-L3 (fable) and verifier-L2 (sonnet) both passed criteria 1 to 5 on unchanged code (ebd06da39)
+- Follow-up: note: packages/agent-ui/a2ui/src/agent/produce.ts the surface arm sends... -> notes.md
+- Follow-up: note: the 4 conversation.browser.test.ts failures GH #1221, TKT-0079 are... -> notes.md
+- Follow-up: note: scratch under... -> notes.md

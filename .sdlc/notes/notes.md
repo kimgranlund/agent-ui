@@ -325,3 +325,76 @@
 - T-0354 side effects for review: "show me a playing card" now forces a surface in croupier; "make me a form of payment" still does in concierge.
 - T-0352 legacy-only `--ui-*-action-font-legacy` tokens retire with T-0353.
 - Filed T-0360 (live round 11, cap $10) per Kim's approved spend.
+
+## T-0178: Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (2026-10-18)
+
+- note: `.sdlc/evals/rounds/2026-10-17-r10-targeted/runs/regress-croupier-blackjack-moves-haiku-1` (the good croupier case in `scripts/e2e-admin/probe/rubrics/calibration.json`) scores 3 on the live run, exactly at the croupier threshold, and the C4 reason still names the turn 4 chat-log fragment "100" as a slip. The margin is zero, so a rerun may flip it; recheck on any judge model, rubric or transcript change.
+- note: I could not run a mutation check on the threshold or `wx` write guard (the throwaway-worktree command was denied by the permission system), so those two bite-checks rest on reading the tests' names and the code at judge.ts:303 and 331-337. A scratch probe file remains at `/var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0178-verifier-L2/probe.mts` (rm was denied); no worktree was created.
+
+## T-0187: split-pane demo stacks or scrolls at 400px instead of overflowing the column (2026-10-18)
+
+- note: the red-checkpoint deviations script printed nothing (no `(red)` criteria in this handoff).
+- note: the throwaway worktrees were removed; two scratch log files under /var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/ could not be deleted (rm was denied) and are harmless.
+
+## T-0188: line-chart projected dash: user-unit dash or a ruled screen-px exemption (2026-10-18)
+
+- note: scripts/dogfood-rules.json and .claude/docs/references/dogfood-lint.md still describe the dash-scale rule without a "ruled texture dash" carve-out (solo flagged it, optional).
+
+## T-0189: playing-card corner index: a type floor or a ruled pictorial exemption (2026-10-18)
+
+- note: .sdlc/notes/notes.md does not record the playing-card ruling (the solo report flags this). The conductor should add the line or confirm it with Kim.
+
+## T-0190: site demos: inline type sizes and off-ramp spacing literals move to tokens (2026-10-18)
+
+- note: .sdlc/runtime/tasks/0190-site-demo-inline-literals/solo-report.md "Open": audio, video, swiper-label and in-control captions moved from em to type roles; no exemption was needed and the render lint is green.
+
+## T-0343: Smoke scenarios for every preset, planned from tags, replayed in CI (2026-10-18)
+
+- note: `git status` in the tree was clean (build committed in 994464e97), so the diff above is `aa20d07c6..HEAD`.
+
+## T-0349: eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table (2026-10-18)
+
+- note: report.md line 38 "Concierge confirm turns retrieving confirmation-view or backable-wizard: 0 of 9" is a turn-class count the command does not produce; it gives per-exemplar turn counts (confirmation-view 2 vs 5, backable-wizard 0 vs 3, frontier-booking-receipt 0 vs 1), and the 2 matches report.md's "two non-confirm turns". Solo reported this openly; the retrieval table reproduces the underlying counts.
+
+## T-0350: A settled card table ships with no way forward (no Deal again), and no check names it (2026-10-18)
+
+- decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:641-645 note: `namesOtherGame` and the `opened()` poker skip scan the full merged component map while the forward scan uses `reachable()`, so a poker-named component orphaned from an earlier turn exempts a surface the reachable graph no longer shows as poker; no recorded turn trips it (sweep above).
+
+## T-0354: Explicit format asks ('as a card', 'as a table', 'build me a form') force a surface even where the catalog owns the noun (2026-10-18)
+
+- decide: packages/agent-ui/a2ui/src/agent/response-type.ts:177 "show me a playing card" now forces a surface in croupier (base: none) because `domainLeadWords` turns "playing" from PlayingCard into a format modifier.
+- decide: packages/agent-ui/a2ui/src/agent/response-type.ts:177 the solo reported that "show me a card table" forces a surface in croupier. My probe returned none in croupier (and `surface` in quizmaster, the same as base), so the solo's claim does not reproduce. Kim should still say which result is wanted.
+- decide: packages/agent-ui/a2ui/src/agent/response-type.ts:224 "make me a form of payment" still forces a surface in concierge ("of" is in NOUN_END after a build verb plus "a").
+- note: the default catalog also changed. "build me a deck of cards" and "I worked as a card dealer" were `surface` at base and are none now (the `of` non-modifier and the NOUN_END on the "as a" phrases).
+- note: I could not remove the scratch probe dir /var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0354-verifier-L1 (rm was denied). The throwaway worktree was removed.
+
+## T-0355: Per-version seed field digests so a migration tells an untouched old seed value from a user edit (2026-10-18)
+
+- decide: site/agent-content/seed-history.ts:29-38: note: only Quizmaster v1 `model` is recorded; the v2 to v6 bumps moved entry lists, which the table and `diffOverlay` do not digest yet (spec ACS-R7 item 6 says so), so a pre-overlay store at v2 to v5 keeps every differing entry flagged, the T-0161 behaviour.
+- decide: .claude/docs/spec/agent-content.spec.md:283-284: note: the sentence `Any other differing value is kept and` wraps mid-clause onto the next line; a cosmetic reflow.
+
+## T-0356: The other seven controls build their glyphs through createGlyph, with no host aria-hidden (2026-10-18)
+
+- note: packages/agent-ui/components/src/controls/swiper/swiper-paddles.ts:36-39: on a re-drive the glyph's `symbol` property is set but the initial `symbol` attribute stays (the prop does not reflect). The solo report states this too; no CSS or test reads that attribute.
+- note: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/wave-w356/site/pages/glyph-doc.ts:28,62 still call `document.createElement('ui-glyph')`. This is outside the `packages/` criterion; it is a docs-site page that exercises label and symbol variants, not a control.
+- note: the `npm run check` exit code was not captured directly (the pipe hid it); success rests on the && chain reaching its last line.
+
+## T-0357: A poker opening that asks for the stake instead of dealing gets a deterministic check and repair (2026-10-18)
+
+- decide: `packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:541`: note: `isDealPress` now matches any `deal_<x>` action (`deal_again`, `deal_next`) on the blackjack arm, so a table-less settled summary Card whose new-round Button has a non-"Deal" label but a `deal_again` action would be BET_TABLE_MISSING; no recorded fixture does this (sweep, 0 new hits), so it is a watch item for the next live round, not a defect.
+- decide: `packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:578-585`: note: the hold'em arm reads only the surfaces the turn touches, so a mid-hand raise ask opened on a new surface while the dealt table sits untouched would fire; no recorded turn does this (:83 and :84 touch the dealt surface, :82 ships no payload), so it is a watch item, not a defect.
+
+## T-0358: GameHud composite moment fires only beside a BoardGrid, so board-less game personas hand-build their score panels (2026-10-18)
+
+- decide: .sdlc/tickets/0358-gamehud-moment-board-only/handoff.md:32: decide: the acceptance criteria were written by the builder (the base handoff ends at Constraints), so this verdict judges builder-authored criteria. Against the Goal: sentence one holds (GAME_HUD_MISSING fires on the three board-less strips and an authored compliant round ships a GameHud), sentence two ("the three pinned smoke replays flip to green") does not: Mentalist turn 0, Negotiator turn 1, Dungeon Master turn 1 and the run-level Timeline stay red, pinned to T-0362 and T-0361 with the trace evidence above. Per spec CL-R3 (`.claude/docs/spec/agent-closed-loop.spec.md:75`) the authored rounds prove the loop mechanics, not live compliance.
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:161: note: false-positive sweep of the built GameHud check vs base over 588 recorded runs (`.sdlc/evals/rounds/*/runs/*/report.json`, all 15 personas) and 69 replay fixtures, 3409 turns, 4164 model rounds (2841 tool-call rounds) and the shipped lines, 6555 surfaces judged through `semanticSurfaceViews` with the session replayed: base 71 hits (admiral 65, lexicographer 4, croupier 2), built 103, NEW 32, LOST 0. All 32 new hits are the three smoke targets (mentalist 12 at `ask-1:progress`, negotiator 12 at `ask-1:badge`, dungeon-master 8 at `quest-log:hp`, each across the run and its replay, every round and the shipped lines): all true. Zero hits on quant (KPI dashboard), concierge (171 runs, membership and bookings), shopkeeper, travel, stylist, curator, quizmaster, alchemist, restaurant, or the 299 croupier CardTable games.
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:158: note: `lacks: ['CardTable']` also feeds `compositeAnswered` (`produce.ts:1230`, `:1521`), so a CardTable now counts as answering a carried-over GAME_HUD_MISSING; consistent with the croupier `game-hud` skill ("never add a GameHud beside" a CardTable) and LOST 0 in the sweep.
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts:400: decide: the "fires with the game gate or CardTable `lacks` removed" clause is proven only by a verifier-run mutation; `compositeMomentCheck` is exported, so an in-tree assertion over a mutated row would pin it.
+- decide: .sdlc/tickets/0363-gamehud-feed-scope/handoff.md:13: decide: the ruled repair names no surface, and GameHud is outside `FEED_SURFACE_TYPES`, so a live model that follows it on an ask surface gets FEED_SCOPE (the authored rounds sidestep this with a separate `hud-1`); with T-0362's open question (per-surface firing when another surface already holds a GameHud, Negotiator turn 1) the Goal's "the turn ships the GameHud" is unproven live until those land.
+- decide: .sdlc/tickets/0361-quest-log-timeline-unchecked/handoff.md:1: note: T-0361 to T-0364 exist, status ready, `depends: [T-0358]`, every section filled; `tickets.py check` prints `ok: 362 tickets, roadmap current` (its warnings on T-0189/0349/0350/0354 and old placeholder text predate this ticket).
+
+## T-0203: Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header (2026-10-18)
+
+- note: packages/agent-ui/a2ui/src/agent/produce.ts the surface arm sends server tools beside `render_surface` with a forced `tool_choice`; whether the API accepts that mix and the `web_search_20260318` / `web_fetch_20260318` types is settled only by the conductor's live probe (carried from verifier-L3).
+- note: the 4 conversation.browser.test.ts failures (GH #1221, TKT-0079) are pre-existing at base per verifier-L3; no criterion names the browser shard.
+- note: scratch under /var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0203-verifier-L2 and 0203-verifier-L2-check.log not removed (cleanup command was denied); no throwaway worktree was created.

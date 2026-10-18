@@ -2,7 +2,7 @@
 id: T-0358
 title: "GameHud composite moment fires only beside a BoardGrid, so board-less game personas hand-build their score panels"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -36,3 +36,19 @@ verifier: L3
 - `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0. The three smoke fixtures keep every recorded round byte-for-byte and only append authored repair rounds (a standalone GameHud surface, the hand-built stat items dropped, the meta-line as recorded); each test is re-pinned `expectedFail` to its true remaining cause (T-0361 Timeline, T-0362 recorded rounds that predate the check) and asserts GAME_HUD_MISSING where an authored round repairs it.
 - The GameHud row carries no `requires: ['BoardGrid']`, and its repair line reads as ruled.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 39560271fd48
+- Changed: GameHud moment fires on board-less game surfaces (#2135)
+- Commits: none
+- Check: 1 `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0, the three ...: pass
+- Check: 2 `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0; the three fixtures k...: pass
+- Check: 3 The GameHud row carries no `requires: ['BoardGrid']`, and its repair line reads as ruled: pass
+- Check: 4 `npm run check` exits 0: pass
+- Follow-up: decide: .sdlc/tickets/0358-gamehud-moment-board-only/handoff.md:32: decide... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:161: note... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:158: note... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts:400... -> notes.md
+- Follow-up: decide: .sdlc/tickets/0363-gamehud-feed-scope/handoff.md:13: decide: the... -> notes.md
+- Follow-up: decide: .sdlc/tickets/0361-quest-log-timeline-unchecked/handoff.md:1: note... -> notes.md

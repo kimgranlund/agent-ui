@@ -2,7 +2,7 @@
 id: T-0178
 title: "Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0342]
@@ -41,3 +41,18 @@ Keys only in the CLI's keyed arm, never devtools.
 - `eval:judge run` writes only new files under `<round>/judged/` and never edits a file already in the round, `signals.md` included.
 - SPEC CL-R8 (and its check table row, the CL-R7 key boundary, the scope line and the acceptance summary), `scripts/e2e-admin/README.md` Live rounds and `.claude/docs/references/commands.md` describe the shipped judge.
 - `npm run eval:judge -- selftest` (live, keyed, manual) scores every bad case under its threshold and every good case at or over, and reports a cost under $5.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: ecad202386a5
+- Changed: Judged checks with a pinned judge, rubrics and calibration; measurement only (#2124)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `npx vitest run --project scripts scripts/e2e-admin/probe/judge.test.mjs scripts/e2e-admin/probe/...: pass
+- Check: 3 Rubrics for croupier, concierge, lexicographer in `scripts/e2e-admin/probe/rubrics/`; `calibratio...: pass
+- Check: 4 Key read only in `eval-judge.ts` `selftest` and `run` arms; `judge.ts` reads no key or `process.env`: pass
+- Check: 5 `eval:judge run` writes only new files under `<round>/judged/`, never edits an existing file, `si...: pass
+- Check: 6 SPEC CL-R8 (+ check table row, CL-R7 key boundary, scope line, acceptance summary), README Live r...: pass
+- Check: 7 Transcript probes (requested): pass
+- Follow-up: note: .sdlc/evals/rounds/2026-10-17-r10-targeted/runs/regress-croupier-bl... -> notes.md
+- Follow-up: note: I could not run a mutation check on the threshold or wx write guard... -> notes.md
