@@ -2,7 +2,7 @@
 id: T-0345
 title: "Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B)"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -26,3 +26,5 @@ None beyond AGENTS.md.
 
 ## Debate
 Kim 2026-10-17: run the debate (Opus proposal, then a different-family challenge), then Kim rules; build only after. The proposal names one cause from the round 10 traces, the exact text change (file:line, old and new), its byte budget and pinned tests, and a relative measurement plan (OLD, NEW, MIX at Haiku N=10, about $1, cap $3).
+
+Ruling (Kim, 2026-10-18): measure the Opus proposal (architect-L1.md) with the relative rule, ceiling fixed: NEW must beat OLD by 3 of 10 at N=10 per opening, extending to +9 of 30; if OLD scores 8 or more, both arms go straight to N=30. The Done-when "round 8's rate" bar is retired for this rule. Arms OLD, NEW, MIX on Haiku 5.5, "Let's play blackjack." and "Let's play Texas hold'em.", about $0.30, `run-capped.ts --cap 3`. A failing NEW returns to Kim. The poker stake-ask check is the sibling T-0357.
