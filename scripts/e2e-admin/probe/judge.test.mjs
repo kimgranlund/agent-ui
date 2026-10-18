@@ -7,8 +7,8 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
-import { estimate, main } from './eval-judge.ts'
-import { calibrated, clip, JUDGE_MODEL, judgedPath, judgeTranscript, loadCalibration, loadRubric, parseReply, parseRubric, quoteFound, readJudge, transcriptOf, writeJudge } from './judge.ts'
+import { estimate, explain, main } from './eval-judge.ts'
+import { addedWords, calibrated, clip, JUDGE_MODEL, judgedPath, judgeTranscript, loadCalibration, loadRubric, parseReply, parseRubric, quoteFound, readJudge, transcriptOf, writeJudge } from './judge.ts'
 import { aggregate, readRound, renderSignals } from './signals.ts'
 
 const here = dirname(fileURLToPath(import.meta.url))
@@ -83,29 +83,33 @@ describe('judge', () => {
     expect(t).toContain('User clicks: Deal again\n(the probe found no such button on the page, so no agent turn ran)')
   })
 
-  it('reads what the chat showed from proseText, the new part of the log per turn, keeping a long reply\'s head and tail', () => {
+  it('carries the reply, what the chat log gained, and the table state; a long text keeps its head and tail', () => {
     const leak = '{"a2uiMeta":{"note":"x"}}'
     const long = `You Hit me. ${'The dealer draws. '.repeat(200)}${leak}`
+    const deal = JSON.stringify({ version: 'v1.0', updateDataModel: { surfaceId: 'table-1', value: { bankroll: 750, bet: 250 } } })
     const report = {
       agent: 'croupier',
       turns: [
-        // The meta-line note differs from what the page showed: proseText wins.
-        { index: 0, step: { say: 'Blackjack, please.' }, lines: [note('meta note')], proseScope: 'log', proseText: 'You Blackjack, please. blackjack Blackjack it is.' },
-        { index: 1, step: { say: 'Hit me.' }, lines: [], proseScope: 'log', proseText: `You Blackjack, please. blackjack Blackjack it is. ${long}` },
-        { index: 2, step: { click: '100' }, lines: [], proseScope: 'log', proseText: 'You Blackjack, please. blackjack Bet of 100 is down.' },
+        { index: 0, step: { say: 'Blackjack, please.' }, lines: [note('Blackjack it is.')], proseScope: 'log', proseText: 'You Blackjack, please. blackjack Blackjack it is.' },
+        { index: 1, step: { say: 'Hit me.' }, lines: [note('The dealer draws.')], proseScope: 'log', proseText: `You Blackjack, please. blackjack Blackjack it is. ${long}` },
+        // A click reply replaces the earlier message in place (round 10 blackjack-moves turn 4): only the changed word
+        // is new, never the later messages a prefix cut would sweep in.
+        { index: 2, step: { click: '250' }, lines: [note('Bet of 250 placed.'), deal], proseScope: 'log', proseText: `You Blackjack, please. blackjack Bet of 250 placed. ${long}` },
       ],
     }
     const t = transcriptOf(report)
-    expect(t).toContain('Chat shows (new this turn): You Blackjack, please. blackjack Blackjack it is.')
-    expect(t).not.toContain('meta note')
-    // Turn 1: only what it added, the head and the tail kept, so the trailing JSON leak is in view.
+    expect(t).toContain('Agent says: Blackjack it is.\nChat log, added this turn: You Blackjack, please. blackjack Blackjack it is.')
     const turn1 = t.split('## Turn 1')[1].split('## Turn 2')[0]
-    expect(turn1).toContain('Chat shows (new this turn): You Hit me. The dealer draws.')
+    expect(turn1).toContain('Agent says: The dealer draws.')
+    expect(turn1).toContain('Chat log, added this turn: You Hit me. The dealer draws.')
     expect(turn1).toMatch(/\[\.\.\. \d+ chars elided \.\.\.\]/)
     expect(turn1).toContain(leak)
-    expect(turn1).not.toContain('Blackjack it is.')
-    // Turn 2 replaced the earlier reply: the new text starts at a word, never mid-word.
-    expect(t).toContain('Chat shows (new this turn): Bet of 100 is down.')
+    const turn2 = t.split('## Turn 2')[1]
+    expect(turn2).toContain('Agent says: Bet of 250 placed.')
+    expect(turn2).toContain('Chat log, added this turn: Bet of 250 placed.\n')
+    expect(turn2).toContain('Surface data: / = {"bankroll":750,"bet":250}')
+    expect(addedWords('a b c d', 'a x c d y')).toBe('x ... y')
+    expect(addedWords('a b', 'a b')).toBe('')
     expect(clip('abcdef', 2, 2)).toBe('ab [... 2 chars elided ...] ef')
     expect(clip('abcd', 2, 2)).toBe('abcd')
   })
@@ -153,6 +157,8 @@ describe('judge', () => {
     expect(quoteFound('Blackjack it is... the dealer wins.', t)).toBe(false)
     expect(quoteFound('Blackjack it is... Place your bet.', t)).toBe(true)
     expect(quoteFound('', t)).toBe(false)
+    const why = explain(invented.file)
+    expect(why).toContain('    C1 5 fail (unsupported evidence): C1 reasoning\n      found: "Place your bet."\n      NOT FOUND: "The dealer cheated."\n')
   })
 
   it('refuses a reply that is not one JSON object over exactly the rubric criteria', async () => {

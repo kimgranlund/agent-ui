@@ -8,7 +8,8 @@
 //                                `check:scripts`.
 //   selftest [--cap <usd>] [--repo-root <dir>] [--rounds-dir <dir>]
 //                                NEEDS KEY. Scores every calibration case; exits 0 only when every bad case lands
-//                                under its rubric's threshold and every good case at or over it. Prints the cost.
+//                                under its rubric's threshold and every good case at or over it. Prints each
+//                                criterion's score, reason and quotes (found or not), and the cost.
 //                                Writes nothing. A manual measurement, never a gate.
 //   run --round <folder> [--only <run substring>] [--cap <usd>] [--dry-run] [--repo-root <dir>] [--rounds-dir <dir>]
 //                                NEEDS KEY (not with --dry-run). Judges every run of the round whose persona has a
@@ -32,7 +33,7 @@ import type { AgentProvider } from '../../../packages/agent-ui/a2ui/src/agent/ag
 import { anthropicProvider, buildRequestBody } from '../../../packages/agent-ui/a2ui/src/agent/providers/anthropic.ts'
 import { resolvePair, validateProvidersConfig, type ProvidersConfig } from '../../../packages/agent-ui/a2ui/tools/agent/providers-config.ts'
 import { readAnthropicApiKey, readAnthropicWorkspaceId } from '../../../packages/agent-ui/a2ui/tools/corpus-genui/fs.ts'
-import { calibrated, JUDGE_MODEL, judgedPath, judgeRequest, judgeTranscript, loadCalibration, loadRubric, REPO_ROOT, RUBRICS_DIR, transcriptOf, writeJudge, type Rubric } from './judge.ts'
+import { calibrated, JUDGE_MODEL, judgedPath, judgeRequest, judgeTranscript, loadCalibration, loadRubric, REPO_ROOT, RUBRICS_DIR, transcriptOf, writeJudge, type JudgeFile, type Rubric } from './judge.ts'
 import { EVALS_ROUNDS, PRICES, modelFamily } from './ledger.ts'
 
 const VALUE_FLAGS = ['--cap', '--repo-root', '--rounds-dir', '--round', '--only']
@@ -111,6 +112,12 @@ async function judgeAll(jobs: Job[], provider: AgentProvider, cap: number, write
   return t
 }
 
+/** Each criterion's score, verdict, reason and quotes, so a miss explains itself. */
+export const explain = (f: JudgeFile): string =>
+  f.criteria
+    .map((c) => `    ${c.id} ${c.score} ${c.passed ? 'pass' : 'fail'}${c.supported ? '' : ' (unsupported evidence)'}: ${c.why}\n${c.evidence.map((e) => `      ${e.found ? 'found' : 'NOT FOUND'}: ${JSON.stringify(e.quote)}\n`).join('')}`)
+    .join('')
+
 const scores = (f: { criteria: Array<{ id: string; score: number }> }): string => f.criteria.map((c) => `${c.id} ${c.score}`).join(', ')
 
 /** The CLI; returns the exit code. `deps.provider` stands in for the keyed adapter (tests only). */
@@ -170,6 +177,7 @@ export async function main(
       if (ok) landed += 1
       else misses += 1
       write(`${ok ? 'ok  ' : 'MISS'} ${c.expect} ${c.rubric} ${j.label}: score ${r.file.score} (threshold ${r.file.threshold}; ${scores(r.file)})\n`)
+      write(explain(r.file))
     })
     write(`eval:judge selftest: ${landed} of ${cases.length} calibrated, judge ${JUDGE_MODEL}, cost $${t.spent.toFixed(4)}\n`)
     return misses > 0 || t.remaining > 0 || t.errors > 0 ? 1 : 0

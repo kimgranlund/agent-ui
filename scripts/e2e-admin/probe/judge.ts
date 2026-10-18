@@ -35,8 +35,12 @@ const WHY_CHARS = 600
 const WRAPPER = `You are a strict, evidence-bound judge of one chat transcript between a user and an agent persona. Score
 every criterion of the rubric below from 1 to 5. Score only what the rubric says and only from the transcript you are
 given: quote the exact transcript text you weighed (copied verbatim, a few words to one sentence per quote), never
-invent evidence. A turn marked [turn failed] showed the user only its error. Reply with ONLY one JSON object, no prose
-before or after it, no markdown fence:
+invent evidence. Each turn lists: what the user said or clicked; "Agent says", the reply the agent sent that turn;
+"Chat log, added this turn", the words the chat log the user saw gained that turn (the log edits earlier messages in
+place, so this can be a fragment, and JSON here was shown to the user); "Agent surface" and "Surface text", the
+components and their visible strings; "Surface data", the data model the turn wrote (state the surface renders, never
+shown as chat text). A turn marked [turn failed] showed the user only its error. Reply with ONLY one JSON object, no
+prose before or after it, no markdown fence:
 
 {"criteria":[{"id":"<criterion id>","score":<1-5>,"evidence":["<verbatim quote>"],"why":"<one or two sentences>"}]}
 
@@ -91,15 +95,18 @@ export const clip = (s: string, head = HEAD_CHARS, tail = TAIL_CHARS): string =>
   s.length > head + tail ? `${s.slice(0, head)} [... ${s.length - head - tail} chars elided ...] ${s.slice(-tail)}` : s
 const VISIBLE = ['text', 'label', 'title', 'subtitle', 'caption', 'placeholder', 'description'] as const
 
-/** The component types and literal visible strings the shipped A2UI lines of one turn carry. */
-function surfaceOf(lines: readonly string[]): { types: string[]; strings: string[] } {
+/** The component types, literal visible strings and data model writes the shipped A2UI lines of one turn carry. */
+function surfaceOf(lines: readonly string[]): { types: string[]; strings: string[]; data: string[] } {
   const types = new Set<string>()
   const strings: string[] = []
+  const data: string[] = []
   for (const line of lines) {
     if (readMetaLine(line) !== undefined || line.trim() === '') continue
     const healed = heal(line)
     if (!healed.ok) continue
     for (const msg of (Array.isArray(healed.messages) ? healed.messages : [healed.messages]) as unknown[]) {
+      const dm = isObject(msg) ? msg.updateDataModel : undefined
+      if (isObject(dm) && 'value' in dm) data.push(`${typeof dm.path === 'string' ? dm.path : '/'} = ${JSON.stringify(dm.value)}`)
       const body = isObject(msg) ? msg.updateComponents : undefined
       if (!isObject(body) || !Array.isArray(body.components)) continue
       for (const c of body.components) {
@@ -109,7 +116,7 @@ function surfaceOf(lines: readonly string[]): { types: string[]; strings: string
       }
     }
   }
-  return { types: [...types], strings }
+  return { types: [...types], strings, data }
 }
 
 interface ReportTurn {
@@ -120,19 +127,51 @@ interface ReportTurn {
   clickMissing?: unknown
 }
 
-/** What this turn added to the chat log: `proseText` (the log the user saw, the text `no-json-as-prose` judges) past
- *  the prefix it shares with the previous turn's log, cut at a word start. */
-function newProse(text: string, before: string): string {
+/** The words a turn added to the chat log: `proseText` (the log the user saw, the text `no-json-as-prose` judges)
+ *  against the previous turn's log, as the runs of words a word-level longest common subsequence marks inserted,
+ *  joined with " ... ". The log is not append-only: a click turn's reply replaces an earlier message in place, so a
+ *  prefix cut would hand the turn every later message too. */
+export function addedWords(before: string, now: string): string {
+  const a = before.split(/\s+/).filter(Boolean)
+  const b = now.split(/\s+/).filter(Boolean)
+  let lo = 0
+  while (lo < a.length && lo < b.length && a[lo] === b[lo]) lo += 1
+  let hiA = a.length
+  let hiB = b.length
+  while (hiA > lo && hiB > lo && a[hiA - 1] === b[hiB - 1]) {
+    hiA -= 1
+    hiB -= 1
+  }
+  const x = a.slice(lo, hiA)
+  const y = b.slice(lo, hiB)
+  // lcs[i][j]: the LCS length of x[i..] and y[j..].
+  const lcs = Array.from({ length: x.length + 1 }, () => new Array<number>(y.length + 1).fill(0))
+  for (let i = x.length - 1; i >= 0; i -= 1) for (let j = y.length - 1; j >= 0; j -= 1) lcs[i][j] = x[i] === y[j] ? lcs[i + 1][j + 1] + 1 : Math.max(lcs[i + 1][j], lcs[i][j + 1])
+  const runs: string[][] = []
+  let run: string[] = []
+  const flush = (): void => {
+    if (run.length > 0) runs.push(run)
+    run = []
+  }
   let i = 0
-  while (i < text.length && i < before.length && text[i] === before[i]) i += 1
-  if (i < text.length && !/\s/.test(text[i])) while (i > 0 && !/\s/.test(text[i - 1])) i -= 1 // mid-word: back to its start
-  return text.slice(i).trim()
+  let j = 0
+  while (j < y.length) {
+    if (i < x.length && x[i] === y[j]) {
+      flush()
+      i += 1
+      j += 1
+    } else if (i < x.length && lcs[i + 1][j] >= lcs[i][j + 1]) i += 1
+    else run.push(y[j++])
+  }
+  flush()
+  return runs.map((r) => r.join(' ')).join(' ... ')
 }
 
-/** The transcript a judge reads, from a probe `report.json`: per turn what the user said or clicked, what the chat
- *  showed (the new part of the turn's `proseText`, the log the user saw; only when a report has no `proseText`, the
- *  reply as `metaOf` reads it from the meta-lines), and the surface it shipped (component types and literal visible
- *  strings). A halted turn shows its error. */
+/** The transcript a judge reads, from a probe `report.json`. Per turn: what the user said or clicked; the reply the
+ *  agent sent (the turn's meta-lines, as `metaOf` reads them); what the chat log the user saw gained that turn (its
+ *  `proseText` against the previous turn's, `addedWords`), where a JSON leak or an error banner shows; the surface
+ *  (component types and literal visible strings) and the data model the turn wrote, the table state a reply is
+ *  judged against. A long text keeps its head and tail. A halted turn shows its error. */
 export function transcriptOf(report: { agent?: unknown; turns?: unknown }): string {
   const out: string[] = [`Persona: ${typeof report.agent === 'string' ? report.agent : 'unknown'}`]
   const turns = Array.isArray(report.turns) ? (report.turns as ReportTurn[]) : []
@@ -151,12 +190,14 @@ export function transcriptOf(report: { agent?: unknown; turns?: unknown }): stri
     }
     const meta = metaOf(lines)
     if (meta.error !== undefined) out.push(`Agent: [turn failed] ${clip(meta.error, 300, 0)}`)
+    else out.push(`Agent says: ${clip(meta.prose.join('').trim()) || '(no reply text)'}`)
     if (typeof t.proseText === 'string') {
-      out.push(`Chat shows (new this turn): ${clip(newProse(t.proseText, log)) || '(nothing new)'}`)
+      out.push(`Chat log, added this turn: ${clip(addedWords(log, t.proseText)) || '(nothing)'}`)
       log = t.proseText
-    } else if (meta.error === undefined) out.push(`Agent says: ${clip(meta.prose.join('').trim()) || '(no reply text)'}`)
+    }
     const s = surfaceOf(lines)
     if (s.types.length > 0) out.push(`Agent surface: ${s.types.join(', ')}`, `Surface text: ${clip(s.strings.map((x) => JSON.stringify(x)).join(' '))}`)
+    if (s.data.length > 0) out.push(`Surface data: ${clip(s.data.join('; '))}`)
   })
   return `${out.join('\n')}\n`
 }
