@@ -28,3 +28,6 @@ Found by T-0358. The GameHud repair wording is ruled (team-lead, 2026-10-17); an
 
 ## Constraints
 The failing test lands before or with the fix, never after.
+
+## Kim ruling (2026-10-18, close-out round)
+Option (b): teach the game persona skills to place GameHud in a surface; grammar.md stays byte-pinned and unchanged.

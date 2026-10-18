@@ -28,3 +28,6 @@ Found by T-0343's smoke round. Guess, not yet checked: no producer check covers 
 
 ## Constraints
 The failing test lands before or with the fix, never after. Re-pin the replay to green in the fix's change (`scripts/e2e-admin/README.md`, Fixtures and regressions). A prompt-stack edit follows skill `a2ui-prompt-authoring`.
+
+## Kim ruling (2026-10-18, close-out round)
+Narrow the Swatch ask row to the first palette ask only; later turns stay unchecked (every verifier misfire came from a later turn).

@@ -2,7 +2,7 @@
 id: T-0368
 title: "POKER_DEAL_MISSING judges a PlayingCard template over an empty hand as undealt (round 11 cluster H)"
 type: bug             # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,6 @@ The check fires on templates over empty hands and stays quiet once a hand array 
 
 ## Constraints
 The failing test lands before or with the fix, never after.
+
+## Kim ruling (2026-10-18, close-out round)
+Promoted to ready; run as a keyless solo lane with one verifier, no live spend.

@@ -34,3 +34,6 @@ Ruling (Kim, 2026-10-18): measure the Opus proposal (architect-L1.md) with the r
 - The arms are archived: `test -f .sdlc/evals/rounds/2026-10-18-t0345-README.md -a -f .sdlc/evals/rounds/2026-10-18-t0345-old/ledger.jsonl -a -f .sdlc/evals/rounds/2026-10-18-t0345-new/ledger.jsonl -a -f .sdlc/evals/rounds/2026-10-18-t0345-mix/ledger.jsonl` exits 0.
 - `npm run check` exits 0.
 - The README table matches a recount of round 1 from each round's `ledger.jsonl` and `traces/` (OLD blackjack 22 of 30, NEW 30 of 30; hold'em 28 and 29 of 30; MIX 9 and 7 of 10), with `signals.md` BET_TABLE_MISSING 8 in OLD and 0 in NEW as the independent cross-check.
+
+## Kim ruling (2026-10-18, close-out round)
+Ship the NEW opening line: 30/30 vs OLD 22/30 is the most a 30-run set can show, so the +9 bar is waived as a ceiling effect.
