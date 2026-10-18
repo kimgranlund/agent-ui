@@ -7,10 +7,13 @@ import { describe, it, expect } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json carries no node types)
 import { existsSync, readFileSync } from 'node:fs'
 import { discoverAgentContent, generateRegistryModule, generateRuntimeModule, manifestUpdates, OUT_REGISTRY, OUT_RUNTIME } from '../../scripts/generate-agent-content.mjs'
-import { digestInput, runtimeRecord, validateContent, type ContentRecord, type PersonaRecord, type PackRecord, type EntryRecord } from './schema.ts'
+import { digestInput, runtimeRecord, validateContent, validateSeedHistory, type ContentRecord, type PersonaRecord, type PackRecord, type EntryRecord } from './schema.ts'
+import { diffOverlay, modifiedPaths } from '@agent-ui/app/agent-admin-overlay'
+import { valueDigest } from '@agent-ui/app/agent-admin-value-digest'
+import { SEED_HISTORY } from './seed-history.ts'
 import { sha256 } from './digest.ts'
 import { AGENT_CONTENT } from './registry.gen.ts'
-import { AGENT_CONTENT_RUNTIME } from './registry.runtime.gen.ts'
+import { AGENT_CONTENT_RUNTIME, SEED_DIGESTS } from './registry.runtime.gen.ts'
 
 declare const process: { cwd(): string }
 
@@ -76,6 +79,71 @@ describe('agent-content registry: freshness and schema', () => {
   it('the real tree has no schema problems', () => {
     expect(validateContent(discovered.records)).toEqual([])
     expect(discovered.problems).toEqual([])
+  })
+
+  // The SEED_DIGESTS literal of a generated runtime module, parsed back.
+  const digestsIn = (text: string): Record<string, Record<string, Record<string, string[]>>> => {
+    const line = text.split('\n').find((l) => l.startsWith('export const SEED_DIGESTS: SeedDigests = '))!
+    return JSON.parse(line.slice(line.indexOf('= ') + 2)) as Record<string, Record<string, Record<string, string[]>>>
+  }
+  const quizmasterVersion = (): number => persona(records(), 'quizmaster').version
+
+  it('T-0355: the runtime module carries the seed history as digests, never the values', () => {
+    expect(validateSeedHistory(discovered.records, SEED_HISTORY)).toEqual([])
+    expect(SEED_DIGESTS['quizmaster']?.['1']?.['model']).toEqual([valueDigest('claude-haiku-4-5-20251001'), valueDigest('claude-haiku-5-5')])
+    expect(digestsIn(committedRuntime)).toEqual(JSON.parse(JSON.stringify(SEED_DIGESTS)))
+    const literal = JSON.stringify(digestsIn(committedRuntime))
+    for (const versions of Object.values(SEED_HISTORY))
+      for (const keys of Object.values(versions))
+        for (const row of Object.values(keys)) for (const value of row.seeded) expect(literal, 'a history value leaked into SEED_DIGESTS').not.toContain(JSON.stringify(value))
+    expect(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded: ['claude-haiku-4-0'] } } } }), 'a history edit changes the module').not.toBe(committedRuntime)
+  })
+
+  it('T-0355 (ACS-R7 item 6, option C): an unmarked earlier in-version value is kept and flagged; an untouchedWins row migrates it', () => {
+    const seed = { model: 'claude-opus-5-5' }
+    const stored = { model: 'claude-haiku-4-5-20251001' }
+    const seeded = ['claude-haiku-4-5-20251001', 'claude-haiku-5-5']
+    const plain = digestsIn(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded } } } }))['quizmaster']!['1']!
+    expect(plain['model']).toEqual([valueDigest('claude-haiku-5-5')])
+    expect(modifiedPaths(diffOverlay('quizmaster', quizmasterVersion(), seed, stored, { baseUnknown: true, baseDigests: plain })), 'unmarked: kept, flagged').toEqual([
+      { key: 'model', seedChanged: { seed: 'claude-opus-5-5', user: 'claude-haiku-4-5-20251001' } },
+    ])
+    const marked = digestsIn(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded, untouchedWins: 'Kim 2026-10-17, T-0355 (option C)' } } } }))['quizmaster']!['1']!
+    expect(marked['model']).toEqual([valueDigest('claude-haiku-4-5-20251001'), valueDigest('claude-haiku-5-5')])
+    expect(modifiedPaths(diffOverlay('quizmaster', quizmasterVersion(), seed, stored, { baseUnknown: true, baseDigests: marked })), 'marked: takes the new seed').toEqual([])
+    expect(SEED_HISTORY['quizmaster']?.['1']?.['model']?.untouchedWins).toBe('Kim 2026-10-17, T-0355 (option C)')
+  })
+
+  it('T-0355: a value seeded at v1 and again at v3 is listed under both, so a v1 copy and a v3 copy each take the new seed', () => {
+    const history = { quizmaster: { '1': { model: { seeded: ['claude-sonnet-5-5'] } }, '2': { model: { seeded: ['claude-opus-5-5'] } }, '3': { model: { seeded: ['claude-sonnet-5-5'] } } } }
+    expect(validateSeedHistory(discovered.records, history)).toEqual([])
+    const digests = digestsIn(generateRuntimeModule(discovered.records, history))['quizmaster']!
+    const seed = { model: 'claude-haiku-5-5' }
+    for (const version of ['1', '3']) {
+      const overlay = diffOverlay('quizmaster', quizmasterVersion(), seed, { model: 'claude-sonnet-5-5' }, { baseUnknown: true, baseDigests: digests[version]! })
+      expect(modifiedPaths(overlay), `a v${version} copy`).toEqual([])
+    }
+    const v2 = diffOverlay('quizmaster', quizmasterVersion(), seed, { model: 'claude-sonnet-5-5' }, { baseUnknown: true, baseDigests: digests['2']! })
+    expect(modifiedPaths(v2), 'v2 never seeded it: kept, flagged').toEqual([{ key: 'model', seedChanged: { seed: 'claude-haiku-5-5', user: 'claude-sonnet-5-5' } }])
+  })
+
+  it('bites: a seed history row naming no persona, a bad or current version, an entry list, an empty list, a wrong value shape', () => {
+    const current = quizmasterVersion()
+    const problems = validateSeedHistory(discovered.records, {
+      ghost: { '1': { model: { seeded: ['x'] } } },
+      quizmaster: {
+        [String(current)]: { model: { seeded: ['x'] } },
+        v2: { model: { seeded: ['x'] } },
+        '2': { 'entries:skill': { seeded: [[]] }, name: { seeded: [] }, toolsEnabled: { seeded: ['yes'] }, model: { seeded: ['a', 'b'], untouchedWins: 'because' } },
+      },
+    }).join('\n')
+    expect(problems).toContain('ghost names no persona')
+    expect(problems).toContain(`quizmaster version ${current} is not below its current version ${current}`)
+    expect(problems).toContain('quizmaster version key "v2" is not a positive integer')
+    expect(problems).toContain('quizmaster@2 key entries:skill is no scalar persona store key')
+    expect(problems).toContain('quizmaster@2 name has no seeded values')
+    expect(problems).toContain('quizmaster@2 toolsEnabled value "yes"')
+    expect(problems).toContain('quizmaster@2 model untouchedWins cites no ruling ticket (T-NNNN)')
   })
 
   it('bites: a planted body byte changes the generated module', () => {

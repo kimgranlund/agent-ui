@@ -24,8 +24,10 @@ import {
   PERSONA_FIELDS,
   PRESET_CATEGORIES,
   REF_PATTERN as REF,
+  checkFieldValue,
   checkFrontmatter,
 } from '@agent-ui/app/agent-admin-content-fields'
+import type { SeedHistory } from './seed-history.ts'
 
 /** The capability entry kinds a persona references and a pack groups (defined once, in the kind schema). */
 export const ENTRY_KINDS = CONTENT_ENTRY_KINDS
@@ -165,6 +167,11 @@ export function runtimeRecord(record: ContentRecord): RuntimeRecord {
   return { ...rest, frontmatter }
 }
 
+/** The browser's per-version field digests (`SEED_DIGESTS`, T-0355): persona id, then past seed version,
+ *  then store key to the `valueDigest`s of the values that take the new seed there (ACS-R7 item 6: the
+ *  version's final seed value, plus its earlier values when the history row is marked `untouchedWins`). */
+export type SeedDigests = Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, readonly string[]>>>>>>
+
 // ── canonical form and digests ──────────────────────────────────────────────────────────────────────
 
 /** Sorted-key, undefined-dropped, unspaced JSON (the `site/lib/agent-manifest/agent-manifest.ts` rule): the
@@ -272,6 +279,46 @@ export function findRef<R extends RuntimeRecord>(records: readonly R[], ref: str
   const want = parsed.local ? scope : undefined
   const hit = records.find((r): r is Extract<R, { kind: EntryKind }> => r.kind === kind && r.id === parsed.id && (r as { scope?: string }).scope === want)
   return hit && hit.version === parsed.version ? hit : null
+}
+
+/** Every problem in the committed seed history table (`seed-history.ts`, T-0355), as `<path>: <problem>`
+ *  lines: a persona the registry lacks, a version key that is not a positive integer below the persona's
+ *  current version, a key that is no scalar persona store key (an entry list is not recorded yet), an empty
+ *  or missing `seeded` list, a value of the wrong shape for its field, or an `untouchedWins` mark that cites
+ *  no ticket. `[]` means valid. */
+export function validateSeedHistory(records: readonly ContentRecord[], history: SeedHistory): string[] {
+  const out: string[] = []
+  const at = `${CONTENT_ROOT}/seed-history.ts`
+  const fields = new Map(PERSONA_FIELDS.flatMap((f) => (f.key === undefined || f.type === 'entries' ? [] : [[f.key, f] as const])))
+  for (const [id, versions] of Object.entries(history)) {
+    const persona = records.find((r): r is PersonaRecord => r.kind === 'persona' && r.id === id)
+    if (!persona) {
+      out.push(`${at}: ${id} names no persona`)
+      continue
+    }
+    for (const [version, keys] of Object.entries(versions)) {
+      if (!/^[1-9][0-9]*$/.test(version)) out.push(`${at}: ${id} version key "${version}" is not a positive integer`)
+      else if (Number(version) >= persona.version) out.push(`${at}: ${id} version ${version} is not below its current version ${persona.version}`)
+      for (const [key, row] of Object.entries(keys)) {
+        const field = fields.get(key)
+        if (!field) {
+          out.push(`${at}: ${id}@${version} key ${key} is no scalar persona store key`)
+          continue
+        }
+        if (!Array.isArray(row?.seeded) || row.seeded.length === 0) {
+          out.push(`${at}: ${id}@${version} ${key} has no seeded values`)
+          continue
+        }
+        if (row.untouchedWins !== undefined && !/T-\d{4}/.test(String(row.untouchedWins)))
+          out.push(`${at}: ${id}@${version} ${key} untouchedWins cites no ruling ticket (T-NNNN)`)
+        for (const value of row.seeded) {
+          const problem = checkFieldValue(field, value)
+          if (problem !== undefined) out.push(`${at}: ${id}@${version} ${key} value ${JSON.stringify(value)}: ${problem}`)
+        }
+      }
+    }
+  }
+  return out
 }
 
 /** Every problem in a registry, as `<path>: <problem>` lines. `[]` means valid. */

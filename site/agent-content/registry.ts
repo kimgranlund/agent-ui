@@ -1,11 +1,12 @@
 // site/agent-content/registry.ts: the typed read side of the generated agent-content registry (T-0160).
 // Every reader of seed content (agent-admin-presets.ts, agent-admin-libraries.ts, and the Builder through
 // them) goes through these lookups, never through a file path. It reads the browser projection
-// (`registry.runtime.gen.ts`: no paths, digests, changelogs or notes); Node-side tooling reads the full
+// (`registry.runtime.gen.ts`: no paths, item digests, changelogs or notes, plus the seed history's field
+// digests, T-0355); Node-side tooling reads the full
 // records in `registry.gen.ts`. The generator has already validated every ref, so a failed lookup here is a
 // broken invariant and throws.
 import type { NewEntryInput } from '@agent-ui/app/entry-data'
-import { AGENT_CONTENT_RUNTIME } from './registry.runtime.gen.ts'
+import { AGENT_CONTENT_RUNTIME, SEED_DIGESTS } from './registry.runtime.gen.ts'
 import { findRef, type EntryKind, type RuntimeRecord } from './schema.ts'
 
 export { personaSections, PERSONA_SECTIONS } from './schema.ts'
@@ -25,6 +26,13 @@ export function personaRecord(id: string): RuntimePersona {
   const hit = AGENT_CONTENT_RUNTIME.find((r): r is RuntimePersona => r.kind === 'persona' && r.id === id)
   if (!hit) throw new Error(`agent-content: no persona ${id}`)
   return hit
+}
+
+/** T-0355: per store key, the digests (`valueDigest`) of the values a persona's seed at a past `version`
+ *  held that take the new seed (ACS-R7 item 6), from the committed history table; `undefined` where that
+ *  version recorded none. */
+export function seedDigestsAt(id: string, version: number): Readonly<Record<string, readonly string[]>> | undefined {
+  return SEED_DIGESTS[id]?.[String(version)]
 }
 
 export function packRecord(id: string): RuntimePack {

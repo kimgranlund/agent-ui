@@ -8,6 +8,7 @@ priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-17
 router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
+verifier: L3
 ---
 
 ## Goal
@@ -24,3 +25,9 @@ Kim's ruling 2026-10-17 (seed digests per version), after T-0161 shipped spec AC
 
 ## Constraints
 Never wipe a real user edit. Registry and manifests stay generated (never hand-edit).
+
+## Acceptance criteria
+- `npx vitest run --project site site/pages/agent-admin-presets.test.ts -t "T-0355"` exits 0: a Quizmaster store at seedVersion 1 holding the v1 default (`claude-haiku-4-5-20251001`, the id v1 actually seeded) reads `claude-haiku-5-5` with no modified path, one holding a user-chosen model keeps it flagged `seedChanged`, and one with no seedVersion marker keeps even the v1 default, flagged.
+- `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin` and `npx vitest run --project site site/agent-content site/lib/agent-manifest site/pages/agent-admin` exit 0.
+- `node scripts/generate-agent-content.mjs --check` exits 0 (the registry, with `SEED_DIGESTS`, stays generated and drift-gated).
+- `npm run check` exits 0.

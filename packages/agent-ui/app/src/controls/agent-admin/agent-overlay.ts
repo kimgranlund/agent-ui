@@ -22,7 +22,7 @@
 // edit, the default), `builder` (an applied Builder `personaPatch`) or `pack` (an entry added from a
 // library pack). `user` is stored as no `source` member, so a user op keeps its pre-T-0162 shape. A place
 // with no op reads `seed`. `provenanceAt` answers one place's provenance.
-import { canonicalJson } from '@agent-ui/a2ui/agent/agent-bundle'
+import { canonical, valueDigest } from './value-digest.ts'
 import type { SettingsStore } from '../settings/store.ts'
 
 /** The surface an op was written by (ACS-R8). */
@@ -101,27 +101,13 @@ export interface OverlayAddress {
 
 // ── value helpers ────────────────────────────────────────────────────────────────────────────────────
 
-/** The repo's one canonical JSON (T-0163, `@agent-ui/a2ui/agent/agent-bundle`): the equality and fingerprint
- *  basis (it drops `undefined` members, exactly as the StorageAdapter encoding does, so equal here means
- *  equal after a reload). An absent value reads `undefined`, distinct from `null`. */
-function canonical(value: unknown): string {
-  return value === undefined ? 'undefined' : canonicalJson(value)
-}
-
 const same = (a: unknown, b: unknown): boolean => a === b || canonical(a) === canonical(b)
 
-/** Two 32-bit FNV-1a passes (different offsets) over the canonical JSON: a sync, browser-safe change
- *  detector. It only decides whether a merge runs; a false "changed" costs one no-op merge. */
+export { valueDigest }
+
+/** The fingerprint of a whole seed (an overlay's `baseDigest`). */
 export function seedFingerprint(seed: Readonly<Record<string, unknown>>): string {
-  const text = canonical(seed)
-  let a = 0x811c9dc5
-  let b = 0x01000193 ^ text.length
-  for (let i = 0; i < text.length; i++) {
-    const c = text.charCodeAt(i)
-    a = Math.imul(a ^ c, 0x01000193) >>> 0
-    b = Math.imul(b ^ c, 0x0100019d) >>> 0
-  }
-  return `fnv:${a.toString(16).padStart(8, '0')}${b.toString(16).padStart(8, '0')}`
+  return valueDigest(seed)
 }
 
 const has = (record: Readonly<Record<string, unknown>>, key: string): boolean => Object.hasOwn(record, key) && record[key] !== undefined
@@ -253,23 +239,26 @@ export function emptyOverlay(id: string, version: number, seed: Readonly<Record<
 }
 
 /** The one-time migration (ACS-R7): diff a full stored copy (today's per-key shape) against `seed`.
- *  `baseUnknown` is the copy written against an OLDER seed version, which the registry no longer holds:
- *  a stored value that differs from the seed may be the user's or the old seed's, so every differing
- *  place keeps the stored value and is flagged `seedChanged` (no base). A seed entry missing from the
- *  stored list is no evidence of a user removal there (a later version may have added it), so that
- *  branch records no removals and no order. */
+ *  `baseUnknown` is the copy written against an OLDER seed version, whose seed the registry no longer
+ *  holds. `baseDigests` (T-0355) are, per store key, the digests (`valueDigest`) of the values that version
+ *  seeded and that take the new seed (ACS-R7 item 6): a stored value whose digest is listed is untouched,
+ *  so its op drops and the new seed flows in. Any other differing value may be the user's, so it keeps the
+ *  stored value flagged `seedChanged` (no base). A seed entry missing from the stored list is no evidence
+ *  of a user removal there (a later version may have added it), so that branch records no removals and no
+ *  order. Entry lists carry no digests yet, so their differing places are always kept flagged. */
 export function diffOverlay(
   id: string,
   version: number,
   seed: Readonly<Record<string, unknown>>,
   stored: Readonly<Record<string, unknown>>,
-  options: { baseUnknown?: boolean } = {},
+  options: { baseUnknown?: boolean; baseDigests?: Readonly<Record<string, readonly string[]>> } = {},
 ): AgentOverlay {
   let overlay = emptyOverlay(id, version, seed)
   for (const [key, value] of Object.entries(stored)) overlay = setOverlayKey(seed, overlay, key, value)
   if (options.baseUnknown !== true) return overlay
+  const oldSeed = (key: string, op: ValueOp): boolean => 'value' in op && (options.baseDigests?.[key]?.includes(valueDigest(op.value)) ?? false)
   const values: Record<string, ValueOp> = {}
-  for (const [key, op] of Object.entries(overlay.values)) values[key] = { ...op, seedChanged: seedSide(seed, key) }
+  for (const [key, op] of Object.entries(overlay.values)) if (!oldSeed(key, op)) values[key] = { ...op, seedChanged: seedSide(seed, key) }
   const lists: Record<string, ListOp> = {}
   for (const [key, list] of Object.entries(overlay.lists)) {
     const entries: Record<string, EntryOp> = {}

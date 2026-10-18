@@ -64,7 +64,7 @@ import type { Entry } from '@agent-ui/app/entry-data'
 // generated registry. A preset seeds from the SAME entry files the add-from-library menu offers
 // (agent-admin-libraries.ts reads the same packs): one authored source, zero drift (GH #46).
 import type { PresetCategory } from './agent-admin-libraries.ts'
-import { personaRecord, personaRecords, personaSections, PERSONA_SECTIONS, resolveRef, type RuntimePersona } from '../agent-content/registry.ts'
+import { personaRecord, personaRecords, personaSections, PERSONA_SECTIONS, resolveRef, seedDigestsAt, type RuntimePersona } from '../agent-content/registry.ts'
 import type { EntryKind } from '../agent-content/schema.ts'
 // GH #497 — the concierge/croupier content personas seed their OWN local pattern set selection (the
 // `SHIPPED_PERSONA_CATALOGS` `personaId`, SPEC-R5) the same way every other persona-scoped config key
@@ -373,8 +373,11 @@ export function personaInstantiated(id: string): boolean {
  *    same), so a seed bump keeps every user edit and flags a field both sides changed `seedChanged`;
  *  - today's pre-overlay shape (full per-key copies) at the CURRENT version: diff the copies against the
  *    seed into an overlay, then drop the copies (the one-time migration);
- *  - those copies at an OLDER version: the seed they were written against is not in the registry, so a
- *    user edit cannot be told from the old seed text; every differing value is kept, flagged `seedChanged`.
+ *  - those copies at an OLDER version: the seed they were written against is not in the registry, only its
+ *    field digests where the history table recorded them (T-0355, `site/agent-content/seed-history.ts`). A
+ *    stored value whose digest is one the stored version lists is untouched and takes the new seed; every
+ *    other differing value may be a user edit, so it is kept, flagged `seedChanged`. A copy with no version
+ *    marker gets no digests (its version is unknown), so all of its differing values are kept flagged.
  *  The sweep-before-hydrate ordering leans on the storage tier's same-tick writes (agent-roster-source.ts's
  *  own stated law). */
 function overlayStoreFor(persona: Persona): OverlayStore {
@@ -387,8 +390,12 @@ function overlayStoreFor(persona: Persona): OverlayStore {
     overlay = merged
   } else {
     const legacy = rosterSource.legacyStateSync(id)
-    const persisted = rosterSource.seedVersionSync(id) ?? 1
-    overlay = diffOverlay(id, wanted, seed, legacy, { baseUnknown: persisted < wanted })
+    // No marker means the copy's version is unknown: still an older-version copy for the flagging, but no
+    // version's digests apply, so every differing value is kept and flagged (T-0355).
+    const marker = rosterSource.seedVersionSync(id)
+    const persisted = marker ?? 1
+    const baseDigests = marker === undefined ? undefined : seedDigestsAt(id, marker)
+    overlay = diffOverlay(id, wanted, seed, legacy, { baseUnknown: persisted < wanted, ...(baseDigests === undefined ? {} : { baseDigests }) })
     if (Object.keys(legacy).length > 0) {
       rosterSource.dropLegacyStateSync(id)
       rosterSource.writeOverlaySync(id, overlay)

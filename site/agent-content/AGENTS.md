@@ -15,7 +15,8 @@ This file is authoring context for a person or an agent editing the files here. 
 | `schema.ts` | | The types, the frontmatter parser and the validator. Each kind's fields come from the kind schema, `@agent-ui/app/agent-admin-content-fields` (T-0162): the same rows the settings form and the Builder's patch gate read. |
 | `seed-file.ts` | | The file writer: `formatContentFile`, and `personaSeedFiles` (an exported persona file as a seed folder). |
 | `registry.gen.ts` | | Generated: the full records, for Node and tests. Never edit it by hand. |
-| `registry.runtime.gen.ts` | | Generated: the browser projection (no path, digest, changelog or notes). Never edit it by hand. |
+| `registry.runtime.gen.ts` | | Generated: the browser projection (no path, digest, changelog or notes), plus `SEED_DIGESTS`, the field digests of `seed-history.ts`. Never edit it by hand. |
+| `seed-history.ts` | | The committed seed history table (T-0355): per persona and past version, the store values that version seeded. Hand-authored; the generator validates it and emits only digests. |
 | `registry.ts` | | The typed lookups every runtime reader uses (over the projection). |
 | `digest.ts` | | The one sha256 helper (Node-side). |
 
@@ -61,7 +62,7 @@ A ref is `<id>@<version>`. `./<id>@<version>` names an entry under the persona's
 
 ## Change seed text
 
-Edit the file and run the generator. A user's edits are an overlay over the seed (T-0161), so a seed change never drops them: on the next load every field the user did not edit takes the new text, an edited field keeps the user's value, and a field both changed keeps the user's value flagged `seedChanged`. That merge runs on any seed change, bumped or not. Bump the persona's `version` when the change is a new seed release, and add a `changelog` line saying why. The generator copies `version` into the manifest's `seedVersion`. The manifest's `seedDigest` pins the assembled seed (so a change to the assembly code reds it too): refresh it with the armed writer, `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`. `site/pages/agent-admin-seed-digests.test.ts` pins every assembled seed and needs its row updated for a deliberate change.
+Edit the file and run the generator. A user's edits are an overlay over the seed (T-0161), so a seed change never drops them: on the next load every field the user did not edit takes the new text, an edited field keeps the user's value, and a field both changed keeps the user's value flagged `seedChanged`. That merge runs on any seed change, bumped or not. Bump the persona's `version` when the change is a new seed release, and add a `changelog` line saying why. When the bump moves a scalar store value (a model, a name, a switch), list in `seed-history.ts`, under every past version that seeded it, each value it held there, oldest first (a value changed without a bump gives that version two). A browser still holding a pre-overlay copy saved at that version then takes the new seed where its value equals that version's final seed (or any listed value, when the row is marked `untouchedWins` with the ruling it cites, Kim 2026-10-17, T-0355 option C; an unmarked earlier value is kept and flagged), instead of keeping it flagged as a possible user edit. The generator copies `version` into the manifest's `seedVersion`. The manifest's `seedDigest` pins the assembled seed (so a change to the assembly code reds it too): refresh it with the armed writer, `AGENT_MANIFEST_WRITE=1 npx vitest run --project site site/lib/agent-manifest/agent-manifest.write.test.ts`. `site/pages/agent-admin-seed-digests.test.ts` pins every assembled seed and needs its row updated for a deliberate change.
 
 ## The CLI
 

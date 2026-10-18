@@ -1,7 +1,8 @@
 // agent-overlay.test.ts: T-0161, user edits stored as a diff over the seed. The laws: resolve(seed,
 // diff(seed, value)) gives back exactly what was written; a seed update merges per field (base, new seed,
 // user) and never wipes; a conflict keeps the user value and is flagged seedChanged with the base, seed and
-// user values; a legacy copy at an older version is kept flagged; reset per field and
+// user values; a legacy copy at an older version is kept flagged unless its value matches that version's
+// field digest (T-0355), which takes the new seed; reset per field and
 // per key; the overlay round-trips through JSON (the StorageAdapter encoding).
 import { describe, it, expect } from 'vitest'
 import {
@@ -15,6 +16,7 @@ import {
   resetPath,
   resolveOverlay,
   setOverlayKey,
+  valueDigest,
   type AgentOverlay,
 } from './agent-overlay.ts'
 
@@ -253,6 +255,24 @@ describe('the spec example and the older-version migration (ACS-R7)', () => {
       { key: 'entries:skill', entryId: 'greet', field: 'content', seedChanged: { seed: 'Say hello.', user: 'Old hello.' } },
       { key: 'entries:skill', entryId: 'retired', change: 'added', seedChanged: { user: stale[1] } },
     ])
+  })
+
+  it('T-0355: a stored value equal to the old version digest takes the new seed unflagged; a user value stays flagged', () => {
+    const seed = seedV1()
+    const baseDigests = { model: [valueDigest('claude-haiku-4-5'), valueDigest('claude-haiku-4-0')], name: [valueDigest('Old Concierge')] }
+    const untouched = diffOverlay('concierge', 2, seed, { model: 'claude-haiku-4-5', name: 'Old Concierge' }, { baseUnknown: true, baseDigests })
+    expect(untouched.values).toEqual({})
+    expect(resolveOverlay(seed, reload(untouched))['model']).toBe('claude-sonnet-5-5')
+    expect(modifiedPaths(untouched)).toEqual([])
+    const edited = diffOverlay('concierge', 2, seed, { model: 'claude-opus-5-5', name: 'Old Concierge' }, { baseUnknown: true, baseDigests })
+    expect(resolveOverlay(seed, reload(edited))['model']).toBe('claude-opus-5-5')
+    expect(modifiedPaths(edited)).toEqual([{ key: 'model', seedChanged: { seed: 'claude-sonnet-5-5', user: 'claude-opus-5-5' } }])
+  })
+
+  it('T-0355: the digests apply only to an older-version copy; at the current version a matching value is still an edit', () => {
+    const seed = seedV1()
+    const overlay = diffOverlay('concierge', 2, seed, { model: 'claude-haiku-4-5' }, { baseDigests: { model: [valueDigest('claude-haiku-4-5')] } })
+    expect(modifiedPaths(overlay)).toEqual([{ key: 'model' }])
   })
 })
 

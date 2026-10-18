@@ -9,6 +9,10 @@
 //                                               ACS-R4 canonical form (`digestInput` in schema.ts).
 //   site/agent-content/registry.runtime.gen.ts  AGENT_CONTENT_RUNTIME: the browser projection
 //                                               (`runtimeRecord`): no path, digest, changelog or notes.
+//                                               SEED_DIGESTS (T-0355): per persona, past seed version and
+//                                               store key, the `valueDigest`s of the values the committed
+//                                               history table (seed-history.ts) says take the new seed,
+//                                               never the values.
 //   site/lib/agent-manifest/*.manifest.json     `seedVersion` of each existing manifest that names a preset,
 //                                               from its agent.md `version` (persona-catalog-composition
 //                                               SPEC-R7), written through `formatManifest`. Never creates a
@@ -30,7 +34,9 @@
 // values are JSON with every single quote, U+2028 and U+2029 escaped (the same precedent and reason).
 
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
-import { CONTENT_ROOT, classifyPath, parseContentFile, runtimeRecord, validateContent } from '../site/agent-content/schema.ts'
+import { CONTENT_ROOT, classifyPath, parseContentFile, runtimeRecord, validateContent, validateSeedHistory } from '../site/agent-content/schema.ts'
+import { SEED_HISTORY } from '../site/agent-content/seed-history.ts'
+import { valueDigest } from '@agent-ui/app/agent-admin-value-digest'
 import { sha256 } from '../site/agent-content/digest.ts'
 import { formatManifest } from '../site/lib/agent-manifest/format.ts'
 
@@ -72,8 +78,26 @@ export function discoverAgentContent(root = process.cwd()) {
       problems.push(`${path}: ${error instanceof Error ? error.message : String(error)}`)
     }
   }
-  problems.push(...validateContent(records))
+  problems.push(...validateContent(records), ...validateSeedHistory(records, SEED_HISTORY))
   return { records, problems }
+}
+
+/** The per-version field digests of a seed history table (ACS-R7 item 6): per key, the digest of the
+ *  version's final seed value, plus every earlier value's when the row is marked `untouchedWins`. Object key order
+ *  is the table's (integer-like version keys enumerate ascending). */
+function seedDigests(history) {
+  const out = {}
+  for (const id of Object.keys(history).sort()) {
+    out[id] = {}
+    for (const [version, keys] of Object.entries(history[id])) {
+      out[id][version] = {}
+      for (const key of Object.keys(keys).sort()) {
+        const { seeded, untouchedWins } = keys[key]
+        out[id][version][key] = (untouchedWins === undefined ? seeded.slice(-1) : seeded).map(valueDigest)
+      }
+    }
+  }
+  return out
 }
 
 /** A JS literal for `value`: JSON, with `'`, U+2028 and U+2029 escaped. */
@@ -110,15 +134,18 @@ export function generateRegistryModule(records) {
   ].join('\n')
 }
 
-/** The browser projection module source: `runtimeRecord` of each record, in the same order. */
-export function generateRuntimeModule(records) {
+/** The browser projection module source: `runtimeRecord` of each record, in the same order, then the
+ *  seed history's field digests. */
+export function generateRuntimeModule(records, history = SEED_HISTORY) {
   return [
     HEADER,
     '// The browser projection of registry.gen.ts (runtimeRecord in schema.ts): no path, digest, changelog or notes.',
-    "import type { RuntimeRecord } from './schema.ts'",
+    "import type { RuntimeRecord, SeedDigests } from './schema.ts'",
     'export const AGENT_CONTENT_RUNTIME: readonly RuntimeRecord[] = [',
     ...byPath(records).map((r) => `  ${literal(ordered(runtimeRecord(r)))},`),
     ']',
+    '// Per persona, past seed version and store key, the valueDigests that take the new seed (seed-history.ts, T-0355).',
+    `export const SEED_DIGESTS: SeedDigests = ${literal(seedDigests(history))}`,
     '',
   ].join('\n')
 }
