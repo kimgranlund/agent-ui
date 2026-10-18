@@ -3,9 +3,9 @@
 // where its types live, and every row's moment is one of its composite's selection intents.
 
 import { describe, expect, it } from 'vitest'
-import { COMPOSITE_MOMENTS, PALETTE_TYPES, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
+import { COMPOSITE_MOMENTS, PALETTE_TYPES, askedCompositeMoment, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
 import type { CompositeMoment } from './composite-moments.ts'
-import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
+import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews, sessionComponentTypes, sessionSurfaceViews } from './semantic-check.ts'
 import type { SurfaceView } from './semantic-check.ts'
 import type { A2uiComponent, A2uiOutput } from '../protocol.ts'
 import { loadCatalog } from './catalog.ts'
@@ -1105,6 +1105,11 @@ describe('the rows carry the ask cue of each Concierge composite moment (T-0313)
     ])
   })
 
+  it('T-0359: a surfaceRequired ask (the palette) is read by its own check, never by askedCompositeMoment', () => {
+    expect(askedCompositeMoment('Make it 16:00 and use the brand colours for the table decor')).toBeUndefined()
+    expect(askedCompositeMoment('Propose a calm blue palette for a banking app.')).toBeUndefined()
+  })
+
   it.each([
     ['BookingConfirmation', 'Those details are right, please confirm the booking.'],
     ['BookingConfirmation', 'Confirm it, the details are right.'],
@@ -1278,6 +1283,7 @@ describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-03
       surfaces: out.length === 0 ? [] : semanticSurfaceViews(log, out),
       intent,
       open: sessionSurfaceViews(log),
+      shownTypes: sessionComponentTypes(log),
       ...(target !== undefined ? { target } : {}),
     })
   }
@@ -1306,6 +1312,20 @@ describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-03
     expect(said(ASK, msgs('text-1', [{ id: 'root', component: 'Text', text: 'Navy, steel blue and sky' }])).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
   })
 
+  it('a palette closed or rebuilt is still shown: a later ask stays quiet (code review item 1)', () => {
+    const closed: A2uiOutput = [{ version: 'v1.0', deleteSurface: { surfaceId: 'palette-1' } }] as A2uiOutput
+    const log = { turns: [prior(PALETTE).turns[0]!, { role: 'user', content: 'Close it.' }, { role: 'assistant', content: JSON.stringify(closed[0]) }] }
+    const turn = 'Make the dashboard use that palette'
+    expect(sessionSurfaceViews(log)).toEqual([])
+    expect(askCheck.check({ surfaces: [], intent: turn, open: [], shownTypes: sessionComponentTypes(log) })).toEqual([])
+    expect(said(turn).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('a turn that targets an open surface edits it and is never judged (code review item 5)', () => {
+    expect(said('Make it 16:00 and use the brand colours for the table decor', [], [], 'booking-1')).toEqual([])
+    expect(said('Make it 16:00 and use the brand colours for the table decor')).toEqual([])
+  })
+
   it('a later turn is never judged: with a palette shown, a change request answered with no Swatch or Ramp yields none', () => {
     const touched = msgs('palette-1', [{ id: 'note', component: 'Text', text: 'A warmer take.' }], false)
     expect(said('Now propose a warmer palette.', touched, PALETTE)).toEqual([])
@@ -1325,6 +1345,18 @@ describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-03
     ['Propose a calm blue palette for a banking app.', true],
     ['Great palette, but can you swap the accent?', true],
     ['Can you build a palette for dark mode?', true],
+    // Code review (T-0359): these first asks fire.
+    ['Propose a palette with clear contrast for a bank.', true],
+    ["I'd love a calm palette for my banking app.", true],
+    ['A nice calm blue palette for a banking app, please.', true],
+    ['What palette would suit a banking app?', true],
+    ["What's a good color scheme for a bank?", true],
+    ['Any palette ideas for a fintech app?', true],
+    ['Do you have a palette suggestion for my app?', true],
+    // Code review (T-0359): a game color question, and a request whose object is not the palette, are none.
+    ['Which color should I bet on?', false],
+    ['Which colour should I pick, red or black?', false],
+    ['Our brand colors are navy and gold. Build me a dashboard.', false],
     ['Great palette, thanks.', false],
     ['Perfect, love the palette!', false],
     ['Thanks, I love the palette.', false],

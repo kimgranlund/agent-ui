@@ -115,7 +115,7 @@ import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from './mini-sk
 import { FEED_SURFACE_TYPE_SET } from './feed-catalog.ts'
 import { isGenuiCandidate, readGenuiLine, utf8ByteLength, GENUI_MAX_HTML_BYTES } from './genui-line.ts'
 import type { GenuiSurfaceConfig } from './genui-surface-config.ts'
-import { flowHeldOpen, runSemanticChecks, semanticActionOf, semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
+import { flowHeldOpen, runSemanticChecks, semanticActionOf, semanticSurfaceViews, sessionComponentTypes, sessionSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticCheckInput } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
 import type { SemanticFinding, SurfaceView } from '../catalog/semantic-check.ts'
@@ -1509,6 +1509,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0286: the surfaces the session holds before this say turn, so a check can find the table a move typed with
   // no target was meant for.
   const turnOpen = turnIntent !== undefined ? sessionSurfaceViews(input.session) : undefined
+  // T-0359: every component type the session ever showed, so a check can tell a first ask from a later one.
+  const turnShown = turnIntent !== undefined ? sessionComponentTypes(input.session) : undefined
   // T-0281, T-0317 (Kim's L1 ruling, 2026-10-16): every surface an earlier round of this turn built and kept to its end,
   // failure-named or not. A later round that ships without one, in prose alone or in lines that neither create nor
   // delete it, has dropped it (SURFACE_DROPPED), never a success: the turn-scoped invariant replaced T-0172's
@@ -1560,7 +1562,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       const fb = fallbacks[i]!
       if (deps.semanticChecks === undefined || deps.semanticChecks.length === 0) return { fb, errored: false }
       const surfaces = semanticSurfaceViews(input.session, fb.output)
-      const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(fb.roundTarget !== undefined ? { target: fb.roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
+      const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(fb.roundTarget !== undefined ? { target: fb.roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}) })
       if (withBoundComposites(semantic.findings, boundComposites, surfaces).length === 0) return { fb, errored: semantic.errored.length > 0 }
     }
     return undefined
@@ -1914,7 +1916,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // for the missing value is never closed as a booking that was not made.
       const sayInput: SemanticCheckInput | undefined =
         turnAction === undefined && turnIntent !== undefined && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0
-          ? { surfaces: [], intent: turnIntent, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) }
+          ? { surfaces: [], intent: turnIntent, ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}) }
           : undefined
       const heldOpen = sayInput !== undefined && flowHeldOpen(deps.semanticChecks!, sayInput)
       const closeInferable =
@@ -2054,7 +2056,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       const semanticTally: string[] = []
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
         const surfaces = semanticSurfaceViews(input.session, assembled.output)
-        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, round, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}) })
+        const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, round, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}) })
         const findings = withBoundComposites(semantic.findings, boundComposites, surfaces) // T-0299
         compositeFindings.push(...semantic.findings.filter((f) => missingCompositeMoment(f.code) !== undefined)) // T-0330
         if (findings.length > 0 && round < opts.maxRounds - 1) {

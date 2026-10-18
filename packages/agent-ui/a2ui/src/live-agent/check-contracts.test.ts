@@ -20,7 +20,7 @@ import defaultCatalogRaw from '../catalog/default/catalog.json'
 import basicCatalogRaw from '../catalog/a2ui-basic/catalog.json'
 import { COMPOSITE_MOMENTS, compositeMomentCheck } from '../catalog/composite-moments.ts'
 import { gradeGuess } from '../catalog/hidden-state-checks.ts'
-import { semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
+import { semanticSurfaceViews, sessionComponentTypes, sessionSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticAction, SemanticCheck, SemanticCheckInput, SemanticFinding } from '../catalog/semantic-check.ts'
 import { CORRECTED_LINE, DEAL_TURN, EVIDENCE_LINE, toJsonl } from '../catalog/personas/croupier/hands.fixture.ts'
 import { personaCroupierCardTableBettingSeed, personaCroupierCardTableSettledSeed } from '../examples/persona-exemplars.ts'
@@ -493,12 +493,14 @@ function inputOf(f: Fixture): SemanticCheckInput {
   const session = { turns: turnsOf(f) }
   if (f.action !== undefined) return { surfaces: f.output.length === 0 ? [] : semanticSurfaceViews(session, f.output), action: f.action }
   const open = f.intent !== undefined ? sessionSurfaceViews(session) : undefined
+  const shownTypes = f.intent !== undefined ? sessionComponentTypes(session) : undefined
   const target = f.target !== undefined && open?.some((v) => v.surfaceId === f.target) ? f.target : undefined
   return {
     surfaces: f.output.length === 0 ? [] : semanticSurfaceViews(session, f.output),
     ...(f.intent !== undefined ? { intent: f.intent } : {}),
     ...(target !== undefined ? { target } : {}),
     ...(open !== undefined ? { open } : {}),
+    ...(shownTypes !== undefined ? { shownTypes } : {}),
   }
 }
 
