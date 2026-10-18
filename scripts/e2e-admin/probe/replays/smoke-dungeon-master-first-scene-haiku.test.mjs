@@ -9,10 +9,9 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0343 (the fix ticket is not filed yet; re-point this pin when it is). Haiku 5.5 built the quest
-// log from a Card, Rows and Badges with no GameHud or Timeline, which the `quest-log` skill names. The GameHud
-// composite moment fires only on a surface holding a BoardGrid (`has`, `composite-moments.ts`), so no producer check
-// sends the turn back.
+// expectedFail: T-0358. Haiku 5.5 built the quest log from a Card, Rows and Badges with no GameHud or Timeline, which
+// the `quest-log` skill names. The GameHud composite moment fires only on a surface holding a BoardGrid (`has`,
+// `composite-moments.ts`), so no producer check sends the turn back.
 it('smoke-dungeon-master-first-scene-haiku: a hand-built quest log with no GameHud fails expect-component on both turns', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-dungeon-master-first-scene-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())

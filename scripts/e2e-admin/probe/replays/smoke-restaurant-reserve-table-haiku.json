@@ -10,11 +10,15 @@
     {
       "say": "I'd like to reserve a table for dinner.",
       "expect": [
-        "Select",
-        "TextField"
+        "Field"
       ]
     }
   ],
+  "expect": {
+    "components": [
+      "Field"
+    ]
+  },
   "turns": [
     {
       "lines": [

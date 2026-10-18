@@ -14,8 +14,7 @@
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round4.ts` to print the script;
 // `round4.test.mjs` pins the file to this generator.
 
-import type { ProbeStep, RoutingExpect } from '../model.ts'
-import { quote } from './croupier.ts'
+import { quote, sayRouted as say } from '../model.ts'
 import type { RoundModel, RoundScenario } from './round.ts'
 import { ROUND3_MODELS, round3Argv, round3Runs } from './round3.ts'
 
@@ -65,8 +64,6 @@ const BOOKING_REQUEST = 'domain-concierge-booking-request'
 const WORD_BOARD = 'domain-lexicographer-word-board'
 const GAME_OVER = 'domain-lexicographer-game-over'
 const BOOK_ASK = 'Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.'
-
-const say = (text: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({ say: text, ...(expect.length ? { expect } : {}), ...(routing !== undefined ? { expectRouting: routing } : {}) })
 
 /** L: the long flows, each on Haiku and Sonnet. */
 export const ROUND4_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario; covers: readonly string[] }> = [

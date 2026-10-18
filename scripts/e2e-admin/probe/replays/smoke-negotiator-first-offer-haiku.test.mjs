@@ -9,10 +9,9 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0343 (the fix ticket is not filed yet; re-point this pin when it is). Haiku 5.5 built the deal
-// sheet from a Card and a DescriptionList with no GameHud, which the `deal-sheet` skill names for the asking price,
-// offer and mood. The GameHud composite moment fires only on a surface holding a BoardGrid (`has`,
-// `composite-moments.ts`), so no producer check sends the turn back.
+// expectedFail: T-0358. Haiku 5.5 built the deal sheet from a Card and a DescriptionList with no GameHud, which the
+// `deal-sheet` skill names for the asking price, offer and mood. The GameHud composite moment fires only on a surface
+// holding a BoardGrid (`has`, `composite-moments.ts`), so no producer check sends the turn back.
 it('smoke-negotiator-first-offer-haiku: a hand-built deal sheet with no GameHud fails expect-component on both turns', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-negotiator-first-offer-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())

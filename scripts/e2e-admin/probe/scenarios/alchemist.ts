@@ -5,10 +5,9 @@
 // stops at the round's opening. `plan.ts --tag smoke` plans it; `plan.test.mjs` checks every expected type is in the
 // preset's catalog.
 
-import type { ProbeStep } from '../model.ts'
+import { say } from '../model.ts'
 import type { RoundScenario } from './round.ts'
 
-const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? { say: text, expect } : { say: text })
 
 export const ALCHEMIST_SCENARIOS: readonly RoundScenario[] = [
   {

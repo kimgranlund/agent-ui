@@ -6,10 +6,10 @@
 //
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round.ts` to print the script.
 
-import { stepArgv, type ProbeStep } from '../model.ts'
+import { quote, stepArgv, type ProbeStep } from '../model.ts'
 import { ADMIRAL_MODELS, ADMIRAL_SCENARIOS } from './admiral.ts'
 import { CONCIERGE_MODELS, CONCIERGE_SCENARIOS } from './concierge.ts'
-import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, quote } from './croupier.ts'
+import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS } from './croupier.ts'
 import { LEXICOGRAPHER_MODELS, LEXICOGRAPHER_SCENARIOS } from './lexicographer.ts'
 
 /** T-0343: what a scenario is for. `plan.ts` selects a round by tag, and a run name starts with its first tag's prefix

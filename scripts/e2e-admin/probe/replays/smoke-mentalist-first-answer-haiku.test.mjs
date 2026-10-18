@@ -9,10 +9,9 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0343 (the fix ticket is not filed yet; re-point this pin when it is). Haiku 5.5 built the
-// Twenty Questions scoreboard from a Card, a Progress, a Stat and a SegmentedControl with no GameHud, which the
-// `guess-hud` skill names. The GameHud composite moment fires only on a surface holding a BoardGrid (`has`,
-// `composite-moments.ts`), so no producer check sends the turn back.
+// expectedFail: T-0358. Haiku 5.5 built the Twenty Questions scoreboard from a Card, a Progress, a Stat and a
+// SegmentedControl with no GameHud, which the `guess-hud` skill names. The GameHud composite moment fires only on a
+// surface holding a BoardGrid (`has`, `composite-moments.ts`), so no producer check sends the turn back.
 it('smoke-mentalist-first-answer-haiku: a hand-built scoreboard with no GameHud fails expect-component on both turns', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-mentalist-first-answer-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())

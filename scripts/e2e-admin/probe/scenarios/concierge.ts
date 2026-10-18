@@ -14,10 +14,9 @@
 // preset's `property-knowledge-base` resource, which the prompt lists by name only (T-0231), so an hours question
 // names it and auto-attaches it.
 
-import type { ProbeStep } from '../model.ts'
+import { say } from '../model.ts'
 import type { RoundScenario } from './round.ts'
 
-const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? { say: text, expect } : { say: text })
 
 export const CONCIERGE_SCENARIOS: readonly RoundScenario[] = [
   {

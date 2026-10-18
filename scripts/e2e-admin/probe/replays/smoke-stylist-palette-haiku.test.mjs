@@ -9,12 +9,12 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0343 (the fix ticket is not filed yet; re-point this pin when it is). Haiku 5.5 answered "Propose a
-// calm blue palette" with the palette in prose and no surface at all, though the persona says never a hex list in prose.
-// No producer check asks the Stylist for its token surface, so the turn ships as recorded.
+// expectedFail: T-0359. Haiku 5.5 answered "Propose a calm blue palette" with the palette in prose and no surface at
+// all, though the persona says never a hex list in prose. No producer check asks the Stylist for its token surface, so
+// the turn ships as recorded.
 it('smoke-stylist-palette-haiku: a palette answered in prose with no surface fails expect-component', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-stylist-palette-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['expect-component', null]])
-  expect(report.failed.at(-1).detail).toBe('missing Swatch (shipped none)')
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0]])
+  expect(report.failed[0].detail).toBe('no surface this turn updated holds Swatch or Ramp (touched none)')
 })

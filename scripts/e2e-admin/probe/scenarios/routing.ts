@@ -18,8 +18,7 @@
 // `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/routing.ts` to print `routing-pack.sh`;
 // `routing.test.mjs` pins the file to this generator.
 
-import { stepArgv, type ProbeStep, type RoutingExpect } from '../model.ts'
-import { quote } from './croupier.ts'
+import { clickRouted as click, quote, sayRouted as say, stepArgv, type RoutingExpect } from '../model.ts'
 import type { RoundModel, RoundScenario } from './round.ts'
 
 export interface RoutingScenario extends RoundScenario {
@@ -27,16 +26,6 @@ export interface RoutingScenario extends RoundScenario {
   agent: string
 }
 
-const say = (text: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({
-  say: text,
-  ...(expect.length ? { expect } : {}),
-  ...(routing !== undefined ? { expectRouting: routing } : {}),
-})
-const click = (label: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({
-  click: label,
-  ...(expect.length ? { expect } : {}),
-  ...(routing !== undefined ? { expectRouting: routing } : {}),
-})
 
 const CARD_TABLE = 'domain-croupier-card-table-round'
 const BOOKING = ['domain-concierge-booking-request', 'booking-reservation']

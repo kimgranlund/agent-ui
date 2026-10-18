@@ -14,27 +14,29 @@
 // cells and every scenario's first sample filled.
 //
 // `--affected <baseline round>` (SPEC CL-R10) keeps only the presets whose agent content changed since that round: each
-// preset's current resolution (`node scripts/agent-content.mjs compile <id> --json`, T-0163) is compared with the first
-// one the round's trace lines record (`bundle.resolution`, a run's opening turn: play can change the persona's state,
-// such as the Croupier's bankroll after a bet), every item but the `setting` entries, which name the model and effort a
-// probe overrides. A preset the round never recorded counts as affected; nothing is approximated.
+// preset's current resolution (the one agent compiler of `scripts/agent-content.mjs compile`, T-0163, loaded once for
+// every preset) is compared with the first one the round's trace lines record (`bundle.resolution`, a run's opening
+// turn: play can change the persona's state), every item but the `model` setting a planned probe overrides and the
+// `bankroll` setting play moves. A preset the round never recorded counts as affected; nothing is approximated. A
+// malformed trace line is skipped and counted in the header. The baseline is a folder name under `.sdlc/evals/rounds/`,
+// a repo-relative path or an absolute one. A compile failure exits 1.
 //
 // usage: node --experimental-strip-types scripts/e2e-admin/probe/scenarios/plan.ts --tag <tag> [--tag <tag>]...
 //          [--persona <preset id>]... [--model <haiku | sonnet | opus | model id>]... [--samples <n>] [--cap <usd>]
 //          [--round <slug>] [--affected <baseline round folder>]
-// Prints the script; exit 2 on a usage problem or an empty selection. `--model` defaults to all three, `--samples` to
+// Prints the script; exit 2 on a usage problem or an empty selection, 1 on a compile failure. `--model` defaults to all three, `--samples` to
 // 1; `--cap` and `--round` only fill in the runner line of the header. `plan.test.mjs` pins the smoke plan.
 
 import { spawnSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { isAbsolute, join } from 'node:path'
+import { isAbsolute, join, resolve } from 'node:path'
 import type { ResolutionEntry } from '../../../../packages/agent-ui/a2ui/src/agent/agent-bundle.ts'
 import { EVALS_ROUNDS } from '../ledger.ts'
-import { stepArgv } from '../model.ts'
+import { quote, stepArgv } from '../model.ts'
 import { ADMIRAL_SMOKE } from './admiral.ts'
 import { ALCHEMIST_SCENARIOS } from './alchemist.ts'
 import { CONCIERGE_SMOKE } from './concierge.ts'
-import { CROUPIER_SMOKE, quote } from './croupier.ts'
+import { CROUPIER_SMOKE } from './croupier.ts'
 import { CURATOR_SCENARIOS } from './curator.ts'
 import { DUNGEON_MASTER_SCENARIOS } from './dungeon-master.ts'
 import { LEXICOGRAPHER_SMOKE } from './lexicographer.ts'
@@ -162,48 +164,100 @@ export function parsePlanArgs(argv: readonly string[], registry: readonly Planne
   }
 }
 
-/** One preset's current content resolution, from the one agent compiler (T-0163). */
-export type CompileResolution = (agent: string) => ResolutionEntry[]
+/** Each preset's current content resolution, from the one agent compiler (T-0163). */
+export type CompileResolutions = (agents: readonly string[]) => Map<string, ResolutionEntry[]>
 
-export const compileResolution: CompileResolution = (agent) => {
-  const r = spawnSync(process.execPath, ['scripts/agent-content.mjs', 'compile', agent, '--json'], { cwd: ROOT, encoding: 'utf8' })
-  if (r.status !== 0) throw new PlanUsageError(`agent-content compile ${agent} exited ${r.status}: ${r.stderr.trim()}`)
-  return (JSON.parse(r.stdout) as { resolution: ResolutionEntry[] }).resolution
+/** A compile that failed or printed no result: exit 1, not a usage problem. */
+export class PlanCompileError extends Error {}
+
+/** One child process loads the compiler once (`loadSite` in `scripts/agent-content.mjs`) and compiles every preset,
+ *  printing `{ <id>: resolution }` as its last line; the compiler's modules leave timers behind, so it exits itself. */
+const COMPILE_ALL = `
+const { loadSite } = await import(${JSON.stringify(new URL('../../../agent-content.mjs', import.meta.url).href)})
+const { compileAgent, shippedPersona } = await loadSite('site/lib/agent-compile.ts')
+const out = {}
+for (const id of process.argv.slice(1)) {
+  if (shippedPersona(id) === undefined) { console.error('no shipped persona ' + id); process.exit(1) }
+  out[id] = (await compileAgent(id)).resolution
+}
+process.stdout.write('\\n' + JSON.stringify(out) + '\\n')
+process.exit(0)
+`
+
+export const compileResolutions: CompileResolutions = (agents) => {
+  const r = spawnSync(process.execPath, ['--input-type=module', '-e', COMPILE_ALL, ...agents], { cwd: ROOT, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+  const fail = (why: string): PlanCompileError => new PlanCompileError(`agent compile ${why}${r.stderr?.trim() ? `:\n${r.stderr.trim()}` : ''}`)
+  if (r.status !== 0) throw fail(`exited ${r.status ?? r.signal}`)
+  let parsed: unknown
+  try {
+    parsed = JSON.parse((r.stdout ?? '').trim().split('\n').at(-1) ?? '')
+  } catch {
+    throw fail('printed no JSON result')
+  }
+  const map = new Map<string, ResolutionEntry[]>()
+  for (const agent of agents) {
+    const resolution = (parsed as Record<string, unknown> | null)?.[agent]
+    if (!Array.isArray(resolution)) throw fail(`printed no resolution for ${agent}`)
+    map.set(agent, resolution as ResolutionEntry[])
+  }
+  return map
 }
 
-/** The content items of a resolution, canonical: every entry but the `setting` ones a probe overrides, sorted. */
+/** The settings a resolution may differ in without the content changing: the model every planned probe overrides
+ *  (`--model`) and the bankroll the Croupier's play moves. Every other setting, such as a seeded effort, counts. */
+const PROBE_SETTINGS = new Set(['model', 'bankroll'])
+
+/** The content items of a resolution, canonical and sorted, without the probe settings. */
 const contentKey = (resolution: readonly ResolutionEntry[]): string =>
   JSON.stringify(
     resolution
-      .filter((e) => e.kind !== 'setting')
+      .filter((e) => !(e.kind === 'setting' && PROBE_SETTINGS.has(e.id)))
       .map((e) => [e.kind, e.id, e.version, e.digest])
       .sort((a, b) => String(a).localeCompare(String(b))),
   )
 
+export interface Affected {
+  presets: Map<string, { affected: boolean; why: string }>
+  /** Trace lines that did not parse, skipped. */
+  malformed: number
+}
+
 /** CL-R10: per preset, whether its content changed since the baseline round, and why. */
-export function affectedPresets(agents: readonly string[], baselineDir: string, compile: CompileResolution = compileResolution): Map<string, { affected: boolean; why: string }> {
+export function affectedPresets(agents: readonly string[], baselineDir: string, compile: CompileResolutions = compileResolutions): Affected {
   const traces = join(baselineDir, 'traces')
   if (!existsSync(traces)) throw new PlanUsageError(`--affected: no traces/ in ${baselineDir}`)
   const recorded = new Map<string, readonly ResolutionEntry[]>()
+  let malformed = 0
   for (const file of readdirSync(traces).filter((f) => f.endsWith('.jsonl')).sort()) {
     for (const raw of readFileSync(join(traces, file), 'utf8').split('\n')) {
       if (raw.trim() === '') continue
+      let line: { bundle?: { resolution?: ResolutionEntry[] } }
+      try {
+        line = JSON.parse(raw) as typeof line
+      } catch {
+        malformed += 1
+        continue
+      }
       // The resolution's persona entry names the preset: the trace's own `agent` is absent on the base catalog.
-      const resolution = (JSON.parse(raw) as { bundle?: { resolution?: ResolutionEntry[] } }).bundle?.resolution
-      const agent = resolution?.find((e) => e.kind === 'persona')?.id
+      const resolution = line.bundle?.resolution
+      const agent = Array.isArray(resolution) ? resolution.find((e) => e.kind === 'persona')?.id : undefined
       if (agent !== undefined && !recorded.has(agent)) recorded.set(agent, resolution as ResolutionEntry[])
     }
   }
-  return new Map(
+  const known = agents.filter((a) => recorded.has(a))
+  const now = known.length > 0 ? compile(known) : new Map<string, ResolutionEntry[]>()
+  const presets = new Map(
     agents.map((agent) => {
       const then = recorded.get(agent)
-      const v = then === undefined ? { affected: true, why: 'no recorded resolution' } : contentKey(compile(agent)) === contentKey(then) ? { affected: false, why: 'unchanged' } : { affected: true, why: 'content changed' }
+      const v = then === undefined ? { affected: true, why: 'no recorded resolution' } : contentKey(now.get(agent) ?? []) === contentKey(then) ? { affected: false, why: 'unchanged' } : { affected: true, why: 'content changed' }
       return [agent, v] as const
     }),
   )
+  return { presets, malformed }
 }
 
-const baselinePath = (round: string): string => (isAbsolute(round) || round.includes('/') ? round : join(ROOT, EVALS_ROUNDS, round))
+/** A baseline round: a folder name under `.sdlc/evals/rounds/`, else a path, repo-relative unless absolute. */
+const baselinePath = (round: string): string => (isAbsolute(round) ? round : round.includes('/') ? resolve(ROOT, round) : join(ROOT, EVALS_ROUNDS, round))
 
 export interface PlannedRun {
   name: string
@@ -227,10 +281,8 @@ export function planArgv(s: PlannedScenario, model: RoundModel, name: string): s
 }
 
 /** The selected runs in script order: by model, then sample, then registry order. */
-export function planRuns(o: PlanOptions, registry: readonly PlannedScenario[] = scenarioRegistry(), only?: ReadonlySet<string>): PlannedRun[] {
-  const picked = registry.filter(
-    (s) => s.scenario.tags.some((t) => o.tags.includes(t)) && (o.personas.length === 0 || o.personas.includes(s.agent)) && (only === undefined || only.has(s.agent)),
-  )
+export function planRuns(o: PlanOptions, registry: readonly PlannedScenario[] = scenarioRegistry()): PlannedRun[] {
+  const picked = registry.filter((s) => s.scenario.tags.some((t) => o.tags.includes(t)) && (o.personas.length === 0 || o.personas.includes(s.agent)))
   return o.models.flatMap((model) =>
     Array.from({ length: o.samples }, (_, i) => i + 1).flatMap((sample) =>
       picked.map((s) => {
@@ -241,10 +293,8 @@ export function planRuns(o: PlanOptions, registry: readonly PlannedScenario[] = 
   )
 }
 
-/** The `live-commands.sh` for a plan; `argv` is the plan's own command line, echoed in the header. */
-export function planScript(o: PlanOptions, argv: readonly string[], registry: readonly PlannedScenario[] = scenarioRegistry(), affected?: Map<string, { affected: boolean; why: string }>): string {
-  const only = affected === undefined ? undefined : new Set([...affected].filter(([, v]) => v.affected).map(([a]) => a))
-  const runs = planRuns(o, registry, only)
+/** The `live-commands.sh` for a plan's runs; `argv` is the plan's own command line, echoed in the header. */
+export function planScript(o: PlanOptions, argv: readonly string[], runs: readonly PlannedRun[], affected?: Affected): string {
   const per = o.models.map((m) => `${m.short} ${runs.filter((r) => r.model.id === m.id).length}`).join(', ')
   const lines = [
     '#!/usr/bin/env bash',
@@ -255,7 +305,9 @@ export function planScript(o: PlanOptions, argv: readonly string[], registry: re
     '#   node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe <this file>',
     `#   node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts <this file> --cap ${o.cap ?? '<usd>'} --round ${o.round ?? '<slug>'}`,
     '# A probe exits 1 when a check fails.',
-    ...(affected === undefined ? [] : [`# Affected since ${o.affected} (SPEC CL-R10): ${[...affected].map(([a, v]) => `${a} ${v.why}`).join(', ')}.`]),
+    ...(affected === undefined
+      ? []
+      : [`# Affected since ${o.affected} (SPEC CL-R10): ${[...affected.presets].map(([a, v]) => `${a} ${v.why}`).join(', ')}${affected.malformed > 0 ? `; ${affected.malformed} malformed trace line(s) skipped` : ''}.`]),
   ]
   let current = ''
   for (const run of runs) {
@@ -268,17 +320,28 @@ export function planScript(o: PlanOptions, argv: readonly string[], registry: re
   return `${lines.join('\n')}\n`
 }
 
-/** The CLI: the script on stdout and exit 0, or the problem and the usage on stderr and exit 2. */
-export function planMain(argv: readonly string[], out: (text: string) => void, err: (text: string) => void, compile: CompileResolution = compileResolution): number {
+/** The CLI: the script on stdout and exit 0; a usage problem or an empty selection on stderr with the usage, exit 2; a
+ *  compile failure on stderr, exit 1. */
+export function planMain(argv: readonly string[], out: (text: string) => void, err: (text: string) => void, compile: CompileResolutions = compileResolutions): number {
   try {
     const registry = scenarioRegistry()
     const o = parsePlanArgs(argv, registry)
-    if (planRuns(o, registry).length === 0) throw new PlanUsageError(`no scenario is tagged ${o.tags.join(' or ')}${o.personas.length > 0 ? ` for ${o.personas.join(', ')}` : ''}`)
-    const affected = o.affected === undefined ? undefined : affectedPresets([...new Set(planRuns(o, registry).map((r) => r.agent))], baselinePath(o.affected), compile)
-    if (affected !== undefined && ![...affected.values()].some((v) => v.affected)) throw new PlanUsageError(`no selected preset's agent content changed since ${o.affected}`)
-    out(planScript(o, argv, registry, affected))
+    let runs = planRuns(o, registry)
+    if (runs.length === 0) throw new PlanUsageError(`no scenario is tagged ${o.tags.join(' or ')}${o.personas.length > 0 ? ` for ${o.personas.join(', ')}` : ''}`)
+    let affected: Affected | undefined
+    if (o.affected !== undefined) {
+      affected = affectedPresets([...new Set(runs.map((r) => r.agent))], baselinePath(o.affected), compile)
+      const changed = affected.presets
+      runs = runs.filter((r) => changed.get(r.agent)?.affected === true)
+      if (runs.length === 0) throw new PlanUsageError(`no selected preset's agent content changed since ${o.affected}`)
+    }
+    out(planScript(o, argv, runs, affected))
     return 0
   } catch (e) {
+    if (e instanceof PlanCompileError) {
+      err(`plan: ${e.message}\n`)
+      return 1
+    }
     if (!(e instanceof PlanUsageError)) throw e
     err(`plan: ${e.message}\n${PLAN_USAGE}\n`)
     return 2

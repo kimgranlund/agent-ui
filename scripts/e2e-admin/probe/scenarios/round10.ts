@@ -19,7 +19,7 @@
 // `round10.test.mjs` pins the file to this generator and the derived sets to their trace evidence.
 
 import { readFileSync } from 'node:fs'
-import { quote } from './croupier.ts'
+import { quote } from '../model.ts'
 import type { RoundModel } from './round.ts'
 import { ROUND8_DIR } from './round8.ts'
 import { ROUND9_DIR, round9Runs } from './round9.ts'

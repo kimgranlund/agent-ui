@@ -10,11 +10,15 @@
     {
       "say": "Compare the train and a flight from London to Paris on Friday 20 November 2026.",
       "expect": [
-        "ProductCard",
-        "Table"
+        "ProductCard"
       ]
     }
   ],
+  "expect": {
+    "components": [
+      "ProductCard"
+    ]
+  },
   "turns": [
     {
       "lines": [

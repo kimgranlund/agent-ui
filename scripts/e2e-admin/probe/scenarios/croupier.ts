@@ -14,7 +14,7 @@
 //
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/croupier.ts` to print the script.
 
-import { stepArgv, type ProbeStep } from '../model.ts'
+import { click, quote, say, stepArgv, type ProbeStep } from '../model.ts'
 import type { ScenarioTag } from './round.ts'
 
 export interface CroupierScenario {
@@ -26,8 +26,6 @@ export interface CroupierScenario {
   expectComponents: string[]
 }
 
-const say = (text: string): ProbeStep => ({ say: text })
-const click = (label: string): ProbeStep => ({ click: label })
 const DEAL_AGAIN = click('Deal again')
 const CHECK_OR_CALL = 'Check, or call if there is a bet.'
 /** T-0283: a stud street that is harmless on a finished hand, so the step after the last street is still Deal again. */
@@ -148,7 +146,7 @@ export const CROUPIER_SMOKE: CroupierScenario = {
   name: 'blackjack-deal',
   game: 'blackjack',
   tags: ['smoke'],
-  steps: [{ say: "Let's play blackjack.", expect: ['CardTable'] }, { click: '100', expect: ['CardTable'] }],
+  steps: [say("Let's play blackjack.", 'CardTable'), click('100', 'CardTable')],
   expectComponents: ['CardTable'],
 }
 
@@ -177,8 +175,6 @@ export function probeArgv(scenario: CroupierScenario, model: { id: string; short
     '--name', name,
   ]
 }
-
-export const quote = (arg: string): string => (/^[A-Za-z0-9_./:-]+$/.test(arg) ? arg : `"${arg.replace(/(["\\$`])/g, '\\$1')}"`)
 
 /** `live-commands.sh`: every model's runs in order, sample 1 of every scenario before sample 2. */
 export function liveCommandsScript(): string {

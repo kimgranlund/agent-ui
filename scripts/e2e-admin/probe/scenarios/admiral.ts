@@ -7,10 +7,9 @@
 //
 // Every shot is a `--say`: a BoardGrid cell has no fixed button label to click.
 
-import type { ProbeStep } from '../model.ts'
+import { say, type ProbeStep } from '../model.ts'
 import type { RoundScenario } from './round.ts'
 
-const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? { say: text, expect } : { say: text })
 const fire = (cell: string): ProbeStep => say(`Fire at ${cell}.`, 'BoardGrid')
 
 export const ADMIRAL_SCENARIOS: readonly RoundScenario[] = [

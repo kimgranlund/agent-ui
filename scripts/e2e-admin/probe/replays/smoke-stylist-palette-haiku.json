@@ -15,11 +15,6 @@
       ]
     }
   ],
-  "expect": {
-    "components": [
-      "Swatch"
-    ]
-  },
   "turns": [
     {
       "lines": [

@@ -10,7 +10,7 @@
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round8.ts` to print the script;
 // `round8.test.mjs` pins the file to this generator.
 
-import { quote } from './croupier.ts'
+import { quote } from '../model.ts'
 import { round6Runs, type Round6Run } from './round6.ts'
 
 export const ROUND8_DIR = '.sdlc/evals/rounds/2026-10-16-r8-matrix'

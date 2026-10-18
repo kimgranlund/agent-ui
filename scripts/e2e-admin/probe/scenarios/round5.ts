@@ -13,8 +13,7 @@
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round5.ts` to print the script;
 // `round5.test.mjs` pins the file to this generator.
 
-import type { ProbeStep, RoutingExpect } from '../model.ts'
-import { quote } from './croupier.ts'
+import { quote, sayRouted as say, type RoutingExpect } from '../model.ts'
 import type { RoundModel, RoundScenario } from './round.ts'
 import { ROUND3_MODELS, round3Argv } from './round3.ts'
 import { ROUND4_LONG_FLOWS, ROUND4_LONG_MODELS, round4Runs } from './round4.ts'
@@ -57,8 +56,6 @@ export const R4_FAILED: readonly string[] = [
 export const ROUND5_LONG_MODELS: readonly RoundModel[] = ROUND4_LONG_MODELS
 
 const KB_FULL: RoutingExpect['references'] = [{ name: 'property-knowledge-base', load: 'full' }]
-
-const say = (text: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({ say: text, ...(expect.length ? { expect } : {}), ...(routing !== undefined ? { expectRouting: routing } : {}) })
 
 /** L: round 4's long flows plus the T-0285 facility-hours flow, each on Haiku and Sonnet. */
 export const ROUND5_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario; covers: readonly string[] }> = [

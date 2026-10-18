@@ -7,10 +7,9 @@
 //
 // Every move is a `--say`: a guess typed into the model's TextField has no fixed label to click.
 
-import type { ProbeStep } from '../model.ts'
+import { say } from '../model.ts'
 import type { RoundScenario } from './round.ts'
 
-const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? { say: text, expect } : { say: text })
 
 export const LEXICOGRAPHER_SCENARIOS: readonly RoundScenario[] = [
   {

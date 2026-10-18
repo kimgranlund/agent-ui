@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:c67bd856a4a4 -->
+<!-- sdlc-lite:managed:start v1 sha256:c30506c2a941 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,9 +9,8 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 1
-  - T-0350 A settled card table ships with no way forward (no Deal again), and no check names it (0350-r10-settled-table-no-way-forward)
-- ready: 19
+- proposed: 0
+- ready: 22
   - T-0178 Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (0178-eval-judged-checks)
   - T-0187 split-pane demo stacks or scrolls at 400px instead of overflowing the column (0187-split-pane-narrow-fit)
   - T-0188 line-chart projected dash: user-unit dash or a ruled screen-px exemption (0188-line-chart-projected-dash)
@@ -27,10 +26,13 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0343 Smoke scenarios for every preset, planned from tags, replayed in CI (0343-eval-smoke-scenarios)
   - T-0345 Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) (0345-r10-poker-opens-with-cards)
   - T-0349 eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table (0349-signals-gaps-r10)
+  - T-0350 A settled card table ships with no way forward (no Deal again), and no check names it (0350-r10-settled-table-no-way-forward)
   - T-0354 Explicit format asks ('as a card', 'as a table', 'build me a form') force a surface even where the catalog owns the noun (0354-override-explicit-format)
   - T-0355 Per-version seed field digests so a migration tells an untouched old seed value from a user edit (0355-seed-version-digests)
   - T-0356 The other seven controls build their glyphs through createGlyph, with no host aria-hidden (0356-create-glyph-rest)
   - T-0357 A poker opening that asks for the stake instead of dealing gets a deterministic check and repair (0357-poker-stake-ask-check)
+  - T-0358 GameHud composite moment fires only beside a BoardGrid, so board-less game personas hand-build their score panels (0358-gamehud-moment-board-only)
+  - T-0359 The Stylist answers a palette ask in prose with no token surface (0359-stylist-palette-prose)
 - claimed: 0
 - paused: 0
 - blocked: 1

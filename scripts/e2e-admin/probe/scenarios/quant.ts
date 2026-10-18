@@ -4,10 +4,9 @@
 // Haiku 5.5 rightly asked for them on a bare ask (smoke round 2026-10-18, `traces/2026-10-18.jsonl:3`). `plan.ts --tag
 // smoke` plans it; `plan.test.mjs` checks every expected type is in the preset's catalog.
 
-import type { ProbeStep } from '../model.ts'
+import { say } from '../model.ts'
 import type { RoundScenario } from './round.ts'
 
-const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? { say: text, expect } : { say: text })
 
 export const QUANT_SCENARIOS: readonly RoundScenario[] = [
   {

@@ -4,10 +4,9 @@
 // order summary belongs on the storefront surface, so the turn must update the surface that holds the tiles. `plan.ts
 // --tag smoke` plans it; `plan.test.mjs` checks every expected type is in the preset's catalog.
 
-import type { ProbeStep } from '../model.ts'
+import { say } from '../model.ts'
 import type { RoundScenario } from './round.ts'
 
-const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? { say: text, expect } : { say: text })
 
 export const SHOPKEEPER_SCENARIOS: readonly RoundScenario[] = [
   {
