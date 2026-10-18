@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:2cc86f0880a3 -->
+<!-- sdlc-lite:managed:start v1 sha256:64c41026db0f -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -10,7 +10,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 ## Stages
 
 - proposed: 0
-- ready: 13
+- ready: 15
   - T-0193 OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card (0193-option-deck)
   - T-0195 Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state (0195-confirm-receipt)
   - T-0196 Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit (0196-amount-picker)
@@ -24,6 +24,8 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0362 Re-record the board-less game smoke replays after T-0358 (0362-rerecord-boardless-smoke)
   - T-0363 GameHud is outside the feed scope, so an ask-surface game cannot answer GAME_HUD_MISSING in place (0363-gamehud-feed-scope)
   - T-0364 ResultCard composite moment fires only beside a BoardGrid (0364-resultcard-moment-board-only)
+  - T-0365 Board-less GameHud check misses a stat strip of uncued Badges or Texts (0365-gamehud-statstrip-misses)
+  - T-0366 A board-less game turn answered in prose alone passes the producer (0366-boardless-move-prose-only)
 - claimed: 0
 - paused: 0
 - blocked: 1

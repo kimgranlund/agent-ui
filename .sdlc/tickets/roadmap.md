@@ -19,5 +19,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0362 | [0362-rerecord-boardless-smoke](0362-rerecord-boardless-smoke/handoff.md) | Re-record the board-less game smoke replays after T-0358 | chore | L2 | P2 | T-0358 | 🔵 ready |
 | T-0363 | [0363-gamehud-feed-scope](0363-gamehud-feed-scope/handoff.md) | GameHud is outside the feed scope, so an ask-surface game cannot answer GAME_HUD_MISSING in place | bug | L2 | P2 | T-0358 | 🔵 ready |
 | T-0364 | [0364-resultcard-moment-board-only](0364-resultcard-moment-board-only/handoff.md) | ResultCard composite moment fires only beside a BoardGrid | bug | L2 | P3 | T-0358 | 🔵 ready |
+| T-0365 | [0365-gamehud-statstrip-misses](0365-gamehud-statstrip-misses/handoff.md) | Board-less GameHud check misses a stat strip of uncued Badges or Texts | bug | L2 | P2 | T-0358 | 🔵 ready |
+| T-0366 | [0366-boardless-move-prose-only](0366-boardless-move-prose-only/handoff.md) | A board-less game turn answered in prose alone passes the producer | bug | L2 | P2 | T-0358 | 🔵 ready |
 
 Closed: 345 done, 4 dropped (git log or .NNNN-* folders)

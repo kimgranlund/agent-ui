@@ -5,7 +5,7 @@
   "agent": "negotiator",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "2026-10-18.jsonl:15,2026-10-18.jsonl:16 (catalog agent-ui)",
+  "source": "2026-10-18.jsonl:3,2026-10-18.jsonl:4 (catalog agent-ui)",
   "steps": [
     {
       "say": "I'd like to buy your brass lantern. What's your price?",
@@ -20,33 +20,28 @@
       ]
     }
   ],
-  "expect": {
-    "components": [
-      "GameHud"
-    ]
-  },
   "turns": [
     {
       "lines": [
-        "{\"a2uiMeta\":{\"textDelta\":\"Ah, a customer with taste! This lantern was hammered by the finest brass-smith in the Grand Bazaar, and its light never flickers. My asking price is **240 silver**. Don't faint. Name your number, and we'll see whether we both walk away happy. Put your offer on the table below.\"}}",
-        "{\"a2uiMeta\":{\"note\":\"Ah, a customer with taste! This lantern was hammered by the finest brass-smith in the Grand Bazaar, and its light never flickers. My asking price is **240 silver**. Don't faint. Name your number, and we'll see whether we both walk away happy. Put your offer on the table below.\",\"ask\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to buy your brass lantern. What's your price?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":46795,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1515}],\"over\":false},\"miniSkillIds\":[\"product-presentation\",\"greeting-card\"],\"cacheBoundary\":45280}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
-        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"draft\":{\"offer\":\"\"},\"deal\":{\"asking\":240,\"mood\":\"Curious, a little smug. Holding firm.\",\"item\":\"Brass lantern\",\"history\":\"240 (asking)\"}}}}",
-        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Deal sheet: Brass lantern\",\"variant\":\"h4\"},{\"id\":\"badge\",\"component\":\"Badge\",\"label\":\"Asking 240 silver\",\"intent\":\"info\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"sheet\",\"offer_field\"]},{\"id\":\"sheet\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Item\",\"value\":\"Brass lantern\"},{\"label\":\"Asking price\",\"value\":\"240 silver\"},{\"label\":\"Merchant's mood\",\"value\":\"Curious, a little smug. Holding firm.\"},{\"label\":\"Price history\",\"value\":\"240 (asking)\"}]},{\"id\":\"offer_field\",\"component\":\"Field\",\"label\":\"Your offer (silver)\",\"children\":[\"offer\"]},{\"id\":\"offer\",\"component\":\"TextField\",\"type\":\"number\",\"value\":{\"path\":\"/draft/offer\"},\"placeholder\":\"e.g. 150\",\"name\":\"offer\",\"min\":\"0\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"submit\"]},{\"id\":\"submit\",\"component\":\"Button\",\"label\":\"Put my offer forward\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_offer\",\"context\":{\"item\":\"brass-lantern\"}}}]}}"
+        "{\"a2uiMeta\":{\"textDelta\":\"Ah, the brass lantern! Polished every morning, it has seen three sultans and one very confused goat. My asking price is **240 gold**. For a customer of your fine taste, I might be persuaded to come down, but I will be wounded while doing it. Name your number below, or accept my price and be done with it.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Selim sets the lantern on the scale. My price stands at 240 gold, and the sheet below tracks where we are. Name your number, or accept and be done.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to buy your brass lantern. What's your price?\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"SURFACE_NOT_CREATED\",\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":46795,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1515}],\"over\":false},\"miniSkillIds\":[\"product-presentation\",\"greeting-card\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"deal-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"deal-1\",\"value\":{\"deal\":{\"item\":\"Brass lantern\",\"asking\":\"240 gold\",\"onTable\":\"240 gold\",\"mood\":\"Amused, a little wounded\",\"trend\":\"Holding firm\"},\"history\":[\"Round 0: I asked 240 gold\"],\"draft\":{\"offer\":\"200\"}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"deal-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Brass lantern\",\"variant\":\"h4\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"sheet\"]},{\"id\":\"sheet\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"hist_label\",\"hist\",\"offer_field\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal sheet\",\"status\":\"Negotiating\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Asking price\",\"value\":\"240 gold\"},{\"label\":\"On the table\",\"value\":\"240 gold\"},{\"label\":\"Selim's mood\",\"value\":\"Amused, a little wounded\"},{\"label\":\"Which way it is moving\",\"value\":\"Holding firm\"}]},{\"id\":\"hist_label\",\"component\":\"Text\",\"text\":\"Price history\",\"variant\":\"label\"},{\"id\":\"hist\",\"component\":\"Column\",\"gap\":\"xs\",\"children\":[\"h0\"]},{\"id\":\"h0\",\"component\":\"Text\",\"text\":\"Round 0: I asked 240 gold\",\"variant\":\"caption\"},{\"id\":\"offer_field\",\"component\":\"TextField\",\"type\":\"currency\",\"currency\":\"gold\",\"label\":\"Your offer\",\"name\":\"offer\",\"value\":{\"path\":\"/draft/offer\"},\"min\":\"1\",\"max\":\"240\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"child\":\"actions\"},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"justify\":\"end\",\"children\":[\"btn_offer\",\"btn_accept\",\"btn_walk\"]},{\"id\":\"btn_offer\",\"component\":\"Button\",\"label\":\"Put my offer forward\",\"variant\":\"solid\",\"action\":{\"action\":\"offer\",\"context\":{\"amount\":{\"path\":\"/draft/offer\"}},\"wantResponse\":true}},{\"id\":\"btn_accept\",\"component\":\"Button\",\"label\":\"Accept 240 gold\",\"variant\":\"soft\",\"action\":{\"action\":\"accept\",\"context\":{\"amount\":240},\"wantResponse\":true}},{\"id\":\"btn_walk\",\"component\":\"Button\",\"label\":\"Walk away\",\"variant\":\"ghost\",\"action\":{\"action\":\"walk_away\",\"wantResponse\":true}}]}}"
       ],
       "rounds": [
         {
-          "text": "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nAh, a customer with taste! This lantern was hammered by the finest brass-smith in the Grand Bazaar, and its light never flickers. My asking price is **240 silver**. Don't faint. Name your number, and we'll see whether we both walk away happy. Put your offer on the table below.",
+          "text": "Ah, the brass lantern! Polished every morning, it has seen three sultans and one very confused goat. My asking price is **240 gold**. For a customer of your fine taste, I might be persuaded to come down, but I will be wounded while doing it. Name your number below, or accept my price and be done with it.",
           "tools": [
             {
               "name": "render_surface",
               "input": {
-                "reply": "Put your offer on the table, friend.",
+                "reply": "Ah, the brass lantern! My asking price is 240 gold. Put your number on the sheet below, or accept my price and be done with it.",
                 "messages": [
                   {
                     "version": "v1.0",
                     "createSurface": {
-                      "surfaceId": "ask-1",
+                      "surfaceId": "deal-1",
                       "catalogId": "agent-ui",
                       "sendDataModel": true
                     }
@@ -54,16 +49,20 @@
                   {
                     "version": "v1.0",
                     "updateDataModel": {
-                      "surfaceId": "ask-1",
+                      "surfaceId": "deal-1",
                       "value": {
-                        "draft": {
-                          "offer": ""
-                        },
                         "deal": {
-                          "asking": 240,
-                          "mood": "Curious, a little smug. Holding firm.",
                           "item": "Brass lantern",
-                          "history": "240 (asking)"
+                          "asking": "240 gold",
+                          "onTable": "240 gold",
+                          "mood": "Amused, a little wounded",
+                          "trend": "Holding firm"
+                        },
+                        "history": [
+                          "Round 0: I asked 240 gold"
+                        ],
+                        "draft": {
+                          "offer": "200"
                         }
                       }
                     }
@@ -71,7 +70,7 @@
                   {
                     "version": "v1.0",
                     "updateComponents": {
-                      "surfaceId": "ask-1",
+                      "surfaceId": "deal-1",
                       "components": [
                         {
                           "id": "root",
@@ -87,88 +86,156 @@
                           "id": "hd",
                           "component": "CardHeader",
                           "children": [
+                            "title_row"
+                          ]
+                        },
+                        {
+                          "id": "title_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "align": "center",
+                          "children": [
                             "title",
-                            "badge"
+                            "status"
                           ]
                         },
                         {
                           "id": "title",
                           "component": "Text",
-                          "text": "Deal sheet: Brass lantern",
+                          "text": "Brass lantern",
                           "variant": "h4"
                         },
                         {
-                          "id": "badge",
+                          "id": "status",
                           "component": "Badge",
-                          "label": "Asking 240 silver",
+                          "label": "Negotiating",
                           "intent": "info"
                         },
                         {
                           "id": "ct",
                           "component": "CardContent",
                           "children": [
-                            "sheet",
-                            "offer_field"
+                            "sheet"
                           ]
                         },
                         {
                           "id": "sheet",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "facts",
+                            "hist_label",
+                            "hist",
+                            "offer_field"
+                          ]
+                        },
+                        {
+                          "id": "facts",
                           "component": "DescriptionList",
                           "rows": [
                             {
-                              "label": "Item",
-                              "value": "Brass lantern"
-                            },
-                            {
                               "label": "Asking price",
-                              "value": "240 silver"
+                              "value": "240 gold"
                             },
                             {
-                              "label": "Merchant's mood",
-                              "value": "Curious, a little smug. Holding firm."
+                              "label": "On the table",
+                              "value": "240 gold"
                             },
                             {
-                              "label": "Price history",
-                              "value": "240 (asking)"
+                              "label": "Selim's mood",
+                              "value": "Amused, a little wounded"
+                            },
+                            {
+                              "label": "Which way it is moving",
+                              "value": "Holding firm"
                             }
                           ]
                         },
                         {
-                          "id": "offer_field",
-                          "component": "Field",
-                          "label": "Your offer (silver)",
+                          "id": "hist_label",
+                          "component": "Text",
+                          "text": "Price history",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "hist",
+                          "component": "Column",
+                          "gap": "xs",
                           "children": [
-                            "offer"
+                            "h0"
                           ]
                         },
                         {
-                          "id": "offer",
+                          "id": "h0",
+                          "component": "Text",
+                          "text": "Round 0: I asked 240 gold",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "offer_field",
                           "component": "TextField",
-                          "type": "number",
+                          "type": "currency",
+                          "currency": "gold",
+                          "label": "Your offer",
+                          "name": "offer",
                           "value": {
                             "path": "/draft/offer"
                           },
-                          "placeholder": "e.g. 150",
-                          "name": "offer",
-                          "min": "0"
+                          "min": "1",
+                          "max": "240"
                         },
                         {
                           "id": "ft",
                           "component": "CardFooter",
+                          "child": "actions"
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "justify": "end",
                           "children": [
-                            "submit"
+                            "btn_offer",
+                            "btn_accept",
+                            "btn_walk"
                           ]
                         },
                         {
-                          "id": "submit",
+                          "id": "btn_offer",
                           "component": "Button",
                           "label": "Put my offer forward",
                           "variant": "solid",
                           "action": {
-                            "action": "submit_offer",
+                            "action": "offer",
                             "context": {
-                              "item": "brass-lantern"
-                            }
+                              "amount": {
+                                "path": "/draft/offer"
+                              }
+                            },
+                            "wantResponse": true
+                          }
+                        },
+                        {
+                          "id": "btn_accept",
+                          "component": "Button",
+                          "label": "Accept 240 gold",
+                          "variant": "soft",
+                          "action": {
+                            "action": "accept",
+                            "context": {
+                              "amount": 240
+                            },
+                            "wantResponse": true
+                          }
+                        },
+                        {
+                          "id": "btn_walk",
+                          "component": "Button",
+                          "label": "Walk away",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "walk_away",
+                            "wantResponse": true
                           }
                         }
                       ]
@@ -180,34 +247,41 @@
           ]
         },
         {
-          "text": "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nAh, a customer with taste! This lantern was hammered by the finest brass-smith in the Grand Bazaar, and its light never flickers. My asking price is **240 silver**. Don't faint. Name your number, and we'll see whether we both walk away happy. Put your offer on the table below.",
+          "text": "Selim sets the lantern on the scale. My price stands at 240 gold, and the sheet below tracks where we are. Name your number, or accept and be done.\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"deal-1\",\"value\":{\"deal\":{\"item\":\"Brass lantern\",\"asking\":\"240 gold\",\"onTable\":\"240 gold\",\"mood\":\"Amused, a little wounded\",\"trend\":\"Holding firm\"},\"history\":[\"Round 0: I asked 240 gold\"],\"draft\":{\"offer\":\"200\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"deal-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Brass lantern\",\"variant\":\"h4\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"sheet\"]},{\"id\":\"sheet\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"hist_label\",\"hist\",\"offer_field\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal sheet\",\"status\":\"Negotiating\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Asking price\",\"value\":\"240 gold\"},{\"label\":\"On the table\",\"value\":\"240 gold\"},{\"label\":\"Selim's mood\",\"value\":\"Amused, a little wounded\"},{\"label\":\"Which way it is moving\",\"value\":\"Holding firm\"}]},{\"id\":\"hist_label\",\"component\":\"Text\",\"text\":\"Price history\",\"variant\":\"label\"},{\"id\":\"hist\",\"component\":\"Column\",\"gap\":\"xs\",\"children\":[\"h0\"]},{\"id\":\"h0\",\"component\":\"Text\",\"text\":\"Round 0: I asked 240 gold\",\"variant\":\"caption\"},{\"id\":\"offer_field\",\"component\":\"TextField\",\"type\":\"currency\",\"currency\":\"gold\",\"label\":\"Your offer\",\"name\":\"offer\",\"value\":{\"path\":\"/draft/offer\"},\"min\":\"1\",\"max\":\"240\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"child\":\"actions\"},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"justify\":\"end\",\"children\":[\"btn_offer\",\"btn_accept\",\"btn_walk\"]},{\"id\":\"btn_offer\",\"component\":\"Button\",\"label\":\"Put my offer forward\",\"variant\":\"solid\",\"action\":{\"action\":\"offer\",\"context\":{\"amount\":{\"path\":\"/draft/offer\"}},\"wantResponse\":true}},{\"id\":\"btn_accept\",\"component\":\"Button\",\"label\":\"Accept 240 gold\",\"variant\":\"soft\",\"action\":{\"action\":\"accept\",\"context\":{\"amount\":240},\"wantResponse\":true}},{\"id\":\"btn_walk\",\"component\":\"Button\",\"label\":\"Walk away\",\"variant\":\"ghost\",\"action\":{\"action\":\"walk_away\",\"wantResponse\":true}}]}}",
+          "tools": []
+        },
+        {
+          "text": "Selim sets the lantern on the scale. My price stands at 240 gold, and the sheet below tracks where we are. Name your number, or accept and be done.",
           "tools": [
             {
               "name": "render_surface",
               "input": {
-                "reply": "Put your offer on the table, friend.",
+                "reply": "Selim sets the lantern on the scale. My price stands at 240 gold, and the sheet below tracks where we are. Name your number, or accept and be done.",
                 "messages": [
                   {
                     "version": "v1.0",
                     "createSurface": {
-                      "surfaceId": "ask-1",
-                      "catalogId": "agent-ui",
-                      "sendDataModel": true
+                      "surfaceId": "deal-1",
+                      "catalogId": "agent-ui"
                     }
                   },
                   {
                     "version": "v1.0",
                     "updateDataModel": {
-                      "surfaceId": "ask-1",
+                      "surfaceId": "deal-1",
                       "value": {
-                        "draft": {
-                          "offer": ""
-                        },
                         "deal": {
-                          "asking": 240,
-                          "mood": "Curious, a little smug. Holding firm.",
                           "item": "Brass lantern",
-                          "history": "240 (asking)"
+                          "asking": "240 gold",
+                          "onTable": "240 gold",
+                          "mood": "Amused, a little wounded",
+                          "trend": "Holding firm"
+                        },
+                        "history": [
+                          "Round 0: I asked 240 gold"
+                        ],
+                        "draft": {
+                          "offer": "200"
                         }
                       }
                     }
@@ -215,7 +289,7 @@
                   {
                     "version": "v1.0",
                     "updateComponents": {
-                      "surfaceId": "ask-1",
+                      "surfaceId": "deal-1",
                       "components": [
                         {
                           "id": "root",
@@ -237,88 +311,138 @@
                         {
                           "id": "title",
                           "component": "Text",
-                          "text": "Deal sheet: Brass lantern",
+                          "text": "Brass lantern",
                           "variant": "h4"
                         },
                         {
                           "id": "ct",
                           "component": "CardContent",
                           "children": [
+                            "sheet"
+                          ]
+                        },
+                        {
+                          "id": "sheet",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "hist_label",
+                            "hist",
                             "offer_field"
                           ]
                         },
                         {
-                          "id": "offer_field",
-                          "component": "Field",
-                          "label": "Your offer (silver)",
-                          "children": [
-                            "offer"
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Deal sheet",
+                          "status": "Negotiating",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Asking price",
+                              "value": "240 gold"
+                            },
+                            {
+                              "label": "On the table",
+                              "value": "240 gold"
+                            },
+                            {
+                              "label": "Selim's mood",
+                              "value": "Amused, a little wounded"
+                            },
+                            {
+                              "label": "Which way it is moving",
+                              "value": "Holding firm"
+                            }
                           ]
                         },
                         {
-                          "id": "offer",
+                          "id": "hist_label",
+                          "component": "Text",
+                          "text": "Price history",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "hist",
+                          "component": "Column",
+                          "gap": "xs",
+                          "children": [
+                            "h0"
+                          ]
+                        },
+                        {
+                          "id": "h0",
+                          "component": "Text",
+                          "text": "Round 0: I asked 240 gold",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "offer_field",
                           "component": "TextField",
-                          "type": "number",
+                          "type": "currency",
+                          "currency": "gold",
+                          "label": "Your offer",
+                          "name": "offer",
                           "value": {
                             "path": "/draft/offer"
                           },
-                          "placeholder": "e.g. 150",
-                          "name": "offer",
-                          "min": "0"
+                          "min": "1",
+                          "max": "240"
                         },
                         {
                           "id": "ft",
                           "component": "CardFooter",
+                          "child": "actions"
+                        },
+                        {
+                          "id": "actions",
+                          "component": "Row",
+                          "gap": "sm",
+                          "justify": "end",
                           "children": [
-                            "submit"
+                            "btn_offer",
+                            "btn_accept",
+                            "btn_walk"
                           ]
                         },
                         {
-                          "id": "submit",
+                          "id": "btn_offer",
                           "component": "Button",
                           "label": "Put my offer forward",
                           "variant": "solid",
                           "action": {
-                            "action": "submit_offer",
+                            "action": "offer",
                             "context": {
-                              "item": "brass-lantern"
-                            }
+                              "amount": {
+                                "path": "/draft/offer"
+                              }
+                            },
+                            "wantResponse": true
                           }
-                        }
-                      ]
-                    }
-                  },
-                  {
-                    "version": "v1.0",
-                    "createSurface": {
-                      "surfaceId": "hud-1",
-                      "catalogId": "agent-ui"
-                    }
-                  },
-                  {
-                    "version": "v1.0",
-                    "updateComponents": {
-                      "surfaceId": "hud-1",
-                      "components": [
+                        },
                         {
-                          "id": "root",
-                          "component": "GameHud",
-                          "title": "Brass lantern",
-                          "status": "Holding firm",
-                          "stats": [
-                            {
-                              "label": "Asking price",
-                              "value": "240 silver"
+                          "id": "btn_accept",
+                          "component": "Button",
+                          "label": "Accept 240 gold",
+                          "variant": "soft",
+                          "action": {
+                            "action": "accept",
+                            "context": {
+                              "amount": 240
                             },
-                            {
-                              "label": "Current offer",
-                              "value": "none yet"
-                            },
-                            {
-                              "label": "Mood",
-                              "value": "Curious, a little smug"
-                            }
-                          ]
+                            "wantResponse": true
+                          }
+                        },
+                        {
+                          "id": "btn_walk",
+                          "component": "Button",
+                          "label": "Walk away",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "walk_away",
+                            "wantResponse": true
+                          }
                         }
                       ]
                     }
@@ -362,463 +486,13 @@
     },
     {
       "lines": [
-        "{\"a2uiMeta\":{\"textDelta\":\"Twenty?! My brass lantern is not a tin cup found in the gutter. My friend, I would sooner polish it with my own beard. Still, I am a merchant, not a wall. I will come down to **200 silver**, and not one coin lower until you show me something more respectable.\"}}",
-        "{\"a2uiMeta\":{\"note\":\"Twenty? My lantern is not a tin cup from the gutter. I will come down to **200 silver**, and not one coin lower until you show me something more respectable.\",\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I offer 20.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"IDGRAPH\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":45280,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
-        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Deal sheet: Brass lantern\",\"variant\":\"h4\"},{\"id\":\"badge\",\"component\":\"Badge\",\"label\":\"Counter at 200\",\"intent\":\"warning\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"sheet\",\"offer_field\"]},{\"id\":\"sheet\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Item\",\"value\":\"Brass lantern\"},{\"label\":\"Asking price\",\"value\":\"240 silver\"},{\"label\":\"Offer on the table\",\"value\":\"20 silver (yours)\"},{\"label\":\"Merchant's counter\",\"value\":\"200 silver\"},{\"label\":\"Merchant's mood\",\"value\":\"Insulted, but amused. Coming down slowly.\"},{\"label\":\"Price history\",\"value\":\"240 → 20 → 200\"}]},{\"id\":\"offer_field\",\"component\":\"Field\",\"label\":\"Your offer (silver)\",\"children\":[\"offer\"]},{\"id\":\"offer\",\"component\":\"TextField\",\"type\":\"number\",\"value\":{\"path\":\"/draft/offer\"},\"placeholder\":\"e.g. 150\",\"name\":\"offer\",\"min\":\"0\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"actions\"]},{\"id\":\"actions\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"offer_submit\",\"accept_btn\",\"walk_btn\"]},{\"id\":\"offer_submit\",\"component\":\"Button\",\"label\":\"Put my offer forward\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_offer\",\"context\":{\"item\":\"brass-lantern\"}}},{\"id\":\"accept_btn\",\"component\":\"Button\",\"label\":\"Accept 200 silver\",\"variant\":\"soft\",\"action\":{\"action\":\"accept_counter\",\"context\":{\"item\":\"brass-lantern\",\"price\":200}}},{\"id\":\"walk_btn\",\"component\":\"Button\",\"label\":\"Walk away\",\"variant\":\"ghost\",\"action\":{\"action\":\"walk_away\",\"context\":{\"item\":\"brass-lantern\"}}}]}}"
+        "{\"a2uiMeta\":{\"textDelta\":\"Selim clutches his heart. \\\"Twenty gold for a lantern that lights my whole stall? Ah, you wound me. I come down to 230 gold, and not one coin lower until you offer like a serious buyer.\\\"\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Selim clutches his heart. \\\"Twenty gold for a lantern that lights my whole stall? Ah, you wound me. I come down to 230 gold, and not one coin lower until you offer like a serious buyer.\\\"\",\"target\":{\"surfaceId\":\"deal-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I offer 20.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":45280,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}"
       ],
       "rounds": [
         {
-          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"ask-1\"}}}\nTwenty?! My brass lantern is not a tin cup found in the gutter. My friend, I would sooner polish it with my own beard. Still, I am a merchant, not a wall. I will come down to **200 silver**, and not one coin lower until you show me something more respectable.",
-          "tools": [
-            {
-              "name": "render_surface",
-              "input": {
-                "reply": "Selim has countered at 200 silver. Your offer of 20 is on the sheet, and the price history is updated below.",
-                "messages": [
-                  {
-                    "version": "v1.0",
-                    "updateDataModel": {
-                      "surfaceId": "ask-1",
-                      "path": "/deal",
-                      "value": {
-                        "asking": 240,
-                        "counter": 200,
-                        "lastOffer": 20,
-                        "item": "Brass lantern",
-                        "mood": "Insulted, but amused. Coming down slowly.",
-                        "history": "240 (asking) → 20 (your offer) → 200 (my counter)"
-                      }
-                    }
-                  },
-                  {
-                    "version": "v1.0",
-                    "updateComponents": {
-                      "surfaceId": "ask-1",
-                      "components": [
-                        {
-                          "id": "sheet",
-                          "component": "DescriptionList",
-                          "rows": [
-                            {
-                              "label": "Item",
-                              "value": "Brass lantern"
-                            },
-                            {
-                              "label": "Asking price",
-                              "value": "240 silver"
-                            },
-                            {
-                              "label": "Offer on the table",
-                              "value": "20 silver (yours)"
-                            },
-                            {
-                              "label": "Merchant's counter",
-                              "value": "200 silver"
-                            },
-                            {
-                              "label": "Merchant's mood",
-                              "value": "Insulted, but amused. Coming down slowly."
-                            },
-                            {
-                              "label": "Price history",
-                              "value": "240 → 20 → 200"
-                            }
-                          ]
-                        },
-                        {
-                          "id": "ft",
-                          "component": "CardFooter",
-                          "children": [
-                            "actions"
-                          ]
-                        },
-                        {
-                          "id": "actions",
-                          "component": "Row",
-                          "gap": "sm",
-                          "children": [
-                            "submit",
-                            "accept",
-                            "walk"
-                          ]
-                        },
-                        {
-                          "id": "submit",
-                          "component": "Button",
-                          "label": "Put my offer forward",
-                          "variant": "solid",
-                          "action": {
-                            "action": "submit_offer",
-                            "context": {
-                              "item": "brass-lantern"
-                            }
-                          }
-                        },
-                        {
-                          "id": "accept",
-                          "component": "Button",
-                          "label": "Accept 200 silver",
-                          "variant": "soft",
-                          "action": {
-                            "action": "accept_counter",
-                            "context": {
-                              "item": "brass-lantern",
-                              "price": 200
-                            }
-                          }
-                        },
-                        {
-                          "id": "walk",
-                          "component": "Button",
-                          "label": "Walk away",
-                          "variant": "ghost",
-                          "action": {
-                            "action": "walk_away",
-                            "context": {
-                              "item": "brass-lantern"
-                            }
-                          }
-                        },
-                        {
-                          "id": "badge",
-                          "component": "Badge",
-                          "label": "Counter at 200",
-                          "intent": "warning"
-                        }
-                      ],
-                      "root": "root"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "text": "{\"a2uiMeta\":{\"note\":\"Twenty? My lantern is not a tin cup from the gutter. I will come down to **200 silver**, and not one coin lower until you show me something more respectable.\",\"target\":{\"surfaceId\":\"ask-1\"}}}",
-          "tools": [
-            {
-              "name": "render_surface",
-              "input": {
-                "reply": "Twenty? My lantern is not a tin cup from the gutter. I will come down to 200 silver, and not one coin lower until you show me something more respectable.",
-                "target": "ask-1",
-                "messages": [
-                  {
-                    "version": "v1.0",
-                    "updateComponents": {
-                      "surfaceId": "ask-1",
-                      "components": [
-                        {
-                          "id": "root",
-                          "component": "Card",
-                          "elevation": "1",
-                          "children": [
-                            "hd",
-                            "ct",
-                            "ft"
-                          ]
-                        },
-                        {
-                          "id": "hd",
-                          "component": "CardHeader",
-                          "children": [
-                            "title",
-                            "badge"
-                          ]
-                        },
-                        {
-                          "id": "title",
-                          "component": "Text",
-                          "text": "Deal sheet: Brass lantern",
-                          "variant": "h4"
-                        },
-                        {
-                          "id": "badge",
-                          "component": "Badge",
-                          "label": "Counter at 200",
-                          "intent": "warning"
-                        },
-                        {
-                          "id": "ct",
-                          "component": "CardContent",
-                          "children": [
-                            "sheet",
-                            "offer_field"
-                          ]
-                        },
-                        {
-                          "id": "sheet",
-                          "component": "DescriptionList",
-                          "rows": [
-                            {
-                              "label": "Item",
-                              "value": "Brass lantern"
-                            },
-                            {
-                              "label": "Asking price",
-                              "value": "240 silver"
-                            },
-                            {
-                              "label": "Offer on the table",
-                              "value": "20 silver (yours)"
-                            },
-                            {
-                              "label": "Merchant's counter",
-                              "value": "200 silver"
-                            },
-                            {
-                              "label": "Merchant's mood",
-                              "value": "Insulted, but amused. Coming down slowly."
-                            },
-                            {
-                              "label": "Price history",
-                              "value": "240 → 20 → 200"
-                            }
-                          ]
-                        },
-                        {
-                          "id": "offer_field",
-                          "component": "Field",
-                          "label": "Your offer (silver)",
-                          "children": [
-                            "offer"
-                          ]
-                        },
-                        {
-                          "id": "offer",
-                          "component": "TextField",
-                          "type": "number",
-                          "value": {
-                            "path": "/draft/offer"
-                          },
-                          "placeholder": "e.g. 150",
-                          "name": "offer",
-                          "min": "0"
-                        },
-                        {
-                          "id": "ft",
-                          "component": "CardFooter",
-                          "children": [
-                            "actions"
-                          ]
-                        },
-                        {
-                          "id": "actions",
-                          "component": "Row",
-                          "gap": "sm",
-                          "children": [
-                            "submit",
-                            "accept",
-                            "walk"
-                          ]
-                        },
-                        {
-                          "id": "submit",
-                          "component": "Button",
-                          "label": "Put my offer forward",
-                          "variant": "solid",
-                          "action": {
-                            "action": "submit_offer",
-                            "context": {
-                              "item": "brass-lantern"
-                            }
-                          }
-                        },
-                        {
-                          "id": "accept",
-                          "component": "Button",
-                          "label": "Accept 200 silver",
-                          "variant": "soft",
-                          "action": {
-                            "action": "accept_counter",
-                            "context": {
-                              "item": "brass-lantern",
-                              "price": 200
-                            }
-                          }
-                        },
-                        {
-                          "id": "walk",
-                          "component": "Button",
-                          "label": "Walk away",
-                          "variant": "ghost",
-                          "action": {
-                            "action": "walk_away",
-                            "context": {
-                              "item": "brass-lantern"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "text": "Twenty? My lantern is not a tin cup from the gutter. I will come down to **200 silver**, and not one coin lower until you show me something more respectable.",
-          "tools": [
-            {
-              "name": "render_surface",
-              "input": {
-                "target": "ask-1",
-                "reply": "Twenty? My lantern is not a tin cup from the gutter. I will come down to 200 silver, and not one coin lower until you show me something more respectable.",
-                "messages": [
-                  {
-                    "version": "v1.0",
-                    "updateComponents": {
-                      "surfaceId": "ask-1",
-                      "components": [
-                        {
-                          "id": "root",
-                          "component": "Card",
-                          "elevation": "1",
-                          "children": [
-                            "hd",
-                            "ct",
-                            "ft"
-                          ]
-                        },
-                        {
-                          "id": "hd",
-                          "component": "CardHeader",
-                          "children": [
-                            "title",
-                            "badge"
-                          ]
-                        },
-                        {
-                          "id": "title",
-                          "component": "Text",
-                          "text": "Deal sheet: Brass lantern",
-                          "variant": "h4"
-                        },
-                        {
-                          "id": "badge",
-                          "component": "Badge",
-                          "label": "Counter at 200",
-                          "intent": "warning"
-                        },
-                        {
-                          "id": "ct",
-                          "component": "CardContent",
-                          "children": [
-                            "sheet",
-                            "offer_field"
-                          ]
-                        },
-                        {
-                          "id": "sheet",
-                          "component": "DescriptionList",
-                          "rows": [
-                            {
-                              "label": "Item",
-                              "value": "Brass lantern"
-                            },
-                            {
-                              "label": "Asking price",
-                              "value": "240 silver"
-                            },
-                            {
-                              "label": "Offer on the table",
-                              "value": "20 silver (yours)"
-                            },
-                            {
-                              "label": "Merchant's counter",
-                              "value": "200 silver"
-                            },
-                            {
-                              "label": "Merchant's mood",
-                              "value": "Insulted, but amused. Coming down slowly."
-                            },
-                            {
-                              "label": "Price history",
-                              "value": "240 → 20 → 200"
-                            }
-                          ]
-                        },
-                        {
-                          "id": "offer_field",
-                          "component": "Field",
-                          "label": "Your offer (silver)",
-                          "children": [
-                            "offer"
-                          ]
-                        },
-                        {
-                          "id": "offer",
-                          "component": "TextField",
-                          "type": "number",
-                          "value": {
-                            "path": "/draft/offer"
-                          },
-                          "placeholder": "e.g. 150",
-                          "name": "offer",
-                          "min": "0"
-                        },
-                        {
-                          "id": "ft",
-                          "component": "CardFooter",
-                          "children": [
-                            "actions"
-                          ]
-                        },
-                        {
-                          "id": "actions",
-                          "component": "Row",
-                          "gap": "sm",
-                          "children": [
-                            "offer_submit",
-                            "accept_btn",
-                            "walk_btn"
-                          ]
-                        },
-                        {
-                          "id": "offer_submit",
-                          "component": "Button",
-                          "label": "Put my offer forward",
-                          "variant": "solid",
-                          "action": {
-                            "action": "submit_offer",
-                            "context": {
-                              "item": "brass-lantern"
-                            }
-                          }
-                        },
-                        {
-                          "id": "accept_btn",
-                          "component": "Button",
-                          "label": "Accept 200 silver",
-                          "variant": "soft",
-                          "action": {
-                            "action": "accept_counter",
-                            "context": {
-                              "item": "brass-lantern",
-                              "price": 200
-                            }
-                          }
-                        },
-                        {
-                          "id": "walk_btn",
-                          "component": "Button",
-                          "label": "Walk away",
-                          "variant": "ghost",
-                          "action": {
-                            "action": "walk_away",
-                            "context": {
-                              "item": "brass-lantern"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            }
-          ]
+          "text": "{\"a2uiMeta\":{\"note\":\"Twenty gold for a lantern that lights my whole stall? Selim clutches his heart. I come down to 230 gold, and not a coin lower until you offer like a serious buyer.\",\"target\":{\"surfaceId\":\"deal-1\"}}}\nSelim clutches his heart. \"Twenty gold for a lantern that lights my whole stall? Ah, you wound me. I come down to 230 gold, and not one coin lower until you offer like a serious buyer.\"",
+          "tools": []
         }
       ],
       "input": {
@@ -851,5 +525,10 @@
         ]
       }
     }
-  ]
+  ],
+  "expect": {
+    "components": [
+      "GameHud"
+    ]
+  }
 }

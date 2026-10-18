@@ -5,7 +5,7 @@
   "agent": "mentalist",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "2026-10-18.jsonl:13,2026-10-18.jsonl:14 (catalog agent-ui)",
+  "source": "2026-10-18.jsonl:1,2026-10-18.jsonl:2 (catalog agent-ui)",
   "steps": [
     {
       "say": "Let's play Twenty Questions. I'm thinking of something.",
@@ -20,28 +20,22 @@
       ]
     }
   ],
-  "expect": {
-    "components": [
-      "GameHud"
-    ]
-  },
   "turns": [
     {
       "lines": [
-        "{\"a2uiMeta\":{\"textDelta\":\"Right, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.\"}}",
-        "{\"a2uiMeta\":{\"note\":\"Right, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### twenty-questions (workflow)\\nGuessing-game domain — the 20-questions loop: one question per turn, HUD-tracked, honest reveal by 20.\\n\\nThink of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when confidence is high; always reveal by question 20 via the Modal.\\n\\nLet's play Twenty Questions. I'm thinking of something.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"SURFACE_NOT_CREATED\",\"FEED_SCOPE_RESCOPED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":47116,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1836}],\"over\":false},\"miniSkillIds\":[\"card-game-sheet\",\"game-hud\",\"comparison-table\"],\"cacheBoundary\":45280}}}",
+        "{\"a2uiMeta\":{\"note\":\"Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### twenty-questions (workflow)\\nGuessing-game domain — the 20-questions loop: one question per turn, HUD-tracked, honest reveal by 20.\\n\\nThink of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when confidence is high; always reveal by question 20 via the Modal.\\n\\nLet's play Twenty Questions. I'm thinking of something.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"FEED_SCOPE\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":47116,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1836}],\"over\":false},\"miniSkillIds\":[\"card-game-sheet\",\"game-hud\",\"comparison-table\"],\"cacheBoundary\":45280}}}",
         "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
-        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":0,\"spentLabel\":\"0 of 20\",\"confidence\":\"Low, casting wide\",\"live\":\"Q1: Is it a living thing?\"},\"draft\":{\"answer\":\"\"}}}}",
-        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"spent_badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Twenty Questions\",\"variant\":\"h4\"},{\"id\":\"spent_badge\",\"component\":\"Badge\",\"label\":{\"path\":\"/hud/spentLabel\"},\"intent\":\"neutral\",\"slot\":\"trailing\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"progress\",\"conf\",\"live\",\"answer\"]},{\"id\":\"progress\",\"component\":\"Progress\",\"value\":{\"path\":\"/hud/spent\"},\"max\":20,\"label\":\"Questions spent\"},{\"id\":\"conf\",\"component\":\"Stat\",\"label\":\"Confidence\",\"value\":{\"path\":\"/hud/confidence\"}},{\"id\":\"live\",\"component\":\"Text\",\"text\":{\"path\":\"/hud/live\"},\"variant\":\"h5\"},{\"id\":\"answer\",\"component\":\"SegmentedControl\",\"name\":\"answer\",\"value\":{\"path\":\"/draft/answer\"},\"children\":[\"seg_yes\",\"seg_no\",\"seg_sort\"]},{\"id\":\"seg_yes\",\"component\":\"Segment\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"seg_no\",\"component\":\"Segment\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"seg_sort\",\"component\":\"Segment\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"child\":\"commit\"},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Lock it in\",\"variant\":\"solid\",\"action\":{\"action\":\"commit_answer\",\"context\":{\"question\":1}}}]}}"
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"draft\":{\"answer\":\"\"}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"count\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Twenty Questions\",\"variant\":\"h4\"},{\"id\":\"count\",\"component\":\"Badge\",\"label\":\"Q1 of 20\",\"intent\":\"neutral\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"q_text\",\"prog\",\"conf\",\"ans\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Is it a living thing?\",\"variant\":\"h5\"},{\"id\":\"prog\",\"component\":\"Progress\",\"value\":1,\"max\":20,\"label\":\"Questions spent\"},{\"id\":\"conf\",\"component\":\"Text\",\"text\":\"Confidence: low, the net is wide open.\",\"variant\":\"caption\"},{\"id\":\"ans\",\"component\":\"RadioGroup\",\"value\":{\"path\":\"/draft/answer\"},\"name\":\"answer\",\"orientation\":\"horizontal\",\"children\":[\"r_yes\",\"r_no\",\"r_sort\"]},{\"id\":\"r_yes\",\"component\":\"Radio\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"r_no\",\"component\":\"Radio\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"r_sort\",\"component\":\"Radio\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"commit\"]},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Answer\",\"variant\":\"solid\",\"action\":{\"action\":\"answer_question\",\"context\":{\"questionId\":1}}}]}}"
       ],
       "rounds": [
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
+          "text": "{\"a2uiMeta\":{\"note\":\"Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
           "tools": [
             {
               "name": "render_surface",
               "input": {
-                "reply": "Q1 of 20: Is it a living thing?",
+                "reply": "Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.",
                 "messages": [
                   {
                     "version": "v1.0",
@@ -56,12 +50,6 @@
                     "updateDataModel": {
                       "surfaceId": "ask-1",
                       "value": {
-                        "hud": {
-                          "spent": 0,
-                          "spentLabel": "0 of 20",
-                          "confidence": "Low, casting wide",
-                          "live": "Q1: Is it a living thing?"
-                        },
                         "draft": {
                           "answer": ""
                         }
@@ -76,7 +64,6 @@
                         {
                           "id": "root",
                           "component": "Card",
-                          "elevation": "1",
                           "children": [
                             "hd",
                             "ct",
@@ -88,7 +75,7 @@
                           "component": "CardHeader",
                           "children": [
                             "title",
-                            "spent_badge"
+                            "count"
                           ]
                         },
                         {
@@ -98,94 +85,88 @@
                           "variant": "h4"
                         },
                         {
-                          "id": "spent_badge",
+                          "id": "count",
                           "component": "Badge",
-                          "label": {
-                            "path": "/hud/spentLabel"
-                          },
-                          "intent": "neutral",
-                          "slot": "trailing"
+                          "label": "Q1 of 20",
+                          "intent": "neutral"
                         },
                         {
                           "id": "ct",
                           "component": "CardContent",
                           "children": [
-                            "progress",
+                            "q_text",
+                            "prog",
                             "conf",
-                            "live",
-                            "answer"
+                            "ans"
                           ]
                         },
                         {
-                          "id": "progress",
+                          "id": "q_text",
+                          "component": "Text",
+                          "text": "Is it a living thing?",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "prog",
                           "component": "Progress",
-                          "value": {
-                            "path": "/hud/spent"
-                          },
+                          "value": 1,
                           "max": 20,
                           "label": "Questions spent"
                         },
                         {
                           "id": "conf",
-                          "component": "Stat",
-                          "label": "Confidence",
-                          "value": {
-                            "path": "/hud/confidence"
-                          }
-                        },
-                        {
-                          "id": "live",
                           "component": "Text",
-                          "text": {
-                            "path": "/hud/live"
-                          },
-                          "variant": "h5"
+                          "text": "Confidence: low, the net is wide open.",
+                          "variant": "caption"
                         },
                         {
-                          "id": "answer",
-                          "component": "SegmentedControl",
-                          "name": "answer",
+                          "id": "ans",
+                          "component": "RadioGroup",
                           "value": {
                             "path": "/draft/answer"
                           },
+                          "name": "answer",
+                          "orientation": "horizontal",
                           "children": [
-                            "seg_yes",
-                            "seg_no",
-                            "seg_sort"
+                            "r_yes",
+                            "r_no",
+                            "r_sort"
                           ]
                         },
                         {
-                          "id": "seg_yes",
-                          "component": "Segment",
+                          "id": "r_yes",
+                          "component": "Radio",
                           "value": "yes",
                           "label": "Yes"
                         },
                         {
-                          "id": "seg_no",
-                          "component": "Segment",
+                          "id": "r_no",
+                          "component": "Radio",
                           "value": "no",
                           "label": "No"
                         },
                         {
-                          "id": "seg_sort",
-                          "component": "Segment",
+                          "id": "r_sort",
+                          "component": "Radio",
                           "value": "sort_of",
                           "label": "Sort of"
                         },
                         {
                           "id": "ft",
                           "component": "CardFooter",
-                          "child": "commit"
+                          "children": [
+                            "commit"
+                          ]
                         },
                         {
                           "id": "commit",
                           "component": "Button",
-                          "label": "Lock it in",
+                          "label": "Answer",
                           "variant": "solid",
                           "action": {
-                            "action": "commit_answer",
+                            "action": "answer_question",
                             "context": {
-                              "question": 1
+                              "questionId": 1
                             }
                           }
                         }
@@ -198,167 +179,12 @@
           ]
         },
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
+          "text": "",
           "tools": [
             {
               "name": "render_surface",
               "input": {
-                "target": "ask-1",
-                "reply": "Right, you've got something in mind. Let's start wide. Is it a living thing? Answer Yes, No, or Sort of on the scoreboard.",
-                "messages": [
-                  {
-                    "version": "v1.0",
-                    "updateDataModel": {
-                      "surfaceId": "ask-1",
-                      "value": {
-                        "hud": {
-                          "spent": 0,
-                          "spentLabel": "0 of 20",
-                          "confidence": "Low, casting wide",
-                          "live": "Q1: Is it a living thing?"
-                        },
-                        "draft": {
-                          "answer": ""
-                        }
-                      }
-                    }
-                  },
-                  {
-                    "version": "v1.0",
-                    "updateComponents": {
-                      "surfaceId": "ask-1",
-                      "components": [
-                        {
-                          "id": "root",
-                          "component": "Card",
-                          "elevation": "1",
-                          "children": [
-                            "hd",
-                            "ct",
-                            "ft"
-                          ]
-                        },
-                        {
-                          "id": "hd",
-                          "component": "CardHeader",
-                          "children": [
-                            "title",
-                            "spent_badge"
-                          ]
-                        },
-                        {
-                          "id": "title",
-                          "component": "Text",
-                          "text": "Twenty Questions",
-                          "variant": "h4"
-                        },
-                        {
-                          "id": "spent_badge",
-                          "component": "Badge",
-                          "label": {
-                            "path": "/hud/spentLabel"
-                          },
-                          "intent": "neutral",
-                          "slot": "trailing"
-                        },
-                        {
-                          "id": "ct",
-                          "component": "CardContent",
-                          "children": [
-                            "progress",
-                            "conf",
-                            "live",
-                            "answer"
-                          ]
-                        },
-                        {
-                          "id": "progress",
-                          "component": "Progress",
-                          "value": {
-                            "path": "/hud/spent"
-                          },
-                          "max": 20,
-                          "label": "Questions spent"
-                        },
-                        {
-                          "id": "conf",
-                          "component": "Stat",
-                          "label": "Confidence",
-                          "value": {
-                            "path": "/hud/confidence"
-                          }
-                        },
-                        {
-                          "id": "live",
-                          "component": "Text",
-                          "text": {
-                            "path": "/hud/live"
-                          },
-                          "variant": "h5"
-                        },
-                        {
-                          "id": "answer",
-                          "component": "SegmentedControl",
-                          "name": "answer",
-                          "value": {
-                            "path": "/draft/answer"
-                          },
-                          "children": [
-                            "seg_yes",
-                            "seg_no",
-                            "seg_sort"
-                          ]
-                        },
-                        {
-                          "id": "seg_yes",
-                          "component": "Segment",
-                          "value": "yes",
-                          "label": "Yes"
-                        },
-                        {
-                          "id": "seg_no",
-                          "component": "Segment",
-                          "value": "no",
-                          "label": "No"
-                        },
-                        {
-                          "id": "seg_sort",
-                          "component": "Segment",
-                          "value": "sort_of",
-                          "label": "Sort of"
-                        },
-                        {
-                          "id": "ft",
-                          "component": "CardFooter",
-                          "child": "commit"
-                        },
-                        {
-                          "id": "commit",
-                          "component": "Button",
-                          "label": "Lock it in",
-                          "variant": "solid",
-                          "action": {
-                            "action": "commit_answer",
-                            "context": {
-                              "question": 1
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
-          "tools": [
-            {
-              "name": "render_surface",
-              "input": {
-                "reply": "Q1 of 20: Is it a living thing? Pick Yes, No, or Sort of on the scoreboard, then lock it in.",
+                "reply": "Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.",
                 "messages": [
                   {
                     "version": "v1.0",
@@ -373,12 +199,6 @@
                     "updateDataModel": {
                       "surfaceId": "ask-1",
                       "value": {
-                        "hud": {
-                          "spent": 0,
-                          "spentLabel": "0 of 20",
-                          "confidence": "Low, casting wide",
-                          "live": "Q1: Is it a living thing?"
-                        },
                         "draft": {
                           "answer": ""
                         }
@@ -393,7 +213,6 @@
                         {
                           "id": "root",
                           "component": "Card",
-                          "elevation": "1",
                           "children": [
                             "hd",
                             "ct",
@@ -405,7 +224,7 @@
                           "component": "CardHeader",
                           "children": [
                             "title",
-                            "spent_badge"
+                            "count"
                           ]
                         },
                         {
@@ -415,94 +234,88 @@
                           "variant": "h4"
                         },
                         {
-                          "id": "spent_badge",
+                          "id": "count",
                           "component": "Badge",
-                          "label": {
-                            "path": "/hud/spentLabel"
-                          },
-                          "intent": "neutral",
-                          "slot": "trailing"
+                          "label": "Q1 of 20",
+                          "intent": "neutral"
                         },
                         {
                           "id": "ct",
                           "component": "CardContent",
                           "children": [
-                            "progress",
+                            "q_text",
+                            "prog",
                             "conf",
-                            "live",
-                            "answer"
+                            "ans"
                           ]
                         },
                         {
-                          "id": "progress",
+                          "id": "q_text",
+                          "component": "Text",
+                          "text": "Is it a living thing?",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "prog",
                           "component": "Progress",
-                          "value": {
-                            "path": "/hud/spent"
-                          },
+                          "value": 1,
                           "max": 20,
                           "label": "Questions spent"
                         },
                         {
                           "id": "conf",
-                          "component": "Stat",
-                          "label": "Confidence",
-                          "value": {
-                            "path": "/hud/confidence"
-                          }
-                        },
-                        {
-                          "id": "live",
                           "component": "Text",
-                          "text": {
-                            "path": "/hud/live"
-                          },
-                          "variant": "h5"
+                          "text": "Confidence: low, the net is wide open.",
+                          "variant": "caption"
                         },
                         {
-                          "id": "answer",
-                          "component": "SegmentedControl",
-                          "name": "answer",
+                          "id": "ans",
+                          "component": "RadioGroup",
                           "value": {
                             "path": "/draft/answer"
                           },
+                          "name": "answer",
+                          "orientation": "horizontal",
                           "children": [
-                            "seg_yes",
-                            "seg_no",
-                            "seg_sort"
+                            "r_yes",
+                            "r_no",
+                            "r_sort"
                           ]
                         },
                         {
-                          "id": "seg_yes",
-                          "component": "Segment",
+                          "id": "r_yes",
+                          "component": "Radio",
                           "value": "yes",
                           "label": "Yes"
                         },
                         {
-                          "id": "seg_no",
-                          "component": "Segment",
+                          "id": "r_no",
+                          "component": "Radio",
                           "value": "no",
                           "label": "No"
                         },
                         {
-                          "id": "seg_sort",
-                          "component": "Segment",
+                          "id": "r_sort",
+                          "component": "Radio",
                           "value": "sort_of",
                           "label": "Sort of"
                         },
                         {
                           "id": "ft",
                           "component": "CardFooter",
-                          "child": "commit"
+                          "children": [
+                            "commit"
+                          ]
                         },
                         {
                           "id": "commit",
                           "component": "Button",
-                          "label": "Lock it in",
+                          "label": "Answer",
                           "variant": "solid",
                           "action": {
-                            "action": "commit_answer",
+                            "action": "answer_question",
                             "context": {
-                              "question": 1
+                              "questionId": 1
                             }
                           }
                         }
@@ -552,17 +365,165 @@
     },
     {
       "lines": [
-        "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Yes.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":45280,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
-        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}"
+        "{\"a2uiMeta\":{\"textDelta\":\"Living, so we're in the big biological pile now. Question 2 of 20: is it an animal? Pick Yes, No, or Sort of below and hit Answer.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Living, so we're in the big biological pile now. Question 2 of 20: is it an animal? Pick Yes, No, or Sort of below and hit Answer.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Yes.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"FEED_SCOPE\",\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":45280,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-2\",\"value\":{\"draft\":{\"answer\":\"\"}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"count\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Twenty Questions\",\"variant\":\"h4\"},{\"id\":\"count\",\"component\":\"Badge\",\"label\":\"Q2 of 20\",\"intent\":\"neutral\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"q_text\",\"prog\",\"conf\",\"ans\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Is it an animal?\",\"variant\":\"h5\"},{\"id\":\"prog\",\"component\":\"Progress\",\"value\":2,\"max\":20,\"label\":\"Questions spent\"},{\"id\":\"conf\",\"component\":\"Text\",\"text\":\"Confidence: low, but the living-thing answer narrows the field.\",\"variant\":\"caption\"},{\"id\":\"ans\",\"component\":\"RadioGroup\",\"value\":{\"path\":\"/draft/answer\"},\"name\":\"answer\",\"orientation\":\"horizontal\",\"children\":[\"r_yes\",\"r_no\",\"r_sort\"]},{\"id\":\"r_yes\",\"component\":\"Radio\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"r_no\",\"component\":\"Radio\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"r_sort\",\"component\":\"Radio\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"commit\"]},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Answer\",\"variant\":\"solid\",\"action\":{\"action\":\"answer_question\",\"context\":{\"questionId\":2}}}]}}"
       ],
       "rounds": [
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}",
+          "text": "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Question 2 of 20: is it an animal?\",\"ask\":{\"surfaceId\":\"ask-2\"}}}\n\nLiving, so we're in the big biological pile now. Question 2 of 20: is it an animal? Pick Yes, No, or Sort of below and hit Answer.\n\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-2\",\"value\":{\"draft\":{\"answer\":\"\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"count\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Twenty Questions\",\"variant\":\"h4\"},{\"id\":\"count\",\"component\":\"Badge\",\"label\":\"Q2 of 20\",\"intent\":\"neutral\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"q_text\",\"prog\",\"conf\",\"ans\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Is it an animal?\",\"variant\":\"h5\"},{\"id\":\"prog\",\"component\":\"Progress\",\"value\":2,\"max\":20,\"label\":\"Questions spent\"},{\"id\":\"conf\",\"component\":\"Text\",\"text\":\"Confidence: low, but the living-thing answer narrows the field.\",\"variant\":\"caption\"},{\"id\":\"ans\",\"component\":\"RadioGroup\",\"value\":{\"path\":\"/draft/answer\"},\"name\":\"answer\",\"orientation\":\"horizontal\",\"children\":[\"r_yes\",\"r_no\",\"r_sort\"]},{\"id\":\"r_yes\",\"component\":\"Radio\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"r_no\",\"component\":\"Radio\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"r_sort\",\"component\":\"Radio\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"commit\"]},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Answer\",\"variant\":\"solid\",\"action\":{\"action\":\"answer_question\",\"context\":{\"questionId\":2}}}]}}",
           "tools": []
         },
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"live\",\"answer\"]}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Q2: Is it an animal?\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"Low, narrowing\"}],\"progress\":{\"value\":1,\"max\":20,\"label\":\"Questions used\"}}]}}",
-          "tools": []
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Living, so we're in the big biological pile now. Question 2 of 20: is it an animal? Pick Yes, No, or Sort of below and hit Answer.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-2",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-2",
+                      "value": {
+                        "draft": {
+                          "answer": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "count"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Twenty Questions",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "count",
+                          "component": "Badge",
+                          "label": "Q2 of 20",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "q_text",
+                            "prog",
+                            "conf",
+                            "ans"
+                          ]
+                        },
+                        {
+                          "id": "q_text",
+                          "component": "Text",
+                          "text": "Is it an animal?",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "prog",
+                          "component": "Progress",
+                          "value": 2,
+                          "max": 20,
+                          "label": "Questions spent"
+                        },
+                        {
+                          "id": "conf",
+                          "component": "Text",
+                          "text": "Confidence: low, but the living-thing answer narrows the field.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "ans",
+                          "component": "RadioGroup",
+                          "value": {
+                            "path": "/draft/answer"
+                          },
+                          "name": "answer",
+                          "orientation": "horizontal",
+                          "children": [
+                            "r_yes",
+                            "r_no",
+                            "r_sort"
+                          ]
+                        },
+                        {
+                          "id": "r_yes",
+                          "component": "Radio",
+                          "value": "yes",
+                          "label": "Yes"
+                        },
+                        {
+                          "id": "r_no",
+                          "component": "Radio",
+                          "value": "no",
+                          "label": "No"
+                        },
+                        {
+                          "id": "r_sort",
+                          "component": "Radio",
+                          "value": "sort_of",
+                          "label": "Sort of"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "commit"
+                          ]
+                        },
+                        {
+                          "id": "commit",
+                          "component": "Button",
+                          "label": "Answer",
+                          "variant": "solid",
+                          "action": {
+                            "action": "answer_question",
+                            "context": {
+                              "questionId": 2
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {
@@ -594,5 +555,10 @@
         ]
       }
     }
-  ]
+  ],
+  "expect": {
+    "components": [
+      "GameHud"
+    ]
+  }
 }
