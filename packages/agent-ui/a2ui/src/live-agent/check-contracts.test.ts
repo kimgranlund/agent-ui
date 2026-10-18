@@ -164,6 +164,31 @@ const resultCard = (outcome: string, summary: string): Record<string, unknown>[]
   { id: 'again', component: 'Button', label: 'Play again', action: { event: { name: 'play_again', context: { newGame: true } } } },
 ]
 
+// T-0366: the board-less games, the Negotiator's deal sheet (a GameHud) and the Dungeon Master's quest log (a Timeline
+// and stat Badges, no GameHud), as the T-0362 smoke re-record drew them.
+const DEAL_OPEN = { deal: { asking: '240 gold', onTable: '240 gold', mood: 'Amused' } }
+const dealSession = [
+  {
+    say: "I'd like to buy your brass lantern. What's your price?",
+    out: surface('deal-1', UI, [
+      { id: 'root', component: 'Column', gap: 'md', children: ['hud'] },
+      { id: 'hud', component: 'GameHud', title: 'Deal sheet', status: 'Negotiating', stats: [{ label: 'Asking price', value: { path: '/deal/asking' } }, { label: 'Mood', value: { path: '/deal/mood' } }] },
+    ], DEAL_OPEN),
+  },
+]
+const questSession = [
+  {
+    say: 'Start the adventure.',
+    out: surface('quest-log', UI, [
+      { id: 'root', component: 'Column', gap: 'md', children: ['title', 'hp', 'scenes'] },
+      { id: 'title', component: 'Text', text: 'Quest log: The Undervault', variant: 'h4' },
+      { id: 'hp', component: 'Badge', label: 'HP 12/12' },
+      { id: 'scenes', component: 'Timeline', label: 'Scenes', children: ['s1'] },
+      { id: 's1', component: 'TimelineItem', label: 'Antechamber', status: 'active' },
+    ]),
+  },
+]
+
 // Blackjack and poker (Croupier).
 const DEAL_SESSION = [{ say: 'Deal round 3', out: DEAL_TURN }]
 const line = (l: string): A2uiOutput => [JSON.parse(l) as A2uiServerMessage]
@@ -376,6 +401,11 @@ const CONTRACTS: Record<string, Contract> = {
       target: 'waters-1',
       output: [data('waters-1', { ...FLEET_OPEN, cells: FLEET.map((c) => ({ ...c, mark: '■' })), status: 'You conceded' })],
     },
+  },
+  'boardless-move-applied': {
+    code: 'ACTION_NOT_APPLIED',
+    pass: { catalog: UI, session: dealSession, intent: 'I offer 20.', target: 'deal-1', output: [data('deal-1', { deal: { ...DEAL_OPEN.deal, onTable: '20 gold', asking: '230 gold' } })] },
+    fail: { catalog: UI, session: dealSession, intent: 'I offer 20.', target: 'deal-1', output: [] },
   },
   'concierge-surface-required': {
     code: 'SURFACE_MISSING',
@@ -629,6 +659,8 @@ const PROBES: Record<string, readonly Fixture[]> = {
     },
   ],
   'fleet-concede': [{ catalog: UI, session: fleetSession, intent: 'I concede.', target: 'waters-1', output: [] }],
+  // T-0366: the quest log carries no GameHud, so its game words gate the check.
+  'boardless-move-applied': [{ catalog: UI, session: questSession, intent: 'I open the door and step inside.', target: 'quest-log', output: [] }],
   // T-0323: DEALT_IN_BETTING's two arms (round 8 :61 round 2 keeps the moves, :65 round 1 asks for them) and the
   // poker arms of the new-round and opening repair texts. T-0350: DEAL_AGAIN_MISSING, a table settled by data alone.
   // T-0357: POKER_DEAL_MISSING, the round 10 :81 hold'em stake ask.

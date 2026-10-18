@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
-import { fleetConcedeCheck, fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
+import { boardlessMoveAppliedCheck, fleetConcedeCheck, fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
@@ -357,8 +357,8 @@ describe('T-0296: fleet-concede', () => {
     } as A2uiServerMessage,
   ]
 
-  it('rides every catalog last', () => {
-    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied', 'fleet-hud', 'fleet-concede'])
+  it('rides every catalog after the fleet HUD check', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id).slice(0, 6)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied', 'fleet-hud', 'fleet-concede'])
   })
 
   it('the recorded surrender that reveals the fleet on the board with no ResultCard is RESULT_CARD_MISSING', () => {
@@ -410,5 +410,65 @@ describe('T-0322: a word game asked for with no surface', () => {
     expect(said('How does the word game work?')).toEqual([])
     expect(said('Battleship, please.')).toEqual([])
     expect(wordMoveAppliedCheck.check({ surfaces: [], action: { name: 'guess', surfaceId: 'word-forge', context: {}, dataModel: {} } })).toEqual([])
+  })
+})
+
+// T-0366 (the T-0362 smoke re-record, round 2026-10-18-t0362-smoke, Haiku 5.5, traces 4 and 6): "I offer 20." targeting
+// deal-1 and "I open the door and step inside." targeting quest-log were answered in prose alone and passed. The
+// sessions here are the recorded turn 0 surfaces of the two replays.
+describe('T-0366: boardless-move-applied', () => {
+  const recorded = (name: string): SemanticTurnLog => {
+    const fixture = JSON.parse(readFileSync(join(import.meta.dirname, `../../../../../scripts/e2e-admin/probe/replays/${name}.json`), 'utf8')) as { turns: { lines: string[] }[] }
+    return { turns: [assistant(wire(fixture.turns[0]!.lines))] }
+  }
+  const deal = recorded('smoke-negotiator-first-offer-haiku')
+  const quest = recorded('smoke-dungeon-master-first-scene-haiku')
+  const said = (session: SemanticTurnLog, intent: string, target: string | undefined, out: A2uiOutput = []) =>
+    boardlessMoveAppliedCheck.check({ surfaces: semanticSurfaceViews(session, out), intent, open: sessionSurfaceViews(session), ...(target !== undefined ? { target } : {}) })
+
+  it('rides every catalog last', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id).at(-1)).toBe('boardless-move-applied')
+  })
+
+  it('the recorded prose-only offer and quest move are ACTION_NOT_APPLIED, framed as a check result', () => {
+    const offer = said(deal, 'I offer 20.', 'deal-1')
+    expect(offer.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'deal-1:move']])
+    expect(offer[0]!.message).toMatch(/^The game check found that the player made a move on deal-1 \("I offer 20\."\)/)
+    expect(offer[0]!.message).toMatch(/Call render_surface with an updateDataModel or updateComponents for deal-1/)
+    expect(said(quest, 'I open the door and step inside.', 'quest-log').map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'quest-log:move']])
+    expect(said(deal, 'Deal. 150 and the lantern is mine.', 'deal-1').map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+    expect(said(quest, 'Attack the goblin with my dagger.', 'quest-log').map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+  })
+
+  it('a move that updates the target, or opens a new surface, passes', () => {
+    expect(said(deal, 'I offer 20.', 'deal-1', [data('deal-1', { deal: { asking: '230 gold', onTable: '20 gold' } })])).toEqual([])
+    expect(said(quest, 'I open the door and step inside.', 'quest-log', [{ version: 'v1.0', createSurface: { surfaceId: 'scene-2', catalogId: 'agent-ui' } } as A2uiServerMessage])).toEqual([])
+  })
+
+  it('a question, a rules ask, small talk, or a turn with no target passes', () => {
+    expect(said(deal, 'Why is it so expensive?', 'deal-1')).toEqual([])
+    expect(said(deal, 'What is your lowest price', 'deal-1')).toEqual([])
+    expect(said(quest, 'Explain the rules.', 'quest-log')).toEqual([])
+    expect(said(quest, 'Tell me more about the Undervault.', 'quest-log')).toEqual([])
+    expect(said(deal, 'Thanks, this is fun!', 'deal-1')).toEqual([])
+    expect(said(quest, 'Haha, nice.', 'quest-log')).toEqual([])
+    expect(said(deal, 'I offer 20.', undefined)).toEqual([])
+    expect(boardlessMoveAppliedCheck.check({ surfaces: [], action: { name: 'offer', surfaceId: 'deal-1', context: {}, dataModel: {} } })).toEqual([])
+  })
+
+  it('stands aside for a board, a table, a booking and a surface that names no game', () => {
+    const fleetSession: SemanticTurnLog = { turns: [assistant([...waters('enemy-waters'), data('enemy-waters', { secret: { fleet, playerFleet: fleet }, cells: [] })])] }
+    expect(said(fleetSession, 'I take aim and fire.', 'enemy-waters')).toEqual([])
+    const words: SemanticTurnLog = { turns: [assistant([...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [] })])] }
+    expect(said(words, 'I try another word.', 'word-forge')).toEqual([])
+    const shop: SemanticTurnLog = {
+      turns: [
+        assistant([
+          { version: 'v1.0', createSurface: { surfaceId: 'storefront-1', catalogId: 'agent-ui' } },
+          { version: 'v1.0', updateComponents: { surfaceId: 'storefront-1', components: [{ id: 'root', component: 'Text', text: 'Lanterns and lamps' }] } } as A2uiServerMessage,
+        ]),
+      ],
+    }
+    expect(said(shop, 'Add the first one to my order.', 'storefront-1')).toEqual([])
   })
 })

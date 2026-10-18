@@ -28,3 +28,9 @@ Found by T-0362's live re-record. Cause class (d), a check gap: ACTION_NOT_APPLI
 
 ## Constraints
 The failing test lands before or with the fix, never after. Recorded rounds are never hand-edited.
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog/hidden-state-checks.test.ts packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts packages/agent-ui/a2ui/src/live-agent/chat-validation.test.ts` exits 0: the T-0366 block sends back the recorded prose-only "I offer 20." on deal-1 and "I open the door and step inside." on quest-log with ACTION_NOT_APPLIED, passes an updating move, a question, a rules ask, small talk, a turn with no target, and stands aside for a board, a word game and a shop surface; the new check carries its contract fixtures.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0: the two smoke replays pin turn 1 to `ACTION_NOT_APPLIED, SEMANTIC_UNCORRECTED` (the fixtures record no repaired round, so their probe checks stay red), and no other replay changes.
+- `npm run check` exits 0.

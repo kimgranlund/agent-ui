@@ -19,7 +19,8 @@
 // guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard; T-0291 judges one
 // typed with no target against the open word game, and a Play again answered in prose; T-0322, a word game asked for
 // with no board. T-0284: a
-// Battleship board opened with no GameHud. T-0296: a Battleship surrender answered with no ResultCard.
+// Battleship board opened with no GameHud. T-0296: a Battleship surrender answered with no ResultCard. T-0366: a move
+// typed at an open board-less game (the Negotiator's deal sheet, the Dungeon Master's quest log) answered in prose alone.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
 // and a committed fleet with no word cue is never judged for a word.
@@ -493,5 +494,50 @@ function isFleetGame(id: string, surfaces: readonly SurfaceView[], open: readonl
   return [...surfaces, ...(open ?? [])].some((v) => v.surfaceId === id && hasFleetCue(v) && !hasWordCue(v))
 }
 
+/** T-0366: the words that name a board-less game surface: the Negotiator's deal sheet, the Dungeon Master's quest log. */
+const BOARDLESS_GAME_WORDS = /\b(?:deal sheet|asking price|haggl\w*|negotiat\w*|bargain\w*|quest|quest log|adventure|dungeon|hp|hit points|scenes?)\b/i
+/** T-0366: a surface that holds one of these is another check's game or flow (a board, a table, a booking). */
+const BOARDLESS_STAND_ASIDE = new Set(['BoardGrid', 'CardTable', 'PlayingCard', 'BookingForm', 'BookingConfirmation'])
+/** T-0366: a say turn that is no move: a question, a rules or help ask, or small talk with no move in it. */
+const NOT_A_MOVE = [
+  /\?\s*$/,
+  /^\s*(?:what|how|why|who|when|where|which|can|could|do|does|did|is|are|was|were|will|would|should|may|tell me|explain|remind me|rules|help)\b/i,
+  /^\s*(?:thanks|thank you|cheers|hi|hello|hey|ok|okay|cool|nice|great|lol|haha|wow)\b(?![^.!?]*\b(?:i|i'll|i'm|let's|we)\b)[^.!?]*[.!]?\s*$/i,
+]
+
+/** T-0366: whether a surface reads as a board-less game: a GameHud or game words, and no other game's or flow's types. */
+function isBoardlessGame(view: SurfaceView): boolean {
+  const types = [...view.components.values()].map((c) => c.component)
+  if (types.some((t) => BOARDLESS_STAND_ASIDE.has(t)) || hasFleetCue(view) || hasWordCue(view)) return false
+  return types.includes('GameHud') || BOARDLESS_GAME_WORDS.test(`${view.surfaceId} ${JSON.stringify([...view.components.values()])}`)
+}
+
+/**
+ * T-0366 (the T-0362 smoke re-record, Haiku 5.5, traces 4 and 6): "I offer 20." targeting deal-1 and "I open the door
+ * and step inside." targeting quest-log were each answered in one round with a reply and no render_surface call, so
+ * the HUD kept the old price and the log the old scene. ACTION_NOT_APPLIED: a say turn that declares an open board-less
+ * game surface its target and plays a move there (no question, rules ask or small talk) sends that surface no update
+ * and opens no new surface.
+ */
+export const boardlessMoveAppliedCheck: SemanticCheck = {
+  id: 'boardless-move-applied',
+  requires: ['GameHud'],
+  check({ surfaces, action, intent, target, open }) {
+    if (action !== undefined || intent === undefined || target === undefined || NOT_A_MOVE.some((re) => re.test(intent.trim()))) return []
+    const game = (open ?? []).find((v) => v.surfaceId === target)
+    if (game === undefined || !isBoardlessGame(game)) return []
+    if (surfaces.some((v) => v.surfaceId === target || v.priorDataModel === undefined)) return []
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${target}:move`,
+        message:
+          `The game check found that the player made a move on ${target} ("${intent.trim()}") and this turn sends it no update, so the move exists only in prose. ` +
+          `Call render_surface with an updateDataModel or updateComponents for ${target} that shows what the move changed (the stats, status and story it shows), not only prose.`,
+      },
+    ]
+  },
+}
+
 /** Every hidden-state check, in the order the hosts run them. */
-export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck, fleetConcedeCheck]
+export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck, fleetConcedeCheck, boardlessMoveAppliedCheck]

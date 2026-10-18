@@ -9,16 +9,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0366. Turn 0 is green: Haiku 5.5 built the deal sheet with a DescriptionList, GAME_HUD_MISSING sent
-// it back, round 2 sent its messages as JSONL text with no createSurface (SURFACE_NOT_CREATED) and round 3 re-created
-// deal-1 with a GameHud.
-// Turn 1 ("I offer 20.") is answered in one round with a reply and a meta-line targeting deal-1 but no render_surface
-// call, and the producer passes it, so the HUD keeps the old price.
-it('smoke-negotiator-first-offer-haiku: turn 0 ships a GameHud; turn 1 answers the offer in prose alone', async () => {
+// Turn 0 is green: Haiku 5.5 built the deal sheet with a DescriptionList, GAME_HUD_MISSING sent it back, round 2 sent
+// its messages as JSONL text with no createSurface (SURFACE_NOT_CREATED) and round 3 re-created deal-1 with a GameHud.
+// Turn 1 ("I offer 20.") is answered with a reply and a meta-line targeting deal-1 but no render_surface call, so the
+// HUD keeps the old price. T-0366: the boardless-move-applied check now sends it back with ACTION_NOT_APPLIED. The
+// fixture records no repaired round, so the turn ships SEMANTIC_UNCORRECTED and both probe checks stay red here.
+it('smoke-negotiator-first-offer-haiku: turn 0 ships a GameHud; the prose-only offer on turn 1 gets ACTION_NOT_APPLIED', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-negotiator-first-offer-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['action-updates-surface', 1], ['expect-component', 1]])
   const trace = (i) => report.records[i].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
   expect(trace(0)).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_NOT_CREATED', 'TEXT_JSONL_ROUTED'] })
-  expect(trace(1)).toMatchObject({ rounds: 1, failureCodes: [] })
+  expect(trace(1)).toMatchObject({ failureCodes: ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'] })
 })
