@@ -2,7 +2,7 @@
 id: T-0188
 title: "line-chart projected dash: user-unit dash or a ruled screen-px exemption"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -23,3 +23,15 @@ Filed by T-0170 (lint allowlist owners, 2026-10-14), which repointed the allowli
 
 ## Constraints
 Never add an allowlist entry without an owner (T-0170 format check). No em dashes.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 45dcca581087
+- Changed: Projected dash is a ruled screen-px exemption (#2128)
+- Commits: 2a4a3a0 T-0188: line-chart projected dash: ruled screen-px exemption (#2128)
+- Check: 1 Entry reason states Kim's ruling and passes the owner-format check: pass
+- Check: 2 Solo's user-unit trial screenshots support the reason: pass
+- Check: 3 Nothing else changed: pass
+- Check: 4 npm run check exit 0: pass
+- Check: 5 Dogfood render test exit 0: pass
+- Follow-up: note: scripts/dogfood-rules.json and... -> notes.md

@@ -2,7 +2,7 @@
 id: T-0355
 title: "Per-version seed field digests so a migration tells an untouched old seed value from a user edit"
 type: feature        # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,15 @@ Never wipe a real user edit. Registry and manifests stay generated (never hand-e
 - `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin` and `npx vitest run --project site site/agent-content site/lib/agent-manifest site/pages/agent-admin` exit 0.
 - `node scripts/generate-agent-content.mjs --check` exits 0 (the registry, with `SEED_DIGESTS`, stays generated and drift-gated).
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: ecad202386a5
+- Changed: Per-version seed digests; untouched old seeds migrate (#2127)
+- Commits: none
+- Check: 1 `npx vitest run --project site site/pages/agent-admin-presets.test.ts -t "T-0355"` exits 0 (v1 de...: pass
+- Check: 2 `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin` and `npx vites...: pass
+- Check: 3 `node scripts/generate-agent-content.mjs --check` exits 0 (registry with `SEED_DIGESTS` stays gen...: pass
+- Check: 4 `npm run check` exits 0: pass
+- Follow-up: decide: site/agent-content/seed-history.ts:29-38: note: only Quizmaster v1... -> notes.md
+- Follow-up: decide: .claude/docs/spec/agent-content.spec.md:283-284: note: the sentence... -> notes.md

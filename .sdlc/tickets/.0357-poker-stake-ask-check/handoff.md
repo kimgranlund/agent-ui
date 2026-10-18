@@ -2,7 +2,7 @@
 id: T-0357
 title: "A poker opening that asks for the stake instead of dealing gets a deterministic check and repair"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -35,3 +35,15 @@ verifier: L3
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0: the new repair text names only croupier catalog types.
 - `npx vitest run scripts/e2e-admin/probe/replays` exits 0: every croupier replay stays green.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 45dcca581087
+- Changed: POKER_DEAL_MISSING for a hold'em stake ask (#2132)
+- Commits: none
+- Check: 1 `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier` exits 0 (the :81 pin and it...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0 (the repai...: pass
+- Check: 3 `npx vitest run scripts/e2e-admin/probe/replays` exits 0 (every croupier replay stays green): pass
+- Check: 4 `npm run check` exits 0: pass
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:541... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:578-... -> notes.md

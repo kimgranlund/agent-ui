@@ -2,7 +2,7 @@
 id: T-0354
 title: "Explicit format asks ('as a card', 'as a table', 'build me a form') force a surface even where the catalog owns the noun"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,17 @@ Kim's ruling 2026-10-17: keep T-0348's domain-noun rule, but exempt explicit for
 
 ## Constraints
 The failing test lands before or with the fix. No prompt text changes.
+
+## Outcome
+
+2026-10-18 · lane: full L1 · verdict: pass · verifier: verifier-L1 (opus) · base: ecad202386a5
+- Changed: Explicit format asks force a surface in owning catalogs (#2125)
+- Commits: 45dcca5 T-0354: Explicit format asks force a surface where the catalog owns the noun (#2125)
+- Check: 1 Goal: explicit format asks ("as a card", "as a table", "build me a form", "show me a summary card...: pass
+- Check: 3 Expected: "show me the cards" in croupier still returns none: pass
+- Check: 4 Constraint: the failing test lands with the fix, and no prompt text changes: pass
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/response-type.ts:177 "show me a... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/response-type.ts:177 the solo... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/response-type.ts:224 "make me a... -> notes.md
+- Follow-up: note: the default catalog also changed -> notes.md
+- Follow-up: note: I could not remove the scratch probe dir... -> notes.md

@@ -2,7 +2,7 @@
 id: T-0343
 title: "Smoke scenarios for every preset, planned from tags, replayed in CI"
 type: feature        # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -43,3 +43,16 @@ Re-scope of T-0176 to T-0179 (Kim 2026-10-17), architect record .sdlc/runtime/ta
 
 ## Constraints
 Never read or print .env; live legs only under their cap; keys never enter devtools.
+
+## Outcome
+
+2026-10-18 · lane: full L3 · verdict: pass · verifier: verifier-L2 (sonnet) · base: aa20d07c6fa2
+- Changed: Smoke scenarios for every preset, planned from tags (#2121)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `npx vitest run --project scripts scripts/e2e-admin/probe/scenarios/ scripts/e2e-admin/probe/repl...: pass
+- Check: 3 `plan.ts --tag smoke --model haiku --samples 1` prints 15 probe command lines, one per roster pre...: pass
+- Check: 4 `.sdlc/evals/rounds/2026-10-18-smoke/ledger.jsonl` holds 15 rows with `costUsd` summing under 5: pass
+- Check: 5 `ls scripts/e2e-admin/probe/replays/smoke-*.test.mjs | wc -l` prints 15, each beside its fixture: pass
+- Check: 6 SPEC CL-R1, CL-R5, CL-R6, CL-R7, CL-R9, CL-R10 match the tree, and `scripts/e2e-admin/README.md` ...: pass
+- Follow-up: note: git status in the tree was clean build committed in 994464e97, so... -> notes.md

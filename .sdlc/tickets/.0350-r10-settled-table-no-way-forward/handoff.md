@@ -2,7 +2,7 @@
 id: T-0350
 title: "A settled card table ships with no way forward (no Deal again), and no check names it"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -38,3 +38,15 @@ verifier: L3
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0, with a DEAL_AGAIN_MISSING probe under croupier-bet-controls.
 - `npm run check` exits 0.
 - No change under `site/agent-content/personas/croupier/` and none to the NATURAL_ACTIONS message.
+
+## Outcome
+
+2026-10-18 · lane: full L1 · verdict: pass · verifier: verifier-L3 (fable) · base: 4943a40aa3bf
+- Changed: DEAL_AGAIN_MISSING for a settled table with no way forward (#2122)
+- Commits: 37b36e4 T-0350: A settled card table with no Deal again gets DEAL_AGAIN_MISSING (#2122)
+- Check: 1 `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts` exits 0 with...: pass
+- Check: 2 `npx vitest run scripts/e2e-admin/probe/replays/croupier-natural-skip.test.mjs` exits 0, offline ...: pass
+- Check: 3 `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0 with a DEA...: pass
+- Check: 4 `npm run check` exits 0: pass
+- Check: 5 No change under `site/agent-content/personas/croupier/` and none to the NATURAL_ACTIONS message: pass
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:641-... -> notes.md

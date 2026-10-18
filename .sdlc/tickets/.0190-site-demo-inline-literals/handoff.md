@@ -2,7 +2,7 @@
 id: T-0190
 title: "site demos: inline type sizes and off-ramp spacing literals move to tokens"
 type: chore           # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,3 +29,16 @@ Never add an allowlist entry without an owner (T-0170 format check). No em dashe
 - `npm run check` exits 0.
 - The touched demos' browser tests and `site/pages/dogfood-render.browser.test.ts` pass in the site project.
 - Type sizes in the 22 demos read `--md-sys-type-*` roles, never `--md-sys-typescale-*`; no frame height multiplies `--md-sys-height`; the only literals left sit in the five paths `scripts/dogfood-rules.json` exempts with a T-0190 reason (attachment, split, split-pane, swiper-item frames; pie-chart's em readout).
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 45dcca581087
+- Changed: Site demos use token roles; compose allowlist empty (#2133)
+- Commits: none
+- Check: 1 gate exits 0 and allowlist is `{}`: pass
+- Check: 2 `npm run check` exits 0: pass
+- Check: 3 touched demos' browser tests and dogfood-render pass in the site project: pass
+- Check: 4 type roles only, no typescale, no height multiples, literals only in the five exempt paths: pass
+- Check: 5 Goal, record line: pass
+- Check: 6 Screenshots (icon, split, theme-provider, avatar pairs in scratchpad/shots): pass
+- Follow-up: note: .sdlc/runtime/tasks/0190-site-demo-inline-literals/solo-report.md... -> notes.md
