@@ -2,7 +2,7 @@
 id: T-0359
 title: "The Stylist answers a palette ask in prose with no token surface"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -38,3 +38,19 @@ The failing test lands before or with the fix, never after. Re-pin the replay to
 - `npx vitest run --project scripts scripts/e2e-admin/probe/replays/smoke-stylist-palette-haiku.test.mjs` exits 0, and the test carries no `expectedFail` pin: the prose palette turn is sent back and the repaired turn ships a token surface with every probe check green.
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts scripts/e2e-admin/probe/trace.test.mjs` exits 0: the palette check is the Swatch row's `prose` in `COMPOSITE_MOMENTS`, riding the Stylist's catalog alone and judged on the reply (Rulings). On a turn with no token surface, in a session that never showed one, a reply is flagged when it sets out three or more distinct colors in exactly these forms (a closed set, the conductor's 2026-10-18 call after verifier 6): (1) hex codes, an all-digit code only on a list line or beside two lettered codes, none inside a CSS rule or a fenced code block; (2) a role then its color, by colon, equals sign, en or em dash, hyphen, "is", a role noun (colour, tone, hue, shade) or a bare space, with optional emphasis marks ("Primary: navy", "**Primary:** navy", "The primary is navy", "Primary navy", "a success green"); (3) a color then its role ("a deep navy primary"), a UI part (text, border, background, surface, link) only when it names no part of something else ("a soft cream background" counts, "white text on the primary" does not); (4) a color with a for-phrase role ("navy for the header"); (5) a list line, past emphasis marks and a `word:` or `word colour:` label ("- **Navy** for headers", "- Header: navy"). Color names come from a closed list. Every phrase the verifiers gave is a `REPLIES` row. Not flagged: one or two colors, prose about palettes with no color list, colors with no role or list ("Navy, teal and coral all appear in your logo."), a CSS rule or code block, a reply beside a Swatch, Ramp or ContrastPair, a later turn, and every non-Stylist catalog.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: c0ee6ffb7eb4
+- Changed: Stylist prose palettes are sent back for a token surface, judged on the reply (#2153)
+- Commits: none
+- Check: 1 `npx vitest run --project scripts scripts/e2e-admin/probe/replays/smoke-stylist-palette-haiku.tes...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts packages/agent-ui/a2...: pass
+- Check: 3 `npm run check` exits 0: pass
+- Follow-up: decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/wave-w359/pac... -> notes.md
+- Follow-up: decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/wave-w359/pac... -> notes.md
+- Follow-up: decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/wave-w359/pac... -> notes.md
+- Follow-up: decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/wave-w359/pac... -> notes.md
+- Follow-up: decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/wave-w359/pac... -> notes.md
+- Follow-up: decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/wave-w359/pac... -> notes.md
+- Follow-up: decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0306-veri... -> notes.md

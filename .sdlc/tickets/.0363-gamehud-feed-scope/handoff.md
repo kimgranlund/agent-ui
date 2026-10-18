@@ -2,7 +2,7 @@
 id: T-0363
 title: "GameHud is outside the feed scope, so an ask-surface game cannot answer GAME_HUD_MISSING in place"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0358]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -48,3 +48,20 @@ Skill descriptions trimmed to the SPEC-R14 200 B entry budget; the boundary-nego
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent packages/agent-ui/a2ui/src/catalog site/agent-content scripts/e2e-admin/probe/replays site/lib/agent-manifest site/pages/agent-admin-seed-digests.test.ts site/pages/agent-admin-presets.test.ts site/pages/agent-admin-prompt-budget.test.ts` exits 0 (recorded rounds byte-identical, the Alchemist replay, every grammar pin and the re-measured prompt budgets green).
 - `npx vitest run site/pages/agent-admin` exits 0 (the agent-admin tests, the ambient per-entry index budget among them).
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 0ee8dfffec7c
+- Changed: A game's ask turn may also create or update one HUD surface (grammar.md, Kim's ruling) (#2152)
+- Commits: 6e347b8 T-0363: a game's HUD surface sits beside its ask (#2152)
+- Check: 1 `npx vitest run packages/agent-ui/a2ui/src/live-agent/system-prompt-grammar.test.ts packages/agen...: pass
+- Check: 2 `npx vitest run scripts/e2e-admin/probe/replays/mentalist-ask-hud-beside.test.mjs scripts/e2e-adm...: pass
+- Check: 3 `node scripts/chat-probe.mjs selftest` exits 0 (a click that settles its targeted surface passes ...: pass
+- Check: 4 `npx vitest run packages/agent-ui/a2ui/src/live-agent packages/agent-ui/a2ui/src/agent packages/a...: pass
+- Check: 5 `npx vitest run site/pages/agent-admin` exits 0: pass
+- Check: 6 `npm run check` exits 0: pass
+- Follow-up: decide: scripts/e2e-admin/probe/replays/mentalist-ask-hud-beside.test.mjs... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/prompt-budget.ts:31 note: the... -> notes.md
+- Follow-up: decide: .sdlc/runtime/tasks/0363-gamehud-feed-scope/architect-L1-2.md:114... -> notes.md
+- Follow-up: decide: scripts/e2e-admin/probe/replays/mentalist-ask-hud-beside.json note... -> notes.md
+- Follow-up: decide: .sdlc/runtime/tasks/0363-gamehud-feed-scope/solo-report.md:28 note... -> notes.md

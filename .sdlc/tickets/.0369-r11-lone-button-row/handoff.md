@@ -2,7 +2,7 @@
 id: T-0369
 title: "LONE_BUTTON_FRAME sees through a one-child Row as the probe render lint does (round 11 cluster I)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -30,3 +30,14 @@ The failing test lands before or with the fix, never after.
 
 ## Kim ruling (2026-10-18, close-out round)
 Promoted to ready; run as a keyless solo lane with one verifier, no live spend.
+
+## Outcome
+
+2026-10-18 · lane: full L1 · verdict: pass · verifier: verifier-L1 (opus) · base: 25097e88d3a1
+- Changed: LONE_BUTTON_FRAME sees through one-child wrappers, one shared rule (#2147)
+- Commits: none
+- Check: 1 Goal: LONE_BUTTON_FRAME sends back Card > CardFooter > Row > one Button: pass
+- Check: 2 Expected: producer and dogfood lint agree on one-child Row or Column wrappers: pass
+- Check: 3 Constraint: failing test lands with the fix: pass
+- Check: 4 gate: pass
+- Follow-up: note: scripts/dogfood-compose.mjs:257 scoping by innermost array means a... -> notes.md

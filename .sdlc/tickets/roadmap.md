@@ -11,14 +11,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0197 | [0197-bookingform-kinds](0197-bookingform-kinds/handoff.md) | BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' | feature | L2 | P2 | T-0196 | 🔵 ready |
 | T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | 🔵 ready |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | 🔵 ready |
-| T-0345 | [0345-r10-poker-opens-with-cards](0345-r10-poker-opens-with-cards/handoff.md) | Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) | bug | L2 | P1 | none | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
-| T-0359 | [0359-stylist-palette-prose](0359-stylist-palette-prose/handoff.md) | The Stylist answers a palette ask in prose with no token surface | bug | L2 | P2 | none | 🔵 ready |
-| T-0363 | [0363-gamehud-feed-scope](0363-gamehud-feed-scope/handoff.md) | GameHud is outside the feed scope, so an ask-surface game cannot answer GAME_HUD_MISSING in place | bug | L2 | P2 | T-0358 | 🔵 ready |
-| T-0367 | [0367-r11-hole-card-oracle](0367-r11-hole-card-oracle/handoff.md) | The guidance-conflict hole-card step expects a table update a correct refusal never sends (round 11 cluster G) | bug | L1 | P2 | none | 🔵 ready |
-| T-0368 | [0368-r11-poker-deal-template](0368-r11-poker-deal-template/handoff.md) | POKER_DEAL_MISSING judges a PlayingCard template over an empty hand as undealt (round 11 cluster H) | bug | L2 | P2 | none | 🔵 ready |
-| T-0369 | [0369-r11-lone-button-row](0369-r11-lone-button-row/handoff.md) | LONE_BUTTON_FRAME sees through a one-child Row as the probe render lint does (round 11 cluster I) | bug | L1 | P3 | none | 🔵 ready |
-| T-0370 | [0370-r11-pontoon-stick-under-15](0370-r11-pontoon-stick-under-15/handoff.md) | The pontoon scenario does not stick under 15 (round 11 cluster J) | bug | L1 | P2 | none | 🔵 ready |
-| T-0371 | [0371-r11-poker-chip-check](0371-r11-poker-chip-check/handoff.md) | A Croupier check reads poker pot and bankroll arithmetic (round 11 cluster K) | feature | L2 | P2 | none | 🔵 ready |
 
-Closed: 351 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 359 done, 4 dropped (git log or .NNNN-* folders)

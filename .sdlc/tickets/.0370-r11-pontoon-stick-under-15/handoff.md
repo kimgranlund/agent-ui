@@ -2,7 +2,7 @@
 id: T-0370
 title: "The pontoon scenario does not stick under 15 (round 11 cluster J)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -30,3 +30,17 @@ The failing test lands before or with the fix, never after.
 
 ## Kim ruling (2026-10-18, close-out round)
 Promoted to ready; run as a keyless solo lane with one verifier, no live spend.
+
+## Outcome
+
+2026-10-18 · lane: full L1 · verdict: pass · verifier: verifier-L1 (opus) · base: 570b7835fa19
+- Changed: Pontoon scenario survives a refused stick under 15 (#2150)
+- Commits: none
+- Check: 1 Goal: regress-croupier-pontoon survives a hand that stands under 15 after "Buy a card.": pass
+- Check: 2 Expected: a correct refusal to stick on 14 does not fail; a stick on 15 or more is unchanged: pass
+- Check: 3 Repro still holds for the recorded fixture: pass
+- Check: 4 Constraint: the failing test lands before or with the fix: pass
+- Check: 5 Replay fidelity (brief): pass
+- Check: 6 Finished rounds' pins hold (brief): pass
+- Follow-up: note: the handoff has no ## Acceptance criteria section; criteria above... -> notes.md
+- Follow-up: note: round 1's Stick after Twist has no follow-up step solo-report.md... -> notes.md
