@@ -28,3 +28,9 @@ None beyond AGENTS.md.
 Kim 2026-10-17: run the debate (Opus proposal, then a different-family challenge), then Kim rules; build only after. The proposal names one cause from the round 10 traces, the exact text change (file:line, old and new), its byte budget and pinned tests, and a relative measurement plan (OLD, NEW, MIX at Haiku N=10, about $1, cap $3).
 
 Ruling (Kim, 2026-10-18): measure the Opus proposal (architect-L1.md) with the relative rule, ceiling fixed: NEW must beat OLD by 3 of 10 at N=10 per opening, extending to +9 of 30; if OLD scores 8 or more, both arms go straight to N=30. The Done-when "round 8's rate" bar is retired for this rule. Arms OLD, NEW, MIX on Haiku 5.5, "Let's play blackjack." and "Let's play Texas hold'em.", about $0.30, `run-capped.ts --cap 3`. A failing NEW returns to Kim. The poker stake-ask check is the sibling T-0357.
+
+## Acceptance criteria
+- No seed text change shipped (NEW failed the ruling's rule): `git diff --quiet 45dcca581 HEAD -- site packages scripts` exits 0.
+- The arms are archived: `test -f .sdlc/evals/rounds/2026-10-18-t0345-README.md -a -f .sdlc/evals/rounds/2026-10-18-t0345-old/ledger.jsonl -a -f .sdlc/evals/rounds/2026-10-18-t0345-new/ledger.jsonl -a -f .sdlc/evals/rounds/2026-10-18-t0345-mix/ledger.jsonl` exits 0.
+- `npm run check` exits 0.
+- The README table matches a recount of round 1 from each round's `ledger.jsonl` and `traces/` (OLD blackjack 22 of 30, NEW 30 of 30; hold'em 28 and 29 of 30; MIX 9 and 7 of 10), with `signals.md` BET_TABLE_MISSING 8 in OLD and 0 in NEW as the independent cross-check.
