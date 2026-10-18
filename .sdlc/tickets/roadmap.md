@@ -12,5 +12,10 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | 🔵 ready |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
+| T-0372 | [0372-foundations-geometry-revendor](0372-foundations-geometry-revendor/handoff.md) | Re-vendor the geometry resolver from the mathematical-design-system skill, no visual change | chore | L2 | P2 | none | 🔵 ready |
+| T-0373 | [0373-foundations-geometry-structure](0373-foundations-geometry-structure/handoff.md) | Adopt the skill's geometry structure: type roles, control surface anatomy, spacing roles, emit-time rounding | chore | L3 | P2 | T-0372 | 🔵 ready |
+| T-0374 | [0374-foundations-geometry-visible](0374-foundations-geometry-visible/handoff.md) | Visible geometry changes from the skill model: glyph, field label, tiers, density heights, curvature presets | feature | L4 | P2 | T-0373 | ⏳ proposed |
+| T-0375 | [0375-game-table-chrome-lone-footer-row](0375-game-table-chrome-lone-footer-row/handoff.md) | game-table-chrome teaches a Row around a lone Deal again Button, against grammar.md:179 | bug | L2 | P2 | none | 🔵 ready |
+| T-0376 | [0376-live-round-12](0376-live-round-12/handoff.md) | Live round 12: measure the round 11 wave (T-0345, T-0359, T-0363, T-0367 to T-0371) | chore | L2 | P2 | T-0375 | ⏳ proposed |
 
 Closed: 359 done, 4 dropped (git log or .NNNN-* folders)
