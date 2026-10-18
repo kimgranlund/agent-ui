@@ -28,9 +28,10 @@ export function personaRecord(id: string): RuntimePersona {
   return hit
 }
 
-/** T-0355: the field digests (store key to `valueDigest`) of a persona's seed at a past `version`, from the
- *  committed history table; `undefined` where that version recorded none. */
-export function seedDigestsAt(id: string, version: number): Readonly<Record<string, string>> | undefined {
+/** T-0355: per store key, the digests (`valueDigest`) of the values a persona's seed at a past `version`
+ *  held that take the new seed (ACS-R7 item 6), from the committed history table; `undefined` where that
+ *  version recorded none. */
+export function seedDigestsAt(id: string, version: number): Readonly<Record<string, readonly string[]>> | undefined {
   return SEED_DIGESTS[id]?.[String(version)]
 }
 

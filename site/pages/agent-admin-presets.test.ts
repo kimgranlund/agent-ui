@@ -313,14 +313,15 @@ describe('personaInstantiated (GH #1277 — the From-catalog dedup probe)', () =
 describe('the Quizmaster seedVersion bump (T-0036, T-0355): an untouched saved model moves to Haiku 5.5', () => {
   const quizmaster = () => personaFromPreset(AGENT_PRESETS.find((p) => p.id === 'quizmaster')!)
 
-  // T-0161 (ACS-R7): a bump never wipes. T-0355: a pre-overlay store at an older version is diffed against that
-  // version's field digests (site/agent-content/seed-history.ts): the v1 default model is untouched, so the new
-  // seed flows in unflagged, while a model the user chose differs from every seed value and is kept, flagged.
-  it('a pre-bump store (seedVersion 1) holding the v1 default claude-haiku-4-5 migrates to claude-haiku-5-5, unflagged', () => {
+  // T-0161 (ACS-R7): a bump never wipes. T-0355 (ACS-R7 item 6): a pre-overlay store at an older version is
+  // diffed against the digests site/agent-content/seed-history.ts lists for that version. v1 seeded the dated
+  // Haiku 4.5 id and then, unbumped (T-0030), Haiku 5.5; the row's ruling admits the earlier value, so an
+  // untouched v1 model takes the new seed unflagged, while a model no v1 seed held is kept, flagged.
+  it('a pre-bump store (seedVersion 1) holding the v1 default claude-haiku-4-5-20251001 migrates to claude-haiku-5-5, unflagged', () => {
     const persona = quizmaster()
     resetPersona(persona) // empties the cache so personaStore re-reads the keys below
     localStorage.setItem(`${PREFIX}.quizmaster.seedVersion`, '1')
-    localStorage.setItem(`${PREFIX}.quizmaster.model`, JSON.stringify('claude-haiku-4-5'))
+    localStorage.setItem(`${PREFIX}.quizmaster.model`, JSON.stringify('claude-haiku-4-5-20251001'))
     expect(personaStore(persona).get('model')).toBe('claude-haiku-5-5')
     expect(personaModified(persona)).toEqual([])
     expect(persona.seedVersion).toBeGreaterThan(1)
@@ -336,6 +337,15 @@ describe('the Quizmaster seedVersion bump (T-0036, T-0355): an untouched saved m
     expect(personaModified(persona)).toEqual([{ key: 'model', seedChanged: { seed: 'claude-haiku-5-5', user: 'claude-sonnet-4-5' } }])
     resetPersonaField(persona, { key: 'model' })
     expect(personaStore(persona).get('model'), 'reset takes the seed').toBe('claude-haiku-5-5')
+    resetPersona(persona)
+  })
+
+  it('a store with no seedVersion marker is of unknown version: even the v1 default is kept, flagged', () => {
+    const persona = quizmaster()
+    resetPersona(persona)
+    localStorage.setItem(`${PREFIX}.quizmaster.model`, JSON.stringify('claude-haiku-4-5-20251001'))
+    expect(personaStore(persona).get('model')).toBe('claude-haiku-4-5-20251001')
+    expect(personaModified(persona)).toEqual([{ key: 'model', seedChanged: { seed: 'claude-haiku-5-5', user: 'claude-haiku-4-5-20251001' } }])
     resetPersona(persona)
   })
 

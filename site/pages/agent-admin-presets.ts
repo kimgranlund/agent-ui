@@ -375,8 +375,9 @@ export function personaInstantiated(id: string): boolean {
  *    seed into an overlay, then drop the copies (the one-time migration);
  *  - those copies at an OLDER version: the seed they were written against is not in the registry, only its
  *    field digests where the history table recorded them (T-0355, `site/agent-content/seed-history.ts`). A
- *    stored value whose digest equals the old seed's is untouched and takes the new seed; every other
- *    differing value may be a user edit, so it is kept, flagged `seedChanged`.
+ *    stored value whose digest is one the stored version lists is untouched and takes the new seed; every
+ *    other differing value may be a user edit, so it is kept, flagged `seedChanged`. A copy with no version
+ *    marker gets no digests (its version is unknown), so all of its differing values are kept flagged.
  *  The sweep-before-hydrate ordering leans on the storage tier's same-tick writes (agent-roster-source.ts's
  *  own stated law). */
 function overlayStoreFor(persona: Persona): OverlayStore {
@@ -389,8 +390,11 @@ function overlayStoreFor(persona: Persona): OverlayStore {
     overlay = merged
   } else {
     const legacy = rosterSource.legacyStateSync(id)
-    const persisted = rosterSource.seedVersionSync(id) ?? 1
-    const baseDigests = seedDigestsAt(id, persisted)
+    // No marker means the copy's version is unknown: still an older-version copy for the flagging, but no
+    // version's digests apply, so every differing value is kept and flagged (T-0355).
+    const marker = rosterSource.seedVersionSync(id)
+    const persisted = marker ?? 1
+    const baseDigests = marker === undefined ? undefined : seedDigestsAt(id, marker)
     overlay = diffOverlay(id, wanted, seed, legacy, { baseUnknown: persisted < wanted, ...(baseDigests === undefined ? {} : { baseDigests }) })
     if (Object.keys(legacy).length > 0) {
       rosterSource.dropLegacyStateSync(id)

@@ -259,7 +259,7 @@ describe('the spec example and the older-version migration (ACS-R7)', () => {
 
   it('T-0355: a stored value equal to the old version digest takes the new seed unflagged; a user value stays flagged', () => {
     const seed = seedV1()
-    const baseDigests = { model: valueDigest('claude-haiku-4-5'), name: valueDigest('Old Concierge') }
+    const baseDigests = { model: [valueDigest('claude-haiku-4-5'), valueDigest('claude-haiku-4-0')], name: [valueDigest('Old Concierge')] }
     const untouched = diffOverlay('concierge', 2, seed, { model: 'claude-haiku-4-5', name: 'Old Concierge' }, { baseUnknown: true, baseDigests })
     expect(untouched.values).toEqual({})
     expect(resolveOverlay(seed, reload(untouched))['model']).toBe('claude-sonnet-5-5')
@@ -271,7 +271,7 @@ describe('the spec example and the older-version migration (ACS-R7)', () => {
 
   it('T-0355: the digests apply only to an older-version copy; at the current version a matching value is still an edit', () => {
     const seed = seedV1()
-    const overlay = diffOverlay('concierge', 2, seed, { model: 'claude-haiku-4-5' }, { baseDigests: { model: valueDigest('claude-haiku-4-5') } })
+    const overlay = diffOverlay('concierge', 2, seed, { model: 'claude-haiku-4-5' }, { baseDigests: { model: [valueDigest('claude-haiku-4-5')] } })
     expect(modifiedPaths(overlay)).toEqual([{ key: 'model' }])
   })
 })

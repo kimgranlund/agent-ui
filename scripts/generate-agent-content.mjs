@@ -9,9 +9,10 @@
 //                                               ACS-R4 canonical form (`digestInput` in schema.ts).
 //   site/agent-content/registry.runtime.gen.ts  AGENT_CONTENT_RUNTIME: the browser projection
 //                                               (`runtimeRecord`): no path, digest, changelog or notes.
-//                                               SEED_DIGESTS (T-0355): per persona and past seed version,
-//                                               the `valueDigest` of each store value the committed
-//                                               history table (seed-history.ts) records, never the value.
+//                                               SEED_DIGESTS (T-0355): per persona, past seed version and
+//                                               store key, the `valueDigest`s of the values the committed
+//                                               history table (seed-history.ts) says take the new seed,
+//                                               never the values.
 //   site/lib/agent-manifest/*.manifest.json     `seedVersion` of each existing manifest that names a preset,
 //                                               from its agent.md `version` (persona-catalog-composition
 //                                               SPEC-R7), written through `formatManifest`. Never creates a
@@ -35,7 +36,7 @@
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { CONTENT_ROOT, classifyPath, parseContentFile, runtimeRecord, validateContent, validateSeedHistory } from '../site/agent-content/schema.ts'
 import { SEED_HISTORY } from '../site/agent-content/seed-history.ts'
-import { valueDigest } from '@agent-ui/app/agent-admin-overlay'
+import { valueDigest } from '@agent-ui/app/agent-admin-value-digest'
 import { sha256 } from '../site/agent-content/digest.ts'
 import { formatManifest } from '../site/lib/agent-manifest/format.ts'
 
@@ -81,16 +82,20 @@ export function discoverAgentContent(root = process.cwd()) {
   return { records, problems }
 }
 
-/** The per-version field digests of a seed history table, in persona, version and key order. */
-export function seedDigests(history = SEED_HISTORY) {
+/** The per-version field digests of a seed history table (ACS-R7 item 6): per key, the digest of the
+ *  version's final seed value, plus every earlier value's when the row carries a ruling. Object key order
+ *  is the table's (integer-like version keys enumerate ascending). */
+function seedDigests(history) {
   const out = {}
   for (const id of Object.keys(history).sort()) {
-    const versions = {}
-    for (const version of Object.keys(history[id]).sort((a, b) => Number(a) - Number(b))) {
-      const fields = history[id][version]
-      versions[version] = Object.fromEntries(Object.keys(fields).sort().map((key) => [key, valueDigest(fields[key])]))
+    out[id] = {}
+    for (const [version, keys] of Object.entries(history[id])) {
+      out[id][version] = {}
+      for (const key of Object.keys(keys).sort()) {
+        const { seeded, ruling } = keys[key]
+        out[id][version][key] = (ruling === undefined ? seeded.slice(-1) : seeded).map(valueDigest)
+      }
     }
-    out[id] = versions
   }
   return out
 }
@@ -139,7 +144,7 @@ export function generateRuntimeModule(records, history = SEED_HISTORY) {
     'export const AGENT_CONTENT_RUNTIME: readonly RuntimeRecord[] = [',
     ...byPath(records).map((r) => `  ${literal(ordered(runtimeRecord(r)))},`),
     ']',
-    '// Per persona and past seed version, the valueDigest of each store value seed-history.ts records (T-0355).',
+    '// Per persona, past seed version and store key, the valueDigests that take the new seed (seed-history.ts, T-0355).',
     `export const SEED_DIGESTS: SeedDigests = ${literal(seedDigests(history))}`,
     '',
   ].join('\n')
