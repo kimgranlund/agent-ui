@@ -4,6 +4,8 @@ import { readFileSync } from 'node:fs'
 import { CFG, check, resolve, type Resolved } from './scale.mjs'
 import { BRIDGE_REL, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
 import { DERIVED, GLYPH_FLOOR, ROOT_REGISTER, STEP, glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs'
+import { anchors, checkAnchors, resolve as resolveEmitted, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
+import { CFG as VENDORED_CFG } from './vendor/mathematical-design-system/scale.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
 // The 36-cell computed leg (tokens equal resolve() in both engines) is foundations.browser.test.ts.
@@ -24,13 +26,108 @@ const selectorsOf = (css: string): string[] =>
     .filter(Boolean)
     .flatMap((list) => list.split(/,(?![^(]*\))/).map((s) => s.trim()))
 
-/** The skill revision this repo vendors (ADR-0245 Amendment 3). Re-vendoring is a deliberate change of this line. */
+/** The skill's former revision, frozen as the repo's own scale.mjs (ADR-0245 Amendment 3, T-0372). */
 const VENDORED_SHA = '3c319761e5c8221e500077d62db65a555b95a85145cd022b58255b6e6057ba5b'
+/** The skill's current resolver and radius policy, vendored untouched (`scripts/lib/{scale,curvature}.mjs`, T-0372).
+ *  Re-vendoring is a deliberate change of these lines. */
+const VENDOR = 'packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system'
+const CURRENT_SCALE_SHA = '5b370bdd0b6dda206db29f34c7f9aecaed00972ccdd4de41804d3117e68dd2b8'
+const CURRENT_CURVATURE_SHA = 'cc1639f495299070ac02f86825589e970aff9286933fe6a3b0435e71fba84a2f'
+/** T-0372 parity: both sheets as they stood before the re-vendor. A change that moves an emitted token changes these
+ *  on purpose (T-0373, T-0374), never as a side effect of where an input is read. */
+const PARITY_SHA = {
+  foundations: '5a0dd7eef81aed81231a89c889f5c87a6c451c43c9406aa7fddf1516128d2aef',
+  bridge: '1ad5621277876b1f3c4073e5438a9fb50ead1bece8b708b98c74b403378f8952',
+}
+const textSha = (text: string): string => createHash('sha256').update(text).digest('hex')
 
 describe('foundations: the vendored config and its contract (ADR-0245 clause 1)', () => {
-  it('scale.mjs is the vendored skill revision, byte for byte, and so is the ADR derivation copy', () => {
+  it('scale.mjs is the frozen former skill revision, byte for byte, and so is the ADR derivation copy', () => {
     expect(sha('packages/agent-ui/shared/src/tokens/scale.mjs')).toBe(VENDORED_SHA)
     expect(sha('.claude/docs/references/foundations-derivation/scale.mjs')).toBe(VENDORED_SHA)
+  })
+
+  it('the vendored scale.mjs and curvature.mjs are the skill\'s current files, byte for byte (T-0372)', () => {
+    expect(sha(`${VENDOR}/scale.mjs`)).toBe(CURRENT_SCALE_SHA)
+    expect(sha(`${VENDOR}/curvature.mjs`)).toBe(CURRENT_CURVATURE_SHA)
+  })
+
+  it('T-0372 parity: both sheets render byte-identical to the pre-re-vendor tokens', () => {
+    expect(textSha(renderFoundationsCss())).toBe(PARITY_SHA.foundations)
+    expect(textSha(renderBridgeCss())).toBe(PARITY_SHA.bridge)
+  })
+
+  it('the parity pin bites: every anchor read from the vendored resolver moves a sheet when nudged', () => {
+    const nudges: Record<string, (a: Anchors) => void> = {
+      heightPerN: (a) => { a.heightPerN += 1 },
+      iconPerN: (a) => { a.iconPerN += 0.5 },
+      'containers.widget': (a) => { a.containers.widget += 0.5 },
+      'containers.card': (a) => { a.containers.card += 0.5 },
+      'containers.layout': (a) => { a.containers.layout += 0.5 },
+      'Q[0]': (a) => { a.Q[0] += 0.01 },
+      'Q[1]': (a) => { a.Q[1] += 0.01 },
+      floor: (a) => { a.floor += 1 },
+      'titleBump.md': (a) => { a.titleBump.md += 1 },
+      kicker: (a) => { a.kicker -= 0.0625 },
+      'linear.body': (a) => { a.linear.body = [a.linear.body[0] + 1, a.linear.body[1]] },
+      'linear.control': (a) => { a.linear.control = [a.linear.control[0] + 1, a.linear.control[1]] },
+    }
+    for (const [name, nudge] of Object.entries(nudges)) {
+      const a = anchors()
+      nudge(a)
+      const moved = textSha(renderFoundationsCss({ anchors: a })) !== PARITY_SHA.foundations || textSha(renderBridgeCss({ anchors: a })) !== PARITY_SHA.bridge
+      expect(moved, name).toBe(true)
+    }
+    // Read at render time: a nudge of the vendored CFG itself reaches the next render, with no injection.
+    const q = VENDORED_CFG.Q[0]
+    try {
+      VENDORED_CFG.Q[0] = q + 0.01
+      expect(textSha(renderFoundationsCss())).not.toBe(PARITY_SHA.foundations)
+    } finally {
+      VENDORED_CFG.Q[0] = q
+    }
+    expect(textSha(renderFoundationsCss())).toBe(PARITY_SHA.foundations)
+  })
+
+  it('the generator refuses to emit on a broken vendored anchor (a falling heading ratio, a non-finite height)', () => {
+    expect(checkAnchors()).toEqual([])
+    const slope = VENDORED_CFG.Q[1]
+    try {
+      VENDORED_CFG.Q[1] = -0.1
+      expect(checkAnchors().some((f) => f.startsWith('A2'))).toBe(true)
+      expect(() => renderFoundationsCss()).toThrow(/refusing to emit/)
+      expect(() => renderBridgeCss()).toThrow(/refusing to emit/)
+    } finally {
+      VENDORED_CFG.Q[1] = slope
+    }
+    const broken = anchors()
+    broken.heightPerN = Number.NaN
+    expect(() => renderFoundationsCss({ anchors: broken })).toThrow(/A1/)
+    const flat = anchors()
+    flat.containers.card = flat.containers.widget
+    expect(checkAnchors(flat).some((f) => f.startsWith('A4'))).toBe(true)
+  })
+
+  it('resolve() mirrors the sheet: every emitted token equals the repo\'s resolve() on all 36 cells at every density', () => {
+    const steps = ['sm', 'md', 'lg'] as const
+    let cells = 0
+    for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const s of steps) for (const z of steps) {
+      for (const d of ['compact', 'default', 'spacious'] as const) {
+        const e = resolveEmitted(tier, s, z, d)
+        const r = resolve(tier, s, z, d)
+        const at = `${tier}/${s}/${z} ${d}`
+        expect([e.n, e.m, e.c, e.height, e.inset, e.labelInset, e.radius, e.iconBox, e.checkboxRadius], at)
+          .toEqual([r.n, r.m, r.c, r.h, r.n, r.labelMargin, r.n, r.icon, r.parts.checkboxRadius])
+        expect(e.glyphBox, at).toBe(glyphBox(r))
+        expect(e.type, at).toEqual(r.type)
+        expect([e.group, e.widget, e.card, e.layout], at).toEqual([r.group, r.widget, r.card, r.page])
+        // The chip pill n + c (Amendment 5) and the control pill h/2 are the sheet's own, beside the resolver.
+        expect(e.chip, at).toEqual({ margin: r.chip.margin, gutter: r.chip.gutter, radius: r.n + r.c })
+        expect(e.controlRadius, at).toBe(r.h / 2)
+        cells++
+      }
+    }
+    expect(cells).toBe(108)
   })
 
   it('check() returns no failure (M1 to M16)', () => {

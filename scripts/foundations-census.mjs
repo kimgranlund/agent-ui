@@ -29,7 +29,8 @@ import { RULES, findingsIn, hasOwner, kindOf, lineOf } from './lib/foundations-r
 const REPO = fileURLToPath(new URL('..', import.meta.url))
 const SCAN_DIRS = ['packages', 'site']
 const SKIP_DIRS = new Set(['node_modules', '__baselines__', '__fixtures__', '__screenshots__', 'public'])
-const SKIP_FILE = /\.gen\.|(?:^|\/)dogfood-assets\.ts$/
+// A vendored module (tokens/vendor/, T-0372) is a byte copy of its source: no rule applies, nothing there is edited.
+export const SKIP_FILE = /\.gen\.|(?:^|\/)dogfood-assets\.ts$|(?:^|\/)vendor\//
 
 function walk(dir, root, out) {
   let entries
@@ -168,6 +169,7 @@ function selftest() {
   check('axes: a css selector is found', rule('a.css', ':is([scale="ui-lg"]) x { color: red; }', 'axes') === 1)
   check('axes: data-scale, transform scale() and --md-sys-scale pass', rule('a.css', 'x[data-scale="sm"] { transform: scale(2); font-size: calc(1px * var(--md-sys-scale)); }', 'axes') === 0)
   check('axes: a test title or comment naming [scale] passes', rule('a.ts', `it('no [size]/[scale] selector', () => {}) // [density]`, 'axes') === 0)
+  check('skip: a vendored module is not scanned, a sibling of it is', SKIP_FILE.test('packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs') && !SKIP_FILE.test('packages/agent-ui/shared/src/tokens/scale.mjs'))
   const d = gateDiff(['a#px', 'b#px'], ['a#px', 'c#glyph'])
   check('gate: an unlisted finding and a stale entry are both reported', d.unlisted.join() === 'b#px' && d.stale.join() === 'c#glyph')
   check('gate: a listed finding is green', gateDiff(['a#px'], ['a#px']).unlisted.length + gateDiff(['a#px'], ['a#px']).stale.length === 0)

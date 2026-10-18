@@ -1,5 +1,7 @@
-/** Type surface for scale.mjs, the byte-for-byte vendored copy of the mathematical-design-system skill's
- *  reference implementation (ADR-0245 clause 1, Amendment 3). The `.mjs` stays untouched; its types live here. */
+/** Type surface for scale.mjs, the repo's own resolver: the mathematical-design-system skill's former reference
+ *  implementation (ADR-0245 clause 1, Amendment 3, sha 3c319761), frozen here since the skill moved on. It is not the
+ *  skill's `lib/legacy-scale.mjs`; the skill's current resolver is vendored under vendor/mathematical-design-system/
+ *  (T-0372). The `.mjs` stays untouched; its types live here. */
 export type Step = 'sm' | 'md' | 'lg'
 export type Tier = 'widget' | 'product' | 'content' | 'brand'
 export type Density = 'compact' | 'default' | 'spacious'
