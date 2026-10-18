@@ -314,3 +314,14 @@
 ## Debate rulings (Kim, 2026-10-18)
 - T-0350: ship Part A only (DEAL_AGAIN_MISSING check); hold Part B (the NATURAL_ACTIONS wording at checks.ts:370) until a live natural shows the misread with A in play.
 - T-0345: measure the Opus line change with the relative rule, ceiling fixed (+3 of 10, extend to +9 of 30; OLD >= 8 goes straight to N=30); the absolute "round 8 rate" bar is retired. Poker stake-ask check is the sibling T-0357.
+
+## Overnight calls (conductor, delegated by Kim 2026-10-17 "you make the calls")
+- T-0189: Kim confirmed directly: the playing-card corner index is card art, exempt from the 9px type floor (an earlier relay overstated the T-0338 ruling; corrected).
+- T-0188: Kim ruled the non-scaling 3px 2px projected dash a screen-px exemption.
+- T-0355: Kim ruled option C (untouchedWins rows citing a ruling); Quizmaster v1 dated Haiku 4.5 row marked.
+- T-0203: shipped with both verifiers passing criteria 1 to 5 and the live web-search probe moved to an after-merge conductor step (skips.md). The probe and the surface arm's server-tool mix still need a keyed run.
+- T-0357: accepted two widenings that reach blackjack (shared isDealPress incl. deal_<x>; "buy-in" as a bet word).
+- T-0190: type sizes use --md-sys-type-* roles (never the retiring --md-sys-typescale-* aliases); specimen frames get named exemptions; pie-chart keeps em with an exemption; page readouts use field-label; in-control captions use supporting().
+- T-0354 side effects for review: "show me a playing card" now forces a surface in croupier; "make me a form of payment" still does in concierge.
+- T-0352 legacy-only `--ui-*-action-font-legacy` tokens retire with T-0353.
+- Filed T-0360 (live round 11, cap $10) per Kim's approved spend.
