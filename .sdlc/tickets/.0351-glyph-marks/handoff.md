@@ -2,7 +2,7 @@
 id: T-0351
 title: "Badge intent marks and the setIcon carets, clear and stepper marks move to ui-glyph children (GH #1941)"
 type: chore           # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -41,3 +41,26 @@ Scope note: the select caret (T-0148) and the calendar carets (T-0149) were alre
 - `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts site/pages/breadcrumb-demo.browser.test.ts site/pages/badge-demo.browser.test.ts site/pages/text-field-demo.browser.test.ts`
 - `npm run test:visual`
 - Before and after screenshots of badge, text-field (search clear, number stepper), tabs overflow, breadcrumb overflow, game-hud stats and result-card stats at sm, md and lg are in the run's `shots/` folder and listed in solo-report.md.
+
+## Outcome
+
+2026-10-17 · lane: full L3 · verdict: pass · verifier: verifier-L3 (fable) · base: 38ce3e9e3c81
+- Changed: Badge, stat and control marks are ui-glyph children through one createGlyph helper (#2117)
+- Commits: none
+- Check: 1 `! grep -n clip-path packages/agent-ui/components/src/controls/badge/badge.css`: pass
+- Check: 2 `! grep -n clip-path packages/agent-ui/components/src/controls/game-hud/game-hud.css packages/age...: pass
+- Check: 3 `! grep -n "aria-hidden" packages/agent-ui/components/src/controls/badge/badge.ts packages/agent-...: pass
+- Check: 4 `! git grep -n "createElement('ui-glyph')" -- badge.ts game-hud.ts result-card.ts text-field.ts t...: pass
+- Check: 5 `! git grep -nE "setIcon\([^)]*'(x|minus|plus|check|more|dots-three|caret-[a-z]+)'" -- badge sele...: pass
+- Check: 6 `npm run check`: pass
+- Check: 7 `npx vitest run packages/agent-ui/components/src/controls/badge ... tabs breadcrumb text-field gl...: pass
+- Check: 8 `npx vitest run --config vitest.browser.config.ts --project packages badge tabs breadcrumb text-f...: pass
+- Check: 9 `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browse...: pass
+- Check: 10 `npm run test:visual`: pass
+- Check: 11 Before and after screenshots of badge, text-field (search clear, number stepper), tabs overflow, ...: pass
+- Follow-up: decide: .sdlc/tickets/0351-glyph-marks/handoff.md:19 note: the Done-when... -> notes.md
+- Follow-up: decide: .sdlc/runtime/tasks/0351-glyph-marks/shots/after/text-field.png... -> notes.md
+- Follow-up: decide: packages/agent-ui/components/src/controls/styling-gates.test.ts... -> notes.md
+- Follow-up: decide: .sdlc/runtime/tasks/0351-glyph-marks/solo-report.md:45 decide... -> notes.md
+- Follow-up: decide: packages/agent-ui/components/src/controls/tabs/tabs.ts note: tabs... -> notes.md
+- Follow-up: decide: /var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui... -> notes.md

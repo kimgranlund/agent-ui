@@ -2,7 +2,7 @@
 id: T-0352
 title: "Card action parts declare their own size step inside a data-tier region (GH #1940)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -31,3 +31,15 @@ The foundations census gate stays green; no one-off heights.
 - `npm run check` exits 0.
 - Before and after screenshots in the artifacts dir (`before-widget.png`, `after-widget.png`).
 - Kim's ruling 2026-10-17: both actions are md (no visual change at the default card size); board-grid cells scaling with the board is correct, so board-grid is out of scope beyond its stale cell-size comment.
+
+## Outcome
+
+2026-10-17 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 38ce3e9e3c81
+- Changed: Card action parts hold the md step; host overrides still reach them (#2116)
+- Commits: none
+- Check: 1 Browser run of service-card, product-card, board-grid (T-0352 describes: md step at root, product...: pass
+- Check: 2 jsdom run of the three folders: pass
+- Check: 3 `npm run check`: pass
+- Check: 4 Before and after screenshots in the artifacts dir: pass
+- Check: 5 Kim's ruling (both actions md, no visual change at the default card size, board-grid out of scope...: pass
+- Follow-up: note: git grep finds no other reader of --ui-service-card-action- or... -> notes.md

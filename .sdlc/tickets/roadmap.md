@@ -5,26 +5,25 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
-| T-0162 | [0162-agent-content-schema-forms](0162-agent-content-schema-forms/handoff.md) | Settings pane forms generated from each content kind's schema, with provenance, diff and reset | feature | L3 | P2 | T-0160, T-0161 | 🔵 ready |
-| T-0163 | [0163-agent-content-compiler](0163-agent-content-compiler/handoff.md) | One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace | feature | L3 | P2 | T-0160, T-0161 | 🔵 ready |
-| T-0187 | [0187-split-pane-narrow-fit](0187-split-pane-narrow-fit/handoff.md) | split-pane demo stacks or scrolls at 400px instead of overflowing the column | chore | L2 | P2 | none | ⏳ proposed |
-| T-0188 | [0188-line-chart-projected-dash](0188-line-chart-projected-dash/handoff.md) | line-chart projected dash: user-unit dash or a ruled screen-px exemption | chore | L2 | P2 | none | ⏳ proposed |
-| T-0189 | [0189-playing-card-type-floor](0189-playing-card-type-floor/handoff.md) | playing-card corner index: a type floor or a ruled pictorial exemption | chore | L2 | P2 | none | ⏳ proposed |
-| T-0190 | [0190-site-demo-inline-literals](0190-site-demo-inline-literals/handoff.md) | site demos: inline type sizes and off-ramp spacing literals move to tokens | chore | L2 | P2 | none | ⏳ proposed |
-| T-0193 | [0193-option-deck](0193-option-deck/handoff.md) | OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card | feature | L3 | P2 | T-0172 | ⏳ proposed |
-| T-0195 | [0195-confirm-receipt](0195-confirm-receipt/handoff.md) | Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state | feature | L3 | P2 | none | ⏳ proposed |
-| T-0196 | [0196-amount-picker](0196-amount-picker/handoff.md) | Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit | feature | L3 | P2 | none | ⏳ proposed |
-| T-0197 | [0197-bookingform-kinds](0197-bookingform-kinds/handoff.md) | BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' | feature | L2 | P2 | T-0196 | ⏳ proposed |
-| T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | ⏳ proposed |
-| T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | ⏳ proposed |
+| T-0187 | [0187-split-pane-narrow-fit](0187-split-pane-narrow-fit/handoff.md) | split-pane demo stacks or scrolls at 400px instead of overflowing the column | chore | L2 | P2 | none | 🔵 ready |
+| T-0188 | [0188-line-chart-projected-dash](0188-line-chart-projected-dash/handoff.md) | line-chart projected dash: user-unit dash or a ruled screen-px exemption | chore | L2 | P2 | none | 🔵 ready |
+| T-0189 | [0189-playing-card-type-floor](0189-playing-card-type-floor/handoff.md) | playing-card corner index: a type floor or a ruled pictorial exemption | chore | L2 | P2 | none | 🔵 ready |
+| T-0190 | [0190-site-demo-inline-literals](0190-site-demo-inline-literals/handoff.md) | site demos: inline type sizes and off-ramp spacing literals move to tokens | chore | L2 | P2 | none | 🔵 ready |
+| T-0193 | [0193-option-deck](0193-option-deck/handoff.md) | OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card | feature | L3 | P2 | T-0172 | 🔵 ready |
+| T-0195 | [0195-confirm-receipt](0195-confirm-receipt/handoff.md) | Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state | feature | L3 | P2 | none | 🔵 ready |
+| T-0196 | [0196-amount-picker](0196-amount-picker/handoff.md) | Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit | feature | L3 | P2 | none | 🔵 ready |
+| T-0197 | [0197-bookingform-kinds](0197-bookingform-kinds/handoff.md) | BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' | feature | L2 | P2 | T-0196 | 🔵 ready |
+| T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | 🔵 ready |
+| T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | 🔵 ready |
 | T-0203 | [0203-composer-model-controls](0203-composer-model-controls/handoff.md) | Composer model controls: thinking off and show reasoning in the effort menu, web search and fetch toggles, server tools in requests, mid-conversation effort header | feature | L2 | P2 | T-0185 | 🔵 ready |
 | T-0178 | [0178-eval-judged-checks](0178-eval-judged-checks/handoff.md) | Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts | feature | L2 | P2 | T-0342 | 🔵 ready |
 | T-0343 | [0343-eval-smoke-scenarios](0343-eval-smoke-scenarios/handoff.md) | Smoke scenarios for every preset, planned from tags, replayed in CI | feature | L3 | P2 | none | 🔵 ready |
 | T-0345 | [0345-r10-poker-opens-with-cards](0345-r10-poker-opens-with-cards/handoff.md) | Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) | bug | L2 | P1 | none | ⏳ proposed |
 | T-0349 | [0349-signals-gaps-r10](0349-signals-gaps-r10/handoff.md) | eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table | chore | L2 | P3 | none | 🔵 ready |
 | T-0350 | [0350-r10-settled-table-no-way-forward](0350-r10-settled-table-no-way-forward/handoff.md) | A settled card table ships with no way forward (no Deal again), and no check names it | bug | L1 | P2 | none | ⏳ proposed |
-| T-0351 | [0351-glyph-marks](0351-glyph-marks/handoff.md) | Badge intent marks and the setIcon carets, clear and stepper marks move to ui-glyph children (GH #1941) | chore | L3 | P2 | none | 🔵 ready |
-| T-0352 | [0352-part-size-step](0352-part-size-step/handoff.md) | Card action parts declare their own size step inside a data-tier region (GH #1940) | bug | L2 | P2 | none | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
+| T-0354 | [0354-override-explicit-format](0354-override-explicit-format/handoff.md) | Explicit format asks ('as a card', 'as a table', 'build me a form') force a surface even where the catalog owns the noun | bug | L1 | P2 | none | 🔵 ready |
+| T-0355 | [0355-seed-version-digests](0355-seed-version-digests/handoff.md) | Per-version seed field digests so a migration tells an untouched old seed value from a user edit | feature | L2 | P2 | none | 🔵 ready |
+| T-0356 | [0356-create-glyph-rest](0356-create-glyph-rest/handoff.md) | The other seven controls build their glyphs through createGlyph, with no host aria-hidden | chore | L2 | P2 | none | 🔵 ready |
 
-Closed: 327 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 331 done, 4 dropped (git log or .NNNN-* folders)

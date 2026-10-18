@@ -2,7 +2,7 @@
 id: T-0163
 title: "One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0160, T-0161]  # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -39,3 +39,21 @@ Every place that runs an agent builds its prompt the same way, and every turn sa
 - `node scripts/e2e-admin.mjs selftest` exits 0, including the `agent@digest` pin case.
 - `npm run e2e:admin` exits 0.
 - `node scripts/agent-content.mjs compile concierge` exits 0.
+
+## Outcome
+
+2026-10-17 · lane: full L3 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 74fd3265ad43
+- Changed: One agent compiler; every agent turn trace carries a bundle digest and resolution (#2114)
+- Commits: ebbc378 T-0163: One agent compiler with resolution trace and bundle digest (#2114)
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `site/lib/agent-compile.test.ts`: pass
+- Check: 3 `agent-trace.test.ts`: pass
+- Check: 4 app `agent-compile.test.ts`: pass
+- Check: 5 broad vitest set (live-agent, admin-live-runner, agent-admin-, tools/agent, app agent-admin): pass
+- Check: 6 `node scripts/e2e-admin.mjs selftest`: pass
+- Check: 7 `npm run e2e:admin`: pass
+- Check: 8 `node scripts/agent-content.mjs compile concierge`: pass
+- Follow-up: note: held per the handoff, outside its Acceptance criteria: --affected... -> notes.md
+- Follow-up: decide: the Worker's x-agent-bundle-digest header worker/index.ts:227-229... -> notes.md
+- Follow-up: note: packages/agent-ui/app/src/controls/agent-admin/agent-admin-error-tu... -> notes.md
+- Follow-up: note: scratch under... -> notes.md

@@ -2,7 +2,7 @@
 id: T-0193
 title: "OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card"
 type: feature         # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0172]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
