@@ -37,7 +37,9 @@ export interface FormHint {
   required?: boolean
   gate?: 'efforts' | 'thinking' | 'displays' | 'cacheTtls' | 'serverTools'
   /** T-0203: with gate `serverTools`, the server tool the model's row must list for the field to show. */
-  serverTool?: 'web_search' | 'web_fetch'
+  serverTool?: ServerToolName
+  /** T-0203: a text field's format (`ui-settings` marks a value that does not match invalid). */
+  pattern?: string
   optionLabels?: Readonly<Record<string, string>>
   notes?: Readonly<Record<string, string>>
 }
@@ -99,6 +101,35 @@ const KIND_LABELS: Readonly<Record<(typeof PANE_ENTRY_KINDS)[number], string>> =
 const fileRefsOf = (kind: string): string | undefined => ((CONTENT_ENTRY_KINDS as readonly string[]).includes(kind) ? `${kind}s` : undefined)
 
 /** The persona kind. State rows are in the persona file's key order. */
+/** T-0203: the server tools and their settings key. This module imports nothing, so it cannot read
+ *  `model-capabilities.ts`'s `SERVER_TOOL_KEY`; `content-fields.test.ts` pins the two equal. */
+export const SERVER_TOOL_FIELD_KEYS = { web_search: 'webSearch', web_fetch: 'webFetch' } as const
+export type ServerToolName = keyof typeof SERVER_TOOL_FIELD_KEYS
+
+/** T-0203: one server tool's pane rows: its switch, max uses, and allowed and blocked domains. */
+function serverToolFields(tool: ServerToolName, label: string, description: string, uses: string, allowedNote: string): ContentField[] {
+  const key = SERVER_TOOL_FIELD_KEYS[tool]
+  const gate = { gate: 'serverTools', serverTool: tool } as const
+  return [
+    { key, type: 'boolean', home: 'model', label, description, form: { control: 'boolean', ...gate, default: false } },
+    { key: `${key}MaxUses`, type: 'integer', min: 0, home: 'model', label: `${label} max uses`, description: `The most ${uses} per turn. 0 sets no limit.`, form: { control: 'number', ...gate, default: 0 } },
+    { key: `${key}AllowedDomains`, type: 'string', home: 'model', label: `${label} allowed domains`, description: `Comma-separated; ${allowedNote}. Used instead of blocked domains when both are set.`, form: { control: 'text', ...gate } },
+    { key: `${key}BlockedDomains`, type: 'string', home: 'model', label: `${label} blocked domains`, description: `Comma-separated; never ${uses === 'searches' ? 'search these' : 'fetch from these'}.`, form: { control: 'text', ...gate } },
+  ]
+}
+
+/** T-0203: the web search location, one field per part (all optional). */
+function webSearchLocationFields(): ContentField[] {
+  const key = SERVER_TOOL_FIELD_KEYS.web_search
+  const gate = { gate: 'serverTools', serverTool: 'web_search' } as const
+  return [
+    { key: `${key}City`, type: 'string', home: 'model', label: 'Web search city', description: 'Approximate city to localize results, for example Helsinki.', form: { control: 'text', ...gate } },
+    { key: `${key}Region`, type: 'string', home: 'model', label: 'Web search region', description: 'Approximate region or state, for example Uusimaa.', form: { control: 'text', ...gate } },
+    { key: `${key}Country`, type: 'string', home: 'model', label: 'Web search country', description: 'Two-letter ISO 3166-1 country code, for example FI.', form: { control: 'text', ...gate, pattern: '^([A-Za-z]{2})?$' } },
+    { key: `${key}Timezone`, type: 'string', home: 'model', label: 'Web search timezone', description: 'IANA time zone, for example Europe/Helsinki.', form: { control: 'text', ...gate, pattern: '^([A-Za-z]+(/[A-Za-z0-9_+-]+)*)?$' } },
+  ]
+}
+
 export const PERSONA_FIELDS: readonly ContentField[] = [
   { file: 'id', type: 'id', required: true, home: 'file', label: 'Id' },
   { file: 'version', type: 'integer', min: 1, required: true, home: 'file', label: 'Seed version' },
@@ -215,80 +246,9 @@ export const PERSONA_FIELDS: readonly ContentField[] = [
   // Store keys the pane edits that are not persona-file state (never exported, never patchable).
   // T-0203: the server tools, shown only when the model's row lists the tool. Each row only reaches the
   // request while its switch is on and the composer's toggle for it is on.
-  {
-    key: 'webSearch',
-    type: 'boolean',
-    home: 'model',
-    label: 'Web search',
-    description: 'Let the model search the web and cite its sources. Billed per search ($10 per 1,000 searches) on top of tokens.',
-    form: { control: 'boolean', gate: 'serverTools', serverTool: 'web_search', default: false },
-  },
-  {
-    key: 'webSearchMaxUses',
-    type: 'integer',
-    min: 0,
-    home: 'model',
-    label: 'Web search max uses',
-    description: 'The most searches per turn. 0 sets no limit.',
-    form: { control: 'number', gate: 'serverTools', serverTool: 'web_search', default: 0 },
-  },
-  {
-    key: 'webSearchAllowedDomains',
-    type: 'string',
-    home: 'model',
-    label: 'Web search allowed domains',
-    description: 'Comma-separated; search only these. Used instead of blocked domains when both are set.',
-    form: { control: 'text', gate: 'serverTools', serverTool: 'web_search' },
-  },
-  {
-    key: 'webSearchBlockedDomains',
-    type: 'string',
-    home: 'model',
-    label: 'Web search blocked domains',
-    description: 'Comma-separated; never search these.',
-    form: { control: 'text', gate: 'serverTools', serverTool: 'web_search' },
-  },
-  {
-    key: 'webSearchLocation',
-    type: 'string',
-    home: 'model',
-    label: 'Web search location',
-    description: 'Approximate location as city, region, country code, timezone (for example: Helsinki, Uusimaa, FI, Europe/Helsinki). Blank parts are skipped.',
-    form: { control: 'text', gate: 'serverTools', serverTool: 'web_search' },
-  },
-  {
-    key: 'webFetch',
-    type: 'boolean',
-    home: 'model',
-    label: 'Web fetch',
-    description: 'Let the model read pages and PDFs at URLs from the conversation, with citations. No charge beyond tokens.',
-    form: { control: 'boolean', gate: 'serverTools', serverTool: 'web_fetch', default: false },
-  },
-  {
-    key: 'webFetchMaxUses',
-    type: 'integer',
-    min: 0,
-    home: 'model',
-    label: 'Web fetch max uses',
-    description: 'The most fetches per turn. 0 sets no limit.',
-    form: { control: 'number', gate: 'serverTools', serverTool: 'web_fetch', default: 0 },
-  },
-  {
-    key: 'webFetchAllowedDomains',
-    type: 'string',
-    home: 'model',
-    label: 'Web fetch allowed domains',
-    description: 'Comma-separated; fetch only from these. Used instead of blocked domains when both are set.',
-    form: { control: 'text', gate: 'serverTools', serverTool: 'web_fetch' },
-  },
-  {
-    key: 'webFetchBlockedDomains',
-    type: 'string',
-    home: 'model',
-    label: 'Web fetch blocked domains',
-    description: 'Comma-separated; never fetch from these.',
-    form: { control: 'text', gate: 'serverTools', serverTool: 'web_fetch' },
-  },
+  ...serverToolFields('web_search', 'Web search', 'Let the model search the web and cite its sources. Billed per search ($10 per 1,000 searches) on top of tokens.', 'searches', 'search only these'),
+  ...webSearchLocationFields(),
+  ...serverToolFields('web_fetch', 'Web fetch', 'Let the model read pages and PDFs at URLs from the conversation, with citations. No charge beyond tokens.', 'fetches', 'fetch only from these'),
   { key: 'surfaceBubbles', type: 'boolean', home: 'surface', label: 'Chat bubbles' },
   { key: 'prefers', type: 'enum', values: ['auto', 'text', 'surface'], home: 'surface', label: 'Response type' },
   { key: 'a2uiDomains', file: 'domains', type: 'string', fileType: 'strings', home: 'seed', label: 'Domains' },

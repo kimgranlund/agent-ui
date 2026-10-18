@@ -67,7 +67,7 @@ describe('T-0203: server tools in the agent settings and the composer overrides'
 
   it('the Model section offers the web search and web fetch rows for a model whose row lists them, none for an unknown model', () => {
     const keys = (modelSettingsSection('claude-opus-5-5')?.fields ?? []).map((f) => f.key)
-    expect(keys).toEqual(expect.arrayContaining(['webSearch', 'webSearchMaxUses', 'webSearchAllowedDomains', 'webSearchBlockedDomains', 'webSearchLocation', 'webFetch', 'webFetchMaxUses', 'webFetchAllowedDomains', 'webFetchBlockedDomains']))
+    expect(keys).toEqual(expect.arrayContaining(['webSearch', 'webSearchMaxUses', 'webSearchAllowedDomains', 'webSearchBlockedDomains', 'webSearchCity', 'webSearchRegion', 'webSearchCountry', 'webSearchTimezone', 'webFetch', 'webFetchMaxUses', 'webFetchAllowedDomains', 'webFetchBlockedDomains']))
     const search = modelSettingsSection('claude-opus-5-5')?.fields.find((f) => f.key === 'webSearch')
     expect(search?.description).toContain('Billed per search')
     expect(modelSettingsSection('gpt-x')).toBeUndefined()
@@ -79,7 +79,8 @@ describe('T-0203: server tools in the agent settings and the composer overrides'
       webSearchMaxUses: 3,
       webSearchAllowedDomains: 'a.com, b.org',
       webSearchBlockedDomains: 'c.com',
-      webSearchLocation: 'Helsinki, , FI',
+      webSearchCity: 'Helsinki',
+      webSearchCountry: 'FI',
       webFetch: false,
       webFetchMaxUses: 2,
     }
@@ -88,9 +89,9 @@ describe('T-0203: server tools in the agent settings and the composer overrides'
     expect(settings.webFetch).toBeUndefined()
     expect(resolveModelSettings(read(values), 'claude-opus-5-5', 'medium', { webSearch: false }).webSearch).toBeUndefined()
     expect(resolveModelSettings(read(values), 'claude-opus-5-5', 'medium', { webFetch: true }).webFetch).toBeUndefined()
-    expect(agentServerToolOn(read(values), 'claude-opus-5-5', 'webSearch')).toBe(true)
-    expect(agentServerToolOn(read(values), 'claude-opus-5-5', 'webFetch')).toBe(false)
-    expect(agentServerToolOn(read(values), 'gpt-x', 'webSearch')).toBe(false)
+    expect(agentServerToolOn(read(values), 'claude-opus-5-5', 'web_search')).toBe(true)
+    expect(agentServerToolOn(read(values), 'claude-opus-5-5', 'web_fetch')).toBe(false)
+    expect(agentServerToolOn(read(values), 'gpt-x', 'web_search')).toBe(false)
   })
 
   it('thinking off and show reasoning from the composer replace the agent settings, still capability-checked', () => {
@@ -98,5 +99,17 @@ describe('T-0203: server tools in the agent settings and the composer overrides'
     expect(resolveModelSettings(agent, 'claude-haiku-5-5', 'high', { thinkingOff: true, showReasoning: false })).toEqual({ thinking: 'disabled', display: 'omitted' })
     expect(resolveModelSettings(agent, 'claude-haiku-5-5', 'xhigh', { thinkingOff: true })).toEqual({ display: 'summarized' })
     expect(resolveModelSettings(read({ thinking: 'disabled' }), 'claude-haiku-5-5', 'high', { thinkingOff: false })).toEqual({})
+  })
+})
+
+describe('T-0203: the web search location is validated, never sent invalid', () => {
+  const read = (values: Record<string, unknown>) => ({ get: (key: string) => values[key] })
+  it('a bad country or timezone is dropped from the request; the pane field carries a pattern', () => {
+    const settings = resolveModelSettings(read({ webSearch: true, webSearchCity: 'Oslo', webSearchCountry: 'Norway', webSearchTimezone: 'Mars/Base' }), 'claude-opus-5-5', 'medium')
+    expect(settings.webSearch).toEqual({ userLocation: { city: 'Oslo' } })
+    const good = resolveModelSettings(read({ webSearch: true, webSearchCountry: 'no', webSearchTimezone: 'Europe/Oslo' }), 'claude-opus-5-5', 'medium')
+    expect(good.webSearch).toEqual({ userLocation: { country: 'NO', timezone: 'Europe/Oslo' } })
+    const country = modelSettingsSection('claude-opus-5-5')?.fields.find((f) => f.key === 'webSearchCountry')
+    expect(country?.validation?.pattern).toBe('^([A-Za-z]{2})?$')
   })
 })

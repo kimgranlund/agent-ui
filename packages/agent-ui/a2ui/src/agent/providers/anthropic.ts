@@ -30,11 +30,19 @@ import { AgentTimeoutError } from '../deadlines.ts'
  * BLOCK form with GH #49's tool loop (tool_use/tool_result round-trips are block-typed on the wire);
  * plain-string content is unchanged for the text-only path. */
 type AnthropicContentBlock =
-  | { type: 'text'; text: string }
+  | { type: 'text'; text: string; citations?: unknown[] }
+  | ServerContentBlock
   | { type: 'thinking'; thinking: string; signature: string }
   | { type: 'redacted_thinking'; data: string }
   | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
   | { type: 'tool_result'; tool_use_id: string; content: string; is_error?: boolean }
+
+/** T-0203: a server tool block (`server_tool_use`, `web_search_tool_result`, `web_fetch_tool_result`), carried
+ *  back verbatim: the API needs a search result's `encrypted_content` unmodified on the next request. */
+interface ServerContentBlock {
+  type: 'server_tool_use' | `${string}_tool_result`
+  [key: string]: unknown
+}
 
 interface AnthropicMessage {
   role: 'user' | 'assistant'
@@ -50,8 +58,10 @@ interface AnthropicMessage {
 export type RoundBlock =
   | { type: 'thinking'; thinking: string; signature: string }
   | { type: 'redacted_thinking'; data: string }
-  | { type: 'text'; text: string }
+  | { type: 'text'; text: string; citations?: unknown[] }
   | { type: 'tool_use'; call: number }
+  /** T-0203: a server tool block as it started (`block`), plus a `server_tool_use` input streamed in. */
+  | { type: 'server'; block: Record<string, unknown>; inputJson: string }
 
 /** GH #49 — the per-round tool-call collector `parseAnthropicSSE` fills when tools are active: block
  *  metadata from `content_block_start` (type tool_use), `input_json_delta` accumulation per block index,
@@ -245,6 +255,9 @@ export function* parseAnthropicSSE(
           openBlock(tools, index, { type: 'redacted_thinking', data: started.data })
         } else if (started?.type === 'text') {
           openBlock(tools, index, { type: 'text', text: '' })
+        } else if (started !== undefined && (started.type === 'server_tool_use' || started.type?.endsWith('_tool_result') === true)) {
+          // T-0203: a server tool call or its result, kept in place for the replay (and a pause_turn resend).
+          openBlock(tools, index, { type: 'server', block: started as Record<string, unknown>, inputJson: '' })
         }
       }
       continue
@@ -280,7 +293,7 @@ export function* parseAnthropicSSE(
       typeof (parsed as { delta: unknown }).delta === 'object' &&
       (parsed as { delta: unknown }).delta !== null
     ) {
-      const delta = (parsed as { delta: { type?: unknown; text?: unknown; thinking?: unknown; signature?: unknown; partial_json?: unknown } }).delta
+      const delta = (parsed as { delta: { type?: unknown; text?: unknown; thinking?: unknown; signature?: unknown; partial_json?: unknown; citation?: unknown } }).delta
       const at = (parsed as { index?: unknown }).index
       const blockIndex = typeof at === 'number' ? at : undefined
       if (delta.type === 'text_delta' && typeof delta.text === 'string') {
@@ -298,6 +311,15 @@ export function* parseAnthropicSSE(
         // GH #49 — a tool call's argument JSON, streamed in fragments keyed by block index.
         const slot = blockIndex !== undefined ? tools.byIndex.get(blockIndex) : undefined
         if (slot !== undefined) tools.calls[slot]!.inputJson += delta.partial_json
+        else {
+          // T-0203: a server tool call's input (the search query, the fetched URL).
+          const server = blockIndex !== undefined ? tools.blocks[tools.blockAt.get(blockIndex) ?? -1] : undefined
+          if (server?.type === 'server') server.inputJson += delta.partial_json
+        }
+      } else if (delta.type === 'citations_delta' && delta.citation !== undefined && tools) {
+        // T-0203: a citation on the text block it cites, carried back with the text.
+        const text = blockFor(tools, blockIndex, 'text')
+        text.citations = [...(text.citations ?? []), delta.citation]
       }
     }
   }
@@ -365,7 +387,10 @@ function assistantTurnBlocks(collector: ToolUseCollector): AnthropicContentBlock
       const call = collector.calls[block.call]!
       out.push({ type: 'tool_use', id: call.id, name: call.name, input: parseToolInput(call.inputJson) })
     } else if (block.type === 'text') {
-      if (block.text.trim().length > 0) out.push({ type: 'text', text: block.text })
+      if (block.text.trim().length > 0) out.push({ type: 'text', text: block.text, ...(block.citations !== undefined ? { citations: block.citations } : {}) })
+    } else if (block.type === 'server') {
+      // T-0203: verbatim, with a streamed server_tool_use input parsed in.
+      out.push({ ...block.block, ...(block.inputJson.length > 0 ? { input: parseToolInput(block.inputJson) } : {}) } as ServerContentBlock)
     } else if (block.type === 'thinking') {
       if (block.signature.length > 0) out.push({ type: 'thinking', thinking: block.thinking, signature: block.signature })
     } else {
@@ -421,15 +446,6 @@ const isHaiku55 = (model: string): boolean => /haiku-5-5/.test(model)
  *  and live rounds stopped at it). */
 const HAIKU_55_MAX_TOKENS = { default: 5376, medium: 5376, high: 5376, xhigh: 8192 } as const
 
-/** The Anthropic Messages-API request BODY, PURE (SPEC-R11 AC3, fixture-tested — the `parseAnthropicSSE`
- *  precedent, this file's OTHER extracted-for-testability seam): `effort` → thinking/effort params, with
- *  no network/key involved. The impure `stream()` below is the ONLY caller; kept exported so the mapping
- *  itself is directly testable without a live key.
- *
- *  T-0185: `modelSettings` (thinking mode, display, max tokens, cache TTL) is first passed through
- *  `normalizeModelSettings`, so a field the model's capability row rejects (thinking off at xhigh on Haiku
- *  5.5, `between_tools` on Opus 5.5, a max tokens over the ceiling) is dropped before the call, never sent.
- *  No sampling param (temperature, top_p, top_k) is ever sent: the 5.5 rows accept none. */
 /** T-0203: the server tool versions sent (web search `web_search_20260318`, web fetch `web_fetch_20260318`). */
 export const WEB_SEARCH_TOOL_TYPE = 'web_search_20260318'
 export const WEB_FETCH_TOOL_TYPE = 'web_fetch_20260318'
@@ -469,10 +485,12 @@ const isEffort = (v: unknown): v is Effort => v === 'low' || v === 'medium' || v
 function perMessageEffortPlan(
   req: { model: string; messages: Turn[]; effort?: Effort },
   settings: ModelSettings,
+  rawSettings: ModelSettings | undefined,
 ): { opening: Effort; messages: Record<string, unknown>[] } | undefined {
   const row = capabilitiesFor(req.model)
   if (!row?.perMessageEffort || req.effort === undefined) return undefined
-  if (settings.thinking !== undefined && settings.thinking !== 'adaptive') return undefined
+  const adaptive = (mode: ModelSettings['thinking']): boolean => mode === undefined || mode === 'adaptive'
+  if (!adaptive(settings.thinking)) return undefined
   const users = req.messages.map((t, i) => (t.role === 'user' ? i : -1)).filter((i) => i >= 0)
   const last = users[users.length - 1]
   const levelAt = (i: number): Effort | undefined => {
@@ -481,6 +499,10 @@ function perMessageEffortPlan(
   }
   const opening = users.length > 0 ? levelAt(users[0]!) : undefined
   if (opening === undefined || users.every((i) => (levelAt(i) ?? opening) === opening)) return undefined
+  // The body is built at the opening level, so its thinking must be adaptive there too: a mode the new level
+  // drops (Haiku 5.5 thinking off at low, then xhigh) would still ride the opening body beside the marker,
+  // which the API rejects. Such a conversation falls back to a plain top-level effort change.
+  if (!adaptive(normalizeModelSettings(req.model, rawSettings, opening).thinking)) return undefined
   let running = opening
   const messages: Record<string, unknown>[] = []
   req.messages.forEach((t, i) => {
@@ -501,6 +523,15 @@ export function anthropicBetas(body: Record<string, unknown>): string[] {
   return messages.some((m) => m['output_config'] !== undefined) ? [MID_CONVERSATION_EFFORT_BETA] : []
 }
 
+/** The Anthropic Messages-API request BODY, PURE (SPEC-R11 AC3, fixture-tested — the `parseAnthropicSSE`
+ *  precedent, this file's OTHER extracted-for-testability seam): `effort` → thinking/effort params, with
+ *  no network/key involved. The impure `stream()` below is the ONLY caller; kept exported so the mapping
+ *  itself is directly testable without a live key.
+ *
+ *  T-0185: `modelSettings` (thinking mode, display, max tokens, cache TTL) is first passed through
+ *  `normalizeModelSettings`, so a field the model's capability row rejects (thinking off at xhigh on Haiku
+ *  5.5, `between_tools` on Opus 5.5, a max tokens over the ceiling) is dropped before the call, never sent.
+ *  No sampling param (temperature, top_p, top_k) is ever sent: the 5.5 rows accept none. */
 export function buildRequestBody(req: {
   model: string
   system: string
@@ -521,7 +552,7 @@ export function buildRequestBody(req: {
 }): Record<string, unknown> {
   // T-0203: a mid-conversation effort change builds the body at the opening level (thinking and output_config
   // stay as the cached prefix saw them), with the new turn's max_tokens and the effort-marked messages.
-  const plan = perMessageEffortPlan(req, normalizeModelSettings(req.model, req.modelSettings, req.effort))
+  const plan = perMessageEffortPlan(req, normalizeModelSettings(req.model, req.modelSettings, req.effort), req.modelSettings)
   const plain = buildArmBody(req)
   const body = plan === undefined ? plain : { ...buildArmBody({ ...req, effort: plan.opening }), max_tokens: plain['max_tokens'], messages: [...plan.messages, ...(req.extraMessages ?? [])] }
   const thinking = body.thinking as { type?: string } | undefined
@@ -621,6 +652,14 @@ function buildArmBody(req: {
 /** GH #49 — the tool-loop's round cap: a runaway model calling tools forever is cut off here; the text
  *  accumulated so far still flows (a degraded ANSWER, never a hung turn). */
 const MAX_TOOL_ROUNDS = 4
+/** T-0203: the most `pause_turn` continuations one turn takes (a long server tool turn the API paused). Each
+ *  resends the paused assistant content so the model carries on; past the cap the text so far stands. */
+const MAX_PAUSE_CONTINUATIONS = 3
+
+/** T-0203: the request messages that continue a paused turn: the paused assistant content appended. */
+function withPaused(extra: readonly AnthropicMessage[], paused: readonly AnthropicContentBlock[]): AnthropicMessage[] {
+  return paused.length > 0 ? [...extra, { role: 'assistant', content: [...paused] }] : [...extra]
+}
 /** PR #59 review — the PER-ROUND fan-out cap: one round may emit arbitrarily many tool_use blocks
  *  within its token budget, and every one fired a concurrent upstream fetch. Only the first N execute;
  *  the REST still get a (capped-error) tool_result — Anthropic requires every tool_use id to be paired —
@@ -925,9 +964,15 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
       const useTools = (req.tools?.length ?? 0) > 0 && req.executeTool !== undefined
 
       if (!useTools) {
-        // The pre-#49 path, byte-identical: ONE round, live pass-through streaming, no collector.
-        yield* runRound(buildRequestBody(req), req.onEvent, req.signal, undefined)
-        return
+        // The pre-#49 path: one round, live pass-through streaming. T-0203: a collector rides along so a
+        // `pause_turn` (a server tool turn the API paused) is continued by resending the paused content.
+        let paused: AnthropicContentBlock[] = []
+        for (let pauses = 0; ; pauses++) {
+          const collector = newToolCollector()
+          yield* runRound(buildRequestBody(paused.length > 0 ? { ...req, extraMessages: withPaused([], paused) } : req), req.onEvent, req.signal, collector)
+          if (collector.stopReason !== 'pause_turn' || pauses >= MAX_PAUSE_CONTINUATIONS) return
+          paused = [...paused, ...assistantTurnBlocks(collector)]
+        }
       }
 
       type Call = ToolUseCollector['calls'][number]
@@ -963,11 +1008,19 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
       // RTS-R2: every declared tool is terminal, so no scratch prose can precede a later round. One round,
       // text yielded live as it arrives, then the terminal call (if any) runs once and the turn ends.
       if (terminal.size > 0 && req.tools!.every((t) => terminal.has(t.name))) {
-        const collector = newToolCollector()
-        yield* runRound(buildRequestBody(req), req.onEvent, req.signal, collector)
-        const call = terminalCall(collector)
-        if (call) await execute(call)
-        return
+        let paused: AnthropicContentBlock[] = []
+        for (let pauses = 0; ; pauses++) {
+          const collector = newToolCollector()
+          yield* runRound(buildRequestBody(paused.length > 0 ? { ...req, extraMessages: withPaused([], paused) } : req), req.onEvent, req.signal, collector)
+          // T-0203: a paused turn is resent to continue (bounded), then the terminal call runs as before.
+          if (collector.stopReason === 'pause_turn' && pauses < MAX_PAUSE_CONTINUATIONS) {
+            paused = [...paused, ...assistantTurnBlocks(collector)]
+            continue
+          }
+          const call = terminalCall(collector)
+          if (call) await execute(call)
+          return
+        }
       }
 
       // GH #49 — the bounded tool loop. Each round's TEXT is buffered and flushed ONLY when the round
@@ -976,22 +1029,37 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
       // output flows. The buffered text still travels back to the model as the assistant turn's text
       // block, so the model keeps its own context.
       const extra: AnthropicMessage[] = []
+      // T-0203: a paused round's content and text, carried into the round that continues it.
+      let paused: AnthropicContentBlock[] = []
+      let carried: string[] = []
+      let pauses = 0
       for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
         const collector = newToolCollector()
         const roundText: string[] = []
-        const body = buildRequestBody({ ...req, tools: req.tools, extraMessages: extra })
+        const body = buildRequestBody({ ...req, tools: req.tools, extraMessages: withPaused(extra, paused) })
         for await (const fragment of runRound(body, req.onEvent, req.signal, collector)) roundText.push(fragment)
 
         // RTS-R2: a terminal call ends the loop: execute it, flush the round's text, no continuation.
         const call = terminalCall(collector)
         if (call) {
           await execute(call)
+          yield* carried
           yield* roundText
           return
         }
 
+        // T-0203: a paused round is resent to continue; the continuation does not count as a tool round.
+        if (collector.stopReason === 'pause_turn' && pauses < MAX_PAUSE_CONTINUATIONS) {
+          pauses++
+          paused = [...paused, ...assistantTurnBlocks(collector)]
+          carried = [...carried, ...roundText]
+          round--
+          continue
+        }
+
         const wantsTools = collector.stopReason === 'tool_use' && collector.calls.length > 0 && round < MAX_TOOL_ROUNDS
         if (!wantsTools) {
+          yield* carried
           yield* roundText
           return
         }
@@ -1010,7 +1078,9 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
         )
 
         for (const { call, isError } of results) req.onEvent?.({ kind: 'tool_result', id: call.id, text: call.name, ok: !isError }) // T-0259: observation only
-        const assistantBlocks = assistantTurnBlocks(collector)
+        const assistantBlocks = [...paused, ...assistantTurnBlocks(collector)]
+        paused = []
+        carried = []
         extra.push({ role: 'assistant', content: assistantBlocks })
         extra.push({
           role: 'user',

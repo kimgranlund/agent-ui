@@ -13,8 +13,8 @@
 
 import type { SettingsSchema, SettingsSection, SettingsField } from '../settings/schema.ts'
 // T-0185: the pure per-model capability table (no producer bytes cross; the `./agent/meta-line` posture).
-import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY } from '@agent-ui/a2ui/agent/model-capabilities'
-import type { ModelCapabilities, ModelSettings, ThinkingMode } from '@agent-ui/a2ui/agent/model-capabilities'
+import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY, SERVER_TOOL_KEY } from '@agent-ui/a2ui/agent/model-capabilities'
+import type { ModelCapabilities, ModelSettings, ServerTool, ThinkingMode } from '@agent-ui/a2ui/agent/model-capabilities'
 // T-0162: the persona kind schema, the one field definition the Agent and Model sections derive from.
 import { PERSONA_FIELDS, type ContentField } from './content-fields.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
@@ -171,18 +171,20 @@ export const MODEL_SETTING_KEYS = {
   cacheTtl: 'cacheTtl',
 } as const
 
-/** T-0203: the server tool store keys (pane-edited, not persona-file state). */
-export const SERVER_TOOL_SETTING_KEYS = {
-  webSearch: 'webSearch',
-  webSearchMaxUses: 'webSearchMaxUses',
-  webSearchAllowedDomains: 'webSearchAllowedDomains',
-  webSearchBlockedDomains: 'webSearchBlockedDomains',
-  webSearchLocation: 'webSearchLocation',
-  webFetch: 'webFetch',
-  webFetchMaxUses: 'webFetchMaxUses',
-  webFetchAllowedDomains: 'webFetchAllowedDomains',
-  webFetchBlockedDomains: 'webFetchBlockedDomains',
-} as const
+/** T-0203: the server tool store keys (pane-edited, not persona-file state), derived from the one key
+ *  vocabulary (`SERVER_TOOL_KEY`): per tool its switch, max uses and domain lists, plus the search location. */
+export const SERVER_TOOL_SETTING_KEYS = Object.fromEntries(
+  (Object.entries(SERVER_TOOL_KEY) as [ServerTool, string][]).map(([tool, key]) => [
+    tool,
+    {
+      enabled: key,
+      maxUses: `${key}MaxUses`,
+      allowedDomains: `${key}AllowedDomains`,
+      blockedDomains: `${key}BlockedDomains`,
+      ...(tool === 'web_search' ? { city: `${key}City`, region: `${key}Region`, country: `${key}Country`, timezone: `${key}Timezone` } : {}),
+    },
+  ]),
+) as Readonly<Record<ServerTool, { enabled: string; maxUses: string; allowedDomains: string; blockedDomains: string; city?: string; region?: string; country?: string; timezone?: string }>>
 
 /** `off` is the cache TTL select's "no cache_control" value. */
 const CACHE_OFF = 'off'
@@ -215,7 +217,7 @@ function settingsFieldFor(field: ContentField, row: ModelCapabilities | undefine
       // T-0203: a server tool's rows show only when the model's row lists that tool.
       if (!row || hint.serverTool === undefined || !row.serverTools.includes(hint.serverTool)) return undefined
       if (hint.control === 'number') return { ...base, type: 'number', default: Number(hint.default ?? 0), validation: { min: field.min ?? 0, step: 1 } }
-      return { ...base, type: hint.control, ...(hint.default === undefined ? {} : { default: hint.default }) } as SettingsField
+      return { ...base, type: hint.control, ...(hint.default === undefined ? {} : { default: hint.default }), ...(hint.pattern === undefined ? {} : { validation: { pattern: hint.pattern } }) } as SettingsField
   }
   if (hint.control === 'number') {
     // The ceiling is the model's own: the schema states the floor, the row the max.
@@ -280,12 +282,10 @@ export function resolveAgentEffort(store: { get(key: string): unknown } | undefi
  *  agent's thinking and display settings when set; `webSearch` and `webFetch` false keep that server tool off
  *  for this conversation even when the agent enables it (a toggle can only narrow, never enable a tool the
  *  settings leave off). */
-export interface ComposerModelOverrides {
+export type ComposerModelOverrides = {
   thinkingOff?: boolean
   showReasoning?: boolean
-  webSearch?: boolean
-  webFetch?: boolean
-}
+} & Partial<Record<(typeof SERVER_TOOL_KEY)[ServerTool], boolean>>
 
 /** A comma-separated domain list as an array (blank entries dropped). */
 const domainsOf = (v: unknown): string[] | undefined => {
@@ -295,14 +295,18 @@ const domainsOf = (v: unknown): string[] | undefined => {
 }
 
 /** T-0203: one server tool's settings from the store, `undefined` when its switch is off. */
-function serverToolFromStore(store: { get(key: string): unknown } | undefined, prefix: 'webSearch' | 'webFetch'): Record<string, unknown> | undefined {
-  if (store?.get(prefix) !== true) return undefined
-  const maxUses = store.get(`${prefix}MaxUses`)
-  const allowed = domainsOf(store.get(`${prefix}AllowedDomains`))
-  const blocked = domainsOf(store.get(`${prefix}BlockedDomains`))
-  const location = store.get(`${prefix}Location`)
-  const parts = typeof location === 'string' ? location.split(',').map((p) => p.trim()) : []
-  const userLocation = Object.fromEntries((['city', 'region', 'country', 'timezone'] as const).map((k, i) => [k, parts[i] ?? '']).filter(([, v]) => v !== ''))
+function serverToolFromStore(store: { get(key: string): unknown } | undefined, tool: ServerTool): Record<string, unknown> | undefined {
+  const keys = SERVER_TOOL_SETTING_KEYS[tool]
+  if (store?.get(keys.enabled) !== true) return undefined
+  const maxUses = store.get(keys.maxUses)
+  const allowed = domainsOf(store.get(keys.allowedDomains))
+  const blocked = domainsOf(store.get(keys.blockedDomains))
+  const userLocation: Record<string, string> = {}
+  for (const part of ['city', 'region', 'country', 'timezone'] as const) {
+    const key = keys[part]
+    const value = key === undefined ? undefined : store.get(key)
+    if (typeof value === 'string' && value.trim() !== '') userLocation[part] = value.trim()
+  }
   return {
     ...(typeof maxUses === 'number' && maxUses > 0 ? { maxUses } : {}),
     ...(allowed !== undefined ? { allowedDomains: allowed } : {}),
@@ -311,9 +315,9 @@ function serverToolFromStore(store: { get(key: string): unknown } | undefined, p
   }
 }
 
-/** T-0203: whether the agent's settings turn `tool` on for `model` (the composer's toggle shows only then). */
-export function agentServerToolOn(store: { get(key: string): unknown } | undefined, model: string, tool: 'webSearch' | 'webFetch'): boolean {
-  return serverToolFromStore(store, tool) !== undefined && (capabilitiesFor(model)?.serverTools ?? []).includes(tool === 'webSearch' ? 'web_search' : 'web_fetch')
+/** T-0203: whether the agent's settings turn `tool` on for `model` (the composer's row shows only then). */
+export function agentServerToolOn(store: { get(key: string): unknown } | undefined, model: string, tool: ServerTool): boolean {
+  return serverToolFromStore(store, tool) !== undefined && (capabilitiesFor(model)?.serverTools ?? []).includes(tool)
 }
 
 /** T-0185: the agent's model settings for `model` and this turn's `effort`, read from the store and passed
@@ -324,8 +328,8 @@ export function resolveModelSettings(store: { get(key: string): unknown } | unde
   const maxTokens = store?.get(MODEL_SETTING_KEYS.maxTokens)
   const cacheTtl = store?.get(MODEL_SETTING_KEYS.cacheTtl)
   const showReasoning = overrides.showReasoning ?? store?.get(MODEL_SETTING_KEYS.showReasoning)
-  const webSearch = overrides.webSearch === false ? undefined : serverToolFromStore(store, 'webSearch')
-  const webFetch = overrides.webFetch === false ? undefined : serverToolFromStore(store, 'webFetch')
+  const webSearch = overrides.webSearch === false ? undefined : serverToolFromStore(store, 'web_search')
+  const webFetch = overrides.webFetch === false ? undefined : serverToolFromStore(store, 'web_fetch')
   const thinking = overrides.thinkingOff === true ? 'disabled' : overrides.thinkingOff === false ? 'adaptive' : store?.get(MODEL_SETTING_KEYS.thinking)
   const raw = {
     thinking,

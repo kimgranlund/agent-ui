@@ -148,6 +148,7 @@ import type { SettingsSchema } from '../settings/schema.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import {
   agentServerToolOn,
+  SERVER_TOOL_SETTING_KEYS,
   type ComposerModelOverrides,
   AGENT_ENABLED_KEY,
   A2UI_CATALOG_KEY,
@@ -208,7 +209,7 @@ import {
 // the rows' own native `title` hints.
 import { buildAdminHelp, buildAdminHelpForSummary } from './admin-help.ts'
 import { EFFORT_LEVELS, type EffortLevel, type TurnReference, type ContextItem, type PickerOption, type CapabilityRow } from '../conversation/composer-options.ts'
-import { capabilitiesFor, effortsAllowing, DEFAULT_DISPLAY } from '@agent-ui/a2ui/agent/model-capabilities'
+import { capabilitiesFor, effortsAllowing, DEFAULT_DISPLAY, SERVER_TOOL_KEY } from '@agent-ui/a2ui/agent/model-capabilities'
 // GH #1211 — the ingest handler's rejection toast (req-doc-ingestion.md R1's "visible reason" AC): a
 // `ui-toast-region` this element mounts and owns itself (toast-region.md's "v1 ownership is
 // consumer-mounted" law — there is no static singleton to reach for instead).
@@ -569,9 +570,11 @@ const EFFORT_TOGGLE_SHOW_REASONING = 'show-reasoning'
 /** T-0203: the capabilities panel's server tool rows; the id prefix keeps them apart from entry rows. */
 const SERVER_TOOL_ROW_PREFIX = 'server-tool:'
 const SERVER_TOOL_ROWS = [
-  { key: 'webSearch', label: 'Web search', icon: 'magnifying-glass' },
-  { key: 'webFetch', label: 'Web fetch', icon: 'file-text' },
+  { tool: 'web_search', key: SERVER_TOOL_KEY.web_search, label: 'Web search', icon: 'magnifying-glass' },
+  { tool: 'web_fetch', key: SERVER_TOOL_KEY.web_fetch, label: 'Web fetch', icon: 'file-text' },
 ] as const
+/** T-0203: every server tool store key, so a settings edit re-derives the capabilities rows. */
+const SERVER_TOOL_STORE_KEYS: ReadonlySet<string> = new Set(Object.values(SERVER_TOOL_SETTING_KEYS).flatMap((k) => Object.values(k)))
 
 export interface UIAgentAdminElement extends ReactiveProps<typeof agentAdminProps> {}
 export class UIAgentAdminElement extends UIElement {
@@ -973,6 +976,12 @@ export class UIAgentAdminElement extends UIElement {
 
   /** T-0203: hand the Chat composer its effort menu (the levels and the two toggles) afresh. */
   #syncEffortOptions(): void {
+    // A Thinking off choice ends when the toggle stops being offered (an effort or model that rejects it), so
+    // it never comes back silently on a later effort.
+    if (this.#modelOverrides.thinkingOff !== undefined && !effortsAllowing(this.#modelFor(this.store), 'disabled').includes(this.#effort)) {
+      const { thinkingOff: _dropped, ...rest } = this.#modelOverrides
+      this.#modelOverrides = rest
+    }
     if (this.#conversation) this.#conversation.efforts = this.#effortOptions()
   }
 
@@ -980,7 +989,7 @@ export class UIAgentAdminElement extends UIElement {
    *  model, `included` while the composer has not switched it off for this conversation. */
   #serverToolRows(): CapabilityRow[] {
     const model = this.#modelFor(this.store)
-    return SERVER_TOOL_ROWS.filter((t) => agentServerToolOn(this.store, model, t.key)).map((t) => ({
+    return SERVER_TOOL_ROWS.filter((t) => agentServerToolOn(this.store, model, t.tool)).map((t) => ({
       id: `${SERVER_TOOL_ROW_PREFIX}${t.key}`,
       label: t.label,
       kind: 'server tool',
@@ -1046,7 +1055,7 @@ export class UIAgentAdminElement extends UIElement {
         if (key === MODEL_SETTING_KEYS.effort || key === 'model') this.#syncEffortFromAgent()
         // T-0203: the effort menu's toggles and the server tool rows follow the agent's settings.
         if (key === MODEL_SETTING_KEYS.thinking || key === MODEL_SETTING_KEYS.showReasoning) this.#syncEffortOptions()
-        if (key === 'model' || (SERVER_TOOL_ROWS as readonly { key: string }[]).some((t) => key === t.key)) this.#syncEntryRosters()
+        if (key === 'model' || SERVER_TOOL_STORE_KEYS.has(key)) this.#syncEntryRosters()
       })
       this.#syncModelSchema()
       this.#syncEffortFromAgent()
@@ -2966,9 +2975,6 @@ export class UIAgentAdminElement extends UIElement {
       // is the truth. Emptying it is what stops a pick from re-applying to a LATER arm (leave the flow, come
       // back, and the card starts neutral again) — the same no-leak law GH #145's reset carries.
       this.#preArm = {}
-    // T-0203: the composer's model overrides belong to this agent's conversation; the next starts from its settings.
-    this.#modelOverrides = {}
-    this.#syncEffortOptions()
     }
     this.#syncAuthoringConversationConfig(authoringStore)
     // LLD §16.2 — arming the flow lands Co-pilot visible AND primary, at the one choke point every arm
@@ -3822,7 +3828,7 @@ export class UIAgentAdminElement extends UIElement {
       const reply = runStubAgentTurn(framedText, config)
       handle.setNote(reply)
       handle.finalize()
-      this.#recordTurn(history, framedText, reply)
+      this.#recordTurn(history, framedText, reply, this.#effort) // synchronous: the effort the stub ran at
       this.#logTurn('stub', { text: framedText, config }, { reply })
       return
     }
@@ -3853,7 +3859,7 @@ export class UIAgentAdminElement extends UIElement {
         const reply = await agentTurn(request)
         handle.setNote(reply)
         handle.finalize()
-        this.#recordTurn(history, framedText, reply)
+        this.#recordTurn(history, framedText, reply, request.effort)
         this.#logTurn('live', request, { reply })
       } catch (err) {
         // A network/provider fault, a non-2xx proxy response, or the runner's 120s timeout: surface it
@@ -4685,11 +4691,11 @@ export class UIAgentAdminElement extends UIElement {
   /** Append one completed exchange to the multi-turn history (both arms). GH #644 — `history` is the
    *  CALLER's context-scoped array (`#handleSubmit`'s `#contextFor()` read), never `this.#history`
    *  directly, so a turn always lands in the transcript it was actually composed from. */
-  #recordTurn(history: AdminTurn[], text: string, reply: string): void {
+  #recordTurn(history: AdminTurn[], text: string, reply: string, effort?: EffortLevel): void {
     const turns: AdminTurn[] = [
-      // T-0203: the user turn keeps the effort it was sent at, so a later effort change can ride a
-      // per-message marker that leaves the cached prefix intact.
-      { role: 'user', content: text, effort: this.#effort },
+      // T-0203: the user turn keeps the effort it was sent at (the request's, read before the reply), so a
+      // later effort change can ride a per-message marker that leaves the cached prefix intact.
+      { role: 'user', content: text, ...(effort !== undefined ? { effort } : {}) },
       { role: 'assistant', content: reply },
     ]
     history.push(...turns)
@@ -5173,6 +5179,10 @@ export class UIAgentAdminElement extends UIElement {
     // successor must not silently seed the next persona's interview. The card re-paints neutral pickers on
     // the `#reflectAuthorEntry` the caller's `#rewireAuthoringContext` already runs.
     this.#preArm = {}
+    // T-0203: the Chat composer's model overrides belong to this agent's conversation; the next agent starts
+    // from its own settings. The Co-pilot composer carries none.
+    this.#modelOverrides = {}
+    this.#syncEffortOptions()
     // follow-the-change SPEC-R4 AC3 — pending attention is per-draft: a persona switch clears it, so the
     // next draft never inherits a ghost wash queued against the previous one's folds.
     this.#pendingAttention.clear()

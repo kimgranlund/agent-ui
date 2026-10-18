@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import providersConfigRaw from '../../tools/agent/providers.json'
 import { buildRequestBody } from '../agent/providers/anthropic.ts'
-import { MODEL_CAPABILITIES, capabilitiesFor, effortsAllowing, normalizeModelSettings, validateModelSettings } from '../agent/model-capabilities.ts'
+import { MODEL_CAPABILITIES, capabilitiesFor, effortsAllowing, normalizeModelSettings, validateModelSettings, userLocationIssues } from '../agent/model-capabilities.ts'
 import type { Effort } from '../agent/agent-transport.ts'
 
 const BASE = { system: 'be helpful', messages: [] }
@@ -138,5 +138,14 @@ describe('T-0203: server tool settings against the capability table', () => {
     } finally {
       ;(row as { serverTools: readonly string[] }).serverTools = saved
     }
+  })
+})
+
+describe('T-0203: the web search location', () => {
+  it('a country that is not two letters or a timezone that is not IANA is an issue, and normalize drops just that part', () => {
+    expect(userLocationIssues({ country: 'FI', timezone: 'Europe/Helsinki' })).toEqual([])
+    expect(userLocationIssues({ country: 'Finland', timezone: 'Mars/Base' })).toHaveLength(2)
+    expect(validateModelSettings('claude-opus-5-5', { webSearch: { userLocation: { country: 'FIN' } } }).map((i) => i.key)).toEqual(['webSearch'])
+    expect(normalizeModelSettings('claude-opus-5-5', { webSearch: { userLocation: { city: 'Turku', country: 'fi', timezone: 'Nope/Zone' } } }).webSearch).toEqual({ userLocation: { city: 'Turku', country: 'FI' } })
   })
 })

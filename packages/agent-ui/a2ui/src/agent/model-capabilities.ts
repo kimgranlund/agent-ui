@@ -160,8 +160,9 @@ export interface SettingsIssue {
   message: string
 }
 
-/** The `ModelSettings` key of each server tool. */
-const SERVER_TOOL_KEY = { web_search: 'webSearch', web_fetch: 'webFetch' } as const satisfies Record<ServerTool, keyof ModelSettings>
+/** T-0203: the `ModelSettings` key of each server tool, the one key vocabulary the agent settings, the
+ *  composer rows and the request read (`content-fields.ts`, import-free, is pinned to it by a test). */
+export const SERVER_TOOL_KEY = { web_search: 'webSearch', web_fetch: 'webFetch' } as const satisfies Record<ServerTool, keyof ModelSettings>
 
 /** Every setting the model's row rejects, as plain-words issues (empty when the combination is legal). An
  *  unknown model accepts nothing optional, so any set field is an issue. */
@@ -189,6 +190,7 @@ export function validateModelSettings(model: string, settings: ModelSettings, ef
   for (const [tool, key] of Object.entries(SERVER_TOOL_KEY) as [ServerTool, 'webSearch' | 'webFetch'][]) {
     if (settings[key] !== undefined && !row.serverTools.includes(tool)) issues.push({ key, message: `${model} does not take the ${tool} tool` })
   }
+  for (const message of userLocationIssues(settings.webSearch?.userLocation)) issues.push({ key: 'webSearch', message })
   return issues
 }
 
@@ -207,6 +209,29 @@ export function normalizeModelSettings(model: string, raw: unknown, effort?: Eff
   }
   const bad = new Set(validateModelSettings(model, typed, effort).map((i) => i.key))
   return Object.fromEntries(Object.entries(typed).filter(([k]) => !bad.has(k as keyof ModelSettings))) as ModelSettings
+}
+
+/** T-0203: an ISO 3166-1 alpha-2 country code (two letters; the API rejects a code it does not support). */
+export const COUNTRY_CODE_PATTERN = '^[A-Za-z]{2}$'
+
+/** T-0203: whether `tz` is an IANA time zone this runtime knows. */
+export function isIanaTimeZone(tz: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: tz })
+    return /^[A-Za-z]/.test(tz)
+  } catch {
+    return false
+  }
+}
+
+/** T-0203: what is wrong with a web search location: a country that is not two letters, a timezone that is
+ *  not an IANA name. Empty when it is fine or absent. */
+export function userLocationIssues(loc: UserLocation | undefined): string[] {
+  if (loc === undefined) return []
+  return [
+    ...(loc.country !== undefined && !new RegExp(COUNTRY_CODE_PATTERN).test(loc.country) ? [`web search country ${loc.country} is not a two-letter ISO 3166-1 code`] : []),
+    ...(loc.timezone !== undefined && !isIanaTimeZone(loc.timezone) ? [`web search timezone ${loc.timezone} is not an IANA time zone`] : []),
+  ]
 }
 
 /** A clean list of non-empty domain strings, or `undefined` when none survive. */
@@ -229,7 +254,11 @@ function serverToolField<K extends 'webSearch' | 'webFetch'>(key: K, raw: unknow
   if (withLocation && typeof loc === 'object' && loc !== null) {
     const l = loc as Record<string, unknown>
     const fields = (['city', 'region', 'country', 'timezone'] as const).filter((f) => typeof l[f] === 'string' && (l[f] as string).trim() !== '')
-    if (fields.length > 0) userLocation = Object.fromEntries(fields.map((f) => [f, (l[f] as string).trim()])) as UserLocation
+    const typed = Object.fromEntries(fields.map((f) => [f, f === 'country' ? (l[f] as string).trim().toUpperCase() : (l[f] as string).trim()])) as UserLocation
+    // An invalid country or timezone is dropped, never sent (the pane shows the field invalid).
+    if (typed.country !== undefined && userLocationIssues({ country: typed.country }).length > 0) delete typed.country
+    if (typed.timezone !== undefined && userLocationIssues({ timezone: typed.timezone }).length > 0) delete typed.timezone
+    if (Object.keys(typed).length > 0) userLocation = typed
   }
   const tool: WebSearchSettings = {
     ...(typeof maxUses === 'number' && Number.isInteger(maxUses) && maxUses >= 1 ? { maxUses } : {}),

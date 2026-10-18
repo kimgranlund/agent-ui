@@ -3377,6 +3377,45 @@ describe('UIAgentAdminElement — the DEV-only live-turn fork (TKT-0052/ADR-0136
     expect(toggle('thinking-off'), 'Opus 5.5 never takes thinking off').toBeUndefined()
   })
 
+  it('T-0203: Thinking off ends when the toggle stops being offered, so it never comes back silently', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set('model', 'claude-haiku-5-5')
+    await whenFlushed()
+    const conversation = el.querySelector('ui-conversation') as UIConversationElement
+    const menu = el.querySelector('[data-part="effort-menu"]') as HTMLElement
+    const click = (id: string): boolean => (menu.querySelector(`[data-value="${id}"]`) as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    click('thinking-off')
+    await whenFlushed()
+    expect(conversation.efforts?.find((o) => o.id === 'thinking-off')?.checked).toBe(true)
+    click('xhigh')
+    await whenFlushed()
+    click('high')
+    await whenFlushed()
+    expect(conversation.efforts?.find((o) => o.id === 'thinking-off')?.checked).toBe(false)
+  })
+
+  it('T-0203: a recorded user turn carries the effort the request was sent at, even if the dial moves mid-turn', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    await whenFlushed()
+    const menu = el.querySelector('[data-part="effort-menu"]') as HTMLElement
+    const click = (id: string): boolean => (menu.querySelector(`[data-value="${id}"]`) as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    click('high')
+    let release: (reply: string) => void = () => {}
+    const calls: import('./agent-admin-schema.ts').AdminTurnRequest[] = []
+    el.agentTurn = (req) => {
+      calls.push(req)
+      return calls.length === 1 ? new Promise<string>((resolve) => (release = resolve)) : Promise.resolve('ok')
+    }
+    submit(el, 'one')
+    await waitFor(() => calls.length === 1, 'first turn')
+    click('low') // the dial moves while the first turn is in flight
+    release('aye')
+    await whenFlushed()
+    submit(el, 'two')
+    await waitFor(() => calls.length === 2, 'second turn')
+    expect(calls[1]!.history[0]).toEqual({ role: 'user', content: 'one', effort: 'high' })
+  })
+
   it('the kind MASTER switches gate the projection (vision rev.5: default ON; an explicit false gates the kind out)', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     addEntry(el, ENTRY_KINDS.tool, 'Calculator')
@@ -3681,6 +3720,20 @@ describe('UIAgentAdminElement — a persona switch resets the conversation (GH #
   function turnLabels(el: UIAgentAdminElement): string[] {
     return [...el.querySelectorAll('[data-part="context-turn"] [data-part="summary-text"]')].map((s) => s.textContent ?? '')
   }
+
+  it('T-0203: an agent switch clears the Chat composer overrides; the new agent starts from its own settings', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store!.set('model', 'claude-haiku-5-5')
+    await whenFlushed()
+    const conversation = el.querySelector('ui-conversation') as UIConversationElement
+    const menu = el.querySelector('[data-part="effort-menu"]') as HTMLElement
+    ;(menu.querySelector('[data-value="show-reasoning"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
+    await whenFlushed()
+    expect(conversation.efforts?.find((o) => o.id === 'show-reasoning')?.checked).toBe(false)
+    el.store = createMemoryStore({ initial: { ...initialEntryValues(), model: 'claude-haiku-5-5' } })
+    await whenFlushed()
+    expect(conversation.efforts?.find((o) => o.id === 'show-reasoning')?.checked, 'the override did not leak into the next agent').toBe(true)
+  })
 
   it('a real store reassignment clears the chat log AND the Dialog Turns log; a fresh message starts its own thread', async () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
