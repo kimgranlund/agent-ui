@@ -27,12 +27,12 @@ function schemePanel(scheme: 'light' | 'dark'): HTMLElement {
     uiButton('Soft', 'soft'),
   ])
   provider.style.cssText =
-    'display: flex; flex-direction: column; gap: 0.6rem; padding: 1.25rem; border-radius: 0.75rem; ' +
+    'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: var(--md-sys-radius); ' +
     'border: 1px solid var(--md-sys-color-neutral-outline-variant); background: var(--md-sys-color-neutral-surface); flex: 1 1 14rem;'
   return provider
 }
 const independenceRow = el('div', {}, [schemePanel('light'), schemePanel('dark')])
-independenceRow.style.cssText = 'display: flex; flex-wrap: wrap; gap: 1.25rem;'
+independenceRow.style.cssText = 'display: flex; flex-wrap: wrap; gap: var(--md-sys-space-lg);'
 
 // ── 2 · the ancestor-inherit fix — an UNSET provider nested inside a scheme="dark" ancestor ─────────────────
 // The nested provider carries NO scheme attribute at all — SPEC-R3 AC4: it must resolve the ANCESTOR's dark
@@ -47,10 +47,10 @@ const nestedUnset = el('ui-theme-provider', {}, [
 ])
 ancestor.append(nestedUnset)
 ancestor.style.cssText =
-  'display: flex; flex-direction: column; gap: 0.75rem; padding: 1.25rem; border-radius: 0.75rem; ' +
+  'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: var(--md-sys-radius); ' +
   'border: 1px solid var(--md-sys-color-neutral-outline-variant); background: var(--md-sys-color-neutral-surface); max-inline-size: 20rem;'
 nestedUnset.style.cssText =
-  'display: flex; flex-direction: column; gap: 0.6rem; padding: 1rem; border-radius: 0.6rem; border: 1px dashed var(--md-sys-color-neutral-outline-variant);'
+  'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: var(--md-sys-radius); border: 1px dashed var(--md-sys-color-neutral-outline-variant);'
 
 content.append(
   exampleSection('Subtree independence', independenceRow),

@@ -70,7 +70,7 @@ const fileList = el('ui-list', { gap: 'xs' }, files.map(([glyph, name, meta]) =>
     ]),
   ]),
 ))
-fileList.style.fontSize = '1.25rem' // the rows' ambient font-size IS the icon size lever (see the ramp below)
+fileList.style.fontSize = 'var(--md-sys-typescale-title-large-size)' // the rows' ambient font-size IS the icon size lever (see the ramp below)
 
 // ── the size ramp — ambient font-size only; there is no [size] attribute by design ────────────────────────
 // The cards wrap at narrow widths (a scroller clipped the third card mid-word at 400px).
@@ -90,10 +90,10 @@ const rampNote = el('p', {}, [
 
 // ── a meaningful icon — `label` ⇒ role=img + aria-label via ElementInternals ─────────────────────────────
 const statusRow = el('ui-row', { gap: 'md', align: 'center' }, [
-  icon('check-circle', { label: 'Deployed', style: 'color: var(--md-sys-color-primary); font-size: 1.5rem;' }),
-  icon('warning', { label: 'Needs attention', style: 'color: var(--md-sys-color-tertiary); font-size: 1.5rem;' }),
-  icon('x-circle', { label: 'Failed', style: 'color: var(--md-sys-color-error); font-size: 1.5rem;' }),
-  icon('clock', { label: 'Scheduled', style: 'color: var(--md-sys-color-on-surface-variant); font-size: 1.5rem;' }),
+  icon('check-circle', { label: 'Deployed', style: 'color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-headline-small-size);' }),
+  icon('warning', { label: 'Needs attention', style: 'color: var(--md-sys-color-tertiary); font-size: var(--md-sys-typescale-headline-small-size);' }),
+  icon('x-circle', { label: 'Failed', style: 'color: var(--md-sys-color-error); font-size: var(--md-sys-typescale-headline-small-size);' }),
+  icon('clock', { label: 'Scheduled', style: 'color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-headline-small-size);' }),
 ])
 
 const statusNote = el('p', {}, [

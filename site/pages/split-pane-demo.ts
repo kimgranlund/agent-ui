@@ -31,17 +31,17 @@ function panel(title: string, spec: string, body: string): HTMLElement {
   return el('div', { style: 'display:flex; flex-direction:column; block-size:100%; min-inline-size:0;' }, [
     el(
       'div',
-      { style: 'padding:0.4rem var(--md-sys-space-md); font-size:0.75rem; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
+      { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-size:var(--md-sys-typescale-body-small-size); font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
         'color: var(--md-sys-color-neutral-on-surface-variant); border-block-end:1px solid var(--md-sys-color-neutral-outline-variant); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;' },
       [text(title)],
     ),
-    el('div', { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-family: var(--md-sys-typeface-mono); font-size:0.75rem; color: var(--md-sys-color-neutral-on-surface-variant);' }, [text(spec)]),
-    el('div', { style: 'padding:0 var(--md-sys-space-md) var(--md-sys-space-md); font-size:0.85rem; line-height:1.5; overflow:auto;' }, [text(body)]),
+    el('div', { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-typescale-body-small-size); color: var(--md-sys-color-neutral-on-surface-variant);' }, [text(spec)]),
+    el('div', { style: 'padding:0 var(--md-sys-space-md) var(--md-sys-space-md); font-size:var(--md-sys-typescale-body-small-size); line-height:1.5; overflow:auto;' }, [text(body)]),
   ])
 }
 
 const frame = (split: HTMLElement, height: string): HTMLElement =>
-  el('div', { style: `block-size:${height}; inline-size:100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:0.5rem; overflow:hidden;` }, [split])
+  el('div', { style: `block-size:${height}; inline-size:100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:var(--md-sys-radius); overflow:hidden;` }, [split])
 
 // ── the shared panel log ────────────────────────────────────────────────────────────────────────────────────
 const log = document.createElement('ul')

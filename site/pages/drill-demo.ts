@@ -39,13 +39,13 @@ function logEvent(source: string, path: string[]): void {
 // ── layout="stack" (default), chrome="backbar" (default) — a 3-level Settings tree, CONTROLLED ────────────────
 const stackDrill = el('ui-drill', { 'aria-label': 'Settings (stack, controlled demo)' }, [
   el('ui-drill-panel', { key: 'root', heading: 'Settings' }, [
-    el('ul', { style: 'margin:0; padding-inline-start:1.25rem' }, [
+    el('ul', { style: 'margin:0; padding-inline-start:var(--md-sys-space-lg)' }, [
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'appearance' }, [text('Appearance')])]),
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'notifications' }, [text('Notifications')])]),
     ]),
   ]),
   el('ui-drill-panel', { key: 'appearance', parent: 'root', heading: 'Appearance' }, [
-    el('ul', { style: 'margin:0; padding-inline-start:1.25rem' }, [
+    el('ul', { style: 'margin:0; padding-inline-start:var(--md-sys-space-lg)' }, [
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'font-size' }, [text('Font size')])]),
     ]),
   ]),
@@ -75,13 +75,13 @@ const stackNote = el('p', {}, [
 // ── chrome="crumbs" — a Library catalog, already 2 levels deep on load, CONTROLLED ─────────────────────────────
 const crumbsDrill = el('ui-drill', { 'aria-label': 'Library catalog (crumbs demo)', chrome: 'crumbs' }, [
   el('ui-drill-panel', { key: 'library', heading: 'Library' }, [
-    el('ul', { style: 'margin:0; padding-inline-start:1.25rem' }, [
+    el('ul', { style: 'margin:0; padding-inline-start:var(--md-sys-space-lg)' }, [
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'fiction' }, [text('Fiction')])]),
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'nonfiction' }, [text('Non-fiction')])]),
     ]),
   ]),
   el('ui-drill-panel', { key: 'fiction', parent: 'library', heading: 'Fiction' }, [
-    el('ul', { style: 'margin:0; padding-inline-start:1.25rem' }, [
+    el('ul', { style: 'margin:0; padding-inline-start:var(--md-sys-space-lg)' }, [
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'mystery' }, [text('Mystery')])]),
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'scifi' }, [text('Science fiction')])]),
     ]),
@@ -116,14 +116,14 @@ const crumbsNote = el('p', {}, [
 // ── layout="columns" — a Categories browser, side-by-side, CONTROLLED, inside a resizable frame ───────────────
 const columnsDrill = el('ui-drill', { 'aria-label': 'Product categories (columns demo)', layout: 'columns' }, [
   el('ui-drill-panel', { key: 'categories', heading: 'Categories' }, [
-    el('ul', { style: 'margin:0; padding-inline-start:1.25rem' }, [
+    el('ul', { style: 'margin:0; padding-inline-start:var(--md-sys-space-lg)' }, [
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'electronics' }, [text('Electronics')])]),
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'books' }, [text('Books')])]),
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'apparel' }, [text('Apparel')])]),
     ]),
   ]),
   el('ui-drill-panel', { key: 'electronics', parent: 'categories', heading: 'Electronics' }, [
-    el('ul', { style: 'margin:0; padding-inline-start:1.25rem' }, [
+    el('ul', { style: 'margin:0; padding-inline-start:var(--md-sys-space-lg)' }, [
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'laptops' }, [text('Laptops')])]),
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'phones' }, [text('Phones')])]),
       el('li', {}, [el('button', { 'data-role': 'drill-trigger', 'data-drill-key': 'cameras' }, [text('Cameras')])]),

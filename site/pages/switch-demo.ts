@@ -46,9 +46,9 @@ function prefRow(sw: HTMLElement, title: string, description: string): HTMLEleme
     'div',
     { style: 'display:flex; align-items:center; justify-content:space-between; gap:var(--md-sys-space-lg);' },
     [
-      el('div', { style: 'display:flex; flex-direction:column; gap:2px;' }, [
+      el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-xs);' }, [
         el('span', {}, [text(title)]),
-        el('span', { style: 'font-size:0.85em; opacity:0.75;' }, [text(description)]),
+        el('span', { style: 'font-size:var(--md-sys-typescale-body-small-size); opacity:0.75;' }, [text(description)]),
       ]),
       sw,
     ],

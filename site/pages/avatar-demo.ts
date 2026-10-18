@@ -54,18 +54,18 @@ const presenceDot = (presence: Presence): HTMLElement =>
   el('span', {
     'aria-label': presence,
     role: 'img',
-    style: `display:inline-block; inline-size:0.6rem; block-size:0.6rem; border-radius:50%; background:${PRESENCE_COLOR[presence]};`,
+    style: `display:inline-block; inline-size:var(--md-sys-space-md); block-size:var(--md-sys-space-md); border-radius:50%; background:${PRESENCE_COLOR[presence]};`,
   })
 
 // ── the roster — one row per member: avatar · name/role · presence ──────────────────────────────────────
 const rosterRow = (m: Member): HTMLElement =>
-  el('li', { style: 'display:grid; grid-template-columns:auto 1fr auto; gap:var(--md-sys-space-md); align-items:center; padding:0.4rem 0;' }, [
+  el('li', { style: 'display:grid; grid-template-columns:auto 1fr auto; gap:var(--md-sys-space-md); align-items:center; padding:var(--md-sys-space-sm) 0;' }, [
     avatar(m.src ? { src: m.src, identity: m.identity } : { identity: m.identity }),
     el('div', {}, [
       el('div', {}, [text(m.identity || 'Invited teammate')]),
       supporting(m.role),
     ]),
-    el('div', { style: 'display:flex; gap:0.4rem; align-items:center;' }, [
+    el('div', { style: 'display:flex; gap:var(--md-sys-space-sm); align-items:center;' }, [
       presenceDot(m.presence),
       supporting(m.presence),
     ]),

@@ -30,7 +30,7 @@ function pane(title: string, body: HTMLElement): HTMLElement {
   return el('div', { style: 'display:flex; flex-direction:column; block-size:100%; min-inline-size:0;' }, [
     el(
       'div',
-      { style: 'padding:0.4rem var(--md-sys-space-md); font-size:0.75rem; font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
+      { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-size:var(--md-sys-typescale-body-small-size); font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
         'color: var(--md-sys-color-neutral-on-surface-variant); border-block-end:1px solid var(--md-sys-color-neutral-outline-variant);' },
       [text(title)],
     ),
@@ -67,13 +67,13 @@ const MARKDOWN_SOURCE = [
 
 const editorBody = el(
   'pre',
-  { style: 'margin:0; padding:var(--md-sys-space-md); flex:1; overflow:auto; font-family: var(--md-sys-typeface-mono); font-size:0.8rem; line-height:1.5; white-space:pre-wrap;' },
+  { style: 'margin:0; padding:var(--md-sys-space-md); flex:1; overflow:auto; font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-typescale-body-small-size); line-height:1.5; white-space:pre-wrap;' },
   [text(MARKDOWN_SOURCE)],
 )
-const previewBody = el('div', { style: 'padding:var(--md-sys-space-md); flex:1; overflow:auto; font-size:0.9rem; line-height:1.5;' }, [
-  el('h3', { style: 'margin:0 0 var(--md-sys-space-sm); font-size:1.05rem;' }, [text('Release notes — 1.4.0')]),
+const previewBody = el('div', { style: 'padding:var(--md-sys-space-md); flex:1; overflow:auto; font-size:var(--md-sys-typescale-body-medium-size); line-height:1.5;' }, [
+  el('h3', { style: 'margin:0 0 var(--md-sys-space-sm); font-size:var(--md-sys-typescale-title-medium-size);' }, [text('Release notes — 1.4.0')]),
   el('p', { style: 'margin:0 0 var(--md-sys-space-sm);' }, [text('The report, content and feed families ship.')]),
-  el('ul', { style: 'margin:0 0 var(--md-sys-space-sm); padding-inline-start:1.2rem;' }, [
+  el('ul', { style: 'margin:0 0 var(--md-sys-space-sm); padding-inline-start:var(--md-sys-space-lg);' }, [
     el('li', {}, [code('ui-table'), text(' gains sticky headers')]),
     el('li', {}, [code('ui-toast-region'), text(' hosts the new toast stack')]),
     el('li', {}, [code('ui-split'), text(' — this control — lands in M4')]),
@@ -91,7 +91,7 @@ editorSplit.addEventListener('change', (e) => logResize('editor', 'change', (e a
 // A ui-split has no intrinsic size — an ancestor block gives the flex distribution real space to divide.
 const editorFrame = el(
   'div',
-  { style: 'block-size: 16rem; inline-size: 100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:0.5rem; overflow:hidden;' },
+  { style: 'block-size: calc(var(--md-sys-height) * 8); inline-size: 100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:var(--md-sys-radius); overflow:hidden;' },
   [editorSplit],
 )
 
@@ -105,13 +105,13 @@ const editorNote = el('p', {}, [
 ])
 
 // ── (2) list / detail — CONTROLLED sizes, preset buttons + echo-back ────────────────────────────────────────
-const inbox = el('ul', { style: 'margin:0; padding:var(--md-sys-space-xs) 0; list-style:none; flex:1; overflow:auto; font-size:0.85rem;' }, [
+const inbox = el('ul', { style: 'margin:0; padding:var(--md-sys-space-xs) 0; list-style:none; flex:1; overflow:auto; font-size:var(--md-sys-typescale-body-small-size);' }, [
   ...['Design review — Thursday', 'Invoice #4821 paid', 'Q3 roadmap draft', 'New comment on PR #1042', 'Onboarding checklist'].map((s, i) =>
-    el('li', { style: `padding:0.4rem var(--md-sys-space-md); ${i === 2 ? 'background: var(--md-sys-color-neutral-surface-high);' : ''}` }, [text(s)]),
+    el('li', { style: `padding:var(--md-sys-space-sm) var(--md-sys-space-md); ${i === 2 ? 'background: var(--md-sys-color-neutral-surface-high);' : ''}` }, [text(s)]),
   ),
 ])
-const detail = el('div', { style: 'padding:var(--md-sys-space-md); flex:1; overflow:auto; font-size:0.9rem; line-height:1.5;' }, [
-  el('h3', { style: 'margin:0 0 var(--md-sys-space-sm); font-size:1.05rem;' }, [text('Q3 roadmap draft')]),
+const detail = el('div', { style: 'padding:var(--md-sys-space-md); flex:1; overflow:auto; font-size:var(--md-sys-typescale-body-medium-size); line-height:1.5;' }, [
+  el('h3', { style: 'margin:0 0 var(--md-sys-space-sm); font-size:var(--md-sys-typescale-title-medium-size);' }, [text('Q3 roadmap draft')]),
   el('p', { style: 'margin:0;' }, [text('Ana shared a draft of the Q3 roadmap. Three themes: the composition guides, the devtools harness, and the persistence tiers. Comments due Friday.')]),
 ])
 
@@ -120,7 +120,7 @@ const listDetail = el('ui-split', { 'data-role': 'controlled-split' }, [
   el('ui-split-pane', { min: '12rem' }, [pane('Message', detail)]),
 ]) as UISplitElement
 listDetail.sizes = [0.35, 0.65] // CONTROLLED from the first render — a JS property, never an attribute
-const sizesReadout = el('span', { 'data-demo': 'sizes-readout', style: 'font-family: var(--md-sys-typeface-mono); font-size:0.85rem;' }, [text('sizes = [0.35, 0.65]')])
+const sizesReadout = el('span', { 'data-demo': 'sizes-readout', style: 'font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-typescale-body-small-size);' }, [text('sizes = [0.35, 0.65]')])
 function writeSizes(next: number[]): void {
   listDetail.sizes = next
   sizesReadout.textContent = `sizes = [${next.map((r) => r.toFixed(2)).join(', ')}]`
@@ -146,7 +146,7 @@ const presets = el('div', { style: 'display:flex; gap:var(--md-sys-space-md); fl
 ])
 const listFrame = el(
   'div',
-  { style: 'block-size: 14rem; inline-size: 100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:0.5rem; overflow:hidden;' },
+  { style: 'block-size: calc(var(--md-sys-height) * 7); inline-size: 100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:var(--md-sys-radius); overflow:hidden;' },
   [listDetail],
 )
 const controlledNote = el('p', {}, [
@@ -157,14 +157,14 @@ const controlledNote = el('p', {}, [
 ])
 
 // ── (3) a vertical three-pane console — axis="vertical", a collapsible pane ─────────────────────────────────
-const consoleOut = el('pre', { style: 'margin:0; padding:0.6rem var(--md-sys-space-md); flex:1; overflow:auto; font-family: var(--md-sys-typeface-mono); font-size:0.78rem; line-height:1.5;' }, [
+const consoleOut = el('pre', { style: 'margin:0; padding:var(--md-sys-space-md) var(--md-sys-space-md); flex:1; overflow:auto; font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-typescale-body-small-size); line-height:1.5;' }, [
   text(['$ npm run check', '> tsc --noEmit', '> vitest run site/lib', '✓ 212 passed', '$ █'].join('\n')),
 ])
-const problems = el('ul', { style: 'margin:0; padding:0.4rem var(--md-sys-space-md); list-style:none; flex:1; overflow:auto; font-size:0.82rem;' }, [
+const problems = el('ul', { style: 'margin:0; padding:var(--md-sys-space-sm) var(--md-sys-space-md); list-style:none; flex:1; overflow:auto; font-size:var(--md-sys-typescale-body-small-size);' }, [
   el('li', {}, [text('⚠ src/report/pct.ts:3 — prefer Intl.NumberFormat')]),
   el('li', {}, [text('ℹ 0 errors, 1 warning')]),
 ])
-const source = el('pre', { style: 'margin:0; padding:0.6rem var(--md-sys-space-md); flex:1; overflow:auto; font-family: var(--md-sys-typeface-mono); font-size:0.78rem; line-height:1.5;' }, [
+const source = el('pre', { style: 'margin:0; padding:var(--md-sys-space-md) var(--md-sys-space-md); flex:1; overflow:auto; font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-typescale-body-small-size); line-height:1.5;' }, [
   text(['export function pct(r: number[]) {', "  return r.map((x) => `${Math.round(x * 100)}%`).join(' / ')", '}'].join('\n')),
 ])
 
@@ -176,7 +176,7 @@ const vertical = el('ui-split', { axis: 'vertical', 'data-role': 'vertical-split
 vertical.addEventListener('change', (e) => logResize('vertical', 'change', (e as CustomEvent<number[]>).detail))
 const verticalFrame = el(
   'div',
-  { style: 'block-size: 20rem; inline-size: 100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:0.5rem; overflow:hidden;' },
+  { style: 'block-size: calc(var(--md-sys-height) * 10); inline-size: 100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:var(--md-sys-radius); overflow:hidden;' },
   [vertical],
 )
 const verticalNote = el('p', {}, [

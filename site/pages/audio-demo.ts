@@ -90,7 +90,7 @@ const preloadNote = el('p', {}, [
 const lazyPlayer = player({ label: 'Voice memo from Ola · pending upload' })
 const loadButton = uiButton('Attach memo (write src)', 'solid')
 const clearButton = uiButton('Detach (src = "")', 'soft')
-const state = el('p', { 'aria-live': 'polite', style: 'margin:var(--md-sys-space-sm) 0 0; font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: 0.85em;' })
+const state = el('p', { 'aria-live': 'polite', style: 'margin:var(--md-sys-space-sm) 0 0; font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: var(--md-sys-typescale-body-small-size);' })
 function reportState(): void {
   const media = lazyPlayer.querySelector('[data-part="media"]')
   state.textContent = media === null ? 'src is empty → no <audio> in the DOM (nothing rendered, no dead bar).' : 'src set → <audio data-part="media" controls> is live.'

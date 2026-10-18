@@ -142,6 +142,8 @@ Day one (T-0136) listed 9 render findings and 53 compose findings, every compose
 T-0170 fixed two render findings (ui-code border-box, the avatar plane), scoped glyph-gap off a badge mark (two
 findings), marked the specimen, moved four to owner tickets, migrated 22 demos to
 the `--md-sys-space-*` steps, exempted 6 and left 22 compose entries owned by T-0190.
+T-0190 moved those 22 demos' type sizes to `--md-sys-typescale-*` roles, their spacing to `--md-sys-space-*` steps,
+radii to `--md-sys-radius` and frame heights to `--md-sys-height` multiples, leaving the compose allowlist empty.
 
 ## How to add a rule
 
