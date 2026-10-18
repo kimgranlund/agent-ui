@@ -151,7 +151,7 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
   {
     composite: 'GameHud',
     moment: 'a game score and status strip',
-    repair: 'beside the BoardGrid with its title, status and stats, and drop the hand-built score text.',
+    repair: 'with its title, status and stats (and progress when the game counts turns), beside the BoardGrid when the game has one, and drop the hand-built score text or stat badges.',
     requires: ['BoardGrid'],
     lacks: [],
     has: ['BoardGrid'],

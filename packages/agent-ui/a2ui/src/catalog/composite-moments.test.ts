@@ -389,6 +389,7 @@ describe('composite moment checks (T-0208)', () => {
     const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(BOARDLESS['dungeon-master']!, 'quest-log')] }).findings
     expect(f!.path).toBe('quest-log:hp')
     expect(f!.message).toContain('hp (a Badge), gold (a Badge)')
+    expect(f!.message).toContain('Make it ONE GameHud with its title, status and stats (and progress when the game counts turns), beside the BoardGrid when the game has one')
   })
 
   it('T-0358 negative control: one game-stat Badge, a KPI strip and inventory Badges yield none', () => {
