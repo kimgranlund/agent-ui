@@ -70,6 +70,7 @@ import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { colorCodecOptions } from '../color-picker/color.ts'
 import { UISwatchElement } from '../swatch/swatch.ts'
 import { setIcon } from '@agent-ui/icons'
+import { createGlyph } from '../glyph/glyph.ts' // the clear and stepper marks are library marks, pictorial icons stay setIcon (ADR-0245 cl.5, T-0351)
 
 // The editor's editable mode (ADR-0014 cl.1) and a per-instance id seed for aria-describedby.
 const EDITABLE = 'plaintext-only'
@@ -922,7 +923,7 @@ export class UITextFieldElement extends UIFormElement {
       btn.type = 'button'
       btn.setAttribute('data-part', 'clear-button')
       btn.setAttribute('aria-label', 'Clear')
-      setIcon(btn, 'x') // Phosphor, via @agent-ui/icons
+      btn.append(createGlyph('x')) // the library mark, not pack art (ADR-0245 cl.5)
       btn.addEventListener('click', () => {
         if (this.value === '') return // nothing to clear
         this.value = ''
@@ -992,7 +993,7 @@ export class UITextFieldElement extends UIFormElement {
 
   /**
    * Create and append a control-injected TRAILING numeric adornment: a side-by-side − + stepper pair
-   * (Phosphor minus/plus, step-down LEFT of step-up — the iOS/Material stepper convention, GH #1406)
+   * (ui-glyph minus/plus marks, step-down LEFT of step-up; the iOS/Material stepper convention, GH #1406)
    * with an optional suffix span. Used for ALL numeric types (number · currency · unit · percent — ADR-0047: codec ≠ null
    * implies steppers). `suffixText` is non-null for unit (the localized label) and percent ('%').
    * The trailing container's data-role is 'numeric' when a suffix is present, 'stepper' otherwise —
@@ -1017,14 +1018,14 @@ export class UITextFieldElement extends UIFormElement {
     down.type = 'button'
     down.setAttribute('data-part', 'step-down')
     down.setAttribute('aria-label', 'Decrease')
-    setIcon(down, 'minus') // Phosphor, via @agent-ui/icons
+    down.append(createGlyph('minus')) // the library mark, not pack art (ADR-0245 cl.5)
     down.addEventListener('click', () => { this.#step(-1) }, { signal: typeAc })
 
     const up = document.createElement('button')
     up.type = 'button'
     up.setAttribute('data-part', 'step-up')
     up.setAttribute('aria-label', 'Increase')
-    setIcon(up, 'plus') // Phosphor, via @agent-ui/icons
+    up.append(createGlyph('plus')) // the library mark, not pack art (ADR-0245 cl.5)
     up.addEventListener('click', () => { this.#step(1) }, { signal: typeAc })
 
     container.append(down, up) // − before + (minus left of plus — GH #1406, Kim's 2026-08-19 ruling)

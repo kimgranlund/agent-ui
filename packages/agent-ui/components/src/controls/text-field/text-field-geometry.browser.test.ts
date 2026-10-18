@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // s11 (geometry leg) — the CROSS-ENGINE geometry smoke for ui-text-field (decomp g4-g6 node s11). Where the
@@ -423,11 +423,11 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     }
   })
 
-  it('Phosphor-icon sweep: injected <svg> glyphs (magnifier / clear / steppers) paint at a real, non-collapsed derived icon-box size', () => {
-    // setIcon(...) glyphs must themselves render at a real size — not just their containing button/span
-    // (the ui-slider "collapsed dot" lesson: a container can pass every bounding-box check while its
-    // content renders at 0×0). Each svg is sized to the derived icon box (--ui-text-field-svg, 1em outside a
-    // data-tier region; text-field.css).
+  it('adornment sweep: the magnifier icon and the clear / stepper ui-glyph marks paint at a real, non-collapsed derived size', () => {
+    // Each mark must itself render at a real size, not just its containing button/span (the ui-slider
+    // "collapsed dot" lesson: a container can pass every bounding-box check while its content renders at
+    // 0×0). The magnifier svg (setIcon) is sized to the derived icon box (--ui-text-field-svg); the clear x is a
+    // ui-glyph whose host is the same 2n slot and whose svg is the glyph box inside it (T-0351).
     const { field: searchField } = mount('<ui-text-field type="search" value="x"></ui-text-field>')
     const magnifier = searchField.querySelector('[data-part="leading-adornment"]') as HTMLElement
     const clearBtn = searchField.querySelector('[data-part="clear-button"]') as HTMLElement
@@ -439,7 +439,8 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
       ['magnifier', magnifier, magnifier],
       ['clear-button', clearBtn, clearSlot],
     ] as const) {
-      const svg = el.querySelector('svg')!
+      // the icon-box element: the magnifier's own svg, or the clear mark's ui-glyph host (its 2n slot)
+      const svg = (el.querySelector('ui-glyph') ?? el.querySelector('svg'))!
       const r = svg.getBoundingClientRect()
       expect(r.width, `${server.browser}: ${label} svg collapsed to zero width`).toBeGreaterThan(0)
       expect(r.height, `${server.browser}: ${label} svg collapsed to zero height`).toBeGreaterThan(0)
@@ -461,6 +462,10 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
       expect(Math.abs(gapX1 - gapX2), `${server.browser}: ${label} glyph not horizontally centered in its slot`).toBeLessThanOrEqual(1)
       expect(Math.abs(gapY1 - gapY2), `${server.browser}: ${label} glyph not vertically centered in its slot`).toBeLessThanOrEqual(1)
     }
+
+    // the clear x itself is drawn in the glyph box 2n - 2c, inset c in its slot (ADR-0245 cl.4, T-0351)
+    const clearMark = clearBtn.querySelector('ui-glyph svg')!.getBoundingClientRect()
+    expect(clearMark.width, `${server.browser}: the clear mark is not the glyph box`).toBeCloseTo(glyphBox(rootResolve('md')), 0)
 
     const { field: numberField } = mount('<ui-text-field type="number"></ui-text-field>')
     const stepUp = numberField.querySelector('[data-part="step-up"]') as HTMLElement

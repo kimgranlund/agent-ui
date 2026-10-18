@@ -25,7 +25,7 @@
  * current-page span, a slotted-or-default separator glyph), never a background-image / alpha-only wash /
  * color-only `::before` decoration, so nothing there is at risk of vanishing under `forced-colors`
  * (breadcrumb.browser.test.ts proves the separator survives CDP forced-colors emulation, both engines). S2
- * DOES pin one explicit rule for the overflow trigger's icon glyph below — belt-and-braces certainty over
+ * DOES pin one explicit rule for the overflow trigger's mark below; belt-and-braces certainty over
  * relying purely on the UA's automatic `currentColor` remap (the tabs.css forced-colors block precedent).
  *
  * Standalone stylesheet — linked per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from breadcrumb.ts
@@ -35,6 +35,7 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-breadcrumb) declares --ui-breadcrumb-* ════════════════ */
 
 /* uses: synced from breadcrumb.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
 @import '../menu/menu.css';
 
 :where(ui-breadcrumb) {
@@ -45,6 +46,7 @@
   --ui-breadcrumb-link-ink-hover: var(--md-sys-color-neutral-on-surface);
   --ui-breadcrumb-trigger-bg: var(--md-sys-color-neutral-container-low); /* the overflow trigger's resting fill: a shape at rest (T-0149) */
   --ui-breadcrumb-trigger-bg-hover: var(--md-sys-color-neutral-container); /* the overflow trigger's hover wash, one step up */
+  --ui-breadcrumb-trigger-icon: var(--md-sys-icon-box, 1em); /* the overflow trigger's glyph slot (2n), the tabs.css twin; the trigger never drops below it */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-breadcrumb) consumes ONLY --ui-breadcrumb-* ════════════════ */
@@ -107,15 +109,16 @@
   }
 
   /* The overflow trigger: a compact round square (a circle) keyed to the CRUMB'S OWN line box (`1lh`, not a new control-
-     height token — the intake's Geometry row: ui-breadcrumb owns no geometry row of its own), a padded hit
-     area, the shared ink + focus ring. `setIcon` (breadcrumb.ts) injects a fresh <svg fill="currentColor">
-     that inherits `color` here (the tabs.css trigger precedent, minus the grid-area assignment — the
-     composed `<ui-menu>` wrapper is `display:contents`, so this button is simply the next flex item at the
-     fold's DOM position). */
+     height token; the intake's Geometry row: ui-breadcrumb owns no geometry row of its own), floored at the
+     glyph slot so the mark always fits, a padded hit area, the shared ink + focus ring. The mark is a
+     `<ui-glyph symbol="more">` child (breadcrumb.ts, T-0351) that inherits `color` here, its slot
+     `--ui-breadcrumb-trigger-icon` with the glyph box centred in it (the tabs.css trigger precedent, minus the
+     grid-area assignment; the composed `<ui-menu>` wrapper is `display:contents`, so this button is simply the
+     next flex item at the fold's DOM position). */
   :scope > [data-part='overflow'] > [data-part='trigger'] {
     box-sizing: border-box;
-    inline-size: 1lh;
-    block-size: 1lh;
+    inline-size: max(1lh, var(--ui-breadcrumb-trigger-icon));
+    block-size: max(1lh, var(--ui-breadcrumb-trigger-icon));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -126,9 +129,9 @@
     color: var(--ui-breadcrumb-current-ink);
     cursor: pointer;
   }
-  :scope > [data-part='overflow'] > [data-part='trigger'] svg {
-    inline-size: var(--md-sys-icon-box, 1em);
-    block-size: var(--md-sys-icon-box, 1em);
+  :scope > [data-part='overflow'] > [data-part='trigger'] > ui-glyph {
+    inline-size: var(--ui-breadcrumb-trigger-icon);
+    block-size: var(--ui-breadcrumb-trigger-icon);
   }
   :scope > [data-part='overflow'] > [data-part='trigger']:hover {
     color: var(--ui-breadcrumb-current-ink);
@@ -139,7 +142,7 @@
     outline-offset: var(--md-sys-state-focus-ring-offset);
   }
 
-  /* Forced-colors — the trigger's glyph is an SVG `fill="currentColor"` (not a real DOM text node like the
+  /* Forced-colors: the trigger's mark is an SVG `fill="currentColor"` (not a real DOM text node like the
      separator), so it is pinned explicitly rather than left to the UA's automatic remap (the tabs.css
      forced-colors block precedent) — belt-and-braces, browser-probed in breadcrumb.browser.test.ts. */
   @media (forced-colors: active) {

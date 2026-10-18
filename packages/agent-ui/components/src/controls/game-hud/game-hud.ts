@@ -15,13 +15,15 @@
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 import '../badge/badge.ts'
 import type { UIBadgeElement } from '../badge/badge.ts'
+import { createGlyph, type GlyphSymbol, type UIGlyphElement } from '../glyph/glyph.ts' // stat intent marks (T-0351)
+import { intentMark } from '../badge/intent-mark.ts'
 import { cleanProgress, cleanStats, statusIntentOf, type CleanStat } from './game-hud-model.ts'
 // Generated from game-hud.md's `attributes[]` (ADR-0173): `node scripts/generate-props.mjs game-hud`.
 import { props } from './game-hud.props.gen.ts'
 
 interface StatParts {
   root: HTMLElement
-  glyph: HTMLElement
+  glyph: UIGlyphElement | undefined // built on the stat's first intent, then kept
   label: HTMLElement
   value: HTMLElement
   delta: HTMLElement
@@ -132,9 +134,7 @@ export class UIGameHudElement extends UIElement {
     while (parts.length > stats.length) parts.pop()!.root.remove()
     while (parts.length < stats.length) {
       const root = part('div', 'stat')
-      const glyph = part('span', 'glyph')
-      glyph.setAttribute('aria-hidden', 'true')
-      const entry: StatParts = { root, glyph, label: part('span', 'label'), value: part('span', 'value'), delta: part('span', 'delta') }
+      const entry: StatParts = { root, glyph: undefined, label: part('span', 'label'), value: part('span', 'value'), delta: part('span', 'delta') }
       root.append(entry.label, entry.value)
       this.#stats.append(root)
       parts.push(entry)
@@ -145,11 +145,25 @@ export class UIGameHudElement extends UIElement {
 
   #renderStat(parts: StatParts, stat: CleanStat): void {
     setAttr(parts.root, 'data-intent', stat.intent ?? null)
-    place(parts.root, parts.glyph, stat.intent !== undefined, [parts.label])
+    this.#renderStatMark(parts, intentMark(stat.intent))
     setText(parts.label, stat.label)
     setText(parts.value, stat.value)
     if (stat.delta !== undefined) setText(parts.delta, stat.delta)
     place(parts.root, parts.delta, stat.delta !== undefined)
+  }
+
+  /** The stat's intent mark: the shared badge table's ui-glyph (T-0351), placed before the label for a known
+   *  intent and detached otherwise. Decorative: ui-glyph hides itself, the label carries the meaning. */
+  #renderStatMark(parts: StatParts, mark: GlyphSymbol | undefined): void {
+    if (mark === undefined) {
+      if (parts.glyph !== undefined) place(parts.root, parts.glyph, false)
+      return
+    }
+    if (parts.glyph === undefined) {
+      parts.glyph = createGlyph(mark)
+      parts.glyph.dataset.part = 'glyph'
+    } else setAttr(parts.glyph, 'symbol', mark)
+    place(parts.root, parts.glyph, true, [parts.label])
   }
 }
 

@@ -7,7 +7,8 @@ tag: ui-result-card
 description: A settled outcome card for a game end or a finished booking, with an outcome pill, a title, a summary, up to four stat tiles and the producer's own action buttons.
 tier: pattern           # geometry size-class: container spacing, no control-height row (ADR-0244 ResultCard Geometry row)
 extends: UIElement      # a display primitive with data-props: not form-associated (no value)
-uses: []
+uses:
+  - ui-glyph
 # marginal: not yet measured; measured at the fleet size gate (npm run size)
 
 attributes:             # attributes-as-API, the generation source for result-card.props.gen.ts
@@ -63,7 +64,7 @@ parts:
   - name: stat
     description: One stat tile, reused by index across updates (the ui-game-hud stat look). Carries `data-intent` only when the stat has an intent; an intent never tints the tile.
   - name: glyph
-    description: The `aria-hidden` intent shape inside a stat (the badge clip-paths). Present only when the stat has an intent, sized to the glyph box 2n - 2c and n clear of its label (ADR-0245 Amendment 6).
+    description: The intent shape inside a stat, a `<ui-glyph data-part="glyph">` whose mark comes from the badge's shared intent table (info `info`, success `check`, warning `warning`, danger `x`; T-0351, ADR-0245 cl.5). Decorative: ui-glyph hides itself through ElementInternals. Present only when the stat has an intent, sized to the glyph box 2n - 2c and n clear of its label (ADR-0245 Amendment 6).
   - name: label
     description: The stat label, small uppercase text.
   - name: value
@@ -93,7 +94,7 @@ geometry:
   radius: var(--ui-result-card-radius)               # = --md-sys-shape-corner-base
   note: Container spacing only, no control-height row of its own. The spacing is the ADR-0046 box model in fixed rem (the shared --ui-box-* tokens), so the ink sits 19px inline and 13px block from the outer edge like a stock card region. The control stamps size="lg" on every direct ui-button child (28px at the root and on an A2UI canvas, the button's own ramp, the personas/action-row.ts behaviour re-homed), so action buttons never take a custom height. Block-level fill by default (ADR-0223); the `inline` boolean flips the host to inline-flex. Stat tiles wrap in an auto-fit grid with an 84px tile floor, and the actions row wraps, so the card never overflows its container.
 
-forcedColors: The host keeps its outline as a CanvasText border, the outcome pill gains a CanvasText border (a tinted fill would otherwise flatten to Canvas), and the stat glyphs paint in CanvasText. The outcome glyph strokes in currentColor and needs no adjustment.
+forcedColors: The host keeps its outline as a CanvasText border, the outcome pill gains a CanvasText border (a tinted fill would otherwise flatten to Canvas), and the stat glyphs stroke in CanvasText. The outcome glyph strokes in currentColor and needs no adjustment.
 ---
 
 # ui-result-card

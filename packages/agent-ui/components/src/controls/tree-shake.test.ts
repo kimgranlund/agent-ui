@@ -132,14 +132,16 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
     expect(tfLayers('reactive/').length).toBeGreaterThan(0)
   })
 
-  it('drags ONLY {controls/text-field, controls/swatch, controls/_token-surface, dom, traits, reactive} — and NOT the sibling ui-button', () => {
+  it('drags ONLY {controls/text-field, controls/swatch, controls/_token-surface, controls/glyph, dom, traits, reactive}; and NOT the sibling ui-button', () => {
     // ADR-0123 LLD-C9 — the type=color leg statically pulls TWO deliberate additions: ui-swatch (a tiny,
     // zero-dep Display-class leaf, so the trailing swatch-button preview renders immediately, before the
     // lazy picker has ever loaded — the ADR-0123 own reasoning) and its own `_token-surface/token-surface.ts`
     // value-lane dependency; the color CODEC (color-picker/color.ts, pure/zero-DOM) is ALSO statically
     // reached (the currency/date/time codec precedent) — but the color-picker CONTROL itself
     // (color-picker/color-picker.ts, the pad/canvas/codec machinery) stays out, via dynamic import() below.
-    const ALLOWED = ['controls/text-field/', 'controls/swatch/', 'controls/_token-surface/', 'controls/color-picker/color.ts', 'dom/', 'traits/', 'reactive/']
+    // T-0351: the clear x and the stepper minus/plus are ui-glyph marks, so the zero-dep display atom
+    // (controls/glyph, its path table included) is a deliberate static addition too (ADR-0245 cl.5).
+    const ALLOWED = ['controls/text-field/', 'controls/swatch/', 'controls/_token-surface/', 'controls/glyph/', 'controls/color-picker/color.ts', 'dom/', 'traits/', 'reactive/']
     for (const p of tf.reached) {
       expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in text-field graph: ${p}`).toBe(true)
     }
@@ -158,8 +160,8 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
 
   it('does NOT drag the descriptor tooling, and pulls ONLY @agent-ui/icons as its non-relative import', () => {
     expect(tfLayers('descriptor/')).toEqual([])
-    // Phosphor-icon sweep: text-field injects setIcon(...) glyphs (magnifier / x / eye / eye-slash /
-    // calendar-blank / minus / plus) via the swappable icon adapter — the ONE deliberate
+    // Phosphor-icon sweep: text-field injects setIcon(...) icons (magnifier / eye / eye-slash /
+    // calendar-blank; the x and minus / plus marks are ui-glyph since T-0351) via the swappable icon adapter; the ONE deliberate
     // external edge, mirroring components → @agent-ui/shared (ADR-0065/0066; layering.test.ts already
     // allowlists both lower-tier siblings). It imports the root `@agent-ui/icons` barrel only (never the
     // `/phosphor` subpath), so it drags zero Phosphor bytes itself — just resolve/registry/types, the

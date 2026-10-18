@@ -474,7 +474,7 @@ describe('UIBreadcrumbElement — collapse="menu" fold computation across crumb 
     const trigger = menu.firstElementChild as HTMLButtonElement
     expect(trigger.tagName.toLowerCase()).toBe('button')
     expect(trigger.getAttribute('aria-label')).toBe('Show hidden breadcrumbs')
-    expect(trigger.querySelector('svg'), 'setIcon must have injected an <svg> (dots-three)').not.toBeNull()
+    expect(trigger.querySelector('ui-glyph')?.getAttribute('symbol'), 'the trigger carries the `more` ui-glyph mark (T-0351)').toBe('more')
   })
 })
 

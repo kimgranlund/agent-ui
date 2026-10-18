@@ -37,8 +37,10 @@ describe('ui-badge geometry (ADR-0245 cl.3)', () => {
     expect(px(getComputedStyle(badge.querySelector('[data-part="label"]') as HTMLElement).paddingLeft), 'the label margin c: text edge 2c').toBeCloseTo(root.c, 1)
     expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.n + root.c, 1) // h/2 of the 2n + 2c chip
     expect(px(cs.fontSize)).toBeCloseTo(root.type.fieldLabel, 1)
+    // the ui-glyph part is the glyph box and its svg (the drawn mark) fills it (T-0351)
     const glyph = badge.querySelector('[data-part="glyph"]') as HTMLElement
     expect(glyph.getBoundingClientRect().width).toBeCloseTo(glyphBox(root), 1)
+    expect((glyph.querySelector('svg') as SVGElement).getBoundingClientRect().width).toBeCloseTo(glyphBox(root), 1)
   })
 
   it("under data-foundations=legacy: today's 18px compact box, pill radius and 8.75px pad", () => {
@@ -48,6 +50,6 @@ describe('ui-badge geometry (ADR-0245 cl.3)', () => {
     expect(px(cs.paddingLeft)).toBeCloseTo(8.75, 2)
     expect(px(cs.borderTopLeftRadius)).toBe(9)
     expect(px(cs.fontSize)).toBe(13)
-    expect((badge.querySelector('[data-part="glyph"]') as HTMLElement).getBoundingClientRect().width).toBe(9)
+    expect((badge.querySelector('[data-part="glyph"] svg') as SVGElement).getBoundingClientRect().width).toBe(9)
   })
 })

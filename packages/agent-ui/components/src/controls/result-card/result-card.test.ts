@@ -181,6 +181,12 @@ describe('UIResultCardElement: stats hardening', () => {
     const tiles = all(el, '[data-part="stat"]')
     expect(tiles.map((t) => t.dataset.intent)).toEqual(['success', undefined, undefined])
     expect(tiles.map((t) => q(t, '[data-part="glyph"]') !== null)).toEqual([true, false, false])
+    // the mark is a decorative ui-glyph from the shared intent table (T-0351), no ARIA host attribute
+    const glyph = q(tiles[0]!, '[data-part="glyph"]') as HTMLElement & { symbol: string; label: string }
+    expect(glyph.localName).toBe('ui-glyph')
+    expect(glyph.symbol).toBe('check')
+    expect(glyph.label).toBe('')
+    expect(glyph.hasAttribute('aria-hidden')).toBe(false)
   })
 
   it('the attribute codec parses JSON, falls back to [] on null or malformed input, and never throws', () => {

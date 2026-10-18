@@ -40,16 +40,10 @@ describe('game-hud.css: structure and token hygiene', () => {
 })
 
 describe('game-hud.css: intent glyphs and ink', () => {
-  const glyphClip = (intent: string): string | null => {
-    const re = new RegExp(`\\[data-intent='${intent}'\\] \\[data-part='glyph'\\] \\{([^}]*)\\}`)
-    const rule = re.exec(stylesBlock)?.[1] ?? null
-    return rule === null ? null : (/clip-path:\s*([^;]+);/.exec(rule)?.[1]?.replace(/\s+/g, ' ').trim() ?? null)
-  }
-
-  it('each of the four intents has its own glyph clip-path, pairwise distinct', () => {
-    const clips = INTENTS.map(glyphClip)
-    for (const [i, clip] of clips.entries()) expect(clip, `${INTENTS[i]} has no glyph clip-path`).not.toBeNull()
-    expect(new Set(clips).size).toBe(INTENTS.length)
+  it('each of the four intents opts its ui-glyph mark in, and no clip-path shape remains (T-0351)', () => {
+    const optIn = /\[data-part='stat'\]:is\(([^)]*)\) \[data-part='glyph'\] \{[^}]*display:\s*inline-flex/.exec(stylesBlock)?.[1] ?? ''
+    for (const intent of INTENTS) expect(optIn, `${intent} glyph is never shown`).toContain(`[data-intent='${intent}']`)
+    expect(stylesBlock).not.toMatch(/clip-path/)
   })
 
   it('the glyph is hidden by default, so an unknown intent never paints a shapeless square', () => {
@@ -97,6 +91,7 @@ describe('game-hud.css: sizing, motion and forced colors', () => {
 
   it('forced colors paints the fill and the glyph in a system ink', () => {
     const whcm = stylesBlock.slice(stylesBlock.indexOf('@media (forced-colors: active)'))
-    expect(whcm).toMatch(/\[data-part='progress-fill'\],\s*\n?\s*:scope \[data-part='stat'\] \[data-part='glyph'\] \{[^}]*background-color:\s*CanvasText/)
+    expect(whcm).toMatch(/\[data-part='progress-fill'\] \{[^}]*background-color:\s*CanvasText/)
+    expect(whcm).toMatch(/\[data-part='stat'\] \[data-part='glyph'\] \{[^}]*color:\s*CanvasText/)
   })
 })

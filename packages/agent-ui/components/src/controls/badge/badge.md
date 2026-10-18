@@ -17,7 +17,8 @@ tier: display           # SPEC-R11 AC3 + LLD-C9: a non-interactive display leaf 
                         # display-tier membership list (site-coverage.test.ts) landing at LLD-C10.
 extends: UIElement      # a non-interactive, non-form-associated display LEAF (SPEC-R11) — no UIIndicatorElement
                         # base: no checked/value/disabled, no tabbable/pressActivation (chips are fenced, F3)
-uses: []
+uses:
+  - ui-glyph
 # marginal: NOT measured in this M1-a slice — ui-badge is not yet wired into the family barrel /
 # the CSS barrel / package.json exports (the LLD-C10 serial-integration wave, a shared-file slice
 # explicitly out of this folder-only build's fence). `npm run size` through the family barrel is owed at
@@ -46,12 +47,12 @@ properties: []          # no manual accessors beyond the two typed props
 events: []              # display-only — emits nothing (SPEC-R11: no events, no keyboard contract)
 
 slots: []               # no author-slotted content model — `label` is a PROP (plain text), not a slot;
-                         # the inherited render() no-op path is unused: connected() builds two
-                         # component-owned spans once (`replaceChildren`), never author-slotted children
+                         # the inherited render() no-op path is unused: connected() builds the label span
+                         # once (`replaceChildren`) and a ui-glyph mark for a non-neutral intent, never author-slotted children
 
 parts:
   - name: glyph
-    description: The `<span data-part="glyph" aria-hidden="true">` — a CONSTANT node whose clip-path shape differs per `[intent]` (pairwise-distinct; ADR-0057). Hidden entirely (`display:none`) for `intent="neutral"` — absence is neutral's own non-color signifier. Decorative only; never carries the announced message.
+    description: The `<ui-glyph data-part="glyph">` whose library mark follows `[intent]` (info `info`, success `check`, warning `warning`, danger `x`; the shared table in intent-mark.ts; pairwise-distinct, ADR-0057, ADR-0245 cl.5). Built on the first non-neutral intent and kept, so an intent change flips its symbol; absent for `intent="neutral"`, where absence is the non-color signifier. Decorative only: ui-glyph hides itself through ElementInternals (no host aria attribute), and it never carries the announced message.
   - name: label
     description: The `<span data-part="label">` — real text mirroring the `label` prop; the host's accessible name (no internals ARIA is minted — SPEC-R12 AC3).
 
@@ -67,7 +68,7 @@ aria:
   roleSource: none        # never internals, never a host role/aria-* attribute (FACE — FACE controls that
                           # need no ARIA mint none, rather than a placebo role)
   labelSource: the rendered label span's text content  # `label` prop → `[data-part=label]` textContent;
-                          # the glyph is aria-hidden and text-free (SPEC-R12 AC3) — colour/shape carry
+                          # the glyph is hidden (ui-glyph's own internals) and text-free (SPEC-R12 AC3); colour/shape carry
                           # visual-only redundancy, never assistive-tech meaning
 
 keyboard: []             # NOT interactive and NOT focusable — no tabindex, no keyboard contract (SPEC-R11)
@@ -81,7 +82,7 @@ geometry:
   radius: var(--ui-badge-radius)         # the chip pill n + c = h/2 of the 2n + 2c chip (--md-sys-chip-radius, ADR-0245 Amendment 5); box/2 under the legacy opt-out
   noSizeAttribute: true                   # v1 ships no [size] axis (SPEC-R13 AC3) — a foreseen extension only
 
-forcedColors: A `@media (forced-colors: active)` block maps the host to a `Canvas` fill / `CanvasText` ink+border (the boxed identity survives), and the glyph to a `CanvasText` background (a background-drawn clip-path glyph is otherwise flattened to `Canvas` and vanishes — the bar-chart fill lesson, SPEC-R15 AC1).
+forcedColors: A `@media (forced-colors: active)` block maps the host to a `Canvas` fill / `CanvasText` ink+border (the boxed identity survives); the ui-glyph mark strokes in `currentColor`, so it paints the host's `CanvasText` (SPEC-R15 AC1).
 ---
 
 # ui-badge
@@ -101,8 +102,8 @@ are a fenced separate component class; ADR-0111 fork F3).
 
 `intent` is **bindable status data** (`neutral` default, `info` / `success` / `warning` / `danger`) —
 unlike a structural `variant`, it is expected to change live as the status it reports changes. Every
-non-neutral intent renders a **pairwise-distinct**, component-drawn glyph (a CSS `clip-path` — tick /
-cross / triangle / disc) alongside its colour repoint, so hue is never the only channel carrying the
+non-neutral intent renders a **pairwise-distinct** library mark (a `ui-glyph`: `check` for success, `x` for
+danger, `warning` for warning, `info` for info) alongside its colour repoint, so hue is never the only channel carrying the
 status (ADR-0057). `neutral` renders no glyph at all — absence is its own signifier. An out-of-enum
 runtime value (e.g. a data-model bind resolving to something unexpected) is hardened back to `neutral`
 by the component itself; the shared catalog validator only checks literal membership at parse time, not a
@@ -110,10 +111,11 @@ bound value at runtime.
 
 ## Anatomy
 
-The host is an `inline-flex` pill: a constant `[data-part=glyph]` node (shape/visibility keyed on
-`[intent]`) followed by a `[data-part=label]` text node mirroring the `label` prop. Neither node is ever
-replaced — an intent change is a zero-DOM-churn attribute flip; a label change updates only the label
-span's text.
+The host is an `inline-flex` pill: a `[data-part=glyph]` `ui-glyph` (present for a non-neutral intent,
+its `symbol` following the intent) followed by a `[data-part=label]` text node mirroring the `label` prop.
+Neither node is ever replaced: the glyph is built on the first non-neutral intent and kept, so an intent
+change flips the host attribute and the glyph's symbol (a neutral intent detaches it); a label change
+updates only the label span's text.
 
 ## Geometry
 
@@ -127,11 +129,11 @@ still floors at `min-inline-size = box` — a filled dot/pill, never a collapsed
 ## Accessibility
 
 No `ElementInternals` ARIA is minted at all — the host is a generic element whose own text content (the
-label span) is its accessible name via the platform accname algorithm. The glyph is `aria-hidden` and
-carries no text; it is pure visual redundancy, never assistive-tech meaning.
+label span) is its accessible name via the platform accname algorithm. The glyph is a decorative
+`ui-glyph`, hidden through its own `ElementInternals` (no host `aria-hidden`), and carries no text; it is
+pure visual redundancy, never assistive-tech meaning.
 
 ## Forced colors
 
 Under `forced-colors: active` the host repaints to `Canvas` fill / `CanvasText` ink and border (the boxed
-identity survives), and the glyph repaints to `CanvasText` (a `currentColor`/background-drawn clip-path
-glyph would otherwise vanish under WHCM's flattening).
+identity survives), and the glyph's `currentColor` stroke follows the host to `CanvasText`.

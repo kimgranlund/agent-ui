@@ -117,7 +117,9 @@
       "tag": "ui-badge",
       "tier": "display",
       "description": "A non-interactive status tag with an intent-keyed color and a matching non-color glyph.",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": [
         "agent-ui"
       ]
@@ -184,6 +186,7 @@
       "tier": "pattern",
       "description": "A wayfinding trail of ordered crumb links ending in the current page — tag-agnostic author children, an optional slotted separator template, an auto-stamped current-page leaf, and an optional `collapse=\"menu\"` fold of the middle behind a composed overflow menu.",
       "uses": [
+        "ui-glyph",
         "ui-menu"
       ],
       "catalogs": [
@@ -654,7 +657,8 @@
       "tier": "pattern",
       "description": "A game score and status strip with a title, a status badge, an optional progress bar and up to six stat tiles with signed deltas.",
       "uses": [
-        "ui-badge"
+        "ui-badge",
+        "ui-glyph"
       ],
       "catalogs": [
         "agent-ui"
@@ -1156,7 +1160,9 @@
       "tag": "ui-result-card",
       "tier": "pattern",
       "description": "A settled outcome card for a game end or a finished booking, with an outcome pill, a title, a summary, up to four stat tiles and the producer's own action buttons.",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": [
         "agent-ui"
       ]
@@ -1686,6 +1692,7 @@
       "tier": "pattern",
       "description": "A tab strip and panel container that switches visible content via keyboard-navigable, roving-focus tabs.",
       "uses": [
+        "ui-glyph",
         "ui-menu"
       ],
       "catalogs": [
@@ -1733,6 +1740,7 @@
       "uses": [
         "ui-calendar",
         "ui-color-picker",
+        "ui-glyph",
         "ui-swatch"
       ],
       "catalogs": [

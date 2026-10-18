@@ -106,9 +106,12 @@ describe('UIGameHudElement: anatomy', () => {
     })
     const [a, b, c] = all(el, '[data-part="stat"]')
     expect(a!.dataset.intent).toBe('success')
-    const glyph = a!.firstElementChild as HTMLElement
+    const glyph = a!.firstElementChild as HTMLElement & { symbol: string; label: string }
     expect(glyph.dataset.part).toBe('glyph')
-    expect(glyph.getAttribute('aria-hidden')).toBe('true')
+    expect(glyph.localName, 'the stat mark is a ui-glyph (T-0351)').toBe('ui-glyph')
+    expect(glyph.symbol, 'the shared intent table: success is check').toBe('check')
+    expect(glyph.label, 'decorative: ui-glyph hides itself through ElementInternals').toBe('')
+    expect(glyph.hasAttribute('aria-hidden'), 'no ARIA host attribute').toBe(false)
     for (const s of [b!, c!]) {
       expect(s.hasAttribute('data-intent')).toBe(false)
       expect(q(s, '[data-part="glyph"]')).toBeNull()

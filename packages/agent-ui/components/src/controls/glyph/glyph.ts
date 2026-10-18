@@ -13,7 +13,7 @@
 //     aria-label). ARIA via ElementInternals only, never a host attribute.
 
 import { UIElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-import { GLYPH_MARKS, GLYPH_VIEWBOX, isGlyphSymbol } from './glyph-paths.ts'
+import { GLYPH_MARKS, GLYPH_VIEWBOX, isGlyphSymbol, type GlyphSymbol } from './glyph-paths.ts'
 
 export { GLYPH_MARKS, GLYPH_SYMBOLS, isGlyphSymbol, type GlyphSymbol } from './glyph-paths.ts'
 
@@ -43,6 +43,14 @@ export function renderGlyph(symbol: string): SVGSVGElement {
   path.setAttribute('vector-effect', 'non-scaling-stroke')
   svg.append(path)
   return svg
+}
+
+/** A decorative `<ui-glyph>` drawing `symbol`: no label, so it hides itself through ElementInternals and the
+ *  control around it carries the name. The symbol is set before the element connects, so it draws on connect. */
+export function createGlyph(symbol: GlyphSymbol): UIGlyphElement {
+  const glyph = document.createElement('ui-glyph') as UIGlyphElement
+  glyph.setAttribute('symbol', symbol)
+  return glyph
 }
 
 export interface UIGlyphElement extends ReactiveProps<typeof props> {}
