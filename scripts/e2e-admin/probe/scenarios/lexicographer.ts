@@ -7,14 +7,14 @@
 //
 // Every move is a `--say`: a guess typed into the model's TextField has no fixed label to click.
 
-import type { ProbeStep } from '../model.ts'
+import { say } from '../model.ts'
 import type { RoundScenario } from './round.ts'
 
-const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? { say: text, expect } : { say: text })
 
 export const LEXICOGRAPHER_SCENARIOS: readonly RoundScenario[] = [
   {
     name: 'six-guesses',
+    tags: ['regression'],
     steps: [
       say("Let's play the word game.", 'BoardGrid'),
       say('My guess: crane.', 'BoardGrid'),
@@ -27,6 +27,7 @@ export const LEXICOGRAPHER_SCENARIOS: readonly RoundScenario[] = [
   },
   {
     name: 'give-up',
+    tags: ['regression'],
     steps: [
       say('Start a new word game.', 'BoardGrid'),
       say('My guess: audio.', 'BoardGrid'),
@@ -37,6 +38,7 @@ export const LEXICOGRAPHER_SCENARIOS: readonly RoundScenario[] = [
   },
   {
     name: 'invalid-then-replay',
+    tags: ['regression'],
     steps: [
       say('New word game, please.', 'BoardGrid'),
       say('My guess: cat.'),
@@ -48,6 +50,15 @@ export const LEXICOGRAPHER_SCENARIOS: readonly RoundScenario[] = [
     expectComponents: ['BoardGrid', 'GameHud', 'ResultCard'],
   },
 ]
+
+/** T-0343: the smoke case, the game start and one guess, each on the board; kept apart from the round scenarios, whose
+ *  finished rounds' `live-commands.sh` files are pinned. */
+export const LEXICOGRAPHER_SMOKE: RoundScenario = {
+  name: 'first-guess',
+  tags: ['smoke'],
+  steps: [say("Let's play the word game.", 'BoardGrid'), say('My guess: crane.', 'BoardGrid')],
+  expectComponents: ['BoardGrid', 'GameHud'],
+}
 
 export const LEXICOGRAPHER_MODELS: ReadonlyArray<{ id: string; short: string }> = [
   { id: 'claude-haiku-5-5', short: 'haiku' },

@@ -55,6 +55,16 @@ export function stepArgv(s: ProbeStep): string[] {
   ]
 }
 
+/** The scenario modules' step builders (T-0343): a `--say` or `--click` whose `expect` types become its `--expect-turn`
+ *  (any-of), and the routed forms that also carry an `--expect-routing` oracle (T-0260). */
+export const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? { say: text, expect } : { say: text })
+export const click = (label: string, ...expect: string[]): ProbeStep => (expect.length ? { click: label, expect } : { click: label })
+export const sayRouted = (text: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({ ...say(text, ...expect), ...(routing !== undefined ? { expectRouting: routing } : {}) })
+export const clickRouted = (label: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({ ...click(label, ...expect), ...(routing !== undefined ? { expectRouting: routing } : {}) })
+
+/** One argument as a shell word of a generated `live-commands.sh`: bare when safe, else double-quoted. */
+export const quote = (arg: string): string => (/^[A-Za-z0-9_./:-]+$/.test(arg) ? arg : `"${arg.replace(/(["\\$`])/g, '\\$1')}"`)
+
 /** One provider call as the trace log records it: the raw text and the tool calls (`render_surface`
  *  carries the payload on a capture round). */
 export interface ProbeRound {

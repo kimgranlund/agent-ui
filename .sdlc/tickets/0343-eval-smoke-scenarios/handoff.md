@@ -30,6 +30,14 @@ See the re-scope below.
   - The smoke round is archived under $5.
   - 15 smoke replays are committed.
 
+## Acceptance criteria
+- `npm run check` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/scenarios/ scripts/e2e-admin/probe/replays/` exits 0 (plan pin, tags, catalog-held smoke expects, round 9 replanned from tags, `--affected`, and 15 smoke replays, 4 of them pinned red).
+- `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/plan.ts --tag smoke --model haiku --samples 1` prints 15 probe command lines, one per roster preset, and `node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe <that output>` exits 0.
+- `.sdlc/evals/rounds/2026-10-18-smoke/ledger.jsonl` holds 15 rows whose `costUsd` sums under 5 (`plan.test.mjs` asserts it).
+- `ls scripts/e2e-admin/probe/replays/smoke-*.test.mjs | wc -l` prints 15, each beside its fixture.
+- SPEC `.claude/docs/spec/agent-closed-loop.spec.md` CL-R1, CL-R5, CL-R6, CL-R7, CL-R9 and CL-R10 match the tree, and `scripts/e2e-admin/README.md` Live rounds names `plan.ts`.
+
 ## Context
 Re-scope of T-0176 to T-0179 (Kim 2026-10-17), architect record .sdlc/runtime/tasks/0176-eval-scenarios-store/architect-L1.md.
 

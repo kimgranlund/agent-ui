@@ -20,11 +20,13 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0343 | [0343-eval-smoke-scenarios](0343-eval-smoke-scenarios/handoff.md) | Smoke scenarios for every preset, planned from tags, replayed in CI | feature | L3 | P2 | none | 🔵 ready |
 | T-0345 | [0345-r10-poker-opens-with-cards](0345-r10-poker-opens-with-cards/handoff.md) | Haiku poker and blackjack openings deal on the first turn instead of asking for a stake (round 10 cluster B) | bug | L2 | P1 | none | 🔵 ready |
 | T-0349 | [0349-signals-gaps-r10](0349-signals-gaps-r10/handoff.md) | eval:signals follow-ups from round 10: like-sample churn, halt and failureCode tallies, retrieval table | chore | L2 | P3 | none | 🔵 ready |
-| T-0350 | [0350-r10-settled-table-no-way-forward](0350-r10-settled-table-no-way-forward/handoff.md) | A settled card table ships with no way forward (no Deal again), and no check names it | bug | L1 | P2 | none | ⏳ proposed |
+| T-0350 | [0350-r10-settled-table-no-way-forward](0350-r10-settled-table-no-way-forward/handoff.md) | A settled card table ships with no way forward (no Deal again), and no check names it | bug | L1 | P2 | none | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 | T-0354 | [0354-override-explicit-format](0354-override-explicit-format/handoff.md) | Explicit format asks ('as a card', 'as a table', 'build me a form') force a surface even where the catalog owns the noun | bug | L1 | P2 | none | 🔵 ready |
 | T-0355 | [0355-seed-version-digests](0355-seed-version-digests/handoff.md) | Per-version seed field digests so a migration tells an untouched old seed value from a user edit | feature | L2 | P2 | none | 🔵 ready |
 | T-0356 | [0356-create-glyph-rest](0356-create-glyph-rest/handoff.md) | The other seven controls build their glyphs through createGlyph, with no host aria-hidden | chore | L2 | P2 | none | 🔵 ready |
 | T-0357 | [0357-poker-stake-ask-check](0357-poker-stake-ask-check/handoff.md) | A poker opening that asks for the stake instead of dealing gets a deterministic check and repair | bug | L2 | P2 | none | 🔵 ready |
+| T-0358 | [0358-gamehud-moment-board-only](0358-gamehud-moment-board-only/handoff.md) | GameHud composite moment fires only beside a BoardGrid, so board-less game personas hand-build their score panels | bug | L2 | P2 | none | 🔵 ready |
+| T-0359 | [0359-stylist-palette-prose](0359-stylist-palette-prose/handoff.md) | The Stylist answers a palette ask in prose with no token surface | bug | L2 | P2 | none | 🔵 ready |
 
 Closed: 331 done, 4 dropped (git log or .NNNN-* folders)

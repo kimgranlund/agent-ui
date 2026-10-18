@@ -17,8 +17,7 @@
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round3.ts` to print the script;
 // `round3.test.mjs` pins the file to this generator.
 
-import { stepArgv, type ProbeStep, type RoutingExpect } from '../model.ts'
-import { quote } from './croupier.ts'
+import { click, quote, sayRouted as say, stepArgv, type ProbeStep, type RoutingExpect } from '../model.ts'
 import { ROUND_PRESETS, type RoundModel, type RoundScenario } from './round.ts'
 import { routingRuns } from './routing.ts'
 
@@ -94,9 +93,6 @@ export function regressionScenario(r: Regression): RoundScenario {
   }
 }
 
-const say = (text: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({ say: text, ...(expect.length ? { expect } : {}), ...(routing !== undefined ? { expectRouting: routing } : {}) })
-const click = (label: string, ...expect: string[]): ProbeStep => ({ click: label, ...(expect.length ? { expect } : {}) })
-
 /** C: the long flows, each on every model. */
 export const LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario }> = [
   {
@@ -105,6 +101,7 @@ export const LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario 
     // The bet after Deal again is a click, so a new round dealt without the bet strip fails click-target (T-0232).
     scenario: {
       name: 'blackjack-hand',
+      tags: ['long'],
       steps: [
         say("Let's play blackjack.", { domains: ['croupier'], exemplars: { include: [CARD_TABLE], exclude: [WORD_BOARD, BATTLESHIP_BOARD] } }, 'CardTable'),
         click('100', 'CardTable'),
@@ -121,6 +118,7 @@ export const LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario 
     agent: 'concierge',
     scenario: {
       name: 'booking',
+      tags: ['long'],
       steps: [
         say('What spa services can I book during my stay?', undefined, 'ProductCard'),
         say('Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', { domains: ['concierge'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),

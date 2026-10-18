@@ -18,8 +18,7 @@
 // `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/routing.ts` to print `routing-pack.sh`;
 // `routing.test.mjs` pins the file to this generator.
 
-import { stepArgv, type ProbeStep, type RoutingExpect } from '../model.ts'
-import { quote } from './croupier.ts'
+import { clickRouted as click, quote, sayRouted as say, stepArgv, type RoutingExpect } from '../model.ts'
 import type { RoundModel, RoundScenario } from './round.ts'
 
 export interface RoutingScenario extends RoundScenario {
@@ -27,16 +26,6 @@ export interface RoutingScenario extends RoundScenario {
   agent: string
 }
 
-const say = (text: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({
-  say: text,
-  ...(expect.length ? { expect } : {}),
-  ...(routing !== undefined ? { expectRouting: routing } : {}),
-})
-const click = (label: string, routing?: RoutingExpect, ...expect: string[]): ProbeStep => ({
-  click: label,
-  ...(expect.length ? { expect } : {}),
-  ...(routing !== undefined ? { expectRouting: routing } : {}),
-})
 
 const CARD_TABLE = 'domain-croupier-card-table-round'
 const BOOKING = ['domain-concierge-booking-request', 'booking-reservation']
@@ -54,6 +43,7 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
   {
     agent: 'croupier',
     name: 'domain-switch',
+    tags: ['routing'],
     steps: [
       say("Let's play blackjack.", croupier({ exemplars: { include: [CARD_TABLE], exclude: BOOKING }, sections: CORE_SECTIONS }), 'CardTable'),
       click('100', croupier({ exemplars: { exclude: BOOKING } }), 'CardTable'),
@@ -65,6 +55,7 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
   {
     agent: 'concierge',
     name: 'decoy-words',
+    tags: ['routing'],
     steps: [
       say('Can I still board the 5pm cruise today?', concierge({ exemplars: { exclude: GAME_BOARDS } })),
       say('Any deals on suites this weekend?', concierge({ exemplars: { exclude: GAME_BOARDS } })),
@@ -76,6 +67,7 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
   {
     agent: 'concierge',
     name: 'long-session',
+    tags: ['routing'],
     steps: [
       say('Hello, I just checked in.', concierge({ sections: CORE_SECTIONS })),
       say('What spa services can I book during my stay?', concierge({ exemplars: { exclude: GAME_BOARDS } }), 'ProductCard'),
@@ -99,6 +91,7 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
   {
     agent: 'concierge',
     name: 'doc-only',
+    tags: ['routing'],
     steps: [
       say("What's the late checkout fee?", HOUSE_FACTS),
       say('And how late can I keep the room?', HOUSE_FACTS),
@@ -108,6 +101,7 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
   {
     agent: 'croupier',
     name: 'guidance-conflict',
+    tags: ['routing'],
     steps: [
       say("Let's play blackjack.", croupier({ exemplars: { include: [CARD_TABLE] } }), 'CardTable'),
       click('100', croupier(), 'CardTable'),
@@ -119,6 +113,7 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
   {
     agent: 'concierge',
     name: 'two-surfaces',
+    tags: ['routing'],
     steps: [
       say('What spa services can I book during my stay?', concierge(), 'ProductCard'),
       say("I'd like a table at Vela on Friday 20 November 2026 at 20:00 for two, name Alex Moreau.", concierge({ exemplars: { include: ['domain-concierge-booking-request'] } }), 'BookingForm'),

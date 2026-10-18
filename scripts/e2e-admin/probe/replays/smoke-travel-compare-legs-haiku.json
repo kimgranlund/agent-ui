@@ -1,0 +1,214 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-travel-compare-legs-haiku",
+  "agent": "travel",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-18.jsonl:7 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "Compare the train and a flight from London to Paris on Friday 20 November 2026.",
+      "expect": [
+        "ProductCard"
+      ]
+    }
+  ],
+  "expect": {
+    "components": [
+      "ProductCard"
+    ]
+  },
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Here's how the Eurostar and a flight compare for Friday 20 November 2026. All times and fares are illustrative demo values, not live schedules.\\n\\nThe train is the quicker trip city centre to city centre, with no airport check-in. The flight is shorter in the air but usually takes longer door to door.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's how the Eurostar and a flight compare for Friday 20 November 2026. All times and fares are illustrative demo values, not live schedules.\\n\\nThe train is the quicker trip city centre to city centre, with no airport check-in. The flight is shorter in the air but usually takes longer door to door.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare the train and a flight from London to Paris on Friday 20 November 2026.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":46712,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1432}],\"over\":false},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"trip-compare-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"trip-compare-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"options\",\"compare\"]},{\"id\":\"options\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"train_card\",\"flight_card\"]},{\"id\":\"train_card\",\"component\":\"ProductCard\",\"title\":\"Eurostar\",\"subtitle\":\"London St Pancras to Paris Gare du Nord, direct\",\"price\":\"£69\",\"priceNote\":\"Illustrative one-way fare\",\"badge\":\"City centre to centre\",\"badgeIntent\":\"success\",\"actionLabel\":\"Choose train\",\"action\":{\"action\":\"choose_leg\",\"context\":{\"leg\":\"train\",\"date\":\"2026-11-20\"}}},{\"id\":\"flight_card\",\"component\":\"ProductCard\",\"title\":\"Flight\",\"subtitle\":\"London airport to Paris airport\",\"price\":\"£95\",\"priceNote\":\"Illustrative one-way fare\",\"badge\":\"Shortest in the air\",\"badgeIntent\":\"info\",\"actionLabel\":\"Choose flight\",\"action\":{\"action\":\"choose_leg\",\"context\":{\"leg\":\"flight\",\"date\":\"2026-11-20\"}}},{\"id\":\"compare\",\"component\":\"Table\",\"label\":\"Train vs flight, Friday 20 November 2026\",\"columns\":[{\"key\":\"factor\",\"label\":\"Factor\"},{\"key\":\"train\",\"label\":\"Train\"},{\"key\":\"flight\",\"label\":\"Flight\"}],\"rows\":[{\"factor\":\"Journey time\",\"train\":\"About 2h 16m\",\"flight\":\"About 1h 15m in the air\"},{\"factor\":\"Approx. door to door\",\"train\":\"About 2h 45m\",\"flight\":\"About 4h\"},{\"factor\":\"Illustrative fare\",\"train\":\"£69\",\"flight\":\"£95\"},{\"factor\":\"Check-in\",\"train\":\"Light, about 30 min before departure\",\"flight\":\"Earlier, security and boarding\"},{\"factor\":\"Baggage\",\"train\":\"Generous, no check-in bag fee\",\"flight\":\"Bag fees usually apply\"},{\"factor\":\"Comfort\",\"train\":\"Spacious seats, able to move around\",\"flight\":\"Compact cabin, shorter ground time\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here's how the Eurostar and a flight compare for Friday 20 November 2026. All times and fares are illustrative demo values, not live schedules.\n\nThe train is the quicker trip city centre to city centre, with no airport check-in. The flight is shorter in the air but usually takes longer door to door.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's the side-by-side for Friday 20 November 2026. Pick one to build your itinerary.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "trip-compare-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "trip-compare-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "options",
+                            "compare"
+                          ]
+                        },
+                        {
+                          "id": "options",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "train_card",
+                            "flight_card"
+                          ]
+                        },
+                        {
+                          "id": "train_card",
+                          "component": "ProductCard",
+                          "title": "Eurostar",
+                          "subtitle": "London St Pancras to Paris Gare du Nord, direct",
+                          "price": "£69",
+                          "priceNote": "Illustrative one-way fare",
+                          "badge": "City centre to centre",
+                          "badgeIntent": "success",
+                          "actionLabel": "Choose train",
+                          "action": {
+                            "action": "choose_leg",
+                            "context": {
+                              "leg": "train",
+                              "date": "2026-11-20"
+                            }
+                          }
+                        },
+                        {
+                          "id": "flight_card",
+                          "component": "ProductCard",
+                          "title": "Flight",
+                          "subtitle": "London airport to Paris airport",
+                          "price": "£95",
+                          "priceNote": "Illustrative one-way fare",
+                          "badge": "Shortest in the air",
+                          "badgeIntent": "info",
+                          "actionLabel": "Choose flight",
+                          "action": {
+                            "action": "choose_leg",
+                            "context": {
+                              "leg": "flight",
+                              "date": "2026-11-20"
+                            }
+                          }
+                        },
+                        {
+                          "id": "compare",
+                          "component": "Table",
+                          "label": "Train vs flight, Friday 20 November 2026",
+                          "columns": [
+                            {
+                              "key": "factor",
+                              "label": "Factor"
+                            },
+                            {
+                              "key": "train",
+                              "label": "Train"
+                            },
+                            {
+                              "key": "flight",
+                              "label": "Flight"
+                            }
+                          ],
+                          "rows": [
+                            {
+                              "factor": "Journey time",
+                              "train": "About 2h 16m",
+                              "flight": "About 1h 15m in the air"
+                            },
+                            {
+                              "factor": "Approx. door to door",
+                              "train": "About 2h 45m",
+                              "flight": "About 4h"
+                            },
+                            {
+                              "factor": "Illustrative fare",
+                              "train": "£69",
+                              "flight": "£95"
+                            },
+                            {
+                              "factor": "Check-in",
+                              "train": "Light, about 30 min before departure",
+                              "flight": "Earlier, security and boarding"
+                            },
+                            {
+                              "factor": "Baggage",
+                              "train": "Generous, no check-in bag fee",
+                              "flight": "Bag fees usually apply"
+                            },
+                            {
+                              "factor": "Comfort",
+                              "train": "Spacious seats, able to move around",
+                              "flight": "Compact cabin, shorter ground time"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Compare the train and a flight from London to Paris on Friday 20 November 2026."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-result-card-win",
+          "crud-entry-list-drawer",
+          "frontier-review-split"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-plan",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-planning-notes",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

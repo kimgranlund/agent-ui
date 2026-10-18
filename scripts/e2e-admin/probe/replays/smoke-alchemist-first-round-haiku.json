@@ -1,0 +1,355 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-alchemist-first-round-haiku",
+  "agent": "alchemist",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-18.jsonl:26 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "Let's have a color duel.",
+      "expect": [
+        "Swatch"
+      ]
+    }
+  ],
+  "expect": {
+    "components": [
+      "Swatch",
+      "GameHud"
+    ]
+  },
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Round one is set. Here is my target, a deep violet, cool and slightly luminous. Mix your own in the picker and submit it, and I'll tell you how near you came.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### color-duel (skill)\\ncolor guessing, oklch, swatch match, palette game\\n\\nA color round shows the target as a Swatch, takes the guess through a ColorPicker (oklch), and scores in coarse closeness BANDS (perfect / close / warm / cold — never numeric distance math). Show the reveal as a Ramp between target and guess; the running score and the rounds ride ONE GameHud (a score stat, progress = rounds played). End state: after the last round show ONE ResultCard (outcome win, lose or draw, a title, a one-line summary, the final score in its stats) whose child is a Play again Button with newGame true in its action context.\\n\\nLet's have a color duel.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"FEED_SCOPE\",\"FEED_SCOPE\",\"FEED_SCOPE\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":47049,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1769}],\"over\":false},\"miniSkillIds\":[\"game-hud\",\"variant-picker\",\"card-game-sheet\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"target\":\"oklch(0.55 0.18 300)\",\"guess\":\"oklch(0.7 0.1 250)\",\"score\":0,\"round\":1,\"rounds\":3}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hdr\",\"body\",\"foot\"]},{\"id\":\"hdr\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Pigment duel\",\"variant\":\"h4\"},{\"id\":\"body\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"target\",\"guess_field\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Color duel\",\"status\":\"Round 1 of 3\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Score\",\"value\":0},{\"label\":\"Rounds\",\"value\":\"0 of 3\"}],\"progress\":{\"value\":0,\"max\":3,\"label\":\"Rounds played\"}},{\"id\":\"target\",\"component\":\"Swatch\",\"label\":\"Target\",\"value\":{\"path\":\"/target\"}},{\"id\":\"guess_field\",\"component\":\"Field\",\"label\":\"Your mix\",\"child\":\"picker\"},{\"id\":\"picker\",\"component\":\"ColorPicker\",\"name\":\"guess\",\"format\":\"oklch\",\"value\":{\"path\":\"/guess\"}},{\"id\":\"foot\",\"component\":\"CardFooter\",\"children\":[\"submit\"]},{\"id\":\"submit\",\"component\":\"Button\",\"label\":\"Submit my mix\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_guess\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Round one, challenger. I have conjured a target hue: a deep violet, cool and slightly luminous. Mix your own color in the picker below, then submit it. I will judge how near you came in four bands: perfect, close, warm, or cold.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round one, challenger. I have conjured a target hue: a deep violet, cool and slightly luminous. Mix your own color in the picker below, then submit it. I will judge how near you came in four bands: perfect, close, warm, or cold.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "target": "oklch(0.55 0.18 300)",
+                        "guess": "oklch(0.7 0.1 250)",
+                        "score": 0,
+                        "round": 1,
+                        "rounds": 3
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hdr",
+                            "body",
+                            "foot"
+                          ]
+                        },
+                        {
+                          "id": "hdr",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Pigment duel",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "body",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "target",
+                            "guess_field"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Color duel",
+                          "status": "Round 1 of 3",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": 0
+                            },
+                            {
+                              "label": "Rounds",
+                              "value": "0 of 3"
+                            }
+                          ],
+                          "progress": {
+                            "value": 0,
+                            "max": 3,
+                            "label": "Rounds played"
+                          }
+                        },
+                        {
+                          "id": "target",
+                          "component": "Swatch",
+                          "label": "Target",
+                          "value": {
+                            "path": "/target"
+                          }
+                        },
+                        {
+                          "id": "guess_field",
+                          "component": "Field",
+                          "label": "Your mix",
+                          "child": "picker"
+                        },
+                        {
+                          "id": "picker",
+                          "component": "ColorPicker",
+                          "name": "guess",
+                          "format": "oklch",
+                          "value": {
+                            "path": "/guess"
+                          }
+                        },
+                        {
+                          "id": "foot",
+                          "component": "CardFooter",
+                          "children": [
+                            "submit"
+                          ]
+                        },
+                        {
+                          "id": "submit",
+                          "component": "Button",
+                          "label": "Submit my mix",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_guess"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Round one is set. Here is my target, a deep violet, cool and slightly luminous. Mix your own in the picker and submit it, and I'll tell you how near you came.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round one is set. Here is my target, a deep violet, cool and slightly luminous. Mix your own in the picker and submit it, and I'll tell you how near you came.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "target": "oklch(0.55 0.18 300)",
+                        "guess": "oklch(0.7 0.1 250)",
+                        "score": 0,
+                        "round": 1,
+                        "rounds": 3
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hdr",
+                            "body",
+                            "foot"
+                          ]
+                        },
+                        {
+                          "id": "hdr",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Pigment duel",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "body",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "target",
+                            "guess_field"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Color duel",
+                          "status": "Round 1 of 3",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": 0
+                            },
+                            {
+                              "label": "Rounds",
+                              "value": "0 of 3"
+                            }
+                          ],
+                          "progress": {
+                            "value": 0,
+                            "max": 3,
+                            "label": "Rounds played"
+                          }
+                        },
+                        {
+                          "id": "target",
+                          "component": "Swatch",
+                          "label": "Target",
+                          "value": {
+                            "path": "/target"
+                          }
+                        },
+                        {
+                          "id": "guess_field",
+                          "component": "Field",
+                          "label": "Your mix",
+                          "child": "picker"
+                        },
+                        {
+                          "id": "picker",
+                          "component": "ColorPicker",
+                          "name": "guess",
+                          "format": "oklch",
+                          "value": {
+                            "path": "/guess"
+                          }
+                        },
+                        {
+                          "id": "foot",
+                          "component": "CardFooter",
+                          "children": [
+                            "submit"
+                          ]
+                        },
+                        {
+                          "id": "submit",
+                          "component": "Button",
+                          "label": "Submit my mix",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_guess"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### color-duel (skill)\ncolor guessing, oklch, swatch match, palette game\n\nA color round shows the target as a Swatch, takes the guess through a ColorPicker (oklch), and scores in coarse closeness BANDS (perfect / close / warm / cold — never numeric distance math). Show the reveal as a Ramp between target and guess; the running score and the rounds ride ONE GameHud (a score stat, progress = rounds played). End state: after the last round show ONE ResultCard (outcome win, lose or draw, a title, a one-line summary, the final score in its stats) whose child is a Play again Button with newGame true in its action context.\n\nLet's have a color duel."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "trivia-round-resume",
+          "color-picker-form",
+          "frontier-image-hero-card"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "color-duel",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "color-duel",
+            "load": "full"
+          }
+        ]
+      }
+    }
+  ]
+}

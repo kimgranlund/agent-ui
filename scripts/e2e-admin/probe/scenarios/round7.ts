@@ -11,7 +11,7 @@
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round7.ts` to print the script;
 // `round7.test.mjs` pins the file to this generator.
 
-import { quote } from './croupier.ts'
+import { quote } from '../model.ts'
 import type { RoundModel } from './round.ts'
 import { round6Runs } from './round6.ts'
 

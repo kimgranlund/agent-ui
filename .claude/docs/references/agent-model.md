@@ -167,11 +167,11 @@ header pointing here.
   `scripts/e2e-admin/probe/model.ts`, T-0174). A live probe writes one; `--from-trace` builds one from
   `.agent-traces/`. Not an admin flow's scenario fixture (scripted lines per endpoint, no rounds) and not
   a kit scenario. Contract: [spec/agent-closed-loop.spec.md](../spec/agent-closed-loop.spec.md) CL-R3.
-- **eval scenario**: one agent use case as data (`agent-ui-eval-scenario`, persona, models, efforts,
-  tags, steps, per-turn checks, optional `expectedFail: T-NNNN`), played live or replayed by the eval
-  runner (T-0176, planned; CL-R1). It tests an agent; a kit scenario tests the A2UI layer and an admin
-  flow tests the agent-admin app. Both eval and kit files end `*.scenario.json`; the `kind` tells them
-  apart.
+- **eval scenario**: one agent use case as TypeScript data (`RoundScenario`: name, tags, steps with
+  per-turn expected types, run-level expected components), filed under its preset in
+  `scripts/e2e-admin/probe/scenarios/<preset>.ts` and played live in a round that `plan.ts` plans from
+  tags, or replayed from a recorded run (CL-R1, T-0343). It tests an agent; a kit scenario
+  (`*.scenario.json`) tests the A2UI layer and an admin flow tests the agent-admin app.
 - **check**: one named verdict over one probe or eval turn (`model-pick`, `click-target`, `no-halt`,
   `no-json-as-prose`, `no-internal-leak`, `reply-text`, `no-surface-loss`, `action-updates-surface`,
   `expect-component`, `render-lint`, `reasoning`; `CHECK_NAMES` in `probe/model.ts`), status `pass`, `fail`, `warn` or `skip` (CL-R2). Not a **semantic check** (a

@@ -10,7 +10,7 @@
 // several as one. A stray argument, an unknown flag or an unknown floor tag exits 2.
 // `--against <folder>` prints the churn of every cell against that round, the baseline (CL-R9), and the trace tallies
 // beside the baseline's in the same cells, sample 1 against sample 1 and all against all. Gates are opt-in:
-// `--floor <tag>=<rate>` (tag regression, routing, long, other or all) and `--max-drop <delta>` exit 1 on a cell
+// `--floor <tag>=<rate>` (tag smoke, regression, routing, long, other or all) and `--max-drop <delta>` exit 1 on a cell
 // under its floor or one whose pass rate fell by more than the delta, reading per cell as `floorMet` does in
 // `tools/corpus-genui/legs/report.ts`: a missing report counts as a fail, a baseline cell with zero samples now
 // fails its floor and counts as a drop to 0, and a cell with fewer than `--min-samples` (default 3) samples on a side
@@ -177,8 +177,10 @@ function modelOrder(models: Iterable<string>): string[] {
   return [...FAMILY_ORDER.filter((m) => set.has(m)), ...[...set].filter((m) => !FAMILY_ORDER.includes(m)).sort()]
 }
 
-/** The floor tag of a scenario, read from its name prefix until scenarios carry tags (CL-R9). */
+/** The floor tag of a scenario, read from its name prefix: a run name starts with its scenario's first tag's prefix
+ *  (`plan.ts`, T-0343), and the archive keeps names, not tags (CL-R9). */
 export function tagOf(scenario: string): string {
+  if (scenario.startsWith('smoke-')) return 'smoke'
   if (scenario.startsWith('regress-')) return 'regression'
   if (scenario.startsWith('routing-')) return 'routing'
   if (scenario.startsWith('long-')) return 'long'
@@ -704,7 +706,7 @@ export function writeSignals(roundDir: string): string {
 }
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..')
-export const FLOOR_TAGS = ['regression', 'routing', 'long', 'other', 'all'] as const
+export const FLOOR_TAGS = ['smoke', 'regression', 'routing', 'long', 'other', 'all'] as const
 const VALUE_FLAGS = ['--round', '--against', '--floor', '--max-drop', '--min-samples', '--rounds-dir']
 const BARE_FLAGS = ['--all', '--json']
 const USAGE = 'usage: npm run eval:signals -- (--round <folder> [--round <folder>]... | --all) [--against <folder>] [--floor <tag>=<rate>]... [--max-drop <delta>] [--min-samples <n>] [--rounds-dir <dir>] [--json]\n'

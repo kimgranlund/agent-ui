@@ -1,0 +1,369 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "smoke-quant-kpi-dashboard-haiku-1",
+  "mode": "live",
+  "agent": "quant",
+  "model": "claude-haiku-5-5",
+  "runId": "smoke-quant-kpi-dashboard-haiku-1-77b05fe8",
+  "at": "2026-10-18T01:35:47.707Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Given this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a Quant persona, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m th\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inking a minimal d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ashboard with three st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"at tiles and a short anal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ytical paragraph mak\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ense, without f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abricating any trend or prog\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ress data that wasn't given\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure the rev\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enue,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" custom\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ers, and churn fig\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ures with their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" deltas and captions no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting \\\"vs prior quar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ter,\\\" then wrap everything\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in a Card with a header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Grid of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Stats beneath it,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the surface simple\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a quarter-dashbo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard id.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Here's last\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" quarter on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dashboard.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Revenue rose 8\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"% to $1.2M and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" active users r\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ose 3% to 48,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"000. Churn fell \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"0.4 points to 2\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".1%,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ret\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ention impro\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ved al\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ongside growth. I didn\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'t have a target\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" or a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" qu\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"arterly trend series\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", so the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ashboard doesn't show\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" progress to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ward a go\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"al or a trend line\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"quarter-dashboard\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"quarter-dashboard\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"header\\\",\\\"body\\\"]},{\\\"id\\\":\\\"header\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Last quarter at a glance\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"body\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"grid\\\"]},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"Grid\\\",\\\"gap\\\":\\\"md\\\",\\\"min\\\":\\\"12rem\\\",\\\"children\\\":[\\\"revenue\\\",\\\"users\\\",\\\"churn\\\"]},{\\\"id\\\":\\\"revenue\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Revenue\\\",\\\"value\\\":\\\"$1.2M\\\",\\\"delta\\\":8,\\\"caption\\\":\\\"vs prior quarter\\\"},{\\\"id\\\":\\\"users\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Active users\\\",\\\"value\\\":\\\"48,000\\\",\\\"delta\\\":3,\\\"caption\\\":\\\"vs prior quarter\\\"},{\\\"id\\\":\\\"churn\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Churn\\\",\\\"value\\\":\\\"2.1%\\\",\\\"delta\\\":-0.4,\\\"caption\\\":\\\"points vs prior quarter\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's last quarter on one dashboard. Revenue rose 8% to $1.2M and active users rose 3% to 48,000. Churn fell 0.4 points to 2.1%, so retention improved alongside growth. I didn't have a target or a quarterly trend series, so the dashboard doesn't show progress toward a goal or a trend line.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Last quarter: revenue $1.2M, up 8%; active users 48,000, up 3%; churn 2.1%, down 0.4 points. Put it on a dashboard.\",\"k\":3},\"exemplarIds\":[\"pattern-dashboard-tiles\",\"kpi-panel-lifecycle\",\"report-card-dashboard\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":52156,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3790},{\"id\":\"mini-skills\",\"chars\":1395},{\"id\":\"persona\",\"chars\":1691}],\"over\":false},\"usage\":{\"inputTokens\":2953,\"outputTokens\":1401,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"login-form\",\"form-rhythm\",\"dashboard-kpi-grid\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"quarter-dashboard\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quarter-dashboard\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"header\",\"body\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Last quarter at a glance\",\"variant\":\"h4\"},{\"id\":\"body\",\"component\":\"CardContent\",\"children\":[\"grid\"]},{\"id\":\"grid\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"12rem\",\"children\":[\"revenue\",\"users\",\"churn\"]},{\"id\":\"revenue\",\"component\":\"Stat\",\"label\":\"Revenue\",\"value\":\"$1.2M\",\"delta\":8,\"caption\":\"vs prior quarter\"},{\"id\":\"users\",\"component\":\"Stat\",\"label\":\"Active users\",\"value\":\"48,000\",\"delta\":3,\"caption\":\"vs prior quarter\"},{\"id\":\"churn\",\"component\":\"Stat\",\"label\":\"Churn\",\"value\":\"2.1%\",\"delta\":-0.4,\"caption\":\"points vs prior quarter\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here's last quarter on one dashboard. Revenue rose 8% to $1.2M and active users rose 3% to 48,000. Churn fell 0.4 points to 2.1%, so retention improved alongside growth. I didn't have a target or a quarterly trend series, so the dashboard doesn't show progress toward a goal or a trend line.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's last quarter's dashboard: revenue up 8%, active users up 3%, churn down 0.4 points.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quarter-dashboard",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quarter-dashboard",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "header",
+                            "body"
+                          ]
+                        },
+                        {
+                          "id": "header",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Last quarter at a glance",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "body",
+                          "component": "CardContent",
+                          "children": [
+                            "grid"
+                          ]
+                        },
+                        {
+                          "id": "grid",
+                          "component": "Grid",
+                          "gap": "md",
+                          "min": "12rem",
+                          "children": [
+                            "revenue",
+                            "users",
+                            "churn"
+                          ]
+                        },
+                        {
+                          "id": "revenue",
+                          "component": "Stat",
+                          "label": "Revenue",
+                          "value": "$1.2M",
+                          "delta": 8,
+                          "caption": "vs prior quarter"
+                        },
+                        {
+                          "id": "users",
+                          "component": "Stat",
+                          "label": "Active users",
+                          "value": "48,000",
+                          "delta": 3,
+                          "caption": "vs prior quarter"
+                        },
+                        {
+                          "id": "churn",
+                          "component": "Stat",
+                          "label": "Churn",
+                          "value": "2.1%",
+                          "delta": -0.4,
+                          "caption": "points vs prior quarter"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-18.jsonl:25",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          452
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "pattern-dashboard-tiles",
+          "kpi-panel-lifecycle",
+          "report-card-dashboard"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "dashboard-kpi-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "drilldown",
+            "load": "index-only"
+          },
+          {
+            "name": "metric-definitions",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Last quarter: revenue $1.2M, up 8%; active users 48,000, up 3%; churn 2.1%, down 0.4 points. Put it on a dashboard.",
+        "expect": [
+          "Stat"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Last quarter: revenue $1.2M, up 8%; active users 48,000, up 3%; churn 2.1%, down 0.4 points. Put it on a dashboard. Here's last quarter on one dashboard. Revenue rose 8% to $1.2M and active users rose 3% to 48,000. Churn fell 0.4 points to 2.1%, so retention improved alongside growth. I didn't have a target or a quarterly trend series, so the dashboard doesn't show progress toward a goal or a trend line.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-18-smoke/smoke-quant-kpi-dashboard-haiku-1/turn-1.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "411 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "291 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [quarter-dashboard], open [quarter-dashboard] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "quarter-dashboard holds Stat"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "452 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found Stat"
+    }
+  ],
+  "verdict": "pass"
+}

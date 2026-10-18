@@ -1,0 +1,172 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-quizmaster-first-question-haiku",
+  "agent": "quizmaster",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-18.jsonl:12 (catalog agent-ui--quizmaster)",
+  "steps": [
+    {
+      "say": "Start a quiz on world capitals.",
+      "expect": [
+        "QuestionCard"
+      ]
+    }
+  ],
+  "expect": {
+    "components": [
+      "QuestionCard"
+    ]
+  },
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Let's go. This is a five-round quiz on world capitals, and I'll keep a running score as we go. Round 1 is up.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Let's go. This is a five-round quiz on world capitals, and I'll keep a running score as we go. Round 1 is up.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Start a quiz on world capitals.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46574,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20020},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":804}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":45770}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"quiz-capitals\",\"catalogId\":\"agent-ui--quizmaster\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"quiz-capitals\",\"value\":{\"quiz\":{\"score\":0,\"round\":1,\"total\":5,\"selected\":\"\"}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quiz-capitals\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"qcard\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"World capitals\",\"status\":\"Round 1 of 5\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Score\",\"value\":0}],\"progress\":{\"value\":0,\"max\":5}},{\"id\":\"qcard\",\"component\":\"QuestionCard\",\"label\":\"Round 1\",\"meta\":\"World capitals\",\"question\":\"What is the capital of Australia?\",\"name\":\"answer\",\"options\":[{\"value\":\"sydney\",\"label\":\"Sydney\"},{\"value\":\"melbourne\",\"label\":\"Melbourne\"},{\"value\":\"canberra\",\"label\":\"Canberra\"},{\"value\":\"perth\",\"label\":\"Perth\"}],\"value\":{\"path\":\"/quiz/selected\"},\"answer\":\"canberra\",\"explanation\":\"Canberra was purpose-built as the capital in 1908, a compromise between rivals Sydney and Melbourne.\",\"revealed\":false,\"progress\":{\"value\":1,\"max\":5}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Let's go. This is a five-round quiz on world capitals, and I'll keep a running score as we go. Round 1 is up.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 1: What is the capital of Australia? Pick an answer on the card.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quiz-capitals",
+                      "catalogId": "agent-ui--quizmaster",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "quiz-capitals",
+                      "value": {
+                        "quiz": {
+                          "score": 0,
+                          "round": 1,
+                          "total": 5,
+                          "selected": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quiz-capitals",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "qcard"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "World capitals",
+                          "status": "Round 1 of 5",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": 0
+                            }
+                          ],
+                          "progress": {
+                            "value": 0,
+                            "max": 5
+                          }
+                        },
+                        {
+                          "id": "qcard",
+                          "component": "QuestionCard",
+                          "label": "Round 1",
+                          "meta": "World capitals",
+                          "question": "What is the capital of Australia?",
+                          "name": "answer",
+                          "options": [
+                            {
+                              "value": "sydney",
+                              "label": "Sydney"
+                            },
+                            {
+                              "value": "melbourne",
+                              "label": "Melbourne"
+                            },
+                            {
+                              "value": "canberra",
+                              "label": "Canberra"
+                            },
+                            {
+                              "value": "perth",
+                              "label": "Perth"
+                            }
+                          ],
+                          "value": {
+                            "path": "/quiz/selected"
+                          },
+                          "answer": "canberra",
+                          "explanation": "Canberra was purpose-built as the capital in 1908, a compromise between rivals Sydney and Melbourne.",
+                          "revealed": false,
+                          "progress": {
+                            "value": 1,
+                            "max": 5
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Start a quiz on world capitals."
+      },
+      "routing": {
+        "domains": [
+          "quizmaster"
+        ],
+        "exemplars": [
+          "frontier-result-card-win",
+          "frontier-review-split",
+          "frontier-invite-modal"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quiz-round",
+            "load": "index-only"
+          },
+          {
+            "name": "grand-reveal",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

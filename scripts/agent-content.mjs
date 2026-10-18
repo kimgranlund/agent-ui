@@ -191,7 +191,7 @@ async function compileCheck(root, out) {
 
 /** Load a site module through Vite's module runner over a jsdom window (both existing dev dependencies):
  *  the compiler's modules are site TypeScript that imports JSON and the component layer. */
-async function loadSite(path) {
+export async function loadSite(path) {
   const { JSDOM } = await import('jsdom')
   const { window } = new JSDOM('<!doctype html><html><body></body></html>', { url: 'http://localhost/' })
   for (const key of ['window', 'document', 'HTMLElement', 'customElements', 'Node', 'Element', 'CSSStyleSheet', 'localStorage', 'MutationObserver', 'getComputedStyle', 'DocumentFragment', 'ShadowRoot', 'Event', 'CustomEvent', 'EventTarget']) {

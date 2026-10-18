@@ -34,9 +34,10 @@
   headless (live spends API credit; `--replay <fixture>` is keyless), writes a report, screenshots and named
   checks (no halt, no A2UI JSON as prose, no surface lost to self-correct, render lint), exit 1 on a fail;
   `-- --from-trace last` turns a trace into a keyless replay regression. Local only, no CI job; `-- selftest`
-  rides `check:scripts`. Home: `scripts/e2e-admin/README.md`, T-0174. A live round of many probes runs through
-  `probe/run-capped.ts <live-commands.sh> --cap <usd> --round <slug>` and archives into `.sdlc/evals/rounds/`
-  (T-0225, T-0241; README, Live rounds).
+  rides `check:scripts`. Home: `scripts/e2e-admin/README.md`, T-0174. A live round of many probes is planned
+  from scenario tags with `probe/scenarios/plan.ts --tag <smoke | regression | routing | long>` (T-0343), runs
+  through `probe/run-capped.ts <live-commands.sh> --cap <usd> --round <slug>` and archives into
+  `.sdlc/evals/rounds/` (T-0225, T-0241; README, Live rounds).
 - `npm run eval:signals -- --round <folder> [--against <folder>]`: keyless tables over the committed round
   archive (pass rate per scenario and preset by model, mixed cells, failing checks, retry codes, spend and
   latency per turn, section digests, turn outcomes and failure codes, repair and payload shapes, exemplar

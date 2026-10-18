@@ -6,14 +6,20 @@
 //
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/round.ts` to print the script.
 
-import { stepArgv, type ProbeStep } from '../model.ts'
+import { quote, stepArgv, type ProbeStep } from '../model.ts'
 import { ADMIRAL_MODELS, ADMIRAL_SCENARIOS } from './admiral.ts'
 import { CONCIERGE_MODELS, CONCIERGE_SCENARIOS } from './concierge.ts'
-import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, quote } from './croupier.ts'
+import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS } from './croupier.ts'
 import { LEXICOGRAPHER_MODELS, LEXICOGRAPHER_SCENARIOS } from './lexicographer.ts'
+
+/** T-0343: what a scenario is for. `plan.ts` selects a round by tag, and a run name starts with its first tag's prefix
+ *  (`smoke-`, `regress-`, `routing-`, `long-`), the prefix `signals.ts` reads the tag back from. */
+export const SCENARIO_TAGS = ['smoke', 'regression', 'routing', 'long'] as const
+export type ScenarioTag = (typeof SCENARIO_TAGS)[number]
 
 export interface RoundScenario {
   name: string
+  tags: readonly ScenarioTag[]
   /** A step's own `expect` becomes `--expect-turn` after it. */
   steps: ProbeStep[]
   /** Run-level `--expect-component`: some turn ships each type. */

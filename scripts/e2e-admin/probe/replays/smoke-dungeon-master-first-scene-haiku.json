@@ -1,0 +1,296 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-dungeon-master-first-scene-haiku",
+  "agent": "dungeon-master",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-18.jsonl:23,2026-10-18.jsonl:24 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "Start the adventure.",
+      "expect": [
+        "GameHud"
+      ]
+    },
+    {
+      "say": "I open the door and step inside.",
+      "expect": [
+        "GameHud"
+      ]
+    }
+  ],
+  "expect": {
+    "components": [
+      "GameHud",
+      "Timeline"
+    ]
+  },
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"The stair down is cracked and slick with water, and the air smells of old iron and cold stone. A torch flickers in your hand, and ahead, the first step drops into darkness. Three paths lie before you: the stair, a rusted grate in the wall, and an iron door with a faint sound behind it.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"The stair down is cracked and slick with water, and the air smells of old iron and cold stone. A torch flickers in your hand, and ahead, the first step drops into darkness. Three paths lie before you: the stair, a rusted grate in the wall, and an iron door with a faint sound behind it.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Start the adventure.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":46084,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":804}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"quest-log\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quest-log\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Quest log: The Undervault\",\"variant\":\"h4\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"strip\",\"scenes_lbl\",\"scenes\",\"inv_lbl\",\"inv\"]},{\"id\":\"strip\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"hp\",\"gold\"]},{\"id\":\"hp\",\"component\":\"Badge\",\"label\":\"HP 12/12\",\"intent\":\"success\"},{\"id\":\"gold\",\"component\":\"Badge\",\"label\":\"Gold 0\",\"intent\":\"warning\"},{\"id\":\"scenes_lbl\",\"component\":\"Text\",\"text\":\"Scenes\",\"variant\":\"label\"},{\"id\":\"scenes\",\"component\":\"Column\",\"gap\":\"xs\",\"children\":[\"s1\"]},{\"id\":\"s1\",\"component\":\"Text\",\"text\":\"1. The stair down, at the Undervault's entrance.\",\"variant\":\"body\"},{\"id\":\"inv_lbl\",\"component\":\"Text\",\"text\":\"Inventory (2/6)\",\"variant\":\"label\"},{\"id\":\"inv\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"i1\",\"i2\"]},{\"id\":\"i1\",\"component\":\"Badge\",\"label\":\"Torch\",\"intent\":\"neutral\"},{\"id\":\"i2\",\"component\":\"Badge\",\"label\":\"Dagger\",\"intent\":\"neutral\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"choice_row\"]},{\"id\":\"choice_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Button\",\"label\":\"Descend the stair\",\"variant\":\"solid\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"descend\"}}},{\"id\":\"c2\",\"component\":\"Button\",\"label\":\"Pry the rusted grate\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"grate\"}}},{\"id\":\"c3\",\"component\":\"Button\",\"label\":\"Listen at the iron door\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"door\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "The stair down is cracked and slick with water, and the air smells of old iron and cold stone. A torch flickers in your hand, and ahead, the first step drops into darkness. Three paths lie before you: the stair, a rusted grate in the wall, and an iron door with a faint sound behind it.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your quest log is open. Choose your first move below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quest-log",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quest-log",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Quest log: The Undervault",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "strip",
+                            "scenes_lbl",
+                            "scenes",
+                            "inv_lbl",
+                            "inv"
+                          ]
+                        },
+                        {
+                          "id": "strip",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "hp",
+                            "gold"
+                          ]
+                        },
+                        {
+                          "id": "hp",
+                          "component": "Badge",
+                          "label": "HP 12/12",
+                          "intent": "success"
+                        },
+                        {
+                          "id": "gold",
+                          "component": "Badge",
+                          "label": "Gold 0",
+                          "intent": "warning"
+                        },
+                        {
+                          "id": "scenes_lbl",
+                          "component": "Text",
+                          "text": "Scenes",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "scenes",
+                          "component": "Column",
+                          "gap": "xs",
+                          "children": [
+                            "s1"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "Text",
+                          "text": "1. The stair down, at the Undervault's entrance.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "inv_lbl",
+                          "component": "Text",
+                          "text": "Inventory (2/6)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "inv",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "i1",
+                            "i2"
+                          ]
+                        },
+                        {
+                          "id": "i1",
+                          "component": "Badge",
+                          "label": "Torch",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "i2",
+                          "component": "Badge",
+                          "label": "Dagger",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "choice_row"
+                          ]
+                        },
+                        {
+                          "id": "choice_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "c1",
+                            "c2",
+                            "c3"
+                          ]
+                        },
+                        {
+                          "id": "c1",
+                          "component": "Button",
+                          "label": "Descend the stair",
+                          "variant": "solid",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "descend"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c2",
+                          "component": "Button",
+                          "label": "Pry the rusted grate",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "grate"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c3",
+                          "component": "Button",
+                          "label": "Listen at the iron door",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "door"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Start the adventure."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "listing-photo-grid",
+          "frontier-review-split",
+          "five-day-weather"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quest-log",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"The iron door groans open onto a low vault. Bones crunch underfoot, and the torch shows a cracked urn near the wall, glinting with coins. A dry rasp comes from the far archway, then falls silent. Your choices are the urn, the archway, or the way back to the stair.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"note\":\"The iron door groans open onto a low vault. Bones crunch underfoot, and the torch shows a cracked urn near the wall, glinting with coins. A dry rasp comes from the far archway, then falls silent. Your choices are the urn, the archway, or the way back to the stair.\",\"target\":{\"surfaceId\":\"quest-log\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I open the door and step inside.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":45280,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quest-log\",\"components\":[{\"id\":\"scenes\",\"component\":\"Column\",\"gap\":\"xs\",\"children\":[\"s1\",\"s2\"]},{\"id\":\"s2\",\"component\":\"Text\",\"text\":\"2. The iron door: a bone-littered vault with a coin-filled urn.\",\"variant\":\"body\"},{\"id\":\"gold\",\"component\":\"Badge\",\"label\":\"Gold 3\",\"intent\":\"warning\"},{\"id\":\"choice_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Button\",\"label\":\"Take the urn's coins\",\"variant\":\"solid\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"urn\"}}},{\"id\":\"c2\",\"component\":\"Button\",\"label\":\"Cross to the far archway\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"archway\"}}},{\"id\":\"c3\",\"component\":\"Button\",\"label\":\"Slip back to the stair\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"retreat\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"quest-log\"}}}\nThe iron door groans open onto a low vault. Bones crunch underfoot, and the torch shows a cracked urn near the wall, glinting with coins. A dry rasp comes from the far archway, then falls silent. Your choices are the urn, the archway, or the way back to the stair.\n\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quest-log\",\"components\":[{\"id\":\"scenes\",\"component\":\"Column\",\"gap\":\"xs\",\"children\":[\"s1\",\"s2\"]},{\"id\":\"s2\",\"component\":\"Text\",\"text\":\"2. The iron door: a bone-littered vault with a coin-filled urn.\",\"variant\":\"body\"},{\"id\":\"gold\",\"component\":\"Badge\",\"label\":\"Gold 3\",\"intent\":\"warning\"},{\"id\":\"choice_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Button\",\"label\":\"Take the urn's coins\",\"variant\":\"solid\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"urn\"}}},{\"id\":\"c2\",\"component\":\"Button\",\"label\":\"Cross to the far archway\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"archway\"}}},{\"id\":\"c3\",\"component\":\"Button\",\"label\":\"Slip back to the stair\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"retreat\"}}}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "I open the door and step inside."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-game-hud-quest",
+          "frontier-service-gateway",
+          "plan-and-execute-approve-ask"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quest-log",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

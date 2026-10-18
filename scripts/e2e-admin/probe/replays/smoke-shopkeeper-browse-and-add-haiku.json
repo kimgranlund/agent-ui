@@ -1,0 +1,320 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-shopkeeper-browse-and-add-haiku",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-18.jsonl:10,2026-10-18.jsonl:11 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "What lamps do you have?",
+      "expect": [
+        "ProductCard"
+      ]
+    },
+    {
+      "say": "Add the first one to my order.",
+      "expect": [
+        "ProductCard"
+      ]
+    }
+  ],
+  "expect": {
+    "components": [
+      "ProductCard"
+    ]
+  },
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Here's what we have in lamps right now. Prices and stock are illustrative demo values.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's what we have in lamps right now. Prices and stock are illustrative demo values.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":46084,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":804}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"storefront-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-1\",\"value\":{\"order\":{\"status\":\"Nothing in your order yet.\",\"total\":\"$0.00\"}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"intro\",\"grid\",\"summary\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"intro\",\"component\":\"Text\",\"text\":\"Illustrative prices and stock for this demo.\",\"variant\":\"caption\"},{\"id\":\"grid\",\"component\":\"Grid\",\"min\":\"220px\",\"gap\":\"md\",\"children\":[\"p_arc\",\"p_drum\",\"p_ceramic\",\"p_rattan\"]},{\"id\":\"p_arc\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass with a linen shade\",\"price\":\"$149\",\"badge\":\"New\",\"badgeIntent\":\"success\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"add_to_order\",\"context\":{\"item\":\"brass-arc-floor-lamp\",\"price\":149}}},{\"id\":\"p_drum\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Pendant\",\"subtitle\":\"Natural linen, 40 cm\",\"price\":\"$89\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"add_to_order\",\"context\":{\"item\":\"linen-drum-pendant\",\"price\":89}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Sage Ceramic Table Lamp\",\"subtitle\":\"Hand-glazed stoneware\",\"price\":\"$64\",\"badge\":\"Sold out\",\"badgeIntent\":\"neutral\",\"disabled\":true,\"actionLabel\":\"Sold out\"},{\"id\":\"p_rattan\",\"component\":\"ProductCard\",\"title\":\"Rattan Lantern\",\"subtitle\":\"Woven rattan, warm glow\",\"price\":\"$45\",\"priceOld\":\"$58\",\"badge\":\"Sale\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"add_to_order\",\"context\":{\"item\":\"rattan-lantern\",\"price\":45}}},{\"id\":\"summary\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"sum_hd\",\"sum_ct\"]},{\"id\":\"sum_hd\",\"component\":\"CardHeader\",\"children\":[\"sum_title\"]},{\"id\":\"sum_title\",\"component\":\"Text\",\"text\":\"Your order\",\"variant\":\"h5\"},{\"id\":\"sum_ct\",\"component\":\"CardContent\",\"children\":[\"sum_status\",\"sum_total_row\"]},{\"id\":\"sum_status\",\"component\":\"Text\",\"text\":{\"path\":\"/order/status\"},\"variant\":\"body\"},{\"id\":\"sum_total_row\",\"component\":\"Row\",\"justify\":\"between\",\"align\":\"center\",\"children\":[\"sum_total_label\",\"sum_total\"]},{\"id\":\"sum_total_label\",\"component\":\"Text\",\"text\":\"Total\",\"variant\":\"label\"},{\"id\":\"sum_total\",\"component\":\"Text\",\"text\":{\"path\":\"/order/total\"},\"emphasis\":true}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here's what we have in lamps right now. Prices and stock are illustrative demo values.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are our lamps. Prices and stock are illustrative demo values. Add anything you like and your order summary will update below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "storefront-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "storefront-1",
+                      "value": {
+                        "order": {
+                          "status": "Nothing in your order yet.",
+                          "total": "$0.00"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "intro",
+                            "grid",
+                            "summary"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "intro",
+                          "component": "Text",
+                          "text": "Illustrative prices and stock for this demo.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "Grid",
+                          "min": "220px",
+                          "gap": "md",
+                          "children": [
+                            "p_arc",
+                            "p_drum",
+                            "p_ceramic",
+                            "p_rattan"
+                          ]
+                        },
+                        {
+                          "id": "p_arc",
+                          "component": "ProductCard",
+                          "title": "Brass Arc Floor Lamp",
+                          "subtitle": "Solid brass with a linen shade",
+                          "price": "$149",
+                          "badge": "New",
+                          "badgeIntent": "success",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "add_to_order",
+                            "context": {
+                              "item": "brass-arc-floor-lamp",
+                              "price": 149
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_drum",
+                          "component": "ProductCard",
+                          "title": "Linen Drum Pendant",
+                          "subtitle": "Natural linen, 40 cm",
+                          "price": "$89",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "add_to_order",
+                            "context": {
+                              "item": "linen-drum-pendant",
+                              "price": 89
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Sage Ceramic Table Lamp",
+                          "subtitle": "Hand-glazed stoneware",
+                          "price": "$64",
+                          "badge": "Sold out",
+                          "badgeIntent": "neutral",
+                          "disabled": true,
+                          "actionLabel": "Sold out"
+                        },
+                        {
+                          "id": "p_rattan",
+                          "component": "ProductCard",
+                          "title": "Rattan Lantern",
+                          "subtitle": "Woven rattan, warm glow",
+                          "price": "$45",
+                          "priceOld": "$58",
+                          "badge": "Sale",
+                          "badgeIntent": "warning",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "add_to_order",
+                            "context": {
+                              "item": "rattan-lantern",
+                              "price": 45
+                            }
+                          }
+                        },
+                        {
+                          "id": "summary",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "sum_hd",
+                            "sum_ct"
+                          ]
+                        },
+                        {
+                          "id": "sum_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "sum_title"
+                          ]
+                        },
+                        {
+                          "id": "sum_title",
+                          "component": "Text",
+                          "text": "Your order",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "sum_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "sum_status",
+                            "sum_total_row"
+                          ]
+                        },
+                        {
+                          "id": "sum_status",
+                          "component": "Text",
+                          "text": {
+                            "path": "/order/status"
+                          },
+                          "variant": "body"
+                        },
+                        {
+                          "id": "sum_total_row",
+                          "component": "Row",
+                          "justify": "between",
+                          "align": "center",
+                          "children": [
+                            "sum_total_label",
+                            "sum_total"
+                          ]
+                        },
+                        {
+                          "id": "sum_total_label",
+                          "component": "Text",
+                          "text": "Total",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "sum_total",
+                          "component": "Text",
+                          "text": {
+                            "path": "/order/total"
+                          },
+                          "emphasis": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "What lamps do you have?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "travel-itinerary",
+          "frontier-breadcrumb-trail"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Added the Brass Arc Floor Lamp ($149) to your order.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Added the Brass Arc Floor Lamp ($149) to your order.\",\"target\":{\"surfaceId\":\"storefront-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add the first one to my order.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":46853,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1573}],\"over\":false},\"miniSkillIds\":[\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-1\",\"path\":\"/order\",\"value\":{\"status\":\"1 × Brass Arc Floor Lamp\",\"total\":\"$149.00\"}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"storefront-1\"}}}\nAdded the Brass Arc Floor Lamp ($149) to your order.\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-1\",\"path\":\"/order\",\"value\":{\"status\":\"1 × Brass Arc Floor Lamp\",\"total\":\"$149.00\"}}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Add the first one to my order."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "wallet-summary-card",
+          "receipt-order-summary",
+          "crud-entry-list-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

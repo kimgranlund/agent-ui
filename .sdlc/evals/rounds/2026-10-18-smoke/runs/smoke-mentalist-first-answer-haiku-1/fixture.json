@@ -1,0 +1,790 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-mentalist-first-answer-haiku-1",
+  "agent": "mentalist",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-18T01:32:30.312Z, traces 2026-10-18.jsonl:13,2026-10-18.jsonl:14",
+  "steps": [
+    {
+      "say": "Let's play Twenty Questions. I'm thinking of something.",
+      "expect": [
+        "GameHud"
+      ]
+    },
+    {
+      "say": "Yes.",
+      "expect": [
+        "GameHud"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"As the Mentalist,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I should kick off with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single question and a scorebo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"style ask surface showing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Yes/No/Sort\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", tracking questions as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of 20 and confidence\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" level.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm la\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying out the act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual card structure: a header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with title and a bad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ge showing quest\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" content with a prog\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ress indicator,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a confidence stat, the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" live question text, and fin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ally a seg\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"mented control for the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Yes/No/Sort\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"of answer plus comm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it button.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m planning the messages I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": createSurface, update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Components, upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ateDataModel, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the Card's children ordered\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as header, content, footer.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Right\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ve\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" got\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" something in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" mind. Let's start\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" w\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ide.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" **\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Is it a living thing?\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"** Answer\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Yes, No, or S\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ort of on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the scoreboard.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"hud\\\":{\\\"spent\\\":0,\\\"spentLabel\\\":\\\"0 of 20\\\",\\\"confidence\\\":\\\"Low, casting wide\\\",\\\"live\\\":\\\"Q1: Is it a living thing?\\\"},\\\"draft\\\":{\\\"answer\\\":\\\"\\\"}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"spent_badge\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Twenty Questions\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"spent_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":{\\\"path\\\":\\\"/hud/spentLabel\\\"},\\\"intent\\\":\\\"neutral\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"progress\\\",\\\"conf\\\",\\\"live\\\",\\\"answer\\\"]},{\\\"id\\\":\\\"progress\\\",\\\"component\\\":\\\"Progress\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/spent\\\"},\\\"max\\\":20,\\\"label\\\":\\\"Questions spent\\\"},{\\\"id\\\":\\\"conf\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Confidence\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/confidence\\\"}},{\\\"id\\\":\\\"live\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/hud/live\\\"},\\\"variant\\\":\\\"h5\\\"},{\\\"id\\\":\\\"answer\\\",\\\"component\\\":\\\"SegmentedControl\\\",\\\"name\\\":\\\"answer\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/answer\\\"},\\\"children\\\":[\\\"seg_yes\\\",\\\"seg_no\\\",\\\"seg_sort\\\"]},{\\\"id\\\":\\\"seg_yes\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"yes\\\",\\\"label\\\":\\\"Yes\\\"},{\\\"id\\\":\\\"seg_no\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"no\\\",\\\"label\\\":\\\"No\\\"},{\\\"id\\\":\\\"seg_sort\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"sort_of\\\",\\\"label\\\":\\\"Sort of\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"child\\\":\\\"commit\\\"},{\\\"id\\\":\\\"commit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Lock it in\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"commit_answer\\\",\\\"context\\\":{\\\"question\\\":1}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"hud\\\":{\\\"spent\\\":0,\\\"spentLabel\\\":\\\"0 of 20\\\",\\\"confidence\\\":\\\"Low, casting wide\\\",\\\"live\\\":\\\"Q1: Is it a living thing?\\\"},\\\"draft\\\":{\\\"answer\\\":\\\"\\\"}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"spent_badge\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Twenty Questions\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"spent_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":{\\\"path\\\":\\\"/hud/spentLabel\\\"},\\\"intent\\\":\\\"neutral\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"progress\\\",\\\"conf\\\",\\\"live\\\",\\\"answer\\\"]},{\\\"id\\\":\\\"progress\\\",\\\"component\\\":\\\"Progress\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/spent\\\"},\\\"max\\\":20,\\\"label\\\":\\\"Questions spent\\\"},{\\\"id\\\":\\\"conf\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Confidence\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/confidence\\\"}},{\\\"id\\\":\\\"live\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/hud/live\\\"},\\\"variant\\\":\\\"h5\\\"},{\\\"id\\\":\\\"answer\\\",\\\"component\\\":\\\"SegmentedControl\\\",\\\"name\\\":\\\"answer\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/answer\\\"},\\\"children\\\":[\\\"seg_yes\\\",\\\"seg_no\\\",\\\"seg_sort\\\"]},{\\\"id\\\":\\\"seg_yes\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"yes\\\",\\\"label\\\":\\\"Yes\\\"},{\\\"id\\\":\\\"seg_no\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"no\\\",\\\"label\\\":\\\"No\\\"},{\\\"id\\\":\\\"seg_sort\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"sort_of\\\",\\\"label\\\":\\\"Sort of\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"child\\\":\\\"commit\\\"},{\\\"id\\\":\\\"commit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Lock it in\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"commit_answer\\\",\\\"context\\\":{\\\"question\\\":1}}}]}}\",\"codes\":[\"FEED_SCOPE\"],\"detail\":\"Round 1 failed:\\n  FEED_SCOPE: at ask-1:Progress\\n  FEED_SCOPE: at ask-1:Stat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The checker flags that the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask surface can't comb\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ine Progress and Stat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king me to resend it as a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" plain surface without the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask meta-line while ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping all components int\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"act. This seems like a re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"asonable automated formatting\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ction, so I'll com\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply and resend the same surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ident\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ical components but without the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask designation.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face ask-1 already ex\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ists and this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" turn will mutate it,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I can decl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"are a target update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than creating it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fresh—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"using updateComponents and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updateDataModel with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" same content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than re-running\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" createSurface, since the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" question is still open and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" unanswered. My reply\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" will address\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the user directly without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"entioning the surface id or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" correction note.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"hud\\\":{\\\"spent\\\":0,\\\"spentLabel\\\":\\\"0 of 20\\\",\\\"confidence\\\":\\\"Low, casting wide\\\",\\\"live\\\":\\\"Q1: Is it a living thing?\\\"},\\\"draft\\\":{\\\"answer\\\":\\\"\\\"}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"spent_badge\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Twenty Questions\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"spent_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":{\\\"path\\\":\\\"/hud/spentLabel\\\"},\\\"intent\\\":\\\"neutral\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"progress\\\",\\\"conf\\\",\\\"live\\\",\\\"answer\\\"]},{\\\"id\\\":\\\"progress\\\",\\\"component\\\":\\\"Progress\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/spent\\\"},\\\"max\\\":20,\\\"label\\\":\\\"Questions spent\\\"},{\\\"id\\\":\\\"conf\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Confidence\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/confidence\\\"}},{\\\"id\\\":\\\"live\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/hud/live\\\"},\\\"variant\\\":\\\"h5\\\"},{\\\"id\\\":\\\"answer\\\",\\\"component\\\":\\\"SegmentedControl\\\",\\\"name\\\":\\\"answer\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/answer\\\"},\\\"children\\\":[\\\"seg_yes\\\",\\\"seg_no\\\",\\\"seg_sort\\\"]},{\\\"id\\\":\\\"seg_yes\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"yes\\\",\\\"label\\\":\\\"Yes\\\"},{\\\"id\\\":\\\"seg_no\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"no\\\",\\\"label\\\":\\\"No\\\"},{\\\"id\\\":\\\"seg_sort\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"sort_of\\\",\\\"label\\\":\\\"Sort of\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"child\\\":\\\"commit\\\"},{\\\"id\\\":\\\"commit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Lock it in\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"commit_answer\\\",\\\"context\\\":{\\\"question\\\":1}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":3,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"hud\\\":{\\\"spent\\\":0,\\\"spentLabel\\\":\\\"0 of 20\\\",\\\"confidence\\\":\\\"Low, casting wide\\\",\\\"live\\\":\\\"Q1: Is it a living thing?\\\"},\\\"draft\\\":{\\\"answer\\\":\\\"\\\"}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"spent_badge\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Twenty Questions\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"spent_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":{\\\"path\\\":\\\"/hud/spentLabel\\\"},\\\"intent\\\":\\\"neutral\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"progress\\\",\\\"conf\\\",\\\"live\\\",\\\"answer\\\"]},{\\\"id\\\":\\\"progress\\\",\\\"component\\\":\\\"Progress\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/spent\\\"},\\\"max\\\":20,\\\"label\\\":\\\"Questions spent\\\"},{\\\"id\\\":\\\"conf\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Confidence\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/confidence\\\"}},{\\\"id\\\":\\\"live\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/hud/live\\\"},\\\"variant\\\":\\\"h5\\\"},{\\\"id\\\":\\\"answer\\\",\\\"component\\\":\\\"SegmentedControl\\\",\\\"name\\\":\\\"answer\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/answer\\\"},\\\"children\\\":[\\\"seg_yes\\\",\\\"seg_no\\\",\\\"seg_sort\\\"]},{\\\"id\\\":\\\"seg_yes\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"yes\\\",\\\"label\\\":\\\"Yes\\\"},{\\\"id\\\":\\\"seg_no\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"no\\\",\\\"label\\\":\\\"No\\\"},{\\\"id\\\":\\\"seg_sort\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"sort_of\\\",\\\"label\\\":\\\"Sort of\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"child\\\":\\\"commit\\\"},{\\\"id\\\":\\\"commit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Lock it in\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"commit_answer\\\",\\\"context\\\":{\\\"question\\\":1}}}]}}\",\"codes\":[\"SURFACE_NOT_CREATED\"],\"detail\":\"Round 2 failed:\\n  SURFACE_NOT_CREATED: at ask-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I realize the previous turn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" refer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enced ask-1 as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a target without actually creating it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so now I need to create that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface first with createSurface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" adding components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and data, since this is its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" first render with no target meta need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll declare the ask\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with ask-1 as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since it was only\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ever used as a target, never\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually declared as an ask,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so it's safe to reu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"se. The reply it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self should just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" be the question\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose without any correction note or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface id re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ference, with the meta line car\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rying the note field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" containing the full question text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aces, I'll build create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Surface with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sendDataModel set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to true, then updateData\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Model, then updateCompon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ents in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that order, following the spec that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data come\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" after cre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ation. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also double check the comm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it button,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Stat,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Badge, and Segment\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"edControl b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"indings are all w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ired to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the right paths.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"hud\\\":{\\\"spent\\\":0,\\\"spentLabel\\\":\\\"0 of 20\\\",\\\"confidence\\\":\\\"Low, casting wide\\\",\\\"live\\\":\\\"Q1: Is it a living thing?\\\"},\\\"draft\\\":{\\\"answer\\\":\\\"\\\"}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\",\\\"spent_badge\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Twenty Questions\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"spent_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":{\\\"path\\\":\\\"/hud/spentLabel\\\"},\\\"intent\\\":\\\"neutral\\\",\\\"slot\\\":\\\"trailing\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"progress\\\",\\\"conf\\\",\\\"live\\\",\\\"answer\\\"]},{\\\"id\\\":\\\"progress\\\",\\\"component\\\":\\\"Progress\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/spent\\\"},\\\"max\\\":20,\\\"label\\\":\\\"Questions spent\\\"},{\\\"id\\\":\\\"conf\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Confidence\\\",\\\"value\\\":{\\\"path\\\":\\\"/hud/confidence\\\"}},{\\\"id\\\":\\\"live\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":{\\\"path\\\":\\\"/hud/live\\\"},\\\"variant\\\":\\\"h5\\\"},{\\\"id\\\":\\\"answer\\\",\\\"component\\\":\\\"SegmentedControl\\\",\\\"name\\\":\\\"answer\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/answer\\\"},\\\"children\\\":[\\\"seg_yes\\\",\\\"seg_no\\\",\\\"seg_sort\\\"]},{\\\"id\\\":\\\"seg_yes\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"yes\\\",\\\"label\\\":\\\"Yes\\\"},{\\\"id\\\":\\\"seg_no\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"no\\\",\\\"label\\\":\\\"No\\\"},{\\\"id\\\":\\\"seg_sort\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"sort_of\\\",\\\"label\\\":\\\"Sort of\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"child\\\":\\\"commit\\\"},{\\\"id\\\":\\\"commit\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Lock it in\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"commit_answer\\\",\\\"context\\\":{\\\"question\\\":1}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Right, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### twenty-questions (workflow)\\nGuessing-game domain — the 20-questions loop: one question per turn, HUD-tracked, honest reveal by 20.\\n\\nThink of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when confidence is high; always reveal by question 20 via the Modal.\\n\\nLet's play Twenty Questions. I'm thinking of something.\",\"k\":3},\"exemplarIds\":[\"trivia-round-resume\",\"frontier-result-card-win\",\"five-day-weather\"],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"SURFACE_NOT_CREATED\",\"FEED_SCOPE_RESCOPED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":56239,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7287},{\"id\":\"mini-skills\",\"chars\":1836},{\"id\":\"persona\",\"chars\":1836}],\"over\":false},\"usage\":{\"inputTokens\":16580,\"outputTokens\":5615,\"cacheReadInputTokens\":51327,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-game-sheet\",\"game-hud\",\"comparison-table\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":0,\"spentLabel\":\"0 of 20\",\"confidence\":\"Low, casting wide\",\"live\":\"Q1: Is it a living thing?\"},\"draft\":{\"answer\":\"\"}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\",\"spent_badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Twenty Questions\",\"variant\":\"h4\"},{\"id\":\"spent_badge\",\"component\":\"Badge\",\"label\":{\"path\":\"/hud/spentLabel\"},\"intent\":\"neutral\",\"slot\":\"trailing\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"progress\",\"conf\",\"live\",\"answer\"]},{\"id\":\"progress\",\"component\":\"Progress\",\"value\":{\"path\":\"/hud/spent\"},\"max\":20,\"label\":\"Questions spent\"},{\"id\":\"conf\",\"component\":\"Stat\",\"label\":\"Confidence\",\"value\":{\"path\":\"/hud/confidence\"}},{\"id\":\"live\",\"component\":\"Text\",\"text\":{\"path\":\"/hud/live\"},\"variant\":\"h5\"},{\"id\":\"answer\",\"component\":\"SegmentedControl\",\"name\":\"answer\",\"value\":{\"path\":\"/draft/answer\"},\"children\":[\"seg_yes\",\"seg_no\",\"seg_sort\"]},{\"id\":\"seg_yes\",\"component\":\"Segment\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"seg_no\",\"component\":\"Segment\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"seg_sort\",\"component\":\"Segment\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"child\":\"commit\"},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Lock it in\",\"variant\":\"solid\",\"action\":{\"action\":\"commit_answer\",\"context\":{\"question\":1}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Q1 of 20: Is it a living thing?",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "hud": {
+                          "spent": 0,
+                          "spentLabel": "0 of 20",
+                          "confidence": "Low, casting wide",
+                          "live": "Q1: Is it a living thing?"
+                        },
+                        "draft": {
+                          "answer": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "spent_badge"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Twenty Questions",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "spent_badge",
+                          "component": "Badge",
+                          "label": {
+                            "path": "/hud/spentLabel"
+                          },
+                          "intent": "neutral",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "progress",
+                            "conf",
+                            "live",
+                            "answer"
+                          ]
+                        },
+                        {
+                          "id": "progress",
+                          "component": "Progress",
+                          "value": {
+                            "path": "/hud/spent"
+                          },
+                          "max": 20,
+                          "label": "Questions spent"
+                        },
+                        {
+                          "id": "conf",
+                          "component": "Stat",
+                          "label": "Confidence",
+                          "value": {
+                            "path": "/hud/confidence"
+                          }
+                        },
+                        {
+                          "id": "live",
+                          "component": "Text",
+                          "text": {
+                            "path": "/hud/live"
+                          },
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "answer",
+                          "component": "SegmentedControl",
+                          "name": "answer",
+                          "value": {
+                            "path": "/draft/answer"
+                          },
+                          "children": [
+                            "seg_yes",
+                            "seg_no",
+                            "seg_sort"
+                          ]
+                        },
+                        {
+                          "id": "seg_yes",
+                          "component": "Segment",
+                          "value": "yes",
+                          "label": "Yes"
+                        },
+                        {
+                          "id": "seg_no",
+                          "component": "Segment",
+                          "value": "no",
+                          "label": "No"
+                        },
+                        {
+                          "id": "seg_sort",
+                          "component": "Segment",
+                          "value": "sort_of",
+                          "label": "Sort of"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "child": "commit"
+                        },
+                        {
+                          "id": "commit",
+                          "component": "Button",
+                          "label": "Lock it in",
+                          "variant": "solid",
+                          "action": {
+                            "action": "commit_answer",
+                            "context": {
+                              "question": 1
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "ask-1",
+                "reply": "Right, you've got something in mind. Let's start wide. Is it a living thing? Answer Yes, No, or Sort of on the scoreboard.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "hud": {
+                          "spent": 0,
+                          "spentLabel": "0 of 20",
+                          "confidence": "Low, casting wide",
+                          "live": "Q1: Is it a living thing?"
+                        },
+                        "draft": {
+                          "answer": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "spent_badge"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Twenty Questions",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "spent_badge",
+                          "component": "Badge",
+                          "label": {
+                            "path": "/hud/spentLabel"
+                          },
+                          "intent": "neutral",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "progress",
+                            "conf",
+                            "live",
+                            "answer"
+                          ]
+                        },
+                        {
+                          "id": "progress",
+                          "component": "Progress",
+                          "value": {
+                            "path": "/hud/spent"
+                          },
+                          "max": 20,
+                          "label": "Questions spent"
+                        },
+                        {
+                          "id": "conf",
+                          "component": "Stat",
+                          "label": "Confidence",
+                          "value": {
+                            "path": "/hud/confidence"
+                          }
+                        },
+                        {
+                          "id": "live",
+                          "component": "Text",
+                          "text": {
+                            "path": "/hud/live"
+                          },
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "answer",
+                          "component": "SegmentedControl",
+                          "name": "answer",
+                          "value": {
+                            "path": "/draft/answer"
+                          },
+                          "children": [
+                            "seg_yes",
+                            "seg_no",
+                            "seg_sort"
+                          ]
+                        },
+                        {
+                          "id": "seg_yes",
+                          "component": "Segment",
+                          "value": "yes",
+                          "label": "Yes"
+                        },
+                        {
+                          "id": "seg_no",
+                          "component": "Segment",
+                          "value": "no",
+                          "label": "No"
+                        },
+                        {
+                          "id": "seg_sort",
+                          "component": "Segment",
+                          "value": "sort_of",
+                          "label": "Sort of"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "child": "commit"
+                        },
+                        {
+                          "id": "commit",
+                          "component": "Button",
+                          "label": "Lock it in",
+                          "variant": "solid",
+                          "action": {
+                            "action": "commit_answer",
+                            "context": {
+                              "question": 1
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Q1 of 20: Is it a living thing? Pick Yes, No, or Sort of on the scoreboard, then lock it in.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "hud": {
+                          "spent": 0,
+                          "spentLabel": "0 of 20",
+                          "confidence": "Low, casting wide",
+                          "live": "Q1: Is it a living thing?"
+                        },
+                        "draft": {
+                          "answer": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "spent_badge"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Twenty Questions",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "spent_badge",
+                          "component": "Badge",
+                          "label": {
+                            "path": "/hud/spentLabel"
+                          },
+                          "intent": "neutral",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "progress",
+                            "conf",
+                            "live",
+                            "answer"
+                          ]
+                        },
+                        {
+                          "id": "progress",
+                          "component": "Progress",
+                          "value": {
+                            "path": "/hud/spent"
+                          },
+                          "max": 20,
+                          "label": "Questions spent"
+                        },
+                        {
+                          "id": "conf",
+                          "component": "Stat",
+                          "label": "Confidence",
+                          "value": {
+                            "path": "/hud/confidence"
+                          }
+                        },
+                        {
+                          "id": "live",
+                          "component": "Text",
+                          "text": {
+                            "path": "/hud/live"
+                          },
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "answer",
+                          "component": "SegmentedControl",
+                          "name": "answer",
+                          "value": {
+                            "path": "/draft/answer"
+                          },
+                          "children": [
+                            "seg_yes",
+                            "seg_no",
+                            "seg_sort"
+                          ]
+                        },
+                        {
+                          "id": "seg_yes",
+                          "component": "Segment",
+                          "value": "yes",
+                          "label": "Yes"
+                        },
+                        {
+                          "id": "seg_no",
+                          "component": "Segment",
+                          "value": "no",
+                          "label": "No"
+                        },
+                        {
+                          "id": "seg_sort",
+                          "component": "Segment",
+                          "value": "sort_of",
+                          "label": "Sort of"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "child": "commit"
+                        },
+                        {
+                          "id": "commit",
+                          "component": "Button",
+                          "label": "Lock it in",
+                          "variant": "solid",
+                          "action": {
+                            "action": "commit_answer",
+                            "context": {
+                              "question": 1
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "trivia-round-resume",
+          "frontier-result-card-win",
+          "five-day-weather"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "guess-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"With the user conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irming it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s a living thing, I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to move to Q2 while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the same surface and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask id active\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", since the flow hasn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'t \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ended yet and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1 is still techn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ically open.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll update the HUD\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data to reflect sp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ent=1, nar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" confidence label, and set the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" live question to \\\"Is it an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" animal?\\\", resetting the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" draft answer so n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"othing is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pre-selected. No new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed since ever\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ything is data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-bound, so a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" simple data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model update suffices,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and the chat response will note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Q1 is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settled as Yes before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pos\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing Q2.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"hud\\\":{\\\"spent\\\":1,\\\"spentLabel\\\":\\\"1 of 20\\\",\\\"confidence\\\":\\\"Low, narrowing\\\",\\\"live\\\":\\\"Q2: Is it an animal?\\\"},\\\"draft\\\":{\\\"answer\\\":\\\"\\\"}}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Yes.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":47116,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":1836}],\"over\":false},\"usage\":{\"inputTokens\":1657,\"outputTokens\":830,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "guess-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "full"
+          }
+        ]
+      }
+    }
+  ]
+}
