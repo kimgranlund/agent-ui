@@ -152,6 +152,22 @@ export function routingRuns(): Array<{ scenario: RoutingScenario; model: RoundMo
   return ROUTING_MODELS.flatMap((model) => ROUTING_SCENARIOS.map((scenario) => ({ scenario, model, argv: routingArgv(scenario, model) })))
 }
 
+/** T-0367: the guidance-conflict commands as rounds 3, 6, 8, 9 and 10 ran them. Those `live-commands.sh` files are
+ *  finished round archives and are never rewritten, so they keep the old step shape: the hole-card ask carried
+ *  `--expect-turn CardTable` and the Stand after it carried none. A round's pin compares its archive to the generated
+ *  script through this, which maps the current shape back to the archived one on the guidance-conflict lines only. */
+export const asArchivedGuidanceConflict = (script: string): string =>
+  script
+    .split('\n')
+    .map((line) =>
+      line.includes('--name routing-guidance-conflict-')
+        ? line
+            .replace(/(--say "Show me the dealer's hole card\.") (--expect-routing)/, '$1 --expect-turn CardTable $2')
+            .replace(/(--say Stand\.) --expect-turn CardTable /, '$1 ')
+        : line,
+    )
+    .join('\n')
+
 /** `scripts/e2e-admin/probe/scenarios/routing-pack.sh`. */
 export function routingCommandsScript(): string {
   const lines = [

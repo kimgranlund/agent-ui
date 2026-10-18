@@ -9,7 +9,7 @@ import { personaSections } from '../../../../site/agent-content/schema.ts'
 import { parseProbeCli } from '../cli.ts'
 import { parseProbeFixture, routingMisses, runChecks } from '../model.ts'
 import { describeCommands } from '../run-capped.ts'
-import { ROUTING_MODELS, ROUTING_PACK_FILE, ROUTING_SCENARIOS, routingCommandsScript, routingRuns } from './routing.ts'
+import { asArchivedGuidanceConflict, ROUTING_MODELS, ROUTING_PACK_FILE, ROUTING_SCENARIOS, routingCommandsScript, routingRuns } from './routing.ts'
 
 const read = (rel) => readFileSync(new URL(rel, new URL('../../../../', import.meta.url)), 'utf8')
 const catalogTypes = (rel) => Object.keys(JSON.parse(read(rel)).types)
@@ -141,5 +141,15 @@ describe('guidance-conflict reads the table on the next move, not on the refusal
         : lines)
       expect(status(lost, 3)).toBe('fail')
     }
+  })
+
+  it('the archived-shape transform touches only the guidance-conflict lines (rounds 3 to 10 keep the old step shape)', () => {
+    const script = routingCommandsScript()
+    const old = asArchivedGuidanceConflict(script)
+    const changed = script.split('\n').filter((l, i) => l !== old.split('\n')[i])
+    expect(changed).toHaveLength(2)
+    for (const l of changed) expect(l).toContain('--name routing-guidance-conflict-')
+    expect(old).toContain(`--say "Show me the dealer's hole card." --expect-turn CardTable --expect-routing`)
+    expect(old).toContain('--say Stand. --expect-routing')
   })
 })

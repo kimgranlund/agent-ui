@@ -4,6 +4,7 @@
 // that the committed `live-commands.sh`, with its `# est` lines, is the generated script and stays under the cap.
 import { readFileSync, statSync } from 'node:fs'
 import { withoutSkipMarks } from './croupier.ts'
+import { asArchivedGuidanceConflict } from './routing.ts'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
 import { describeCommands, parseCommands, runCapped } from '../run-capped.ts'
@@ -143,7 +144,7 @@ describe('live round 10', () => {
 
   it('live-commands.sh is the generated, executable script; every run has its estimate and none is a cap skip at the estimates', () => {
     const text = read(ROUND10_FILE)
-    expect(text).toBe(withoutSkipMarks(round10CommandsScript()))
+    expect(text).toBe(withoutSkipMarks(asArchivedGuidanceConflict(round10CommandsScript())))
     expect(statSync(new URL(ROUND10_FILE, root)).mode & 0o111).not.toBe(0)
     expect(text).toContain(`run-capped.ts ${ROUND10_FILE} --cap 10 --round r10-targeted`)
     const cmds = parseCommands(text)
