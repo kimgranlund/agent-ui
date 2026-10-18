@@ -31,6 +31,12 @@ const CHECK_OR_CALL = 'Check, or call if there is a bet.'
 /** T-0283: a stud street that is harmless on a finished hand, so the step after the last street is still Deal again. */
 export const STUD_STREET = 'Check, or call if there is a bet. If the hand is already over, leave the table as it is.'
 
+/** T-0370 (live round 11 cluster J, :37 to :38): pontoon forbids sticking under 15, so "Buy a card." then "Stick." on a
+ *  hand of 14 is refused by the rules, the hand never settles and Deal again finds no button on the newest table. The
+ *  agent was right. This step follows round 2's Stick: a settled hand skips it (`--skip-if-phase settled`), a refused
+ *  stick plays it, and it twists to 15 or more and sticks (or busts), so the hand is over before Deal again. */
+export const TWIST_TO_STICK = 'If the hand is still under 15, twist until it reaches 15 or more, then stick.'
+
 const SCENARIOS: readonly CroupierScenario[] = [
   {
     name: 'blackjack-rounds',
@@ -115,6 +121,7 @@ const ROUND_STEPS: Readonly<Record<string, ProbeStep[]>> = {
   'blackjack-rounds': [say("Let's play blackjack."), click('100'), click('Stand'), DEAL_AGAIN, click('50'), click('Hit'), say('Stand.'), DEAL_AGAIN, click('25'), click('Stand')],
   'texas-holdem': [say("Let's play Texas hold'em."), say(CHECK_OR_CALL), say('Bet 50.'), say(STUD_STREET), say(STUD_STREET), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Raise 100.'), say(STUD_STREET)],
   'seven-card-stud': [say("Let's play seven-card stud."), ...Array.from({ length: 5 }, () => say(STUD_STREET)), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
+  pontoon: [say("Let's play pontoon."), click('100'), say('Twist.'), say('Stick.'), DEAL_AGAIN, click('100'), say('Buy a card.'), say('Stick.'), say(TWIST_TO_STICK), DEAL_AGAIN, click('50'), say('Stick.')],
 }
 
 /** T-0347 (live round 10 cluster D, :80 and :101 to :103): a natural settles the hand on the deal, and the scripted
@@ -133,9 +140,11 @@ const skipOnNatural = (s: CroupierScenario): CroupierScenario =>
     ? { ...s, steps: s.steps.map((step, i) => (i === 0 || step === DEAL_AGAIN || isBet(step) || ('say' in step && step.say === HIT_AFTER_BUST) ? step : { ...step, skipIfPhase: SKIP_PHASE })) }
     : s
 
-/** The flag every finished round's committed `live-commands.sh` predates (T-0347): a finished run record is never
- *  rewritten, so each finished round's pin compares its committed file with the generator's output minus this flag. */
-export const withoutSkipMarks = (script: string): string => script.replaceAll(` --skip-if-phase ${SKIP_PHASE}`, '')
+/** What every finished round's committed `live-commands.sh` predates: the T-0347 flag and the T-0370 pontoon follow-up
+ *  step. A finished run record is never rewritten, so each finished round's pin compares its committed file with the
+ *  generator's output minus both. */
+const TWIST_TO_STICK_ARGS = ` ${stepArgv({ say: TWIST_TO_STICK, skipIfPhase: SKIP_PHASE }).map(quote).join(' ')}`
+export const withoutSkipMarks = (script: string): string => script.replaceAll(TWIST_TO_STICK_ARGS, '').replaceAll(` --skip-if-phase ${SKIP_PHASE}`, '')
 
 /** The live-round scenarios: SCENARIOS with the round's fixes. */
 export const CROUPIER_ROUND_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map((s) => withDealExpect(skipOnNatural({ ...s, steps: ROUND_STEPS[s.name] ?? s.steps })))
