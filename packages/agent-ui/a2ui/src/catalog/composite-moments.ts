@@ -152,7 +152,7 @@ const BOOK_ASK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would)
 
 /** T-0358, T-0364: the words that name a game on a surface with no board. Generic words (player, level, round, turn)
  *  name none: a podcast player or a Gold level is no game. */
-const GAME_WORDS = /\b(game|games|quest|hp|quiz|trivia|twenty questions|the answer was|the word was|deal sheet|adventure|dungeon)\b/i
+export const GAME_WORDS = /\b(game|games|quest|hp|quiz|trivia|twenty questions|the answer was|the word was|deal sheet|adventure|dungeon)\b/i
 /** T-0361 review: the GameHud gate also takes round and turn (T-0358's Negotiator, "Round 3, your turn"); its two-stat strip
  *  keeps a dashboard out. */
 const HUD_GAME_WORDS = new RegExp(`\\b(round|rounds|turn|turns)\\b|${GAME_WORDS.source}`, 'i')

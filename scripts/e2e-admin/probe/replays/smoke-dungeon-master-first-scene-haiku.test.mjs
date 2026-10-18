@@ -17,11 +17,12 @@ import { offlineReplay } from '../trace.ts'
 // and step inside.") is answered in prose with a meta-line targeting quest-log and no render_surface call. T-0366: the
 // boardless-move-applied check now sends it back with ACTION_NOT_APPLIED. The fixture records no repaired round, so the
 // turn ships SEMANTIC_UNCORRECTED and its probe checks stay red here.
+// The scripted provider replays the one recorded prose round for each repair, so the turn runs to the bound (3 rounds).
 it('smoke-dungeon-master-first-scene-haiku: turn 0 ships no GameHud; the prose-only move on turn 1 gets ACTION_NOT_APPLIED', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-dungeon-master-first-scene-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['action-updates-surface', 1], ['expect-component', 1], ['expect-component', null]])
   const trace = (i) => report.records[i].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
   expect(trace(0)).toMatchObject({ rounds: 3, failureCodes: ['IDGRAPH', 'SURFACE_NOT_CREATED', 'SEMANTIC_UNCORRECTED'] })
-  expect(trace(1)).toMatchObject({ failureCodes: ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'] })
+  expect(trace(1)).toMatchObject({ rounds: 3, failureCodes: ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'] })
 })
