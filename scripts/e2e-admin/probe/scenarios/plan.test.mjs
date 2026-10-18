@@ -45,6 +45,16 @@ describe('plan.ts', () => {
     expect(describeCommands(out)).toHaveLength(roster.length)
   })
 
+  it("the smoke round's live-commands.sh is the plan with every --out retargeted into the round, as run-capped writes it", () => {
+    const argv = ['--tag', 'smoke', '--model', 'haiku', '--samples', '1', '--cap', '5', '--round', 'smoke']
+    const home = '.sdlc/evals/rounds/2026-10-18-smoke'
+    const want = run(argv).out.replaceAll('--out runs/', `--out ${home}/runs/`)
+    expect(readFileSync(new URL(`${home}/live-commands.sh`, root), 'utf8')).toBe(want)
+    const ledger = readFileSync(new URL(`${home}/ledger.jsonl`, root), 'utf8').trim().split('\n').map((l) => JSON.parse(l))
+    expect(ledger.map((r) => r.name).sort()).toEqual(planRuns(parsePlanArgs(argv)).map((r) => r.name).sort())
+    expect(ledger.reduce((sum, r) => sum + r.costUsd, 0)).toBeLessThan(5)
+  })
+
   it('every smoke scenario is one or two turns, each expecting a type its preset catalog holds', () => {
     const resolve = nodeCatalogResolver(root.pathname)
     for (const { agent, scenarios } of SMOKE_PRESETS) {

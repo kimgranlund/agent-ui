@@ -1,0 +1,242 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-restaurant-reserve-table-haiku",
+  "agent": "restaurant",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-18.jsonl:6 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "I'd like to reserve a table for dinner.",
+      "expect": [
+        "Select",
+        "TextField"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"I'd be delighted to book you a table. Please fill in the date, seating, covers and any dietary notes below.\",\"ask\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to reserve a table for dinner.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":141100,\"total\":46950,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1670}],\"over\":false},\"miniSkillIds\":[\"master-detail-split\",\"feature-collection\",\"table-toolbar-pagination\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"path\":\"/draft\",\"value\":{\"date\":\"\",\"seating\":\"\",\"covers\":\"2\",\"dietary\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Reserve a table at Vela\",\"variant\":\"h4\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"f_date\",\"f_seat\",\"f_covers\",\"f_diet\"]},{\"id\":\"f_date\",\"component\":\"Field\",\"label\":\"Date\",\"child\":\"cal\"},{\"id\":\"cal\",\"component\":\"Calendar\",\"mode\":\"single\",\"name\":\"date\",\"value\":{\"path\":\"/draft/date\"}},{\"id\":\"f_seat\",\"component\":\"Field\",\"label\":\"Seating\",\"child\":\"seat\"},{\"id\":\"seat\",\"component\":\"RadioGroup\",\"name\":\"seating\",\"value\":{\"path\":\"/draft/seating\"},\"orientation\":\"vertical\",\"children\":[\"r1\",\"r2\"]},{\"id\":\"r1\",\"component\":\"Radio\",\"value\":\"18:00\",\"label\":\"18:00 seating\"},{\"id\":\"r2\",\"component\":\"Radio\",\"value\":\"20:30\",\"label\":\"20:30 seating\"},{\"id\":\"f_covers\",\"component\":\"Field\",\"label\":\"Covers\",\"child\":\"covers\"},{\"id\":\"covers\",\"component\":\"TextField\",\"type\":\"number\",\"name\":\"covers\",\"min\":\"1\",\"value\":{\"path\":\"/draft/covers\"}},{\"id\":\"f_diet\",\"component\":\"Field\",\"label\":\"Dietary notes\",\"child\":\"diet\"},{\"id\":\"diet\",\"component\":\"Textarea\",\"name\":\"dietary\",\"rows\":2,\"placeholder\":\"Allergies or dietary requirements\",\"value\":{\"path\":\"/draft/dietary\"}},{\"id\":\"ft\",\"component\":\"CardFooter\",\"child\":\"submit\"},{\"id\":\"submit\",\"component\":\"Button\",\"label\":\"Check availability\",\"variant\":\"solid\",\"action\":{\"action\":\"submit_booking\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"I'd be delighted to book you a table. Please tell me the date you'd like, which seating you prefer (18:00 or 20:30), how many covers, and any dietary requirements or allergies. Then select Check availability.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "I'd be delighted to book you a table. Please fill in the date, seating, covers and any dietary notes below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "path": "/draft",
+                      "value": {
+                        "date": "",
+                        "seating": "",
+                        "covers": "2",
+                        "dietary": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Reserve a table at Vela",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "f_date",
+                            "f_seat",
+                            "f_covers",
+                            "f_diet"
+                          ]
+                        },
+                        {
+                          "id": "f_date",
+                          "component": "Field",
+                          "label": "Date",
+                          "child": "cal"
+                        },
+                        {
+                          "id": "cal",
+                          "component": "Calendar",
+                          "mode": "single",
+                          "name": "date",
+                          "value": {
+                            "path": "/draft/date"
+                          }
+                        },
+                        {
+                          "id": "f_seat",
+                          "component": "Field",
+                          "label": "Seating",
+                          "child": "seat"
+                        },
+                        {
+                          "id": "seat",
+                          "component": "RadioGroup",
+                          "name": "seating",
+                          "value": {
+                            "path": "/draft/seating"
+                          },
+                          "orientation": "vertical",
+                          "children": [
+                            "r1",
+                            "r2"
+                          ]
+                        },
+                        {
+                          "id": "r1",
+                          "component": "Radio",
+                          "value": "18:00",
+                          "label": "18:00 seating"
+                        },
+                        {
+                          "id": "r2",
+                          "component": "Radio",
+                          "value": "20:30",
+                          "label": "20:30 seating"
+                        },
+                        {
+                          "id": "f_covers",
+                          "component": "Field",
+                          "label": "Covers",
+                          "child": "covers"
+                        },
+                        {
+                          "id": "covers",
+                          "component": "TextField",
+                          "type": "number",
+                          "name": "covers",
+                          "min": "1",
+                          "value": {
+                            "path": "/draft/covers"
+                          }
+                        },
+                        {
+                          "id": "f_diet",
+                          "component": "Field",
+                          "label": "Dietary notes",
+                          "child": "diet"
+                        },
+                        {
+                          "id": "diet",
+                          "component": "Textarea",
+                          "name": "dietary",
+                          "rows": 2,
+                          "placeholder": "Allergies or dietary requirements",
+                          "value": {
+                            "path": "/draft/dietary"
+                          }
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "child": "submit"
+                        },
+                        {
+                          "id": "submit",
+                          "component": "Button",
+                          "label": "Check availability",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_booking"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "I'd like to reserve a table for dinner."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "comparison-pricing-table",
+          "five-day-weather",
+          "ops-report"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "hotel-booking-form",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "dietary-and-cellar-notes",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
