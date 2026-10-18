@@ -28,6 +28,7 @@ import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
 import { formatAllowlist, gateDiff, readAllowlist } from './foundations-census.mjs'
 import { hasOwner } from './lib/foundations-rules.mjs'
+import { loneButtonFrame } from '../packages/agent-ui/a2ui/src/catalog/lone-button-frame.ts'
 
 const REPO = fileURLToPath(new URL('..', import.meta.url))
 const COMPOSE = JSON.parse(readFileSync(new URL('./dogfood-rules.json', import.meta.url), 'utf8')).compose
@@ -129,6 +130,29 @@ export function braceSpans(src) {
   return spans
 }
 
+/** Every `[ ... ]` span of the (comment-free) source, outside strings and template literals: [open, close] index pairs. */
+export function bracketSpans(src) {
+  const spans = []
+  const open = []
+  let i = 0
+  while (i < src.length) {
+    const ch = src[i]
+    if (ch === "'" || ch === '"') {
+      i++
+      while (i < src.length && src[i] !== ch && src[i] !== '\n') i += src[i] === '\\' ? 2 : 1
+    } else if (ch === '`') {
+      i++
+      while (i < src.length && src[i] !== '`') i += src[i] === '\\' ? 2 : 1
+    } else if (ch === '[') open.push(i)
+    else if (ch === ']') {
+      const from = open.pop()
+      if (from !== undefined) spans.push([from, i])
+    }
+    i++
+  }
+  return spans
+}
+
 /** Every `ui-*` element the source creates: createElement / el / h calls and `<ui-x` markup, with indices. */
 export function createdTags(src) {
   const out = []
@@ -177,7 +201,7 @@ export function payloadComponents(src, spans = braceSpans(src)) {
     const explicit = flat.match(/['"]?\bchildren['"]?\s*:\s*\[([^\]]*)\]/)?.[1]
     const children = explicit ? [...explicit.matchAll(/['"]([^'"]+)['"]/g)].map((r) => r[1]) : []
     const child = flat.match(/['"]?\bchild['"]?\s*:\s*['"]([^'"]+)['"]/)?.[1] ?? null
-    comps.push({ id, component: m[1], index: m.index, refs, template, children, child })
+    comps.push({ id, component: m[1], index: m.index, start: span[0], refs, template, children, child })
   }
   return comps
 }
@@ -225,14 +249,26 @@ export function findingsIn(path, raw) {
     }
   }
 
-  // lone-button-frame (T-0172): a Card whose only content is one Button, directly or through a lone CardContent or CardFooter
-  const soleChild = (c) => (c.children.length === 1 ? c.children[0] : c.children.length === 0 && c.template === null ? c.child : null)
-  const loneButton = (c, depth) => {
-    const kid = byId.get(soleChild(c))
-    if (kid === undefined) return false
-    return kid.component === 'Button' || ((kid.component === 'CardContent' || kid.component === 'CardFooter') && depth < 2 && loneButton(kid, depth + 1))
+  // lone-button-frame (T-0172, T-0369): a Card whose whole subtree holds one Button and nothing text-bearing; the walk is
+  // the producer's own (`lone-button-frame.ts`), so a Row, Column, List or Grid around the Button is seen through
+  // one source can hold several payloads that reuse ids (head, body, foot), so a walk reads one payload's scope: the
+  // innermost `[ ... ]` array around the component's own object, the array its siblings sit in (null at top level)
+  const arrays = bracketSpans(src)
+  const arrayOf = (c) => arrays.filter((a) => a[0] < c.start && c.start < a[1]).reduce((best, a) => (best === null || a[0] > best[0] ? a : best), null)
+  const scopeMaps = new Map()
+  for (const c of comps) {
+    const key = arrayOf(c)?.[0] ?? -1
+    if (!scopeMaps.has(key)) scopeMaps.set(key, new Map())
+    scopeMaps.get(key).set(c.id, c)
   }
-  for (const c of comps) if (c.component === 'Card' && loneButton(c, 0)) res['lone-button-frame'].push({ index: c.index, text: snippet(c.index) })
+  const scopes = [...scopeMaps.values()]
+  for (const scope of scopes) {
+    const frameNode = (id) => {
+      const k = scope.get(id)
+      return k === undefined ? undefined : { component: k.component, ids: [...new Set([...k.children, ...(k.child === null ? [] : [k.child])])], template: k.template !== null }
+    }
+    for (const c of scope.values()) if (c.component === 'Card' && loneButtonFrame(c.id, frameNode) !== undefined) res['lone-button-frame'].push({ index: c.index, text: snippet(c.index) })
+  }
 
   // caret-glyph (T-0168): a caret drawn as an icon in a control source
   for (const m of src.matchAll(CARET_ICON)) res['caret-glyph'].push({ index: m.index, text: snippet(m.index) })
@@ -417,7 +453,16 @@ function selftest() {
   rule('lone-button-frame', 'a Card whose only child is a Button is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['b1'] }, { id: 'b1', component: 'Button', label: 'Blackjack' }]`, 'lone-button-frame') === 1)
   rule('lone-button-frame', 'a Card holding one Button through a lone CardContent is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['c1'] }, { id: 'c1', component: 'CardContent', child: 'b1' }, { id: 'b1', component: 'Button', label: 'Poker' }]`, 'lone-button-frame') === 1)
   rule('lone-button-frame', 'a bare Card around a CardFooter with one Button is found', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['f1'] }, { id: 'f1', component: 'CardFooter', children: ['b1'] }, { id: 'b1', component: 'Button', label: 'Hold em' }]`, 'lone-button-frame') === 1)
-  rule('lone-button-frame', 'a Row of Buttons, and a Card with a header and a Button, pass', n(F, `const p = [{ id: 'r', component: 'Row', children: ['a', 'b'] }, { id: 'a', component: 'Button' }, { id: 'b', component: 'Button' }, { id: 'k', component: 'Card', children: ['h', 'a'] }, { id: 'h', component: 'CardHeader', children: [] }]`, 'lone-button-frame') === 0)
+  rule('lone-button-frame', 'a Card footer holding one Button through a one-child Row is found (T-0369)', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['f1'] }, { id: 'f1', component: 'CardFooter', children: ['r1'] }, { id: 'r1', component: 'Row', children: ['b1'] }, { id: 'b1', component: 'Button', label: 'Deal again' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'a Card footer Row of two Buttons passes (T-0369)', n(F, `const p = [{ id: 'g1', component: 'Card', children: ['f1'] }, { id: 'f1', component: 'CardFooter', children: ['r1'] }, { id: 'r1', component: 'Row', children: ['b1', 'b2'] }, { id: 'b1', component: 'Button' }, { id: 'b2', component: 'Button' }]`, 'lone-button-frame') === 0)
+  rule('lone-button-frame', 'a Row of Buttons, and a Card with a header Text and a Button, pass', n(F, `const p = [{ id: 'r', component: 'Row', children: ['a', 'b'] }, { id: 'a', component: 'Button' }, { id: 'b', component: 'Button' }, { id: 'k', component: 'Card', children: ['h', 'a'] }, { id: 'h', component: 'CardHeader', children: ['t'] }, { id: 't', component: 'Text', text: 'Title' }]`, 'lone-button-frame') === 0)
+  rule('lone-button-frame', 'an empty CardHeader beside the Button is found, as the DOM lint finds it (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', children: ['h', 'a'] }, { id: 'h', component: 'CardHeader', children: [] }, { id: 'a', component: 'Button', label: 'Go' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'a Button four wrappers deep (CardContent, Column, List, Row) is found, with no depth cap (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', child: 'c' }, { id: 'c', component: 'CardContent', child: 'col' }, { id: 'col', component: 'Column', children: ['l'] }, { id: 'l', component: 'List', children: ['r'] }, { id: 'r', component: 'Row', children: ['a'] }, { id: 'a', component: 'Button', label: 'Go' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'a Column of the Button and a Divider, and a Grid around the Button, are found (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', children: ['col'] }, { id: 'col', component: 'Column', children: ['a', 'd'] }, { id: 'd', component: 'Divider' }, { id: 'a', component: 'Button' }, { id: 'k2', component: 'Card', children: ['g'] }, { id: 'g', component: 'Grid', children: ['b'] }, { id: 'b', component: 'Button' }]`, 'lone-button-frame') === 2)
+  rule('lone-button-frame', 'a Button beside a Text or a Badge, and under a template list, pass (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', children: ['r'] }, { id: 'r', component: 'Row', children: ['t', 'a'] }, { id: 't', component: 'Text', text: 'Hi' }, { id: 'a', component: 'Button' }, { id: 'k2', component: 'Card', children: ['b', 'g'] }, { id: 'b', component: 'Badge' }, { id: 'g', component: 'Button' }, { id: 'k3', component: 'Card', children: { componentId: 'tpl', path: '/x' } }, { id: 'tpl', component: 'Button' }]`, 'lone-button-frame') === 0)
+  rule('lone-button-frame', 'a later payload that reuses an earlier payload id is walked on its own (T-0369)', n(F, `const a = [{ id: 'k', component: 'Card', children: ['t'] }, { id: 'b', component: 'Text' }]; const c = [{ id: 'k2', component: 'Card', children: ['b'] }, { id: 'b', component: 'Button', label: 'Go' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'the same reuse behind a Row is found too, and the earlier Text-card still passes (T-0369)', n(F, `const a = [{ id: 'k', component: 'Card', children: ['b'] }, { id: 'b', component: 'Text' }]; const c = [{ id: 'k2', component: 'Card', children: ['r'] }, { id: 'r', component: 'Row', children: ['b'] }, { id: 'b', component: 'Button', label: 'Go' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'child and children are both read, and a cycle ends (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', child: 'r', children: ['r'] }, { id: 'r', component: 'Row', child: 'a', children: ['r'] }, { id: 'a', component: 'Button' }]`, 'lone-button-frame') === 1)
 
   rule('inline-geometry', 'style.padding = 12px is found', n(F, `function f() { x.style.padding = '12px' }`, 'inline-geometry') === 1)
   rule('inline-geometry', 'cssText with a gap literal is found', n(F, `x.style.cssText = 'display:flex; gap:0.75rem;'`, 'inline-geometry') === 1)
