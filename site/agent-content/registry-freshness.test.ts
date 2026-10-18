@@ -7,10 +7,12 @@ import { describe, it, expect } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (site/tsconfig.json carries no node types)
 import { existsSync, readFileSync } from 'node:fs'
 import { discoverAgentContent, generateRegistryModule, generateRuntimeModule, manifestUpdates, OUT_REGISTRY, OUT_RUNTIME } from '../../scripts/generate-agent-content.mjs'
-import { digestInput, runtimeRecord, validateContent, type ContentRecord, type PersonaRecord, type PackRecord, type EntryRecord } from './schema.ts'
+import { digestInput, runtimeRecord, validateContent, validateSeedHistory, type ContentRecord, type PersonaRecord, type PackRecord, type EntryRecord } from './schema.ts'
+import { valueDigest } from '@agent-ui/app/agent-admin-overlay'
+import { SEED_HISTORY } from './seed-history.ts'
 import { sha256 } from './digest.ts'
 import { AGENT_CONTENT } from './registry.gen.ts'
-import { AGENT_CONTENT_RUNTIME } from './registry.runtime.gen.ts'
+import { AGENT_CONTENT_RUNTIME, SEED_DIGESTS } from './registry.runtime.gen.ts'
 
 declare const process: { cwd(): string }
 
@@ -76,6 +78,20 @@ describe('agent-content registry: freshness and schema', () => {
   it('the real tree has no schema problems', () => {
     expect(validateContent(discovered.records)).toEqual([])
     expect(discovered.problems).toEqual([])
+  })
+
+  it('T-0355: the runtime module carries each seed history value as its digest, never the value', () => {
+    expect(validateSeedHistory(discovered.records, SEED_HISTORY)).toEqual([])
+    expect(SEED_DIGESTS['quizmaster']?.['1']?.['model']).toBe(valueDigest('claude-haiku-4-5'))
+    expect(committedRuntime).not.toContain('claude-haiku-4-5')
+    expect(generateRuntimeModule(discovered.records, { quizmaster: { 1: { model: 'claude-haiku-4-0' } } }), 'a history edit changes the module').not.toBe(committedRuntime)
+  })
+
+  it('bites: a seed history row naming no persona, a version not below the current one, or an entry list', () => {
+    const problems = validateSeedHistory(discovered.records, { ghost: { 1: { model: 'x' } }, quizmaster: { 6: { model: 'x' }, 2: { 'entries:skill': [] } } }).join('\n')
+    expect(problems).toContain('ghost names no persona')
+    expect(problems).toContain('quizmaster version 6 is not below its current version 6')
+    expect(problems).toContain('quizmaster@2 key entries:skill is no persona store key')
   })
 
   it('bites: a planted body byte changes the generated module', () => {

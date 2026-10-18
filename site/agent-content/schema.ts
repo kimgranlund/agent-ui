@@ -165,6 +165,10 @@ export function runtimeRecord(record: ContentRecord): RuntimeRecord {
   return { ...rest, frontmatter }
 }
 
+/** The browser's per-version field digests (`SEED_DIGESTS`, T-0355): persona id, then past seed version,
+ *  then store key to the `valueDigest` of the value that version seeded. */
+export type SeedDigests = Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, string>>>>>>
+
 // ── canonical form and digests ──────────────────────────────────────────────────────────────────────
 
 /** Sorted-key, undefined-dropped, unspaced JSON (the `site/lib/agent-manifest/agent-manifest.ts` rule): the
@@ -272,6 +276,28 @@ export function findRef<R extends RuntimeRecord>(records: readonly R[], ref: str
   const want = parsed.local ? scope : undefined
   const hit = records.find((r): r is Extract<R, { kind: EntryKind }> => r.kind === kind && r.id === parsed.id && (r as { scope?: string }).scope === want)
   return hit && hit.version === parsed.version ? hit : null
+}
+
+/** Every problem in the committed seed history table (`seed-history.ts`, T-0355), as `<path>: <problem>`
+ *  lines: a persona the registry lacks, a version that is not a past one, or a key that is no persona store
+ *  key (an entry list is not recorded yet). `[]` means valid. */
+export function validateSeedHistory(records: readonly ContentRecord[], history: Readonly<Record<string, Readonly<Record<number, Readonly<Record<string, unknown>>>>>>): string[] {
+  const out: string[] = []
+  const at = `${CONTENT_ROOT}/seed-history.ts`
+  const storeKeys = new Set(PERSONA_FIELDS.flatMap((f) => (f.key === undefined || f.type === 'entries' ? [] : [f.key])))
+  for (const [id, versions] of Object.entries(history)) {
+    const persona = records.find((r): r is PersonaRecord => r.kind === 'persona' && r.id === id)
+    if (!persona) {
+      out.push(`${at}: ${id} names no persona`)
+      continue
+    }
+    for (const [version, fields] of Object.entries(versions)) {
+      const v = Number(version)
+      if (!isVersion(v) || v >= persona.version) out.push(`${at}: ${id} version ${version} is not below its current version ${persona.version}`)
+      for (const key of Object.keys(fields)) if (!storeKeys.has(key)) out.push(`${at}: ${id}@${version} key ${key} is no persona store key`)
+    }
+  }
+  return out
 }
 
 /** Every problem in a registry, as `<path>: <problem>` lines. `[]` means valid. */

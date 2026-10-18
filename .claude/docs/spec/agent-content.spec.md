@@ -273,7 +273,12 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
    merges, a superset of ACS-R7's "higher version": an unbumped seed text edit reaches every user who did not
    edit that field. An entry patch keeps its whole base entry, which case 5 needs to keep the user's entry. At a
    lower stored version (ACS-R7's migration) a seed entry missing from the stored list is not read as a user
-   removal (a later version may have added it), so that branch records no removals and no order. ACS-R8's
+   removal (a later version may have added it), so that branch records no removals and no order. T-0355
+   (Kim 2026-10-17, seed digests per version): a committed history table (`site/agent-content/seed-history.ts`)
+   records the store values of past seed versions, and the generator emits their field digests as
+   `SEED_DIGESTS` in the runtime registry. On that migration a stored value whose digest equals the stored
+   version's seed digest is untouched and takes the new seed unflagged; any other differing value is kept and
+   flagged `seedChanged`. Entry lists carry no digests yet, so they stay on the flagged path. ACS-R8's
    per-op `source` landed with T-0162 (item 7). The Teams pane takes its store through `ui-agent-admin`'s
    `setTeamStore`; the page's store writes through the `teamsResource` mutations.
 7. Schema forms, decided (T-0162, ACS-R8 and ACS-R10). Each kind's fields are declared once in
