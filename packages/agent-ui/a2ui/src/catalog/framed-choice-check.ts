@@ -9,14 +9,14 @@
 // lone-button Card with no sibling, which FRAMED_CHOICE skipped. LONE_BUTTON_FRAME now sends back every other Card
 // that frames one Button and asks for the plain Button in the surface's flow.
 // T-0369 (round 11 :164, Haiku 5.5 seven-card stud): the probe render lint reads the DOM, one ui-button and no other
-// text in the ui-card, so a one-child Row or Column wrapper (CardFooter > Row > Button) is seen through as well.
-// The detector mirrors `scripts/dogfood-compose.mjs` `lone-button-frame`: the Button is the Card's sole child,
-// or the sole child of a chain of one-child CardContent, CardFooter, Row or Column wrappers. It reads only Card and
-// Button, so it `requires` those.
+// text in the ui-card, so the Button may sit behind any chain of one-child wrappers (CardFooter > Row > Button). The
+// walk is the shared `lone-button-frame.ts`, which `scripts/dogfood-compose.mjs` imports too; see it for the rule.
+// It reads only Card and Button, so it `requires` those.
 // DOM-less and node-free, like `semantic-check.ts`: both server hosts import it.
 
 import type { A2uiComponent } from '../protocol.ts'
 import type { SemanticCheck, SemanticFinding, SurfaceView } from './semantic-check.ts'
+import { CARD_PARTS, loneButtonFrame } from './lone-button-frame.ts'
 
 /** The ids a component lists as `child` or explicit `children` (a template ChildList names no fixed ids). */
 const childIds = (c: A2uiComponent): string[] => [
@@ -24,29 +24,21 @@ const childIds = (c: A2uiComponent): string[] => [
   ...(Array.isArray(c.children) ? c.children.filter((id): id is string => typeof id === 'string') : []),
 ]
 
-/** The types a lone Button can sit inside without the Card framing more than that Button. */
-const WRAPPERS: ReadonlySet<string> = new Set(['CardContent', 'CardFooter', 'Row', 'Column'])
+/** Whether a component lists a template ChildList (an object `children`), whose ids are not fixed. */
+const hasTemplate = (c: A2uiComponent): boolean => typeof c.children === 'object' && c.children !== null && !Array.isArray(c.children)
 
-/** The one Button a Card frames (directly, or through one-child CardContent, CardFooter, Row or Column wrappers), or undefined. */
-function loneButton(view: SurfaceView, c: A2uiComponent, depth: number): A2uiComponent | undefined {
-  if (!Array.isArray(c.children) && typeof c.child !== 'string') return undefined
-  const ids = childIds(c)
-  if (ids.length !== 1) return undefined
-  const kid = view.components.get(ids[0]!)
-  if (kid === undefined) return undefined
-  if (kid.component === 'Button') return kid
-  return WRAPPERS.has(kid.component) && depth < 3 ? loneButton(view, kid, depth + 1) : undefined
+/** The lone Button a Card frames (T-0369: through any structural wrappers), via the shared walk. */
+function loneButton(view: SurfaceView, card: A2uiComponent): { button: A2uiComponent; wrappers: string[] } | undefined {
+  const frame = loneButtonFrame(card.id, (id) => {
+    const c = view.components.get(id)
+    return c === undefined ? undefined : { component: c.component, ids: childIds(c), template: hasTemplate(c) }
+  })
+  return frame === undefined ? undefined : { button: view.components.get(frame.button)!, wrappers: frame.wrappers }
 }
 
-/** T-0316 (D3): the wrapper types between a Card and its lone Button, so the repair names only the
- *  wrappers the surface holds (a2ui-basic has neither). */
-function wrappersOf(view: SurfaceView, cards: readonly A2uiComponent[]): string[] {
-  const types = new Set<string>()
-  for (const card of cards) {
-    for (let c = view.components.get(childIds(card)[0]!); c !== undefined && c.component !== 'Button'; c = view.components.get(childIds(c)[0]!)) types.add(c.component)
-  }
-  return [...types]
-}
+/** T-0316 (D3): the Card-level wrapper types between a Card and its lone Button, so the repair names only the ones the
+ *  surface holds (a2ui-basic has neither). Row and Column are never named: the FRAMED_CHOICE repair builds a Row. */
+const cardParts = (wrappers: readonly string[]): string[] => wrappers.filter((w) => CARD_PARTS.has(w))
 
 export const framedChoiceCheck: SemanticCheck = {
   id: 'framed-choice',
@@ -58,30 +50,33 @@ export const framedChoiceCheck: SemanticCheck = {
       for (const parent of view.components.values()) {
         const framed = childIds(parent)
           .map((id) => view.components.get(id))
-          .filter((c): c is A2uiComponent => c !== undefined && c.component === 'Card' && loneButton(view, c, 0) !== undefined)
+          .filter((c): c is A2uiComponent => c !== undefined && c.component === 'Card' && loneButton(view, c) !== undefined)
         if (framed.length < 2) continue
         for (const c of framed) grouped.add(c.id)
-        const labels = framed.map((c) => loneButton(view, c, 0)!['label']).filter((l): l is string => typeof l === 'string')
-        const wrappers = wrappersOf(view, framed)
+        const found = framed.map((c) => loneButton(view, c)!)
+        const labels = found.map((f) => f.button['label']).filter((l): l is string => typeof l === 'string')
+        const parts = cardParts([...new Set(found.flatMap((f) => f.wrappers))])
         findings.push({
           code: 'FRAMED_CHOICE',
           path: `${view.surfaceId}:${framed[0]!.id}`,
           message:
             `${view.surfaceId} frames each choice in its own Card (${framed.map((c) => c.id).join(', ')}), each holding one Button${labels.length ? ` (${labels.map((l) => `"${l}"`).join(', ')})` : ''}. ` +
-            `Put the Buttons directly in one Row (variant soft, wrap) under ${parent.id} and drop the Cards${wrappers.length ? ` and their ${wrappers.join(' or ')}` : ''}.`,
+            `Put the Buttons directly in one Row (variant soft, wrap) under ${parent.id} and drop the Cards${parts.length ? ` and their ${parts.join(' or ')}` : ''}.`,
         })
       }
       for (const card of view.components.values()) {
-        const lone = card.component === 'Card' && !grouped.has(card.id) ? loneButton(view, card, 0) : undefined
+        const lone = card.component === 'Card' && !grouped.has(card.id) ? loneButton(view, card) : undefined
         if (lone === undefined) continue
-        const label = typeof lone['label'] === 'string' ? ` "${lone['label']}"` : ''
-        const wrappers = wrappersOf(view, [card])
+        const label = typeof lone.button['label'] === 'string' ? ` "${lone.button['label']}"` : ''
+        const parts = cardParts(lone.wrappers)
+        // grammar.md "Card anatomy": a footer with exactly one action Button skips the Row, so a Row or Column is not
+        // part of the fix; the Button either leaves the Card or, where the Card holds content it acts on, is the footer's own child.
         findings.push({
           code: 'LONE_BUTTON_FRAME',
           path: `${view.surfaceId}:${card.id}`,
           message:
-            `${view.surfaceId} frames the one Button${label} (${lone.id}) alone in Card ${card.id}, a bordered box around a single action. ` +
-            `Put Button ${lone.id} directly in the surface's flow where ${card.id} sits (or in the Card above it that holds the content it acts on) and drop ${card.id}${wrappers.length ? ` and its ${wrappers.join(' and ')}` : ''}.`,
+            `${view.surfaceId} frames the one Button${label} (${lone.button.id}) alone in Card ${card.id}, a bordered box around a single action. ` +
+            `Put Button ${lone.button.id} directly in the surface's flow where ${card.id} sits (or, in the CardFooter of the Card above it that holds the content it acts on, as the footer's own child, since a footer with one Button needs no Row) and drop ${card.id}${parts.length ? ` and its ${parts.join(' and ')}` : ''}.`,
         })
       }
     }
