@@ -331,6 +331,12 @@
 - Round 11 clusters H to K filed as T-0368 to T-0371 (and T-0367) but not started: they follow the close-out round.
 - Live spend for the long run: about $10 of the $15 cap; nothing further spent.
 
+## Close-out rulings (Kim, 2026-10-18, round 11 wave)
+- T-0345: ship the NEW opening line (30/30 vs 22/30; the +9 bar waived as a ceiling effect).
+- T-0359: narrow the Swatch ask row to the first palette ask only.
+- T-0363: option (b), persona skills place GameHud in a surface; grammar.md unchanged.
+- T-0367 to T-0371: promoted to ready, keyless solo lanes in a fanout.
+
 ## T-0178: Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (2026-10-18)
 
 - note: `.sdlc/evals/rounds/2026-10-17-r10-targeted/runs/regress-croupier-blackjack-moves-haiku-1` (the good croupier case in `scripts/e2e-admin/probe/rubrics/calibration.json`) scores 3 on the live run, exactly at the croupier threshold, and the C4 reason still names the turn 4 chat-log fragment "100" as a slip. The margin is zero, so a rerun may flip it; recheck on any judge model, rubric or transcript change.
