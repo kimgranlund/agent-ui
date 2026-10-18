@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "long-croupier-blackjack-hand-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Press **Deal again** on the table to start a new round.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and in plain dealer language with no JSON or tool talk. The one slip is stray markdown bold markers in turn 3."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "That hand is already over. You busted at 22, so there's nothing left to stand on.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 50 placed. Dealing you in.",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on: bets are taken, Hit draws, Stand plays out the dealer, and the impossible Stand is explained with a next step. In turn 4 the surface showed bet 100 after the player had not yet chosen, and the reply did not mention it."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer has 18 (10 + 8) and stands.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays the dealer hand and settles the bet itself. The only wrinkle is that the Deal again betting surface carried a pre-set bet of 100 that the player did not choose."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your total is 22, which busts. The dealer wins this round and you lose your 100 bet.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll is 850.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankroll match the surface text. The turn 2 reply did not state the bankroll, which is a minor omission but not a contradiction."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2972,
+    "outputTokens": 493,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.010874,
+  "at": "2026-10-18T09:22:21.779Z"
+}

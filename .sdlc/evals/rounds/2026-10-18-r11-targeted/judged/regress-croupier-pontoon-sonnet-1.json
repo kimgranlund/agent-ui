@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-pontoon-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealt. You hold the 10 and 6 for 16, with 100 staked.",
+          "found": true
+        },
+        {
+          "quote": "You can't stick on 14. Pontoon rules say you need 15 or better",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain dealer talk with no JSON, ids, or tool talk. 'Pontoon rules say' is game vocabulary, not system rules."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bought the 3 of hearts. You're on 19 with 200 staked.",
+          "found": true
+        },
+        {
+          "quote": "You can't stick on 14. ... so you have to twist or buy.",
+          "found": true
+        }
+      ],
+      "why": "Every bet, twist, buy and stick is acted on, and the impossible stick on 14 is refused plainly with the legal options named."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the king and 5 for 15, then twists on 16 or less and draws the 4 of clubs for 19.",
+          "found": true
+        },
+        {
+          "quote": "The dealer sticks on 17 or more, and your 19 beats 18.",
+          "found": true
+        }
+      ],
+      "why": "The dealer plays out and settles in the same turn as the stick, and the croupier never picks a move or bet for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your bankroll is now 1,100.",
+          "found": true
+        },
+        {
+          "quote": "You win 200 at even money, and your bankroll is now 1,300.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankroll in each reply match the surface data and the earlier replies, e.g. 1,100 then 1,300 across rounds."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4887,
+    "outputTokens": 487,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.014644,
+  "at": "2026-10-18T09:24:54.678Z"
+}

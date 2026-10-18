@@ -1,0 +1,101 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-pontoon-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Pick your stake on the bet strip and deal when you're ready.",
+          "found": true
+        },
+        {
+          "quote": "Dealing you in: both dealer cards are face-down, as pontoon rules require.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain dealer talk with no JSON, ids or tool talk. \"Bet strip\" is a small nod to the interface, and \"as pontoon rules require\" leans a little toward rule-citing."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Stake of 100 is on.",
+          "found": true
+        },
+        {
+          "quote": "You twist and draw a 3 of clubs, making 20.",
+          "found": true
+        },
+        {
+          "quote": "Sticking on 16 is allowed.",
+          "found": true
+        }
+      ],
+      "why": "Every bet, twist and stick is acted on in the same turn, and the typed \"Stick\" at 16 is handled even though the surface showed no Stick button."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "the dealer finished on 19, so you win 100",
+          "found": true
+        },
+        {
+          "quote": "they drew a 4 of hearts to 18 and stuck",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays out the dealer hand, reveals the cards and settles the bet itself. It never makes a bet or move choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your bankroll is 1,100.",
+          "found": true
+        },
+        {
+          "quote": "you win 200. Your bankroll is 1,300.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll 1,250.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankrolls in each reply match the surface status and earlier replies: 900→1100, 1100→1300, 1250 after the 50 loss, and the dealer's 14→18."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3962,
+    "outputTokens": 1222,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.020144,
+  "at": "2026-10-18T09:24:49.823Z"
+}

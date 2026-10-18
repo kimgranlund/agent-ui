@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-moves-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Press **Deal again** on the table to start a new round from your 1,400 bankroll.",
+          "found": true
+        },
+        {
+          "quote": "Set your bet on the table strip and it deals the hand.",
+          "found": true
+        }
+      ],
+      "why": "The replies are short and read like a dealer. The one slip is the markdown bold in turn 6, plus a slightly awkward 'table strip' phrase in turn 0."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The round is already over. You busted at 23, so there's no hand left to hit.",
+          "found": true
+        },
+        {
+          "quote": "Split isn't available, since your Queen and 8 aren't a pair. I stood on 18.",
+          "found": true
+        }
+      ],
+      "why": "Every bet, double, hit and stand is acted on. The impossible hit and the impossible split are each declined plainly, with the next step given."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turned the hole card (9 + 4 = 13), drew a 5 for 18, and stood.",
+          "found": true
+        },
+        {
+          "quote": "The dealer revealed the 5 (12), drew a 10 and busted at 22",
+          "found": true
+        }
+      ],
+      "why": "The Croupier reveals the hole card, plays out the dealer hand and settles each bet itself. It never makes a bet or move for the player: it follows 'Split if you can, otherwise stand' and the double-down request as given."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your 20 beats the dealer's 18, so you win 500 chips. Your bankroll is now 1,500.",
+          "found": true
+        },
+        {
+          "quote": "you win 75. Your bankroll is now 1,475.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankrolls in every reply match the surface data of the same turn and the earlier replies (1,500, 1,400, 1,475)."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4066,
+    "outputTokens": 1092,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.019052,
+  "at": "2026-10-18T09:22:51.063Z"
+}

@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-rounds-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "You stand on soft 20 and the dealer stands on 17.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain dealer talk with no JSON, ids, or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 50 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "You hit and draw a 10. That's 23, a bust",
+          "found": true
+        }
+      ],
+      "why": "Each bet, Hit, Stand and Deal again click is acted on directly and correctly."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer drew a 10 to 23 and busts, so you win the 100 bet.",
+          "found": true
+        },
+        {
+          "quote": "the dealer takes your 50",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays out the dealer hand and settles each bet itself, and it never makes a choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 25 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll is 1,100.",
+          "found": true
+        }
+      ],
+      "why": "Totals and bankrolls match the surface in every turn. The one slip is turn 3, where the reply says to set the stake while the surface still shows bet 100 after the 1,100 bankroll; this is minor and consistent. Turn 6 shows bet 50 after the 1,050 bankroll, which is also fine."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3456,
+    "outputTokens": 449,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.011402,
+  "at": "2026-10-18T09:23:17.624Z"
+}

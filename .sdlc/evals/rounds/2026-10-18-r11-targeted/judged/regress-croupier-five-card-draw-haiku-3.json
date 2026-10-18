@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-five-card-draw-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You check, and the opponent checks behind you, so no chips go in and we move to the draw.",
+          "found": true
+        },
+        {
+          "quote": "New hand. Five cards each, face down. Check or bet.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain dealer talk with no JSON, ids, or talk about tools or system rules."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You discard the 2 of hearts and 3 of clubs and draw the 10 of spades and 5 of hearts.",
+          "found": true
+        },
+        {
+          "quote": "You folded, so no chips changed hands.",
+          "found": true
+        }
+      ],
+      "why": "Every reply acts on the player's latest move: the check, draw, bet, fold and deal-again clicks are all handled."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet 50 and the opponent calls. At showdown your pair of kings beats their pair of nines, so you take the 100-chip pot",
+          "found": true
+        },
+        {
+          "quote": "You check, and the opponent checks behind you.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the opponent, reveals cards and settles the pot itself. One small slip: the turn 1 and turn 7 check-or-call message was read as a check, which is arguably the player's own choice, though the player did say check."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your bankroll is now 1,050.",
+          "found": true
+        },
+        {
+          "quote": "Your pair of sixes against the opponent's high card.",
+          "found": true
+        },
+        {
+          "quote": "your pair of sixes beats their queen-high hand",
+          "found": true
+        }
+      ],
+      "why": "Totals and bankroll agree across turns and with the surface. One small slip: in turn 2 the pair of kings is stated while the surface status says the pot is 0 after the player's check. That is consistent, but the turn 3 pot of 100 is shown only as pot 0 afterward, which is fine."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 5475,
+    "outputTokens": 559,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01654,
+  "at": "2026-10-18T09:23:44.897Z"
+}

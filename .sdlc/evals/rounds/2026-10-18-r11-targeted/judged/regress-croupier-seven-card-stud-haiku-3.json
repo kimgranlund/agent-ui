@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-seven-card-stud-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Seven-card stud it is.",
+          "found": true
+        },
+        {
+          "quote": "The hand is already over. We reached showdown, and you won with a king-high hand.",
+          "found": true
+        }
+      ],
+      "why": "Replies are plain dealer talk with no JSON or tool talk. A few lines read a bit like a narrator ('Ante is 10'), but this is a minor slip."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The hand is already over. We reached showdown, and you won with a king-high hand. The table stays as it is. Press Deal again to start the next round.",
+          "found": true
+        },
+        {
+          "quote": "You bet 50 and the dealer calls, so the pot is 100",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on, and the impossible check after the hand ended is handled and the player is told what to do. The 'Bet 50' is accepted even though the surface only offered Bet 10, which is a small oddity."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Both of you check, so the hand goes to showdown.",
+          "found": true
+        },
+        {
+          "quote": "You win, but no chips were bet",
+          "found": true
+        }
+      ],
+      "why": "The dealer deals streets, reveals cards, runs the showdown and settles the hand itself. It never asks the player to do the house's job and never picks the player's bet."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your best five cards are K, Q, 9, 7 and 4, a king-high hand.",
+          "found": true
+        },
+        {
+          "quote": "your bankroll drops to 950",
+          "found": true
+        },
+        {
+          "quote": "New hand. Ante is 10 and your bankroll is 1,000.",
+          "found": true
+        }
+      ],
+      "why": "The reply claims an ante of 10 but the pot stays 0 and the bankroll is unchanged, which contradicts the surface. After the 50 bet the pot is 100 with a bankroll of 950, but the ante is ignored. The showdown K-high hand also omits the 3 and 2 properly, though that is fine. The ante contradiction can mislead the player."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 5606,
+    "outputTokens": 595,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.017162,
+  "at": "2026-10-18T09:25:13.248Z"
+}

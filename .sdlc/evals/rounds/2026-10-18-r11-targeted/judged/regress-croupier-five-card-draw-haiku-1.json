@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-five-card-draw-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You check, and the dealer checks behind you, so no chips go in.",
+          "found": true
+        },
+        {
+          "quote": "Final betting round: check, bet 20, or fold.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Final betting round: check, bet 20, or fold.",
+          "found": true
+        },
+        {
+          "quote": "I dealt you a 7 of hearts and a queen of clubs for the 4 and 2 you discarded",
+          "found": true
+        }
+      ],
+      "why": "Every move is acted on. The one slip is that the turn 2 reply to \"Discard my two lowest cards and draw\" never says what was drawn, and that only comes out a turn later."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet 50 and the dealer calls.",
+          "found": true
+        },
+        {
+          "quote": "At showdown your pair of queens beats the dealer's jack high.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the dealer hand, runs showdown and settles the pot itself. It never makes a bet or discard choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win the 100-chip pot, a net gain of 50. Your bankroll is now 1,050.",
+          "found": true
+        },
+        {
+          "quote": "Pot of 100 to you, net +50 chips.",
+          "found": true
+        }
+      ],
+      "why": "Totals, hand names, pot and bankroll in each reply match the surface text and data and the earlier replies."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 5168,
+    "outputTokens": 1423,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.024566,
+  "at": "2026-10-18T09:23:34.416Z"
+}

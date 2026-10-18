@@ -1,0 +1,101 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-omaha-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "**The dealer wins the 60 pot with a pair of queens, and you're down 30 for the round.**",
+          "found": true
+        },
+        {
+          "quote": "New round, new table.",
+          "found": true
+        }
+      ],
+      "why": "The replies are short, plain table talk with no JSON, ids or tool talk. The only slip is the markdown bold in the turn 4 reply."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You check and the dealer checks behind. The flop is J♦ 10♣ 3♦",
+          "found": true
+        },
+        {
+          "quote": "You bet the pot, 20, and the dealer calls.",
+          "found": true
+        },
+        {
+          "quote": "You fold and the dealer takes the 20 pot without a showdown.",
+          "found": true
+        }
+      ],
+      "why": "Every reply acts on the player's latest move: a check, a pot bet, a fold, or a deal. None is ignored or misread."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "so we go to showdown. The dealer's Q♣ Q♦ with the J♦ 10♣ 5♠ on the board makes a pair of queens.",
+          "found": true
+        },
+        {
+          "quote": "The turn is the 2♣, a blank",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals every street, plays the dealer's actions, reveals the dealer's hand at showdown and settles the pot itself. The player only makes their own choices."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your bankroll is 970.",
+          "found": true
+        },
+        {
+          "quote": "your bankroll carries over from 970 to 960 after your ante",
+          "found": true
+        },
+        {
+          "quote": "The pot is 60 and your bankroll is 930.",
+          "found": true
+        }
+      ],
+      "why": "Pots, bankrolls and results in each reply match that turn's surface and the earlier replies. The round 1 loss is 10 ante plus a 20 bet, so the reported 30 is consistent."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 7548,
+    "outputTokens": 1764,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.032736,
+  "at": "2026-10-18T09:24:30.867Z"
+}

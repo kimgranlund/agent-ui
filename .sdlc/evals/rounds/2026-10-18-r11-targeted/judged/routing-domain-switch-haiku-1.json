@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-domain-switch-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I can't book restaurant tables. I'm the dealer here, and I only have the card table.",
+          "found": true
+        },
+        {
+          "quote": "Stand. The dealer reveals the hole card and draws a 5 to reach 18",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain, and in dealer voice, with no JSON, ids, or talk of tools or payloads."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "I can't book restaurant tables.",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken, Stand plays out the dealer, and the off-topic question is answered plainly with a pointer back to the table."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the hole card and draws a 5 to reach 18, which beats your 17. You lose the 100 bet.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, draws for the dealer, and settles the bet itself. The player chose the 100 bet and Stand."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer wins 18 to 17. You lose 100.",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll is now 900.",
+          "found": true
+        }
+      ],
+      "why": "The reply totals, result, and bankroll of 900 match the surface data and the later turn's reply."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2368,
+    "outputTokens": 421,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.008946,
+  "at": "2026-10-18T09:26:31.667Z"
+}

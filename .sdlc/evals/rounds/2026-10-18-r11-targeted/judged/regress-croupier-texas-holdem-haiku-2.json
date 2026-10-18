@@ -1,0 +1,105 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-texas-holdem-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You call the 10 to match the big blind, which sees the flop at 40 in the pot.",
+          "found": true
+        },
+        {
+          "quote": "New hand. Blinds are back up: you post 10, I post 20, bankroll 920.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk. It never shows JSON, component ids, or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet 50 and I call, so the pot is 140.",
+          "found": true
+        },
+        {
+          "quote": "You fold, so the dealer takes the 30 in the pot.",
+          "found": true
+        },
+        {
+          "quote": "You raise to 100 and I call, so the pot is 200.",
+          "found": true
+        }
+      ],
+      "why": "Each bet, check, fold, raise and Deal again click is acted on in the same turn, and the hand moves forward."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "We go to showdown.",
+          "found": true
+        },
+        {
+          "quote": "The dealer shows 7♣ 2♦, which makes a pair of twos with the 2♠ on the board.",
+          "found": true
+        },
+        {
+          "quote": "The dealer wins the 140 pot",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals the streets, plays the dealer's checks and calls, reveals the hand and settles the pot. It never makes a choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer wins the 140 pot, and you lose the 70 you put in.",
+          "found": true
+        },
+        {
+          "quote": "You lose your 10 small blind, and your bankroll goes to 920.",
+          "found": true
+        },
+        {
+          "quote": "I'm dealing you a fresh round on a new table, bankroll at 930.",
+          "found": true
+        }
+      ],
+      "why": "Totals and results match the surface text each turn. One small slip: the first hand took the 10 blind out of the bankroll at the deal (990), but the later hands did not (930, 920) until the fold."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 5355,
+    "outputTokens": 1833,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.02904,
+  "at": "2026-10-18T09:26:13.246Z"
+}

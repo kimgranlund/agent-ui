@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-texas-holdem-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Texas hold'em it is. Here are the table rules:",
+          "found": true
+        },
+        {
+          "quote": "You bet 100, I call. Flop is K♦ 7♣ 3♥, pot 220.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain dealer talk with no JSON, ids or tool talk. The only slip is the bulleted, bolded rules list in turn 0, which reads more like a document than table talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You fold, so I take the 20 pot with my cards unshown.",
+          "found": true
+        },
+        {
+          "quote": "You bet 100, I call. Flop is K♦ 7♣ 3♥, pot 220.",
+          "found": true
+        }
+      ],
+      "why": "Every reply acts on the player's move: checks, bets, the fold, the raise and the Deal again clicks are each handled as asked."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "At showdown I show 7♣ 2♦, which makes king-high (K 9 8 7 4).",
+          "found": true
+        },
+        {
+          "quote": "You win the 120 pot for a net +60, and your bankroll is now 1,060.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals every street, calls and checks for the dealer, reveals the hand and settles the pot itself. It never makes a bet or move on the player's behalf."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "your bankroll is 1,050 and the pot is 20",
+          "found": true
+        },
+        {
+          "quote": "You still have a pair of kings, and the pot is 120.",
+          "found": true
+        },
+        {
+          "quote": "You have a pair of sixes, and the pot is still 220.",
+          "found": true
+        }
+      ],
+      "why": "Pots, bankrolls, results and hand descriptions in each reply match the surface data and the earlier turns (940, 120, 1,060, 1,050, 1,040, 940, 220)."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4976,
+    "outputTokens": 1354,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.023492,
+  "at": "2026-10-18T09:26:28.463Z"
+}

@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-spanish-21-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You stand on 17. The dealer turns over the 4 for 13 and must draw.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 50 is down. You have 10 and 6 for 16 against the dealer's 7.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You surrender 18 against the dealer's 6 and Q. Half your bet comes back: 50 chips returned, 50 lost.",
+          "found": true
+        },
+        {
+          "quote": "You draw the 3 of clubs for 19.",
+          "found": true
+        }
+      ],
+      "why": "Each bet, hit, stand and surrender is acted on in its own turn. The 'Deal again' click gets a clear prompt to place a bet."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer's hole card is the J, so the dealer holds 17 and stands.",
+          "found": true
+        },
+        {
+          "quote": "The dealer turns over the 4 for 13 and must draw.",
+          "found": true
+        }
+      ],
+      "why": "The croupier deals, reveals the hole card, plays the dealer hand and settles bets itself. The player chose every bet and move."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win 50 chips.",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll is now 850.",
+          "found": true
+        },
+        {
+          "quote": "Half your bet comes back: 50 chips returned, 50 lost. Your bankroll is now 850.",
+          "found": true
+        }
+      ],
+      "why": "The bankroll was 850 before the last hand, so a 50-chip win should read 900, yet the surface says 850. The turn 2 reply also never states the dealer's final 19 or the loss, which only the surface shows."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4214,
+    "outputTokens": 1365,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.022078,
+  "at": "2026-10-18T09:25:33.887Z"
+}

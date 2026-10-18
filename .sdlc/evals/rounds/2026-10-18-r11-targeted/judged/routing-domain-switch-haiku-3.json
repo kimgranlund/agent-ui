@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-domain-switch-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I don't have a reservation tool, and I'm only set up to deal cards here.",
+          "found": true
+        }
+      ],
+      "why": "Replies are mostly plain dealer talk, but the turn 3 mention of having no reservation tool is talk about its own tools, a small slip."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "You stand on 17.",
+          "found": true
+        },
+        {
+          "quote": "I can't book restaurant tables.",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken, Stand plays out the dealer, and the off-topic question gets a plain answer with a redirect to Deal again."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 4 (13), draws a 2 (15) and a 3 (18), and stands.",
+          "found": true
+        },
+        {
+          "quote": "Dealer wins 18 to 17, and you lose your 100 chip bet.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays out the dealer and settles the bet itself, and it makes no choices for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer wins 18 to 17. You lose 100 chips.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll stays at 900.",
+          "found": true
+        },
+        {
+          "quote": "You're at 900 chips.",
+          "found": true
+        }
+      ],
+      "why": "The totals, result and bankroll in the replies match the surface data, and the earlier replies agree with the later ones."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2314,
+    "outputTokens": 442,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.009048,
+  "at": "2026-10-18T09:26:38.359Z"
+}

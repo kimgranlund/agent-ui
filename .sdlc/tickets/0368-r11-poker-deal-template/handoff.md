@@ -1,0 +1,29 @@
+---
+id: T-0368
+title: "POKER_DEAL_MISSING judges a PlayingCard template over an empty hand as undealt (round 11 cluster H)"
+type: bug             # feature | bug | chore | spike | idea
+status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
+priority: P2         # P1 | P2 | P3
+depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
+created: 2026-10-18
+router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
+---
+
+## Goal
+A hold'em table that asks for the stake with PlayingCard list templates bound to empty hands gets POKER_DEAL_MISSING, as a table with no PlayingCard does (T-0357).
+
+## Repro
+1. A croupier check test on the round 2 payload of trace :222 of `.sdlc/evals/rounds/2026-10-18-r11-targeted/``traces/2026-10-18.jsonl` (surface `holdem-table-1`, `playerHand: []`, `dealerHand: []`, a "Choose your bet" reply) expecting `['POKER_DEAL_MISSING']`. Today it yields `[]`.
+
+## Expected
+The check fires on templates over empty hands and stays quiet once a hand array holds cards.
+
+## Actual
+`regress-croupier-texas-holdem-haiku-3` opened stake-first through the SURFACE_MISSING repair round, so the scripted hand ran a street behind and Deal again never appeared (:222 to :226). POKER_DEAL_MISSING fired 0 times in round 11.
+
+## Context
+`packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts` `betStepWithoutTable` returns early on any `PlayingCard` ("a dealt hand is past the bet step"), before `holdemStakeAsk`. Guess: a PlayingCard reached only as a ChildList template over an empty bound array is not a dealt card. Report: `.sdlc/evals/rounds/2026-10-18-r11-targeted/``report.md` cluster H.
+
+## Constraints
+The failing test lands before or with the fix, never after.

@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-pontoon-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your hand is A and 9, plus the face-down 4, so the total is 14 with the ace counted as 1.",
+          "found": true
+        }
+      ],
+      "why": "Replies are mostly plain dealer talk with no JSON or tool talk. A few lines read a bit like rule recitation, and \"Dealing your pontoon hand now\" is stiff, but nothing breaks voice."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You can't stick on 14.",
+          "found": true
+        },
+        {
+          "quote": "Twist. You draw a 3 of hearts, making 19.",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on: bets taken, twist draws, stick plays out the dealer, and the illegal stick is refused with alternatives. The Turn 6 buy reply reports the card and total but never confirms the stake doubled."
+    },
+    {
+      "id": "C3",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 5 and must draw to 15 or better, getting a 4 for 17.",
+          "found": true
+        },
+        {
+          "quote": "Both of the dealer's cards stay face-down",
+          "found": true
+        }
+      ],
+      "why": "The house deals, plays out the dealer and settles correctly in Turn 3. But in Turn 6 the dealer's up card 7 is turned face-down on the surface after the buy, which is a house slip."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "so your bankroll is now 1,100",
+          "found": true
+        },
+        {
+          "quote": "Bought: stake now 200.",
+          "found": true
+        },
+        {
+          "quote": "Twist for another card, or buy for a face-down card at a doubled stake of 200.",
+          "found": true
+        }
+      ],
+      "why": "Turn 3 agrees fully with its surface. In Turn 6 the reply says 14 and the surface agrees, but the Turn 7 reply says buying again is at a stake of 200 when the stake is already 200, a slight inconsistency. The Turn 6 total of 14 also ignores the hand's pontoon potential, which is an arithmetic matter checked elsewhere."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3847,
+    "outputTokens": 607,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.013764,
+  "at": "2026-10-18T09:24:36.103Z"
+}

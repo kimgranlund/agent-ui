@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-pontoon-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Pontoon it is.",
+          "found": true
+        },
+        {
+          "quote": "Dealer turns over the ten and seven for 17, which beats your 16.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain dealer talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Round over. Your bankroll is 1,100. Set your next bet and deal again.",
+          "found": true
+        },
+        {
+          "quote": "Any further card would bust you, so stick.",
+          "found": true
+        }
+      ],
+      "why": "Moves are answered correctly. Turn 4 is a bit of a non-answer to 'Deal again', and the agent tells the player to stick rather than leaving the choice open."
+    },
+    {
+      "id": "C3",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Any further card would bust you, so stick.",
+          "found": true
+        },
+        {
+          "quote": "Dealer shows a queen and a five for 15, so dealer sticks.",
+          "found": true
+        }
+      ],
+      "why": "The dealer plays out and the bets are settled by the house. In turn 2 the agent instructs the player on the move and never mentions the hand is only 21 on three cards, so it leans toward making the player's choice. Turn 3 has the dealer stick on 15 when the dealer's own rules may differ. Slight slip."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer had 14 and had to draw, so the dealer took a five of hearts for 19.",
+          "found": true
+        },
+        {
+          "quote": "Your 18 loses to 19, and you lose your 200-chip stake.",
+          "found": true
+        }
+      ],
+      "why": "Most totals and bankroll figures agree with the surface. In turn 7 the dealer's 8+6 is 14, so 14+5=19 is correct, but the earlier face-down dealer hand never showed those cards in the replies. The turn 6 'soft 18' reply discloses a hidden card the player could not know, and turn 10's 'ten and seven' is consistent."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4602,
+    "outputTokens": 581,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.015014,
+  "at": "2026-10-18T09:24:40.757Z"
+}

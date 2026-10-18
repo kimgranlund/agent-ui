@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-moves-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The round is closed on table 2, and your bankroll is 1,400.",
+          "found": true
+        },
+        {
+          "quote": "Use the Deal again button on table 2 to open a fresh table",
+          "found": true
+        }
+      ],
+      "why": "Replies are mostly short and in dealer voice, but turn 6 mentions 'table 2' and a button, which leaks system-ish detail. Turn 9 also says 'Split isn't available on this table, which shows only one player hand', which is about the surface rather than game talk."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "That hand is over. You busted with 25, so there's nothing to hit on.",
+          "found": true
+        },
+        {
+          "quote": "Split isn't available on this table, which shows only one player hand, so I'm standing on 16 as you asked.",
+          "found": true
+        }
+      ],
+      "why": "Moves are answered and the impossible hit is refused with a next step. The split refusal is wrong for a pair of 8s, though the player's fallback instruction to stand was followed."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the 6 for 16 and draws a 9 for 25, a bust.",
+          "found": true
+        },
+        {
+          "quote": "The dealer turned up the 4 for 13, drew a 5 for 18, and must stand.",
+          "found": true
+        }
+      ],
+      "why": "The dealer plays out and settles each hand itself. Turn 5 was fine, since the player asked to hit until bust. Declining a legal split with a pair of 8s was a small house-rule slip, not a choice made for the player."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win 500 and your bankroll is now 1,500.",
+          "found": true
+        },
+        {
+          "quote": "You lose the 100 bet, so your bankroll stays at 1,400.",
+          "found": true
+        },
+        {
+          "quote": "The dealer reveals the 6 for 16 and draws a 9 for 25, a bust. You win 75, and your bankroll is 1,475.",
+          "found": true
+        }
+      ],
+      "why": "The bankrolls and totals match the surface in every turn. The surface shows bet 500 on the new betting screen in turn 3 and bet 100 in turn 7, which are leftover defaults and not contradictions of the replies. The mismatches are small, such as 'the dealer's hole card (8, for 18)' which is correct, so a few minor slips at most."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4205,
+    "outputTokens": 693,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01534,
+  "at": "2026-10-18T09:22:56.418Z"
+}

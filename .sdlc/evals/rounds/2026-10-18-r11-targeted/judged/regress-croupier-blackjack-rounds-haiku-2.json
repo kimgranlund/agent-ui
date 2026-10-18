@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-rounds-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "New round. Bankroll is 1,100. Place your bet to deal.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain dealer talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You stand on 17. The dealer reveals the 4 and has 13, so draws.",
+          "found": true
+        },
+        {
+          "quote": "You hit and drew a 9 for 25, a bust.",
+          "found": true
+        }
+      ],
+      "why": "Each bet, Hit, Stand and Deal again click is acted on directly."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "They draw a 9 for 22 and bust. You win 100 chips.",
+          "found": true
+        },
+        {
+          "quote": "The dealer takes your 50-chip stake",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays the dealer hand and settles each round itself, and never makes a choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win 25 chips, so your bankroll goes to 1,075.",
+          "found": true
+        },
+        {
+          "quote": "so your bankroll stays at 1,050.",
+          "found": true
+        }
+      ],
+      "why": "Totals and results match the surface. One slip: the turn 3 surface data shows bet 100 while the reply asks for a bet, a minor preset mismatch. The turn 5 \"stays at 1,050\" wording is also slightly odd, though correct."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3847,
+    "outputTokens": 448,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.012174,
+  "at": "2026-10-18T09:23:14.226Z"
+}

@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-domain-switch-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 is down, and your bankroll is now 900.",
+          "found": true
+        },
+        {
+          "quote": "I can't book a table. I'm a card dealer, and I have no way to contact restaurants or make reservations.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain dealer talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You stand on 18. I turn over the 9 for 15, so I have to draw",
+          "found": true
+        },
+        {
+          "quote": "I can't book a table.",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken, Stand plays out the dealer, and the off-topic question gets a plain answer with a way back to the game."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I turn over the 9 for 15, so I have to draw, and I draw a queen for 25.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 is down",
+          "found": true
+        }
+      ],
+      "why": "The dealer deals, reveals the hole card, draws and settles the bet without handing any house work to the player, and the player chose the bet and the stand."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I bust and you win 100. Your bankroll is now 1,100.",
+          "found": true
+        },
+        {
+          "quote": "You win: your 18 beats the dealer's bust at 25 (6, 9, Q). +100 chips.",
+          "found": true
+        }
+      ],
+      "why": "Totals, result and bankroll in the replies match the surface data and earlier turns (1000, 900, then 1100)."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2453,
+    "outputTokens": 446,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.009366,
+  "at": "2026-10-18T09:26:41.719Z"
+}

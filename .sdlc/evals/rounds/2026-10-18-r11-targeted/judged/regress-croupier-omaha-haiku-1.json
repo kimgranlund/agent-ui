@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-omaha-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer checks too, so we move to the flop: King of spades, 5 of diamonds, 9 of hearts. Check or bet?",
+          "found": true
+        },
+        {
+          "quote": "New round. Fresh table, same 1,000 bankroll.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk. None shows JSON, ids, or talk about tools or system rules."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The pot is still 0, so a pot-sized bet isn't legal yet. Your move: check, or bet a set amount to open the betting.",
+          "found": true
+        },
+        {
+          "quote": "The pot is 0, so there's nothing to bet the pot against. Your options are Check or a set bet of 20.",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on, and the impossible pot bets are refused with clear alternatives. The turn 8 reply is partly off because it describes the wrong hand."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "At showdown the dealer has a pair of eights, and your best hand is King high, so the dealer wins.",
+          "found": true
+        },
+        {
+          "quote": "The dealer's hand is revealed below.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals every street, reveals the dealer hand and settles the result itself. It never makes a bet or move for the player."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your hand is A♠ K♣ Q♦ 5♥ against the dealer's face-down cards.",
+          "found": true
+        }
+      ],
+      "why": "The turn 7 deal gave the player 10♠ 8♥ 4♦ J♣, but the turn 8 reply and surface show the previous round's hand. That misstates the player's cards and contradicts the earlier turn."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 4945,
+    "outputTokens": 1387,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.02376,
+  "at": "2026-10-18T09:24:07.194Z"
+}
