@@ -27,7 +27,7 @@ function schemePanel(scheme: 'light' | 'dark'): HTMLElement {
     uiButton('Soft', 'soft'),
   ])
   provider.style.cssText =
-    'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: var(--md-sys-radius); ' +
+    'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: var(--md-sys-card-radius); ' +
     'border: 1px solid var(--md-sys-color-neutral-outline-variant); background: var(--md-sys-color-neutral-surface); flex: 1 1 14rem;'
   return provider
 }
@@ -47,10 +47,10 @@ const nestedUnset = el('ui-theme-provider', {}, [
 ])
 ancestor.append(nestedUnset)
 ancestor.style.cssText =
-  'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: var(--md-sys-radius); ' +
+  'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: var(--md-sys-card-radius); ' +
   'border: 1px solid var(--md-sys-color-neutral-outline-variant); background: var(--md-sys-color-neutral-surface); max-inline-size: 20rem;'
 nestedUnset.style.cssText =
-  'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: var(--md-sys-radius); border: 1px dashed var(--md-sys-color-neutral-outline-variant);'
+  'display: flex; flex-direction: column; gap: var(--md-sys-space-md); padding: var(--md-sys-space-lg); border-radius: calc(var(--md-sys-card-radius) - var(--md-sys-space-lg)); border: 1px dashed var(--md-sys-color-neutral-outline-variant);'
 
 content.append(
   exampleSection('Subtree independence', independenceRow),

@@ -48,7 +48,7 @@ const restock = shelf('Back in stock', ['Enamel mug', 'Field notebook', 'Merino 
 const unlabelled = shelf(null, ['Gift card €25', 'Gift card €50', 'Gift card €100'])
 
 // ── the name probe — reads the LIVE wiring back (the label's assigned id + the region's fallback) ───────────
-const probe = el('p', { 'aria-live': 'polite', style: 'font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: var(--md-sys-typescale-body-small-size); white-space: pre-wrap;' })
+const probe = el('p', { 'aria-live': 'polite', style: 'font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: var(--md-sys-type-field-label); white-space: pre-wrap;' })
 function readNames(): void {
   const rows = [arrivals, restock, unlabelled].map(({ label }, i) =>
     label

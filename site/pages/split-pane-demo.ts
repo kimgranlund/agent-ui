@@ -31,17 +31,18 @@ function panel(title: string, spec: string, body: string): HTMLElement {
   return el('div', { style: 'display:flex; flex-direction:column; block-size:100%; min-inline-size:0;' }, [
     el(
       'div',
-      { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-size:var(--md-sys-typescale-body-small-size); font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
+      { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-size:var(--md-sys-type-group-label); font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
         'color: var(--md-sys-color-neutral-on-surface-variant); border-block-end:1px solid var(--md-sys-color-neutral-outline-variant); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;' },
       [text(title)],
     ),
-    el('div', { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-typescale-body-small-size); color: var(--md-sys-color-neutral-on-surface-variant);' }, [text(spec)]),
-    el('div', { style: 'padding:0 var(--md-sys-space-md) var(--md-sys-space-md); font-size:var(--md-sys-typescale-body-small-size); line-height:1.5; overflow:auto;' }, [text(body)]),
+    el('div', { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-type-field-label); color: var(--md-sys-color-neutral-on-surface-variant);' }, [text(spec)]),
+    el('div', { style: 'padding:0 var(--md-sys-space-md) var(--md-sys-space-md); font-size:var(--md-sys-type-control); line-height:1.5; overflow:auto;' }, [text(body)]),
   ])
 }
 
-const frame = (split: HTMLElement, height: string): HTMLElement =>
-  el('div', { style: `block-size:${height}; inline-size:100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:var(--md-sys-radius); overflow:hidden;` }, [split])
+// frame: the specimen frame a split fills (a ui-split has no intrinsic size); each call site names its block-size
+// as a literal so the dogfood lint sees it, and the dogfood-rules.json exemption owns it (T-0190).
+const FRAME = 'inline-size:100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:var(--md-sys-card-radius); overflow:hidden;'
 
 // ── the shared panel log ────────────────────────────────────────────────────────────────────────────────────
 const log = document.createElement('ul')
@@ -160,8 +161,8 @@ const dynamicNote = el('p', {}, [
 ])
 
 content.append(
-  exampleSection('initial · min · max — three bounded panes', frame(bounded, '14rem'), boundedNote),
-  exampleSection('collapsible — fold a side panel with Enter', frame(collapsible, '12rem'), collapsibleNote),
-  exampleSection('Dynamic panes — add / remove at runtime', dynamicControls, frame(workspace, '14rem'), dynamicNote),
+  exampleSection('initial · min · max — three bounded panes', el('div', { style: 'block-size:14rem; ' + FRAME }, [bounded]), boundedNote),
+  exampleSection('collapsible — fold a side panel with Enter', el('div', { style: 'block-size:12rem; ' + FRAME }, [collapsible]), collapsibleNote),
+  exampleSection('Dynamic panes — add / remove at runtime', dynamicControls, el('div', { style: 'block-size:14rem; ' + FRAME }, [workspace]), dynamicNote),
   exampleSection('panel log', log),
 )

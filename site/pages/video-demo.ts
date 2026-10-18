@@ -80,7 +80,7 @@ const preloadNote = el('p', {}, [
 const lazyPlayer = player({ label: 'Lesson 5 · Cleanup and disposal (9:12)', poster: poster(640, 360, 'Lesson 5', '#5c542a', '#d8d0b6') }, 'min(100%, 28rem)')
 const loadButton = uiButton('Load lesson (write src)', 'solid')
 const clearButton = uiButton('Clear (src = "")', 'soft')
-const state = el('p', { 'aria-live': 'polite', style: 'margin:var(--md-sys-space-sm) 0 0; font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: var(--md-sys-typescale-body-small-size);' })
+const state = el('p', { 'aria-live': 'polite', style: 'margin:var(--md-sys-space-sm) 0 0; font-family: var(--ui-font-mono, ui-monospace, monospace); font-size: var(--md-sys-type-field-label);' })
 function reportState(): void {
   const media = lazyPlayer.querySelector('[data-part="media"]')
   state.textContent = media === null ? 'src is empty → no <video> in the DOM (only the reserved box).' : 'src set → <video data-part="media" controls> is live inside the box.'

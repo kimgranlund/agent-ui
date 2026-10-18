@@ -70,11 +70,13 @@ const fileList = el('ui-list', { gap: 'xs' }, files.map(([glyph, name, meta]) =>
     ]),
   ]),
 ))
-fileList.style.fontSize = 'var(--md-sys-typescale-title-large-size)' // the rows' ambient font-size IS the icon size lever (see the ramp below)
+fileList.style.fontSize = 'var(--md-sys-icon-box)' // the rows' ambient font-size IS the icon size lever (see the ramp below)
 
 // ── the size ramp — ambient font-size only; there is no [size] attribute by design ────────────────────────
+// Each step is a derived type role, so the icon follows the text role it would sit beside (T-0190).
 // The cards wrap at narrow widths (a scroller clipped the third card mid-word at 400px).
-const ramp = el('ui-row', { gap: 'lg', align: 'baseline', wrap: '' }, ['0.875rem', '1rem', '1.5rem', '2rem', '3rem'].map((size) => {
+const RAMP = ['field-label', 'body', 'subhead', 'heading', 'display'].map((role) => `var(--md-sys-type-${role})`)
+const ramp = el('ui-row', { gap: 'lg', align: 'baseline', wrap: '' }, RAMP.map((size) => {
   const glyph = icon('calendar-check')
   glyph.style.fontSize = size
   return captioned(`font-size: ${size}`, glyph)
@@ -90,10 +92,10 @@ const rampNote = el('p', {}, [
 
 // ── a meaningful icon — `label` ⇒ role=img + aria-label via ElementInternals ─────────────────────────────
 const statusRow = el('ui-row', { gap: 'md', align: 'center' }, [
-  icon('check-circle', { label: 'Deployed', style: 'color: var(--md-sys-color-primary); font-size: var(--md-sys-typescale-headline-small-size);' }),
-  icon('warning', { label: 'Needs attention', style: 'color: var(--md-sys-color-tertiary); font-size: var(--md-sys-typescale-headline-small-size);' }),
-  icon('x-circle', { label: 'Failed', style: 'color: var(--md-sys-color-error); font-size: var(--md-sys-typescale-headline-small-size);' }),
-  icon('clock', { label: 'Scheduled', style: 'color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-typescale-headline-small-size);' }),
+  icon('check-circle', { label: 'Deployed', style: 'color: var(--md-sys-color-primary); font-size: var(--md-sys-icon-box);' }),
+  icon('warning', { label: 'Needs attention', style: 'color: var(--md-sys-color-tertiary); font-size: var(--md-sys-icon-box);' }),
+  icon('x-circle', { label: 'Failed', style: 'color: var(--md-sys-color-error); font-size: var(--md-sys-icon-box);' }),
+  icon('clock', { label: 'Scheduled', style: 'color: var(--md-sys-color-on-surface-variant); font-size: var(--md-sys-icon-box);' }),
 ])
 
 const statusNote = el('p', {}, [

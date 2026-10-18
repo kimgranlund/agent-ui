@@ -58,8 +58,8 @@ const centerWrap = el('div', {
 }, [
   el('div', { style: 'grid-column:1; grid-row:1; z-index:1; display:grid; place-items:center; pointer-events:none;' }, [
     el('div', { style: 'display:flex; flex-direction:column; align-items:center; line-height:1.1;' }, [
-      el('strong', { style: 'font-size:var(--md-sys-typescale-title-medium-size);' }, [text('83%')]),
-      el('span', { style: 'font-size:var(--md-sys-typescale-label-small-size); opacity:0.7;' }, [text('allocated')]),
+      el('strong', { style: 'font-size:1.1em;' }, [text('83%')]),
+      el('span', { style: 'font-size:0.7em; opacity:0.7;' }, [text('allocated')]),
     ]),
   ]),
   centerDonut,

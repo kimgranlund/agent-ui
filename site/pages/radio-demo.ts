@@ -46,7 +46,7 @@ function methodRadio(m: Method, checked: boolean): HTMLElement {
   const radio = el('ui-radio', attrs, [
     el('span', { style: 'display:inline-flex; flex-direction:column; gap:var(--md-sys-space-xs);' }, [
       el('span', {}, [text(`${m.label}, ${m.price}`)]),
-      el('span', { style: 'font-size:var(--md-sys-typescale-body-small-size); opacity:0.75;' }, [text(m.eta)]),
+      el('span', { style: 'font-size:var(--md-sys-type-field-label); opacity:0.75;' }, [text(m.eta)]),
     ]),
   ])
   radio.addEventListener('input', () => record(`radio[${m.value}]`, 'input', `checked=${String(radio.hasAttribute('checked'))}`))

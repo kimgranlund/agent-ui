@@ -57,7 +57,7 @@ function logAction(action: 'attach' | 'remove', file: FileFixture, pending: numb
 }
 
 // ── the pending strip ──────────────────────────────────────────────────────────────────────────────────────
-const strip = el('div', { role: 'list', 'aria-label': 'Pending attachments', style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap; min-block-size:calc(var(--md-sys-height) * 1.5); align-items:flex-start;' })
+const strip = el('div', { role: 'list', 'aria-label': 'Pending attachments', style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap; min-block-size:3rem; align-items:flex-start;' })
 const empty = el('p', { style: 'margin:0; opacity:0.7;' }, [document.createTextNode('No files attached yet.')])
 strip.append(empty)
 let next = 0

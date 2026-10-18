@@ -54,7 +54,7 @@ const presenceDot = (presence: Presence): HTMLElement =>
   el('span', {
     'aria-label': presence,
     role: 'img',
-    style: `display:inline-block; inline-size:var(--md-sys-space-md); block-size:var(--md-sys-space-md); border-radius:50%; background:${PRESENCE_COLOR[presence]};`,
+    style: `display:inline-block; inline-size:calc(var(--md-sys-icon-box) / 2); block-size:calc(var(--md-sys-icon-box) / 2); border-radius:50%; background:${PRESENCE_COLOR[presence]};`,
   })
 
 // ── the roster — one row per member: avatar · name/role · presence ──────────────────────────────────────

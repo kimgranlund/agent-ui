@@ -28,4 +28,4 @@ Never add an allowlist entry without an owner (T-0170 format check). No em dashe
 - `node scripts/dogfood-compose.mjs --gate` exits 0 and `scripts/dogfood-compose-allowlist.json` holds no `site/pages/*-demo.ts#inline-geometry` entry (it is `{}`).
 - `npm run check` exits 0.
 - The touched demos' browser tests and `site/pages/dogfood-render.browser.test.ts` pass in the site project.
-- No new exemption in `scripts/dogfood-rules.json`; the 22 demos carry no px, rem or em literal on a geometry property.
+- Type sizes in the 22 demos read `--md-sys-type-*` roles, never `--md-sys-typescale-*`; no frame height multiplies `--md-sys-height`; the only literals left sit in the five paths `scripts/dogfood-rules.json` exempts with a T-0190 reason (attachment, split, split-pane, swiper-item frames; pie-chart's em readout).

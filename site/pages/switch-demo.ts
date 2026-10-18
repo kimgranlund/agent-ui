@@ -48,7 +48,7 @@ function prefRow(sw: HTMLElement, title: string, description: string): HTMLEleme
     [
       el('div', { style: 'display:flex; flex-direction:column; gap:var(--md-sys-space-xs);' }, [
         el('span', {}, [text(title)]),
-        el('span', { style: 'font-size:var(--md-sys-typescale-body-small-size); opacity:0.75;' }, [text(description)]),
+        el('span', { style: 'font-size:var(--md-sys-type-field-label); opacity:0.75;' }, [text(description)]),
       ]),
       sw,
     ],

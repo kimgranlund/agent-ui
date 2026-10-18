@@ -35,16 +35,16 @@ describe('icon-demo — real Phosphor icons in real contexts', () => {
     for (const b of iconOnly) expect(b.getAttribute('aria-label')).toBeTruthy()
   })
 
-  it('the ambient font-size ramp sizes the 1em cell — a 3rem icon is wider than a 1rem icon', async () => {
+  it('the ambient font-size ramp sizes the 1em cell — a display-role icon is wider than a body-role icon', async () => {
     await raf()
     const glyphs = [...document.querySelectorAll('ui-icon[symbol="calendar-check"]')] as HTMLElement[]
-    const small = glyphs.find((g) => g.style.fontSize === '1rem')
-    const large = glyphs.find((g) => g.style.fontSize === '3rem')
+    const small = glyphs.find((g) => g.style.fontSize === 'var(--md-sys-type-body)')
+    const large = glyphs.find((g) => g.style.fontSize === 'var(--md-sys-type-display)')
     expect(small && large).toBeTruthy()
     // ADR-0245 Amendment 6: a standalone icon outside a data-tier region follows the text, so the ramp sizes it
-    // on the plain page: each box is its own font-size, and 3rem is three times 1rem.
+    // on the plain page: each box is its own font-size, and the display role is larger than body.
     for (const g of [small!, large!]) expect(g.getBoundingClientRect().width).toBeCloseTo(parseFloat(getComputedStyle(g).fontSize), 0)
-    expect(large!.getBoundingClientRect().width).toBeCloseTo(small!.getBoundingClientRect().width * 3, 0)
+    expect(large!.getBoundingClientRect().width).toBeGreaterThan(small!.getBoundingClientRect().width * 2)
   })
 
   it('the ramp cards wrap at 400px instead of clipping in a scroller', async () => {
