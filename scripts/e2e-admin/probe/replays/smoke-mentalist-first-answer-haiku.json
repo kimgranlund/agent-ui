@@ -353,7 +353,7 @@
           ]
         },
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
+          "text": "{\"a2uiMeta\":{\"note\":\"Q1 of 20: Is it a living thing?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nRight, you've got something in mind. Let's start wide. **Is it a living thing?** Answer Yes, No, or Sort of on the scoreboard.",
           "tools": [
             {
               "name": "render_surface",
@@ -377,18 +377,7 @@
                           "spent": 0,
                           "spentLabel": "0 of 20",
                           "confidence": "Low, casting wide",
-                          "live": "Q1: Is it a living thing?",
-                          "stats": [
-                            {
-                              "label": "Confidence",
-                              "value": "Low, casting wide"
-                            }
-                          ],
-                          "progress": {
-                            "value": 0,
-                            "max": 20,
-                            "label": "Questions used"
-                          }
+                          "live": "Q1: Is it a living thing?"
                         },
                         "draft": {
                           "answer": ""
@@ -403,27 +392,71 @@
                       "components": [
                         {
                           "id": "root",
-                          "component": "Column",
-                          "gap": "md",
+                          "component": "Card",
+                          "elevation": "1",
                           "children": [
-                            "hud",
-                            "answer",
-                            "commit"
+                            "hd",
+                            "ct",
+                            "ft"
                           ]
                         },
                         {
-                          "id": "hud",
-                          "component": "GameHud",
-                          "title": "Twenty Questions",
-                          "status": {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "spent_badge"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Twenty Questions",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "spent_badge",
+                          "component": "Badge",
+                          "label": {
+                            "path": "/hud/spentLabel"
+                          },
+                          "intent": "neutral",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "progress",
+                            "conf",
+                            "live",
+                            "answer"
+                          ]
+                        },
+                        {
+                          "id": "progress",
+                          "component": "Progress",
+                          "value": {
+                            "path": "/hud/spent"
+                          },
+                          "max": 20,
+                          "label": "Questions spent"
+                        },
+                        {
+                          "id": "conf",
+                          "component": "Stat",
+                          "label": "Confidence",
+                          "value": {
+                            "path": "/hud/confidence"
+                          }
+                        },
+                        {
+                          "id": "live",
+                          "component": "Text",
+                          "text": {
                             "path": "/hud/live"
                           },
-                          "stats": {
-                            "path": "/hud/stats"
-                          },
-                          "progress": {
-                            "path": "/hud/progress"
-                          }
+                          "variant": "h5"
                         },
                         {
                           "id": "answer",
@@ -455,6 +488,11 @@
                           "component": "Segment",
                           "value": "sort_of",
                           "label": "Sort of"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "child": "commit"
                         },
                         {
                           "id": "commit",
@@ -520,6 +558,10 @@
       "rounds": [
         {
           "text": "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"live\",\"answer\"]}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Q2: Is it an animal?\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"Low, narrowing\"}],\"progress\":{\"value\":1,\"max\":20,\"label\":\"Questions used\"}}]}}",
           "tools": []
         }
       ],

@@ -28,5 +28,9 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0357 | [0357-poker-stake-ask-check](0357-poker-stake-ask-check/handoff.md) | A poker opening that asks for the stake instead of dealing gets a deterministic check and repair | bug | L2 | P2 | none | 🔵 ready |
 | T-0358 | [0358-gamehud-moment-board-only](0358-gamehud-moment-board-only/handoff.md) | GameHud composite moment fires only beside a BoardGrid, so board-less game personas hand-build their score panels | bug | L2 | P2 | none | 🔵 ready |
 | T-0359 | [0359-stylist-palette-prose](0359-stylist-palette-prose/handoff.md) | The Stylist answers a palette ask in prose with no token surface | bug | L2 | P2 | none | 🔵 ready |
+| T-0361 | [0361-quest-log-timeline-unchecked](0361-quest-log-timeline-unchecked/handoff.md) | A quest log with no Timeline gets no repair round | bug | L2 | P3 | T-0358 | 🔵 ready |
+| T-0362 | [0362-rerecord-boardless-smoke](0362-rerecord-boardless-smoke/handoff.md) | Re-record the board-less game smoke replays after T-0358 | chore | L2 | P2 | T-0358 | 🔵 ready |
+| T-0363 | [0363-gamehud-feed-scope](0363-gamehud-feed-scope/handoff.md) | GameHud is outside the feed scope, so an ask-surface game cannot answer GAME_HUD_MISSING in place | bug | L2 | P2 | T-0358 | 🔵 ready |
+| T-0364 | [0364-resultcard-moment-board-only](0364-resultcard-moment-board-only/handoff.md) | ResultCard composite moment fires only beside a BoardGrid | bug | L2 | P3 | T-0358 | 🔵 ready |
 
 Closed: 331 done, 4 dropped (git log or .NNNN-* folders)

@@ -180,7 +180,7 @@
           ]
         },
         {
-          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nAh, a customer with taste! This lantern was hammered by the finest brass-smith in the Grand Bazaar, and its light never flickers. My asking price is **240 silver**. Don't faint. Name your number, and we'll see whether we both walk away happy. Put your offer on the table below.",
+          "text": "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nAh, a customer with taste! This lantern was hammered by the finest brass-smith in the Grand Bazaar, and its light never flickers. My asking price is **240 silver**. Don't faint. Name your number, and we'll see whether we both walk away happy. Put your offer on the table below.",
           "tools": [
             {
               "name": "render_surface",
@@ -244,29 +244,7 @@
                           "id": "ct",
                           "component": "CardContent",
                           "children": [
-                            "sheet",
                             "offer_field"
-                          ]
-                        },
-                        {
-                          "id": "sheet",
-                          "component": "GameHud",
-                          "title": "Brass lantern",
-                          "status": "Holding firm",
-                          "stats": [
-                            {
-                              "label": "Asking price",
-                              "value": "240 silver"
-                            },
-                            {
-                              "label": "Current offer",
-                              "value": "none yet"
-                            },
-                            {
-                              "label": "Mood",
-                              "value": "Curious",
-                              "delta": 0
-                            }
                           ]
                         },
                         {
@@ -306,6 +284,41 @@
                               "item": "brass-lantern"
                             }
                           }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "GameHud",
+                          "title": "Brass lantern",
+                          "status": "Holding firm",
+                          "stats": [
+                            {
+                              "label": "Asking price",
+                              "value": "240 silver"
+                            },
+                            {
+                              "label": "Current offer",
+                              "value": "none yet"
+                            },
+                            {
+                              "label": "Mood",
+                              "value": "Curious, a little smug"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -672,7 +685,8 @@
                           "id": "hd",
                           "component": "CardHeader",
                           "children": [
-                            "title"
+                            "title",
+                            "badge"
                           ]
                         },
                         {
@@ -680,6 +694,12 @@
                           "component": "Text",
                           "text": "Deal sheet: Brass lantern",
                           "variant": "h4"
+                        },
+                        {
+                          "id": "badge",
+                          "component": "Badge",
+                          "label": "Counter at 200",
+                          "intent": "warning"
                         },
                         {
                           "id": "ct",
@@ -691,28 +711,31 @@
                         },
                         {
                           "id": "sheet",
-                          "component": "GameHud",
-                          "title": "Brass lantern",
-                          "status": "Countered at 200",
-                          "statusIntent": "warning",
-                          "stats": [
+                          "component": "DescriptionList",
+                          "rows": [
+                            {
+                              "label": "Item",
+                              "value": "Brass lantern"
+                            },
                             {
                               "label": "Asking price",
                               "value": "240 silver"
                             },
                             {
-                              "label": "Current offer",
-                              "value": "20 silver"
+                              "label": "Offer on the table",
+                              "value": "20 silver (yours)"
                             },
                             {
-                              "label": "Counter",
-                              "value": "200 silver",
-                              "delta": -40
+                              "label": "Merchant's counter",
+                              "value": "200 silver"
                             },
                             {
-                              "label": "Mood",
-                              "value": "Insulted, but amused",
-                              "delta": -1
+                              "label": "Merchant's mood",
+                              "value": "Insulted, but amused. Coming down slowly."
+                            },
+                            {
+                              "label": "Price history",
+                              "value": "240 → 20 → 200"
                             }
                           ]
                         },

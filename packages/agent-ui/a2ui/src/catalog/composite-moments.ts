@@ -26,9 +26,10 @@
 // that says "confirmed" or "booked" is no hand-built confirmation (round 9 cluster G), and the BookingForm row stands aside
 // for a surface that already holds one.
 //
-// T-0358: the GameHud row's `statStrip` reads a surface with no BoardGrid: two or more game-stat items (HP, gold, mood,
-// asking price, confidence, questions) in Badges, Stats, Progress labels or DescriptionList rows are a hand-built HUD
-// (the Mentalist, the Negotiator and the Dungeon Master, smoke round 2026-10-18-smoke).
+// T-0358: the GameHud row's `statStrip` reads a surface with no BoardGrid: on a surface whose words name a game (quest,
+// round, HP, deal sheet), two or more game-stat items (HP, gold, mood, asking price, confidence, questions) in Badges,
+// Stats, Progress labels or DescriptionList rows are a hand-built HUD (the Mentalist, the Negotiator and the Dungeon
+// Master, smoke round 2026-10-18-smoke). The row needs only GameHud in the catalog, so a catalog with no BoardGrid runs it.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -47,9 +48,10 @@ export interface CompositeMoment {
   readonly lacks: readonly string[]
   /** The surface must hold one of these types. */
   readonly has?: readonly string[]
-  /** T-0358: or, with none of `has` present, at least `min` stat items (a component of `types`, or a DescriptionList row)
-   *  whose words name game state (`cue`): the hand-built score strip of a game with no board. */
-  readonly statStrip?: { readonly types: readonly string[]; readonly cue: RegExp; readonly min: number }
+  /** T-0358: or, with none of `has` present, a surface whose words name a game (`game`) holding at least `min` stat items
+   *  (a component of `types`, or a DescriptionList row) whose words name game state (`cue`): the hand-built score strip of
+   *  a game with no board. Every other gate of the row still applies. */
+  readonly statStrip?: { readonly types: readonly string[]; readonly cue: RegExp; readonly min: number; readonly game: RegExp }
   /** Over the surface words. */
   readonly words?: RegExp
   /** Read words only from components of these types. */
@@ -152,11 +154,16 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     composite: 'GameHud',
     moment: 'a game score and status strip',
     repair: 'with its title, status and stats (and progress when the game counts turns), beside the BoardGrid when the game has one, and drop the hand-built score text or stat badges.',
-    requires: ['BoardGrid'],
-    lacks: [],
+    // T-0358: a CardTable's zone score Badges are its own HUD (the game-hud mini-skill teaches them).
+    lacks: ['CardTable'],
     has: ['BoardGrid'],
     // T-0358: the Mentalist, the Negotiator and the Dungeon Master play with no board (smoke round 2026-10-18-smoke).
-    statStrip: { types: ['Badge', 'Stat', 'Progress'], cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries)\b/i, min: 2 },
+    statStrip: {
+      types: ['Badge', 'Stat', 'Progress'],
+      cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries)\b/i,
+      min: 2,
+      game: /\b(game|games|turn|turns|round|rounds|level|quest|hp|player|twenty questions|deal sheet|adventure|dungeon)\b/i,
+    },
     wordTypes: ['Text', 'Badge', 'Stat'],
     words: /\b(guess|guesses|shot|shots|ship|ships|remaining|score|attempt|attempts|tries)\b/i,
   },
@@ -269,7 +276,9 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
   const comps = [...view.components.values()]
   const types = new Set(comps.map((c) => c.component))
   if ([m.composite, ...m.lacks].some((t) => types.has(t))) return []
-  if (m.has !== undefined && !m.has.some((t) => types.has(t))) return m.statStrip === undefined ? [] : statStrays(m.statStrip, comps, view)
+  // T-0358: with none of `has`, the row reads only its board-less stat strip, when it has one.
+  const boardless = m.has !== undefined && !m.has.some((t) => types.has(t))
+  if (boardless && m.statStrip === undefined) return []
   if (m.noInputs !== undefined && m.noInputs.some((t) => types.has(t))) return []
   // The composite's and the required types' own props never count as words.
   const own = new Set([m.composite, ...(m.requires ?? [])])
@@ -282,6 +291,8 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
   if (m.standsAsideForReadBack === true && liveReadBack()) return []
   if (m.standsAsideForSettled === true && comps.some((c) => isSettledSignal(c) && SETTLED_WORDS.test(wordsOf(c))) && !liveReadBack()) return []
   const surfaceWords = worded.map(wordsOf).join(' ')
+
+  if (boardless) return m.statStrip!.game.test(surfaceWords) ? statStrays(m.statStrip!, comps, view) : []
 
   if (m.gridOf !== undefined || m.inputCue !== undefined) {
     const { gridOf, inputCue } = m

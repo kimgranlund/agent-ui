@@ -366,7 +366,8 @@ describe('composite moment checks (T-0208)', () => {
     ],
     negotiator: [
       { id: 'root', component: 'Card', children: ['hd', 'sheet'] },
-      { id: 'hd', component: 'CardHeader', children: ['badge'] },
+      { id: 'hd', component: 'CardHeader', children: ['title', 'badge'] },
+      { id: 'title', component: 'Text', text: 'Deal sheet: Brass lantern', variant: 'h4' },
       { id: 'badge', component: 'Badge', label: 'Asking 240 silver' },
       { id: 'sheet', component: 'DescriptionList', rows: [{ label: 'Item', value: 'Brass lantern' }, { label: 'Asking price', value: '240 silver' }, { label: "Merchant's mood", value: 'Curious' }] },
     ],
@@ -390,6 +391,52 @@ describe('composite moment checks (T-0208)', () => {
     expect(f!.path).toBe('quest-log:hp')
     expect(f!.message).toContain('hp (a Badge), gold (a Badge)')
     expect(f!.message).toContain('Make it ONE GameHud with its title, status and stats (and progress when the game counts turns), beside the BoardGrid when the game has one')
+  })
+
+  // T-0358 review: a stat strip with no game words is no game. Each of these holds two game-stat items, so without the
+  // row's game gate each would fire.
+  it('T-0358 negative control: a KPI strip with an NPS score and a model confidence yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['nps', 'conf'] },
+        { id: 'nps', component: 'Stat', label: 'NPS score', value: '62' },
+        { id: 'conf', component: 'Stat', label: 'Model confidence', value: '0.91' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0358 negative control: a concierge Gold member card yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Card', children: ['title', 'tier', 'rows'] },
+        { id: 'title', component: 'Text', text: 'Your membership', variant: 'h4' },
+        { id: 'tier', component: 'Badge', label: 'Gold member' },
+        { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Tier', value: 'Gold' }, { label: 'Member since', value: '2019' }] },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0358 negative control: a listing with an asking price and a counter offer yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Card', children: ['title', 'ask', 'counter'] },
+        { id: 'title', component: 'Text', text: '14 Harbour Road', variant: 'h4' },
+        { id: 'ask', component: 'Stat', label: 'Asking price', value: '$640,000' },
+        { id: 'counter', component: 'Stat', label: 'Counter offer', value: '$610,000' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0358 negative control: a CardTable with zone score Badges yields no GAME_HUD_MISSING', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Column', children: ['table', 'round', 'you', 'dealer'] },
+        { id: 'table', component: 'CardTable', phase: 'player-turn', title: 'Blackjack' },
+        { id: 'round', component: 'Badge', label: 'Round 2' },
+        { id: 'you', component: 'Badge', label: 'Your score 17' },
+        { id: 'dealer', component: 'Badge', label: 'Dealer score 10' },
+      ]),
+    ).not.toContain('GAME_HUD_MISSING')
   })
 
   it('T-0358 negative control: one game-stat Badge, a KPI strip and inventory Badges yield none', () => {
