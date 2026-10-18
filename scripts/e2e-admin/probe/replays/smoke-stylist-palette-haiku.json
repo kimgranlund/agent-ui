@@ -19,12 +19,168 @@
     {
       "lines": [
         "{\"a2uiMeta\":{\"textDelta\":\"A calm blue palette for a banking app should feel steady and trustworthy, not loud. I've anchored it on a deep navy primary, a softer steel-blue secondary for supporting elements, and a muted sky accent for highlights. Body-text pairings clear 4.5:1 contrast. The steel-blue secondary falls short on white text, so keep it for charts, icons and non-text accents.\"}}",
-        "{\"a2uiMeta\":{\"note\":\"A calm blue palette for a banking app should feel steady and trustworthy, not loud. I've anchored it on a deep navy primary, a softer steel-blue secondary for supporting elements, and a muted sky accent for highlights. Body-text pairings clear 4.5:1 contrast. The steel-blue secondary falls short on white text, so keep it for charts, icons and non-text accents.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Propose a calm blue palette for a banking app.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":45618,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19868},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45618}}}"
+        "{\"a2uiMeta\":{\"note\":\"A calm banking palette: a deep navy primary for trust, a steel-blue secondary for supporting surfaces and a muted sky accent for highlights. Navy text on white and white labels on steel blue both clear 4.5:1, and the sky accent stays for highlights, never text.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Propose a calm blue palette for a banking app.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_MISSING\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":45618,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19868},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":45618}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"calm-blue-palette\",\"catalogId\":\"agent-ui--stylist\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"calm-blue-palette\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"anchors\",\"ramps\",\"pairs\"]},{\"id\":\"anchors\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"primary\",\"secondary\",\"accent\"]},{\"id\":\"primary\",\"component\":\"Swatch\",\"label\":\"Primary navy\",\"value\":\"#1f3a5f\"},{\"id\":\"secondary\",\"component\":\"Swatch\",\"label\":\"Secondary steel blue\",\"value\":\"#4a6f8a\"},{\"id\":\"accent\",\"component\":\"Swatch\",\"label\":\"Accent sky\",\"value\":\"#9cc3e0\"},{\"id\":\"ramps\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"navyRamp\",\"skyRamp\"]},{\"id\":\"navyRamp\",\"component\":\"Ramp\",\"label\":\"Navy\",\"steps\":[{\"label\":\"100\",\"value\":\"#dbe4ee\"},{\"label\":\"300\",\"value\":\"#8fa7c2\"},{\"label\":\"500\",\"value\":\"#3d5f86\"},{\"label\":\"700\",\"value\":\"#1f3a5f\"},{\"label\":\"900\",\"value\":\"#0f1f33\"}]},{\"id\":\"skyRamp\",\"component\":\"Ramp\",\"label\":\"Sky\",\"steps\":[{\"label\":\"100\",\"value\":\"#eef5fb\"},{\"label\":\"300\",\"value\":\"#c6dcee\"},{\"label\":\"500\",\"value\":\"#9cc3e0\"},{\"label\":\"700\",\"value\":\"#5b8db5\"},{\"label\":\"900\",\"value\":\"#2c5274\"}]},{\"id\":\"pairs\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"navyOnWhite\",\"whiteOnSteel\"]},{\"id\":\"navyOnWhite\",\"component\":\"ContrastPair\",\"label\":\"Body text\",\"foreground\":\"#1f3a5f\",\"background\":\"#ffffff\",\"sample\":\"Your balance\"},{\"id\":\"whiteOnSteel\",\"component\":\"ContrastPair\",\"label\":\"Steel button label\",\"foreground\":\"#ffffff\",\"background\":\"#4a6f8a\",\"sample\":\"Transfer\"}]}}"
       ],
       "rounds": [
         {
           "text": "A calm blue palette for a banking app should feel steady and trustworthy, not loud. I've anchored it on a deep navy primary, a softer steel-blue secondary for supporting elements, and a muted sky accent for highlights. Body-text pairings clear 4.5:1 contrast. The steel-blue secondary falls short on white text, so keep it for charts, icons and non-text accents.",
           "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "A calm banking palette: a deep navy primary for trust, a steel-blue secondary for supporting surfaces and a muted sky accent for highlights. Navy text on white and white labels on steel blue both clear 4.5:1, and the sky accent stays for highlights, never text.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "calm-blue-palette",
+                      "catalogId": "agent-ui--stylist"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "calm-blue-palette",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "anchors",
+                            "ramps",
+                            "pairs"
+                          ]
+                        },
+                        {
+                          "id": "anchors",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "primary",
+                            "secondary",
+                            "accent"
+                          ]
+                        },
+                        {
+                          "id": "primary",
+                          "component": "Swatch",
+                          "label": "Primary navy",
+                          "value": "#1f3a5f"
+                        },
+                        {
+                          "id": "secondary",
+                          "component": "Swatch",
+                          "label": "Secondary steel blue",
+                          "value": "#4a6f8a"
+                        },
+                        {
+                          "id": "accent",
+                          "component": "Swatch",
+                          "label": "Accent sky",
+                          "value": "#9cc3e0"
+                        },
+                        {
+                          "id": "ramps",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "navyRamp",
+                            "skyRamp"
+                          ]
+                        },
+                        {
+                          "id": "navyRamp",
+                          "component": "Ramp",
+                          "label": "Navy",
+                          "steps": [
+                            {
+                              "label": "100",
+                              "value": "#dbe4ee"
+                            },
+                            {
+                              "label": "300",
+                              "value": "#8fa7c2"
+                            },
+                            {
+                              "label": "500",
+                              "value": "#3d5f86"
+                            },
+                            {
+                              "label": "700",
+                              "value": "#1f3a5f"
+                            },
+                            {
+                              "label": "900",
+                              "value": "#0f1f33"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "skyRamp",
+                          "component": "Ramp",
+                          "label": "Sky",
+                          "steps": [
+                            {
+                              "label": "100",
+                              "value": "#eef5fb"
+                            },
+                            {
+                              "label": "300",
+                              "value": "#c6dcee"
+                            },
+                            {
+                              "label": "500",
+                              "value": "#9cc3e0"
+                            },
+                            {
+                              "label": "700",
+                              "value": "#5b8db5"
+                            },
+                            {
+                              "label": "900",
+                              "value": "#2c5274"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "pairs",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "navyOnWhite",
+                            "whiteOnSteel"
+                          ]
+                        },
+                        {
+                          "id": "navyOnWhite",
+                          "component": "ContrastPair",
+                          "label": "Body text",
+                          "foreground": "#1f3a5f",
+                          "background": "#ffffff",
+                          "sample": "Your balance"
+                        },
+                        {
+                          "id": "whiteOnSteel",
+                          "component": "ContrastPair",
+                          "label": "Steel button label",
+                          "foreground": "#ffffff",
+                          "background": "#4a6f8a",
+                          "sample": "Transfer"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {

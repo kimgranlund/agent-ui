@@ -6,8 +6,8 @@
 // surface ONE composite. A row's `notInside` also sends back a composite wrapped in a card of its own (T-0262,
 // `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
 // keeps a row on exactly the catalogs that can emit it: the booking rows ride `<base>--concierge`, the games rows
-// ride `agent-ui` until the games types move to a domain, the ProductCard row rides `agent-ui`, and `a2ui-basic`
-// gets none.
+// ride `agent-ui` until the games types move to a domain, the ProductCard and Swatch rows ride `agent-ui`, and
+// `a2ui-basic` gets none.
 //
 // The link to the sidecar is a test, not an import (`composite-moments.test.ts`: every `moment` is one of its
 // composite's intents): the module imports no JSON, so plain Node (`scripts/e2e-admin/probe/trace.ts`) and both
@@ -57,6 +57,14 @@
 // the GameHud gate also takes round and turn (the Negotiator's "Round 3, your turn"), as T-0358 did, since its two-stat
 // strip guards it; and "new quest", "new adventure" or "new game" end a game only on a surface with no live play control
 // left (a mid-game "Start a new quest" side button beside the choices is no ending).
+//
+// T-0359 (smoke round 2026-10-18-smoke :9, Haiku 5.5): "Propose a calm blue palette for a banking app." was answered in
+// prose with no surface: a navy primary, a steel-blue secondary and a sky accent, in words. The Swatch row's `prose`
+// turns that into a second check (`compositeProseCheck`), judged on the reply, never the ask (Kim, 2026-10-18): on the
+// Stylist's catalog alone (it requires ContrastPair, the Stylist's type), on a turn of a session that has never shown a
+// token surface (Swatch, Ramp or ContrastPair), a reply that lists a palette in its prose (three or more distinct hex
+// codes, or three or more named colors set out by role or as list lines) while the turn ships no token surface is
+// SURFACE_MISSING.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -133,7 +141,15 @@ export interface CompositeMoment {
   readonly standsAsideForReadBack?: boolean
   /** T-0313: the turn words that ask for this moment (`cue`), its short name (the SURFACE_MISSING path), the surface that
    *  answers it, and its precedence when one turn's words ask for two moments (lowest first). */
-  readonly ask?: { readonly moment: string; readonly cue: RegExp; readonly surface: string; readonly rank: number }
+  readonly ask?: {
+    readonly moment: string
+    readonly cue: RegExp
+    readonly surface: string
+    readonly rank: number
+  }
+  /** T-0359: the moment written out in the reply prose instead of shown: `listed` reads the reply, `types` answer it (a
+   *  catalog must hold them all for the check to ride it), and `surface` is what the repair asks for. */
+  readonly prose?: { readonly moment: string; readonly types: readonly string[]; readonly listed: (reply: string) => number; readonly surface: string }
 }
 
 /** T-0333: the past-state words of a settled booking ("Booked" Badge, "Spa booking confirmed" title); the noun
@@ -161,6 +177,16 @@ const HUD_GAME_WORDS = new RegExp(`\\b(round|rounds|turn|turns)\\b|${GAME_WORDS.
 const PLAY_CONTROLS: readonly string[] = ['Button', ...BOOKING_INPUTS]
 
 const BOOKING_READ_BACK: NonNullable<CompositeMoment['readBack']> = { types: ['DescriptionList'], action: /^confirm/i, cue: /\bconfirm\b/i }
+
+/** T-0359: the token types that show a palette to the eye, a Swatch per anchor and a Ramp per graded family. */
+export const PALETTE_TYPES = ['Swatch', 'Ramp'] as const
+/** T-0359 (Kim, 2026-10-18): the token surface types that answer a palette, ContrastPair included. ContrastPair is the
+ *  Stylist's own type, so a check that requires all three rides the Stylist's catalog alone. */
+export const TOKEN_TYPES = [...PALETTE_TYPES, 'ContrastPair'] as const
+/** T-0359: hex color values written out as words: a hex code with a letter, or an all-digit one beside a color word, so an
+ *  order or issue number ("Order #482913") is none. */
+const HEX_WORDS =
+  /#(?=[0-9a-f]{0,5}[a-f])[0-9a-f]{3}(?:[0-9a-f]{3})?\b|\b(colou?rs?|palette|primary|secondary|accent|gr[ae]y|neutral)\b[^.]*#[0-9a-f]{6}\b|#[0-9a-f]{6}\b[^.]*\b(colou?rs?|palette|gr[ae]y|neutral)\b/i
 
 export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
   {
@@ -274,6 +300,23 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     pricedRows: { types: ['DescriptionList', 'List'], cue: /[€$£¥]\s?\d|\d\s?(?:€|eur|usd|gbp)\b/i },
     words: /\b(book|bookable|treatment|treatments|service|services|spa|massage|room|rooms|offer|offers)\b/i,
     ask: { moment: 'services', cue: SERVICES_ASK, rank: 1, surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' },
+  },
+  {
+    // T-0359: a palette is shown, never listed: hex values written in Text are the hand-built moment, and (on the Stylist)
+    // a palette listed in the reply prose with no token surface is sent back by the row's prose check.
+    composite: 'Swatch',
+    moment: 'show one color value',
+    repair: 'per anchor color with its label and value, and one Ramp per color family, and drop the hex values written as text.',
+    requires: PALETTE_TYPES.slice(1),
+    lacks: [...PALETTE_TYPES.slice(1), 'ColorPicker'],
+    wordTypes: ['Text'],
+    words: HEX_WORDS,
+    prose: {
+      moment: 'palette',
+      types: TOKEN_TYPES,
+      listed: proseColors,
+      surface: 'one Swatch per anchor color with its label and value, one Ramp per color family, and one ContrastPair per text pairing',
+    },
   },
 ]
 
@@ -589,7 +632,97 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
   }
 }
 
-export const compositeMomentChecks: readonly SemanticCheck[] = COMPOSITE_MOMENTS.map(compositeMomentCheck)
+/** T-0359: hex codes, each a distinct color. */
+const HEX_CODE = /#(?:[0-9a-f]{6}|[0-9a-f]{3})\b/gi
+/** T-0359: the color names a prose palette sets out ("navy", "steel-blue", "periwinkle"), a closed list. */
+const COLOR_NAME =
+  '(navy|blue|sky|teal|turquoise|cyan|aqua|green|sage|olive|mint|emerald|forest|lime|jade|seafoam|celadon|pistachio|moss|fern|petrol|red|crimson|scarlet|maroon|burgundy|carmine|cerise|vermilion|raspberry|mulberry|coral|salmon|pink|rose|blush|magenta|fuchsia|orchid|purple|violet|lavender|lilac|plum|mauve|heather|thistle|wisteria|aubergine|orange|amber|peach|apricot|tangerine|rust|terracotta|sienna|umber|sepia|copper|bronze|yellow|gold|mustard|lemon|citron|canary|marigold|saffron|ochre|chartreuse|cream|ivory|beige|sand|tan|taupe|khaki|linen|oatmeal|parchment|eggshell|alabaster|champagne|pearl|brown|chocolate|espresso|clay|white|black|charcoal|slate|graphite|gunmetal|pewter|onyx|ink|midnight|gray|grey|silver|stone|snow|bone|indigo|cobalt|azure|cerulean|sapphire|denim|cornflower|periwinkle|ultramarine)'
+/** T-0359: the roles a palette gives its colors, and the UI parts among them ("white text", "a grey border"). */
+const PALETTE_ROLE = '(primary|secondary|tertiary|accent|neutral|base|highlight|brand|cta|success|warning|error|danger|info)'
+const UI_PART = '(text|border|background|surface|link)'
+const ROLE = `(${PALETTE_ROLE.slice(1, -1)}|${UI_PART.slice(1, -1)})`
+/** T-0359: up to two describing words before a color ("deep", "steel"), never a function word. */
+const FILLER = '(?:(?!(?:and|or|but|a|an|the|on|of|for|with|to|in|around|is|are)\\b)[a-z]+[ -]){0,2}?'
+const MARK = '[*_]*'
+/** The pinned forms (criterion 2), each counting the colors it names:
+ *  - role first, by colon, equals sign, en or em dash, hyphen or "is": "Primary: navy", "Accent - coral", "**Primary:** navy", "Primary colour: navy",
+ *    "The primary is navy", "primary=teal", or a bare space ("Primary navy", "a success green, a warning amber");
+ *  - role after: "a deep navy primary", "a muted sky accent"; a UI part only when it names no part of something else
+ *    ("a soft cream background" counts, "white text on the primary" and "a grey border around cards" do not);
+ *  - a for-phrase role: "navy for the header, sand for the background and coral for buttons";
+ *  - a list line ("- Navy for headers", "1) Midnight for the header", "- **Navy** for headers", "- Header: navy",
+ *    "- Primary colour: navy");
+ *  - hex codes: three or more distinct, an all-digit code ("#333") only on a list line or beside two lettered codes; a
+ *    CSS rule or a fenced code block counts nothing. */
+const ROLE_FIRST = new RegExp(
+  `\\b${ROLE}s?(?:\\s+(?:colou?r|tone|hue|shade)s?)?${MARK}\\s*(?:[:=\\u2013\\u2014-]|\\bis\\b)?${MARK}\\s*${FILLER}\\b${COLOR_NAME}\\b`,
+  'gi',
+)
+const ROLE_AFTER = new RegExp(`\\b${COLOR_NAME}\\s+${PALETTE_ROLE}\\b`, 'gi')
+const PART_AFTER = new RegExp(`\\b${COLOR_NAME}\\s+${UI_PART}\\b(?!\\s+(?:on|around|of|for|in|with|behind|under|over|across|inside)\\b)`, 'gi')
+const FOR_ROLE = new RegExp(`\\b${COLOR_NAME}\\s+(?:for|as)\\s+(?:(?:the|your|our|all)\\s+)?[a-z]+`, 'gi')
+const LIST_LINE = new RegExp(
+  `^\\s*(?:[-*\\u2022]|\\d+[.)])\\s+${MARK}(?:[a-z]+(?:\\s+colou?r)?${MARK}\\s*:${MARK}\\s*)?${MARK}${FILLER}\\b${COLOR_NAME}\\b`,
+  'gim',
+)
+const LIST_HEX = /^\s*(?:[-*•]|\d+[.)])\s+.*?(#(?:[0-9a-f]{6}|[0-9a-f]{3}))\b/gim
+/** T-0359: code a reply quotes (a fenced block, a CSS rule's braces) never sets out a palette. */
+const CODE = /```[\s\S]*?(```|$)|\{[^{}]*\}/g
+
+/** T-0359: how many distinct colors a reply sets out as a palette in the pinned forms above: its distinct hex codes when
+ *  three or more, else its distinct named colors. A passing mention ("white text on navy") sets out none. */
+export function proseColors(reply: string): number {
+  const text = reply.replace(CODE, ' ')
+  const codes = [...text.matchAll(HEX_CODE)].map((m) => m[0].toLowerCase())
+  const lettered = new Set(codes.filter((h) => /[a-f]/.test(h)))
+  const listed = new Set([...text.matchAll(LIST_HEX)].map((m) => m[1]!.toLowerCase()))
+  const hex = new Set(codes.filter((h) => lettered.has(h) || listed.has(h) || lettered.size >= 2))
+  if (hex.size >= 3) return hex.size
+  const named = new Set<string>()
+  const add = (re: RegExp, group: number) => {
+    for (const m of text.matchAll(re)) named.add(m[group]!.toLowerCase())
+  }
+  add(ROLE_FIRST, 2)
+  add(ROLE_AFTER, 1)
+  add(PART_AFTER, 1)
+  add(FOR_ROLE, 1)
+  add(LIST_LINE, 1)
+  return Math.max(hex.size, named.size)
+}
+
+/** T-0359: a row's `prose` as a check, judged on the reply (Kim, 2026-10-18): on a turn of a session whose prior assistant
+ *  turns never wrote one of `types` (a closed or rebuilt surface still counts as shown), a reply that sets out three or
+ *  more colors in prose while the turn writes none of `types` is SURFACE_MISSING. The user's words never count. The check
+ *  `requires` every one of `types`, so the palette check rides the Stylist's catalog alone. */
+export function compositeProseCheck(m: CompositeMoment): SemanticCheck {
+  const prose = m.prose!
+  const holds = (v: SurfaceView): boolean => [...v.components.values()].some((c) => prose.types.includes(c.component))
+  return {
+    id: `composite-prose-${kebab(m.composite)}`,
+    requires: [...new Set([m.composite, ...(m.requires ?? []), ...prose.types])],
+    check({ surfaces, action, reply, open, shownTypes }): readonly SemanticFinding[] {
+      if (action !== undefined || reply === undefined) return []
+      if (prose.types.some((t) => shownTypes?.has(t) === true) || open?.some(holds) === true || surfaces.some(holds)) return []
+      const n = prose.listed(reply)
+      if (n < 3) return []
+      return [
+        {
+          code: 'SURFACE_MISSING',
+          path: `reply:${prose.moment}`,
+          message:
+            `This turn's reply sets out a ${prose.moment} of ${n} colors in words and writes no ${prose.types.join(', ')}, so the reader never sees them. ` +
+            `Call render_surface with a createSurface holding ${prose.surface}, and keep the reply to one short paragraph on intent and contrast.`,
+        },
+      ]
+    },
+  }
+}
+
+/** Every row's check, then (T-0359) the prose check of each row with a `prose`. */
+export const compositeMomentChecks: readonly SemanticCheck[] = [
+  ...COMPOSITE_MOMENTS.map(compositeMomentCheck),
+  ...COMPOSITE_MOMENTS.filter((m) => m.prose !== undefined).map(compositeProseCheck),
+]
 
 /** T-0313: the rows that carry an ask cue, in precedence order. */
 const ASKED = COMPOSITE_MOMENTS.filter((m) => m.ask !== undefined).sort((a, b) => a.ask!.rank - b.ask!.rank)

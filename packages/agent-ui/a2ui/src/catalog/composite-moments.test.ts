@@ -3,17 +3,18 @@
 // where its types live, and every row's moment is one of its composite's selection intents.
 
 import { describe, expect, it } from 'vitest'
-import { COMPOSITE_MOMENTS, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
+import { COMPOSITE_MOMENTS, TOKEN_TYPES, askedCompositeMoment, proseColors, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
 import type { CompositeMoment } from './composite-moments.ts'
-import { gateChecksOnCatalog, runSemanticChecks } from './semantic-check.ts'
+import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews, sessionComponentTypes, sessionSurfaceViews } from './semantic-check.ts'
 import type { SurfaceView } from './semantic-check.ts'
-import type { A2uiComponent } from '../protocol.ts'
+import type { A2uiComponent, A2uiOutput } from '../protocol.ts'
 import { loadCatalog } from './catalog.ts'
 import { composeCatalog, loadCatalogFragment } from './compose.ts'
 import { validateCatalogConformance } from './conformance.ts'
 import defaultCatalogRaw from './default/catalog.json'
 import basicCatalogRaw from './a2ui-basic/catalog.json'
 import conciergeFragmentRaw from './personas/concierge/catalog.json'
+import stylistFragmentRaw from './personas/stylist/catalog.json'
 import defaultSelection from './default/selection.json'
 import conciergeSelection from './personas/concierge/selection.json'
 
@@ -63,6 +64,11 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
   ProductCard: [
     { id: 'root', component: 'Table', label: 'Spa treatments', columns: [{ key: 'treatment', label: 'Treatment' }, { key: 'price', label: 'Price' }], rows: [] },
   ],
+  Swatch: [
+    { id: 'root', component: 'Column', children: ['title', 'list'] },
+    { id: 'title', component: 'Text', text: 'A calm blue palette', variant: 'h4' },
+    { id: 'list', component: 'Text', text: 'Primary navy #1f3a5f, secondary steel blue #4a6f8a, accent sky #9cc3e0' },
+  ],
 }
 
 const COMPOSED: Record<string, A2uiComponent[]> = {
@@ -88,6 +94,12 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
   ProductCard: [
     { id: 'root', component: 'Grid', children: { path: '/treatments', componentId: 'tile' } },
     { id: 'tile', component: 'ProductCard', title: { path: 'name' }, price: { path: 'price' }, actionLabel: 'Book' },
+  ],
+  Swatch: [
+    { id: 'root', component: 'Column', children: ['note', 'navy', 'blues'] },
+    { id: 'note', component: 'Text', text: 'Navy #1f3a5f anchors the palette.' },
+    { id: 'navy', component: 'Swatch', label: 'Primary navy', value: '#1f3a5f' },
+    { id: 'blues', component: 'Ramp', label: 'Navy', steps: [{ label: '500', value: '#3d5f86' }] },
   ],
 }
 
@@ -1051,7 +1063,7 @@ describe('composite moment checks (T-0208)', () => {
     const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
     const basic = loadCatalog(basicCatalogRaw)
     const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
-    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card']
+    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-swatch']
     expect(ids(base)).toEqual(games)
     expect(concierge.catalogId).toBe('agent-ui--concierge')
     expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', ...games])
@@ -1072,8 +1084,10 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-result-card',
       'composite-moment-timeline',
       'composite-moment-product-card',
+      'composite-moment-swatch',
+      'composite-prose-swatch',
     ])
-    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING'])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'SWATCH_MISSING'])
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })
@@ -1089,6 +1103,11 @@ describe('the rows carry the ask cue of each Concierge composite moment (T-0313)
       ['services', 'ProductCard'],
       ['booking', 'BookingForm'],
     ])
+  })
+
+  it('T-0359: no palette words are an ask (the palette check reads the reply), so none shadows a Concierge moment', () => {
+    expect(askedCompositeMoment('Make it 16:00 and use the brand colours for the table decor')).toBeUndefined()
+    expect(askedCompositeMoment('Propose a calm blue palette for a banking app.')).toBeUndefined()
   })
 
   it.each([
@@ -1243,5 +1262,136 @@ describe('BOOKING_CONFIRMATION_MISSING reads settled-status signals, not caption
   it('the BookingForm row still fires on an unsettled read-back (no Badge)', () => {
     const unsettled = R9_85.filter((c) => c.id !== 'settled').map((c) => (c.id === 'footer' ? { ...c, children: ['bookBtn'] } : c))
     expect(findings(unsettled)).toEqual(['BOOKING_FORM_MISSING'])
+  })
+})
+
+// T-0359 (smoke round 2026-10-18-smoke :9, Haiku 5.5): "Propose a calm blue palette for a banking app." shipped the
+// palette in prose with no surface. Kim, 2026-10-18: judge the reply, not the ask. On the Stylist's catalog alone, a
+// reply that sets out a palette in words (three or more distinct hex codes, or named colors by role or as list lines)
+// on a turn that ships no token surface, in a session that never showed one, is SURFACE_MISSING.
+describe('a palette set out in the reply with no token surface is SURFACE_MISSING on the Stylist (T-0359)', () => {
+  const proseCheck = compositeMomentChecks.find((c) => c.id === 'composite-prose-swatch')!
+  const base = loadCatalog(defaultCatalogRaw)
+  const stylist = composeCatalog(base, loadCatalogFragment(stylistFragmentRaw), 'stylist')
+  const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
+  const RECORDED =
+    "A calm blue palette for a banking app should feel steady and trustworthy, not loud. I've anchored it on a deep navy primary, a softer steel-blue secondary for supporting elements, and a muted sky accent for highlights. Body-text pairings clear 4.5:1 contrast. The steel-blue secondary falls short on white text, so keep it for charts, icons and non-text accents."
+  const msgs = (sid: string, components: A2uiComponent[], create = true): A2uiOutput => [
+    ...(create ? [{ version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui--stylist' } }] : []),
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components } },
+  ] as A2uiOutput
+  const PALETTE = msgs('palette-1', COMPOSED['Swatch']!)
+  const PAIR = msgs('pair-1', [{ id: 'root', component: 'ContrastPair', foreground: '#1f3a5f', background: '#ffffff', label: 'Body' }])
+  const prior = (out: A2uiOutput) => ({ turns: [{ role: 'assistant', content: out.map((m) => JSON.stringify(m)).join('\n') }] })
+  const inputOf = (reply: string, out: A2uiOutput = [], session: A2uiOutput = []) => {
+    const log = session.length === 0 ? { turns: [] } : prior(session)
+    return { surfaces: out.length === 0 ? [] : semanticSurfaceViews(log, out), intent: 'Hi.', reply, open: sessionSurfaceViews(log), shownTypes: sessionComponentTypes(log) }
+  }
+  /** The SURFACE_MISSING findings every check gated onto `catalog` yields, as `produce()` runs them there. */
+  const on = (catalog: { components: Readonly<Record<string, unknown>> }, ...args: Parameters<typeof inputOf>) =>
+    runSemanticChecks(gateChecksOnCatalog(compositeMomentChecks, catalog), inputOf(...args)).findings.filter((f) => f.code === 'SURFACE_MISSING')
+  const said = (...args: Parameters<typeof inputOf>) => on(stylist, ...args)
+
+  it('the check rides the Stylist catalog alone: never agent-ui, the Concierge or a2ui-basic', () => {
+    expect(proseCheck.requires).toEqual([...TOKEN_TYPES])
+    expect(stylist.catalogId).toBe('agent-ui--stylist')
+    expect(gateChecksOnCatalog([proseCheck], stylist)).toEqual([proseCheck])
+    for (const c of [base, concierge, loadCatalog(basicCatalogRaw)]) expect(gateChecksOnCatalog([proseCheck], c)).toEqual([])
+  })
+
+  it('the recorded prose reply is SURFACE_MISSING, asking for Swatches, Ramps and ContrastPairs', () => {
+    const [f, ...rest] = said(RECORDED)
+    expect(rest).toEqual([])
+    expect([f!.code, f!.path]).toEqual(['SURFACE_MISSING', 'reply:palette'])
+    expect(f!.message).toContain('a palette of 4 colors in words') // navy, steel-blue, sky and white text
+    expect(f!.message).toContain('createSurface holding one Swatch per anchor color with its label and value, one Ramp per color family, and one ContrastPair per text pairing')
+  })
+
+  // Replies, judged on a first turn with no token surface written, on the Stylist. The user's words never count.
+  const REPLIES: readonly (readonly [string, boolean])[] = [
+    [RECORDED, true],
+    ['Here is the palette: #1f3a5f for headers, #4a6f8a for panels and #9cc3e0 for highlights.', true],
+    ['Your palette: #1F3A5F, #4a6f8a and #9cc3e0. Navy on white passes AA.', true],
+    ['Primary: navy, Accent: coral, Neutral: sand.', true],
+    ['A warm set:\n- Terracotta for buttons\n- Cream for the page\n- Charcoal for body text', true],
+    ['1. Sage for the header\n2. Ivory for cards\n3. Slate for text', true],
+    ['Background - ivory; text - charcoal; accent - mustard.', true],
+    // Quiet: one or two colors, palettes discussed with no list, a passing mention, an order number.
+    ['Yes, all three pass AA on white.', false],
+    ['White text on navy passes AA at 9.4:1.', false],
+    ['Pair a navy primary with a coral accent.', false],
+    ['Use #1f3a5f for headers and #4a6f8a for panels.', false],
+    ['A limited palette keeps a painting coherent, and painters clean a palette with a rag.', false],
+    ['A calm palette for a bank leans on blues and greens, with warm accents used sparingly.', false],
+    ['Order #482913 shipped; see issue #969 and ticket #123.', false],
+    ['Thanks! Glad the palette works.', false],
+    // Verifier 6: every missed form, now pinned (criterion 2).
+    ['- **Navy** for headers\n- **Coral** for buttons\n- **Sand** for the page', true],
+    ['- **Primary:** Navy\n- **Secondary:** Steel blue\n- **Accent:** Sky', true],
+    ['- Header: navy\n- Buttons: coral\n- Body: charcoal', true],
+    ['- Primary colour: navy\n- Secondary colour: steel blue\n- Accent colour: sky', true],
+    ['Primary navy, secondary steel blue, accent sky.', true],
+    ['Primary colour: navy. Secondary colour: steel blue. Accent colour: sky.', true],
+    ['Primary \u2014 navy\nSecondary \u2014 steel blue\nAccent \u2014 sky', true],
+    ['The primary is navy, the secondary is steel blue and the accent is sky.', true],
+    ['Use a success green, a warning amber and an error red for the status badges.', true],
+    ['Three anchors:\n- #2a9d8f\n- #e76f51\n- #264653', true],
+    // The conductor's decide notes, pinned one way.
+    ['Go with navy for the header, sand for the background and coral for buttons.', true],
+    ['Primary: periwinkle, Secondary: cornflower, Accent: sienna.', true],
+    ['.btn { color: #333; border: 1px solid #ddd; background: #fff; }', false],
+    ['```css\n:root { --primary: #1f3a5f; --accent: #9cc3e0; --neutral: #f4efe6; }\n```', false],
+    ['Use white text on the primary, black text on the accent and a grey border around cards.', false],
+    ['Navy, teal and coral all appear in your logo.', false],
+    // Verifier 6 forms that already fired, kept.
+    ['Background: cream. Text: charcoal. Accent: teal.', true],
+    ['a warm terracotta primary, a soft cream background and a deep espresso text color', true],
+    ['Anchors: #FFF, #333, #E63946 and #457B9D.', true],
+    ['Here you go: #abcdef, #fedcba and #aabbcc.', true],
+  ]
+  it.each(REPLIES)('on the Stylist, the reply %j fires: %s; outside the Stylist, none', (reply, fires) => {
+    expect(said(reply).map((f) => f.code)).toEqual(fires ? ['SURFACE_MISSING'] : [])
+    expect(on(base, reply)).toEqual([])
+    expect(on(concierge, reply)).toEqual([])
+  })
+
+  it('a reply listing a palette beside a Swatch, a Ramp or a ContrastPair alone is quiet; beside Text alone it fires', () => {
+    expect(said(RECORDED, PALETTE)).toEqual([])
+    expect(said(RECORDED, msgs('ramp-1', [{ id: 'root', component: 'Ramp', label: 'Blue', steps: [{ label: '500', value: '#3b6ea5' }] }]))).toEqual([])
+    expect(said(RECORDED, PAIR)).toEqual([])
+    expect(said(RECORDED, msgs('text-1', [{ id: 'root', component: 'Text', text: 'Calm blues' }])).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('a later turn is never judged: a token surface shown, closed or rebuilt, a ContrastPair-only one too', () => {
+    expect(said(RECORDED, [], PALETTE)).toEqual([])
+    expect(said(RECORDED, [], PAIR)).toEqual([])
+    const closed = JSON.stringify({ version: 'v1.0', deleteSurface: { surfaceId: 'palette-1' } })
+    const log = { turns: [prior(PALETTE).turns[0]!, { role: 'user', content: 'Close it.' }, { role: 'assistant', content: closed }] }
+    expect(sessionSurfaceViews(log)).toEqual([])
+    expect(proseCheck.check({ surfaces: [], intent: 'Again?', reply: RECORDED, open: [], shownTypes: sessionComponentTypes(log) })).toEqual([])
+  })
+
+  it('"Here\'s our palette... Does it pass AA?" fires only when the reply lists the colors', () => {
+    expect(said('Your palette: #1f3a5f, #4a6f8a and #9cc3e0. All three pass AA as text on white.').map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+    expect(said('Yes: each of the three passes AA as text on white.')).toEqual([])
+  })
+
+  it('a client turn, or a round with no reply, passes', () => {
+    expect(proseCheck.check({ surfaces: [], reply: RECORDED, action: { name: 'pick', surfaceId: 'palette-1', context: {}, dataModel: undefined } })).toEqual([])
+    expect(proseCheck.check({ surfaces: [], intent: 'Propose a calm blue palette for a banking app.' })).toEqual([])
+  })
+
+  it('proseColors counts distinct colors set out as a palette', () => {
+    expect(proseColors(RECORDED)).toBe(4)
+    expect(proseColors('Order #482913 shipped; see issue #969 and ticket #123.')).toBe(0)
+    expect(proseColors('#1f3a5f #1F3A5F #4a6f8a')).toBe(2)
+    expect(proseColors('White text on navy.')).toBe(0) // a UI part of something else names no palette role
+  })
+
+  it('SWATCH_MISSING reads hex color values, never an order or issue number', () => {
+    const text = (t: string) => codes([{ id: 'root', component: 'Text', text: t }])
+    expect(text('Order #482913 is confirmed, see issue #969')).toEqual([])
+    expect(text('Accent #9cc3e0')).toEqual(['SWATCH_MISSING'])
+    expect(text('Neutral grey #333333 for body text')).toEqual(['SWATCH_MISSING'])
   })
 })

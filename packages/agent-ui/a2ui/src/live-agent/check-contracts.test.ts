@@ -20,7 +20,7 @@ import defaultCatalogRaw from '../catalog/default/catalog.json'
 import basicCatalogRaw from '../catalog/a2ui-basic/catalog.json'
 import { COMPOSITE_MOMENTS, compositeMomentCheck } from '../catalog/composite-moments.ts'
 import { gradeGuess } from '../catalog/hidden-state-checks.ts'
-import { semanticSurfaceViews, sessionSurfaceViews } from '../catalog/semantic-check.ts'
+import { semanticSurfaceViews, sessionComponentTypes, sessionSurfaceViews } from '../catalog/semantic-check.ts'
 import type { SemanticAction, SemanticCheck, SemanticCheckInput, SemanticFinding } from '../catalog/semantic-check.ts'
 import { CORRECTED_LINE, DEAL_TURN, EVIDENCE_LINE, toJsonl } from '../catalog/personas/croupier/hands.fixture.ts'
 import { personaCroupierCardTableBettingSeed, personaCroupierCardTableSettledSeed } from '../examples/persona-exemplars.ts'
@@ -51,6 +51,8 @@ interface Fixture {
   readonly intent?: string
   /** The open surface the say turn declares it changes. */
   readonly target?: string
+  /** T-0359: the round's reply prose. */
+  readonly reply?: string
 }
 
 interface Contract {
@@ -75,6 +77,16 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
 const UI = 'agent-ui'
 const CONCIERGE = 'agent-ui--concierge'
 const CROUPIER = 'agent-ui--croupier'
+const STYLIST = 'agent-ui--stylist'
+
+// Palette (T-0359).
+const PALETTE_NODES = [
+  { id: 'root', component: 'Column', children: ['navy', 'blues'] },
+  { id: 'navy', component: 'Swatch', label: 'Primary', value: '#1f3a5f' },
+  { id: 'blues', component: 'Ramp', label: 'Blue', steps: [{ label: '300', value: '#7ea6cf' }, { label: '700', value: '#1f3a5f' }] },
+]
+const palette = surface('palette-1', UI, PALETTE_NODES)
+const PALETTE_REPLY = 'Primary: navy, Secondary: steel blue, Accent: sky.'
 
 // Booking (Concierge).
 const BOOKING = { date: '2026-10-20', time: '20:00', party: 4 }
@@ -335,6 +347,18 @@ const CONTRACTS: Record<string, Contract> = {
       ]),
     },
   },
+  // T-0359: a palette is shown on a Swatch and a Ramp, never written out, and a palette ask is answered on one.
+  'composite-moment-swatch': {
+    code: 'SWATCH_MISSING',
+    pass: { catalog: UI, output: palette },
+    fail: { catalog: UI, output: surface('palette-1', UI, [{ id: 'root', component: 'Text', text: 'Primary navy #1f3a5f, accent sky #9cc3e0' }]) },
+  },
+  // Kim, 2026-10-18: judged on the reply, on the Stylist alone.
+  'composite-prose-swatch': {
+    code: 'SURFACE_MISSING',
+    pass: { catalog: STYLIST, intent: 'Propose a calm blue palette for a banking app.', reply: PALETTE_REPLY, output: surface('palette-1', STYLIST, PALETTE_NODES) },
+    fail: { catalog: STYLIST, intent: 'Propose a calm blue palette for a banking app.', reply: PALETTE_REPLY, output: [] },
+  },
   'framed-choice': {
     code: 'FRAMED_CHOICE',
     pass: {
@@ -475,12 +499,15 @@ function inputOf(f: Fixture): SemanticCheckInput {
   const session = { turns: turnsOf(f) }
   if (f.action !== undefined) return { surfaces: f.output.length === 0 ? [] : semanticSurfaceViews(session, f.output), action: f.action }
   const open = f.intent !== undefined ? sessionSurfaceViews(session) : undefined
+  const shownTypes = f.intent !== undefined ? sessionComponentTypes(session) : undefined
   const target = f.target !== undefined && open?.some((v) => v.surfaceId === f.target) ? f.target : undefined
   return {
     surfaces: f.output.length === 0 ? [] : semanticSurfaceViews(session, f.output),
     ...(f.intent !== undefined ? { intent: f.intent } : {}),
     ...(target !== undefined ? { target } : {}),
     ...(open !== undefined ? { open } : {}),
+    ...(shownTypes !== undefined ? { shownTypes } : {}),
+    ...(f.reply !== undefined ? { reply: f.reply } : {}),
   }
 }
 
@@ -711,6 +738,7 @@ const ROW_PROPS: Record<string, readonly string[]> = {
   ResultCard: ['outcome', 'title', 'summary', 'stats'],
   Timeline: ['label'],
   ProductCard: ['title', 'price', 'priceNote', 'action'],
+  Swatch: ['label', 'value'],
 }
 
 /** A composite's declared props, with the item props of its array props (`rows[].label`). */

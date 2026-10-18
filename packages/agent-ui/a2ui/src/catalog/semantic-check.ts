@@ -98,6 +98,12 @@ export interface SemanticCheckInput {
   /** T-0350: the 0-based round of the turn being judged; above 0, an earlier answer of this turn was rejected and
    *  never reached the player. Absent when the caller does not track rounds. */
   readonly round?: number
+  /** T-0359: on a say turn, every component type any prior assistant turn of the session wrote, on surfaces since closed
+   *  or rebuilt too (`sessionComponentTypes`), so a check can tell a first ask from a later one. Absent on a client turn. */
+  readonly shownTypes?: ReadonlySet<string>
+  /** T-0359: the reply prose of the round being judged (its note), so a check can see a moment written out in words
+   *  instead of shown. Absent when the round wrote none. */
+  readonly reply?: string
 }
 
 /** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined.
@@ -232,6 +238,24 @@ function replaySession(session: SemanticTurnLog): Map<string, MutableView> {
     }
   }
   return views
+}
+
+/** T-0359: every component type the session's prior ASSISTANT turns ever wrote, whatever became of their surfaces. */
+export function sessionComponentTypes(session: SemanticTurnLog): Set<string> {
+  const types = new Set<string>()
+  for (const turn of session.turns) {
+    if (turn.role !== 'assistant') continue
+    for (const line of turn.content.split('\n')) {
+      if (line.trim() === '') continue
+      try {
+        const comps = (JSON.parse(line) as { updateComponents?: { components?: unknown } }).updateComponents?.components
+        if (Array.isArray(comps)) for (const c of comps) if (isRecord(c) && typeof c['component'] === 'string') types.add(c['component'])
+      } catch {
+        // not JSON: skip, as replaySession does
+      }
+    }
+  }
+  return types
 }
 
 /** T-0286, T-0278: every surface the session's prior ASSISTANT turns leave open, in the order the session first wrote
