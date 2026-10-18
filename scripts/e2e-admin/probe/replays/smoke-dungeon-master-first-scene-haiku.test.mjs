@@ -9,16 +9,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0361, T-0362. Haiku 5.5 built the quest log from a Card, Rows and Badges with no GameHud or Timeline,
-// which the `quest-log` skill names. T-0358's GameHud row now sends turn 0 back with GAME_HUD_MISSING; its round 2 is
-// AUTHORED to that repair: the recorded round with the HP and Gold Badges dropped from quest-log, and ONE GameHud on its
-// own surface hud-1. Still red: no check asks for the Timeline (run level, T-0361), and turn 1's recorded round updates
-// only quest-log, so no touched surface holds the GameHud (T-0362, a live re-record).
-it('smoke-dungeon-master-first-scene-haiku: turn 0 repairs GAME_HUD_MISSING; the Timeline and turn 1 stay red', async () => {
+// expectedFail: T-0362. Haiku 5.5 built the quest log from a Card, Rows and Badges with no GameHud or Timeline,
+// which the `quest-log` skill names. T-0358's GameHud row and T-0361's Timeline row send turn 0 back with
+// GAME_HUD_MISSING and TIMELINE_MISSING; its round 2 is AUTHORED to both repairs: the recorded round with the HP and Gold
+// Badges dropped from quest-log, the scenes Column of Texts replaced by ONE Timeline, and ONE GameHud on its own surface
+// hud-1. Still red: turn 1's recorded round adds s2 to the scenes Column the repair replaced, so IDGRAPH drops it with
+// no recorded retry and the turn updates no surface (T-0362, a live re-record).
+it('smoke-dungeon-master-first-scene-haiku: turn 0 repairs GAME_HUD_MISSING and TIMELINE_MISSING; turn 1 stays red', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-dungeon-master-first-scene-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 1], ['expect-component', null]])
-  expect(report.failed.at(-1).detail).toBe('missing Timeline (shipped Card, CardHeader, Text, CardContent, Column, Row, Badge, CardFooter, Button, GameHud)')
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['action-updates-surface', 1], ['expect-component', 1]])
   const trace = report.records[0].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace).toMatchObject({ rounds: 2, failureCodes: ['GAME_HUD_MISSING'] })
+  expect(trace).toMatchObject({ rounds: 2, failureCodes: ['GAME_HUD_MISSING', 'TIMELINE_MISSING'] })
 })
