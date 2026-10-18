@@ -5,10 +5,12 @@
 // the model. This module never reads a key or `process.env`: `deps.provider` is injected, and the one module that
 // builds the real adapter is `eval-judge.ts`, in its keyed arm.
 //
-// A judged run writes `runs/<name>/judge.json` beside its `report.json`; `signals.ts` reads it.
+// A judged run writes `judged/<name>.json` in its round folder, a new file only: a finished record (the run's
+// `report.json`, the round's `signals.md`, an earlier `judged/` file) is never rewritten. `signals.ts` reads it into a
+// Judged checks table, a measurement that never moves a run's verdict, pass rate or gate.
 
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { AgentProvider } from '../../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
@@ -19,11 +21,15 @@ import { metaOf } from './model.ts'
 
 export const RUBRICS_DIR = join(dirname(fileURLToPath(import.meta.url)), 'rubrics')
 export const CALIBRATION_FILE = join(RUBRICS_DIR, 'calibration.json')
+/** The folder inside a round that holds one `<run name>.json` per judged run. */
+export const JUDGED_DIR = 'judged'
 /** The pinned judge. The 5.5 models accept no sampling parameter (`providers/anthropic.ts` sends none), so the
  *  temperature is the model's own default, recorded as null, never a value the adapter would drop. */
 export const JUDGE_MODEL = 'claude-sonnet-5-5'
 export const JUDGE_TEMPERATURE = null
-const TURN_CHARS = 1_500
+/** A long reply keeps its head and its tail, so a JSON leak at the end of a reply stays in view. */
+const HEAD_CHARS = 1_000
+const TAIL_CHARS = 1_000
 const WHY_CHARS = 600
 
 const WRAPPER = `You are a strict, evidence-bound judge of one chat transcript between a user and an agent persona. Score
@@ -70,14 +76,19 @@ export function parseRubric(text: string, file = 'rubric'): Rubric {
   return { id, version, threshold, criteria, body, sha256: createHash('sha256').update(text).digest('hex') }
 }
 
-/** The rubric for a persona, or undefined when it has none. */
+/** The rubric for a persona, or undefined when it has none. Throws when the file's front matter `id` is not its name. */
 export function loadRubric(persona: string, dir = RUBRICS_DIR): Rubric | undefined {
   const file = join(dir, `${persona}.md`)
-  return existsSync(file) ? parseRubric(readFileSync(file, 'utf8'), file) : undefined
+  if (!existsSync(file)) return undefined
+  const rubric = parseRubric(readFileSync(file, 'utf8'), file)
+  if (rubric.id !== persona) throw new Error(`${file}: front matter id ${rubric.id} is not the file name ${persona}`)
+  return rubric
 }
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
-const clip = (s: string, n: number): string => (s.length > n ? `${s.slice(0, n)}...` : s)
+/** The head and the tail of a long text with the elided middle marked. */
+export const clip = (s: string, head = HEAD_CHARS, tail = TAIL_CHARS): string =>
+  s.length > head + tail ? `${s.slice(0, head)} [... ${s.length - head - tail} chars elided ...] ${s.slice(-tail)}` : s
 const VISIBLE = ['text', 'label', 'title', 'subtitle', 'caption', 'placeholder', 'description'] as const
 
 /** The component types and literal visible strings the shipped A2UI lines of one turn carry. */
@@ -105,15 +116,27 @@ interface ReportTurn {
   index?: number
   step?: { say?: string; click?: string; page?: string }
   lines?: string[]
+  proseText?: string
   clickMissing?: unknown
 }
 
-/** The transcript a judge reads, from a probe `report.json`: per turn what the user said or clicked, the agent's
- *  reply text (the note, else the streamed text, as `metaOf` reads it), and the surface it shipped (component types
- *  and literal visible strings). A halted turn shows its error. */
+/** What this turn added to the chat log: `proseText` (the log the user saw, the text `no-json-as-prose` judges) past
+ *  the prefix it shares with the previous turn's log, cut at a word start. */
+function newProse(text: string, before: string): string {
+  let i = 0
+  while (i < text.length && i < before.length && text[i] === before[i]) i += 1
+  if (i < text.length && !/\s/.test(text[i])) while (i > 0 && !/\s/.test(text[i - 1])) i -= 1 // mid-word: back to its start
+  return text.slice(i).trim()
+}
+
+/** The transcript a judge reads, from a probe `report.json`: per turn what the user said or clicked, what the chat
+ *  showed (the new part of the turn's `proseText`, the log the user saw; only when a report has no `proseText`, the
+ *  reply as `metaOf` reads it from the meta-lines), and the surface it shipped (component types and literal visible
+ *  strings). A halted turn shows its error. */
 export function transcriptOf(report: { agent?: unknown; turns?: unknown }): string {
   const out: string[] = [`Persona: ${typeof report.agent === 'string' ? report.agent : 'unknown'}`]
   const turns = Array.isArray(report.turns) ? (report.turns as ReportTurn[]) : []
+  let log = ''
   turns.forEach((t, i) => {
     const step = t.step ?? {}
     const lines = Array.isArray(t.lines) ? t.lines : []
@@ -127,10 +150,13 @@ export function transcriptOf(report: { agent?: unknown; turns?: unknown }): stri
       return
     }
     const meta = metaOf(lines)
-    if (meta.error !== undefined) out.push(`Agent: [turn failed] ${clip(meta.error, 300)}`)
-    else out.push(`Agent says: ${clip(meta.prose.join('').trim(), TURN_CHARS) || '(no reply text)'}`)
+    if (meta.error !== undefined) out.push(`Agent: [turn failed] ${clip(meta.error, 300, 0)}`)
+    if (typeof t.proseText === 'string') {
+      out.push(`Chat shows (new this turn): ${clip(newProse(t.proseText, log)) || '(nothing new)'}`)
+      log = t.proseText
+    } else if (meta.error === undefined) out.push(`Agent says: ${clip(meta.prose.join('').trim()) || '(no reply text)'}`)
     const s = surfaceOf(lines)
-    if (s.types.length > 0) out.push(`Agent surface: ${s.types.join(', ')}`, `Surface text: ${clip(s.strings.map((x) => JSON.stringify(x)).join(' '), TURN_CHARS)}`)
+    if (s.types.length > 0) out.push(`Agent surface: ${s.types.join(', ')}`, `Surface text: ${clip(s.strings.map((x) => JSON.stringify(x)).join(' '))}`)
   })
   return `${out.join('\n')}\n`
 }
@@ -138,13 +164,17 @@ export function transcriptOf(report: { agent?: unknown; turns?: unknown }): stri
 export interface CriterionScore {
   id: string
   score: number
+  /** At or over the threshold and supported. */
   passed: boolean
-  /** Each quote, and whether it appears in the transcript (whitespace-normalized). */
+  /** At least one quote, and every quote found in the transcript: a criterion the judge backed with invented or no
+   *  evidence fails, whatever its score. */
+  supported: boolean
+  /** Each quote, and whether it appears in the transcript (see `quoteFound`). */
   evidence: Array<{ quote: string; found: boolean }>
   why: string
 }
 
-/** `runs/<name>/judge.json`. */
+/** `judged/<name>.json` in a round folder. */
 export interface JudgeFile {
   kind: 'agent-ui-judge'
   version: 1
@@ -156,7 +186,7 @@ export interface JudgeFile {
   criteria: CriterionScore[]
   /** The lowest criterion score. */
   score: number
-  /** Every criterion at or over the threshold. */
+  /** Every criterion passed (at or over the threshold and supported). */
   passed: boolean
   usage: TraceUsage
   costUsd: number
@@ -165,7 +195,15 @@ export interface JudgeFile {
 
 export type JudgeOutcome = { ok: true; file: JudgeFile } | { ok: false; reason: 'E_JUDGE_PARSE'; raw: string; usage: TraceUsage; costUsd: number }
 
-const norm = (s: string): string => s.replace(/\s+/g, ' ').trim()
+const norm = (s: string): string => s.replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\s+/g, ' ').trim()
+
+/** Whether a quote is in the transcript: whitespace and curly quotes normalized, outer quote marks dropped, and a quote
+ *  the judge elided with `...` found fragment by fragment. An empty quote is never found. */
+export function quoteFound(quote: string, transcript: string): boolean {
+  const hay = norm(transcript)
+  const parts = norm(quote).replace(/^["']+|["']+$/g, '').split(/\.\.\.|\u2026/).map((p) => p.trim()).filter((p) => p !== '')
+  return parts.length > 0 && parts.every((p) => hay.includes(p))
+}
 
 /** Strict parse of the judge reply against the rubric's criteria; undefined on any defect (not JSON, a missing,
  *  repeated or unknown criterion, a score outside 1 to 5, evidence that is not a string array). One markdown fence
@@ -190,6 +228,11 @@ export function parseReply(raw: string, rubric: Rubric): Array<{ id: string; sco
   return rubric.criteria.map((id) => out.find((o) => o.id === id)!)
 }
 
+/** The provider request for one judge call; `eval-judge.ts` estimates a call's cost from it. */
+export function judgeRequest(transcript: string, rubric: Rubric, model = JUDGE_MODEL): { model: string; system: string; messages: Array<{ role: 'user'; content: string }> } {
+  return { model, system: WRAPPER + rubric.body, messages: [{ role: 'user', content: `TRANSCRIPT:\n${transcript}` }] }
+}
+
 /** Score one transcript against one rubric. `deps.model` overrides the pinned judge (tests only). */
 export async function judgeTranscript(
   run: string,
@@ -201,9 +244,7 @@ export async function judgeTranscript(
   const usage: TraceUsage = {}
   let raw = ''
   const stream = deps.provider.stream({
-    model,
-    system: WRAPPER + rubric.body,
-    messages: [{ role: 'user', content: `TRANSCRIPT:\n${transcript}` }],
+    ...judgeRequest(transcript, rubric, model),
     onEvent: (ev) => {
       if (ev.kind !== 'usage' || ev.usage === undefined) return
       for (const k of ['inputTokens', 'outputTokens', 'cacheReadInputTokens', 'cacheCreationInputTokens'] as const) {
@@ -216,14 +257,11 @@ export async function judgeTranscript(
   const costUsd = Math.round(usageCost(model, usage) * 1e6) / 1e6
   const parsed = parseReply(raw, rubric)
   if (parsed === undefined) return { ok: false, reason: 'E_JUDGE_PARSE', raw, usage, costUsd }
-  const hay = norm(transcript)
-  const criteria: CriterionScore[] = parsed.map((c) => ({
-    id: c.id,
-    score: c.score,
-    passed: c.score >= rubric.threshold,
-    evidence: c.evidence.map((quote) => ({ quote, found: norm(quote) !== '' && hay.includes(norm(quote)) })),
-    why: c.why,
-  }))
+  const criteria: CriterionScore[] = parsed.map((c) => {
+    const evidence = c.evidence.map((quote) => ({ quote, found: quoteFound(quote, transcript) }))
+    const supported = evidence.length > 0 && evidence.every((e) => e.found)
+    return { id: c.id, score: c.score, passed: supported && c.score >= rubric.threshold, supported, evidence, why: c.why }
+  })
   const score = Math.min(...criteria.map((c) => c.score))
   return {
     ok: true,
@@ -237,7 +275,7 @@ export async function judgeTranscript(
       threshold: rubric.threshold,
       criteria,
       score,
-      passed: score >= rubric.threshold,
+      passed: criteria.every((c) => c.passed),
       usage,
       costUsd,
       at: (deps.now ?? (() => new Date().toISOString()))(),
@@ -245,23 +283,48 @@ export async function judgeTranscript(
   }
 }
 
-/** Write `judge.json` into a run folder; returns its path. */
-export function writeJudge(runDir: string, file: JudgeFile): string {
-  const out = join(runDir, 'judge.json')
-  writeFileSync(out, `${JSON.stringify(file, null, 2)}\n`)
-  return out
+/** A judged run's file in its round folder. */
+export const judgedPath = (roundDir: string, run: string): string => join(roundDir, JUDGED_DIR, `${run}.json`)
+
+/** Write a judged run into its round's `judged/` folder as a new file; an existing file is never rewritten. */
+export function writeJudge(roundDir: string, file: JudgeFile): { path: string; written: boolean } {
+  const path = judgedPath(roundDir, file.run)
+  if (existsSync(path)) return { path, written: false }
+  mkdirSync(join(roundDir, JUDGED_DIR), { recursive: true })
+  writeFileSync(path, `${JSON.stringify(file, null, 2)}\n`, { flag: 'wx' })
+  return { path, written: true }
 }
 
-/** A run folder's `judge.json`, or undefined when it has none or it does not parse as one. */
-export function readJudge(runDir: string): JudgeFile | undefined {
-  const file = join(runDir, 'judge.json')
-  if (!existsSync(file)) return undefined
+const isScore = (v: unknown): v is number => typeof v === 'number' && Number.isInteger(v) && v >= 1 && v <= 5
+
+/** Why a parsed file is not a judged run, or undefined when it is one. */
+function judgeDefect(doc: unknown): string | undefined {
+  if (!isObject(doc) || doc.kind !== 'agent-ui-judge') return 'not an agent-ui-judge file'
+  if (!isObject(doc.rubric) || typeof doc.rubric.id !== 'string' || !/^[a-z][a-z0-9-]*$/.test(doc.rubric.id)) return 'no rubric id'
+  if (!isScore(doc.threshold)) return 'threshold is not an integer 1 to 5'
+  if (!isScore(doc.score) || typeof doc.passed !== 'boolean') return 'no score or verdict'
+  if (!Array.isArray(doc.criteria) || doc.criteria.length === 0) return 'no criteria'
+  for (const c of doc.criteria) if (!isObject(c) || typeof c.id !== 'string' || !isScore(c.score) || typeof c.passed !== 'boolean') return 'a criterion without an id, a score 1 to 5 and a verdict'
+  return undefined
+}
+
+/** A run's judged file, or undefined when it has none. A file that does not parse as one is skipped with a warning. */
+export function readJudge(roundDir: string, run: string, warn: (s: string) => void = (s) => void process.stderr.write(s)): JudgeFile | undefined {
+  const path = judgedPath(roundDir, run)
+  if (!existsSync(path)) return undefined
+  let doc: unknown
   try {
-    const doc = JSON.parse(readFileSync(file, 'utf8')) as JudgeFile
-    return doc.kind === 'agent-ui-judge' && Array.isArray(doc.criteria) ? doc : undefined
-  } catch {
+    doc = JSON.parse(readFileSync(path, 'utf8'))
+  } catch (err) {
+    warn(`judge: skipping ${path}: ${err instanceof Error ? err.message : String(err)}\n`)
     return undefined
   }
+  const defect = judgeDefect(doc)
+  if (defect !== undefined) {
+    warn(`judge: skipping ${path}: ${defect}\n`)
+    return undefined
+  }
+  return doc as JudgeFile
 }
 
 /** One calibration case: a committed round run cited as a known-good pass or a known-bad fail of its rubric. */
@@ -275,7 +338,8 @@ export interface CalibrationCase {
 }
 
 /** Read and check the calibration set: every case names a rubric that parses and a run whose `report.json` exists
- *  under `roundsDir`, its persona is the rubric's, and each rubric has at least one good and one bad case. Returns
+ *  under `roundsDir`, its persona is the rubric's, a good case's verdict is pass and a bad case's fail, and each
+ *  rubric has at least one good and one bad case. Returns
  *  the cases and the problems found. */
 export function loadCalibration(roundsDir: string, file = CALIBRATION_FILE, rubricsDir = RUBRICS_DIR): { cases: CalibrationCase[]; problems: string[] } {
   const problems: string[] = []
@@ -301,8 +365,10 @@ export function loadCalibration(roundsDir: string, file = CALIBRATION_FILE, rubr
     const report = join(roundsDir, c.round, 'runs', c.run, 'report.json')
     if (!existsSync(report)) problems.push(`${at}: no report.json under ${roundsDir}`)
     else {
-      const agent = (JSON.parse(readFileSync(report, 'utf8')) as { agent?: string }).agent
+      const { agent, verdict } = JSON.parse(readFileSync(report, 'utf8')) as { agent?: string; verdict?: string }
       if (agent !== c.rubric) problems.push(`${at}: persona ${agent} is not rubric ${c.rubric}`)
+      const want = c.expect === 'good' ? 'pass' : 'fail'
+      if (verdict !== want) problems.push(`${at}: a ${c.expect} case must be a run with verdict ${want}, this one is ${verdict}`)
     }
     sides.set(c.rubric, (sides.get(c.rubric) ?? new Set()).add(c.expect))
   }

@@ -45,7 +45,7 @@
   `scripts/e2e-admin/probe/signals.ts`, README Live rounds, SPEC CL-R4 and CL-R9 (T-0342, T-0349).
 - `npm run eval:judge -- run --round <folder> [--only <run>] [--cap <usd>]`: judged checks on a committed round's
   transcripts against the persona rubrics in `scripts/e2e-admin/probe/rubrics/`, by the pinned judge model; writes
-  `runs/<name>/judge.json`, which `eval:signals` reads. Needs a key (`--repo-root <main checkout>` from a lane),
+  new `judged/<name>.json` files in the round (never rewriting one), which `eval:signals` lists as a measurement. Needs a key (`--repo-root <main checkout>` from a lane),
   stops at `--cap` (default $5), a manual measurement, never a gate or CI job. `-- selftest` (keyed) scores the
   calibration set and prints its cost; `-- check` (keyless) rides `check:scripts`. Home: `probe/eval-judge.ts`,
   README Live rounds, SPEC CL-R8 (T-0178).

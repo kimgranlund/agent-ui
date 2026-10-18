@@ -63,11 +63,11 @@ export interface SignalRun {
   model: string
   effort: string
   verdict: 'pass' | 'fail' | null
-  /** The probe checks, then one `judge <rubric>.<criterion>` check per criterion of `judge.json` when the run was
-   *  judged (T-0178). */
+  /** The probe checks from `report.json`; a judged check is never one of them. */
   checks: Check[]
-  /** The run's `judge.json` verdict (T-0178), null when it was not judged. */
-  judge: { rubric: string; score: number; threshold: number; passed: boolean } | null
+  /** The round's `judged/<name>.json` (T-0178), null when the run was not judged. A measurement: it never moves the
+   *  verdict, a pass rate, a floor or a drop. */
+  judge: { rubric: string; score: number; threshold: number; passed: boolean; criteria: Array<{ id: string; score: number; passed: boolean }> } | null
   /** null when the round has no ledger. */
   costUsd: number | null
   turns: Turn[]
@@ -124,7 +124,7 @@ export function readRound(dir: string): SignalRun[] {
   }
   const run = (name: string, siblings: string[], runDir: string, row: Record<string, unknown> | undefined): SignalRun => {
     const report = readJson(join(runDir, 'report.json'))
-    const judged = readJudge(runDir)
+    const judged = readJudge(dir, basename(runDir))
     // The ledger's own `scenario` predates T-0342 on older rounds (T-0329 bucketed every sample), so it is rederived.
     const { scenario, sample } = runNameParts(name, siblings)
     const v = (row !== undefined && 'verdict' in row ? row.verdict : report?.verdict) as unknown
@@ -145,11 +145,8 @@ export function readRound(dir: string): SignalRun[] {
       model: str(row?.model) || str(report?.model),
       effort: str(row?.effort) || 'default',
       verdict: v === 'pass' || v === 'fail' ? v : null,
-      checks: [
-        ...(Array.isArray(report?.checks) ? (report.checks as Check[]) : []),
-        ...(judged?.criteria ?? []).map((c) => ({ check: `judge ${judged!.rubric.id}.${c.id}`, status: c.passed ? 'pass' : 'fail', detail: `score ${c.score}, threshold ${judged!.threshold}` })),
-      ],
-      judge: judged === undefined ? null : { rubric: judged.rubric.id, score: judged.score, threshold: judged.threshold, passed: judged.passed },
+      checks: Array.isArray(report?.checks) ? (report.checks as Check[]) : [],
+      judge: judged === undefined ? null : { rubric: judged.rubric.id, score: judged.score, threshold: judged.threshold, passed: judged.passed, criteria: judged.criteria.map((c) => ({ id: c.id, score: c.score, passed: c.passed })) },
       costUsd: row === undefined ? null : typeof row.costUsd === 'number' ? row.costUsd : 0,
       turns,
     }
@@ -229,6 +226,8 @@ export interface Signals {
   digests: Array<{ agent: string; section: string; digest: string; turns: number }>
   /** Judged runs (T-0178) per rubric x model family: runs judged, passed, and the mean of their lowest scores. */
   judged: Array<{ rubric: string; model: string; runs: number; pass: number; meanScore: number }>
+  /** Per rubric criterion: the judged runs that scored it and the ones it failed. */
+  judgedCriteria: Array<{ rubric: string; criterion: string; runs: number; fails: number }>
   /** Turns per persona with no `routing.sections` (a halted turn carries none). */
   noSections: Record<string, number>
   tally: Tally
@@ -407,6 +406,16 @@ export function aggregate(runs: SignalRun[]): Signals {
     if (r.judge.passed) j.pass += 1
     judged.set(k, j)
   }
+  const judgedCriteria = new Map<string, { rubric: string; criterion: string; runs: number; fails: number }>()
+  for (const r of runs) {
+    for (const c of r.judge?.criteria ?? []) {
+      const k = `${r.judge!.rubric}\u0000${c.id}`
+      const x = judgedCriteria.get(k) ?? { rubric: r.judge!.rubric, criterion: c.id, runs: 0, fails: 0 }
+      x.runs += 1
+      if (!c.passed) x.fails += 1
+      judgedCriteria.set(k, x)
+    }
+  }
 
   const byName = <T>(key: (x: T) => string) => (a: T, b: T): number => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0)
   return {
@@ -422,6 +431,7 @@ export function aggregate(runs: SignalRun[]): Signals {
     spend,
     digests: [...digests.values()].sort(byName((d) => `${d.agent}\u0000${d.section}\u0000${d.digest}`)),
     judged: [...judged.values()].map(({ sum, ...j }) => ({ ...j, meanScore: Math.round((sum / j.runs) * 100) / 100 })).sort((a, b) => byName<{ rubric: string }>((x) => x.rubric)(a, b) || models.indexOf(a.model) - models.indexOf(b.model)),
+    judgedCriteria: [...judgedCriteria.values()].sort(byName((x) => `${x.rubric}\u0000${x.criterion}`)),
     noSections,
     tally: w.tally,
   }
@@ -583,9 +593,11 @@ export function renderSignals(runs: SignalRun[], o: RenderOptions): string {
   }
 
   if (s.judged.length > 0) {
-    L.push('', '## Judged checks', '', 'Each judged run\'s `runs/<name>/judge.json` (`npm run eval:judge`, T-0178): a run passes when every rubric criterion scores at or over the threshold; the score is its lowest criterion. Each criterion is also a `judge <rubric>.<criterion>` row above.', '')
+    L.push('', '## Judged checks', '', 'Each judged run\'s `judged/<name>.json` in its round (`npm run eval:judge`, T-0178), a measurement that never changes a run\'s verdict, the pass rates or the gates above: a run passes when every rubric criterion scores at or over the threshold with its evidence found in the transcript; the score is its lowest criterion.', '')
     L.push('| Rubric | Model | Judged | Pass | Mean score |', '| --- | --- | --- | --- | --- |')
     for (const j of s.judged) L.push(`| ${j.rubric} | ${j.model} | ${j.runs} | ${j.pass} | ${j.meanScore} |`)
+    L.push('', '| Criterion | Judged | Fails |', '| --- | --- | --- |')
+    for (const c of s.judgedCriteria) L.push(`| ${c.rubric}.${c.criterion} | ${c.runs} | ${c.fails} |`)
   }
 
   L.push('', '## Producer retry codes', '', 'From the trace lines: fired counts failed rounds (turns), saved counts turns that did not halt and shipped with no `*_UNCORRECTED` or SURFACE_DEGRADED code, and extra USD is the repair round that answers each failed round, split across its codes.', '')
