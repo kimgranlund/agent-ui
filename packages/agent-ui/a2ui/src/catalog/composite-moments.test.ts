@@ -352,6 +352,112 @@ describe('composite moment checks (T-0208)', () => {
     expect(codes([{ id: 't', component: 'Text', text: 'Score: 3, attempts remaining: 2' }])).toEqual([])
   })
 
+  // T-0358: the smoke round 2026-10-18-smoke (Haiku 5.5) hand-built the score strip of three board-less game personas
+  // whose skills name ONE GameHud (guess-hud, deal-sheet, quest-log). Each is GAME_HUD_MISSING with no BoardGrid.
+  const BOARDLESS: Record<string, A2uiComponent[]> = {
+    mentalist: [
+      { id: 'root', component: 'Card', children: ['hd', 'ct'] },
+      { id: 'hd', component: 'CardHeader', children: ['title', 'spent_badge'] },
+      { id: 'title', component: 'Text', text: 'Twenty Questions', variant: 'h4' },
+      { id: 'spent_badge', component: 'Badge', label: { path: '/hud/spentLabel' } },
+      { id: 'ct', component: 'CardContent', children: ['progress', 'conf'] },
+      { id: 'progress', component: 'Progress', value: { path: '/hud/spent' }, max: 20, label: 'Questions spent' },
+      { id: 'conf', component: 'Stat', label: 'Confidence', value: { path: '/hud/confidence' } },
+    ],
+    negotiator: [
+      { id: 'root', component: 'Card', children: ['hd', 'sheet'] },
+      { id: 'hd', component: 'CardHeader', children: ['title', 'badge'] },
+      { id: 'title', component: 'Text', text: 'Deal sheet: Brass lantern', variant: 'h4' },
+      { id: 'badge', component: 'Badge', label: 'Asking 240 silver' },
+      { id: 'sheet', component: 'DescriptionList', rows: [{ label: 'Item', value: 'Brass lantern' }, { label: 'Asking price', value: '240 silver' }, { label: "Merchant's mood", value: 'Curious' }] },
+    ],
+    'dungeon-master': [
+      { id: 'root', component: 'Card', children: ['strip'] },
+      { id: 'strip', component: 'Row', children: ['hp', 'gold'] },
+      { id: 'hp', component: 'Badge', label: 'HP 12/12' },
+      { id: 'gold', component: 'Badge', label: 'Gold 0' },
+    ],
+  }
+
+  for (const [persona, components] of Object.entries(BOARDLESS)) {
+    it(`T-0358: the recorded ${persona} score strip with no BoardGrid yields GAME_HUD_MISSING, and with a GameHud none`, () => {
+      expect(codes(components)).toEqual(['GAME_HUD_MISSING'])
+      expect(codes([...components, { id: 'hud', component: 'GameHud', title: 'Game' }])).toEqual([])
+    })
+  }
+
+  it('T-0358: the board-less finding names the hand-built stat components', () => {
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(BOARDLESS['dungeon-master']!, 'quest-log')] }).findings
+    expect(f!.path).toBe('quest-log:hp')
+    expect(f!.message).toContain('hp (a Badge), gold (a Badge)')
+    expect(f!.message).toContain('Make it ONE GameHud with its title, status and stats (and progress when the game counts turns), beside the BoardGrid when the game has one')
+  })
+
+  // T-0358 review: a stat strip with no game words is no game. Each of these holds two game-stat items, so without the
+  // row's game gate each would fire.
+  it('T-0358 negative control: a KPI strip with an NPS score and a model confidence yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['nps', 'conf'] },
+        { id: 'nps', component: 'Stat', label: 'NPS score', value: '62' },
+        { id: 'conf', component: 'Stat', label: 'Model confidence', value: '0.91' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0358 negative control: a concierge Gold member card yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Card', children: ['title', 'tier', 'rows'] },
+        { id: 'title', component: 'Text', text: 'Your membership', variant: 'h4' },
+        { id: 'tier', component: 'Badge', label: 'Gold member' },
+        { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Tier', value: 'Gold' }, { label: 'Member since', value: '2019' }] },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0358 negative control: a listing with an asking price and a counter offer yields none', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Card', children: ['title', 'ask', 'counter'] },
+        { id: 'title', component: 'Text', text: '14 Harbour Road', variant: 'h4' },
+        { id: 'ask', component: 'Stat', label: 'Asking price', value: '$640,000' },
+        { id: 'counter', component: 'Stat', label: 'Counter offer', value: '$610,000' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0358 negative control: a CardTable with zone score Badges yields no GAME_HUD_MISSING', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Column', children: ['table', 'round', 'you', 'dealer'] },
+        { id: 'table', component: 'CardTable', phase: 'player-turn', title: 'Blackjack' },
+        { id: 'round', component: 'Badge', label: 'Round 2' },
+        { id: 'you', component: 'Badge', label: 'Your score 17' },
+        { id: 'dealer', component: 'Badge', label: 'Dealer score 10' },
+      ]),
+    ).not.toContain('GAME_HUD_MISSING')
+  })
+
+  it('T-0358 negative control: one game-stat Badge, a KPI strip and inventory Badges yield none', () => {
+    expect(codes([{ id: 'gold', component: 'Badge', label: 'Gold 0' }])).toEqual([])
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['a', 'b', 'c'] },
+        { id: 'a', component: 'Stat', label: 'Revenue', value: '$12k' },
+        { id: 'b', component: 'Stat', label: 'Conversion', value: '3.1%' },
+        { id: 'c', component: 'Progress', label: 'Quota', value: 40, max: 100 },
+      ]),
+    ).toEqual([])
+    expect(
+      codes([
+        { id: 'inv', component: 'Row', children: ['i1', 'i2'] },
+        { id: 'i1', component: 'Badge', label: 'Torch' },
+        { id: 'i2', component: 'Badge', label: 'Dagger' },
+      ]),
+    ).toEqual([])
+  })
+
   // T-0279: the recorded Haiku answer to "What spa services can I book during my stay?" (round 2026-10-15-r4-fixes,
   // long-concierge-spa-services-haiku-1, turn 1): a priced Table where Kim's ruling asks for one ProductCard each.
   const SPA_TABLE: A2uiComponent[] = [

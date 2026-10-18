@@ -559,6 +559,10 @@
         {
           "text": "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}",
           "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Living thing, noted. Q1 is settled as Yes, so I'm narrowing from there. **Q2: Is it an animal?** Answer on the scoreboard.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"hud\":{\"spent\":1,\"spentLabel\":\"1 of 20\",\"confidence\":\"Low, narrowing\",\"live\":\"Q2: Is it an animal?\"},\"draft\":{\"answer\":\"\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"live\",\"answer\"]}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Q2: Is it an animal?\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"Low, narrowing\"}],\"progress\":{\"value\":1,\"max\":20,\"label\":\"Questions used\"}}]}}",
+          "tools": []
         }
       ],
       "input": {

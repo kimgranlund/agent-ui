@@ -9,12 +9,16 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0358. Haiku 5.5 built the quest log from a Card, Rows and Badges with no GameHud or Timeline, which
-// the `quest-log` skill names. The GameHud composite moment fires only on a surface holding a BoardGrid (`has`,
-// `composite-moments.ts`), so no producer check sends the turn back.
-it('smoke-dungeon-master-first-scene-haiku: a hand-built quest log with no GameHud fails expect-component on both turns', async () => {
+// expectedFail: T-0361, T-0362. Haiku 5.5 built the quest log from a Card, Rows and Badges with no GameHud or Timeline,
+// which the `quest-log` skill names. T-0358's GameHud row now sends turn 0 back with GAME_HUD_MISSING; its round 2 is
+// AUTHORED to that repair: the recorded round with the HP and Gold Badges dropped from quest-log, and ONE GameHud on its
+// own surface hud-1. Still red: no check asks for the Timeline (run level, T-0361), and turn 1's recorded round updates
+// only quest-log, so no touched surface holds the GameHud (T-0362, a live re-record).
+it('smoke-dungeon-master-first-scene-haiku: turn 0 repairs GAME_HUD_MISSING; the Timeline and turn 1 stay red', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-dungeon-master-first-scene-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['expect-component', 1], ['expect-component', null]])
-  expect(report.failed.at(-1).detail).toBe('missing GameHud, Timeline (shipped Card, CardHeader, Text, CardContent, Row, Badge, Column, CardFooter, Button)')
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 1], ['expect-component', null]])
+  expect(report.failed.at(-1).detail).toBe('missing Timeline (shipped Card, CardHeader, Text, CardContent, Column, Row, Badge, CardFooter, Button, GameHud)')
+  const trace = report.records[0].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(trace).toMatchObject({ rounds: 2, failureCodes: ['GAME_HUD_MISSING'] })
 })

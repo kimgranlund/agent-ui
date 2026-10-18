@@ -178,6 +178,155 @@
               }
             }
           ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nAh, a customer with taste! This lantern was hammered by the finest brass-smith in the Grand Bazaar, and its light never flickers. My asking price is **240 silver**. Don't faint. Name your number, and we'll see whether we both walk away happy. Put your offer on the table below.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Put your offer on the table, friend.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "draft": {
+                          "offer": ""
+                        },
+                        "deal": {
+                          "asking": 240,
+                          "mood": "Curious, a little smug. Holding firm.",
+                          "item": "Brass lantern",
+                          "history": "240 (asking)"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Deal sheet: Brass lantern",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "offer_field"
+                          ]
+                        },
+                        {
+                          "id": "offer_field",
+                          "component": "Field",
+                          "label": "Your offer (silver)",
+                          "children": [
+                            "offer"
+                          ]
+                        },
+                        {
+                          "id": "offer",
+                          "component": "TextField",
+                          "type": "number",
+                          "value": {
+                            "path": "/draft/offer"
+                          },
+                          "placeholder": "e.g. 150",
+                          "name": "offer",
+                          "min": "0"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "submit"
+                          ]
+                        },
+                        {
+                          "id": "submit",
+                          "component": "Button",
+                          "label": "Put my offer forward",
+                          "variant": "solid",
+                          "action": {
+                            "action": "submit_offer",
+                            "context": {
+                              "item": "brass-lantern"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "GameHud",
+                          "title": "Brass lantern",
+                          "status": "Holding firm",
+                          "stats": [
+                            {
+                              "label": "Asking price",
+                              "value": "240 silver"
+                            },
+                            {
+                              "label": "Current offer",
+                              "value": "none yet"
+                            },
+                            {
+                              "label": "Mood",
+                              "value": "Curious, a little smug"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {

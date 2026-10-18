@@ -217,6 +217,198 @@
               }
             }
           ]
+        },
+        {
+          "text": "The stair down is cracked and slick with water, and the air smells of old iron and cold stone. A torch flickers in your hand, and ahead, the first step drops into darkness. Three paths lie before you: the stair, a rusted grate in the wall, and an iron door with a faint sound behind it.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your quest log is open. Choose your first move below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quest-log",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quest-log",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Quest log: The Undervault",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "scenes_lbl",
+                            "scenes",
+                            "inv_lbl",
+                            "inv"
+                          ]
+                        },
+                        {
+                          "id": "scenes_lbl",
+                          "component": "Text",
+                          "text": "Scenes",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "scenes",
+                          "component": "Column",
+                          "gap": "xs",
+                          "children": [
+                            "s1"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "Text",
+                          "text": "1. The stair down, at the Undervault's entrance.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "inv_lbl",
+                          "component": "Text",
+                          "text": "Inventory (2/6)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "inv",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "i1",
+                            "i2"
+                          ]
+                        },
+                        {
+                          "id": "i1",
+                          "component": "Badge",
+                          "label": "Torch",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "i2",
+                          "component": "Badge",
+                          "label": "Dagger",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "choice_row"
+                          ]
+                        },
+                        {
+                          "id": "choice_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "c1",
+                            "c2",
+                            "c3"
+                          ]
+                        },
+                        {
+                          "id": "c1",
+                          "component": "Button",
+                          "label": "Descend the stair",
+                          "variant": "solid",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "descend"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c2",
+                          "component": "Button",
+                          "label": "Pry the rusted grate",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "grate"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c3",
+                          "component": "Button",
+                          "label": "Listen at the iron door",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "door"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "GameHud",
+                          "title": "The Undervault",
+                          "status": "The stair down",
+                          "stats": [
+                            {
+                              "label": "HP",
+                              "value": "12/12"
+                            },
+                            {
+                              "label": "Gold",
+                              "value": 0
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {

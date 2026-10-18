@@ -9,12 +9,17 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0358. Haiku 5.5 built the deal sheet from a Card and a DescriptionList with no GameHud, which the
-// `deal-sheet` skill names for the asking price, offer and mood. The GameHud composite moment fires only on a surface
-// holding a BoardGrid (`has`, `composite-moments.ts`), so no producer check sends the turn back.
-it('smoke-negotiator-first-offer-haiku: a hand-built deal sheet with no GameHud fails expect-component on both turns', async () => {
+// expectedFail: T-0362. Haiku 5.5 built the deal sheet from a Card and a DescriptionList with no GameHud, which the
+// `deal-sheet` skill names for the asking price, offer and mood. T-0358's GameHud row now sends turn 0 back with
+// GAME_HUD_MISSING; its round 2 is AUTHORED to that repair: the recorded round with the asking Badge and the
+// DescriptionList dropped from ask-1, and ONE GameHud on its own surface hud-1. Turn 1's three recorded rounds rebuild
+// the asking and mood rows on ask-1 (IDGRAPH, then GAME_HUD_MISSING at the bound), so turn 1 stays red until a live
+// re-record.
+it('smoke-negotiator-first-offer-haiku: turn 0 repairs GAME_HUD_MISSING; turn 1 rebuilds the rows at the bound', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-negotiator-first-offer-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['expect-component', 1], ['expect-component', null]])
-  expect(report.failed.at(-1).detail).toBe('missing GameHud (shipped Card, CardHeader, Text, Badge, CardContent, DescriptionList, Field, TextField, CardFooter, Button, Row)')
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 1]])
+  const trace = (i) => report.records[i].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(trace(0)).toMatchObject({ rounds: 2, failureCodes: ['GAME_HUD_MISSING'] })
+  expect(trace(1)).toMatchObject({ rounds: 3, failureCodes: ['IDGRAPH', 'SEMANTIC_UNCORRECTED'] })
 })

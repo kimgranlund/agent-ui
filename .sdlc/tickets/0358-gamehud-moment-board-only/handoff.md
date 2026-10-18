@@ -28,3 +28,11 @@ Found by T-0343's smoke round. Cause (read from the code, not yet proven by a te
 
 ## Constraints
 The failing test lands before or with the fix, never after. Re-pin the three replays to green in the fix's change (`scripts/e2e-admin/README.md`, Fixtures and regressions). A prompt-stack edit follows skill `a2ui-prompt-authoring`.
+
+## Acceptance criteria
+verifier: L3
+
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the recorded Mentalist, Negotiator and Dungeon Master score strips with no BoardGrid each yield exactly `GAME_HUD_MISSING`; beside a GameHud none; the negative controls (an NPS score and model confidence KPI strip, a concierge Gold member card, a listing with an asking price and a counter offer, a CardTable with zone score Badges, one game-stat Badge, inventory Badges) yield none, and each of the first four fires with the row's game gate or CardTable `lacks` removed.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0. The three smoke fixtures keep every recorded round byte-for-byte and only append authored repair rounds (a standalone GameHud surface, the hand-built stat items dropped, the meta-line as recorded); each test is re-pinned `expectedFail` to its true remaining cause (T-0361 Timeline, T-0362 recorded rounds that predate the check) and asserts GAME_HUD_MISSING where an authored round repairs it.
+- The GameHud row carries no `requires: ['BoardGrid']`, and its repair line reads as ruled.
+- `npm run check` exits 0.
