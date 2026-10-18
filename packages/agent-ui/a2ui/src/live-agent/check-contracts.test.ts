@@ -277,6 +277,29 @@ const CONTRACTS: Record<string, Contract> = {
     pass: { catalog: UI, output: wordBoard({ ...WORD_OPEN, cells: graded(0, WORD), status: 'Solved' }, resultCard('win', 'The word was SLAIN, in one guess.'), ['result']) },
     fail: { catalog: UI, output: wordBoard({ ...WORD_OPEN, cells: graded(0, WORD), status: 'Solved' }, [{ id: 'over', component: 'Text', text: 'Game over: you won, the word was SLAIN.' }], ['over']) },
   },
+  // T-0361: a Dungeon Master quest log, its scenes in a Timeline or as a Column of Texts under a "Scenes" label.
+  'composite-moment-timeline': {
+    code: 'TIMELINE_MISSING',
+    pass: {
+      catalog: UI,
+      output: surface('quest-log', UI, [
+        { id: 'root', component: 'Card', children: ['title', 'log'] },
+        { id: 'title', component: 'Text', text: 'Quest log: The Undervault', variant: 'h4' },
+        { id: 'log', component: 'Timeline', label: 'Scenes', children: ['s1'] },
+        { id: 's1', component: 'TimelineItem', label: 'The stair down', status: 'active' },
+      ]),
+    },
+    fail: {
+      catalog: UI,
+      output: surface('quest-log', UI, [
+        { id: 'root', component: 'Card', children: ['title', 'lbl', 'scenes'] },
+        { id: 'title', component: 'Text', text: 'Quest log: The Undervault', variant: 'h4' },
+        { id: 'lbl', component: 'Text', text: 'Scenes', variant: 'label' },
+        { id: 'scenes', component: 'Column', children: ['s1'] },
+        { id: 's1', component: 'Text', text: '1. The stair down' },
+      ]),
+    },
+  },
   'composite-moment-product-card': {
     code: 'PRODUCT_CARD_MISSING',
     pass: { catalog: CONCIERGE, output: services },
@@ -654,6 +677,7 @@ const ROW_PROPS: Record<string, readonly string[]> = {
   BoardGrid: ['rows', 'cols', 'cells', 'actionName'],
   GameHud: ['title', 'status', 'stats'],
   ResultCard: ['outcome', 'title', 'summary', 'stats'],
+  Timeline: ['label'],
   ProductCard: ['title', 'price', 'priceNote', 'action'],
 }
 

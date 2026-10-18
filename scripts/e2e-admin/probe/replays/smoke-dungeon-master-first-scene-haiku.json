@@ -264,31 +264,25 @@
                           "id": "ct",
                           "component": "CardContent",
                           "children": [
-                            "scenes_lbl",
-                            "scenes",
+                            "log",
                             "inv_lbl",
                             "inv"
                           ]
                         },
                         {
-                          "id": "scenes_lbl",
-                          "component": "Text",
-                          "text": "Scenes",
-                          "variant": "label"
-                        },
-                        {
-                          "id": "scenes",
-                          "component": "Column",
-                          "gap": "xs",
+                          "id": "log",
+                          "component": "Timeline",
+                          "label": "Scenes",
                           "children": [
-                            "s1"
+                            "scene-1"
                           ]
                         },
                         {
-                          "id": "s1",
-                          "component": "Text",
-                          "text": "1. The stair down, at the Undervault's entrance.",
-                          "variant": "body"
+                          "id": "scene-1",
+                          "component": "TimelineItem",
+                          "status": "active",
+                          "label": "The stair down",
+                          "description": "The Undervault's entrance."
                         },
                         {
                           "id": "inv_lbl",

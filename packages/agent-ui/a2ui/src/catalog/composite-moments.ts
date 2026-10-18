@@ -36,6 +36,11 @@
 // (`end`: game over, final score, play again) beside the result words is RESULT_CARD_MISSING. A mid-game "you won 20
 // gold", a sales dashboard, a receipt or a booking that says "you won" stays clean, a croupier hand settles on its own
 // table, and a round result Toast is never read.
+//
+// T-0361: the Timeline row reads a quest log built by hand: on a surface whose words name a game, a Column or List of
+// Texts headed or titled as scenes, a journal or a quest log, or whose entries open "Scene N" (the Dungeon Master, smoke
+// round 2026-10-18-smoke). The row has no `has`, so it runs only through the `boardless` gate; an order history, a
+// changelog, a chat history or an itinerary names no game, and an inventory or objectives list names no scenes.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -52,9 +57,9 @@ export interface CompositeMoment {
   readonly requires?: readonly string[]
   /** Types whose presence skips the surface (the composite always does). */
   readonly lacks: readonly string[]
-  /** The surface must hold one of these types. */
+  /** The surface must hold one of these types (with none, the row runs through `boardless` only; T-0361). */
   readonly has?: readonly string[]
-  /** T-0358, T-0364: with none of `has` present, the row still runs on a surface whose words name a game (`game`, read with
+  /** T-0358, T-0364: with none of `has` present (or no `has` at all, T-0361), the row still runs on a surface whose words name a game (`game`, read with
    *  any `end` phrase taken out, so "game over" alone names none) unless it holds a `standAside` type, reading no words from
    *  `skipWordTypes`. Then either `statStrip`: at least `min` stat items (a component of `types`, or a DescriptionList row)
    *  whose words name game state (`cue`), the hand-built score strip of a game with no board; or the row's `words` path,
@@ -80,6 +85,10 @@ export interface CompositeMoment {
   readonly noInputs?: readonly string[]
   /** An input of `types` whose label, name or bound path matches `cue`, while the surface words match `words`. */
   readonly inputCue?: { readonly types: readonly string[]; readonly cue: RegExp; readonly words: RegExp }
+  /** T-0361: a container of `types` whose children (explicit, or a template's component) are all `child`, headed by words
+   *  matching `cue` (its own label or title, or the `child` just before it in its parent) or holding an entry that opens
+   *  with `entry`. */
+  readonly logOf?: { readonly types: readonly string[]; readonly child: string; readonly cue: RegExp; readonly entry: RegExp }
   /** A Grid with at least `min` explicit children, all of type `child`. */
   readonly gridOf?: { readonly child: string; readonly min: number }
   /** T-0262: types the composite must not sit inside (it draws its own card); a wrapper yields `<COMPOSITE>_WRAPPED`. */
@@ -206,6 +215,16 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     words: /\b(game over|you win|you won|you lose|you lost|the word was|play again)\b/i,
   },
   {
+    // T-0361: the quest-log skill keeps the scenes in a Timeline; Haiku 5.5 listed them as a Column of numbered Texts.
+    composite: 'Timeline',
+    moment: 'events in time order',
+    repair: 'with its label and one TimelineItem per scene in the order played, and drop the hand-built scene list.',
+    requires: ['TimelineItem'],
+    lacks: [],
+    boardless: { game: GAME_WORDS },
+    logOf: { types: ['Column', 'List'], child: 'Text', cue: /\b(scenes?|quest log|adventure log|journal|chronicle)\b/i, entry: /^\s*scene\s+\d/i },
+  },
+  {
     // T-0279 (Kim's ruling): a priced, bookable treatment or service list is one ProductCard each, never a Table.
     composite: 'ProductCard',
     moment: 'one product, room or offer to buy or book',
@@ -300,13 +319,35 @@ function statStrays(strip: NonNullable<NonNullable<CompositeMoment['boardless']>
   return items >= strip.min ? found : []
 }
 
+/** T-0361: the containers that list `log.child` entries under a log heading, or `[]`. */
+function logStrays(log: NonNullable<CompositeMoment['logOf']>, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
+  const typeOf = (id: string): string | undefined => view.components.get(id)?.component
+  const textOf = (id: string | undefined): string => {
+    const c = id === undefined ? undefined : view.components.get(id)
+    return c === undefined ? '' : ['label', 'title', 'text'].map((k) => stringOf(c[k], view)).join(' ')
+  }
+  return comps.filter((c) => {
+    if (!log.types.includes(c.component)) return false
+    const kids = Array.isArray(c.children) ? c.children.filter((id): id is string => typeof id === 'string') : []
+    const template = typeof c.children === 'object' && c.children !== null && !Array.isArray(c.children) ? (c.children as { componentId?: unknown }).componentId : undefined
+    const entries = typeof template === 'string' ? [template] : kids
+    if (entries.length === 0 || !entries.every((id) => typeOf(id) === log.child)) return false
+    if (kids.some((id) => log.entry.test(textOf(id)))) return true
+    const parent = comps.find((p) => childIds(p).includes(c.id))
+    const siblings = parent === undefined ? [] : childIds(parent)
+    const before = siblings[siblings.indexOf(c.id) - 1]
+    const heading = [textOf(c.id), before !== undefined && typeOf(before) === log.child ? textOf(before) : ''].join(' ')
+    return log.cue.test(heading)
+  })
+}
+
 /** The components of `view` that hand-build `m`'s moment, or `[]` when the row does not fire. */
 function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefined): A2uiComponent[] {
   const comps = [...view.components.values()]
   const types = new Set(comps.map((c) => c.component))
   if ([m.composite, ...m.lacks].some((t) => types.has(t))) return []
-  // T-0358, T-0364: with none of `has`, the row runs only through its `boardless` gate.
-  const boardless = m.has !== undefined && !m.has.some((t) => types.has(t)) ? m.boardless ?? null : undefined
+  // T-0358, T-0364: with none of `has`, the row runs only through its `boardless` gate (T-0361: so does a row with no `has`).
+  const boardless = m.has === undefined ? m.boardless : !m.has.some((t) => types.has(t)) ? m.boardless ?? null : undefined
   if (boardless === null) return []
   if (boardless?.standAside?.some((t) => types.has(t)) === true) return []
   if (m.noInputs !== undefined && m.noInputs.some((t) => types.has(t))) return []
@@ -334,6 +375,7 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
     if (end !== undefined && !end.test(surfaceWords)) return []
   }
 
+  if (m.logOf !== undefined) return logStrays(m.logOf, comps, view)
   if (m.gridOf !== undefined || m.inputCue !== undefined) {
     const { gridOf, inputCue } = m
     const grids = gridOf === undefined ? [] : comps.filter((c) => {

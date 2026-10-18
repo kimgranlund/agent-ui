@@ -28,3 +28,12 @@ Found by T-0358 (code review asked for no Timeline in the authored GameHud repai
 
 ## Constraints
 The failing test lands before or with the fix, never after. Flip the replay pin in the fix's change (`scripts/e2e-admin/README.md`, Fixtures and regressions).
+
+## Acceptance criteria
+verifier: L3
+
+- `npx vitest run --project scripts scripts/e2e-admin/probe/replays/smoke-dungeon-master-first-scene-haiku.test.mjs` exits 0: turn 0 carries GAME_HUD_MISSING and TIMELINE_MISSING into its authored round 2, which ships ONE Timeline, so the run-level `missing Timeline` failure is gone; turn 1 stays pinned to T-0362.
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the recorded quest log yields TIMELINE_MISSING, and the order history, changelog, chat history, adventure itinerary, quest inventory and quiz question negatives yield none, each guard shown to bite.
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts packages/agent-ui/a2ui/src/live-agent/chat-validation.test.ts` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin/probe/` exits 0: no other replay changes.
+- `npm run check` exits 0.
