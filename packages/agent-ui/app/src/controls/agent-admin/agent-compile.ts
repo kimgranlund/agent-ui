@@ -32,6 +32,7 @@ import {
   resolveModelSettings,
   sanitizeBankroll,
   sanitizeModel,
+  type ComposerModelOverrides,
 } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, composeLiveSystemPrompt, type LiveBankrollState, type LiveCapabilityGroup } from './entries.ts'
 import { modifiedPaths, resolveOverlay, type AgentOverlay, type OverlayPath } from './agent-overlay.ts'
@@ -88,6 +89,8 @@ export interface CompileContext {
   team?: TeamPromptContext
   /** Tool ids this turn invoked by name, unioned after the ambient ones. */
   invokedToolIds?: readonly string[]
+  /** T-0203: the composer's model overrides (thinking off, show reasoning, the server tool toggles). */
+  overrides?: ComposerModelOverrides
 }
 
 /** A compiled bundle, its model settings typed for the request shapes that carry them. */
@@ -102,7 +105,7 @@ export function compileStore(store: Reader, ctx: CompileContext = {}): CompiledB
   const system = composeLiveSystemPrompt(readEntries(store, ENTRY_KINDS.promptSection), liveCapabilityGroups(store), bankrollForPrompt(store), ctx.team)
   const ambient = ambientToolIds(store)
   const integrations = ctx.invokedToolIds === undefined || ctx.invokedToolIds.length === 0 ? ambient : [...new Set([...ambient, ...ctx.invokedToolIds])]
-  return { system, model, modelSettings: resolveModelSettings(store, model, ctx.effort ?? resolveAgentEffort(store, model)), integrations }
+  return { system, model, modelSettings: resolveModelSettings(store, model, ctx.effort ?? resolveAgentEffort(store, model), ctx.overrides), integrations }
 }
 
 /** The agent a resolution names: its id, seed version, provenance and the seed version of each content

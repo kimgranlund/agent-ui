@@ -835,7 +835,7 @@ export class UIConversationComposerElement extends UIElement {
     } else {
       this.#markPickerSelection(this.#effortMenu, selected)
     }
-    this.#effortTrigger!.textContent = options.find((o) => o.id === selected)?.label ?? 'Effort'
+    this.#effortTrigger!.textContent = options.find((o) => o.id === selected && o.checked === undefined)?.label ?? 'Effort'
     // GH #868 (owner ruling, 2026-08-14, superseding GH #665's borrowed `fast-forward`/intensity glyph) —
     // see `#syncModelsPicker`'s identical comment. `brain` is a literal reasoning-effort glyph.
     this.#appendLeadingIcon(this.#effortTrigger!, 'brain')
@@ -997,7 +997,12 @@ export class UIConversationComposerElement extends UIElement {
       // exist at the menu's OWN first connect — the panel is still EMPTY at that moment (items are
       // populated here, later, reactively), so it never reaches these. Its click delegation + roving
       // focus both filter strictly by `[role="menuitem"]` (#itemsIn) — set explicitly, never inherited.
-      item.setAttribute('role', 'menuitem')
+      // T-0203: a toggle entry (`checked` set) is a `menuitemcheckbox`, which #itemsIn also collects.
+      if (option.checked !== undefined) {
+        item.setAttribute('role', 'menuitemcheckbox')
+        item.setAttribute('aria-checked', String(option.checked))
+        item.dataset.toggle = ''
+      } else item.setAttribute('role', 'menuitem')
       item.setAttribute('tabindex', option.id === focusableId ? '0' : '-1')
       item.dataset.value = option.id
       item.textContent = option.label
@@ -1016,7 +1021,7 @@ export class UIConversationComposerElement extends UIElement {
     if (!panel) return
     for (const item of panel.children) {
       const el = item as HTMLElement
-      const isSelected = el.dataset.value === selected
+      const isSelected = el.dataset.value === selected && el.dataset.toggle === undefined
       el.toggleAttribute('data-selected', isSelected)
       el.setAttribute('tabindex', isSelected ? '0' : '-1') // keep the roving base in sync with the selection
     }

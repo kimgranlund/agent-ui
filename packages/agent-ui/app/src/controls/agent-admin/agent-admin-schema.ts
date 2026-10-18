@@ -13,8 +13,8 @@
 
 import type { SettingsSchema, SettingsSection, SettingsField } from '../settings/schema.ts'
 // T-0185: the pure per-model capability table (no producer bytes cross; the `./agent/meta-line` posture).
-import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY } from '@agent-ui/a2ui/agent/model-capabilities'
-import type { ModelCapabilities, ModelSettings, ThinkingMode } from '@agent-ui/a2ui/agent/model-capabilities'
+import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY, SERVER_TOOL_KEY } from '@agent-ui/a2ui/agent/model-capabilities'
+import type { ModelCapabilities, ModelSettings, ServerTool, ThinkingMode } from '@agent-ui/a2ui/agent/model-capabilities'
 // T-0162: the persona kind schema, the one field definition the Agent and Model sections derive from.
 import { PERSONA_FIELDS, type ContentField } from './content-fields.ts'
 import type { EffortLevel } from '../conversation/composer-options.ts'
@@ -171,6 +171,21 @@ export const MODEL_SETTING_KEYS = {
   cacheTtl: 'cacheTtl',
 } as const
 
+/** T-0203: the server tool store keys (pane-edited, not persona-file state), derived from the one key
+ *  vocabulary (`SERVER_TOOL_KEY`): per tool its switch, max uses and domain lists, plus the search location. */
+export const SERVER_TOOL_SETTING_KEYS = Object.fromEntries(
+  (Object.entries(SERVER_TOOL_KEY) as [ServerTool, string][]).map(([tool, key]) => [
+    tool,
+    {
+      enabled: key,
+      maxUses: `${key}MaxUses`,
+      allowedDomains: `${key}AllowedDomains`,
+      blockedDomains: `${key}BlockedDomains`,
+      ...(tool === 'web_search' ? { city: `${key}City`, region: `${key}Region`, country: `${key}Country`, timezone: `${key}Timezone` } : {}),
+    },
+  ]),
+) as Readonly<Record<ServerTool, { enabled: string; maxUses: string; allowedDomains: string; blockedDomains: string; city?: string; region?: string; country?: string; timezone?: string }>>
+
 /** `off` is the cache TTL select's "no cache_control" value. */
 const CACHE_OFF = 'off'
 
@@ -198,6 +213,11 @@ function settingsFieldFor(field: ContentField, row: ModelCapabilities | undefine
     case 'cacheTtls':
       if (!row || row.cacheTtls.length === 0) return undefined
       return { ...base, type: 'select', default: String(hint.default), options: options([CACHE_OFF, ...row.cacheTtls]) }
+    case 'serverTools':
+      // T-0203: a server tool's rows show only when the model's row lists that tool.
+      if (!row || hint.serverTool === undefined || !row.serverTools.includes(hint.serverTool)) return undefined
+      if (hint.control === 'number') return { ...base, type: 'number', default: Number(hint.default ?? 0), validation: { min: field.min ?? 0, step: 1 } }
+      return { ...base, type: hint.control, ...(hint.default === undefined ? {} : { default: hint.default }), ...(hint.pattern === undefined ? {} : { validation: { pattern: hint.pattern } }) } as SettingsField
   }
   if (hint.control === 'number') {
     // The ceiling is the model's own: the schema states the floor, the row the max.
@@ -258,18 +278,66 @@ export function resolveAgentEffort(store: { get(key: string): unknown } | undefi
   return typeof stored === 'string' && (row.efforts as readonly string[]).includes(stored) ? (stored as EffortLevel) : (row.defaultEffort ?? undefined)
 }
 
+/** T-0203: the composer's per-conversation model overrides. `thinkingOff` and `showReasoning` replace the
+ *  agent's thinking and display settings when set; `webSearch` and `webFetch` false keep that server tool off
+ *  for this conversation even when the agent enables it (a toggle can only narrow, never enable a tool the
+ *  settings leave off). */
+export type ComposerModelOverrides = {
+  thinkingOff?: boolean
+  showReasoning?: boolean
+} & Partial<Record<(typeof SERVER_TOOL_KEY)[ServerTool], boolean>>
+
+/** A comma-separated domain list as an array (blank entries dropped). */
+const domainsOf = (v: unknown): string[] | undefined => {
+  if (typeof v !== 'string') return undefined
+  const list = v.split(',').map((d) => d.trim()).filter((d) => d !== '')
+  return list.length > 0 ? list : undefined
+}
+
+/** T-0203: one server tool's settings from the store, `undefined` when its switch is off. */
+function serverToolFromStore(store: { get(key: string): unknown } | undefined, tool: ServerTool): Record<string, unknown> | undefined {
+  const keys = SERVER_TOOL_SETTING_KEYS[tool]
+  if (store?.get(keys.enabled) !== true) return undefined
+  const maxUses = store.get(keys.maxUses)
+  const allowed = domainsOf(store.get(keys.allowedDomains))
+  const blocked = domainsOf(store.get(keys.blockedDomains))
+  const userLocation: Record<string, string> = {}
+  for (const part of ['city', 'region', 'country', 'timezone'] as const) {
+    const key = keys[part]
+    const value = key === undefined ? undefined : store.get(key)
+    if (typeof value === 'string' && value.trim() !== '') userLocation[part] = value.trim()
+  }
+  return {
+    ...(typeof maxUses === 'number' && maxUses > 0 ? { maxUses } : {}),
+    ...(allowed !== undefined ? { allowedDomains: allowed } : {}),
+    ...(blocked !== undefined ? { blockedDomains: blocked } : {}),
+    ...(Object.keys(userLocation).length > 0 ? { userLocation } : {}),
+  }
+}
+
+/** T-0203: whether the agent's settings turn `tool` on for `model` (the composer's row shows only then). */
+export function agentServerToolOn(store: { get(key: string): unknown } | undefined, model: string, tool: ServerTool): boolean {
+  return serverToolFromStore(store, tool) !== undefined && (capabilitiesFor(model)?.serverTools ?? []).includes(tool)
+}
+
 /** T-0185: the agent's model settings for `model` and this turn's `effort`, read from the store and passed
  *  through the capability check, so a stored value the model rejects (thinking off on Opus 5.5) is dropped
- *  and never sent. `showReasoning` maps to display; max tokens 0 and cache `off` mean "unset". */
-export function resolveModelSettings(store: { get(key: string): unknown } | undefined, model: string, effort?: EffortLevel): ModelSettings {
+ *  and never sent. `showReasoning` maps to display; max tokens 0 and cache `off` mean "unset". T-0203: the
+ *  server tools the agent enables, and the composer's `overrides` on top. */
+export function resolveModelSettings(store: { get(key: string): unknown } | undefined, model: string, effort?: EffortLevel, overrides: ComposerModelOverrides = {}): ModelSettings {
   const maxTokens = store?.get(MODEL_SETTING_KEYS.maxTokens)
   const cacheTtl = store?.get(MODEL_SETTING_KEYS.cacheTtl)
-  const showReasoning = store?.get(MODEL_SETTING_KEYS.showReasoning)
+  const showReasoning = overrides.showReasoning ?? store?.get(MODEL_SETTING_KEYS.showReasoning)
+  const webSearch = overrides.webSearch === false ? undefined : serverToolFromStore(store, 'web_search')
+  const webFetch = overrides.webFetch === false ? undefined : serverToolFromStore(store, 'web_fetch')
+  const thinking = overrides.thinkingOff === true ? 'disabled' : overrides.thinkingOff === false ? 'adaptive' : store?.get(MODEL_SETTING_KEYS.thinking)
   const raw = {
-    thinking: store?.get(MODEL_SETTING_KEYS.thinking),
+    thinking,
     ...(typeof showReasoning === 'boolean' ? { display: showReasoning ? 'summarized' : 'omitted' } : {}),
     ...(typeof maxTokens === 'number' && maxTokens > 0 ? { maxTokens } : {}),
     ...(cacheTtl !== CACHE_OFF ? { cacheTtl } : {}),
+    ...(webSearch !== undefined ? { webSearch } : {}),
+    ...(webFetch !== undefined ? { webFetch } : {}),
   }
   const settings = normalizeModelSettings(model, raw, effort)
   // Adaptive is the request builder's own default; sending it explicitly would only add a thinking field.
@@ -956,6 +1024,8 @@ export interface AgentConfigSnapshot {
 export interface AdminTurn {
   role: 'user' | 'assistant'
   content: string
+  /** T-0203: on a user turn, the composer effort it was sent at (the mid-conversation effort marker reads it). */
+  effort?: EffortLevel
 }
 
 /** One live turn's request, projected from `agent-admin`'s OWN current config at turn time (LLD Q1/Q4). */

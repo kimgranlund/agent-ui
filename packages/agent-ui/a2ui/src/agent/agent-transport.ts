@@ -32,6 +32,9 @@ export interface Turn {
   role: Role
   /** For `assistant` turns this is the A2UI JSONL the agent emitted; for `user` turns, the framed input. */
   content: string
+  /** T-0203: OPTIONAL, on a `user` turn the effort it was sent at. The Anthropic adapter reads the stamps to
+   *  change effort mid-conversation without restarting the prompt cache; absent everywhere, nothing changes. */
+  effort?: Effort
 }
 
 /** The ordered turn history the BROWSER holds (SPEC-R8: the proxy is stateless).

@@ -20,7 +20,7 @@
 // tool loop sends them back unmodified with the tool results; that replay is request-side only.
 
 import type { AgentProvider, Turn, Effort, ProviderEvent, ToolDef } from '../agent-transport.ts'
-import type { CacheTtl, ModelSettings } from '../model-capabilities.ts'
+import type { CacheTtl, ModelSettings, ServerToolSettings, WebSearchSettings } from '../model-capabilities.ts'
 import { capabilitiesFor, normalizeModelSettings, DEFAULT_DISPLAY } from '../model-capabilities.ts'
 import type { TokenUsage } from '../meta-line.ts'
 import { AgentTimeoutError } from '../deadlines.ts'
@@ -30,11 +30,19 @@ import { AgentTimeoutError } from '../deadlines.ts'
  * BLOCK form with GH #49's tool loop (tool_use/tool_result round-trips are block-typed on the wire);
  * plain-string content is unchanged for the text-only path. */
 type AnthropicContentBlock =
-  | { type: 'text'; text: string }
+  | { type: 'text'; text: string; citations?: unknown[] }
+  | ServerContentBlock
   | { type: 'thinking'; thinking: string; signature: string }
   | { type: 'redacted_thinking'; data: string }
   | { type: 'tool_use'; id: string; name: string; input: Record<string, unknown> }
   | { type: 'tool_result'; tool_use_id: string; content: string; is_error?: boolean }
+
+/** T-0203: a server tool block (`server_tool_use`, `web_search_tool_result`, `web_fetch_tool_result`), carried
+ *  back verbatim: the API needs a search result's `encrypted_content` unmodified on the next request. */
+interface ServerContentBlock {
+  type: 'server_tool_use' | `${string}_tool_result`
+  [key: string]: unknown
+}
 
 interface AnthropicMessage {
   role: 'user' | 'assistant'
@@ -50,8 +58,10 @@ interface AnthropicMessage {
 export type RoundBlock =
   | { type: 'thinking'; thinking: string; signature: string }
   | { type: 'redacted_thinking'; data: string }
-  | { type: 'text'; text: string }
+  | { type: 'text'; text: string; citations?: unknown[] }
   | { type: 'tool_use'; call: number }
+  /** T-0203: a server tool block as it started (`block`), plus a `server_tool_use` input streamed in. */
+  | { type: 'server'; block: Record<string, unknown>; inputJson: string }
 
 /** GH #49 — the per-round tool-call collector `parseAnthropicSSE` fills when tools are active: block
  *  metadata from `content_block_start` (type tool_use), `input_json_delta` accumulation per block index,
@@ -245,6 +255,9 @@ export function* parseAnthropicSSE(
           openBlock(tools, index, { type: 'redacted_thinking', data: started.data })
         } else if (started?.type === 'text') {
           openBlock(tools, index, { type: 'text', text: '' })
+        } else if (started !== undefined && (started.type === 'server_tool_use' || started.type?.endsWith('_tool_result') === true)) {
+          // T-0203: a server tool call or its result, kept in place for the replay (and a pause_turn resend).
+          openBlock(tools, index, { type: 'server', block: started as Record<string, unknown>, inputJson: '' })
         }
       }
       continue
@@ -280,7 +293,7 @@ export function* parseAnthropicSSE(
       typeof (parsed as { delta: unknown }).delta === 'object' &&
       (parsed as { delta: unknown }).delta !== null
     ) {
-      const delta = (parsed as { delta: { type?: unknown; text?: unknown; thinking?: unknown; signature?: unknown; partial_json?: unknown } }).delta
+      const delta = (parsed as { delta: { type?: unknown; text?: unknown; thinking?: unknown; signature?: unknown; partial_json?: unknown; citation?: unknown } }).delta
       const at = (parsed as { index?: unknown }).index
       const blockIndex = typeof at === 'number' ? at : undefined
       if (delta.type === 'text_delta' && typeof delta.text === 'string') {
@@ -298,6 +311,15 @@ export function* parseAnthropicSSE(
         // GH #49 — a tool call's argument JSON, streamed in fragments keyed by block index.
         const slot = blockIndex !== undefined ? tools.byIndex.get(blockIndex) : undefined
         if (slot !== undefined) tools.calls[slot]!.inputJson += delta.partial_json
+        else {
+          // T-0203: a server tool call's input (the search query, the fetched URL).
+          const server = blockIndex !== undefined ? tools.blocks[tools.blockAt.get(blockIndex) ?? -1] : undefined
+          if (server?.type === 'server') server.inputJson += delta.partial_json
+        }
+      } else if (delta.type === 'citations_delta' && delta.citation !== undefined && tools) {
+        // T-0203: a citation on the text block it cites, carried back with the text.
+        const text = blockFor(tools, blockIndex, 'text')
+        text.citations = [...(text.citations ?? []), delta.citation]
       }
     }
   }
@@ -365,7 +387,10 @@ function assistantTurnBlocks(collector: ToolUseCollector): AnthropicContentBlock
       const call = collector.calls[block.call]!
       out.push({ type: 'tool_use', id: call.id, name: call.name, input: parseToolInput(call.inputJson) })
     } else if (block.type === 'text') {
-      if (block.text.trim().length > 0) out.push({ type: 'text', text: block.text })
+      if (block.text.trim().length > 0) out.push({ type: 'text', text: block.text, ...(block.citations !== undefined ? { citations: block.citations } : {}) })
+    } else if (block.type === 'server') {
+      // T-0203: verbatim, with a streamed server_tool_use input parsed in.
+      out.push({ ...block.block, ...(block.inputJson.length > 0 ? { input: parseToolInput(block.inputJson) } : {}) } as ServerContentBlock)
     } else if (block.type === 'thinking') {
       if (block.signature.length > 0) out.push({ type: 'thinking', thinking: block.thinking, signature: block.signature })
     } else {
@@ -421,6 +446,83 @@ const isHaiku55 = (model: string): boolean => /haiku-5-5/.test(model)
  *  and live rounds stopped at it). */
 const HAIKU_55_MAX_TOKENS = { default: 5376, medium: 5376, high: 5376, xhigh: 8192 } as const
 
+/** T-0203: the server tool versions sent (web search `web_search_20260318`, web fetch `web_fetch_20260318`). */
+export const WEB_SEARCH_TOOL_TYPE = 'web_search_20260318'
+export const WEB_FETCH_TOOL_TYPE = 'web_fetch_20260318'
+/** T-0203: the beta that admits a per-message `output_config` (the mid-conversation effort change). */
+export const MID_CONVERSATION_EFFORT_BETA = 'mid-conversation-output-config-2026-07-01'
+
+/** T-0203: the server tool definitions `settings` asks for. `allowed_callers: ['direct']` on both: the
+ *  2026 versions default to calling from code execution (dynamic filtering), which a model without
+ *  programmatic tool calling (Haiku 4.5) rejects with a 400, so every model gets the one shape that runs
+ *  everywhere. Web fetch asks for citations, which are off by default there and always on for search. */
+function serverToolDefs(settings: ModelSettings): Record<string, unknown>[] {
+  const common = (t: ServerToolSettings): Record<string, unknown> => ({
+    allowed_callers: ['direct'],
+    ...(t.maxUses !== undefined ? { max_uses: t.maxUses } : {}),
+    ...(t.allowedDomains !== undefined ? { allowed_domains: [...t.allowedDomains] } : t.blockedDomains !== undefined ? { blocked_domains: [...t.blockedDomains] } : {}),
+  })
+  const search = (t: WebSearchSettings): Record<string, unknown> => ({
+    type: WEB_SEARCH_TOOL_TYPE,
+    name: 'web_search',
+    ...common(t),
+    ...(t.userLocation !== undefined ? { user_location: { type: 'approximate', ...t.userLocation } } : {}),
+  })
+  return [
+    ...(settings.webSearch !== undefined ? [search(settings.webSearch)] : []),
+    ...(settings.webFetch !== undefined ? [{ type: WEB_FETCH_TOOL_TYPE, name: 'web_fetch', ...common(settings.webFetch), citations: { enabled: true } }] : []),
+  ]
+}
+
+const isEffort = (v: unknown): v is Effort => v === 'low' || v === 'medium' || v === 'high' || v === 'xhigh'
+
+/** T-0203: the mid-conversation effort plan, or `undefined` when the plain body applies. It applies on a
+ *  model whose row takes per-message effort, with adaptive thinking (Haiku 5.5 thinking off and Sonnet 5.5
+ *  `between_tools` return a 400 on a per-message effort that differs), when the history's first user turn
+ *  carries its effort stamp and some later user turn (the new one at `effort`) differs from it. The top-level
+ *  effort stays at the opening level and an effort-only `system` message sits before each user turn whose
+ *  level changed, so every earlier request's messages stay a prefix of this one and the cache survives. */
+function perMessageEffortPlan(
+  req: { model: string; messages: Turn[]; effort?: Effort },
+  settings: ModelSettings,
+  rawSettings: ModelSettings | undefined,
+): { opening: Effort; messages: Record<string, unknown>[] } | undefined {
+  const row = capabilitiesFor(req.model)
+  if (!row?.perMessageEffort || req.effort === undefined) return undefined
+  const adaptive = (mode: ModelSettings['thinking']): boolean => mode === undefined || mode === 'adaptive'
+  if (!adaptive(settings.thinking)) return undefined
+  const users = req.messages.map((t, i) => (t.role === 'user' ? i : -1)).filter((i) => i >= 0)
+  const last = users[users.length - 1]
+  const levelAt = (i: number): Effort | undefined => {
+    const stamped = i === last ? req.effort : req.messages[i]!.effort
+    return isEffort(stamped) && row.efforts.includes(stamped) ? stamped : undefined
+  }
+  const opening = users.length > 0 ? levelAt(users[0]!) : undefined
+  if (opening === undefined || users.every((i) => (levelAt(i) ?? opening) === opening)) return undefined
+  // The body is built at the opening level, so its thinking must be adaptive there too: a mode the new level
+  // drops (Haiku 5.5 thinking off at low, then xhigh) would still ride the opening body beside the marker,
+  // which the API rejects. Such a conversation falls back to a plain top-level effort change.
+  if (!adaptive(normalizeModelSettings(req.model, rawSettings, opening).thinking)) return undefined
+  let running = opening
+  const messages: Record<string, unknown>[] = []
+  req.messages.forEach((t, i) => {
+    const level = t.role === 'user' ? levelAt(i) : undefined
+    if (level !== undefined && level !== running) {
+      messages.push({ role: 'system', content: [], output_config: { effort: level } })
+      running = level
+    }
+    messages.push({ role: t.role, content: t.content })
+  })
+  return { opening, messages }
+}
+
+/** T-0203: the `anthropic-beta` values a built body needs: the mid-conversation effort beta when a message
+ *  carries its own `output_config`. Read from the body, so the request-body tests cover the header too. */
+export function anthropicBetas(body: Record<string, unknown>): string[] {
+  const messages = Array.isArray(body['messages']) ? (body['messages'] as Record<string, unknown>[]) : []
+  return messages.some((m) => m['output_config'] !== undefined) ? [MID_CONVERSATION_EFFORT_BETA] : []
+}
+
 /** The Anthropic Messages-API request BODY, PURE (SPEC-R11 AC3, fixture-tested — the `parseAnthropicSSE`
  *  precedent, this file's OTHER extracted-for-testability seam): `effort` → thinking/effort params, with
  *  no network/key involved. The impure `stream()` below is the ONLY caller; kept exported so the mapping
@@ -448,9 +550,14 @@ export function buildRequestBody(req: {
    *  model that rejects a forced choice outright (T-0172, `rejectsForcedToolChoice`); otherwise omitted. */
   toolChoice?: { name: string }
 }): Record<string, unknown> {
-  const body = buildArmBody(req)
+  // T-0203: a mid-conversation effort change builds the body at the opening level (thinking and output_config
+  // stay as the cached prefix saw them), with the new turn's max_tokens and the effort-marked messages.
+  const plan = perMessageEffortPlan(req, normalizeModelSettings(req.model, req.modelSettings, req.effort), req.modelSettings)
+  const plain = buildArmBody(req)
+  const body = plan === undefined ? plain : { ...buildArmBody({ ...req, effort: plan.opening }), max_tokens: plain['max_tokens'], messages: [...plan.messages, ...(req.extraMessages ?? [])] }
   const thinking = body.thinking as { type?: string } | undefined
-  if (req.toolChoice === undefined || body.tools === undefined || (thinking !== undefined && thinking.type !== 'disabled') || rejectsForcedToolChoice(req.model)) return body
+  // A server tool alone never makes a forced client tool legal: the named tool must be a client tool.
+  if (req.toolChoice === undefined || (req.tools?.length ?? 0) === 0 || (thinking !== undefined && thinking.type !== 'disabled') || rejectsForcedToolChoice(req.model)) return body
   return { ...body, tool_choice: { type: 'tool', name: req.toolChoice.name } }
 }
 
@@ -481,12 +588,14 @@ function buildArmBody(req: {
   const row = capabilitiesFor(req.model)
   const settings = normalizeModelSettings(req.model, req.modelSettings, req.effort)
   const system = systemField(req.system, req.systemCacheBoundary, settings.cacheTtl)
+  // T-0203: the server tools the settings ask for ride after the client tools, with or without them.
+  const tools = [...(req.tools ?? []), ...serverToolDefs(settings)]
   const base = {
     model: req.model,
     system,
     messages: [...toAnthropicMessages(req.messages), ...(req.extraMessages ?? [])],
     stream: true,
-    ...(req.tools && req.tools.length > 0 ? { tools: req.tools } : {}),
+    ...(tools.length > 0 ? { tools } : {}),
   }
   /** The tier max_tokens unless the agent set one (already clamped to the row's ceiling by normalize). */
   const maxTokens = (tier: number): number => settings.maxTokens ?? tier
@@ -543,6 +652,14 @@ function buildArmBody(req: {
 /** GH #49 — the tool-loop's round cap: a runaway model calling tools forever is cut off here; the text
  *  accumulated so far still flows (a degraded ANSWER, never a hung turn). */
 const MAX_TOOL_ROUNDS = 4
+/** T-0203: the most `pause_turn` continuations one turn takes (a long server tool turn the API paused). Each
+ *  resends the paused assistant content so the model carries on; past the cap the text so far stands. */
+const MAX_PAUSE_CONTINUATIONS = 3
+
+/** T-0203: the request messages that continue a paused turn: the paused assistant content appended. */
+function withPaused(extra: readonly AnthropicMessage[], paused: readonly AnthropicContentBlock[]): AnthropicMessage[] {
+  return paused.length > 0 ? [...extra, { role: 'assistant', content: [...paused] }] : [...extra]
+}
 /** PR #59 review — the PER-ROUND fan-out cap: one round may emit arbitrarily many tool_use blocks
  *  within its token budget, and every one fired a concurrent upstream fetch. Only the first N execute;
  *  the REST still get a (capped-error) tool_result — Anthropic requires every tool_use id to be paired —
@@ -736,13 +853,14 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
     // so the timer is cleared once headers arrive: the fetch signal also governs the body stream, and a
     // deadline left armed would abort a healthy long turn mid-stream. A caller abort keeps its own error
     // unrelabelled. GH #1797 (d): `fetchWithRetry` wraps each attempt; a first-byte timeout is never retried.
+    const betas = anthropicBetas(body) // T-0203
     const attempt = async (): Promise<Response> => {
       const deadline = new AbortController()
       const deadlineTimer = setTimeout(() => deadline.abort(), ANTHROPIC_FIRST_BYTE_TIMEOUT_MS)
       try {
         return await fetch(endpoint, {
           method: 'POST',
-          headers: { ...anthropicHeaders(opts.apiKey, opts.workspaceId), 'content-type': 'application/json' },
+          headers: { ...anthropicHeaders(opts.apiKey, opts.workspaceId), ...(betas.length > 0 ? { 'anthropic-beta': betas.join(',') } : {}), 'content-type': 'application/json' },
           body: JSON.stringify(body),
           signal: signal ? AbortSignal.any([signal, deadline.signal]) : deadline.signal,
         })
@@ -846,9 +964,15 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
       const useTools = (req.tools?.length ?? 0) > 0 && req.executeTool !== undefined
 
       if (!useTools) {
-        // The pre-#49 path, byte-identical: ONE round, live pass-through streaming, no collector.
-        yield* runRound(buildRequestBody(req), req.onEvent, req.signal, undefined)
-        return
+        // The pre-#49 path: one round, live pass-through streaming. T-0203: a collector rides along so a
+        // `pause_turn` (a server tool turn the API paused) is continued by resending the paused content.
+        let paused: AnthropicContentBlock[] = []
+        for (let pauses = 0; ; pauses++) {
+          const collector = newToolCollector()
+          yield* runRound(buildRequestBody(paused.length > 0 ? { ...req, extraMessages: withPaused([], paused) } : req), req.onEvent, req.signal, collector)
+          if (collector.stopReason !== 'pause_turn' || pauses >= MAX_PAUSE_CONTINUATIONS) return
+          paused = [...paused, ...assistantTurnBlocks(collector)]
+        }
       }
 
       type Call = ToolUseCollector['calls'][number]
@@ -884,11 +1008,19 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
       // RTS-R2: every declared tool is terminal, so no scratch prose can precede a later round. One round,
       // text yielded live as it arrives, then the terminal call (if any) runs once and the turn ends.
       if (terminal.size > 0 && req.tools!.every((t) => terminal.has(t.name))) {
-        const collector = newToolCollector()
-        yield* runRound(buildRequestBody(req), req.onEvent, req.signal, collector)
-        const call = terminalCall(collector)
-        if (call) await execute(call)
-        return
+        let paused: AnthropicContentBlock[] = []
+        for (let pauses = 0; ; pauses++) {
+          const collector = newToolCollector()
+          yield* runRound(buildRequestBody(paused.length > 0 ? { ...req, extraMessages: withPaused([], paused) } : req), req.onEvent, req.signal, collector)
+          // T-0203: a paused turn is resent to continue (bounded), then the terminal call runs as before.
+          if (collector.stopReason === 'pause_turn' && pauses < MAX_PAUSE_CONTINUATIONS) {
+            paused = [...paused, ...assistantTurnBlocks(collector)]
+            continue
+          }
+          const call = terminalCall(collector)
+          if (call) await execute(call)
+          return
+        }
       }
 
       // GH #49 — the bounded tool loop. Each round's TEXT is buffered and flushed ONLY when the round
@@ -897,22 +1029,37 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
       // output flows. The buffered text still travels back to the model as the assistant turn's text
       // block, so the model keeps its own context.
       const extra: AnthropicMessage[] = []
+      // T-0203: a paused round's content and text, carried into the round that continues it.
+      let paused: AnthropicContentBlock[] = []
+      let carried: string[] = []
+      let pauses = 0
       for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
         const collector = newToolCollector()
         const roundText: string[] = []
-        const body = buildRequestBody({ ...req, tools: req.tools, extraMessages: extra })
+        const body = buildRequestBody({ ...req, tools: req.tools, extraMessages: withPaused(extra, paused) })
         for await (const fragment of runRound(body, req.onEvent, req.signal, collector)) roundText.push(fragment)
 
         // RTS-R2: a terminal call ends the loop: execute it, flush the round's text, no continuation.
         const call = terminalCall(collector)
         if (call) {
           await execute(call)
+          yield* carried
           yield* roundText
           return
         }
 
+        // T-0203: a paused round is resent to continue; the continuation does not count as a tool round.
+        if (collector.stopReason === 'pause_turn' && pauses < MAX_PAUSE_CONTINUATIONS) {
+          pauses++
+          paused = [...paused, ...assistantTurnBlocks(collector)]
+          carried = [...carried, ...roundText]
+          round--
+          continue
+        }
+
         const wantsTools = collector.stopReason === 'tool_use' && collector.calls.length > 0 && round < MAX_TOOL_ROUNDS
         if (!wantsTools) {
+          yield* carried
           yield* roundText
           return
         }
@@ -931,7 +1078,9 @@ export function anthropicProvider(opts: { apiKey: string; endpoint?: string; wor
         )
 
         for (const { call, isError } of results) req.onEvent?.({ kind: 'tool_result', id: call.id, text: call.name, ok: !isError }) // T-0259: observation only
-        const assistantBlocks = assistantTurnBlocks(collector)
+        const assistantBlocks = [...paused, ...assistantTurnBlocks(collector)]
+        paused = []
+        carried = []
         extra.push({ role: 'assistant', content: assistantBlocks })
         extra.push({
           role: 'user',

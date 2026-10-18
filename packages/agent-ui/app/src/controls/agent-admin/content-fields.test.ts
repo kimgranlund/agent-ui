@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest'
 import {
   PERSONA_FIELDS,
   PERSONA_FIELD_BY_KEY,
+  SERVER_TOOL_FIELD_KEYS,
   checkFieldValue,
   checkFrontmatter,
   type ContentField,
@@ -35,7 +36,8 @@ import { PERSONA_STATE_KEYS, PERSONA_VALUE_KEYS, applyPersonaPatch } from './per
 import { ENTRY_KINDS } from './entries.ts'
 import { entriesStoreKey } from '../entry-list/entry-data.ts'
 import { EFFORT_LEVELS } from '../conversation/composer-options.ts'
-import { capabilitiesFor } from '@agent-ui/a2ui/agent/model-capabilities'
+import { capabilitiesFor, SERVER_TOOL_KEY } from '@agent-ui/a2ui/agent/model-capabilities'
+import { SERVER_TOOL_SETTING_KEYS } from './agent-admin-schema.ts'
 import { createOverlayStore, emptyOverlay, provenanceAt } from './agent-overlay.ts'
 
 describe('the schema pins the key constants every reader names', () => {
@@ -166,5 +168,15 @@ describe('checkFrontmatter', () => {
     expect(problems.some((p) => p.startsWith('effort "turbo" is not one of'))).toBe(true)
     const valid = { id: 'x', version: 1, order: 1, label: 'X', tagline: 'T', name: 'N', model: 'm', toolsEnabled: true, skills: [], workflows: [], resources: [], tools: ['weather@1'] }
     expect(checkFrontmatter(PERSONA_FIELDS, valid)).toEqual([])
+  })
+})
+
+describe('T-0203: one server tool key vocabulary', () => {
+  it('the import-free field table matches the capability table, and every derived store key is a pane row', () => {
+    expect(SERVER_TOOL_FIELD_KEYS).toEqual(SERVER_TOOL_KEY)
+    const keys = Object.values(SERVER_TOOL_SETTING_KEYS).flatMap((k) => Object.values(k))
+    for (const key of keys) expect(PERSONA_FIELD_BY_KEY.get(key)?.home, key).toBe('model')
+    const rows = PERSONA_FIELDS.filter((f) => f.form?.gate === 'serverTools').map((f) => f.key)
+    expect(new Set(rows)).toEqual(new Set(keys))
   })
 })

@@ -1,0 +1,1 @@
+- skip: verifier; step: all; reason: verifier-L3 (fable) and verifier-L2 (sonnet) both passed criteria 1 to 5 on unchanged code (ebd06da39); their only fail was the post-merge live web-search probe, which a keyless verifier cannot run, now moved to an After merge step the conductor owns; decided: conductor, reported to Kim at close-out

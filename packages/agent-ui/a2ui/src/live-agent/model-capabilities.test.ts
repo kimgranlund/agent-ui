@@ -4,7 +4,7 @@
 import { describe, it, expect } from 'vitest'
 import providersConfigRaw from '../../tools/agent/providers.json'
 import { buildRequestBody } from '../agent/providers/anthropic.ts'
-import { MODEL_CAPABILITIES, capabilitiesFor, effortsAllowing, normalizeModelSettings, validateModelSettings } from '../agent/model-capabilities.ts'
+import { MODEL_CAPABILITIES, capabilitiesFor, effortsAllowing, normalizeModelSettings, validateModelSettings, userLocationIssues } from '../agent/model-capabilities.ts'
 import type { Effort } from '../agent/agent-transport.ts'
 
 const BASE = { system: 'be helpful', messages: [] }
@@ -114,5 +114,38 @@ describe('buildRequestBody per model: only accepted params are sent (T-0185)', (
     const body = buildRequestBody({ ...BASE, model: 'claude-sonnet-5-5', effort: 'high', modelSettings: { maxTokens: 20_000, cacheTtl: '1h' } })
     expect(body['max_tokens']).toBe(20_000)
     expect(body['system']).toEqual([{ type: 'text', text: 'be helpful', cache_control: { type: 'ephemeral', ttl: '1h' } }])
+  })
+})
+
+describe('T-0203: server tool settings against the capability table', () => {
+  it('normalize keeps a well-formed tool, types each field, and prefers allowed over blocked domains', () => {
+    const out = normalizeModelSettings('claude-opus-5-5', {
+      webSearch: { maxUses: 2.5, allowedDomains: [' a.com ', '', 3], blockedDomains: ['b.com'], userLocation: { city: 'Oslo', country: 7 } },
+      webFetch: { maxUses: 4, blockedDomains: ['c.com'] },
+    })
+    expect(out.webSearch).toEqual({ allowedDomains: ['a.com'], userLocation: { city: 'Oslo' } })
+    expect(out.webFetch).toEqual({ maxUses: 4, blockedDomains: ['c.com'] })
+  })
+
+  it('a non-object value drops the tool, and a model whose row lacks the tool is an issue', () => {
+    expect(normalizeModelSettings('claude-opus-5-5', { webSearch: true, webFetch: ['x'] })).toEqual({})
+    const row = MODEL_CAPABILITIES['claude-opus-5-5']!
+    const saved = row.serverTools
+    ;(row as { serverTools: readonly string[] }).serverTools = []
+    try {
+      expect(validateModelSettings('claude-opus-5-5', { webSearch: {} }).map((i) => i.key)).toEqual(['webSearch'])
+      expect(normalizeModelSettings('claude-opus-5-5', { webSearch: {} })).toEqual({})
+    } finally {
+      ;(row as { serverTools: readonly string[] }).serverTools = saved
+    }
+  })
+})
+
+describe('T-0203: the web search location', () => {
+  it('a country that is not two letters or a timezone that is not IANA is an issue, and normalize drops just that part', () => {
+    expect(userLocationIssues({ country: 'FI', timezone: 'Europe/Helsinki' })).toEqual([])
+    expect(userLocationIssues({ country: 'Finland', timezone: 'Mars/Base' })).toHaveLength(2)
+    expect(validateModelSettings('claude-opus-5-5', { webSearch: { userLocation: { country: 'FIN' } } }).map((i) => i.key)).toEqual(['webSearch'])
+    expect(normalizeModelSettings('claude-opus-5-5', { webSearch: { userLocation: { city: 'Turku', country: 'fi', timezone: 'Nope/Zone' } } }).webSearch).toEqual({ userLocation: { city: 'Turku', country: 'FI' } })
   })
 })

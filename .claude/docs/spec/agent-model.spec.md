@@ -159,7 +159,10 @@ The pure guards `initialValuesFor`, `sanitizeNumber`, `sanitizeSelect` are the s
 **SPEC-R11 (the config schema).** `agentConfigSchema()` carries a section `agent` with the field `name` (text,
 required, default `Untitled agent`) and, T-0185, a `model` section generated from the model's capability row
 (`model-capabilities.ts`): `effort`, `thinking`, `showReasoning`, `maxTokens` and `cacheTtl`, each shown only when the
-model accepts it. Temperature is retired (the 5.5 models accept only 1.0); a stored temperature is ignored. Model selection and the
+model accepts it. T-0203 adds the web search and web fetch rows (switch, max uses, allowed and blocked domains, and
+the search city, region, country and timezone, the last two format-checked), shown when the row lists that server tool; they are pane settings, not persona-file state, and
+the Chat composer's toggles (Thinking off and Show reasoning in the effort menu, a capabilities row per enabled server
+tool) narrow them per conversation. Temperature is retired (the 5.5 models accept only 1.0); a stored temperature is ignored. Model selection and the
 per-model inclusion record live on the Model grid under `model` and `modelsIncluded`, not in the schema; the
 `toolsEnabled` field left the schema when kind-level master switches arrived. The Agent help card's summary and facts
 are projected from this schema, never restated. T-0162 (agent-content ACS-R10): both sections are derived from the
