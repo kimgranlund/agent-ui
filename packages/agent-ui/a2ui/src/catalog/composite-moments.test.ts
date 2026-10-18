@@ -651,17 +651,27 @@ describe('composite moment checks (T-0208)', () => {
     expect(codes([...QUEST_LOG, ...strip])).toEqual(['GAME_HUD_MISSING', 'TIMELINE_MISSING'])
   })
 
-  it('T-0361: a List of Texts, "Scene N" entries with no label, and a template of Texts each fire; the repaired surface does not', () => {
+  it('T-0361: plain entries, Rows of a number and a name, two headless "Scene N" entries and a template each fire; the repaired surface does not', () => {
     expect(codes(withScenes([
       { id: 'scenes', component: 'List', children: ['s1', 's2'] },
       { id: 's1', component: 'Text', text: 'The stair down' },
       { id: 's2', component: 'Text', text: 'The iron door' },
     ]))).toEqual(['TIMELINE_MISSING'])
-    const unlabelled = withScenes([
-      { id: 'scenes', component: 'Column', children: ['s1'] },
+    expect(codes(withScenes([
+      { id: 'scenes', component: 'Column', children: ['r1', 'r2'] },
+      { id: 'r1', component: 'Row', children: ['n1', 't1'] },
+      { id: 'n1', component: 'Text', text: '1' },
+      { id: 't1', component: 'Text', text: 'The stair down' },
+      { id: 'r2', component: 'Row', children: ['n2', 't2'] },
+      { id: 'n2', component: 'Text', text: '2' },
+      { id: 't2', component: 'Text', text: 'The iron door' },
+    ]))).toEqual(['TIMELINE_MISSING'])
+    const headless = withScenes([
+      { id: 'scenes', component: 'Column', children: ['s1', 's2'] },
       { id: 's1', component: 'Text', text: 'Scene 1: the stair down' },
+      { id: 's2', component: 'Text', text: 'Scene 2: the iron door' },
     ]).filter((c) => c.id !== 'scenes_lbl')
-    expect(codes(unlabelled)).toEqual(['TIMELINE_MISSING'])
+    expect(codes(headless)).toEqual(['TIMELINE_MISSING'])
     expect(codes(withScenes([
       { id: 'scenes', component: 'Column', children: { path: '/scenes', componentId: 'scene' } },
       { id: 'scene', component: 'Text', text: { path: 'summary' } },
@@ -670,6 +680,51 @@ describe('composite moment checks (T-0208)', () => {
       { id: 'scenes', component: 'Timeline', label: 'Scenes', children: ['s1'] },
       { id: 's1', component: 'TimelineItem', label: 'The stair down', description: "The Undervault's entrance.", status: 'active' },
     ]))).toEqual([])
+  })
+
+  it('T-0361: a "Quest log" CardHeader or Card title heads a list with no label of its own', () => {
+    const underHeader: A2uiComponent[] = [
+      { id: 'root', component: 'Card', children: ['hd', 'ct'] },
+      { id: 'hd', component: 'CardHeader', children: ['title'] },
+      { id: 'title', component: 'Text', text: 'Quest log', variant: 'h4' },
+      { id: 'ct', component: 'CardContent', children: ['scenes'] },
+      { id: 'scenes', component: 'Column', children: ['s1', 's2'] },
+      { id: 's1', component: 'Text', text: '1. The stair down' },
+      { id: 's2', component: 'Text', text: '2. The iron door' },
+    ]
+    expect(codes(underHeader)).toEqual(['TIMELINE_MISSING'])
+    const titled: A2uiComponent[] = [
+      { id: 'root', component: 'Card', title: 'Quest log: The Undervault', children: ['scenes'] },
+      { id: 'scenes', component: 'Column', children: ['s1'] },
+      { id: 's1', component: 'Text', text: '1. The stair down' },
+    ]
+    expect(codes(titled)).toEqual(['TIMELINE_MISSING'])
+    // The nearest heading wins: an Inventory label inside the quest log card heads its own list.
+    const inventory = underHeader.map((c) => (c.id === 'ct' ? { ...c, children: ['lbl', 'scenes'] } : c))
+    expect(codes([...inventory, { id: 'lbl', component: 'Text', text: 'Inventory', variant: 'label' }])).toEqual([])
+  })
+
+  it('T-0361: one plain entry under a log heading, a "Scene 3" heading over narration, and a "Scene 3" heading over choices yield none', () => {
+    expect(codes(withScenes([
+      { id: 'scenes', component: 'Column', children: ['s1'] },
+      { id: 's1', component: 'Text', text: 'The stair down' },
+    ]))).toEqual([])
+    const sceneCard = (body: A2uiComponent[], children: string[]): A2uiComponent[] => [
+      { id: 'root', component: 'Card', children: ['title', 'body'] },
+      { id: 'title', component: 'Text', text: 'The Undervault: a dungeon quest', variant: 'h4' },
+      { id: 'body', component: 'Column', children },
+      ...body,
+    ]
+    expect(codes(sceneCard([
+      { id: 'h', component: 'Text', text: 'Scene 3: the flooded vault', variant: 'h5' },
+      { id: 'n', component: 'Text', text: 'Water drips from the ceiling and the torch gutters.' },
+    ], ['h', 'n']))).toEqual([])
+    expect(codes(sceneCard([
+      { id: 'h', component: 'Text', text: 'Scene 3', variant: 'label' },
+      { id: 'choices', component: 'Column', children: ['o1', 'o2'] },
+      { id: 'o1', component: 'Text', text: '1. Wade across' },
+      { id: 'o2', component: 'Text', text: '2. Climb the ledge' },
+    ], ['h', 'choices']))).toEqual([])
   })
 
   /** Realistic lists in time order, or quest lists that are no scene log: none is a quest log to send back. */
@@ -705,8 +760,9 @@ describe('composite moment checks (T-0208)', () => {
       { id: 'd2', component: 'Text', text: '2. Glacier hike at Skaftafell' },
     ],
     'quest inventory list': withScenes([
-      { id: 'scenes', component: 'List', children: ['s1'] },
+      { id: 'scenes', component: 'List', children: ['s1', 's2'] },
       { id: 's1', component: 'Text', text: 'Rope, 30 feet' },
+      { id: 's2', component: 'Text', text: 'Lantern' },
     ]).map((c) => (c.id === 'scenes_lbl' ? { ...c, text: 'Inventory' } : c)),
     'quiz question list': [
       { id: 'root', component: 'Card', children: ['t', 'lbl', 'qs'] },
@@ -728,15 +784,42 @@ describe('composite moment checks (T-0208)', () => {
     })
   }
 
-  it('T-0361: the game-worded negatives fire with the log cue opened, and the rest with the game gate opened too, so the guards bite', () => {
+  it('T-0361: the game-worded negatives fire with the log heading opened, and the rest with the game gate opened too, so the guards bite', () => {
     const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'Timeline')!
-    const anyHeading: CompositeMoment = { ...row, logOf: { ...row.logOf!, cue: /./ } }
+    const anyHeading: CompositeMoment = { ...row, logOf: { ...row.logOf!, heading: /./ } }
     const fires = (m: CompositeMoment, components: A2uiComponent[]): string[] =>
       runSemanticChecks([compositeMomentCheck(m)], { surfaces: [view(components)] }).findings.map((f) => f.code)
     for (const name of ['adventure itinerary', 'quest inventory list', 'quiz question list']) expect(fires(anyHeading, NOT_QUEST_LOGS[name]!), name).toEqual(['TIMELINE_MISSING'])
     const anySurface: CompositeMoment = { ...anyHeading, boardless: { game: /./ } }
     for (const name of ['order history', 'changelog', 'chat history']) expect(fires(anySurface, NOT_QUEST_LOGS[name]!), name).toEqual(['TIMELINE_MISSING'])
-    expect(fires({ ...row, boardless: { game: /./ } }, NOT_QUEST_LOGS['changelog']!), 'changelog, cue kept').toEqual([])
+    expect(fires({ ...row, boardless: { game: /./ } }, NOT_QUEST_LOGS['changelog']!), 'changelog, heading kept').toEqual([])
+  })
+
+  it("T-0361 review: no row reads another composite's props, so a GameHud whose status says Game over is no hand-built result", () => {
+    const hud: A2uiComponent[] = [{ id: 'root', component: 'GameHud', title: 'Quest: The Undervault', status: 'Game over', stats: [{ label: 'HP', value: 0 }] }]
+    expect(codes(hud)).toEqual([])
+    expect(codes([{ id: 'col', component: 'Column', children: ['root'] }, ...hud])).toEqual([])
+  })
+
+  it('T-0361 review: the Negotiator "Round 3, your turn" surface with Mood and Asking yields GAME_HUD_MISSING again', () => {
+    expect(codes([
+      { id: 'root', component: 'Card', children: ['t', 'mood', 'ask'] },
+      { id: 't', component: 'Text', text: 'Round 3, your turn', variant: 'h4' },
+      { id: 'mood', component: 'Badge', label: 'Mood: wary' },
+      { id: 'ask', component: 'Badge', label: 'Asking $500' },
+    ])).toEqual(['GAME_HUD_MISSING'])
+  })
+
+  it('T-0361 review: a mid-game "Start a new quest" side button is no ending; with no play control left it is one', () => {
+    const midGame: A2uiComponent[] = [
+      { id: 'root', component: 'Card', children: ['t', 'won', 'open', 'restart'] },
+      { id: 't', component: 'Text', text: 'The Undervault quest', variant: 'h4' },
+      { id: 'won', component: 'Text', text: 'You won 20 gold from the urn.' },
+      { id: 'open', component: 'Button', label: 'Open the chest', action: { action: 'choose' } },
+      { id: 'restart', component: 'Button', label: 'Start a new quest', action: { action: 'new_quest' } },
+    ]
+    expect(codes(midGame)).not.toContain('RESULT_CARD_MISSING')
+    expect(codes(midGame.filter((c) => c.id !== 'open').map((c) => (c.id === 'root' ? { ...c, children: ['t', 'won', 'restart'] } : c)))).toContain('RESULT_CARD_MISSING')
   })
 
   // T-0279: the recorded Haiku answer to "What spa services can I book during my stay?" (round 2026-10-15-r4-fixes,

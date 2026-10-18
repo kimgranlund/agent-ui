@@ -38,9 +38,17 @@
 // table, and a round result Toast is never read.
 //
 // T-0361: the Timeline row reads a quest log built by hand: on a surface whose words name a game, a Column or List of
-// Texts headed or titled as scenes, a journal or a quest log, or whose entries open "Scene N" (the Dungeon Master, smoke
-// round 2026-10-18-smoke). The row has no `has`, so it runs only through the `boardless` gate; an order history, a
-// changelog, a chat history or an itinerary names no game, and an inventory or objectives list names no scenes.
+// parallel entries (Texts, or Rows of Texts: a number and a name) under its nearest heading. Under a log heading (scenes,
+// a journal, a quest log: a label Text, the list's own label, or the title or CardHeader of the Card around it) one
+// numbered or "Scene N" entry is enough and plain entries need two; with no log heading it takes two "Scene N" entries
+// (the Dungeon Master, smoke round 2026-10-18-smoke). A single "Scene 3" heading over narration or over a list of choices
+// is no log. The row has no `has`, so it runs only through the `boardless` gate; an order history, a changelog, a chat
+// history or an itinerary names no game, and an inventory or objectives list has no log heading.
+//
+// T-0361 review: no row reads another composite's props as words (a GameHud status "Game over" is no hand-built result);
+// the GameHud gate also takes round and turn (the Negotiator's "Round 3, your turn"), as T-0358 did, since its two-stat
+// strip guards it; and "new quest", "new adventure" or "new game" end a game only on a surface with no live play control
+// left (a mid-game "Start a new quest" side button beside the choices is no ending).
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -63,11 +71,13 @@ export interface CompositeMoment {
    *  any `end` phrase taken out, so "game over" alone names none) unless it holds a `standAside` type, reading no words from
    *  `skipWordTypes`. Then either `statStrip`: at least `min` stat items (a component of `types`, or a DescriptionList row)
    *  whose words name game state (`cue`), the hand-built score strip of a game with no board; or the row's `words` path,
-   *  with an `end` signal on the surface. Every other gate of the row still applies. */
+   *  with an `end` signal on the surface, or a `restart` signal with no live play control left on it (T-0361 review).
+   *  Every other gate of the row still applies. */
   readonly boardless?: {
     readonly game: RegExp
     readonly statStrip?: { readonly types: readonly string[]; readonly cue: RegExp; readonly min: number }
     readonly end?: RegExp
+    readonly restart?: RegExp
     readonly standAside?: readonly string[]
     readonly skipWordTypes?: readonly string[]
   }
@@ -85,10 +95,10 @@ export interface CompositeMoment {
   readonly noInputs?: readonly string[]
   /** An input of `types` whose label, name or bound path matches `cue`, while the surface words match `words`. */
   readonly inputCue?: { readonly types: readonly string[]; readonly cue: RegExp; readonly words: RegExp }
-  /** T-0361: a container of `types` whose children (explicit, or a template's component) are all `child`, headed by words
-   *  matching `cue` (its own label or title, or the `child` just before it in its parent) or holding an entry that opens
-   *  with `entry`. */
-  readonly logOf?: { readonly types: readonly string[]; readonly child: string; readonly cue: RegExp; readonly entry: RegExp }
+  /** T-0361: a container of `types` whose entries (explicit Texts or Rows of Texts, or a Text template) all take one shape:
+   *  the first of `shapes` they match (`shapes[0]` is the scene shape), or plain. Under its nearest heading matching
+   *  `heading` it fires on a template, one shaped entry or two plain ones; with no such heading, on two `shapes[0]` entries. */
+  readonly logOf?: { readonly types: readonly string[]; readonly heading: RegExp; readonly shapes: readonly RegExp[] }
   /** A Grid with at least `min` explicit children, all of type `child`. */
   readonly gridOf?: { readonly child: string; readonly min: number }
   /** T-0262: types the composite must not sit inside (it draws its own card); a wrapper yields `<COMPOSITE>_WRAPPED`. */
@@ -128,6 +138,12 @@ const BOOK_ASK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would)
 /** T-0358, T-0364: the words that name a game on a surface with no board. Generic words (player, level, round, turn)
  *  name none: a podcast player or a Gold level is no game. */
 const GAME_WORDS = /\b(game|games|quest|hp|quiz|trivia|twenty questions|the answer was|the word was|deal sheet|adventure|dungeon)\b/i
+/** T-0361 review: the GameHud gate also takes round and turn (T-0358's Negotiator, "Round 3, your turn"); its two-stat strip
+ *  keeps a dashboard out. */
+const HUD_GAME_WORDS = new RegExp(`\\b(round|rounds|turn|turns)\\b|${GAME_WORDS.source}`, 'i')
+
+/** T-0361 review: the controls that keep a game live; a Button whose words only restart it is none. */
+const PLAY_CONTROLS: readonly string[] = ['Button', ...BOOKING_INPUTS]
 
 const BOOKING_READ_BACK: NonNullable<CompositeMoment['readBack']> = { types: ['DescriptionList'], action: /^confirm/i, cue: /\bconfirm\b/i }
 
@@ -186,7 +202,7 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     has: ['BoardGrid'],
     // T-0358: the Mentalist, the Negotiator and the Dungeon Master play with no board (smoke round 2026-10-18-smoke).
     boardless: {
-      game: GAME_WORDS,
+      game: HUD_GAME_WORDS,
       statStrip: {
         types: ['Badge', 'Stat', 'Progress'],
         cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries)\b/i,
@@ -208,7 +224,8 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     // workflow sanctions. Neither is in `lacks`, so neither answers a carried RESULT_CARD_MISSING.
     boardless: {
       game: GAME_WORDS,
-      end: /\b(game over|final score|you (won|lost|win|lose) the (game|match|quiz)|play again|new game|rematch|new adventure|new quest|deal struck)\b/i,
+      end: /\b(game over|final score|you (won|lost|win|lose) the (game|match|quiz)|play again|rematch|deal struck)\b/i,
+      restart: /\b(new game|new adventure|new quest)\b/i,
       standAside: ['CardTable', 'PlayingCard'],
       skipWordTypes: ['Toast'],
     },
@@ -222,7 +239,7 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     requires: ['TimelineItem'],
     lacks: [],
     boardless: { game: GAME_WORDS },
-    logOf: { types: ['Column', 'List'], child: 'Text', cue: /\b(scenes?|quest log|adventure log|journal|chronicle)\b/i, entry: /^\s*scene\s+\d/i },
+    logOf: { types: ['Column', 'List'], heading: /\b(scenes|quest log|adventure log|journal|chronicle)\b/i, shapes: [/^\s*scene\s+\d/i, /^\s*\d+[.):]?\s+\S/] },
   },
   {
     // T-0279 (Kim's ruling): a priced, bookable treatment or service list is one ProductCard each, never a Table.
@@ -319,30 +336,68 @@ function statStrays(strip: NonNullable<NonNullable<CompositeMoment['boardless']>
   return items >= strip.min ? found : []
 }
 
-/** T-0361: the containers that list `log.child` entries under a log heading, or `[]`. */
+/** Each component's parent, by child id (`child` or explicit `children`). */
+function parentsOf(view: SurfaceView): Map<string, A2uiComponent> {
+  const parent = new Map<string, A2uiComponent>()
+  for (const c of view.components.values()) for (const id of childIds(c)) parent.set(id, c)
+  return parent
+}
+
+/** T-0361: the containers that list a log's parallel entries under its nearest heading, or `[]`. */
 function logStrays(log: NonNullable<CompositeMoment['logOf']>, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
-  const typeOf = (id: string): string | undefined => view.components.get(id)?.component
-  const textOf = (id: string | undefined): string => {
-    const c = id === undefined ? undefined : view.components.get(id)
-    return c === undefined ? '' : ['label', 'title', 'text'].map((k) => stringOf(c[k], view)).join(' ')
+  const parent = parentsOf(view)
+  const get = (id: string): A2uiComponent | undefined => view.components.get(id)
+  const textOf = (c: A2uiComponent | undefined): string => (c === undefined ? '' : ['label', 'title', 'text'].map((k) => stringOf(c[k], view)).join(' ').trim())
+  /** An entry's words: a Text's, or a Row's Texts joined (a number and a name); undefined for any other shape. */
+  const entryOf = (c: A2uiComponent | undefined): string | undefined => {
+    if (c?.component === 'Text') return textOf(c)
+    if (c?.component !== 'Row') return undefined
+    const kids = childIds(c).map(get)
+    return kids.length > 0 && kids.every((k) => k?.component === 'Text') ? kids.map(textOf).join(' ') : undefined
+  }
+  /** The nearest heading: a Text just before the component in its parent, its own label or title, else the same one level up,
+   *  a Card's title or CardHeader words ending the climb. */
+  const headingOf = (c: A2uiComponent): string => {
+    const seen = new Set<string>()
+    for (let at: A2uiComponent | undefined = c; at !== undefined && !seen.has(at.id); at = parent.get(at.id)) {
+      seen.add(at.id)
+      if (at.component === 'Card') {
+        const header = childIds(at).map(get).find((k) => k?.component === 'CardHeader')
+        return [textOf(at), ...(header === undefined ? [] : childIds(header).map((id) => textOf(get(id))))].join(' ')
+      }
+      const siblings = childIds(parent.get(at.id) ?? at)
+      const before = get(siblings[siblings.indexOf(at.id) - 1] ?? '')
+      if (before?.component === 'Text') return textOf(before)
+      if (textOf(at) !== '') return textOf(at)
+    }
+    return ''
   }
   return comps.filter((c) => {
     if (!log.types.includes(c.component)) return false
-    const kids = Array.isArray(c.children) ? c.children.filter((id): id is string => typeof id === 'string') : []
+    const headed = log.heading.test(headingOf(c))
     const template = typeof c.children === 'object' && c.children !== null && !Array.isArray(c.children) ? (c.children as { componentId?: unknown }).componentId : undefined
-    const entries = typeof template === 'string' ? [template] : kids
-    if (entries.length === 0 || !entries.every((id) => typeOf(id) === log.child)) return false
-    if (kids.some((id) => log.entry.test(textOf(id)))) return true
-    const parent = comps.find((p) => childIds(p).includes(c.id))
-    const siblings = parent === undefined ? [] : childIds(parent)
-    const before = siblings[siblings.indexOf(c.id) - 1]
-    const heading = [textOf(c.id), before !== undefined && typeOf(before) === log.child ? textOf(before) : ''].join(' ')
-    return log.cue.test(heading)
+    if (typeof template === 'string') return headed && get(template)?.component === 'Text'
+    const entries = childIds(c).map((id) => entryOf(get(id)))
+    if (entries.length === 0 || entries.some((e) => e === undefined)) return false
+    const shapes = new Set(entries.map((e) => log.shapes.findIndex((re) => re.test(e!))))
+    if (shapes.size !== 1) return false
+    const [shape] = shapes
+    if (!headed) return shape === 0 && entries.length >= 2
+    return shape === -1 ? entries.length >= 2 : true
   })
 }
 
+/** T-0361 review: every composite type of the rows, with the types each reads; none of their props count as words. */
+const COMPOSITE_TYPES: ReadonlySet<string> = new Set(COMPOSITE_MOMENTS.flatMap((m) => [m.composite, ...(m.requires ?? []), ...(m.has ?? [])]))
+
+/** T-0361 review: a row's `end` and `restart` phrases as one global pattern, built once per row, taken out of the game words. */
+function endPhrases(m: CompositeMoment): RegExp | undefined {
+  const phrases = [m.boardless?.end, m.boardless?.restart].filter((re): re is RegExp => re !== undefined)
+  return phrases.length === 0 ? undefined : new RegExp(phrases.map((re) => re.source).join('|'), 'gi')
+}
+
 /** The components of `view` that hand-build `m`'s moment, or `[]` when the row does not fire. */
-function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefined): A2uiComponent[] {
+function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefined, ending: RegExp | undefined): A2uiComponent[] {
   const comps = [...view.components.values()]
   const types = new Set(comps.map((c) => c.component))
   if ([m.composite, ...m.lacks].some((t) => types.has(t))) return []
@@ -351,11 +406,10 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
   if (boardless === null) return []
   if (boardless?.standAside?.some((t) => types.has(t)) === true) return []
   if (m.noInputs !== undefined && m.noInputs.some((t) => types.has(t))) return []
-  // The composite's, the required and the `has` types' own props never count as words.
-  const own = new Set([m.composite, ...(m.requires ?? []), ...(m.has ?? [])])
+  // No composite's own props count as words (T-0361 review: every row's, not only this one's).
   const worded = comps.filter(
     (c) =>
-      !own.has(c.component) &&
+      !COMPOSITE_TYPES.has(c.component) &&
       (m.wordTypes === undefined || m.wordTypes.includes(c.component)) &&
       boardless?.skipWordTypes?.includes(c.component) !== true &&
       (m.settledSignals !== true || isSettledSignal(c)),
@@ -368,11 +422,16 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
   const surfaceWords = worded.map(wordsOf).join(' ')
 
   const end = boardless?.end
+  // T-0361 review: a restart phrase ends the game only once no live play control is left on the surface.
+  const restart = boardless?.restart
+  const ended = (words: string): boolean =>
+    end?.test(words) === true ||
+    (restart?.test(words) === true && !comps.some((c) => PLAY_CONTROLS.includes(c.component) && !(c.component === 'Button' && restart.test(buttonWords(c, view)))))
   if (boardless !== undefined) {
-    const gameWords = end === undefined ? surfaceWords : surfaceWords.replace(new RegExp(end.source, 'gi'), ' ')
+    const gameWords = ending === undefined ? surfaceWords : surfaceWords.replace(ending, ' ')
     if (!boardless.game.test(gameWords)) return []
     if (boardless.statStrip !== undefined) return statStrays(boardless.statStrip, comps, view)
-    if (end !== undefined && !end.test(surfaceWords)) return []
+    if (end !== undefined && !ended(surfaceWords)) return []
   }
 
   if (m.logOf !== undefined) return logStrays(m.logOf, comps, view)
@@ -414,7 +473,7 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
     const confirms = comps.filter((c) => c.component === 'Button' && submitsReadBack(c, view, rb))
     return rows.length > 0 && confirms.length > 0 ? [...rows, ...confirms] : []
   }
-  return m.words === undefined ? [] : worded.filter((c) => m.words!.test(wordsOf(c)) || end?.test(wordsOf(c)) === true)
+  return m.words === undefined ? [] : worded.filter((c) => m.words!.test(wordsOf(c)) || (end !== undefined && ended(wordsOf(c))))
 }
 
 /** The ids a component lists as `child` or explicit `children` (a template ChildList names no fixed ids). */
@@ -426,8 +485,7 @@ const childIds = (c: A2uiComponent): string[] => [
 /** T-0262: the components of `view` of a `notInside` type whose subtree holds `m`'s composite, or `[]`. */
 function wrappers(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
   if (m.notInside === undefined) return []
-  const parent = new Map<string, A2uiComponent>()
-  for (const c of view.components.values()) for (const id of childIds(c)) parent.set(id, c)
+  const parent = parentsOf(view)
   const found = new Map<string, A2uiComponent>()
   for (const c of view.components.values()) {
     if (c.component !== m.composite) continue
@@ -443,6 +501,7 @@ function wrappers(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
 /** The one generator: a row of `COMPOSITE_MOMENTS` as a semantic check. */
 export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
   const code = `${upperSnake(m.composite)}_MISSING`
+  const ending = endPhrases(m)
   return {
     id: `composite-moment-${kebab(m.composite)}`,
     requires: [m.composite, ...(m.requires ?? [])],
@@ -460,7 +519,7 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
           })
           continue
         }
-        const found = strays(m, view, intent)
+        const found = strays(m, view, intent, ending)
         if (found.length === 0) continue
         findings.push({
           code,
