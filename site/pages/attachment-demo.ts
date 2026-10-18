@@ -71,7 +71,7 @@ function refreshChrome(): void {
 }
 
 function attach(file: FileFixture): void {
-  const row = el('div', { role: 'listitem', style: 'display:flex; gap:0.375rem; align-items:center;' })
+  const row = el('div', { role: 'listitem', style: 'display:flex; gap:var(--md-sys-space-sm); align-items:center;' })
   const remove = uiButton('Remove', 'ghost')
   remove.setAttribute('size', 'sm')
   remove.setAttribute('aria-label', `Remove ${file.name}`)

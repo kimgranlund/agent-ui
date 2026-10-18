@@ -98,7 +98,7 @@ const bold = pill('Bold', 'text-b')
 const italic = pill('Italic', 'text-italic')
 const underline = pill('Underline', 'text-underline')
 const format = el('ui-row', { gap: 'xs', align: 'center' }, [bold, italic, underline])
-const preview = el('p', { style: 'margin:var(--md-sys-space-md) 0 0; font-size:1.05rem;' }, [text('The quick brown fox jumps over the lazy dog.')])
+const preview = el('p', { style: 'margin:var(--md-sys-space-md) 0 0; font-size:var(--md-sys-type-title);' }, [text('The quick brown fox jumps over the lazy dog.')])
 const restyle = (): void => {
   preview.style.fontWeight = bold.hasAttribute('pressed') ? '700' : '400'
   preview.style.fontStyle = italic.hasAttribute('pressed') ? 'italic' : 'normal'

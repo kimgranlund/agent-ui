@@ -142,6 +142,12 @@ Day one (T-0136) listed 9 render findings and 53 compose findings, every compose
 T-0170 fixed two render findings (ui-code border-box, the avatar plane), scoped glyph-gap off a badge mark (two
 findings), marked the specimen, moved four to owner tickets, migrated 22 demos to
 the `--md-sys-space-*` steps, exempted 6 and left 22 compose entries owned by T-0190.
+T-0190 cleared those 22 entries, leaving the compose allowlist empty: type sizes moved to `--md-sys-type-*` roles,
+spacing to `--md-sys-space-*` steps, card-like radii to
+`--md-sys-card-radius`, icon sizes to `--md-sys-icon-box`, and icon-demo's ambient ramp to type roles. Five paths
+took a named exemption: the specimen frame heights in attachment, split, split-pane and swiper-item (split-pane's
+heights moved out of a template hole into literals the lint reads), and pie-chart's em readout, which scales with
+the donut's em box.
 
 ## How to add a rule
 

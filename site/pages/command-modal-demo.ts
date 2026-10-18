@@ -35,7 +35,7 @@ function logEvent(line: string): void {
 }
 
 // ── a realistic app backdrop (a mock editor/shell — page-authored content, not a control under test) ───────
-const backdrop = el('div', { class: 'demo-mock-shell', style: 'border: 1px solid var(--md-sys-color-neutral-outline-variant); border-radius: 8px; padding: var(--md-sys-space-lg); display: flex; flex-direction: column; gap: var(--md-sys-space-sm);' }, [
+const backdrop = el('div', { class: 'demo-mock-shell', style: 'border: 1px solid var(--md-sys-color-neutral-outline-variant); border-radius: var(--md-sys-card-radius); padding: var(--md-sys-space-lg); display: flex; flex-direction: column; gap: var(--md-sys-space-sm);' }, [
   el('div', { style: 'font-weight: 600' }, [text('acme-app / src / components / Editor.tsx')]),
   el('div', { style: 'color: var(--md-sys-color-neutral-on-surface-variant)' }, [text('12  export function Editor() {')]),
   el('div', { style: 'color: var(--md-sys-color-neutral-on-surface-variant)' }, [text('13    const [value, setValue] = useState(\'\')')]),

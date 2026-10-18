@@ -55,7 +55,7 @@ function area(attrs: Record<string, string>): UITextareaElement {
 // ── [1] the ticket description — required, rows=4 growable minimum, a live character budget ─────────────────
 const BUDGET = 280
 const description = area({ label: 'What happened?', name: 'description', rows: '4', required: '', placeholder: 'Describe the problem — what you expected, what you saw instead.' })
-const budget = el('p', { style: 'margin:var(--md-sys-inset) 0 0; font-size:0.8rem; color:var(--md-sys-color-neutral-on-surface-variant);' }, [text(`${BUDGET} characters left`)])
+const budget = el('p', { style: 'margin:var(--md-sys-inset) 0 0; font-size:var(--md-sys-type-field-label); color:var(--md-sys-color-neutral-on-surface-variant);' }, [text(`${BUDGET} characters left`)])
 const refreshBudget = (): void => {
   const left = BUDGET - description.value.length
   budget.textContent = left >= 0 ? `${left} characters left` : `${-left} characters over the ${BUDGET} budget`

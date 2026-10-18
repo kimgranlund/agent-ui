@@ -91,7 +91,7 @@ dismissAllBtn.addEventListener('click', () => {
 
 const controls = el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap; align-items:center;' }, [
   el('div', { style: 'display:flex; gap:var(--md-sys-space-md); flex-wrap:wrap;' }, [oneBtn, burstBtn, stickyBtn, dismissAllBtn]),
-  el('span', { style: 'font-family: var(--md-sys-typeface-mono); font-size: 0.85rem;' }, [text('stack: '), stackCount]),
+  el('span', { style: 'font-family: var(--md-sys-typeface-mono); font-size: var(--md-sys-type-control);' }, [text('stack: '), stackCount]),
 ])
 
 const queueNote = el('p', {}, [

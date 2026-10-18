@@ -37,7 +37,7 @@ const stat = (spec: StatSpec): HTMLElement => {
   return el('ui-stat', attrs)
 }
 const row = (...tiles: readonly HTMLElement[]): HTMLElement =>
-  el('div', { style: 'display:flex; gap:1.25rem; flex-wrap:wrap; align-items:flex-start;' }, tiles)
+  el('div', { style: 'display:flex; gap:var(--md-sys-space-lg); flex-wrap:wrap; align-items:flex-start;' }, tiles)
 
 // ── [1] the KPI header — the canonical dashboard job (hand-authored, a believable SaaS month) ────────────────
 const header = row(

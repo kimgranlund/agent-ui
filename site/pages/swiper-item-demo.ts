@@ -46,7 +46,7 @@ function watchSelect(swiper: UISwiperElement, name: string): void {
 
 // readout — a live "active=… · activeIndex=… · slides=…" line for one swiper (page content, refreshed on demand).
 function readout(swiper: UISwiperElement, role: string): { node: HTMLElement; refresh: () => void } {
-  const node = el('span', { 'data-role': role, style: 'font-family: var(--md-sys-typeface-mono); font-size:0.85rem;' })
+  const node = el('span', { 'data-role': role, style: 'font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-type-control);' })
   const refresh = (): void => {
     node.textContent = `active=${JSON.stringify(swiper.active)} · activeIndex=${swiper.activeIndex} · slides=${swiper.slides.length}`
   }
@@ -58,9 +58,9 @@ function readout(swiper: UISwiperElement, role: string): { node: HTMLElement; re
 
 // slide — a tour step's page content (NOT a ui-* control): a title + a line of copy.
 function slide(title: string, copy: string): HTMLElement {
-  return el('div', { style: 'padding:var(--md-sys-space-lg) 1.25rem; min-block-size:6rem; display:flex; flex-direction:column; gap:0.35rem; justify-content:center;' }, [
-    el('strong', { style: 'font-size:1rem;' }, [text(title)]),
-    el('span', { style: 'font-size:0.85rem; color: var(--md-sys-color-neutral-on-surface-variant); line-height:1.4;' }, [text(copy)]),
+  return el('div', { style: 'padding:var(--md-sys-space-lg); min-block-size:6rem; display:flex; flex-direction:column; gap:var(--md-sys-space-sm); justify-content:center;' }, [
+    el('strong', { style: 'font-size:var(--md-sys-type-title);' }, [text(title)]),
+    el('span', { style: 'font-size:var(--md-sys-type-control); color: var(--md-sys-color-neutral-on-surface-variant); line-height:1.4;' }, [text(copy)]),
   ])
 }
 
@@ -174,7 +174,7 @@ const loop = el('ui-swiper', { loop: '', paddles: '', 'data-role': 'loop-swiper'
   el('ui-swiper-item', { key: 'chi' }, [demoBox('Chi — research')]),
 ]) as UISwiperElement
 watchSelect(loop, 'loop')
-const cloneReadout = el('span', { 'data-role': 'clone-readout', style: 'font-family: var(--md-sys-typeface-mono); font-size:0.85rem;' })
+const cloneReadout = el('span', { 'data-role': 'clone-readout', style: 'font-family: var(--md-sys-typeface-mono); font-size:var(--md-sys-type-control);' })
 function refreshClones(): void {
   const track = loop.querySelector('[data-part="track"]')
   const all = track ? track.querySelectorAll('ui-swiper-item').length : 0
