@@ -38,7 +38,7 @@
 
 import type { A2uiComponent } from '../../../protocol.ts'
 import { readPointer } from '../../semantic-check.ts'
-import type { SemanticAction, SemanticCheck, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
+import type { SemanticAction, SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
 
 const PARTICIPANTS = ['dealer', 'player'] as const
 type Participant = (typeof PARTICIPANTS)[number]
@@ -763,7 +763,8 @@ function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticActi
       })
     const path = bindingPath(table['bankroll'])
     const opened = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
-    if (settledBankroll !== undefined && opened !== undefined && opened !== settledBankroll)
+    // T-0371: a poker hand opens with its blinds out of the bankroll, judged by POKER_CHIPS_MISMATCH instead.
+    if (settledBankroll !== undefined && opened !== undefined && opened !== settledBankroll && !isPokerTable(view))
       findings.push({
         code: 'BANKROLL_MISMATCH',
         path: `${view.surfaceId}:${path ?? table.id}`,
@@ -1212,12 +1213,140 @@ function showdownUnsettled(view: SurfaceView): SemanticFinding[] {
   ]
 }
 
-/** T-0219: what the Croupier states agrees with the cards and the game's rules. */
+const CHIPS_IN = /^(bet|raise|call)/i
+const POKER_MOVES: ReadonlySet<string> = new Set(['check', 'call', 'raise', 'fold'])
+const STUD_GAMES = /\b(stud|razz)\b/i
+/** A pointer that names the player's own blind, ante or post (`/playerBlind`, `/blinds/player`, `/heroAnte`). */
+const PLAYER_POST_PATH = /(player|hero|you).*(blind|ante|post)|(blind|ante|post).*(player|hero|you)/i
+const PLAYER_POST_TEXT = /\byou(?:'ve| have)? posted\b|\byour (?:big |small )?(?:blind|ante)\b|\byou(?:'re| are) (?:the )?(?:big|small) blind\b/i
+const NOT_OPPONENT_LIST = /player|hero|you|board|community|flop|turn|river/i
+const SETTLED_STATE = /\b(settled|showdown)\b/i
+
+/** A chip count: a finite number, or a numeric string ("990", "$60", "1,060"). */
+function chipNumber(v: unknown): number | undefined {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined
+  const m = typeof v === 'string' ? /^\s*\$?\s*(\d[\d,]*(?:\.\d+)?)\s*$/.exec(v) : null
+  return m === null ? undefined : Number(m[1]!.replaceAll(',', ''))
+}
+
+/** Where a poker surface keeps its bankroll and pot: the CardTable's bound `bankroll`, and its bound `pot` (or a `bet`
+ *  bound to a pot path), else `/bankroll` and `/pot`. */
+function chipPaths(view: SurfaceView): { bankroll: string; pot: string } {
+  const table = [...view.components.values()].find((c) => c.component === 'CardTable')
+  const absolute = (p: string | undefined): string | undefined => (p?.startsWith('/') === true ? p : undefined)
+  const bet = absolute(bindingPath(table?.['bet']))
+  return {
+    bankroll: absolute(bindingPath(table?.['bankroll'])) ?? '/bankroll',
+    pot: absolute(bindingPath(table?.['pot'])) ?? (bet !== undefined && /pot/i.test(bet) ? bet : '/pot'),
+  }
+}
+
+/** A poker table, not just the word: the surface names a poker game and shows PlayingCards, offers a poker move
+ *  (check, call, raise or fold), or keeps a pot. A blackjack table whose words happen to say poker is none. */
+function isPokerTable(view: SurfaceView): boolean {
+  if (!isPokerView(view)) return false
+  const comps = [...view.components.values()]
+  if (comps.some((c) => c.component === 'PlayingCard' || (c.component === 'Button' && offersMove(c, view.dataModel, POKER_MOVES)))) return true
+  const pot = chipPaths(view).pot
+  return pot !== '/pot' || chipNumber(readPointer(view.dataModel, pot)) !== undefined
+}
+
+/** The turn settles the hand: a ResultCard or a text naming a result, a `/phase` or `/status` reading settled or
+ *  showdown. A settle may hold a final call or an all-in run-out, which a turn-local prior cannot price. */
+function settlesHand(view: SurfaceView): boolean {
+  const comps = [...view.components.values()]
+  if (comps.some((c) => c.component === 'ResultCard' || ['text', 'label', 'title', 'status', 'result'].some((k) => RESULT_WORDS.test(stringProp(view, c, k))))) return true
+  return ['/phase', '/status'].some((p) => { const v = readPointer(view.dataModel, p); return typeof v === 'string' && SETTLED_STATE.test(v) })
+}
+
+/** The player posted into a new hand's pot: a data-model pointer or surface words naming the player's blind or ante,
+ *  or a heads-up blind game (one opponent hand, not stud), where both sides post every hand. */
+function playerPosted(view: SurfaceView): boolean {
+  const posts = (node: unknown, pointer: string, depth: number): boolean =>
+    isRecord(node) && depth < 4
+      ? Object.entries(node).some(([k, v]) => {
+          const at = `${pointer}/${k}`
+          return (PLAYER_POST_PATH.test(at) && (chipNumber(v) ?? 0) > 0) || posts(v, at, depth + 1)
+        })
+      : false
+  if (posts(view.dataModel, '', 0)) return true
+  const words = literalWords(view.components.values())
+  if (PLAYER_POST_TEXT.test(words)) return true
+  if (STUD_GAMES.test(words)) return false
+  const opponents = new Set(deckCards(view.dataModel, '', []).map((c) => c.path.replace(/\/\d+$/, '')).filter((list) => !NOT_OPPONENT_LIST.test(list)))
+  return opponents.size === 1
+}
+
+/** The chips the player's move puts in when the turn says so exactly: a pressed bet or call's `amount`, a raise's
+ *  increment (`raiseBy`, `by` or `increment`; a raise `amount` is a raise-to), or the one number of a typed bet or call. */
+function certainChips(move: string, action: SemanticAction | undefined, intent: string | undefined): number | undefined {
+  if (action !== undefined) {
+    const ctx = action.context
+    if (/^raise/i.test(move)) return chipNumber(ctx['raiseBy']) ?? chipNumber(ctx['by']) ?? chipNumber(ctx['increment'])
+    return chipNumber(ctx['amount'])
+  }
+  const numbers = (intent ?? '').match(/\d[\d,]*/g)
+  return /^(bet|call)/i.test(move) && numbers?.length === 1 ? chipNumber(numbers[0]) : undefined
+}
+
+/** POKER_CHIPS_MISMATCH (T-0371; round 11 :139 to :146, Haiku 5.5 Omaha): a poker table's chips move between the
+ *  bankroll and the pot, never out of thin air. Read through the table's bankroll and pot bindings (`chipPaths`)
+ *  against the surface's prior data model (the click-time one on an action turn), on the player's move: the press,
+ *  or the one move word a typed turn holds (a turn with two moves or a condition, "Check, or call if there is a bet.",
+ *  is never judged). A bet, raise or call that grows the pot takes the player's chips out of the bankroll (:141 bet
+ *  the pot, 20 to 60, and left 990); a fold never raises the bankroll; a new hand the player posted into opens below
+ *  the bankroll the last hand settled at (:144 and :146 posted 10 and opened on 960). A turn that settles the hand is
+ *  not judged for its move: one turn may hold a final call or a run-out, and a turn-local prior cannot tell. */
+function pokerChips(view: SurfaceView, input: SemanticCheckInput): SemanticFinding[] {
+  if (!isPokerTable(view)) return []
+  const paths = chipPaths(view)
+  const chips = (model: unknown) => ({ bankroll: chipNumber(readPointer(model, paths.bankroll)), pot: chipNumber(readPointer(model, paths.pot)) })
+  const { bankroll, pot } = chips(view.dataModel)
+  if (bankroll === undefined || pot === undefined) return []
+  const { action } = input
+  const finding = (message: string): SemanticFinding[] => [{ code: 'POKER_CHIPS_MISMATCH', path: `${view.surfaceId}:${paths.bankroll}`, message }]
+  if (action !== undefined && isNewRound(action.name, action.context)) {
+    // The pressed table reset in place, or a new surface that replaces it; a surface with no dealt hand is a recap.
+    if (view.surfaceId !== action.surfaceId && view.priorDataModel !== undefined) return []
+    if (!deckCards(view.dataModel, '', []).some((c) => /player|hero|you/i.test(c.path))) return []
+    const settled = chips(action.dataModel).bankroll
+    if (settled === undefined || settled <= 0 || pot <= 0 || bankroll < settled || !playerPosted(view)) return []
+    return finding(
+      `The last hand settled with a bankroll of ${settled}, and ${view.surfaceId} opens with ${pot} in the pot but the bankroll at ${bankroll}. ` +
+        `The blind or ante the player posts leaves the bankroll as it enters the pot: write ${settled} less what the player posted.`,
+    )
+  }
+  let move = action?.name
+  if (action === undefined) {
+    const words = [...(input.intent ?? '').matchAll(new RegExp(TYPED_MOVE.source, 'gi'))]
+    if (words.length !== 1 || /\b(if|or)\b/i.test(input.intent ?? '')) return []
+    move = words[0]![1]
+  }
+  const prior = chips(view.priorDataModel ?? (action?.surfaceId === view.surfaceId ? action.dataModel : undefined))
+  if (move === undefined || prior.bankroll === undefined || prior.pot === undefined) return []
+  if (/^fold/i.test(move) && bankroll > prior.bankroll)
+    return finding(
+      `The player folds, and the bankroll rises from ${prior.bankroll} to ${bankroll}. A fold wins nothing: the chips already in the pot stay there, so write ${prior.bankroll}.`,
+    )
+  if (!CHIPS_IN.test(move) || pot <= prior.pot || bankroll !== prior.bankroll || settlesHand(view)) return []
+  const put = certainChips(move, action, input.intent)
+  return finding(
+    `The player's ${move.toLowerCase()} grows the pot from ${prior.pot} to ${pot}, and the bankroll still reads ${bankroll}. The chips the player puts in leave the bankroll: ` +
+      `${put === undefined ? "lower it by the player's own chips this turn, never the opponent's" : `write ${prior.bankroll - put}`}, and keep the pot and the bankroll in step on every street.`,
+  )
+}
+
+/** T-0219: what the Croupier states agrees with the cards and the game's rules; T-0371: a poker table's chips agree. */
 export const croupierRules: SemanticCheck = {
   id: 'croupier-rules',
   requires: ['CardTable'],
   check: (input) =>
-    input.surfaces.flatMap((view) => [...resultClaims(view), ...showdownUnsettled(view), ...(input.action === undefined ? [] : boughtFaceUp(view, input.action))]),
+    input.surfaces.flatMap((view) => [
+      ...resultClaims(view),
+      ...showdownUnsettled(view),
+      ...pokerChips(view, input),
+      ...(input.action === undefined ? [] : boughtFaceUp(view, input.action)),
+    ]),
 }
 
 export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied, croupierDeck, croupierRules]
