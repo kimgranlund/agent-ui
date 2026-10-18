@@ -2,7 +2,7 @@
 id: T-0361
 title: "A quest log with no Timeline gets no repair round"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: [T-0358]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -37,3 +37,22 @@ verifier: L3
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts packages/agent-ui/a2ui/src/live-agent/chat-validation.test.ts` exits 0.
 - `npx vitest run --project scripts scripts/e2e-admin/probe/` exits 0: no other replay changes.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: c5171af032e9
+- Changed: Quest log with no Timeline gets a repair round (#2138)
+- Commits: none
+- Check: 1 `npx vitest run --project scripts scripts/e2e-admin/probe/replays/smoke-dungeon-master-first-scen...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: pass
+- Check: 3 `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts packages/agent-ui/a...: pass
+- Check: 4 `npx vitest run --project scripts scripts/e2e-admin/probe/` exits 0: pass
+- Check: 5 `npm run check` exits 0: pass
+- Follow-up: note: sweep of every tracked .json/.jsonl 2594 files, 8923 distinct... -> notes.md
+- Follow-up: note: fresh probes against HEAD: 9 of 10 quest-log shapes fire paren... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:140... -> notes.md
+- Follow-up: note: composite-moments.ts:352-357 reads entries only as Texts or Rows of... -> notes.md
+- Follow-up: decide: .sdlc/tickets/0362-/handoff.md Actual is stale the solo flagged it... -> notes.md
+- Follow-up: note: composite-moments.test.ts:787-796 opens both gates at once for... -> notes.md
+- Follow-up: note: repair wording composite-moments.ts:238 follows the standard row... -> notes.md
+- Follow-up: note: composite-moments.ts:366 reads a Card's own title/label/text as a... -> notes.md

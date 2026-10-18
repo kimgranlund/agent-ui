@@ -2,7 +2,7 @@
 id: T-0365
 title: "Board-less GameHud check misses a stat strip of uncued Badges or Texts"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0358]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -35,3 +35,19 @@ The failing test lands before or with the fix, never after. Recorded rounds are 
 - `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the recorded Mentalist ("Q1 of 20" Badge, "Questions spent" Progress, "Confidence: low" Text) and Dungeon Master (HP and Gold Texts in a Row) strips yield GAME_HUD_MISSING and none with a GameHud; a Badge and Text mix, a stat Text in a single-child wrapper, one Text or Badge naming two stats, and the slash and spaced counters ("Q1/20", "Q 1 of 20", "Round 2/5", "Guess 3/6") fire; a bare "3 of 6" or "3/6", narration naming gold and HP, stat Texts split across two groups, game-worded KPI, loyalty and receipt strips, and the hiring, workout and survey strips whose only game word is a counter yield none, each guard shown to bite; the T-0358 negative controls and the CardTable stand-aside stay green.
 - `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0: the Mentalist smoke replay is flipped to `toEqual([])` through an appended authored round 3 per turn (recorded rounds untouched), and the Dungeon Master pin keeps its list with its comment updated.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: f776bdebd551
+- Changed: Board-less GameHud catches uncued stat strips via one sibling-group rule (#2141)
+- Commits: none
+- Check: 1 `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0 (recorded s...: pass
+- Check: 2 `npx vitest run --project scripts scripts/e2e-admin/probe/replays/` exits 0 (Mentalist flipped to...: pass
+- Check: 3 `npm run check` exits 0: pass
+- Follow-up: note: sweep of 1654 JSON/JSONL files probe fixtures and replays... -> notes.md
+- Follow-up: note: 12 fresh board-less positives all fire on built 4 fired at base... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:158 decide... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:358 decide... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:358 note: a... -> notes.md
+- Follow-up: note: "Game studio KPIs" with Stats Score and Confidence fires on both... -> notes.md
+- Follow-up: note: the two throwaway worktrees were removed; rm of the empty prefix... -> notes.md

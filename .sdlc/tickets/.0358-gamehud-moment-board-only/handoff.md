@@ -51,4 +51,4 @@ verifier: L3
 - Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:158: note... -> notes.md
 - Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts:400... -> notes.md
 - Follow-up: decide: .sdlc/tickets/0363-gamehud-feed-scope/handoff.md:13: decide: the... -> notes.md
-- Follow-up: decide: .sdlc/tickets/0361-quest-log-timeline-unchecked/handoff.md:1: note... -> notes.md
+- Follow-up: decide: .sdlc/tickets/.0361-quest-log-timeline-unchecked/handoff.md:1: note... -> notes.md

@@ -2,7 +2,7 @@
 id: T-0364
 title: "ResultCard composite moment fires only beside a BoardGrid"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: [T-0358]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -36,3 +36,22 @@ verifier: L3
 3. `npx vitest run --project scripts scripts/e2e-admin/probe/` exits 0 (no replay re-pinned).
 4. `npm run check` exits 0.
 5. The ResultCard repair wording is unchanged.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 8421bba9988a
+- Changed: ResultCard moment fires on board-less game endings (#2137)
+- Commits: none
+- Check: 1 `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0 with the li...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0, its mutat...: pass
+- Check: 3 `npx vitest run --project scripts scripts/e2e-admin/probe/` exits 0 (no replay re-pinned): pass
+- Check: 4 `npm run check` exits 0: pass
+- Check: 5 The ResultCard repair wording is unchanged: pass
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:121... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:349... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:198... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:175: note... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts:475... -> notes.md
+- Follow-up: decide: site/agent-content/personas/quizmaster/workflows/grand-reveal/WORKF... -> notes.md
+- Follow-up: decide: .sdlc/tickets/0364-resultcard-moment-board-only/handoff.md:31... -> notes.md
+- Follow-up: decide: /var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui... -> notes.md
