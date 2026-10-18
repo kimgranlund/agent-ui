@@ -178,23 +178,46 @@ describe('ui-product-card: ADR-0245 derived foundations, dark launch', () => {
   })
 })
 
-// T-0352: the action part declares its own step (`data-size="md"`, the card's control step), so its tokens
-// resolve on the part against the region's ramp like any control, never the card's own n. The legacy
-// opt-out keeps the old large step (36px); the root register and a data-tier="widget" region give
-// scale.mjs's md step there; a card carrying its own data-size moves nothing.
+// T-0352: the action part declares its own step (`data-size="md"`, the card's control step), so its height
+// and font resolve on the part against the region's ramp like any control, never the card's own n. The
+// legacy opt-out keeps the old large step (36px); every region (the root, product and widget at scales sm /
+// md / lg) gives scale.mjs's md step there; a card carrying its own data-size moves nothing; a host or
+// ancestor override of the token still reaches the button.
+const REGIONS = [
+  ['root', '', resolve('product', 'md', 'md')],
+  ['product-sm', 'data-tier="product" data-scale="sm"', resolve('product', 'sm', 'md')],
+  ['product-lg', 'data-tier="product" data-scale="lg"', resolve('product', 'lg', 'md')],
+  ['widget-sm', 'data-tier="widget" data-scale="sm"', resolve('widget', 'sm', 'md')],
+  ['widget-md', 'data-tier="widget" data-scale="md"', resolve('widget', 'md', 'md')],
+  ['widget-lg', 'data-tier="widget" data-scale="lg"', resolve('widget', 'lg', 'md')],
+] as const
+const offer = (extra = ''): string => `<ui-product-card title="Suite" price="$312" action-label="Book" action='{"action":"book"}' ${extra}></ui-product-card>`
+
 describe('ui-product-card: the action part declares its own size step (T-0352)', () => {
-  it('holds the md step outside and inside a data-tier="widget" region, whatever the card\'s own size', async () => {
-    const card = `<ui-product-card title="Suite" price="$312" action-label="Book" action='{"action":"book"}'></ui-product-card>`
-    const big = `<ui-product-card title="Suite" price="$312" action-label="Book" action='{"action":"book"}' data-size="lg"></ui-product-card>`
-    const { wrap } = await mount(`<div data-foundations="legacy">${card}</div><div id="root">${card}${big}</div><div id="widget" data-tier="widget" data-scale="md">${card}${big}</div>`)
+  it('holds the md step in every region, whatever the card\'s own size', async () => {
+    const { wrap } = await mount(`<div data-foundations="legacy">${offer()}</div>` + REGIONS.map(([id, attrs]) => `<div id="${id}" ${attrs}>${offer()}${offer('data-size="lg"')}</div>`).join(''))
     expect(part(wrap.querySelector('[data-foundations] ui-product-card')!, 'action').getBoundingClientRect().height).toBe(36)
-    for (const [id, step] of [['root', resolve('product', 'md', 'md')], ['widget', resolve('widget', 'md', 'md')]] as const) {
-      for (const host of wrap.querySelectorAll(`#${id} ui-product-card`)) {
+    for (const [id, , step] of REGIONS) {
+      const hosts = wrap.querySelectorAll(`#${id} ui-product-card`)
+      expect(hosts.length, id).toBe(2)
+      for (const host of hosts) {
         const action = part(host, 'action')
+        const label = `${id} ${host.getAttribute('data-size') ?? 'bare'}`
         expect(action.getAttribute('data-size')).toBe('md')
-        expect(action.getBoundingClientRect().height, `${id} ${host.getAttribute('data-size') ?? 'bare'}`).toBe(step.h)
-        expect(getComputedStyle(action).fontSize).toBe(`${step.type.control}px`)
+        expect(action.getBoundingClientRect().height, label).toBe(step.h)
+        expect(getComputedStyle(action).fontSize, label).toBe(`${step.type.control}px`)
       }
     }
+  })
+
+  it('a host or ancestor override of the action tokens still reaches the button', async () => {
+    const { wrap } = await mount(
+      offer('id="host" style="--ui-product-card-action-height: 40px; --ui-product-card-action-font: 17px"') +
+        `<div style="--ui-product-card-action-height: 44px">${offer('id="ancestor"')}</div>`,
+    )
+    const host = part(wrap.querySelector('#host')!, 'action')
+    expect(host.getBoundingClientRect().height).toBe(40)
+    expect(getComputedStyle(host).fontSize).toBe('17px')
+    expect(part(wrap.querySelector('#ancestor')!, 'action').getBoundingClientRect().height).toBe(44)
   })
 })

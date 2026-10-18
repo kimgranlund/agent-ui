@@ -161,7 +161,7 @@ export class UIServiceCardElement extends UIElement {
     const action = document.createElement('button')
     action.type = 'button'
     action.setAttribute('data-part', 'action')
-    action.setAttribute('data-size', 'sm') // the part's own step: the sm pill in any register (T-0352)
+    action.setAttribute('data-size', 'md') // the part's own step: md in any register, whatever the card's size (T-0352)
 
     this.append(statusText, body, action)
 

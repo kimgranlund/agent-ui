@@ -73,7 +73,13 @@
   --ui-product-card-inline-gap: var(--md-sys-space-sm); /* price, note and action within the row */
   --ui-product-card-badge-inset: var(--md-sys-space-sm); /* the badge's offset over the image corner */
 
-  /* The action row: a filled primary pill. Its height and font tokens sit on the action part below. */
+  /* The action row: a filled primary pill at the derived control height of the md step the action part
+     declares itself (`data-size="md"`, product-card.ts; 4n: 32px at the root, ADR-0245 Amendment 8, and
+     24px on an A2UI canvas, Amendment 3); the old ramp's large step (36px, the approved mockup, ADR-0243
+     Amendment 2) under the legacy opt-out. Height and font are left UNSET here on purpose: the styles block
+     reads each with that default as the var() fallback, so it resolves ON the part, never the card's own
+     n, while a host or ancestor override of --ui-product-card-action-height / -font still reaches the
+     button (T-0352). */
   --ui-product-card-action-bg: var(--md-sys-color-primary-fill); /* T-0340: the fill ladder under on-primary ink */
   --ui-product-card-action-bg-hover: var(--md-sys-color-primary-fill-hover);
   --ui-product-card-action-bg-active: var(--md-sys-color-primary-fill-active);
@@ -90,16 +96,6 @@
   --ui-product-card-disabled-media-filter: grayscale(1);
   --ui-product-card-disabled-media-opacity: 0.6;
   --ui-product-card-disabled-action-opacity: 0.45;
-}
-
-/* The action row: the derived control height at the md step (4n: 32px at the root, ADR-0245 Amendment 8,
-   and 24px on an A2UI canvas, Amendment 3); the old ramp's large step (36px, the approved mockup, ADR-0243
-   Amendment 2) under the legacy opt-out. The part declares its step itself (`data-size="md"`,
-   product-card.ts), so these tokens resolve ON the part against the region's ramp like any control, never
-   the card's own n (T-0352). */
-:where(ui-product-card [data-part='action']) {
-  --ui-product-card-action-height: var(--md-sys-height, var(--md-sys-height-lg));
-  --ui-product-card-action-font: var(--md-sys-type-control, var(--md-sys-font-lg));
 }
 
 :where(ui-product-card[selected]) {
@@ -278,18 +274,18 @@
     justify-content: center;
     box-sizing: border-box;
 
-    block-size: var(--ui-product-card-action-height);
-    padding-inline: calc(var(--ui-product-card-action-height) / 2);
+    block-size: var(--ui-product-card-action-height, var(--md-sys-height, var(--md-sys-height-lg)));
+    padding-inline: calc(var(--ui-product-card-action-height, var(--md-sys-height, var(--md-sys-height-lg))) / 2);
 
     font: inherit;
-    font-size: var(--ui-product-card-action-font);
+    font-size: var(--ui-product-card-action-font, var(--md-sys-type-control, var(--md-sys-font-lg)));
     line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard, a sanctioned direct read */
     white-space: nowrap;
 
     background: var(--ui-product-card-action-bg);
     color: var(--ui-product-card-action-ink);
     border: 1px solid var(--ui-product-card-action-border);
-    border-radius: calc(var(--ui-product-card-action-height) / 2);
+    border-radius: calc(var(--ui-product-card-action-height, var(--md-sys-height, var(--md-sys-height-lg))) / 2);
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;

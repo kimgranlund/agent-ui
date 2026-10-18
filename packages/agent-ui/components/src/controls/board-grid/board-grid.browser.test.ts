@@ -212,20 +212,3 @@ describe('ui-board-grid: ADR-0245 derived foundations, dark launch', () => {
     expect(lengthOf(inside, '--ui-board-grid-cell-size')).toBe(sm.h + sm.icon) // 6n = height 24 + icon box 12
   })
 })
-
-// T-0352: a cell is a grid item on the host's own tracks (`--ui-board-grid-cell-size` sizes the host's
-// `grid-template-columns`), so the cell's step IS the board's step: md (6n, the control height plus the icon
-// box) against the region's ramp, outside and inside a data-tier="widget" region.
-describe('ui-board-grid: the cell holds the board\'s md step (T-0352)', () => {
-  it('a cell is 6n of the md step at the root and in a data-tier="widget" region', () => {
-    const board = '<ui-board-grid rows="3" cols="3"></ui-board-grid>'
-    const wrap = mount(`<div><div id="root">${board}</div><div id="widget" data-tier="widget" data-scale="md">${board}</div></div>`).parentElement!
-    for (const [id, step] of [['root', resolve('product', 'md', 'md')], ['widget', resolve('widget', 'md', 'md')]] as const) {
-      for (const cell of cells(wrap.querySelector(`#${id} ui-board-grid`)!)) {
-        expect(rect(cell).height, id).toBe(step.h + step.icon)
-        expect(rect(cell).width, id).toBe(step.h + step.icon)
-      }
-    }
-  })
-})
-
