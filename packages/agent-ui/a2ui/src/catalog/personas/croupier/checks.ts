@@ -763,7 +763,8 @@ function newRoundFindings(surfaces: readonly SurfaceView[], action: SemanticActi
       })
     const path = bindingPath(table['bankroll'])
     const opened = path === undefined ? finiteNumber(table['bankroll']) : finiteNumber(readPointer(view.dataModel, path))
-    if (settledBankroll !== undefined && opened !== undefined && opened !== settledBankroll)
+    // T-0371: a poker hand opens with its blinds out of the bankroll, judged by POKER_CHIPS_MISMATCH instead.
+    if (settledBankroll !== undefined && opened !== undefined && opened !== settledBankroll && !namesOtherGame([...view.components.values()]))
       findings.push({
         code: 'BANKROLL_MISMATCH',
         path: `${view.surfaceId}:${path ?? table.id}`,

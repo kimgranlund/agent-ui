@@ -1433,6 +1433,9 @@ describe('croupier checks: a poker table is never judged by the blackjack strip 
     // T-0371: the hand also opens on the settled 1060 with the blinds in a 20 pot, the chip drift it names.
     expect(findings.map((f) => [f.code, f.path])).toEqual([['DEALT_IN_BETTING', 'table-2:root'], ['POKER_CHIPS_MISMATCH', 'table-2:/bankroll']])
     expect(findings[0]!.message).toMatch(/Check, Bet and Fold/)
+    // T-0371: the repaired bankroll (the settled 1060 less a 10 blind) is not a blackjack BANKROLL_MISMATCH.
+    const posted = JSON.parse(JSON.stringify(dealAgain).replace('"bankroll":1060', '"bankroll":1050')) as A2uiOutput
+    expect(all({ surfaces: semanticSurfaceViews({ turns: [] }, posted), action: again }).map((f) => f.code)).toEqual(['DEALT_IN_BETTING'])
   })
 
   it('the same poker table in phase playing passes, and a blackjack table keeps the strip rules', () => {
