@@ -271,3 +271,42 @@
 
 - note: the remaining :101 failure (settled pontoon natural on table-2 shipped no Deal again button, so the click hit table-1's history button) is an agent/check gap outside this ticket: the scenario's Deal again step is correct, and a settled table with no way forward is an agent output defect that a check should name. File a follow-up ticket.
 - note: the replays did not exist at the base, so red-first for #1 was not shown in a base worktree; skip.test.mjs exercises the marked/unmarked split.
+
+## T-0162: Settings pane forms generated from each content kind's schema, with provenance, diff and reset (2026-10-17)
+
+- decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:5216 `formatSeedValue` renders a switch the seed leaves unset as `Seed: unset` (seen on Skills and Planner in the after screenshots) rather than the switch's effective default; the criteria leave the wording open.
+- decide: there is no in-app export-as-seed; the Builder export stays the persona JSON and the seed format is reached only through `node scripts/agent-content.mjs new <id> --from <file>` (scripts/agent-content.mjs:87, site/agent-content/seed-file.ts:45). The Intent's Do says the export writes the seed format; criterion 6 requires only `new --from`.
+- decide: file validation is stricter than before: effort, thinking and cacheTtl are enums, maxTokens floor is 0 (was positive integer), and `order is required in the roster` is explicit (packages/agent-ui/app/src/controls/agent-admin/content-fields.ts:121-178, site/agent-content/schema.ts:365); all 78 records pass today, a future seed with a value outside the enums fails `validate` and the generator.
+- note: scripts/agent-content.mjs is also edited by T-0163 (solo report); whichever lands second merges both.
+- note: site/lib/theme-provider-build-fixture.test.ts:74 is red at the base sha and at HEAD (fixture regen-on-main class per its banner), outside this ticket.
+- note: .sdlc/tickets/0162-agent-content-schema-forms/handoff.md: the `## Acceptance criteria` section was added after the base sha and committed with the build (diff vs 74fd3265a); the diff does not show who authored it; the criteria match the Done-when line for line.
+- note: the solo's bankroll-row negative control (dropping its `data-field` reds both engines) is their claim, unverified here; the bite evidence recorded above (ADMISSION admit-all, maxTokens form hint removed, Edited label changed) is mine.
+
+## T-0163: One agent compiler for Test Chat, proxy, Worker and CLI, with a resolution trace and bundle digest in every turn trace (2026-10-17)
+
+- note: held per the handoff, outside its Acceptance criteria: `--affected` waits on T-0343 (`scripts/e2e-admin/probe/scenarios/plan.ts` does not exist); no `agent@digest` pin on the agent-behavior eval legs yet (only the e2e:admin `match.agent` pin ships, which is what criterion #6 names). Follow-up candidates.
+- decide: the Worker's `x-agent-bundle-digest` header (`worker/index.ts:227-229`, `:396-399`) has no behavioral or structural test; the Worker is not importable under vitest, and a node/vite-runner import of it also fails on the Wrangler-only raw imports. Parity rests on the shared `bundleFromWire`/`bundleDigest` plus the code read above. A structural gate like `chat-route.test.ts:232` would pin it.
+- note: `packages/agent-ui/app/src/controls/agent-admin/agent-admin-error-turn.test.ts:76-79` uses a fixed 40x5ms settle loop and flaked once under load average 10; not caused by this change.
+- note: scratch under `/Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0163-verifier-L2` and the tmp prefix `0163-verifier-L2` could not be rm'd (denied in this session); the throwaway worktree itself was removed.
+
+## T-0351: Badge intent marks and the setIcon carets, clear and stepper marks move to ui-glyph children (GH #1941) (2026-10-17)
+
+- decide: `.sdlc/tickets/0351-glyph-marks/handoff.md:19` note: the Done-when `grep -rn clip-path badge.css` is a relative path that exits 2 from the repo root; criterion #1 is its runnable form (conductor-ruled, no plan-defect verdict).
+- decide: `.sdlc/runtime/tasks/0351-glyph-marks/shots/after/text-field.png` decide: the clear x and the stepper minus/plus (and the tabs and breadcrumb `more` dots) now draw at the glyph box with the token stroke, visibly smaller and bolder than the old 2n Phosphor icons; the derived geometry the Goal asks for, but nobody has ruled on that look.
+- decide: `packages/agent-ui/components/src/controls/styling-gates.test.ts` note: styling-gates, sizing-gates and naming-gates run green (3 files, 94 tests, exit 0); `node scripts/foundations-census.mjs --gate` exit 0, green with 0 allowlisted findings.
+- decide: `.sdlc/runtime/tasks/0351-glyph-marks/solo-report.md:45` decide: select (which still sets a host `aria-hidden` on its caret), calendar, combo-box, disclosure, form-popover, status-stream and swiper-paddles build ui-glyph by hand; a follow-up could adopt `createGlyph`.
+- decide: `packages/agent-ui/components/src/controls/tabs/tabs.ts` note: tabs, breadcrumb and text-field define `props` by hand and ship no `*.props.gen.ts`; my regen probe created three untracked files, which I removed, and the tree is clean (`git status --short` empty).
+- decide: `/var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0351-verifier-L3` note: the scratch log folder stays (the rm was denied by the permission system); the throwaway worktree was removed. `redck.py deviations` printed no `process deviation:` lines (no `(red)` criteria in this handoff).
+
+## T-0352: Card action parts declare their own size step inside a data-tier region (GH #1940) (2026-10-17)
+
+- note: `git grep` finds no other reader of `--ui-service-card-action-*` or `--ui-product-card-action-*` outside these two folders and the regenerated artifacts, so no dependent was missed.
+
+## Close-out rulings (Kim, 2026-10-17, long run)
+- Long run scope: the keyless ready wave (T-0349, T-0203, T-0178), promote the pattern tickets T-0193 to T-0199, lint debt T-0187 to T-0190, and debates for T-0345 and T-0350.
+- Live spend: round 11 (about $10) plus T-0343's capped Haiku smoke leg (about $5).
+- Stop at close-out: when the chosen scope merges, one question round with every pending ruling, then stop.
+- T-0348: keep the domain-noun rule, exempt explicit format asks (T-0354).
+- T-0161 migration: per-version seed digests (T-0355).
+- T-0352: both card actions are md; board-grid cells scale with the board (out of scope).
+- T-0352 follow-up for T-0353: the `--ui-*-action-font-legacy` tokens retire with the legacy bridge.

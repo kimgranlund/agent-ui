@@ -2,7 +2,7 @@
 id: T-0199
 title: "Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper"
 type: feature         # feature | bug | chore | spike | idea
-status: proposed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: [T-0193]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]

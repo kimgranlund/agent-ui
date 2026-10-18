@@ -23,3 +23,6 @@ Round 10: 1 of 6 Haiku poker openings asked for a stake first (round 9: 0 of 12)
 
 ## Constraints
 None beyond AGENTS.md.
+
+## Debate
+Kim 2026-10-17: run the debate (Opus proposal, then a different-family challenge), then Kim rules; build only after. The proposal names one cause from the round 10 traces, the exact text change (file:line, old and new), its byte budget and pinned tests, and a relative measurement plan (OLD, NEW, MIX at Haiku N=10, about $1, cap $3).

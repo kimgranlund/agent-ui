@@ -2,7 +2,7 @@
 id: T-0162
 title: "Settings pane forms generated from each content kind's schema, with provenance, diff and reset"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0160, T-0161]  # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -40,3 +40,26 @@ verifier: L3
 - [ ] `npx vitest run --config vitest.browser.config.ts --project site site/pages/agent-admin` exits 0.
 - [ ] `npm run e2e:admin` exits 0.
 - [ ] Screenshots of the pane before and after, viewed: .sdlc/runtime/tasks/0162-agent-content-schema-forms/screens/ (an unedited pane is byte-identical to today's; an edited one shows the strips).
+
+## Outcome
+
+2026-10-17 · lane: full L3 · verdict: pass · verifier: verifier-L3 (fable) · base: 74fd3265ad43
+- Changed: Settings pane forms from one field definition, with per-edit provenance, diff, reset and Take seed (#2115)
+- Commits: none
+- Check: 1 `npm run check` exits 0: pass
+- Check: 2 `npx vitest run packages/agent-ui/app/src/controls/agent-admin/content-fields.test.ts` exits 0 wi...: pass
+- Check: 3 `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/co...: pass
+- Check: 4 `npx vitest run packages/agent-ui/app/src/controls/agent-admin/agent-overlay.test.ts` exits 0 wit...: pass
+- Check: 5 `node scripts/agent-content.mjs validate` exits 0 on the repo: pass
+- Check: 6 `npx vitest run scripts/agent-content.test.mjs` exits 0 with `validate` red on a seeded bad file ...: pass
+- Check: 7 `npx vitest run packages/agent-ui/app/src/controls/agent-admin packages/agent-ui/app/src/controls...: pass
+- Check: 8 `npx vitest run --config vitest.browser.config.ts --project site site/pages/agent-admin` exits 0: pass
+- Check: 9 `npm run e2e:admin` exits 0: pass
+- Check: 10 Screenshots before and after, viewed, unedited byte-identical and edited shows the strips: pass
+- Follow-up: decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:5216... -> notes.md
+- Follow-up: decide: there is no in-app export-as-seed; the Builder export stays the... -> notes.md
+- Follow-up: decide: file validation is stricter than before: effort, thinking and... -> notes.md
+- Follow-up: note: scripts/agent-content.mjs is also edited by T-0163 solo report... -> notes.md
+- Follow-up: note: site/lib/theme-provider-build-fixture.test.ts:74 is red at the base... -> notes.md
+- Follow-up: note: .sdlc/tickets/0162-agent-content-schema-forms/handoff.md: the ##... -> notes.md
+- Follow-up: note: the solo's bankroll-row negative control dropping its data-field... -> notes.md

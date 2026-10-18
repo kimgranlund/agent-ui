@@ -27,3 +27,6 @@ Found by T-0347 (closed); the verifier ruled it an agent or check gap, not a sce
 
 ## Constraints
 The failing test lands before or with the fix, never after. The keyless replay `croupier-pontoon-natural-skip.json` stays green.
+
+## Debate
+Kim 2026-10-17: run the debate (Opus proposal, then a different-family challenge), then Kim rules; build only after. The proposal decides whether a deterministic check plus repair (sibling of T-0346 SHOWDOWN_UNSETTLED) is enough or persona wording must change too; for any wording, the exact text change (file:line, old and new) and a keyless replay plan.
