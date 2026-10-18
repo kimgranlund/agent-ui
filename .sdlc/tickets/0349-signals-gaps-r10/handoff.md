@@ -23,3 +23,8 @@ T-0342 follow-ups listed in Round 10 report .sdlc/evals/rounds/2026-10-17-r10-ta
 
 ## Constraints
 None beyond AGENTS.md.
+
+## Acceptance criteria
+- `npm run check` exits 0.
+- `npx vitest run --project scripts scripts/e2e-admin/` exits 0 (signals.test.mjs pins each gap on the fixture rounds and the r10 oracle: like-sample churn 7 / 4 / 1 / 11, halts 0 / 0 / 6, PARSE rounds 8 / 12 / 5, string `messages` 8 / 10 / 4, SURFACE_DEGRADED turns 1 / 2 / 0, reply-only NARRATED_MECHANICS repairs 8 of 8 / 9 of 9 / 6 of 14).
+- `npm run eval:signals -- --round 2026-10-17-r10-targeted --against 2026-10-17-r9-matrix --min-samples 1` exits 0 and prints the like-sample churn, the rates table, the trace tallies and the retrieval comparison against r9.

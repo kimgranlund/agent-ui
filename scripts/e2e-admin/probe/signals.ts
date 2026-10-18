@@ -8,7 +8,8 @@
 //
 // `--round` names one folder under `.sdlc/evals/rounds/` (`2026-10-17-r9-matrix`) or a path; repeat the flag to read
 // several as one. A stray argument, an unknown flag or an unknown floor tag exits 2.
-// `--against <folder>` prints the churn of every cell against that round, the baseline (CL-R9). Gates are opt-in:
+// `--against <folder>` prints the churn of every cell against that round, the baseline (CL-R9), and the trace tallies
+// beside the baseline's in the same cells, sample 1 against sample 1 and all against all. Gates are opt-in:
 // `--floor <tag>=<rate>` (tag regression, routing, long, other or all) and `--max-drop <delta>` exit 1 on a cell
 // under its floor or one whose pass rate fell by more than the delta, reading per cell as `floorMet` does in
 // `tools/corpus-genui/legs/report.ts`: a missing report counts as a fail, a baseline cell with zero samples now
@@ -16,7 +17,9 @@
 // it is read from is reported, not gated. Rates compare with a 1e-9 slack, so a drop of exactly the delta passes.
 //
 // A cell is scenario x model family x effort. Its state for churn is pass only when every sample passed, so a mixed
-// cell counts as a fail.
+// cell counts as a fail; churn also compares like samples (sample 1 on both sides) and prints each multi-sample
+// cell's rate (T-0349). The trace tallies (turn outcomes, `trace.failureCodes`, failed rounds per code, repair and
+// payload shapes, exemplar retrieval) compare with the baseline's runs in this round's cells, the same runs.
 
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, isAbsolute, join, resolve } from 'node:path'
@@ -35,6 +38,7 @@ interface TraceRound {
   status?: string
   usage?: TraceUsage
   failures?: Array<{ code?: string }>
+  tools?: Array<{ name?: string; input?: { messages?: unknown } }>
 }
 
 /** One trace line of a run (one agent turn), with the fields the tables read. */
@@ -45,6 +49,7 @@ export interface Turn {
   rounds: TraceRound[]
   failureCodes: string[]
   sections: Array<{ id: string; digest: string }>
+  exemplarIds: string[]
 }
 
 /** One probe run: its ledger row (when the round has one), its report and its trace lines, joined. */
@@ -96,6 +101,7 @@ function toTurn(d: Record<string, unknown>): Turn {
     rounds: Array.isArray(d.rounds) ? (d.rounds as TraceRound[]) : [],
     failureCodes: ((d.trace as { failureCodes?: unknown[] } | undefined)?.failureCodes ?? []).filter((c): c is string => typeof c === 'string'),
     sections: (routing?.sections ?? []).filter((s) => typeof s.id === 'string' && typeof s.digest === 'string').map((s) => ({ id: s.id as string, digest: s.digest as string })),
+    exemplarIds: ((d.trace as { exemplarIds?: unknown[] } | undefined)?.exemplarIds ?? []).filter((c): c is string => typeof c === 'string'),
   }
 }
 
@@ -212,13 +218,109 @@ export interface Signals {
   digests: Array<{ agent: string; section: string; digest: string; turns: number }>
   /** Turns per persona with no `routing.sections` (a halted turn carries none). */
   noSections: Record<string, number>
+  tally: Tally
 }
+
+/** The trace line tallies a round report used to count by hand (T-0349). Keys are sorted. */
+export interface Tally {
+  turns: number
+  /** Turns per `outcome` (ok, halt). */
+  outcomes: Record<string, number>
+  /** Turns per `trace.failureCodes` code, a code once per turn: the shipped turn's codes, SURFACE_DEGRADED among them. */
+  failureCodes: Record<string, number>
+  /** Failed rounds per producer code, a code once per round (the retry table's fired). */
+  failedRounds: Record<string, number>
+  /** Rounds with a tool input that sent `messages` as a string, not an array, a round once. */
+  stringMessages: number
+  /** Per code: the repair rounds that answer a failed round carrying it, and how many of them called no tool (an
+   *  empty `tools` array; a trace line older than the `tools` field counts as a repair, never as reply-only). */
+  repairs: Record<string, { repairs: number; replyOnly: number }>
+  /** Turns per persona (the run's preset) x `trace.exemplarIds` id, a turn once per id. */
+  retrieval: Array<{ agent: string; exemplar: string; turns: number }>
+  /** Distinct turns per persona that retrieved at least one exemplar. */
+  retrievalTurns: Record<string, number>
+}
+
+type Retry = Signals['retries'][number]
+
+/** A turn is saved when it did not halt and shipped with no `*_UNCORRECTED` or SURFACE_DEGRADED code. */
+const savedTurn = (t: Turn): boolean => t.outcome !== 'halt' && !t.failureCodes.some((c) => c.endsWith('_UNCORRECTED') || c === 'SURFACE_DEGRADED')
+
+const sortedRecord = <T>(m: Map<string, T>): Record<string, T> => Object.fromEntries([...m.entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+const bump = (m: Map<string, number>, k: string): void => void m.set(k, (m.get(k) ?? 0) + 1)
+
+/** One walk over the trace lines: the tallies and the retry table (`aggregate`'s retries). Fired counts failed rounds
+ *  (a code once per round); extra USD is the cost of the repair round that answers a failed round, split evenly
+ *  across that round's codes. */
+function walk(runs: SignalRun[]): { tally: Tally; retries: Retry[] } {
+  const outcomes = new Map<string, number>()
+  const failureCodes = new Map<string, number>()
+  const retries = new Map<string, Retry>()
+  const retrievalTurns = new Map<string, number>()
+  const repairs = new Map<string, { repairs: number; replyOnly: number }>()
+  const retrieval = new Map<string, { agent: string; exemplar: string; turns: number }>()
+  let turns = 0
+  let stringMessages = 0
+  for (const r of runs) {
+    for (const t of r.turns) {
+      turns += 1
+      bump(outcomes, t.outcome || '(none)')
+      for (const code of new Set(t.failureCodes)) bump(failureCodes, code)
+      if (t.exemplarIds.length > 0) bump(retrievalTurns, r.agent)
+      for (const id of new Set(t.exemplarIds)) {
+        const k = `${r.agent}\u0000${id}`
+        const x = retrieval.get(k) ?? { agent: r.agent, exemplar: id, turns: 0 }
+        x.turns += 1
+        retrieval.set(k, x)
+      }
+      const inTurn = new Set<string>()
+      t.rounds.forEach((rd, i) => {
+        if ((rd.tools ?? []).some((tool) => typeof tool.input?.messages === 'string')) stringMessages += 1
+        if (rd.status !== 'failed') return
+        const codes = [...new Set((rd.failures ?? []).map((f) => f.code).filter((c): c is string => typeof c === 'string'))]
+        const repair = t.rounds[i + 1]
+        const extra = repair !== undefined && codes.length > 0 ? usageCost(t.model, repair.usage) / codes.length : 0
+        for (const code of codes) {
+          const x = retries.get(code) ?? { code, fired: 0, turns: 0, saved: 0, extraUsd: 0 }
+          x.fired += 1
+          x.extraUsd += extra
+          retries.set(code, x)
+          inTurn.add(code)
+          if (repair === undefined) continue
+          const y = repairs.get(code) ?? { repairs: 0, replyOnly: 0 }
+          y.repairs += 1
+          if (Array.isArray(repair.tools) && repair.tools.length === 0) y.replyOnly += 1
+          repairs.set(code, y)
+        }
+      })
+      for (const code of inTurn) {
+        const x = retries.get(code)!
+        x.turns += 1
+        if (savedTurn(t)) x.saved += 1
+      }
+    }
+  }
+  const byCode = [...retries.values()].sort((a, b) => b.fired - a.fired || (a.code < b.code ? -1 : a.code > b.code ? 1 : 0))
+  return {
+    retries: byCode,
+    tally: {
+      turns,
+      outcomes: sortedRecord(outcomes),
+      failureCodes: sortedRecord(failureCodes),
+      failedRounds: sortedRecord(new Map(byCode.map((x) => [x.code, x.fired]))),
+      stringMessages,
+      repairs: sortedRecord(repairs),
+      retrieval: [...retrieval.values()].sort((a, b) => (a.agent !== b.agent ? (a.agent < b.agent ? -1 : 1) : b.turns - a.turns || (a.exemplar < b.exemplar ? -1 : a.exemplar > b.exemplar ? 1 : 0))),
+      retrievalTurns: sortedRecord(retrievalTurns),
+    },
+  }
+}
+
+export const tally = (runs: SignalRun[]): Tally => walk(runs).tally
 
 /** Nearest-rank percentile of a non-empty sorted list. */
 const pct = (sorted: number[], p: number): number => sorted[Math.max(0, Math.ceil(p * sorted.length) - 1)]
 
-/** A turn is saved when it did not halt and shipped with no `*_UNCORRECTED` or SURFACE_DEGRADED code. */
-const savedTurn = (t: Turn): boolean => t.outcome !== 'halt' && !t.failureCodes.some((c) => c.endsWith('_UNCORRECTED') || c === 'SURFACE_DEGRADED')
 
 export function aggregate(runs: SignalRun[]): Signals {
   const models = modelOrder(runs.map((r) => modelFamily(r.model)))
@@ -251,30 +353,7 @@ export function aggregate(runs: SignalRun[]): Signals {
     }
   }
 
-  // Fired counts failed rounds (a code once per round); extra USD is the cost of the repair round that answers a
-  // failed round, split evenly across that round's codes.
-  const retries = new Map<string, { code: string; fired: number; turns: number; saved: number; extraUsd: number }>()
-  for (const t of runs.flatMap((r) => r.turns)) {
-    const inTurn = new Set<string>()
-    t.rounds.forEach((rd, i) => {
-      if (rd.status !== 'failed') return
-      const codes = [...new Set((rd.failures ?? []).map((f) => f.code).filter((c): c is string => typeof c === 'string'))]
-      const repair = t.rounds[i + 1]
-      const extra = repair !== undefined && codes.length > 0 ? usageCost(t.model, repair.usage) / codes.length : 0
-      for (const code of codes) {
-        const x = retries.get(code) ?? { code, fired: 0, turns: 0, saved: 0, extraUsd: 0 }
-        x.fired += 1
-        x.extraUsd += extra
-        retries.set(code, x)
-        inTurn.add(code)
-      }
-    })
-    for (const code of inTurn) {
-      const x = retries.get(code)!
-      x.turns += 1
-      if (savedTurn(t)) x.saved += 1
-    }
-  }
+  const w = walk(runs)
 
   const spend = models.map((model) => {
     const rs = runs.filter((r) => modelFamily(r.model) === model)
@@ -315,10 +394,11 @@ export function aggregate(runs: SignalRun[]): Signals {
     presets: [...presets.values()].sort((a, b) => byName<{ agent: string }>((x) => x.agent)(a, b) || models.indexOf(a.model) - models.indexOf(b.model)),
     mixed: cells.filter((c) => c.pass > 0 && c.pass < c.runs),
     checks: [...checks.values()].map((h) => ({ check: h.check, fails: h.fails, runs: h.runs.size })).sort((a, b) => b.fails - a.fails || byName<{ check: string }>((x) => x.check)(a, b)),
-    retries: [...retries.values()].sort((a, b) => b.fired - a.fired || byName<{ code: string }>((x) => x.code)(a, b)),
+    retries: w.retries,
     spend,
     digests: [...digests.values()].sort(byName((d) => `${d.agent}\u0000${d.section}\u0000${d.digest}`)),
     noSections,
+    tally: w.tally,
   }
 }
 
@@ -327,24 +407,44 @@ export type Transition = (typeof TRANSITIONS)[number]
 
 export interface Churn {
   transitions: Record<Transition, string[]>
+  /** The same transitions on like samples: each cell's sample 1 against the baseline's sample 1 (T-0349). */
+  sampleOne: Record<Transition, string[]>
+  /** Cells in both rounds with more than one sample on either side, as rates. */
+  rates: Array<{ cell: string; base: { pass: number; runs: number }; now: { pass: number; runs: number } }>
   /** Cells only in the current round. */
   added: string[]
   /** Cells only in the baseline. */
   gone: string[]
 }
 
-/** The churn of every cell from a baseline round to the current one. */
-export function churn(base: SignalRun[], current: SignalRun[]): Churn {
+function transitionsOf(base: SignalRun[], current: SignalRun[]): Record<Transition, string[]> {
   const state = (c: Cell): 'pass' | 'fail' => (c.pass === c.runs ? 'pass' : 'fail')
   const before = new Map(cellsOf(base).map((c) => [c.key, c]))
-  const after = cellsOf(current)
   const transitions = Object.fromEntries(TRANSITIONS.map((t) => [t, [] as string[]])) as Record<Transition, string[]>
-  for (const c of after) {
+  for (const c of cellsOf(current)) {
     const b = before.get(c.key)
     if (b !== undefined) transitions[`${state(b)} to ${state(c)}` as Transition].push(c.key)
   }
+  return transitions
+}
+
+/** The churn of every cell from a baseline round to the current one. */
+export function churn(base: SignalRun[], current: SignalRun[]): Churn {
+  const before = new Map(cellsOf(base).map((c) => [c.key, c]))
+  const after = cellsOf(current)
+  const one = (rs: SignalRun[]): SignalRun[] => rs.filter((r) => r.sample === 1)
+  const rates = after.flatMap((c) => {
+    const b = before.get(c.key)
+    return b !== undefined && (b.runs > 1 || c.runs > 1) ? [{ cell: c.key, base: { pass: b.pass, runs: b.runs }, now: { pass: c.pass, runs: c.runs } }] : []
+  })
   const now = new Set(after.map((c) => c.key))
-  return { transitions, added: after.filter((c) => !before.has(c.key)).map((c) => c.key), gone: [...before.keys()].filter((k) => !now.has(k)) }
+  return { transitions: transitionsOf(base, current), sampleOne: transitionsOf(one(base), one(current)), rates, added: after.filter((c) => !before.has(c.key)).map((c) => c.key), gone: [...before.keys()].filter((k) => !now.has(k)) }
+}
+
+/** The baseline runs in the current round's cells: the same runs a targeted round reran. */
+export function sameCells(base: SignalRun[], current: SignalRun[]): SignalRun[] {
+  const keys = new Set(current.map(cellKey))
+  return base.filter((r) => keys.has(cellKey(r)))
 }
 
 export interface GateOptions {
@@ -397,15 +497,32 @@ export function gate(current: SignalRun[], base: SignalRun[] | undefined, o: Gat
 const usd = (n: number | null): string => (n === null ? 'unknown' : n.toFixed(2))
 const ofN = (p: { pass: number; runs: number } | undefined): string => (p === undefined ? '' : `${p.pass} of ${p.runs}`)
 
+export interface Against {
+  round: string
+  churn: Churn
+  /** This round's sample 1 runs and all its runs, and the same two of the baseline's runs in this round's cells. */
+  tallies: { sampleOne: Tally; baseSampleOne: Tally; all: Tally; base: Tally }
+}
+
+/** Churn and the trace tallies of the current round against a baseline round; `all` is the current round's tally
+ *  when the caller already aggregated it. */
+export function against(round: string, base: SignalRun[], current: SignalRun[], all: Tally = tally(current)): Against {
+  const one = (rs: SignalRun[]): SignalRun[] => rs.filter((r) => r.sample === 1)
+  const same = sameCells(base, current)
+  return { round, churn: churn(base, current), tallies: { sampleOne: tally(one(current)), baseSampleOne: tally(one(same)), all, base: tally(same) } }
+}
+
 export interface RenderOptions {
   rounds: string[]
-  against?: { round: string; churn: Churn }
+  /** The runs' aggregate when the caller already has it. */
+  signals?: Signals
+  against?: Against
   gate?: { misses: GateMiss[]; ungated: string[] }
 }
 
 /** The signals of some runs as markdown; no timestamps, so a rewrite of the same round is byte-identical. */
 export function renderSignals(runs: SignalRun[], o: RenderOptions): string {
-  const s = aggregate(runs)
+  const s = o.signals ?? aggregate(runs)
   const L: string[] = [`# Eval signals: ${o.rounds.join(', ')}`, '']
   L.push('Generated by `scripts/e2e-admin/probe/signals.ts` (T-0342) from the round archive; do not edit by hand. Regenerate: `npm run eval:signals -- ' + o.rounds.map((r) => `--round ${r}`).join(' ') + '`.', '')
   const fails = runs.filter((r) => r.verdict === 'fail').length
@@ -464,13 +581,68 @@ export function renderSignals(runs: SignalRun[], o: RenderOptions): string {
   const bare = Object.entries(s.noSections)
   if (bare.length > 0) L.push('', `Turns with no sections: ${bare.map(([a, n]) => `${a} ${n}`).join(', ')}.`)
 
+  const t = s.tally
+  L.push('', '## Turn outcomes and failure codes', '', 'Each trace line\'s `outcome` and `trace.failureCodes` (the codes the shipped turn carries), counted as turns.', '')
+  L.push('| Measure | Turns |', '| --- | --- |', `| All turns | ${t.turns} |`)
+  for (const [k, n] of Object.entries(t.outcomes)) L.push(`| outcome ${k} | ${n} |`)
+  for (const [k, n] of Object.entries(t.failureCodes)) L.push(`| ${k} | ${n} |`)
+
+  L.push('', '## Repair and payload shapes', '', 'A repair round answers a failed round; reply-only means it called no tool. String `messages` counts rounds whose tool input sent `messages` as a string.', '')
+  L.push(`- String \`messages\`: ${t.stringMessages} rounds`)
+  if (Object.keys(t.repairs).length === 0) L.push('- Repairs: none')
+  else {
+    L.push('', '| Code | Repairs | Reply-only |', '| --- | --- | --- |')
+    for (const [k, x] of Object.entries(t.repairs)) L.push(`| ${k} | ${x.repairs} | ${x.replyOnly} |`)
+  }
+
+  L.push('', '## Exemplar retrieval per persona', '', 'Each trace line\'s `trace.exemplarIds`, the five most retrieved per persona (`--json` lists every one).', '')
+  if (t.retrieval.length === 0) L.push('None recorded.')
+  else {
+    L.push('| Persona | Exemplars | Turns retrieving | Most retrieved (turns) |', '| --- | --- | --- | --- |')
+    for (const agent of [...new Set(t.retrieval.map((x) => x.agent))]) {
+      const xs = t.retrieval.filter((x) => x.agent === agent)
+      const top = xs.slice(0, 5).map((x) => `\`${x.exemplar}\` (${x.turns})`).join(', ')
+      L.push(`| ${agent || '(none)'} | ${xs.length} | ${t.retrievalTurns[agent] ?? 0} | ${top}${xs.length > 5 ? `, ${xs.length - 5} more` : ''} |`)
+    }
+  }
+
   if (o.against !== undefined) {
     const c = o.against.churn
-    L.push('', `## Churn against ${o.against.round}`, '', 'A cell passes when every sample passed; a mixed cell or a run with no report counts as a fail.', '')
-    L.push('| Transition | Count | Cells |', '| --- | --- | --- |')
-    for (const t of TRANSITIONS) L.push(`| ${t} | ${c.transitions[t].length} | ${t === 'pass to pass' ? 'stable' : c.transitions[t].map((k) => `\`${k}\``).join(', ')} |`)
-    if (c.added.length > 0) L.push(`| only in this round | ${c.added.length} | ${c.added.map((k) => `\`${k}\``).join(', ')} |`)
-    if (c.gone.length > 0) L.push(`| only in ${o.against.round} | ${c.gone.length} | ${c.gone.map((k) => `\`${k}\``).join(', ')} |`)
+    const base = o.against.round
+    const cells = (ks: string[]): string => ks.map((k) => `\`${k}\``).join(', ')
+    L.push('', `## Churn against ${base}`, '', 'A cell passes when every sample passed; a mixed cell or a run with no report counts as a fail. Sample 1 compares like samples, each cell\'s first sample on both sides.', '')
+    L.push('| Transition | Count | Cells | Sample 1 | Cells (sample 1) |', '| --- | --- | --- | --- | --- |')
+    for (const tr of TRANSITIONS) L.push(`| ${tr} | ${c.transitions[tr].length} | ${tr === 'pass to pass' ? 'stable' : cells(c.transitions[tr])} | ${c.sampleOne[tr].length} | ${tr === 'pass to pass' ? 'stable' : cells(c.sampleOne[tr])} |`)
+    if (c.added.length > 0) L.push(`| only in this round | ${c.added.length} | ${cells(c.added)} | | |`)
+    if (c.gone.length > 0) L.push(`| only in ${base} | ${c.gone.length} | ${cells(c.gone)} | | |`)
+    if (c.rates.length > 0) {
+      L.push('', 'Cells with more than one sample, as rates:', '', `| Cell | ${base} | This round |`, '| --- | --- | --- |')
+      for (const r of c.rates) L.push(`| \`${r.cell}\` | ${ofN(r.base)} | ${ofN(r.now)} |`)
+    }
+
+    const { sampleOne: s1, baseSampleOne: b1, all, base: b } = o.against.tallies
+    const cols = [s1, b1, all, b]
+    const row = (label: string, f: (x: Tally) => string | number): void => void L.push(`| ${label} |${cols.map((x) => ` ${f(x)} |`).join('')}`)
+    const union = (f: (x: Tally) => Record<string, unknown>): string[] => [...new Set(cols.flatMap((x) => Object.keys(f(x))))].sort()
+    const head = `| Sample 1 | ${base} sample 1 | All samples | ${base} all |`
+    L.push('', `## Trace tallies against ${base}, same cells`, '', `The ${base} columns read its runs in this round's cells; sample 1 compares with sample 1, all with all.`, '')
+    L.push(`| Measure ${head}`, '| --- | --- | --- | --- | --- |')
+    row('Turns', (x) => x.turns)
+    for (const k of union((x) => x.outcomes)) row(`Turns, outcome ${k}`, (x) => x.outcomes[k] ?? 0)
+    row('String `messages` rounds', (x) => x.stringMessages)
+    for (const k of union((x) => x.repairs)) row(`Reply-only repairs, ${k}`, (x) => (x.repairs[k] === undefined ? '0 of 0' : `${x.repairs[k].replyOnly} of ${x.repairs[k].repairs}`))
+    for (const k of union((x) => x.failedRounds)) row(`Failed rounds, ${k}`, (x) => x.failedRounds[k] ?? 0)
+    for (const k of union((x) => x.failureCodes)) row(`Turns with ${k}`, (x) => x.failureCodes[k] ?? 0)
+
+    const turnsOf = (x: Tally, agent: string, id: string): number => x.retrieval.find((r) => r.agent === agent && r.exemplar === id)?.turns ?? 0
+    const ids = [...new Set(cols.flatMap((x) => x.retrieval.map((r) => `${r.agent}\u0000${r.exemplar}`)))].sort().map((k) => k.split('\u0000'))
+    const moved = ids.filter(([a, id]) => turnsOf(s1, a, id) !== turnsOf(b1, a, id) || turnsOf(all, a, id) !== turnsOf(b, a, id))
+    L.push('', `## Exemplar retrieval against ${base}, same cells`, '', 'Turns retrieving each exemplar, the rows whose count moved sample 1 to sample 1 or all to all.', '')
+    if (moved.length === 0) L.push('None moved.')
+    else {
+      L.push(`| Persona | Exemplar ${head}`, '| --- | --- | --- | --- | --- | --- |')
+      for (const [a, id] of moved) L.push(`| ${a || '(none)'} | \`${id}\` |${cols.map((x) => ` ${turnsOf(x, a, id)} |`).join('')}`)
+    }
   }
   if (o.gate !== undefined) {
     L.push('', '## Gates', '')
@@ -546,10 +718,11 @@ export function main(argv: string[], write: (s: string) => void = (s) => void pr
   }
   const gated = Object.keys(floors).length > 0 || maxDrop !== undefined
   const g = gated ? gate(current, base, { floors, maxDrop, minSamples }) : undefined
-  const against = base !== undefined ? { round: basename(locate(againstName!)!), churn: churn(base, current) } : undefined
+  const s = aggregate(current)
+  const vs = base !== undefined ? against(basename(locate(againstName!)!), base, current, s.tally) : undefined
   const rounds = dirs.map((d) => basename(d))
-  if (argv.includes('--json')) write(`${JSON.stringify({ ...aggregate(current), rounds, ...(against ? { against } : {}), ...(g ? { gate: g } : {}) }, null, 2)}\n`)
-  else write(renderSignals(current, { rounds, against, gate: g }))
+  if (argv.includes('--json')) write(`${JSON.stringify({ ...s, rounds, ...(vs ? { against: vs } : {}), ...(g ? { gate: g } : {}) }, null, 2)}\n`)
+  else write(renderSignals(current, { rounds, signals: s, against: vs, gate: g }))
   return g !== undefined && g.misses.length > 0 ? 1 : 0
 }
 
