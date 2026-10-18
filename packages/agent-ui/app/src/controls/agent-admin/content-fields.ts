@@ -113,8 +113,8 @@ function serverToolFields(tool: ServerToolName, label: string, description: stri
   return [
     { key, type: 'boolean', home: 'model', label, description, form: { control: 'boolean', ...gate, default: false } },
     { key: `${key}MaxUses`, type: 'integer', min: 0, home: 'model', label: `${label} max uses`, description: `The most ${uses} per turn. 0 sets no limit.`, form: { control: 'number', ...gate, default: 0 } },
-    { key: `${key}AllowedDomains`, type: 'string', home: 'model', label: `${label} allowed domains`, description: `Comma-separated; ${allowedNote}. Used instead of blocked domains when both are set.`, form: { control: 'text', ...gate } },
-    { key: `${key}BlockedDomains`, type: 'string', home: 'model', label: `${label} blocked domains`, description: `Comma-separated; never ${uses === 'searches' ? 'search these' : 'fetch from these'}.`, form: { control: 'text', ...gate } },
+    { key: `${key}AllowedDomains`, type: 'string', home: 'model', label: `${label} allowed domains`, description: `Comma-separated; ${allowedNote}. Used instead of blocked domains when both are set.`, form: { control: 'text', ...gate, default: '' } },
+    { key: `${key}BlockedDomains`, type: 'string', home: 'model', label: `${label} blocked domains`, description: `Comma-separated; never ${uses === 'searches' ? 'search these' : 'fetch from these'}.`, form: { control: 'text', ...gate, default: '' } },
   ]
 }
 
@@ -123,10 +123,10 @@ function webSearchLocationFields(): ContentField[] {
   const key = SERVER_TOOL_FIELD_KEYS.web_search
   const gate = { gate: 'serverTools', serverTool: 'web_search' } as const
   return [
-    { key: `${key}City`, type: 'string', home: 'model', label: 'Web search city', description: 'Approximate city to localize results, for example Helsinki.', form: { control: 'text', ...gate } },
-    { key: `${key}Region`, type: 'string', home: 'model', label: 'Web search region', description: 'Approximate region or state, for example Uusimaa.', form: { control: 'text', ...gate } },
-    { key: `${key}Country`, type: 'string', home: 'model', label: 'Web search country', description: 'Two-letter ISO 3166-1 country code, for example FI.', form: { control: 'text', ...gate, pattern: '^([A-Za-z]{2})?$' } },
-    { key: `${key}Timezone`, type: 'string', home: 'model', label: 'Web search timezone', description: 'IANA time zone, for example Europe/Helsinki.', form: { control: 'text', ...gate, pattern: '^([A-Za-z]+(/[A-Za-z0-9_+-]+)*)?$' } },
+    { key: `${key}City`, type: 'string', home: 'model', label: 'Web search city', description: 'Approximate city to localize results, for example Helsinki.', form: { control: 'text', ...gate, default: '' } },
+    { key: `${key}Region`, type: 'string', home: 'model', label: 'Web search region', description: 'Approximate region or state, for example Uusimaa.', form: { control: 'text', ...gate, default: '' } },
+    { key: `${key}Country`, type: 'string', home: 'model', label: 'Web search country', description: 'Two-letter ISO 3166-1 country code, for example FI.', form: { control: 'text', ...gate, default: '', pattern: '^([A-Za-z]{2})?$' } },
+    { key: `${key}Timezone`, type: 'string', home: 'model', label: 'Web search timezone', description: 'IANA time zone, for example Europe/Helsinki.', form: { control: 'text', ...gate, default: '', pattern: '^([A-Za-z]+(/[A-Za-z0-9_+-]+)*)?$' } },
   ]
 }
 
