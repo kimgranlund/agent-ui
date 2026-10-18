@@ -55,7 +55,7 @@
       "skipIfPhase": "settled"
     },
     {
-      "say": "If the hand is still under 15, twist until it reaches 15 or more, then stick.",
+      "say": "If the hand is still in play, twist while it is under 15, then stick. If the hand is already over, leave the table as it is.",
       "skipIfPhase": "settled"
     },
     {

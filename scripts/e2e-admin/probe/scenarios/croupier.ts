@@ -34,8 +34,9 @@ export const STUD_STREET = 'Check, or call if there is a bet. If the hand is alr
 /** T-0370 (live round 11 cluster J, :37 to :38): pontoon forbids sticking under 15, so "Buy a card." then "Stick." on a
  *  hand of 14 is refused by the rules, the hand never settles and Deal again finds no button on the newest table. The
  *  agent was right. This step follows round 2's Stick: a settled hand skips it (`--skip-if-phase settled`), a refused
- *  stick plays it, and it twists to 15 or more and sticks (or busts), so the hand is over before Deal again. */
-export const TWIST_TO_STICK = 'If the hand is still under 15, twist until it reaches 15 or more, then stick.'
+ *  stick plays it, and it twists to 15 or more and sticks (or busts), so the hand is over before Deal again. Like
+ *  STUD_STREET (T-0283) it is harmless on a finished hand. */
+export const TWIST_TO_STICK = 'If the hand is still in play, twist while it is under 15, then stick. If the hand is already over, leave the table as it is.'
 
 const SCENARIOS: readonly CroupierScenario[] = [
   {

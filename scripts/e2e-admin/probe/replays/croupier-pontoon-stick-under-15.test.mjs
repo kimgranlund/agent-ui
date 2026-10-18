@@ -4,7 +4,8 @@
 // again found no button on the newest table. Turns 0 to 7 are the recorded run; turn 8 (the new follow-up step twists
 // to 19, sticks, the table settles) and turn 9 (Deal again opens table-3) are authored, the recorded round is untouched.
 // The browser leg, from the repo root: `npm run chat:probe -- --replay scripts/e2e-admin/probe/replays/croupier-pontoon-stick-under-15.json`
-// (exit 0; the recorded fixture, replayed as it was, still ends on the failed Deal again).
+// (exit 0). The recorded fixture, `.sdlc/evals/rounds/2026-10-18-r11-targeted/runs/regress-croupier-pontoon-haiku-1/fixture.json`,
+// replayed as it was, still ends on the failed Deal again.
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { newestTablePhase, parseProbeFixture, quote, stepArgv, stepSkip, TablePhase } from '../model.ts'
