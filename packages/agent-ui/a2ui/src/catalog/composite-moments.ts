@@ -26,10 +26,16 @@
 // that says "confirmed" or "booked" is no hand-built confirmation (round 9 cluster G), and the BookingForm row stands aside
 // for a surface that already holds one.
 //
-// T-0358: the GameHud row's `statStrip` reads a surface with no BoardGrid: on a surface whose words name a game (quest,
-// round, HP, deal sheet), two or more game-stat items (HP, gold, mood, asking price, confidence, questions) in Badges,
+// T-0358: the GameHud row's `boardless.statStrip` reads a surface with no BoardGrid: on a surface whose words name a game
+// (quest, HP, deal sheet), two or more game-stat items (HP, gold, mood, asking price, confidence, questions) in Badges,
 // Stats, Progress labels or DescriptionList rows are a hand-built HUD (the Mentalist, the Negotiator and the Dungeon
 // Master, smoke round 2026-10-18-smoke). The row needs only GameHud in the catalog, so a catalog with no BoardGrid runs it.
+//
+// T-0364: both rows read a surface with no BoardGrid through one `boardless` gate: its `game` words (GAME_WORDS, shared)
+// must name a game. The same personas end their game on ONE ResultCard, so on such a surface an end-of-game signal
+// (`end`: game over, final score, play again) beside the result words is RESULT_CARD_MISSING. A mid-game "you won 20
+// gold", a sales dashboard, a receipt or a booking that says "you won" stays clean, a croupier hand settles on its own
+// table, and a round result Toast is never read.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -48,10 +54,18 @@ export interface CompositeMoment {
   readonly lacks: readonly string[]
   /** The surface must hold one of these types. */
   readonly has?: readonly string[]
-  /** T-0358: or, with none of `has` present, a surface whose words name a game (`game`) holding at least `min` stat items
-   *  (a component of `types`, or a DescriptionList row) whose words name game state (`cue`): the hand-built score strip of
-   *  a game with no board. Every other gate of the row still applies. */
-  readonly statStrip?: { readonly types: readonly string[]; readonly cue: RegExp; readonly min: number; readonly game: RegExp }
+  /** T-0358, T-0364: with none of `has` present, the row still runs on a surface whose words name a game (`game`, read with
+   *  any `end` phrase taken out, so "game over" alone names none) unless it holds a `standAside` type, reading no words from
+   *  `skipWordTypes`. Then either `statStrip`: at least `min` stat items (a component of `types`, or a DescriptionList row)
+   *  whose words name game state (`cue`), the hand-built score strip of a game with no board; or the row's `words` path,
+   *  with an `end` signal on the surface. Every other gate of the row still applies. */
+  readonly boardless?: {
+    readonly game: RegExp
+    readonly statStrip?: { readonly types: readonly string[]; readonly cue: RegExp; readonly min: number }
+    readonly end?: RegExp
+    readonly standAside?: readonly string[]
+    readonly skipWordTypes?: readonly string[]
+  }
   /** Over the surface words. */
   readonly words?: RegExp
   /** Read words only from components of these types. */
@@ -101,6 +115,10 @@ const CONFIRM_ASK = /\bconfirm\s+it\b|\bconfirm\b[^.?!]*\b(booking|reservation|a
 const SERVICES_ASK = /\b(services|treatments|amenities|menu)\b/i
 /** The guest asks to book ("Book a 60-minute massage on Thursday at 15:00"; T-0282: "I'd like a table at Vela"). */
 const BOOK_ASK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) like (a|an) (table|room|treatment|massage|tour|appointment)\b/i
+
+/** T-0358, T-0364: the words that name a game on a surface with no board. Generic words (player, level, round, turn)
+ *  name none: a podcast player or a Gold level is no game. */
+const GAME_WORDS = /\b(game|games|quest|hp|quiz|trivia|twenty questions|the answer was|the word was|deal sheet|adventure|dungeon)\b/i
 
 const BOOKING_READ_BACK: NonNullable<CompositeMoment['readBack']> = { types: ['DescriptionList'], action: /^confirm/i, cue: /\bconfirm\b/i }
 
@@ -158,11 +176,13 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     lacks: ['CardTable'],
     has: ['BoardGrid'],
     // T-0358: the Mentalist, the Negotiator and the Dungeon Master play with no board (smoke round 2026-10-18-smoke).
-    statStrip: {
-      types: ['Badge', 'Stat', 'Progress'],
-      cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries)\b/i,
-      min: 2,
-      game: /\b(game|games|turn|turns|round|rounds|level|quest|hp|player|twenty questions|deal sheet|adventure|dungeon)\b/i,
+    boardless: {
+      game: GAME_WORDS,
+      statStrip: {
+        types: ['Badge', 'Stat', 'Progress'],
+        cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries)\b/i,
+        min: 2,
+      },
     },
     wordTypes: ['Text', 'Badge', 'Stat'],
     words: /\b(guess|guesses|shot|shots|ship|ships|remaining|score|attempt|attempts|tries)\b/i,
@@ -171,9 +191,18 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     composite: 'ResultCard',
     moment: 'a settled game, deal or booking outcome and its next action',
     repair: 'with its outcome, title, summary and stats and the next action, and drop the hand-built result text.',
-    requires: ['BoardGrid'],
     lacks: [],
     has: ['BoardGrid'],
+    // T-0364: the Mentalist, the Negotiator and the Dungeon Master end with no board. A bare "you won" is mid-game too
+    // ("you won 20 gold"), so the surface also needs an end signal. A croupier hand (a CardTable, or PlayingCards dealt by
+    // hand) settles on its own table and its skills name no ResultCard; a Toast is the passing round result the round-loop
+    // workflow sanctions. Neither is in `lacks`, so neither answers a carried RESULT_CARD_MISSING.
+    boardless: {
+      game: GAME_WORDS,
+      end: /\b(game over|final score|you (won|lost|win|lose) the (game|match|quiz)|play again|new game|rematch|new adventure|new quest|deal struck)\b/i,
+      standAside: ['CardTable', 'PlayingCard'],
+      skipWordTypes: ['Toast'],
+    },
     words: /\b(game over|you win|you won|you lose|you lost|the word was|play again)\b/i,
   },
   {
@@ -256,7 +285,7 @@ function submitsReadBack(c: A2uiComponent, view: SurfaceView, rb: NonNullable<Co
 
 /** T-0358: the components holding at least `min` game-stat items (a `types` component's label, title or text, literal or
  *  bound, or a DescriptionList row), or `[]`. */
-function statStrays(strip: NonNullable<CompositeMoment['statStrip']>, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
+function statStrays(strip: NonNullable<NonNullable<CompositeMoment['boardless']>['statStrip']>, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
   let items = 0
   const found: A2uiComponent[] = []
   for (const c of comps) {
@@ -276,14 +305,19 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
   const comps = [...view.components.values()]
   const types = new Set(comps.map((c) => c.component))
   if ([m.composite, ...m.lacks].some((t) => types.has(t))) return []
-  // T-0358: with none of `has`, the row reads only its board-less stat strip, when it has one.
-  const boardless = m.has !== undefined && !m.has.some((t) => types.has(t))
-  if (boardless && m.statStrip === undefined) return []
+  // T-0358, T-0364: with none of `has`, the row runs only through its `boardless` gate.
+  const boardless = m.has !== undefined && !m.has.some((t) => types.has(t)) ? m.boardless ?? null : undefined
+  if (boardless === null) return []
+  if (boardless?.standAside?.some((t) => types.has(t)) === true) return []
   if (m.noInputs !== undefined && m.noInputs.some((t) => types.has(t))) return []
-  // The composite's and the required types' own props never count as words.
-  const own = new Set([m.composite, ...(m.requires ?? [])])
+  // The composite's, the required and the `has` types' own props never count as words.
+  const own = new Set([m.composite, ...(m.requires ?? []), ...(m.has ?? [])])
   const worded = comps.filter(
-    (c) => !own.has(c.component) && (m.wordTypes === undefined || m.wordTypes.includes(c.component)) && (m.settledSignals !== true || isSettledSignal(c)),
+    (c) =>
+      !own.has(c.component) &&
+      (m.wordTypes === undefined || m.wordTypes.includes(c.component)) &&
+      boardless?.skipWordTypes?.includes(c.component) !== true &&
+      (m.settledSignals !== true || isSettledSignal(c)),
   )
   const liveReadBack = (): boolean =>
     comps.some((c) => BOOKING_READ_BACK.types.includes(c.component)) &&
@@ -292,7 +326,13 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
   if (m.standsAsideForSettled === true && comps.some((c) => isSettledSignal(c) && SETTLED_WORDS.test(wordsOf(c))) && !liveReadBack()) return []
   const surfaceWords = worded.map(wordsOf).join(' ')
 
-  if (boardless) return m.statStrip!.game.test(surfaceWords) ? statStrays(m.statStrip!, comps, view) : []
+  const end = boardless?.end
+  if (boardless !== undefined) {
+    const gameWords = end === undefined ? surfaceWords : surfaceWords.replace(new RegExp(end.source, 'gi'), ' ')
+    if (!boardless.game.test(gameWords)) return []
+    if (boardless.statStrip !== undefined) return statStrays(boardless.statStrip, comps, view)
+    if (end !== undefined && !end.test(surfaceWords)) return []
+  }
 
   if (m.gridOf !== undefined || m.inputCue !== undefined) {
     const { gridOf, inputCue } = m
@@ -332,7 +372,7 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
     const confirms = comps.filter((c) => c.component === 'Button' && submitsReadBack(c, view, rb))
     return rows.length > 0 && confirms.length > 0 ? [...rows, ...confirms] : []
   }
-  return m.words === undefined ? [] : worded.filter((c) => m.words!.test(wordsOf(c)))
+  return m.words === undefined ? [] : worded.filter((c) => m.words!.test(wordsOf(c)) || end?.test(wordsOf(c)) === true)
 }
 
 /** The ids a component lists as `child` or explicit `children` (a template ChildList names no fixed ids). */

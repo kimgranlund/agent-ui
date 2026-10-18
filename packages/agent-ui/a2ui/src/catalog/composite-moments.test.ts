@@ -3,7 +3,8 @@
 // where its types live, and every row's moment is one of its composite's selection intents.
 
 import { describe, expect, it } from 'vitest'
-import { COMPOSITE_MOMENTS, compositeMomentChecks } from './composite-moments.ts'
+import { COMPOSITE_MOMENTS, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
+import type { CompositeMoment } from './composite-moments.ts'
 import { gateChecksOnCatalog, runSemanticChecks } from './semantic-check.ts'
 import type { SurfaceView } from './semantic-check.ts'
 import type { A2uiComponent } from '../protocol.ts'
@@ -344,10 +345,6 @@ describe('composite moment checks (T-0208)', () => {
     ).toEqual([])
   })
 
-  it('negative control: ResultCard words with no BoardGrid yield none', () => {
-    expect(codes([{ id: 't', component: 'Text', text: 'Game over, you won. Play again?' }])).toEqual([])
-  })
-
   it('negative control: a GameHud-word Text with no BoardGrid yields none', () => {
     expect(codes([{ id: 't', component: 'Text', text: 'Score: 3, attempts remaining: 2' }])).toEqual([])
   })
@@ -456,6 +453,153 @@ describe('composite moment checks (T-0208)', () => {
         { id: 'i2', component: 'Badge', label: 'Dagger' },
       ]),
     ).toEqual([])
+  })
+
+  // T-0364: the Mentalist, the Negotiator and the Dungeon Master end their game on ONE ResultCard (guess-hud, deal-sheet,
+  // quest-log) with no board. A hand-built ending (an end signal beside the result words) on a surface whose words name a
+  // game is RESULT_CARD_MISSING.
+  const BOARDLESS_ENDS: Record<string, A2uiComponent[]> = {
+    mentalist: [
+      { id: 'root', component: 'Card', children: ['t', 'again'] },
+      { id: 't', component: 'Text', text: 'You won! The answer was a cat.' },
+      { id: 'again', component: 'Button', label: 'Play again' },
+    ],
+    negotiator: [
+      { id: 'root', component: 'Card', children: ['title', 't', 'again'] },
+      { id: 'title', component: 'Text', text: 'Deal sheet: Brass lantern', variant: 'h4' },
+      { id: 't', component: 'Text', text: 'Deal struck at 180 silver. You won the lantern.' },
+      { id: 'again', component: 'Button', label: 'Play again' },
+    ],
+    'dungeon-master': [
+      { id: 'root', component: 'Card', children: ['title', 't', 'again'] },
+      { id: 'title', component: 'Text', text: 'The Sunken Crypt', variant: 'h4' },
+      { id: 't', component: 'Text', text: 'Game over: you lost, your quest ends at the crypt door.' },
+      { id: 'again', component: 'Button', label: 'New adventure' },
+    ],
+    // T-0364 (item 6): the quizmaster's grand-reveal names ONE ResultCard for the end of a run, so a hand-built final score
+    // beside the last QuestionCard is this moment; the QuestionCard does not stand the row aside.
+    'quizmaster final round': [
+      { id: 'root', component: 'Column', children: ['q', 'score', 'again'] },
+      { id: 'q', component: 'QuestionCard', label: 'Round 10 of 10', question: 'Capital of Peru?', options: [], revealed: true },
+      { id: 'score', component: 'Text', text: 'Quiz over. Final score 8 of 10: you won!' },
+      { id: 'again', component: 'Button', label: 'Play again' },
+    ],
+  }
+
+  for (const [persona, components] of Object.entries(BOARDLESS_ENDS)) {
+    it(`T-0364: a hand-built ${persona} ending with no BoardGrid yields RESULT_CARD_MISSING, and with a ResultCard none`, () => {
+      expect(codes(components)).toEqual(['RESULT_CARD_MISSING'])
+      expect(codes([...components, { id: 'res', component: 'ResultCard', outcome: 'win', title: 'You won' }])).toEqual([])
+    })
+  }
+
+  it('T-0364: the board-less finding names the hand-built result components', () => {
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(BOARDLESS_ENDS['mentalist']!, 'ask-1')] }).findings
+    expect(f!.path).toBe('ask-1:t')
+    expect(f!.message).toContain('t (a Text), again (a Button)')
+    expect(f!.message).toContain('Make it ONE ResultCard')
+  })
+
+  it('T-0364: on a BoardGrid surface a Toast still carries the ending, and the BoardGrid label is no result word', () => {
+    const board = { id: 'board', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'fire' }
+    expect(codes([{ id: 'root', component: 'Column', children: ['board', 'toast'] }, board, { id: 'toast', component: 'Toast', label: 'Game over, you won.' }])).toEqual(['RESULT_CARD_MISSING'])
+    expect(codes([{ ...board, label: 'Game over? Fire to play again' }])).toEqual([])
+  })
+
+  // T-0364: result words where no game ends: mid-game progress, a surface whose words name no game, a round result
+  // Toast and two croupier hands. Each holds ResultCard words, so with the row's board-less guards removed each fires;
+  // the guard test below proves it.
+  const NOT_GAME_ENDS: Record<string, A2uiComponent[]> = {
+    'mid-game quest progress': [
+      { id: 'root', component: 'Card', children: ['title', 't'] },
+      { id: 'title', component: 'Text', text: 'The Sunken Crypt: a quest', variant: 'h4' },
+      { id: 't', component: 'Text', text: 'You won 20 gold, but you lost 3 HP.' },
+    ],
+    'mid-game round Text': [
+      { id: 'root', component: 'Card', children: ['title', 't'] },
+      { id: 'title', component: 'Text', text: 'Color duel: a game of five rounds', variant: 'h4' },
+      { id: 't', component: 'Text', text: 'Round 2: you win this round.' },
+    ],
+    'sales dashboard': [
+      { id: 'root', component: 'Row', children: ['won', 'rate', 'note'] },
+      { id: 'won', component: 'Stat', label: 'Deals closed', value: '12' },
+      { id: 'rate', component: 'Stat', label: 'Win rate', value: '60%' },
+      { id: 'note', component: 'Text', text: 'You won 12 of 20 deals this quarter. Play again next quarter?' },
+    ],
+    'order receipt': [
+      { id: 'root', component: 'Card', children: ['title', 'rows', 'promo'] },
+      { id: 'title', component: 'Text', text: 'Order #4821 received', variant: 'h4' },
+      { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Total', value: '$42.10' }, { label: 'Pickup', value: '18:30' }] },
+      { id: 'promo', component: 'Text', text: 'You won a free dessert with this order. Play again Friday!', variant: 'caption' },
+    ],
+    'booking confirmation': [
+      { id: 'root', component: 'BookingConfirmation', title: 'Table for four confirmed', rows: [] },
+      { id: 'promo', component: 'Text', text: 'You won our weekly raffle: dessert is on us. Play again next week.' },
+    ],
+    'concierge Gold level': [
+      { id: 'root', component: 'Card', children: ['t', 'again'] },
+      { id: 't', component: 'Text', text: 'Gold level: you won a free night.' },
+      { id: 'again', component: 'Button', label: 'Play again' },
+    ],
+    'podcast player': [
+      { id: 'root', component: 'Card', children: ['title', 't', 'again'] },
+      { id: 'title', component: 'Text', text: 'Podcast player', variant: 'h4' },
+      { id: 't', component: 'Text', text: 'Episode 42 finished. You won the listener poll!' },
+      { id: 'again', component: 'Button', label: 'Play again' },
+    ],
+    'subscription notice': [{ id: 't', component: 'Text', text: 'Game over? Not yet: your subscription renews Friday, you win either way.' }],
+    'round result Toast': [
+      { id: 'root', component: 'Column', children: ['hud', 'toast'] },
+      { id: 'hud', component: 'GameHud', title: 'Color duel', status: 'Round 2 of 5' },
+      { id: 'toast', component: 'Toast', label: 'Game over for round 2: you win this round.' },
+    ],
+    'croupier hand': [
+      { id: 'root', component: 'Column', children: ['table', 't', 'again'] },
+      { id: 'table', component: 'CardTable', phase: 'settled', title: 'Blackjack' },
+      { id: 't', component: 'Text', text: 'Game over: you win this hand, 20 against 18.' },
+      { id: 'again', component: 'Button', label: 'Play again' },
+    ],
+    // The recorded Opus Texas Hold'em settle (round 2026-10-17-r10-targeted): PlayingCards with no CardTable.
+    'poker hand dealt as PlayingCards': [
+      { id: 'root', component: 'Column', children: ['title', 'hole', 'result', 'again'] },
+      { id: 'title', component: 'Text', text: "Texas Hold'em, a game of two", variant: 'h4' },
+      { id: 'hole', component: 'PlayingCard', rank: 'J', suit: 'spades' },
+      { id: 'result', component: 'Text', text: 'You win with a pair of jacks. You win the 120 pot.' },
+      { id: 'again', component: 'Button', label: 'Play again' },
+    ],
+    'quizmaster mid-run reveal': [
+      { id: 'root', component: 'Column', children: ['q', 't'] },
+      { id: 'q', component: 'QuestionCard', label: 'Round 3 of 10', question: 'Capital of Peru?', options: [], revealed: true },
+      { id: 't', component: 'Text', text: 'Quiz round 3: you won this one, the answer was Lima.' },
+    ],
+  }
+
+  for (const [name, components] of Object.entries(NOT_GAME_ENDS)) {
+    it(`T-0364 negative control: a ${name} yields no RESULT_CARD_MISSING`, () => {
+      expect(codes(components)).not.toContain('RESULT_CARD_MISSING')
+    })
+  }
+
+  it('T-0364: each negative control fires with the board-less gate opened, so the guards bite', () => {
+    const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'ResultCard')!
+    expect(row.boardless?.end).toBeDefined()
+    const loose: CompositeMoment = { ...row, boardless: { game: /./, end: /./ } }
+    for (const [name, components] of Object.entries(NOT_GAME_ENDS)) {
+      const found = runSemanticChecks([compositeMomentCheck(loose)], { surfaces: [view(components)] }).findings.map((f) => f.code)
+      expect(found, name).toEqual(['RESULT_CARD_MISSING'])
+    }
+  })
+
+  it('T-0364: a croupier type never answers a carried RESULT_CARD_MISSING (a round-2 decorative PlayingCard)', () => {
+    const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'ResultCard')!
+    const round2 = view([
+      { id: 'root', component: 'Column', children: ['reveal', 'card'] },
+      { id: 'reveal', component: 'Text', text: 'The word was SLAIN.' },
+      { id: 'card', component: 'PlayingCard', rank: 'A', suit: 'spades' },
+    ])
+    expect(compositeAnswered(row, [round2])).toBe(false)
+    expect(compositeAnswered(row, [view([{ id: 't', component: 'CardTable', phase: 'settled' }])])).toBe(false)
+    expect(compositeAnswered(row, [view([{ id: 'r', component: 'ResultCard', outcome: 'lose', title: 'You conceded' }])])).toBe(true)
   })
 
   // T-0279: the recorded Haiku answer to "What spa services can I book during my stay?" (round 2026-10-15-r4-fixes,
