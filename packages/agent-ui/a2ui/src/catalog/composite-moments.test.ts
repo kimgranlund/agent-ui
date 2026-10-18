@@ -3,7 +3,7 @@
 // where its types live, and every row's moment is one of its composite's selection intents.
 
 import { describe, expect, it } from 'vitest'
-import { COMPOSITE_MOMENTS, PALETTE_TYPES, askedCompositeMoment, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
+import { COMPOSITE_MOMENTS, TOKEN_TYPES, askedCompositeMoment, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
 import type { CompositeMoment } from './composite-moments.ts'
 import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews, sessionComponentTypes, sessionSurfaceViews } from './semantic-check.ts'
 import type { SurfaceView } from './semantic-check.ts'
@@ -14,6 +14,7 @@ import { validateCatalogConformance } from './conformance.ts'
 import defaultCatalogRaw from './default/catalog.json'
 import basicCatalogRaw from './a2ui-basic/catalog.json'
 import conciergeFragmentRaw from './personas/concierge/catalog.json'
+import stylistFragmentRaw from './personas/stylist/catalog.json'
 import defaultSelection from './default/selection.json'
 import conciergeSelection from './personas/concierge/selection.json'
 
@@ -1062,7 +1063,7 @@ describe('composite moment checks (T-0208)', () => {
     const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
     const basic = loadCatalog(basicCatalogRaw)
     const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
-    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-swatch', 'composite-ask-swatch']
+    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-swatch']
     expect(ids(base)).toEqual(games)
     expect(concierge.catalogId).toBe('agent-ui--concierge')
     expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', ...games])
@@ -1267,74 +1268,82 @@ describe('BOOKING_CONFIRMATION_MISSING reads settled-status signals, not caption
 
 // T-0359 (smoke round 2026-10-18-smoke :9, Haiku 5.5): "Propose a calm blue palette for a banking app." shipped the
 // palette in prose with no surface. The Swatch row's ask check sends the first palette ask of a session back unless its
-// turn writes a Swatch or a Ramp; once one is shown, later turns are never judged (Kim, 2026-10-18 close-out).
-describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-0359)', () => {
+// turn writes a token surface (Swatch, Ramp or ContrastPair). Kim, 2026-10-18: later turns are never judged, and the
+// check rides the Stylist's catalog alone.
+describe('a first palette ask on the Stylist answered with no token surface is SURFACE_MISSING (T-0359)', () => {
   const askCheck = compositeMomentChecks.find((c) => c.id === 'composite-ask-swatch')!
+  const base = loadCatalog(defaultCatalogRaw)
+  const stylist = composeCatalog(base, loadCatalogFragment(stylistFragmentRaw), 'stylist')
+  const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
   const ASK = 'Propose a calm blue palette for a banking app.'
   const msgs = (sid: string, components: A2uiComponent[], create = true): A2uiOutput => [
-    ...(create ? [{ version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui' } }] : []),
+    ...(create ? [{ version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui--stylist' } }] : []),
     { version: 'v1.0', updateComponents: { surfaceId: sid, components } },
   ] as A2uiOutput
   const PALETTE = msgs('palette-1', COMPOSED['Swatch']!)
   const prior = (out: A2uiOutput) => ({ turns: [{ role: 'assistant', content: out.map((m) => JSON.stringify(m)).join('\n') }] })
-  const said = (intent: string, out: A2uiOutput = [], session: A2uiOutput = [], target?: string) => {
+  const inputOf = (intent: string, out: A2uiOutput = [], session: A2uiOutput = [], target?: string) => {
     const log = session.length === 0 ? { turns: [] } : prior(session)
-    return askCheck.check({
+    return {
       surfaces: out.length === 0 ? [] : semanticSurfaceViews(log, out),
       intent,
       open: sessionSurfaceViews(log),
       shownTypes: sessionComponentTypes(log),
       ...(target !== undefined ? { target } : {}),
-    })
+    }
   }
+  /** The SURFACE_MISSING findings every check gated onto `catalog` yields, as `produce()` runs them there. */
+  const on = (catalog: { components: Readonly<Record<string, unknown>> }, ...args: Parameters<typeof inputOf>) =>
+    runSemanticChecks(gateChecksOnCatalog(compositeMomentChecks, catalog), inputOf(...args)).findings.filter((f) => f.code === 'SURFACE_MISSING')
+  const said = (...args: Parameters<typeof inputOf>) => on(stylist, ...args)
   const opened = (turn: string) => said(turn, [], PALETTE)
 
-  it('the recorded prose palette turn is SURFACE_MISSING, asking for a new surface of Swatches and Ramps', () => {
+  it('the check rides the Stylist catalog alone: never agent-ui, the Concierge, a game catalog or a2ui-basic', () => {
+    expect(askCheck.requires).toEqual([...TOKEN_TYPES])
+    expect(stylist.catalogId).toBe('agent-ui--stylist')
+    expect(gateChecksOnCatalog([askCheck], stylist)).toEqual([askCheck])
+    for (const c of [base, concierge, loadCatalog(basicCatalogRaw)]) expect(gateChecksOnCatalog([askCheck], c)).toEqual([])
+  })
+
+  it('the recorded prose palette turn is SURFACE_MISSING, asking for a new surface of Swatches, Ramps and ContrastPairs', () => {
     const [f, ...rest] = said(ASK)
     expect(rest).toEqual([])
     expect([f!.code, f!.path]).toEqual(['SURFACE_MISSING', 'intent:palette'])
-    expect(f!.message).toContain('createSurface holding one Swatch per anchor color with its label and value, and one Ramp per color family')
+    expect(f!.message).toContain('createSurface holding one Swatch per anchor color with its label and value, one Ramp per color family, and one ContrastPair per text pairing')
   })
 
-  it.each(['What colors should I use for a meditation app?', 'Suggest a colour-scheme for my recipe site.', 'Pick a brand color for a bakery.', 'Can you build a palette for dark mode?'])(
-    'the cue catches "%s"',
-    (turn) => expect(said(turn).map((f) => f.code)).toEqual(['SURFACE_MISSING']),
-  )
-
-  it.each(['Open the command palette.', 'Add a tool palette to the editor.', 'Why is the palette blue?', 'Thanks, I love the palette.', 'Close the palette.', 'Does white text on navy pass AA?'])(
-    'negative control: "%s" yields none',
-    (turn) => expect(said(turn)).toEqual([]),
-  )
-
-  it('a turn that writes a Swatch or a Ramp passes; a Text-only surface does not', () => {
+  it('a turn that writes a Swatch, a Ramp or (Kim, 2026-10-18) a ContrastPair alone passes; a Text-only surface does not', () => {
     expect(said(ASK, PALETTE)).toEqual([])
     expect(said(ASK, msgs('ramp-1', [{ id: 'root', component: 'Ramp', label: 'Blue', steps: [{ label: '500', value: '#3b6ea5' }] }]))).toEqual([])
+    expect(said(ASK, msgs('pair-1', [{ id: 'root', component: 'ContrastPair', foreground: '#1f3a5f', background: '#ffffff', label: 'Body' }]))).toEqual([])
     expect(said(ASK, msgs('text-1', [{ id: 'root', component: 'Text', text: 'Navy, steel blue and sky' }])).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
   })
 
-  it('a palette closed or rebuilt is still shown: a later ask stays quiet (code review item 1)', () => {
-    const closed: A2uiOutput = [{ version: 'v1.0', deleteSurface: { surfaceId: 'palette-1' } }] as A2uiOutput
-    const log = { turns: [prior(PALETTE).turns[0]!, { role: 'user', content: 'Close it.' }, { role: 'assistant', content: JSON.stringify(closed[0]) }] }
-    const turn = 'Make the dashboard use that palette'
+  it('a token surface closed or rebuilt is still shown, a ContrastPair-only one too: a later ask stays quiet', () => {
+    const closed = JSON.stringify({ version: 'v1.0', deleteSurface: { surfaceId: 'palette-1' } })
+    const turn = 'Propose a warmer palette.'
+    const log = { turns: [prior(PALETTE).turns[0]!, { role: 'user', content: 'Close it.' }, { role: 'assistant', content: closed }] }
     expect(sessionSurfaceViews(log)).toEqual([])
     expect(askCheck.check({ surfaces: [], intent: turn, open: [], shownTypes: sessionComponentTypes(log) })).toEqual([])
+    expect(said('Make the dashboard use that palette', [], PALETTE)).toEqual([])
+    expect(said(turn, [], msgs('pair-1', [{ id: 'root', component: 'ContrastPair', foreground: '#000000', background: '#ffffff' }]))).toEqual([])
     expect(said(turn).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
   })
 
-  it('a turn that targets an open surface edits it and is never judged (code review item 5)', () => {
-    expect(said('Make it 16:00 and use the brand colours for the table decor', [], [], 'booking-1')).toEqual([])
-    expect(said('Make it 16:00 and use the brand colours for the table decor')).toEqual([])
+  it('a turn that targets an open surface edits it and is never judged', () => {
+    expect(said('Propose a warmer palette.', [], [], 'booking-1')).toEqual([])
   })
 
-  it('a later turn is never judged: with a palette shown, a change request answered with no Swatch or Ramp yields none', () => {
+  it('a later turn is never judged: with a palette shown, a change request answered with no token surface yields none', () => {
     const touched = msgs('palette-1', [{ id: 'note', component: 'Text', text: 'A warmer take.' }], false)
     expect(said('Now propose a warmer palette.', touched, PALETTE)).toEqual([])
-    expect(said('Now propose a warmer palette.', [], PALETTE, 'palette-1')).toEqual([])
     expect(opened(ASK)).toEqual([])
   })
 
-  // The first ask (no palette shown yet): a request is sent back for a new surface; a question about an answer, a
-  // read-back, a thanks or a dismissal is none. Every one of these with a palette shown is a later turn: none.
+  // The first ask (no token surface shown yet), under the Stylist: a request for a palette is sent back for a new surface;
+  // a question about an answer, a read-back, a thanks, a dismissal, a request whose object is not the palette or a game,
+  // booking or product turn is none. Outside the Stylist (agent-ui, the Concierge) every row is none, and with a palette
+  // shown every row is a later turn: none.
   const FIRST_ASK: readonly (readonly [string, boolean])[] = [
     ['What colors should I use for my brand?', true],
     ['Can you suggest a warmer palette?', true],
@@ -1345,7 +1354,6 @@ describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-03
     ['Propose a calm blue palette for a banking app.', true],
     ['Great palette, but can you swap the accent?', true],
     ['Can you build a palette for dark mode?', true],
-    // Code review (T-0359): these first asks fire.
     ['Propose a palette with clear contrast for a bank.', true],
     ["I'd love a calm palette for my banking app.", true],
     ['A nice calm blue palette for a banking app, please.', true],
@@ -1353,7 +1361,6 @@ describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-03
     ["What's a good color scheme for a bank?", true],
     ['Any palette ideas for a fintech app?', true],
     ['Do you have a palette suggestion for my app?', true],
-    // Code review (T-0359): a game color question, and a request whose object is not the palette, are none.
     ['Which color should I bet on?', false],
     ['Which colour should I pick, red or black?', false],
     ['Our brand colors are navy and gold. Build me a dashboard.', false],
@@ -1382,9 +1389,82 @@ describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-03
     ['Add a tool palette to the editor.', false],
     ['Build a component palette for the sidebar.', false],
     ['Which palette knife should I buy?', false],
+    // Verifier 4: the 20 fresh first asks, the fragment shapes and colors handed over (Kim: yes under the Stylist).
+    ['Suggest a palette for a children\'s app.', true],
+    ['Design a colour scheme for a law firm website.', true],
+    ['Recommend a color palette for a bakery.', true],
+    ['I need a palette for my portfolio site.', true],
+    ['Create a warm autumn palette for a coffee brand.', true],
+    ['Generate brand colours for a fintech startup.', true],
+    ['Show me a palette with earthy tones.', true],
+    ['Could you please put together a palette for a fitness app?', true],
+    ['What colour scheme would work for a hospital site?', true],
+    ['Give me some swatches for a dark theme.', true],
+    ['Pick a palette for an eco brand.', true],
+    ['Help me choose a color palette for my blog.', true],
+    ["We're launching a wellness app. Propose a palette.", true],
+    ['Can I get a palette for a sushi restaurant?', true],
+    ['I want a colour scheme for my wedding site.', true],
+    ['Build me a brand palette around navy and gold.', true],
+    ['Make a muted palette for a meditation app', true],
+    ['Propose three palette options for a toy store.', true],
+    ['Could you design a palette that feels luxurious?', true],
+    ['A pastel palette for a nursery, please.', true],
+    ['A calm palette for a bank.', true],
+    ['Calm blues for a fintech palette.', true],
+    ['Something calm and blue for a banking app, palette-wise.', true],
+    ["Here's our palette: #1f3a5f, #4a6f8a, #9cc3e0. Does it pass AA?", true],
+    // Verifier 4: requests whose object is not the palette, the roulette and brand-colour turns, and the decide notes.
+    ['Book a table for four at 19:00 and use our brand colours for the napkins.', false],
+    ['Book the spa for two and use our brand colours on the confirmation card.', false],
+    ['Use our brand colours on the invoice header.', false],
+    ['Set the table for four at 19:00 and use the brand colours for napkins.', false],
+    ['Apply the brand colours to the dashboard header.', false],
+    ['Put the brand colours on the chart.', false],
+    ['Add our brand colours to the invoice template.', false],
+    ['Print the menu in our brand colours.', false],
+    ['Match the napkins to our brand colours.', false],
+    ['Keep the table decor in our brand colours.', false],
+    ['Send the invite using the brand colours.', false],
+    ['Style the invoice with our palette.', false],
+    ['Set the dashboard to our colour scheme.', false],
+    ['Use the palette from our brand guide on the landing page.', false],
+    ['Export the palette as CSS variables.', false],
+    ['Please use the brand colours for the chart.', false],
+    ['I want the invoice in our brand colours.', false],
+    ['I need the napkins to match our brand colours.', false],
+    ['Swap the hero image for the brand colours version.', false],
+    ['Which number should I bet on, red 7 or black 22?', false],
+    ["I'll put ten on red.", false],
+    ['Does red or black pay better in roulette?', false],
+    ['Roulette: which colour pays more?', false],
+    ["I'm betting on red this round.", false],
+    ['Which colour chip is worth 100?', false],
+    ['Bet on red.', false],
+    ['Put twenty on black.', false],
+    ['Our brand colours are teal and cream. Can you draft a landing page?', false],
+    ['Can you book a table and match the napkins to our brand colours?', false],
+    ['Could you use our brand colours on the invoice?', false],
+    ['Can you apply the brand colours to the header?', false],
+    ['Make it 16:00 and use the brand colours for the table decor.', false],
+    ['Thanks!', false],
+    ['Thanks, that was helpful.', false],
+    ['What colours does the hoodie come in?', false],
+    ['Is the sofa available in a grey colour scheme?', false],
+    ['Do you sell this lamp in other colours?', false],
+    ["The command palette shortcut doesn't work.", false],
+    ['Where is the palette knife?', false],
+    ['Change the font, not the colours.', false],
+    ['Show me the booking form.', false],
+    ['Clear the board and start a new game.', false],
+    ['Open the colour palette panel in Figma.', false],
+    ['Tell me about the palette of the Mona Lisa.', false],
+    ['The palette looks washed out on my monitor.', false],
   ]
-  it.each(FIRST_ASK)('as a first ask, "%s" fires: %s; with a palette shown, none', (turn, fires) => {
+  it.each(FIRST_ASK)('as a first ask on the Stylist, "%s" fires: %s; outside the Stylist or after a palette, none', (turn, fires) => {
     expect(said(turn).map((f) => f.code)).toEqual(fires ? ['SURFACE_MISSING'] : [])
+    expect(on(base, turn)).toEqual([])
+    expect(on(concierge, turn)).toEqual([])
     expect(opened(turn)).toEqual([])
   })
 
@@ -1430,14 +1510,8 @@ describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-03
     'Would you suggest this palette for dark mode too?',
   ])('with a palette shown, "%s" yields none', (turn) => expect(opened(turn)).toEqual([]))
 
-  // T-0359 ruling: a product's color options are an availability question, not a palette ask.
-  it.each(['What colors does this jacket come in?', 'Is it available in red?', 'Which colours do you have?', 'What jacket colors do you have?'])(
-    'the product availability question "%s" yields none',
-    (turn) => expect(said(turn)).toEqual([]),
-  )
-
-  it('a brand color question still fires', () => {
-    expect(said('What colors should I use for my brand?').map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  it('a palette word never shadows a Concierge moment: the palette ask is no askedCompositeMoment row', () => {
+    expect(askedCompositeMoment('Make it 16:00 and use the brand colours for the table decor')).toBeUndefined()
   })
 
   it('SWATCH_MISSING reads hex color values, never an order or issue number', () => {
@@ -1447,9 +1521,7 @@ describe('a palette ask answered with no Swatch or Ramp is SURFACE_MISSING (T-03
     expect(text('Neutral grey #333333 for body text')).toEqual(['SWATCH_MISSING'])
   })
 
-  it('a client turn passes, and the check rides agent-ui only where Swatch and Ramp live', () => {
+  it('a client turn passes', () => {
     expect(askCheck.check({ surfaces: [], action: { name: 'pick', surfaceId: 'palette-1', context: {}, dataModel: undefined } })).toEqual([])
-    expect(askCheck.requires).toEqual([...PALETTE_TYPES])
-    expect(gateChecksOnCatalog([askCheck], loadCatalog(basicCatalogRaw))).toEqual([])
   })
 })

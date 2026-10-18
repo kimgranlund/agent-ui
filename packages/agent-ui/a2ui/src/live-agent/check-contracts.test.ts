@@ -75,13 +75,15 @@ const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
 const UI = 'agent-ui'
 const CONCIERGE = 'agent-ui--concierge'
 const CROUPIER = 'agent-ui--croupier'
+const STYLIST = 'agent-ui--stylist'
 
 // Palette (T-0359).
-const palette = surface('palette-1', UI, [
+const PALETTE_NODES = [
   { id: 'root', component: 'Column', children: ['navy', 'blues'] },
   { id: 'navy', component: 'Swatch', label: 'Primary', value: '#1f3a5f' },
   { id: 'blues', component: 'Ramp', label: 'Blue', steps: [{ label: '300', value: '#7ea6cf' }, { label: '700', value: '#1f3a5f' }] },
-])
+]
+const palette = surface('palette-1', UI, PALETTE_NODES)
 
 // Booking (Concierge).
 const BOOKING = { date: '2026-10-20', time: '20:00', party: 4 }
@@ -348,10 +350,11 @@ const CONTRACTS: Record<string, Contract> = {
     pass: { catalog: UI, output: palette },
     fail: { catalog: UI, output: surface('palette-1', UI, [{ id: 'root', component: 'Text', text: 'Primary navy #1f3a5f, accent sky #9cc3e0' }]) },
   },
+  // Kim, 2026-10-18: the palette ask rides the Stylist alone.
   'composite-ask-swatch': {
     code: 'SURFACE_MISSING',
-    pass: { catalog: UI, intent: 'Propose a calm blue palette for a banking app.', output: palette },
-    fail: { catalog: UI, intent: 'Propose a calm blue palette for a banking app.', output: [] },
+    pass: { catalog: STYLIST, intent: 'Propose a calm blue palette for a banking app.', output: surface('palette-1', STYLIST, PALETTE_NODES) },
+    fail: { catalog: STYLIST, intent: 'Propose a calm blue palette for a banking app.', output: [] },
   },
   'framed-choice': {
     code: 'FRAMED_CHOICE',
