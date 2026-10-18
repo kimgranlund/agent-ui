@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from './cli.ts'
 import { newestTablePhase, parseProbeFixture, stepArgv, stepSkip, TablePhase } from './model.ts'
-import { CROUPIER_ROUND_SCENARIOS, CROUPIER_SCENARIOS } from './scenarios/croupier.ts'
+import { CROUPIER_ROUND_SCENARIOS, CROUPIER_SCENARIOS, TWIST_TO_STICK } from './scenarios/croupier.ts'
 import { round3Argv } from './scenarios/round3.ts'
 import { roundArgv } from './scenarios/round.ts'
 import { routingArgv } from './scenarios/routing.ts'
@@ -46,7 +46,8 @@ describe('the live-round blackjack-family steps skip a hand a natural settled (T
 
   it('pontoon-haiku-1 (:101 to :103): Buy a card and Stick after the natural are skipped', () => {
     const fixture = fixtureOf('regress-croupier-pontoon-haiku-1')
-    const steps = stepsOf('pontoon').slice(0, fixture.steps.length) // the third hand was never recorded
+    // The third hand was never recorded; T-0370's follow-up step postdates this finished run, so it is not one of its steps.
+    const steps = stepsOf('pontoon').filter((step) => step.say !== TWIST_TO_STICK).slice(0, fixture.steps.length)
     expect(steps.map(label)).toEqual(fixture.steps.map(label))
     expect(phaseAfter(fixture, 6)).toBe('settled')
     expect(walk(steps, fixture).skipped).toEqual([6, 7])
