@@ -38,9 +38,12 @@
 // table, and a round result Toast is never read.
 //
 // T-0365: the T-0362 re-record (round 2026-10-18-t0362-smoke) hand-built two strips that row missed. A question, round,
-// turn, guess or attempt counter ("Q1 of 20", "Round 2 of 5") is a game-stat cue, while a bare "3 of 6" (an inventory
-// count, an order line) is none; and the strip's `rowTypes` (Text) count only from a Row that holds `min` or more cued
-// ones (the Dungeon Master's "HP 12 / 12" and "Gold 0"), so cued narration lines or a lone HP Text stay clean.
+// turn, guess or attempt `counter` ("Q1 of 20", "Q 1/20", "Round 2/5") is a game stat, while a bare "3 of 6" or "3/6"
+// (an inventory count, an order line) is none, and a counter alone never names a game (a hiring "Round 2 of 4" beside a
+// "Confidence: high"). A component counts each distinct stat it names ("HP 12/12, Gold 0" is two). A `groupTypes`
+// component (Text) counts only when it opens on its stat ("Gold 0", "Confidence: low") and sits in a sibling group (the
+// direct children of any parent, one single-child wrapper looked through) whose stat items reach `min` (the Dungeon
+// Master's "HP 12 / 12" and "Gold 0" in a Row), so narration that mentions gold or HP and a lone HP Text stay clean.
 //
 // T-0361: the Timeline row reads a quest log built by hand: on a surface whose words name a game, a Column or List of
 // parallel entries (Texts, or Rows of Texts: a number and a name) under its nearest heading. Under a log heading (scenes,
@@ -75,13 +78,19 @@ export interface CompositeMoment {
   /** T-0358, T-0364: with none of `has` present (or no `has` at all, T-0361), the row still runs on a surface whose words name a game (`game`, read with
    *  any `end` phrase taken out, so "game over" alone names none) unless it holds a `standAside` type, reading no words from
    *  `skipWordTypes`. Then either `statStrip`: at least `min` stat items (a component of `types`, a DescriptionList row,
-   *  or a `rowTypes` component in a Row holding `min` or more cued ones, T-0365) whose words name game state (`cue`), the
-   *  hand-built score strip of a game with no board; or the row's `words` path,
+   *  or T-0365 a `groupTypes` component opening on its stat in a sibling group that reaches `min`) whose words name game
+   *  state (`cue`, or a `counter`, which is taken out of the game words), the hand-built score strip of a game with no board; or the row's `words` path,
    *  with an `end` signal on the surface, or a `restart` signal with no live play control left on it (T-0361 review).
    *  Every other gate of the row still applies. */
   readonly boardless?: {
     readonly game: RegExp
-    readonly statStrip?: { readonly types: readonly string[]; readonly rowTypes?: readonly string[]; readonly cue: RegExp; readonly min: number }
+    readonly statStrip?: {
+      readonly types: readonly string[]
+      readonly groupTypes?: readonly string[]
+      readonly cue: RegExp
+      readonly counter?: RegExp
+      readonly min: number
+    }
     readonly end?: RegExp
     readonly restart?: RegExp
     readonly standAside?: readonly string[]
@@ -212,9 +221,10 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       statStrip: {
         types: ['Badge', 'Stat', 'Progress'],
         // T-0365: the Dungeon Master's HP and Gold as two Texts in a Row.
-        rowTypes: ['Text'],
-        // T-0365: a "Q1 of 20" or "Round 2 of 5" counter is a cue; a bare "3 of 6" is none.
-        cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries|q\d+ of \d+|(question|round|turn|guess|attempt|try) \d+ of \d+)\b/i,
+        groupTypes: ['Text'],
+        cue: /\b(hp|hit points|gold|lives|mood|asking|counter|confidence|questions|score|guesses|attempts|tries)\b/i,
+        // T-0365: "Q1 of 20", "Q 1/20", "Round 2/5"; a bare "3 of 6" or "3/6" is none.
+        counter: /\b(q|question|round|turn|guess|attempt|try)\s*\d+\s*(of|\/)\s*\d+\b/i,
         min: 2,
       },
     },
@@ -328,26 +338,49 @@ function submitsReadBack(c: A2uiComponent, view: SurfaceView, rb: NonNullable<Co
   return name !== 'start_intent' && rb.cue.test(buttonWords(c, view))
 }
 
-/** T-0358: the components holding at least `min` game-stat items (a `types` component's label, title or text, literal or
- *  bound, a DescriptionList row, or T-0365 a `rowTypes` component in a Row holding `min` or more cued ones), or `[]`. */
-function statStrays(strip: NonNullable<NonNullable<CompositeMoment['boardless']>['statStrip']>, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
+type StatStrip = NonNullable<NonNullable<CompositeMoment['boardless']>['statStrip']>
+
+/** T-0365: a strip's `cue` and `counter` as one global pattern. */
+function statPattern(strip: StatStrip): RegExp {
+  return new RegExp([strip.cue, strip.counter].filter((re) => re !== undefined).map((re) => re.source).join('|'), 'gi')
+}
+
+/** T-0358: the components holding at least `min` game-stat items (a `types` component's words, literal or bound, or a
+ *  DescriptionList row; T-0365: each distinct stat a component names counts, and a `groupTypes` component counts when
+ *  it opens on its stat inside a sibling group whose stat items reach `min`), or `[]`. */
+function statStrays(strip: StatStrip, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
+  const stats = statPattern(strip)
+  const opens = new RegExp(`^\\s*(?:${stats.source})\\s*(:|\\d|$)`, 'i')
+  const words = (c: A2uiComponent): string => WORD_PROPS.map((k) => stringOf(c[k], view)).join(' ').trim()
+  /** The distinct stats a component names (T-0365: "HP 12/12, Gold 0" is two). */
+  const statsOf = (c: A2uiComponent): number => {
+    const t = words(c)
+    if (strip.groupTypes?.includes(c.component) === true && !opens.test(t)) return 0
+    if (!strip.types.includes(c.component) && strip.groupTypes?.includes(c.component) !== true) return 0
+    return new Set([...t.matchAll(stats)].map((m) => m[0].toLowerCase().replace(/\s+/g, ''))).size
+  }
+  // T-0365: the `groupTypes` components in a sibling group (a parent's direct children, one single-child wrapper looked
+  // through) whose stat items reach `min`.
+  const grouped = new Set<A2uiComponent>()
+  if (strip.groupTypes !== undefined && strip.groupTypes.length > 0) {
+    for (const parent of comps) {
+      const members = childIds(parent)
+        .map((id) => view.components.get(id))
+        .map((k) => {
+          const only = k === undefined ? [] : childIds(k)
+          return only.length === 1 && statsOf(k!) === 0 ? view.components.get(only[0]!) : k
+        })
+        .filter((k): k is A2uiComponent => k !== undefined && statsOf(k) > 0)
+      if (members.reduce((n, k) => n + statsOf(k), 0) < strip.min) continue
+      for (const k of members) if (strip.groupTypes.includes(k.component)) grouped.add(k)
+    }
+  }
   let items = 0
   const found: A2uiComponent[] = []
-  const textOf = (c: A2uiComponent): string => ['label', 'title', 'text'].map((k) => stringOf(c[k], view)).join(' ')
-  // T-0365: the `rowTypes` components that sit in a Row beside `min` - 1 or more other cued ones.
-  const rowed = new Set<A2uiComponent>()
-  for (const row of comps) {
-    if (row.component !== 'Row') continue
-    const cued = childIds(row)
-      .map((id) => view.components.get(id))
-      .filter((k): k is A2uiComponent => k !== undefined && strip.rowTypes?.includes(k.component) === true && strip.cue.test(textOf(k)))
-    if (cued.length >= strip.min) for (const k of cued) rowed.add(k)
-  }
   for (const c of comps) {
-    const texts = strip.types.includes(c.component) || rowed.has(c)
-      ? [textOf(c)]
-      : c.component === 'DescriptionList' ? rowTexts(c, view) : []
-    const hits = texts.filter((t) => strip.cue.test(t)).length
+    const hits = strip.types.includes(c.component) || grouped.has(c)
+      ? statsOf(c)
+      : c.component === 'DescriptionList' ? rowTexts(c, view).filter((t) => new RegExp(stats.source, 'i').test(t)).length : 0
     if (hits === 0) continue
     items += hits
     found.push(c)
@@ -447,7 +480,10 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
     end?.test(words) === true ||
     (restart?.test(words) === true && !comps.some((c) => PLAY_CONTROLS.includes(c.component) && !(c.component === 'Button' && restart.test(buttonWords(c, view)))))
   if (boardless !== undefined) {
-    const gameWords = ending === undefined ? surfaceWords : surfaceWords.replace(ending, ' ')
+    const unended = ending === undefined ? surfaceWords : surfaceWords.replace(ending, ' ')
+    // T-0365: a counter alone ("Round 2 of 4") names no game.
+    const counter = boardless.statStrip?.counter
+    const gameWords = counter === undefined ? unended : unended.replace(new RegExp(counter.source, 'gi'), ' ')
     if (!boardless.game.test(gameWords)) return []
     if (boardless.statStrip !== undefined) return statStrays(boardless.statStrip, comps, view)
     if (end !== undefined && !ended(surfaceWords)) return []

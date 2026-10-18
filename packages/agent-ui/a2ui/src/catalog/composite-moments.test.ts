@@ -503,75 +503,134 @@ describe('composite moment checks (T-0208)', () => {
     })
   }
 
-  it('T-0365: the finding names the counter Badge and the cued Texts of the Row', () => {
+  it('T-0365: the finding names the counter Badge, the Progress and the grouped Texts', () => {
     const find = (cs: A2uiComponent[]) => runSemanticChecks(compositeMomentChecks, { surfaces: [view(cs, 'quest-log')] }).findings[0]!.message
-    expect(find(STRIPS_T0362['mentalist']!)).toContain('count (a Badge), prog (a Progress)')
+    expect(find(STRIPS_T0362['mentalist']!)).toContain('count (a Badge), prog (a Progress), conf (a Text)')
     expect(find(STRIPS_T0362['dungeon-master']!)).toContain('hp (a Text), gold (a Text)')
   })
 
-  // T-0365 negative controls: each guard of the widened strip shown to bite.
-  it('T-0365 negative control: a bare "3 of 6" count is no counter, so one cued Badge beside it yields none', () => {
-    expect(
-      codes([
-        { id: 'root', component: 'Card', children: ['title', 'inv', 'hp'] },
-        { id: 'title', component: 'Text', text: 'Quest log', variant: 'h4' },
-        { id: 'inv', component: 'Badge', label: 'Inventory 3 of 6' },
-        { id: 'hp', component: 'Badge', label: 'HP 12/12' },
-      ]),
-    ).toEqual([])
+  // T-0365 review: the sibling group, not a Row, admits a stat Text; each distinct stat a component names counts.
+  const QUEST = { id: 'title', component: 'Text', text: 'Quest log', variant: 'h4' } as const
+  const STRIP_SHAPES: Record<string, A2uiComponent[]> = {
+    'a Badge and a Text side by side': [
+      { id: 'root', component: 'Column', children: ['title', 'hp', 'gold'] },
+      QUEST,
+      { id: 'hp', component: 'Badge', label: 'HP 12/12' },
+      { id: 'gold', component: 'Text', text: 'Gold 0' },
+    ],
+    'a stat Text in a single-child wrapper': [
+      { id: 'root', component: 'Row', children: ['title', 'hpBox', 'goldBox'] },
+      QUEST,
+      { id: 'hpBox', component: 'Card', child: 'hp' },
+      { id: 'hp', component: 'Text', text: 'HP 12 / 12' },
+      { id: 'goldBox', component: 'Card', child: 'gold' },
+      { id: 'gold', component: 'Text', text: 'Gold 0' },
+    ],
+    'one Text naming two stats': [
+      { id: 'root', component: 'Column', children: ['title', 'strip'] },
+      QUEST,
+      { id: 'strip', component: 'Row', children: ['s'] },
+      { id: 's', component: 'Text', text: 'HP 12/12, Gold 0' },
+    ],
+    'one Badge naming two stats': [
+      { id: 'root', component: 'Column', children: ['title', 's'] },
+      QUEST,
+      { id: 's', component: 'Badge', label: 'HP 12/12, Gold 0' },
+    ],
+  }
+  for (const [shape, components] of Object.entries(STRIP_SHAPES)) {
+    it(`T-0365 review: ${shape} on a quest yields GAME_HUD_MISSING`, () => {
+      expect(codes(components)).toEqual(['GAME_HUD_MISSING'])
+    })
+  }
+
+  it('T-0365 review: the slash and spaced counters count; a bare "3 of 6" or "3/6" does not', () => {
+    for (const label of ['Q1/20', 'Q 1 of 20', 'Round 2/5', 'Guess 3/6']) {
+      expect(codes([{ id: 'root', component: 'Row', children: ['title', 'c', 'hp'] }, QUEST, { id: 'c', component: 'Badge', label }, { id: 'hp', component: 'Badge', label: 'HP 12/12' }])).toEqual(['GAME_HUD_MISSING'])
+    }
+    for (const label of ['Inventory 3 of 6', 'Slots 3/6']) {
+      expect(codes([{ id: 'root', component: 'Row', children: ['title', 'c', 'hp'] }, QUEST, { id: 'c', component: 'Badge', label }, { id: 'hp', component: 'Badge', label: 'HP 12/12' }])).toEqual([])
+    }
   })
 
-  it('T-0365 negative control: cued narration Texts in a Column are no strip', () => {
+  // T-0365 negative controls, each on a surface whose words name a game (or, for the counter gate, whose only game word
+  // is the counter), so each reaches the widened strip and is kept quiet by one guard.
+  it('T-0365 negative control: narration that mentions gold and HP is no stat strip', () => {
     expect(
       codes([
         { id: 'root', component: 'Column', children: ['title', 'a', 'b'] },
-        { id: 'title', component: 'Text', text: 'Quest log', variant: 'h4' },
+        QUEST,
         { id: 'a', component: 'Text', text: 'You pry 20 gold from the chest.' },
         { id: 'b', component: 'Text', text: 'A potion restores your HP.' },
       ]),
     ).toEqual([])
   })
 
-  it('T-0365 negative control: a Row of one cued Text and a level Text yields none', () => {
+  it('T-0365 negative control: stat Texts in two groups that each hold one stat yield none', () => {
     expect(
       codes([
-        { id: 'root', component: 'Row', children: ['title', 'hp', 'lvl'] },
-        { id: 'title', component: 'Text', text: 'Quest log' },
+        { id: 'root', component: 'Row', children: ['title', 'a', 'b'] },
+        { id: 'title', component: 'Text', text: 'Dungeon: The Undervault', variant: 'h4' },
+        { id: 'a', component: 'Column', children: ['hp', 'lvl'] },
         { id: 'hp', component: 'Text', text: 'HP 12 / 12' },
         { id: 'lvl', component: 'Text', text: 'Level 3' },
+        { id: 'b', component: 'Column', children: ['gold', 'note'] },
+        { id: 'gold', component: 'Text', text: 'Gold 0' },
+        { id: 'note', component: 'Text', text: 'Found in the chest' },
       ]),
     ).toEqual([])
   })
 
-  it('T-0365 negative control: KPI, loyalty, receipt and checkout strips of Texts and counters yield none', () => {
+  it('T-0365 negative control: game-studio KPI, loyalty and receipt strips of Texts yield none', () => {
     expect(
       codes([
-        { id: 'root', component: 'Row', children: ['nps', 'conf'] },
+        { id: 'root', component: 'Row', children: ['t', 'nps', 'conf'] },
+        { id: 't', component: 'Text', text: 'Game studio KPIs', variant: 'h4' },
         { id: 'nps', component: 'Text', text: 'NPS score 62' },
-        { id: 'conf', component: 'Text', text: 'Confidence 91%' },
+        { id: 'conf', component: 'Text', text: 'Model confidence 0.91' },
       ]),
     ).toEqual([])
     expect(
       codes([
-        { id: 'root', component: 'Row', children: ['tier', 'stamps'] },
+        { id: 'root', component: 'Row', children: ['t', 'tier', 'help'] },
+        { id: 't', component: 'Text', text: 'Game night rewards', variant: 'h4' },
         { id: 'tier', component: 'Text', text: 'Gold tier' },
-        { id: 'stamps', component: 'Text', text: 'Questions? Ask at the counter' },
+        { id: 'help', component: 'Text', text: 'Questions? Ask at the counter' },
       ]),
     ).toEqual([])
     expect(
       codes([
-        { id: 'root', component: 'Card', children: ['t', 'row'] },
-        { id: 't', component: 'Text', text: 'Thanks for your order', variant: 'h4' },
-        { id: 'row', component: 'Row', children: ['item', 'card'] },
+        { id: 'root', component: 'Row', children: ['t', 'item', 'paid'] },
+        { id: 't', component: 'Text', text: 'Quest shop receipt', variant: 'h4' },
         { id: 'item', component: 'Text', text: 'Item 1 of 3' },
-        { id: 'card', component: 'Text', text: 'Gold card ending 4242' },
+        { id: 'paid', component: 'Text', text: 'Gold: 40' },
+      ]),
+    ).toEqual([])
+  })
+
+  it('T-0365 negative control: a counter alone names no game (hiring, workout and survey strips)', () => {
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['t', 'round', 'conf'] },
+        { id: 't', component: 'Text', text: 'Candidate: Jane Park', variant: 'h4' },
+        { id: 'round', component: 'Badge', label: 'Round 2 of 4' },
+        { id: 'conf', component: 'Text', text: 'Confidence: high' },
       ]),
     ).toEqual([])
     expect(
       codes([
-        { id: 'root', component: 'Row', children: ['step', 'q'] },
-        { id: 'step', component: 'Badge', label: 'Question 2 of 5' },
-        { id: 'q', component: 'Progress', label: 'Survey questions answered', value: 2, max: 5 },
+        { id: 'root', component: 'Row', children: ['t', 'round', 'score'] },
+        { id: 't', component: 'Text', text: 'Interval session', variant: 'h4' },
+        { id: 'round', component: 'Badge', label: 'Round 2 of 4' },
+        { id: 'score', component: 'Stat', label: 'Score', value: '4.2' },
+      ]),
+    ).toEqual([])
+    expect(
+      codes([
+        { id: 'root', component: 'Row', children: ['t', 'round', 'q'] },
+        { id: 't', component: 'Text', text: 'Customer survey', variant: 'h4' },
+        { id: 'round', component: 'Badge', label: 'Round 2 of 3' },
+        { id: 'q', component: 'Progress', label: 'Questions answered', value: 4, max: 10 },
       ]),
     ).toEqual([])
   })
