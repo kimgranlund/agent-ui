@@ -27,3 +27,12 @@ Follow-up of T-0358. T-0358's board-less path (`statStrip`) reads stat items, wh
 
 ## Constraints
 The failing test lands before or with the fix, never after.
+
+## Acceptance criteria
+verifier: L3
+
+1. `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the repro (a Card with "You won! The answer was a cat." and a Play again Button, no BoardGrid) and a Negotiator and a Dungeon Master ending yield `['RESULT_CARD_MISSING']` and none with a ResultCard; a sales dashboard, an order receipt, a booking confirmation, a podcast player, a round result Toast and two croupier hands (CardTable, PlayingCards) yield no RESULT_CARD_MISSING, and each fires with the game gate, the croupier `lacks` and the Toast skip removed.
+2. `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0, its mutation dropping the row's croupier guard.
+3. `npx vitest run --project scripts scripts/e2e-admin/probe/` exits 0 (no replay re-pinned).
+4. `npm run check` exits 0.
+5. The ResultCard repair wording is unchanged.
