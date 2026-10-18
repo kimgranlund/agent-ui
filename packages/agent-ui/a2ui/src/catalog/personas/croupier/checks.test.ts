@@ -882,6 +882,46 @@ describe('croupier bet controls: a hold\'em opening that asks for the stake (T-0
   })
 })
 
+// T-0368 (round 11 :222 round 2, Haiku 5.5, "Let's play Texas hold'em."): after a SURFACE_MISSING repair the table
+// shipped stake-first, its PlayingCards only templates over empty hands, no game named on screen and a Deal Button
+// whose context says newRound. A template over an empty hand is not a dealt card.
+describe('croupier bet controls: a hold\'em table whose hands are empty templates (T-0368)', () => {
+  const card = (rank: string, suit: string) => ({ rank, suit, faceDown: false })
+  const table = (playerHand: unknown[] = []): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: 'holdem-table-1', catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'holdem-table-1', value: { bankroll: 1000, bet: 0, pot: 0, dealerHand: [], playerHand, communityCards: [], status: 'Place your bet to start the hand', bet_amount: 50 } } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'holdem-table-1', components: [
+      { id: 'root', component: 'Card', children: ['content', 'footer'] },
+      { id: 'content', component: 'CardContent', children: ['header', 'board', 'hand'] },
+      { id: 'header', component: 'Row', justify: 'between', children: ['bankrollText', 'potText'] },
+      { id: 'bankrollText', component: 'Text', variant: 'label', text: { path: '/bankroll' } },
+      { id: 'potText', component: 'Text', variant: 'label', text: { path: '/pot' } },
+      { id: 'board', component: 'Row', gap: 'sm', wrap: true, children: { path: '/communityCards', componentId: 'communityCard' } },
+      { id: 'communityCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+      { id: 'hand', component: 'Row', gap: 'sm', wrap: true, children: { path: '/playerHand', componentId: 'playerCard' } },
+      { id: 'playerCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+      { id: 'footer', component: 'CardFooter', children: ['statusText', 'actions'] },
+      { id: 'statusText', component: 'Text', variant: 'body', text: { path: '/status' } },
+      { id: 'actions', component: 'Row', gap: 'md', justify: 'end', children: ['dealBtn'] },
+      { id: 'dealBtn', component: 'Button', label: 'Deal', variant: 'solid', action: { action: 'deal', context: { newRound: true } } },
+    ] } },
+  ] as A2uiOutput
+  const run = (output: A2uiOutput, intent?: string) =>
+    croupierBetControls.check({ surfaces: semanticSurfaceViews({ turns: [] }, output), ...(intent !== undefined ? { intent } : {}) })
+
+  it('the recorded :222 round 2 payload is POKER_DEAL_MISSING on its Deal Button', () => {
+    const findings = run(table(), "Let's play Texas hold'em.")
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['POKER_DEAL_MISSING', 'holdem-table-1:dealBtn']])
+    expect(findings[0]!.message).toMatch(/dealBtn \(a Button\), and no hand is dealt/)
+  })
+
+  it('a hand that holds cards, or a turn with no game named, passes', () => {
+    expect(run(table([card('A', 'hearts'), card('K', 'clubs')]), "Let's play Texas hold'em.")).toEqual([])
+    expect(run(table())).toEqual([])
+    expect(run(table(), "Let's play seven-card stud.")).toEqual([])
+  })
+})
+
 // T-0172: the live probe on f6f94f7f. Haiku 5.5 answered a 50 press with prose and no update; Sonnet 5.5 dealt and
 // wrote a bankroll of 500 from 1,000.
 describe('croupier action check: a table action moves the table and a deal takes the bet (T-0172 live probe)', () => {

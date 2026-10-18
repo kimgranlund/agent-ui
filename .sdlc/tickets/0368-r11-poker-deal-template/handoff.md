@@ -30,3 +30,9 @@ The failing test lands before or with the fix, never after.
 
 ## Kim ruling (2026-10-18, close-out round)
 Promoted to ready; run as a keyless solo lane with one verifier, no live spend.
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts -t "T-0368"` exits 0: the inlined :222 round 2 payload with intent "Let's play Texas hold'em." yields exactly `[['POKER_DEAL_MISSING', 'holdem-table-1:dealBtn']]`; the same table with two cards in `/playerHand`, with no intent, or with a stud intent yields `[]`.
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier packages/agent-ui/a2ui/src/live-agent` exits 0 (the T-0357 tests and the recorded replays unchanged).
+- `npm run check` exits 0.
