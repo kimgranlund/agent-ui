@@ -1325,6 +1325,29 @@ describe('a palette set out in the reply with no token surface is SURFACE_MISSIN
     ['A calm palette for a bank leans on blues and greens, with warm accents used sparingly.', false],
     ['Order #482913 shipped; see issue #969 and ticket #123.', false],
     ['Thanks! Glad the palette works.', false],
+    // Verifier 6: every missed form, now pinned (criterion 2).
+    ['- **Navy** for headers\n- **Coral** for buttons\n- **Sand** for the page', true],
+    ['- **Primary:** Navy\n- **Secondary:** Steel blue\n- **Accent:** Sky', true],
+    ['- Header: navy\n- Buttons: coral\n- Body: charcoal', true],
+    ['- Primary colour: navy\n- Secondary colour: steel blue\n- Accent colour: sky', true],
+    ['Primary navy, secondary steel blue, accent sky.', true],
+    ['Primary colour: navy. Secondary colour: steel blue. Accent colour: sky.', true],
+    ['Primary \u2014 navy\nSecondary \u2014 steel blue\nAccent \u2014 sky', true],
+    ['The primary is navy, the secondary is steel blue and the accent is sky.', true],
+    ['Use a success green, a warning amber and an error red for the status badges.', true],
+    ['Three anchors:\n- #2a9d8f\n- #e76f51\n- #264653', true],
+    // The conductor's decide notes, pinned one way.
+    ['Go with navy for the header, sand for the background and coral for buttons.', true],
+    ['Primary: periwinkle, Secondary: cornflower, Accent: sienna.', true],
+    ['.btn { color: #333; border: 1px solid #ddd; background: #fff; }', false],
+    ['```css\n:root { --primary: #1f3a5f; --accent: #9cc3e0; --neutral: #f4efe6; }\n```', false],
+    ['Use white text on the primary, black text on the accent and a grey border around cards.', false],
+    ['Navy, teal and coral all appear in your logo.', false],
+    // Verifier 6 forms that already fired, kept.
+    ['Background: cream. Text: charcoal. Accent: teal.', true],
+    ['a warm terracotta primary, a soft cream background and a deep espresso text color', true],
+    ['Anchors: #FFF, #333, #E63946 and #457B9D.', true],
+    ['Here you go: #abcdef, #fedcba and #aabbcc.', true],
   ]
   it.each(REPLIES)('on the Stylist, the reply %j fires: %s; outside the Stylist, none', (reply, fires) => {
     expect(said(reply).map((f) => f.code)).toEqual(fires ? ['SURFACE_MISSING'] : [])
@@ -1362,7 +1385,7 @@ describe('a palette set out in the reply with no token surface is SURFACE_MISSIN
     expect(proseColors(RECORDED)).toBe(4)
     expect(proseColors('Order #482913 shipped; see issue #969 and ticket #123.')).toBe(0)
     expect(proseColors('#1f3a5f #1F3A5F #4a6f8a')).toBe(2)
-    expect(proseColors('White text on navy.')).toBe(1) // one color by role, below a palette
+    expect(proseColors('White text on navy.')).toBe(0) // a UI part of something else names no palette role
   })
 
   it('SWATCH_MISSING reads hex color values, never an order or issue number', () => {

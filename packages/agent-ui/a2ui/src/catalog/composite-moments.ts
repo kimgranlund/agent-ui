@@ -634,29 +634,59 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
 
 /** T-0359: hex codes, each a distinct color. */
 const HEX_CODE = /#(?:[0-9a-f]{6}|[0-9a-f]{3})\b/gi
-/** T-0359: the color names a prose palette sets out ("navy", "steel-blue", "sand"). */
+/** T-0359: the color names a prose palette sets out ("navy", "steel-blue", "periwinkle"), a closed list. */
 const COLOR_NAME =
-  '(navy|blue|sky|teal|turquoise|cyan|aqua|green|sage|olive|mint|emerald|forest|lime|jade|seafoam|red|crimson|scarlet|maroon|burgundy|coral|salmon|pink|rose|blush|magenta|fuchsia|purple|violet|lavender|lilac|plum|mauve|orange|amber|peach|tangerine|rust|terracotta|copper|bronze|yellow|gold|mustard|lemon|ochre|cream|ivory|beige|sand|tan|taupe|khaki|brown|chocolate|espresso|clay|white|black|charcoal|slate|graphite|ink|midnight|gray|grey|silver|stone|snow|bone|indigo|cobalt|azure|cerulean)'
-/** T-0359: the roles a palette gives its colors. */
-const COLOR_ROLE = '(primary|secondary|tertiary|accent|neutral|background|surface|text|base|highlight|brand|cta|link|border|success|warning|error|danger|info)'
-/** T-0359: a named color set out by role, role first ("Primary: navy", "Accent - coral") or after it ("a deep navy primary",
- *  "a muted sky accent"), or on a list line ("- Navy for headers"). */
-const ROLE_FIRST = new RegExp(`\\b${COLOR_ROLE}s?\\s*[:=\\u2013-]\\s*(?:[a-z]+[ -]){0,2}?${COLOR_NAME}\\b`, 'gi')
-const ROLE_AFTER = new RegExp(`\\b${COLOR_NAME}\\s+${COLOR_ROLE}\\b`, 'gi')
-const LIST_LINE = new RegExp(`^\\s*(?:[-*\\u2022]|\\d+[.)])\\s+(?:[a-z]+[ -]){0,3}?${COLOR_NAME}\\b`, 'gim')
+  '(navy|blue|sky|teal|turquoise|cyan|aqua|green|sage|olive|mint|emerald|forest|lime|jade|seafoam|celadon|pistachio|moss|fern|petrol|red|crimson|scarlet|maroon|burgundy|carmine|cerise|vermilion|raspberry|mulberry|coral|salmon|pink|rose|blush|magenta|fuchsia|orchid|purple|violet|lavender|lilac|plum|mauve|heather|thistle|wisteria|aubergine|orange|amber|peach|apricot|tangerine|rust|terracotta|sienna|umber|sepia|copper|bronze|yellow|gold|mustard|lemon|citron|canary|marigold|saffron|ochre|chartreuse|cream|ivory|beige|sand|tan|taupe|khaki|linen|oatmeal|parchment|eggshell|alabaster|champagne|pearl|brown|chocolate|espresso|clay|white|black|charcoal|slate|graphite|gunmetal|pewter|onyx|ink|midnight|gray|grey|silver|stone|snow|bone|indigo|cobalt|azure|cerulean|sapphire|denim|cornflower|periwinkle|ultramarine)'
+/** T-0359: the roles a palette gives its colors, and the UI parts among them ("white text", "a grey border"). */
+const PALETTE_ROLE = '(primary|secondary|tertiary|accent|neutral|base|highlight|brand|cta|success|warning|error|danger|info)'
+const UI_PART = '(text|border|background|surface|link)'
+const ROLE = `(${PALETTE_ROLE.slice(1, -1)}|${UI_PART.slice(1, -1)})`
+/** T-0359: up to two describing words before a color ("deep", "steel"), never a function word. */
+const FILLER = '(?:(?!(?:and|or|but|a|an|the|on|of|for|with|to|in|around|is|are)\\b)[a-z]+[ -]){0,2}?'
+const MARK = '[*_]*'
+/** The pinned forms (criterion 2), each counting the colors it names:
+ *  - role first, by colon, equals sign, en or em dash, hyphen or "is": "Primary: navy", "Accent - coral", "**Primary:** navy", "Primary colour: navy",
+ *    "The primary is navy", "primary=teal", or a bare space ("Primary navy", "a success green, a warning amber");
+ *  - role after: "a deep navy primary", "a muted sky accent"; a UI part only when it names no part of something else
+ *    ("a soft cream background" counts, "white text on the primary" and "a grey border around cards" do not);
+ *  - a for-phrase role: "navy for the header, sand for the background and coral for buttons";
+ *  - a list line ("- Navy for headers", "1) Midnight for the header", "- **Navy** for headers", "- Header: navy",
+ *    "- Primary colour: navy");
+ *  - hex codes: three or more distinct, an all-digit code ("#333") only on a list line or beside two lettered codes; a
+ *    CSS rule or a fenced code block counts nothing. */
+const ROLE_FIRST = new RegExp(
+  `\\b${ROLE}s?(?:\\s+(?:colou?r|tone|hue|shade)s?)?${MARK}\\s*(?:[:=\\u2013\\u2014-]|\\bis\\b)?${MARK}\\s*${FILLER}\\b${COLOR_NAME}\\b`,
+  'gi',
+)
+const ROLE_AFTER = new RegExp(`\\b${COLOR_NAME}\\s+${PALETTE_ROLE}\\b`, 'gi')
+const PART_AFTER = new RegExp(`\\b${COLOR_NAME}\\s+${UI_PART}\\b(?!\\s+(?:on|around|of|for|in|with|behind|under|over|across|inside)\\b)`, 'gi')
+const FOR_ROLE = new RegExp(`\\b${COLOR_NAME}\\s+(?:for|as)\\s+(?:(?:the|your|our|all)\\s+)?[a-z]+`, 'gi')
+const LIST_LINE = new RegExp(
+  `^\\s*(?:[-*\\u2022]|\\d+[.)])\\s+${MARK}(?:[a-z]+(?:\\s+colou?r)?${MARK}\\s*:${MARK}\\s*)?${MARK}${FILLER}\\b${COLOR_NAME}\\b`,
+  'gim',
+)
+const LIST_HEX = /^\s*(?:[-*•]|\d+[.)])\s+.*?(#(?:[0-9a-f]{6}|[0-9a-f]{3}))\b/gim
+/** T-0359: code a reply quotes (a fenced block, a CSS rule's braces) never sets out a palette. */
+const CODE = /```[\s\S]*?(```|$)|\{[^{}]*\}/g
 
-/** T-0359: how many distinct colors a reply sets out as a palette: its distinct hex codes (an all-digit one only in a reply
- *  about colors), or, with fewer than three, its
- *  distinct named colors set out by role or as list lines. A passing mention ("white text on navy") sets out none. */
+/** T-0359: how many distinct colors a reply sets out as a palette in the pinned forms above: its distinct hex codes when
+ *  three or more, else its distinct named colors. A passing mention ("white text on navy") sets out none. */
 export function proseColors(reply: string): number {
-  // An all-digit code ("#482913", "#969") is a color only in a reply about colors, never an order or issue number.
-  const colorTalk = new RegExp(`\\b(colou?rs?|palettes?|hex|${COLOR_ROLE.slice(1, -1)})\\b`, 'i').test(reply)
-  const hex = new Set([...reply.matchAll(HEX_CODE)].map((m) => m[0].toLowerCase()).filter((h) => colorTalk || /[a-f]/.test(h)))
+  const text = reply.replace(CODE, ' ')
+  const codes = [...text.matchAll(HEX_CODE)].map((m) => m[0].toLowerCase())
+  const lettered = new Set(codes.filter((h) => /[a-f]/.test(h)))
+  const listed = new Set([...text.matchAll(LIST_HEX)].map((m) => m[1]!.toLowerCase()))
+  const hex = new Set(codes.filter((h) => lettered.has(h) || listed.has(h) || lettered.size >= 2))
   if (hex.size >= 3) return hex.size
   const named = new Set<string>()
-  for (const m of reply.matchAll(ROLE_FIRST)) named.add(m[2]!.toLowerCase())
-  for (const m of reply.matchAll(ROLE_AFTER)) named.add(m[1]!.toLowerCase())
-  for (const m of reply.matchAll(LIST_LINE)) named.add(m[1]!.toLowerCase())
+  const add = (re: RegExp, group: number) => {
+    for (const m of text.matchAll(re)) named.add(m[group]!.toLowerCase())
+  }
+  add(ROLE_FIRST, 2)
+  add(ROLE_AFTER, 1)
+  add(PART_AFTER, 1)
+  add(FOR_ROLE, 1)
+  add(LIST_LINE, 1)
   return Math.max(hex.size, named.size)
 }
 
