@@ -1,0 +1,1278 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "smoke-dungeon-master-first-scene-haiku-1",
+  "mode": "live",
+  "agent": "dungeon-master",
+  "model": "claude-haiku-5-5",
+  "runId": "smoke-dungeon-master-first-scene-haiku-1-87a20a58",
+  "at": "2026-10-18T09:15:32.985Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The user wants to start the ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"venture, so I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" k\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ick off the crawl as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Dungeon Master. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" build a quest log with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" scene rec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap, HP/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Gold strip, invent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ory cap\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ped at six\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" items, and 2-3 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"choices, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ighing whether to present those\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" choices as a sel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ectable ask vers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us plain text options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up an ask with a rad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"io group of three path\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" choices plus a commit button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping narration brief:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the character\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wakes in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Undervault's antechamber\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a cracked l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amp, an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" east door\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a stair down.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Starting kit is d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"agger, torch, and r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ations, HP 12/12\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Gold 0, and the three\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" choices are pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying the gate, following the water\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" north\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", or examining the lamp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" structuring the qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est log card with a status row for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" HP and gold, bad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ges\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for inventory, a sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ene list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and a foot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er button that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" submits the ch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"osen path\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the meta-line plac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed first follow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed by the narration as prose\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Continuing with the scen\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es section show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the op\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ening narration\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", then an inventory header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and a w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rapped row of badges for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Dagger\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and \\\"Torch\\\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" represent the star\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting items.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Then I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m adding a third\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" badge for \\\"Rations\\\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" followed by a \\\"What do you\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" do?\\\" label\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and a radio group b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" choice field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with three options: forcing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" iron gate east, following the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" drip into the north passage,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" or examining the brass lam\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"p. A foot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eled \\\"Take this path\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ggers a commit_\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"choice action that re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ads the selected choice from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data model.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I'll ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep hp at 12, g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old at 0, and presel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ect the lamp option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as default\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since no specific recommendation\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is required. The narration itself\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" will st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay short—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a few sentences describing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" damp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Undervault,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the alt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ar with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its lamp, and the open\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" i\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ron gate—before let\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the question\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" choices\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" carry the r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You come\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"old fl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"agstones at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the m\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"outh of the Undervault\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\",\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" air\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" th\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ick with wet stone and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" old\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" sm\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"oke. A cracked br\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ass lamp sits on a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dusty altar, an\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" iron gate b\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ars the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" way east\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", and water dr\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ips somewhere north\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the dark. Your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" pack hol\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ds a dagger, a tor\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ch and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" few rations. Cho\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ose your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" first\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" move\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" below\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"hp\\\":12,\\\"maxHp\\\":12,\\\"gold\\\":0,\\\"inventory\\\":[\\\"Dagger\\\",\\\"Torch\\\",\\\"Rations\\\"],\\\"scenes\\\":[\\\"1. Antechamber: you wake beside a cold brazier.\\\"],\\\"draft\\\":{\\\"choice\\\":\\\"lamp\\\"}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Quest log\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"strip\\\",\\\"scenesH\\\",\\\"scenes\\\",\\\"invH\\\",\\\"inv\\\",\\\"chH\\\",\\\"choice\\\"]},{\\\"id\\\":\\\"strip\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hp\\\",\\\"gold\\\"]},{\\\"id\\\":\\\"hp\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"HP 12 / 12\\\",\\\"variant\\\":\\\"label\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"gold\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Gold 0\\\",\\\"variant\\\":\\\"label\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"scenesH\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Scenes\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"scenes\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"xs\\\",\\\"children\\\":[\\\"s1\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"1. Antechamber: you wake beside a cold brazier.\\\"},{\\\"id\\\":\\\"invH\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Inventory (3 of 6)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"inv\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"i1\\\",\\\"i2\\\",\\\"i3\\\"]},{\\\"id\\\":\\\"i1\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Dagger\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"i2\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Torch\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"i3\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Rations\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"chH\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"What do you do?\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"choice\\\",\\\"component\\\":\\\"RadioGroup\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/choice\\\"},\\\"name\\\":\\\"choice\\\",\\\"orientation\\\":\\\"vertical\\\",\\\"children\\\":[\\\"r1\\\",\\\"r2\\\",\\\"r3\\\"]},{\\\"id\\\":\\\"r1\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"gate\\\",\\\"label\\\":\\\"Force the iron gate east\\\"},{\\\"id\\\":\\\"r2\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"stream\\\",\\\"label\\\":\\\"Follow the drip into the north passage\\\"},{\\\"id\\\":\\\"r3\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"lamp\\\",\\\"label\\\":\\\"Examine the brass lamp on the altar\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"child\\\":\\\"go\\\"},{\\\"id\\\":\\\"go\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Take this path\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"commit_choice\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"hp\\\":12,\\\"maxHp\\\":12,\\\"gold\\\":0,\\\"inventory\\\":[\\\"Dagger\\\",\\\"Torch\\\",\\\"Rations\\\"],\\\"scenes\\\":[\\\"1. Antechamber: you wake beside a cold brazier.\\\"],\\\"draft\\\":{\\\"choice\\\":\\\"lamp\\\"}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Quest log\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"strip\\\",\\\"scenesH\\\",\\\"scenes\\\",\\\"invH\\\",\\\"inv\\\",\\\"chH\\\",\\\"choice\\\"]},{\\\"id\\\":\\\"strip\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hp\\\",\\\"gold\\\"]},{\\\"id\\\":\\\"hp\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"HP 12 / 12\\\",\\\"variant\\\":\\\"label\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"gold\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Gold 0\\\",\\\"variant\\\":\\\"label\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"scenesH\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Scenes\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"scenes\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"xs\\\",\\\"children\\\":[\\\"s1\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"1. Antechamber: you wake beside a cold brazier.\\\"},{\\\"id\\\":\\\"invH\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Inventory (3 of 6)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"inv\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"i1\\\",\\\"i2\\\",\\\"i3\\\"]},{\\\"id\\\":\\\"i1\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Dagger\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"i2\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Torch\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"i3\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Rations\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"chH\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"What do you do?\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"choice\\\",\\\"component\\\":\\\"RadioGroup\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/choice\\\"},\\\"name\\\":\\\"choice\\\",\\\"orientation\\\":\\\"vertical\\\",\\\"children\\\":[\\\"r1\\\",\\\"r2\\\",\\\"r3\\\"]},{\\\"id\\\":\\\"r1\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"gate\\\",\\\"label\\\":\\\"Force the iron gate east\\\"},{\\\"id\\\":\\\"r2\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"stream\\\",\\\"label\\\":\\\"Follow the drip into the north passage\\\"},{\\\"id\\\":\\\"r3\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"lamp\\\",\\\"label\\\":\\\"Examine the brass lamp on the altar\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"child\\\":\\\"go\\\"},{\\\"id\\\":\\\"go\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Take this path\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"commit_choice\\\"}}]}}\",\"codes\":[\"TIMELINE_MISSING\"],\"detail\":\"Round 1 failed:\\n  TIMELINE_MISSING: at ask-1:scenes (ask-1 hand-builds events in time order with scenes (a Column). Make it ONE Timeline with its label and one TimelineItem per scene in the order played, and drop the hand-built scene list.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This valid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ation note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" appears in the user turn,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll treat it as a leg\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"itimate instruction rather\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" than inj\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ection—it's just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" asking me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to fix the surface by\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" replacing the scenes\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Column with a Timeline component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", using a T\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"imelineItem for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each scene while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping everything else intact\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since ask-1 is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" still un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"answered, updating it is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" app\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ropriate,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to include the target\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta-line declaring sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"faceId \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1\\\" since this tur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n's l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ines will mutate that existing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface. The vis\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ible reply it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self should just be the prose response\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" without m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"entioning the surface id or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" any correction note.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" contradictions between\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ated and shown values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I don't see any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" major m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ismatches—the inventory\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" count and scene text line\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ine. I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" converting the scenes\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Column into a Timeline component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single TimelineItem for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Antechamber,\\\" gi\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ving it a status of \\\"active\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and fol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding the nar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ration into\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its description, then removing the now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-redundant separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate Text node\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for s1.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I only need to resend the two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" changed components,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" scenes and s1, since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the par\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ent container's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" children references\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stay the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" same and the data model do\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"esn't need updating. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the reply text, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep it to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a short narrated contin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uation ech\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oing the original prose about\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" waking on cold st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"one, since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the user never act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually saw the previous rej\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ected surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"scenes\\\",\\\"component\\\":\\\"Timeline\\\",\\\"label\\\":\\\"Scene log\\\",\\\"children\\\":[\\\"s1\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"label\\\":\\\"1. Antechamber\\\",\\\"description\\\":\\\"You wake beside a cold brazier.\\\",\\\"status\\\":\\\"active\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":3,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"scenes\\\",\\\"component\\\":\\\"Timeline\\\",\\\"label\\\":\\\"Scene log\\\",\\\"children\\\":[\\\"s1\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"label\\\":\\\"1. Antechamber\\\",\\\"description\\\":\\\"You wake beside a cold brazier.\\\",\\\"status\\\":\\\"active\\\"}]}}\",\"codes\":[\"IDGRAPH\",\"SURFACE_NOT_CREATED\"],\"detail\":\"Round 2 failed:\\n  IDGRAPH: surface \\\"ask-1\\\" has no component with id \\\"root\\\"\\n  SURFACE_NOT_CREATED: at ask-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"My\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" last surface att\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"empt was invalid since it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lacked a root and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" createSurface call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I need to redo it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" properly this time—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"creating a fresh surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Surface, then update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Components including\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the root and every\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" referenced component plus data.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since the user never saw the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" broken version, I'll just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" present this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as the norm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al first response\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with no m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ention of a correction or surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id, building\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out the DM quest log with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enes, HP/G\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old status, inventory, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of choices.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Th\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inking about the ask id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ior surface never\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually rendered I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"at this as the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" true\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" first surface and use a fres\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"h id like \\\"ask-2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" rather than reusing \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1\\\" from the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rejected att\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"empt. But\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm reconsidering\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" whether this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" even\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" needs to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" be an ask at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" all—an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask requ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ires sendDataModel and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single commit button, wh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ereas multiple choice bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons don't fit that p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"attern. Simp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ler to just build a plain sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face called\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"quest-log\\\" with action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buttons for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each choice, sk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip the ask declaration and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line ent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irely, and write the narration\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" choices live on the surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm laying out the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face as a root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Column with a header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" badges for HP and gold\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", an inventory row of bad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ges, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a cho\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ices section\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons for each action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying the lamp or forc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the gate. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Timeline for the scene log\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", skip the data model since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" literals\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" are\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fine, and define button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actions with a sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple action/context shape for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each choice.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"quest-log\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"quest-log\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Quest log: The Undervault\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"status\\\",\\\"scenes\\\",\\\"inv_label\\\",\\\"inv\\\",\\\"choices_label\\\",\\\"choices\\\"]},{\\\"id\\\":\\\"status\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"hp\\\",\\\"gold\\\"]},{\\\"id\\\":\\\"hp\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"HP 12/12\\\",\\\"intent\\\":\\\"success\\\"},{\\\"id\\\":\\\"gold\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Gold 0\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"id\\\":\\\"scenes\\\",\\\"component\\\":\\\"Timeline\\\",\\\"label\\\":\\\"Scenes\\\",\\\"children\\\":[\\\"s1\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"label\\\":\\\"1. Antechamber\\\",\\\"description\\\":\\\"You wake beside a cold brazier.\\\",\\\"status\\\":\\\"active\\\"},{\\\"id\\\":\\\"inv_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Inventory\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"inv\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"i1\\\",\\\"i2\\\",\\\"i3\\\"]},{\\\"id\\\":\\\"i1\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Dagger\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"i2\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Torch\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"i3\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Rations\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"choices_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Choices\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"choices\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"c1\\\",\\\"c2\\\",\\\"c3\\\"]},{\\\"id\\\":\\\"c1\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Pry open the brass lamp\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"lamp\\\"}}},{\\\"id\\\":\\\"c2\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Force the iron gate east\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"gate\\\"}}},{\\\"id\\\":\\\"c3\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Follow the drip north\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"north\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Your quest log is below, with HP, gold, inventory, and the three moves open to you. Pick your first move, or tell me what you'd rather try.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Start the adventure.\",\"k\":3},\"exemplarIds\":[\"listing-photo-grid\",\"frontier-review-split\",\"five-day-weather\"],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"IDGRAPH\",\"SURFACE_NOT_CREATED\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":53685,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5736},{\"id\":\"mini-skills\",\"chars\":804},{\"id\":\"persona\",\"chars\":1865}],\"over\":false},\"usage\":{\"inputTokens\":13089,\"outputTokens\":7240,\"cacheReadInputTokens\":51327,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"quest-log\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quest-log\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hd\",\"ct\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Quest log: The Undervault\",\"variant\":\"h4\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"status\",\"scenes\",\"inv_label\",\"inv\",\"choices_label\",\"choices\"]},{\"id\":\"status\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"hp\",\"gold\"]},{\"id\":\"hp\",\"component\":\"Badge\",\"label\":\"HP 12/12\",\"intent\":\"success\"},{\"id\":\"gold\",\"component\":\"Badge\",\"label\":\"Gold 0\",\"intent\":\"warning\"},{\"id\":\"scenes\",\"component\":\"Timeline\",\"label\":\"Scenes\",\"children\":[\"s1\"]},{\"id\":\"s1\",\"component\":\"TimelineItem\",\"label\":\"1. Antechamber\",\"description\":\"You wake beside a cold brazier.\",\"status\":\"active\"},{\"id\":\"inv_label\",\"component\":\"Text\",\"text\":\"Inventory\",\"variant\":\"label\"},{\"id\":\"inv\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"i1\",\"i2\",\"i3\"]},{\"id\":\"i1\",\"component\":\"Badge\",\"label\":\"Dagger\",\"intent\":\"neutral\"},{\"id\":\"i2\",\"component\":\"Badge\",\"label\":\"Torch\",\"intent\":\"neutral\"},{\"id\":\"i3\",\"component\":\"Badge\",\"label\":\"Rations\",\"intent\":\"neutral\"},{\"id\":\"choices_label\",\"component\":\"Text\",\"text\":\"Choices\",\"variant\":\"label\"},{\"id\":\"choices\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Button\",\"label\":\"Pry open the brass lamp\",\"variant\":\"soft\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"lamp\"}}},{\"id\":\"c2\",\"component\":\"Button\",\"label\":\"Force the iron gate east\",\"variant\":\"soft\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"gate\"}}},{\"id\":\"c3\",\"component\":\"Button\",\"label\":\"Follow the drip north\",\"variant\":\"soft\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"north\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nYou come to on cold flagstones at the mouth of the Undervault, the air thick with wet stone and old smoke. A cracked brass lamp sits on a dusty altar, an iron gate bars the way east, and water drips somewhere north in the dark. Your pack holds a dagger, a torch and a few rations. Choose your first move below.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "The quest log is open. Pick your first move and take the path.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "hp": 12,
+                        "maxHp": 12,
+                        "gold": 0,
+                        "inventory": [
+                          "Dagger",
+                          "Torch",
+                          "Rations"
+                        ],
+                        "scenes": [
+                          "1. Antechamber: you wake beside a cold brazier."
+                        ],
+                        "draft": {
+                          "choice": "lamp"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Quest log",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "strip",
+                            "scenesH",
+                            "scenes",
+                            "invH",
+                            "inv",
+                            "chH",
+                            "choice"
+                          ]
+                        },
+                        {
+                          "id": "strip",
+                          "component": "Row",
+                          "gap": "md",
+                          "children": [
+                            "hp",
+                            "gold"
+                          ]
+                        },
+                        {
+                          "id": "hp",
+                          "component": "Text",
+                          "text": "HP 12 / 12",
+                          "variant": "label",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "gold",
+                          "component": "Text",
+                          "text": "Gold 0",
+                          "variant": "label",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "scenesH",
+                          "component": "Text",
+                          "text": "Scenes",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "scenes",
+                          "component": "Column",
+                          "gap": "xs",
+                          "children": [
+                            "s1"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "Text",
+                          "text": "1. Antechamber: you wake beside a cold brazier."
+                        },
+                        {
+                          "id": "invH",
+                          "component": "Text",
+                          "text": "Inventory (3 of 6)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "inv",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "i1",
+                            "i2",
+                            "i3"
+                          ]
+                        },
+                        {
+                          "id": "i1",
+                          "component": "Badge",
+                          "label": "Dagger",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "i2",
+                          "component": "Badge",
+                          "label": "Torch",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "i3",
+                          "component": "Badge",
+                          "label": "Rations",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "chH",
+                          "component": "Text",
+                          "text": "What do you do?",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "choice",
+                          "component": "RadioGroup",
+                          "value": {
+                            "path": "/draft/choice"
+                          },
+                          "name": "choice",
+                          "orientation": "vertical",
+                          "children": [
+                            "r1",
+                            "r2",
+                            "r3"
+                          ]
+                        },
+                        {
+                          "id": "r1",
+                          "component": "Radio",
+                          "value": "gate",
+                          "label": "Force the iron gate east"
+                        },
+                        {
+                          "id": "r2",
+                          "component": "Radio",
+                          "value": "stream",
+                          "label": "Follow the drip into the north passage"
+                        },
+                        {
+                          "id": "r3",
+                          "component": "Radio",
+                          "value": "lamp",
+                          "label": "Examine the brass lamp on the altar"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "child": "go"
+                        },
+                        {
+                          "id": "go",
+                          "component": "Button",
+                          "label": "Take this path",
+                          "variant": "solid",
+                          "action": {
+                            "action": "commit_choice"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You come to on cold flagstones at the mouth of the Undervault, the air thick with wet stone and old smoke. A cracked brass lamp sits on a dusty altar, an iron gate bars the way east, and water drips somewhere north in the dark. Your pack holds a dagger, a torch and a few rations. Choose your first move below.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nYou come to on cold flagstones at the mouth of the Undervault, the air thick with wet stone and old smoke. A cracked brass lamp sits on a dusty altar, an iron gate bars the way east, and water drips somewhere north in the dark. Your pack holds a dagger, a torch and a few rations. Choose your first move below.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You come to on cold flagstones at the mouth of the Undervault, the air thick with wet stone and old smoke. A cracked brass lamp sits on a dusty altar, an iron gate bars the way east, and water drips somewhere north in the dark. Your pack holds a dagger, a torch and a few rations. Choose your first move below.",
+                "target": "ask-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "scenes",
+                          "component": "Timeline",
+                          "label": "Scene log",
+                          "children": [
+                            "s1"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "TimelineItem",
+                          "label": "1. Antechamber",
+                          "description": "You wake beside a cold brazier.",
+                          "status": "active"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Your quest log is below, with HP, gold, inventory, and the three moves open to you. Pick your first move, or tell me what you'd rather try.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your quest log is below, with HP, gold, inventory, and the three moves open to you. Pick your first move, or tell me what you'd rather try.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quest-log",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quest-log",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Quest log: The Undervault",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "status",
+                            "scenes",
+                            "inv_label",
+                            "inv",
+                            "choices_label",
+                            "choices"
+                          ]
+                        },
+                        {
+                          "id": "status",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "hp",
+                            "gold"
+                          ]
+                        },
+                        {
+                          "id": "hp",
+                          "component": "Badge",
+                          "label": "HP 12/12",
+                          "intent": "success"
+                        },
+                        {
+                          "id": "gold",
+                          "component": "Badge",
+                          "label": "Gold 0",
+                          "intent": "warning"
+                        },
+                        {
+                          "id": "scenes",
+                          "component": "Timeline",
+                          "label": "Scenes",
+                          "children": [
+                            "s1"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "TimelineItem",
+                          "label": "1. Antechamber",
+                          "description": "You wake beside a cold brazier.",
+                          "status": "active"
+                        },
+                        {
+                          "id": "inv_label",
+                          "component": "Text",
+                          "text": "Inventory",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "inv",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "i1",
+                            "i2",
+                            "i3"
+                          ]
+                        },
+                        {
+                          "id": "i1",
+                          "component": "Badge",
+                          "label": "Dagger",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "i2",
+                          "component": "Badge",
+                          "label": "Torch",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "i3",
+                          "component": "Badge",
+                          "label": "Rations",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "choices_label",
+                          "component": "Text",
+                          "text": "Choices",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "choices",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "c1",
+                            "c2",
+                            "c3"
+                          ]
+                        },
+                        {
+                          "id": "c1",
+                          "component": "Button",
+                          "label": "Pry open the brass lamp",
+                          "variant": "soft",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "lamp"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c2",
+                          "component": "Button",
+                          "label": "Force the iron gate east",
+                          "variant": "soft",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "gate"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c3",
+                          "component": "Button",
+                          "label": "Follow the drip north",
+                          "variant": "soft",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "north"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-18.jsonl:5",
+        "outcome": "ok",
+        "retries": [
+          {
+            "round": 2,
+            "codes": [
+              "TIMELINE_MISSING"
+            ]
+          },
+          {
+            "round": 3,
+            "codes": [
+              "IDGRAPH",
+              "SURFACE_NOT_CREATED"
+            ]
+          }
+        ],
+        "thinkingChars": [
+          1761,
+          1339,
+          1471
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "listing-photo-grid",
+          "frontier-review-split",
+          "five-day-weather"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quest-log",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Start the adventure.",
+        "expect": [
+          "GameHud"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Start the adventure. Your quest log is below, with HP, gold, inventory, and the three moves open to you. Pick your first move, or tell me what you'd rather try.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-18-t0362-smoke/smoke-dungeon-master-first-scene-haiku-1/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The player\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action doesn't match the list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed choices,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" but as D\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"M I can\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" still\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inter\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"pret it re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"asonably and move the scene\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" forward.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll update the quest log\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" scene, status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and choices, keeping\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the narration brief and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" av\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oiding duplicating story\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll mark scene \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1 as done\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" add scene 2 as active\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and replace the choice\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Search the cistern shel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ves,\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Climb the rusted\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ladder,\\\" and \\\"Take\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the rope-bound crate\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" — describing the iron door\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" groaning open onto a c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dripping c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istern ch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amber. HP,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gold, and inventory st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"changed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to call render_surface targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting the existing quest-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"log surface, writing short\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" nar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ration first and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping the meta-line\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" declaration at the top of the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reply.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"The iron door groans open on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"to a v\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ault of black\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" water\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" wet\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stone. Something\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" slides off\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ledge into\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"istern, then\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the ech\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"o d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ies away\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". Three\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ways for\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ward are open to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The iron door groans open onto a vault of black water and wet stone. Something slides off a ledge into the cistern, then the echo dies away. Three ways forward are open to you.\",\"target\":{\"surfaceId\":\"quest-log\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I open the door and step inside.\",\"k\":3},\"exemplarIds\":[\"frontier-game-hud-quest\",\"frontier-service-gateway\",\"plan-and-execute-approve-ask\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":51224,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4079},{\"id\":\"persona\",\"chars\":1865}],\"over\":false},\"usage\":{\"inputTokens\":3330,\"outputTokens\":1277,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"quest-log\"}}}\nThe iron door groans open onto a vault of black water and wet stone. Something slides off a ledge into the cistern, then the echo dies away. Three ways forward are open to you.",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-18.jsonl:6",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          727
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-game-hud-quest",
+          "frontier-service-gateway",
+          "plan-and-execute-approve-ask"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quest-log",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "I open the door and step inside.",
+        "expect": [
+          "GameHud"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Start the adventure. Your quest log is below, with HP, gold, inventory, and the three moves open to you. Pick your first move, or tell me what you'd rather try. You I open the door and step inside. The iron door groans open onto a vault of black water and wet stone. Something slides off a ledge into the cistern, then the echo dies away. Three ways forward are open to you.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-18-t0362-smoke/smoke-dungeon-master-first-scene-haiku-1/turn-2.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "164 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "139 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [ask-1, quest-log], open [quest-log], replaced by the repair [ask-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "fail",
+      "detail": "no surface this turn updated holds GameHud (touched quest-log)"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "4571 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "378 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no A2UI lines shipped (a text turn)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [quest-log] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "fail",
+      "detail": "the say turn targeting quest-log was answered with no update to it and no new surface"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "fail",
+      "detail": "no surface this turn updated holds GameHud (touched none)"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "727 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "fail",
+      "detail": "missing GameHud (shipped Card, CardHeader, Text, CardContent, Row, Badge, Timeline, TimelineItem, Column, Button)"
+    }
+  ],
+  "verdict": "fail"
+}
