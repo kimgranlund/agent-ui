@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-domain-switch-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I can't book restaurants. I'm only the dealer at this table, and I have no way to reach a restaurant or check availability.",
+          "found": true
+        }
+      ],
+      "why": "Replies are plain dealer speech with no JSON or ids. The turn 3 line about having no way to reach a restaurant edges toward tool talk, a minor slip."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "Dealer draws a 5 to reach 18 and beats your 17.",
+          "found": true
+        },
+        {
+          "quote": "Hit \"Deal again\" on the table whenever you want another round.",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken, Stand plays out the dealer, and the off-topic question gets a plain answer with a way back to the game."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer draws a 5 to reach 18 and beats your 17.",
+          "found": true
+        }
+      ],
+      "why": "The dealer hand is played out and settled in the same turn. The player is never asked to do the house's job and no choice is made for them."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "you lost 100 on a 17 to the dealer's 18, leaving 900 chips",
+          "found": true
+        },
+        {
+          "quote": "Dealer wins 18 to 17. Your hand was K and 7 for 17. You lose 100 chips.",
+          "found": true
+        }
+      ],
+      "why": "Totals, loss and bankroll of 900 match the surface data and the earlier reply."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2379,
+    "outputTokens": 458,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.009338,
+  "at": "2026-10-18T09:26:34.999Z"
+}

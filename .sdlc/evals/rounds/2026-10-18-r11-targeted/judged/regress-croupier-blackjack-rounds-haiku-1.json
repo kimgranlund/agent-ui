@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-rounds-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Here's the rule recap: two cards each, the dealer shows one and hides one.",
+          "found": true
+        },
+        {
+          "quote": "Round over, bankroll at 1,100. Dealing the next round on a fresh table.",
+          "found": true
+        }
+      ],
+      "why": "Replies are in plain dealer voice with no JSON or ids. The opening recap is long, and \"fresh table\" is slightly meta, but both are minor."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You hit and draw a 5. Your hand totals 21.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 25 placed. Dealing you in.",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the click: bets are taken, Hit draws, Stand plays out the dealer. Turn 4 shows a Split button on 8-8, and the player hit instead, so nothing was ignored. Turn 7's \"Set your bet\" fits the betting phase."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the hole card: 9 and 4 make 13, so the dealer must draw.",
+          "found": true
+        },
+        {
+          "quote": "Dealer draws a 9 for 22 and busts. You win 100.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, draws for the dealer and settles every round itself. It never made a choice for the player. In turn 3 it dealt on \"Deal again\" with no bet chosen, but it then waited for the player's bet."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Round over, bankroll at 1,150. Set your bet for the next hand.",
+          "found": true
+        },
+        {
+          "quote": "You win 50 chips.",
+          "found": true
+        },
+        {
+          "quote": "\"bankroll\":1050,\"bet\":50",
+          "found": true
+        }
+      ],
+      "why": "Most totals and bankrolls match across turns. Turn 4's surface shows a bet of 50 and the 8-8 hand, then the reply says the hand totals 21 after a hit, which fits. Turn 3 reports 1,100 while the surface still shows bet 100, a small inconsistency. The turn 6 reply says the dealer 'turns the hole card' and busts with 25, which matches the surface."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4285,
+    "outputTokens": 664,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01521,
+  "at": "2026-10-18T09:23:10.862Z"
+}

@@ -24,3 +24,10 @@ Kim approved round 11 at about $10 (2026-10-17, long-run rulings in `.sdlc/notes
 
 ## Constraints
 Live spend only under the cap; keys checked by HTTP status only; never read or print .env. Never edit an earlier round archive.
+
+## Acceptance criteria
+1. `test -f .sdlc/evals/rounds/2026-10-18-r11-targeted/signals.md && test -d .sdlc/evals/rounds/2026-10-18-r11-targeted/judged && test -f .sdlc/evals/rounds/2026-10-18-r11-targeted/report.md`
+2. `python3 -c "import json,sys; d=json.load(open('.sdlc/evals/rounds/2026-10-18-r11-targeted/round.json')); sys.exit(0 if d['totals']['costUsd'] < 10 and d['cap'] == 10 else 1)"`
+3. `grep -q 2b3686ac6ec777c349cb5600 .sdlc/evals/rounds/2026-10-18-r11-targeted/report.md`
+4. `npm run check`
+5. No earlier round archive changes: `git diff --quiet 8421bba99 HEAD -- .sdlc/evals/rounds/2026-10-17-r10-targeted .sdlc/evals/rounds/2026-10-18-smoke`

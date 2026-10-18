@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "long-croupier-blackjack-hand-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Blackjack it is. Dealer stands on all 17s.",
+          "found": true
+        },
+        {
+          "quote": "New round, fresh table.",
+          "found": true
+        }
+      ],
+      "why": "Every reply uses short, plain dealer language. None shows JSON, ids, or talk about tools."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 is down, and you have 900 left.",
+          "found": true
+        },
+        {
+          "quote": "You drew the 4 of diamonds, so you have 19. Double is off the table after a hit.",
+          "found": true
+        }
+      ],
+      "why": "Each bet, hit, stand and deal-again is acted on in the same turn. The reply also says what options remain."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 7 of spades for 17 and stands",
+          "found": true
+        },
+        {
+          "quote": "The 9 of spades makes 25, so the dealer busts.",
+          "found": true
+        }
+      ],
+      "why": "The dealer plays out, reveals and settles every hand, and the player's choices are never made for them. The one slip is that the player stood on 11 against a 6, which the player chose, so it is not a house error."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your bankroll is now 1,100.",
+          "found": true
+        },
+        {
+          "quote": "your bankroll is now 1,150.",
+          "found": true
+        }
+      ],
+      "why": "Replies match the surface bankrolls, totals and results in every turn (900, 1,100, 1,050, 1,150). The earlier replies carry through consistently."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3368,
+    "outputTokens": 435,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.011086,
+  "at": "2026-10-18T09:22:37.471Z"
+}

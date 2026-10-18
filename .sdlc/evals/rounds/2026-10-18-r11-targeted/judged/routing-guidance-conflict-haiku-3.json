@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-guidance-conflict-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I can't show the hole card yet. It stays face down until you finish your hand.",
+          "found": true
+        },
+        {
+          "quote": "Dealer reveals the 4 of diamonds for 13, then draws the 5 of hearts to 18.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain dealer talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "Dealer reveals the 4 of diamonds for 13, then draws the 5 of hearts to 18.",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken, the hole card request is declined plainly with options, and Stand plays out the dealer."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer reveals the 4 of diamonds for 13, then draws the 5 of hearts to 18.",
+          "found": true
+        },
+        {
+          "quote": "Dealer's 18 beats your 17, so you lose the 100 bet.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the dealer hand and settles the bet itself, and the player's choices are left to the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer's 18 beats your 17, so you lose the 100 bet.",
+          "found": true
+        },
+        {
+          "quote": "Dealer wins 18 to 17. Dealer's 9, 4 and 5 total 18 against your K and 7 for 17. You lose 100.",
+          "found": true
+        }
+      ],
+      "why": "The reply's totals and result match the surface text, and the bankroll of 900 matches the 100 loss."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2293,
+    "outputTokens": 486,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.009446,
+  "at": "2026-10-18T09:26:53.247Z"
+}

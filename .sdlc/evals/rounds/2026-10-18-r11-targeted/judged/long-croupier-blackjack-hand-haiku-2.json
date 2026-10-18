@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "long-croupier-blackjack-hand-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You hit and drew a 5. Your hand is 22, which busts.",
+          "found": true
+        },
+        {
+          "quote": "Tap **Deal again** on the table to start the next round with the same bankroll.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and in plain dealer vocabulary. They contain no JSON, component ids or talk about tools. The only oddity is the markdown bold in one reply, which is trivial."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The round is already over. You busted at 22 on the hit, so there's nothing to stand on.",
+          "found": true
+        },
+        {
+          "quote": "I stand on 15. The dealer turns over the 8 for 18 and stops.",
+          "found": true
+        }
+      ],
+      "why": "Every move gets acted on: the bet is taken, Hit draws, Stand plays out the dealer, and the impossible Stand after the bust is explained with a next step. The wording 'I stand on 15' is a small slip, since the player is the one standing."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 8 for 18 and stops.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        }
+      ],
+      "why": "The croupier deals, reveals the hole card, plays the dealer hand and settles the bet itself. It never leaves any of the house's work to the player, and it makes no choices that belong to the player."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bankroll is 850.",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll is 900 after losing the 100 bet.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankroll match the surface text in every turn. One slip is in turn 4: the reply says to set the bet while the surface data shows a pre-filled bet of 100, which is minor."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2963,
+    "outputTokens": 541,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.011336,
+  "at": "2026-10-18T09:22:25.828Z"
+}

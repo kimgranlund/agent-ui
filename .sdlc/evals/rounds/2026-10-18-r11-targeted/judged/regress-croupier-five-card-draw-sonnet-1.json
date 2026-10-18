@@ -1,0 +1,105 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-five-card-draw-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You checked and the dealer checked behind you, so the pot stays at 20.",
+          "found": true
+        },
+        {
+          "quote": "Clear the selection to stand pat.",
+          "found": true
+        }
+      ],
+      "why": "Every reply uses short, plain table language, with no JSON, component ids or talk of tools."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You threw back 4♥ and 2♠ and drew 9♦ and A♣.",
+          "found": true
+        },
+        {
+          "quote": "You bet 50 and the dealer called.",
+          "found": true
+        },
+        {
+          "quote": "You stood pat, so you keep Q♣ Q♦ 8♠ 5♣ 4♦",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the player's move: the two lowest cards are discarded, the 50 bet is taken, and the stand pat and fold are carried out."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer discarded two cards and drew two.",
+          "found": true
+        },
+        {
+          "quote": "The dealer shows A♦ K♥ J♠ 6♠ 3♦",
+          "found": true
+        },
+        {
+          "quote": "You win the 120 pot, +70 chips",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the dealer's draw, reveals the hands at showdown and settles the pot itself. The bets and discards are the player's own choices."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win the 120 pot, +70 chips, and your bankroll is now 1,060.",
+          "found": true
+        },
+        {
+          "quote": "We each ante 10, so the pot is 20 and your bankroll is 1,040.",
+          "found": true
+        },
+        {
+          "quote": "Your pair of Queens wins the 20 pot, +10 chips net, and your bankroll is now 1,060.",
+          "found": true
+        }
+      ],
+      "why": "Bankroll runs 990 to 1,060 to 1,050 to 1,040 to 1,060. Pots, hands and results match the surface text and earlier replies in every turn."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 6219,
+    "outputTokens": 1574,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.028178,
+  "at": "2026-10-18T09:23:56.306Z"
+}

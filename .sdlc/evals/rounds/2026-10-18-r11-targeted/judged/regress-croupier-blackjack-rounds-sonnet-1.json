@@ -1,0 +1,101 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-rounds-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Blackjack it is. Rules: the dealer draws to 17 and stands on all 17s.",
+          "found": true
+        },
+        {
+          "quote": "New round on a fresh table. Your bankroll carries over at 1,100. Set your bet and deal.",
+          "found": true
+        }
+      ],
+      "why": "Every reply uses short, plain dealer language. None shows JSON, component ids or talk about tools."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 is down, and your bankroll is 900.",
+          "found": true
+        },
+        {
+          "quote": "You hit and draw a 5 of clubs, so you have 9, 2 and 5 for 16.",
+          "found": true
+        },
+        {
+          "quote": "You stand on 16. The dealer turns over the 10 of clubs for 16",
+          "found": true
+        }
+      ],
+      "why": "Each bet, hit, stand and deal-again is acted on in the same turn. No move is impossible or ignored."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 6 for 16 and has to draw. The draw is a 9, so the dealer busts with 25.",
+          "found": true
+        },
+        {
+          "quote": "The dealer wins, and you lose 50.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, draws for the dealer and settles the bet itself. The player chose each bet and move; the agent chose none for them."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win 1:1, which is +100, and your bankroll is now 1,100.",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll stays at 1,050.",
+          "found": true
+        },
+        {
+          "quote": "the dealer busts with 24. You win 1:1, which is +25, and your bankroll is now 1,075.",
+          "found": true
+        }
+      ],
+      "why": "The totals, results and bankrolls in each reply match the surface data and the earlier replies. For example, 900 plus 200 gives 1,100, and 1,025 plus 50 gives 1,075."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4457,
+    "outputTokens": 885,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.017764,
+  "at": "2026-10-18T09:23:24.125Z"
+}

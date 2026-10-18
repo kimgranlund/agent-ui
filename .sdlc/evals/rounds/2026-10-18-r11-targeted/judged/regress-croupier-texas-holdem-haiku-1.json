@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-texas-holdem-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I also fixed an error from earlier: your bankroll is 880, not 930",
+          "found": true
+        }
+      ],
+      "why": "Turn 3 talks about its own corrections instead of dealing, which the rubric forbids. Other replies are fine dealer voice, so one clear slip."
+    },
+    {
+      "id": "C2",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I called 10 for you.",
+          "found": true
+        },
+        {
+          "quote": "I also fixed an error from earlier: your bankroll is 880, not 930",
+          "found": true
+        }
+      ],
+      "why": "Turn 3 never addresses the check; the reply only reports the correction. Turn 1 acts on the call, which is fine. Turn 8 says the player put in 90 more and then the dealer called 80, which is muddled."
+    },
+    {
+      "id": "C3",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I called 10 for you.",
+          "found": true
+        },
+        {
+          "quote": "I checked for the dealer, so the action is on you.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier called for the player, though the player had said to call if there was a bet, so that was authorized. Turn 2: the player bet 50 and no bet size was imposed. Turn 4 reveals the cards and settles. Slips: the dealer's cards sit face down at the turn 9 reveal, and turn 3 skipped the player's move."
+    },
+    {
+      "id": "C4",
+      "score": 1,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win the 140 pot with a pair of sevens (7♣ 7♠), which beats the dealer's king-high.",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll is now 1,020, a net gain of 70 on this hand.",
+          "found": true
+        },
+        {
+          "quote": "The dealer called the extra 80, so the pot is 200.",
+          "found": true
+        }
+      ],
+      "why": "Many contradictions: the pot stayed at 140 though a 50 call was added; bankroll 930 changed to 880 and then 1,020; the dealer's J-high versus 'king-high' claim; and the pot is 200 while the dealer called 80 and the player put in 90. The deal-again bankroll of 1,010 also disagrees with the earlier 1,020 minus the blind."
+    }
+  ],
+  "score": 1,
+  "passed": false,
+  "usage": {
+    "inputTokens": 5032,
+    "outputTokens": 633,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.016394,
+  "at": "2026-10-18T09:25:59.609Z"
+}

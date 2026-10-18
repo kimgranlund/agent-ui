@@ -1,0 +1,20 @@
+{
+  "round": "2026-10-18-r11-targeted",
+  "ticket": "T-0360",
+  "reportId": "2b3686ac6ec777c349cb5600",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "1999c4dd1cdcc857672d0f0773828353efd6c6f1ca231109f0864dc32a38aed1",
+  "mappingNote": "the same manifest as round 10, so detector coverage compares with round 10 directly",
+  "bundleFingerprint": "a6979ba5bff6887ecde7de2ddff366813d3729d04f33089761661af9322e3dea",
+  "engineeringRun": "run-f8c41dbaacffe13714c81124",
+  "events": 1170,
+  "sources": 334,
+  "decisions": 6,
+  "findings": 6,
+  "diagnosticFindings": 0,
+  "excluded": "none: the 362 trace lines are 362 completed produce turns (no halt, no provider-error line), so nothing was blanked",
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-18-r11-targeted --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/final.json",
+  "analysis": "T-0360 decision analysis: d1 is cluster A after T-0344, d2 to d6 are the new clusters G to K of report.md (the hole-card step oracle, POKER_DEAL_MISSING over PlayingCard templates, LONE_BUTTON_FRAME through a one-child Row, the pontoon stick under 15, poker chip arithmetic unchecked), with 3 guidance edges and 6 reviewed findings.",
+  "hydrate": "decisions, guidanceEdges and findings added to the ingested session.json with exact excerpts and event ids, then diagnostics.py --data --out, fog.py validate and library.py publish (references/investigation.md)"
+}

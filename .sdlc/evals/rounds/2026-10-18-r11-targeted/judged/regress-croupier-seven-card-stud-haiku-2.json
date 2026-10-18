@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-seven-card-stud-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Seven-card stud it is.",
+          "found": true
+        },
+        {
+          "quote": "Bets at this table are capped at 10, so 50 isn't available.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short and in plain table language. None shows JSON, ids or talk about tools."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You fold and forfeit your 10 ante.",
+          "found": true
+        },
+        {
+          "quote": "You still have your move on third street: check, bet 10, or fold.",
+          "found": true
+        }
+      ],
+      "why": "Each check, fold and Deal again click is acted on. The impossible bet of 50 is refused plainly, with the legal options listed."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Showdown: the dealer's best five is Queen-high (Q J 9 5 4), and yours is King-high (K Q 10 9 7).",
+          "found": true
+        },
+        {
+          "quote": "You check and the dealer checks.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals every street, plays the dealer's checks, reveals the hands and settles the pot itself. It never makes a choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealing a new hand of seven-card stud. Ante 10 is in, bankroll at 1,000.",
+          "found": true
+        },
+        {
+          "quote": "Each player antes 10 and gets two cards face down and one face up.",
+          "found": true
+        }
+      ],
+      "why": "The turn 6 reply says the bankroll is 1,000 while the surface shows 990. The turn 0 reply says each player antes 10, but the pot is only 10."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 5788,
+    "outputTokens": 1134,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.022916,
+  "at": "2026-10-18T09:25:08.642Z"
+}

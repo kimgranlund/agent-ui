@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-moves-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Press **Deal again** to start a new round, then set your bet and I'll deal.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and use dealer language, with no JSON, ids or tool talk. The one slip is the markdown bold around \"Deal again\" in turn 6."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "That round is finished. You busted on 27, and the dealer holds 16, so there's no card left to draw.",
+          "found": true
+        },
+        {
+          "quote": "No split: K♦ and 5♣ aren't a pair, so I stood on 15.",
+          "found": true
+        }
+      ],
+      "why": "Every move gets acted on: the double, the repeated hits, the conditional split-or-stand. The impossible extra hit is refused plainly with a next step."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer flips the 5 for 14 and draws the 4♣ to reach 18.",
+          "found": true
+        },
+        {
+          "quote": "Dealer drew to 18 and wins.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the dealer hand and settles each bet itself. Its only choices (hit until bust, stand if no pair) were instructed by the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win 500, and your bankroll is now 1,500.",
+          "found": true
+        },
+        {
+          "quote": "You lose your 100 bet, so your bankroll stays at 1,400.",
+          "found": true
+        },
+        {
+          "quote": "You're down 75, bankroll 1,325.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankrolls in each reply match the surface data and the earlier replies. The 750 → 1,500 double-down settlement and the later 1,400 and 1,325 figures are consistent."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4349,
+    "outputTokens": 1286,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.021558,
+  "at": "2026-10-18T09:23:05.545Z"
+}

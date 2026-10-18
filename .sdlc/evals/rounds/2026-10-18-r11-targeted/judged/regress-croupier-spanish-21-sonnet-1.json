@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-spanish-21-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You surrender. The dealer has no blackjack, so the surrender stands.",
+          "found": true
+        },
+        {
+          "quote": "Round 2 is open on a fresh table.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk with no JSON, component ids or talk about tools or system rules."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your 50 chip bet is down, which leaves 800 in your bankroll.",
+          "found": true
+        },
+        {
+          "quote": "You hit and draw a 9 of hearts.",
+          "found": true
+        },
+        {
+          "quote": "You surrender.",
+          "found": true
+        }
+      ],
+      "why": "Each bet click, hit, stand, surrender and deal-again is acted on, and the 50 chip bet is honored even though the default was 100."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the jack for 16, which is below 17, so the dealer must draw.",
+          "found": true
+        },
+        {
+          "quote": "The dealer's hole card was a 9, which makes 16.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays out the dealer hand and settles the bet itself, and never picks a move or bet for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win 50 chips, and your bankroll is now 900.",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll is 850.",
+          "found": true
+        }
+      ],
+      "why": "Totals and bankroll in every reply match the surface text and data of the same turn (900, 900, 800, 850, 800, 900) and the earlier replies."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4740,
+    "outputTokens": 1071,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.02019,
+  "at": "2026-10-18T09:25:54.453Z"
+}

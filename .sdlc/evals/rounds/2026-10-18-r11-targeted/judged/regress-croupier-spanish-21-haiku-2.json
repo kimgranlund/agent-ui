@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-spanish-21-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The next round is ready on a fresh table. Pick your stake on the bet strip and deal when you're set.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing your hand.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and in dealer voice with no JSON or tool talk. \"Bet strip\" is slightly interface-ish, a minor slip."
+    },
+    {
+      "id": "C2",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Fresh table is set. Pick your stake and deal when ready. Bankroll: 850.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing your hand.",
+          "found": true
+        }
+      ],
+      "why": "Most moves are answered correctly: bets taken, stand plays out, surrender handled. In turn 6 the Deal again click produced no surface, and the final 50 click found no button, so the player was stalled."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer reveals the hole card and must draw.",
+          "found": true
+        },
+        {
+          "quote": "Half your bet comes back: 50 chips returned, 50 lost.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier dealt, played the dealer hand, and settled bets itself, and made no choices for the player."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your bankroll carries over at 900.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll: 850.",
+          "found": true
+        }
+      ],
+      "why": "Totals and bankroll agree with the surface text in turns 2, 3 and 5. Turn 6 has no surface to verify, and a stated 'dealer must draw' on a 13 is consistent. Only a small gap remains."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3177,
+    "outputTokens": 492,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.011274,
+  "at": "2026-10-18T09:25:38.034Z"
+}

@@ -1,0 +1,109 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-seven-card-stud-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Earlier I said the dealer had bet on fifth street, which was wrong.",
+          "found": true
+        },
+        {
+          "quote": "My earlier figures don't add up. Antes and calls as I logged them come to 30, not 60",
+          "found": true
+        },
+        {
+          "quote": "the pot and bankroll I logged earlier don't reconcile with the antes and calls",
+          "found": true
+        }
+      ],
+      "why": "Several replies talk about its own corrections and logging, and one mentions the 'surface'. It breaks the dealer voice repeatedly, though no raw JSON appears."
+    },
+    {
+      "id": "C2",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I checked, and the dealer checked. Fifth street: you catch 6♥, and the dealer catches J♠, which is the high card, so the dealer bets 10. I called",
+          "found": true
+        },
+        {
+          "quote": "The hand is already over. The dealer won at showdown, so there's no fold to make",
+          "found": true
+        },
+        {
+          "quote": "Dealing a new hand of seven-card stud.",
+          "found": true
+        }
+      ],
+      "why": "Turn 2 invents a bet and a call the player did not make, and Turn 3 does not move forward. The Deal again click errored, and the fold on a new live hand was refused as 'already over' when a fresh hand was in play. These misstate the state and stall the player."
+    },
+    {
+      "id": "C3",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I called, so the pot is 40 and your count is 980.",
+          "found": true
+        },
+        {
+          "quote": "If you tell me the correct figures, I'll fix them before the next deal.",
+          "found": true
+        },
+        {
+          "quote": "send me the correct count and I'll set it right.",
+          "found": true
+        }
+      ],
+      "why": "The dealer calls on the player's behalf (a bet decision) and later hands the chip accounting to the player. This is the house's job, handed over."
+    },
+    {
+      "id": "C4",
+      "score": 1,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The pot is 40 and your count is 960.",
+          "found": true
+        },
+        {
+          "quote": "Antes and calls as I logged them come to 30, not 60",
+          "found": true
+        },
+        {
+          "quote": "Antes are 10 each, so the pot starts at 20 and your count is 950.",
+          "found": true
+        }
+      ],
+      "why": "Bankroll jumps from 980 to 960 with the pot unchanged at 40. The reply says the pot is 60 but then admits it comes to 30. The Turn 6 reply says 950 while the surface shows 940. These contradict across turns and the surface."
+    }
+  ],
+  "score": 1,
+  "passed": false,
+  "usage": {
+    "inputTokens": 5786,
+    "outputTokens": 675,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.018322,
+  "at": "2026-10-18T09:25:00.004Z"
+}

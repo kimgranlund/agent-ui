@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "long-croupier-blackjack-hand-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Tap **Deal again** on the table to set a new stake and start the next hand.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 is down. Dealing your hand now.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and in plain dealer language, with no JSON or talk of tools. The one small slip is the markdown bold on 'Deal again' in turn 3."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "That hand is already over. You busted on the hit, so there's nothing left to stand on.",
+          "found": true
+        },
+        {
+          "quote": "You stand on 19. The dealer turns over the 6 for 14",
+          "found": true
+        }
+      ],
+      "why": "Each move gets acted on: the bet is taken, Hit draws, Stand plays out the dealer. The impossible Stand after the bust is refused plainly, with Deal again offered instead."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer's hole card was a 4, so the dealer holds 13.",
+          "found": true
+        },
+        {
+          "quote": "draws the 3 of spades to reach 17, and must stand.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays out the dealer hand and settles each round itself. It never asks the player to do the house's job and never chooses a move or bet for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bust: K-7-5 is 22. Dealer wins. You lose 100 chips.",
+          "found": true
+        },
+        {
+          "quote": "Win: your 10-9 is 19, the dealer's 8-6-3 is 17. You win 50 chips.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankroll in each reply match the surface text and the earlier turns: 900 after the bust, 900 at the new round, and 900 after the win. The payout arithmetic itself is checked elsewhere."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3185,
+    "outputTokens": 1071,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01708,
+  "at": "2026-10-18T09:22:34.037Z"
+}

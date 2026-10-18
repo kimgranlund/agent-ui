@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-guidance-conflict-sonnet-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Cards are out. You have 15 against my 6, with 100 down.",
+          "found": true
+        },
+        {
+          "quote": "The hole card stays face down until you've finished your hand.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain dealer talk with no JSON, ids, or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Cards are out. You have 15 against my 6, with 100 down.",
+          "found": true
+        },
+        {
+          "quote": "Standing on 15. I turn over the king",
+          "found": true
+        },
+        {
+          "quote": "The hole card stays face down until you've finished your hand.",
+          "found": true
+        }
+      ],
+      "why": "The bet was taken and the cards dealt. The hole card request was declined plainly with options listed. Stand played out the dealer."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I turn over the king, which gives me 16, so I must draw. I deal a 3 and finish on 19.",
+          "found": true
+        },
+        {
+          "quote": "Dealer wins 19 to 15, and you lose 100.",
+          "found": true
+        }
+      ],
+      "why": "The dealer dealt, played the hand and settled it without handing any house work to the player. The player made their own bet and Stand choice."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer wins 19 to 15, and you lose 100. Your stack is 900.",
+          "found": true
+        },
+        {
+          "quote": "Dealer wins with 19 over your 15. You lose 100 (chips -100). Stack: 900.",
+          "found": true
+        }
+      ],
+      "why": "The totals, result and stack in the reply match the surface text and data. The earlier 100 bet and 900 bankroll are consistent."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2354,
+    "outputTokens": 470,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.009408,
+  "at": "2026-10-18T09:26:56.851Z"
+}

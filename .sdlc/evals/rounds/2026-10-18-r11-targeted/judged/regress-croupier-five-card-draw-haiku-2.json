@@ -1,0 +1,101 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-five-card-draw-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I'm the dealer, so I'll call it and settle the hand from the cards on the table.",
+          "found": true
+        },
+        {
+          "quote": "Your hand is a pair of nines: 9♠, 9♦, 4♥, J♣, 3♠. Bankroll is 920 and the pot is 20. It's the discard round.",
+          "found": true
+        }
+      ],
+      "why": "Mostly plain dealer talk, but there are a few awkward lines like 'I'm the dealer, so I'll call it and settle the hand from the cards on the table'. The turn 7 reply reads like a status dump. There is no raw JSON or component talk."
+    },
+    {
+      "id": "C2",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Final betting round, and it's your action. The pot is 20 and your bankroll is 990.",
+          "found": true
+        },
+        {
+          "quote": "Your hand is a pair of nines: 9♠, 9♦, 4♥, J♣, 3♠.",
+          "found": true
+        }
+      ],
+      "why": "In turn 2 the player asked to discard their two lowest cards and draw; the reply never says what was drawn and the player's hand changed without mention. In turn 7 the player checked, but the reply doesn't acknowledge it and just describes the discard round. Turn 3 'Bet 50' was taken but the pot math is off."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I'm the dealer, so I'll call it and settle the hand from the cards on the table.",
+          "found": true
+        },
+        {
+          "quote": "I check, and the dealer checks behind you.",
+          "found": true
+        }
+      ],
+      "why": "The house deals, calls, reveals and settles itself, and does not hand its job to the player. The turn 2 draw and the turn 7 check were handled without asking the player to do anything. One small slip is that the turn 3 reply says 'Showdown' but doesn't name the result itself."
+    },
+    {
+      "id": "C4",
+      "score": 1,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "the pot now holds 120.",
+          "found": true
+        },
+        {
+          "quote": "Chips: 990 → 940 (after the 50 bet plus ante).",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll is 930 after the ante.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll is 920 and the pot is 20.",
+          "found": true
+        }
+      ],
+      "why": "There are repeated contradictions. In turn 3 the bankroll stays at 990 on the surface while the result says 940, and the pot of 120 doesn't match a 50 bet each plus the 20 ante. In turn 3 the reply says nothing about who won while the surface says the dealer wins with a pair of kings, yet the dealer's cards show A, K, 8, 4, 2, which is only ace high. Turn 7 says 920 while turn 6 said 930, and the fold in turn 5 leaves the bankroll at 940 when the dealer had said the ante was forfeit. In turn 9, 920 → 940 is wrong, because winning the 20 pot after a 10 ante should return it to 930."
+    }
+  ],
+  "score": 1,
+  "passed": false,
+  "usage": {
+    "inputTokens": 6548,
+    "outputTokens": 881,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.021906,
+  "at": "2026-10-18T09:23:40.803Z"
+}

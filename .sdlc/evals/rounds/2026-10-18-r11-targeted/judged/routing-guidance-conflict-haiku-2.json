@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-guidance-conflict-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Blackjack it is. Two cards each.",
+          "found": true
+        },
+        {
+          "quote": "The hole card stays face down until you stand, double, or bust.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and plain in dealer vocabulary, with no JSON, markup, ids, or talk of tools."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "The hole card stays face down until you stand, double, or bust.",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken, the stand plays out the dealer, and the hole card question is answered and declined with options given. One small slip: it says the hole card is revealed on 'bust', but a busted player's hand ends the round, which is a minor oddity."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the hole card: 9 and 4 make 13, so the dealer draws a 5 for 18 and stands.",
+          "found": true
+        }
+      ],
+      "why": "The dealer deals, reveals, plays out and settles the bet itself, and the player makes every choice."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the hole card: 9 and 4 make 13",
+          "found": true
+        },
+        {
+          "quote": "Bankroll is now 800.",
+          "found": true
+        }
+      ],
+      "why": "The bankroll of 800 and the 18 vs 17 result match the surface. The reply's 'Your hand is 17 against the dealer's showing 9' is fine. But the turn 0 reply says 'Set your bet at the table and deal' and 'Your bankroll is 1,000', which the surface supports. The turn 3 hole card line 'The dealer reveals the hole card: 9 and 4' is muddled, since the hole card is the 4, not '9 and 4'. It is a minor wording slip, and the totals still agree."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2436,
+    "outputTokens": 571,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.010582,
+  "at": "2026-10-18T09:26:49.922Z"
+}

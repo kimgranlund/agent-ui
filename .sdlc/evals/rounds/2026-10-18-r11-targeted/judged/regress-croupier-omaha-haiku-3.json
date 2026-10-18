@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-omaha-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The big blind acts first on the flop, so the action is with them now.",
+          "found": true
+        },
+        {
+          "quote": "You call $10, so the pot is $40 and your bankroll is $990.",
+          "found": true
+        }
+      ],
+      "why": "Replies are plain dealer speech with no JSON or tool talk. A slight slip: the turn 1 reply ends by saying action is with the big blind while the surface already says the big blind checked."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet the pot, $40. Your bankroll is now $950 and the pot is $80.",
+          "found": true
+        },
+        {
+          "quote": "The big blind calls your $40, so the pot is $160",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on: call, bet, check. A slip: in turn 3 the player said 'Check, or call', but the reply has the big blind calling the player's bet, and the player did not pick that action. The final click had no agent turn."
+    },
+    {
+      "id": "C3",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The big blind checks, and the flop comes J♥ 7♣ 3♦.",
+          "found": true
+        },
+        {
+          "quote": "The big blind has to call or fold.",
+          "found": true
+        }
+      ],
+      "why": "The dealer deals streets and plays the opponent. But the pot-bet turn leaves the opponent's response pending and stalls, and the hand is left at the river with no showdown or settlement. The player never got to bet at the river, though the hand was not resolved because the player never moved."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The big blind calls your $40, so the pot is $160 and your bankroll stays at $950.",
+          "found": true
+        },
+        {
+          "quote": "The big blind acts first on the flop, so the action is with them now.",
+          "found": true
+        }
+      ],
+      "why": "Totals match the surface across turns, and the pot math 80+80=160 is consistent. Turn 1's reply says the action is with the big blind, but the surface says the big blind checked to the player, which is a mismatch. Also, the player bet $40 when the pot was $40, which is correct."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2969,
+    "outputTokens": 602,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.011958,
+  "at": "2026-10-18T09:24:17.299Z"
+}

@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-texas-holdem-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "There's no hand in progress yet, so I've dealt one.",
+          "found": true
+        },
+        {
+          "quote": "Nothing is in the pot beyond the 100, and the hand isn't over.",
+          "found": true
+        }
+      ],
+      "why": "Mostly plain dealer talk with no JSON or ids. The line about no hand in progress is slightly system-ish, and the turn 3 reply is a little clumsy."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "There's no hand in progress yet, so I've dealt one. Nothing is in the pot, so you can check or bet.",
+          "found": true
+        },
+        {
+          "quote": "You bet 50 and the dealer called, so the pot is 100.",
+          "found": true
+        }
+      ],
+      "why": "Each move was acted on. In turn 1 the player's check was not taken; the agent dealt instead, which is a defensible but not exact response."
+    },
+    {
+      "id": "C3",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet 50 and the dealer called, so the pot is 100.",
+          "found": true
+        },
+        {
+          "quote": "You check and the dealer checks behind you. The turn is 6♦.",
+          "found": true
+        }
+      ],
+      "why": "The agent deals and runs the dealer's actions. It dealt the hand in turn 1 without being asked, though the player had not clicked Deal. The hand also stalls at the river with no showdown, though that is the player's last move."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet 50 and the dealer called, so the pot is 100.",
+          "found": true
+        },
+        {
+          "quote": "Pot 100. Check or bet 50.",
+          "found": true
+        }
+      ],
+      "why": "The pot is 100 in the reply and on the surface, but the bankroll shows 950 after a 50 bet and a 50 call, which should make the pot 100 and leave the player at 950, so that part is consistent. Q-7 on a K-high board is king-high only in the sense of board cards; that is correct. One oddity: the turn 3 reply says 'Nothing is in the pot beyond the 100'."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3080,
+    "outputTokens": 592,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01208,
+  "at": "2026-10-18T09:26:18.103Z"
+}

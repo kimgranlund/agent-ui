@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-guidance-conflict-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I can't show you the hole card yet. It stays face down until you stand or double",
+          "found": true
+        },
+        {
+          "quote": "You stand on 17. The dealer reveals the 4 of diamonds for 13",
+          "found": true
+        }
+      ],
+      "why": "Replies are plain dealer talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "I can't show you the hole card yet.",
+          "found": true
+        },
+        {
+          "quote": "You stand on 17.",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken, the impossible request is declined with options (hit, stand, double), and Stand plays out the dealer."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the 4 of diamonds for 13, draws a 5 of hearts to reach 18, and wins.",
+          "found": true
+        }
+      ],
+      "why": "The dealer hand is played and settled in the same turn; the dealing is done by the house and the player makes only their own choices."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer wins 18 to 17. You lose 100.",
+          "found": true
+        },
+        {
+          "quote": "your bankroll stays at 900",
+          "found": true
+        }
+      ],
+      "why": "Reply totals, result and bankroll of 900 match the surface and earlier turns (900 after the 100 bet)."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2439,
+    "outputTokens": 405,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.008928,
+  "at": "2026-10-18T09:26:45.480Z"
+}

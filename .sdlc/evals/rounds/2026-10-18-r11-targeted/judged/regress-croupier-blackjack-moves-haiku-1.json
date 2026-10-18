@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-moves-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I'm standing on A-6 (soft 17)",
+          "found": true
+        },
+        {
+          "quote": "Press \"Deal again\" on the table to start a new round.",
+          "found": true
+        }
+      ],
+      "why": "The replies are plain dealer talk with no JSON or tool talk. The one slip is the dealer saying \"I'm standing\", and the Turn 6 line about pressing a button on the table is fine."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "That hand is already over. You busted at 27, so there's nothing left to hit.",
+          "found": true
+        },
+        {
+          "quote": "You can't split a non-pair, so I'm standing on A-6 (soft 17).",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on, and the impossible hit is refused with a clear next step. The conditional split-or-stand request is handled as the player asked. The \"hit until I bust\" request was carried out, which is fine, though it picked the number of hits."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You hit to 20, then took a 7 and busted at 27.",
+          "found": true
+        },
+        {
+          "quote": "The dealer reveals the 5 for 13 and draws a 9 for 22, a bust.",
+          "found": true
+        }
+      ],
+      "why": "The house deals, reveals and settles by itself every time. The player asked for \"hit until I bust\" and for the conditional stand, so no choice was taken from them. A minor wrinkle is that the dealer revealed its hole card after the player's bust, which is harmless."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You lose your 100 stake.",
+          "found": true
+        },
+        {
+          "quote": "You win 500 chips.",
+          "found": true
+        },
+        {
+          "quote": "\"bankroll\":1400,\"bet\":0",
+          "found": true
+        }
+      ],
+      "why": "Most totals agree, but Turn 5 says the player hit \"to 20\" when the surface shows Q, 8, 2 totaling 20 and then a 7, which is consistent. The Turn 2 double-win reply says \"You win 500 chips\" and the surface bankroll goes 750 to 1500, which also agrees. The real slip is that the Turn 5 reply says the dealer revealed a 6 for 16, which matches, and the Turn 6 bankroll of 1,400 matches the surface, so this criterion is mostly intact. The overall score is lowered only because the Turn 6 reply shows no surface at all, which leaves the player with nothing to check the reply against."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 4220,
+    "outputTokens": 735,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01579,
+  "at": "2026-10-18T09:22:42.877Z"
+}

@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-omaha-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "(The earlier bankroll figure didn't reflect the flop bet, so I've corrected it here.)",
+          "found": true
+        }
+      ],
+      "why": "Turn 4 talks about its own correction instead of staying in dealer voice. The other replies are plain dealer talk."
+    },
+    {
+      "id": "C2",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet the pot (20) and the dealer calls, so the pot is now 60.",
+          "found": true
+        },
+        {
+          "quote": "The river is the 6♥, and you checked.",
+          "found": true
+        }
+      ],
+      "why": "Most moves are answered. In turn 4 the reply re-narrates the river and the check instead of acting on a fresh move. In turn 3 the river came with no showdown, and turn 4 then reran the river."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer's 4♠ and 5♦ make a six-high straight with the 2♣, 3♦ and 6♥, which beats your A-high. The dealer takes the 60 pot.",
+          "found": true
+        }
+      ],
+      "why": "The dealer plays out and settles the hand itself and never hands a house job to the player. The one slip is that turn 3 stalled at the river instead of going to showdown."
+    },
+    {
+      "id": "C4",
+      "score": 1,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your bankroll is now 960: the 10 blind and the 20 flop bet are gone.",
+          "found": true
+        },
+        {
+          "quote": "You lose 30 on this hand (10 blind and 20 on the flop).",
+          "found": true
+        },
+        {
+          "quote": "the dealer takes the 20 pot. You lose only the 10 big blind you'd already posted, and your bankroll stays at 960.",
+          "found": true
+        }
+      ],
+      "why": "Bankroll and pot figures contradict earlier turns. The bankroll stayed 990 while the pot reached 60, and the 60 pot would mean a 30 loss, so 960 fits only by coincidence. Turn 6 says you lose 10 yet leaves the bankroll at 960, and turn 8 shows a 60 pot while the bankroll stays 960. The turn 4 note admits the earlier figures were wrong."
+    }
+  ],
+  "score": 1,
+  "passed": false,
+  "usage": {
+    "inputTokens": 7241,
+    "outputTokens": 640,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.020882,
+  "at": "2026-10-18T09:24:11.996Z"
+}
