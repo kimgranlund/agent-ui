@@ -38,7 +38,7 @@
 
 import type { A2uiComponent } from '../../../protocol.ts'
 import { readPointer } from '../../semantic-check.ts'
-import type { SemanticAction, SemanticCheck, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
+import type { SemanticAction, SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from '../../semantic-check.ts'
 
 const PARTICIPANTS = ['dealer', 'player'] as const
 type Participant = (typeof PARTICIPANTS)[number]
@@ -1212,12 +1212,62 @@ function showdownUnsettled(view: SurfaceView): SemanticFinding[] {
   ]
 }
 
-/** T-0219: what the Croupier states agrees with the cards and the game's rules. */
+const CHIPS_IN = /^(bet|raise|call)/i
+
+/** POKER_CHIPS_MISMATCH (T-0371; round 11 :139 to :146, Haiku 5.5 Omaha): a poker table's chips move between the
+ *  bankroll and the pot, never out of thin air. Read off `/bankroll` and `/pot` against the surface's prior data model
+ *  (the click-time one on an action turn), on the player's move: the first move word the user typed, or the press.
+ *  A bet, raise or call that grows the pot takes the player's chips out of the bankroll (:141 bet the pot, 20 to 60,
+ *  and left 990); a fold leaves the bankroll where it was, the stake already in the pot; a new hand whose pot holds
+ *  the blinds opens below the bankroll the last hand settled at (:144 and :146 posted 10 and opened on 960). A
+ *  showdown is not judged: one turn may hold a final call, and a turn-local prior cannot tell. */
+function pokerChips(view: SurfaceView, input: SemanticCheckInput): SemanticFinding[] {
+  if (!isPokerView(view)) return []
+  const at = (model: unknown, key: string): number | undefined => (isRecord(model) ? finiteNumber(model[key]) : undefined)
+  const bankroll = at(view.dataModel, 'bankroll')
+  const pot = at(view.dataModel, 'pot')
+  if (bankroll === undefined || pot === undefined) return []
+  const { action } = input
+  const finding = (message: string): SemanticFinding[] => [{ code: 'POKER_CHIPS_MISMATCH', path: `${view.surfaceId}:/bankroll`, message }]
+  if (action !== undefined && isNewRound(action.name, action.context) && view.priorDataModel === undefined) {
+    const settled = at(action.dataModel, 'bankroll')
+    if (settled === undefined || pot <= 0 || bankroll < settled) return []
+    return finding(
+      `The last hand settled with a bankroll of ${settled}, and ${view.surfaceId} opens with ${pot} in the pot but the bankroll at ${bankroll}. ` +
+        `The blind or ante the player posts leaves the bankroll as it enters the pot: write ${settled} less what the player posted.`,
+    )
+  }
+  const move = action?.name ?? TYPED_MOVE.exec(input.intent ?? '')?.[1]
+  const prior = view.priorDataModel ?? (action?.surfaceId === view.surfaceId ? action.dataModel : undefined)
+  const before = at(prior, 'bankroll')
+  const potBefore = at(prior, 'pot')
+  if (move === undefined || before === undefined || potBefore === undefined) return []
+  if (CHIPS_IN.test(move) && pot > potBefore && bankroll >= before) {
+    const amount = finiteNumber(action?.context['amount'])
+    const share = amount ?? (pot - potBefore) / 2
+    return finding(
+      `The player's ${move.toLowerCase()} grows the pot from ${potBefore} to ${pot}, and the bankroll still reads ${bankroll}. The chips the player puts in leave the bankroll: ` +
+        `write ${before - share}${amount === undefined ? ` (the player's ${share} of the ${pot - potBefore} a called bet adds)` : ''}, and keep the pot and the bankroll in step on every street.`,
+    )
+  }
+  if (/^fold/i.test(move) && potBefore > 0 && pot === 0 && bankroll !== before)
+    return finding(
+      `The player folds, and the bankroll goes from ${before} to ${bankroll}. A fold costs only the chips already in the pot, which left the bankroll when they went in: write ${before}.`,
+    )
+  return []
+}
+
+/** T-0219: what the Croupier states agrees with the cards and the game's rules; T-0371: a poker table's chips agree. */
 export const croupierRules: SemanticCheck = {
   id: 'croupier-rules',
   requires: ['CardTable'],
   check: (input) =>
-    input.surfaces.flatMap((view) => [...resultClaims(view), ...showdownUnsettled(view), ...(input.action === undefined ? [] : boughtFaceUp(view, input.action))]),
+    input.surfaces.flatMap((view) => [
+      ...resultClaims(view),
+      ...showdownUnsettled(view),
+      ...pokerChips(view, input),
+      ...(input.action === undefined ? [] : boughtFaceUp(view, input.action)),
+    ]),
 }
 
 export const croupierSemanticChecks: readonly SemanticCheck[] = [croupierHandConsistency, croupierBetControls, croupierActionApplied, croupierDeck, croupierRules]

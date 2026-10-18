@@ -8,7 +8,7 @@ import { croupierActionApplied, croupierBetControls, croupierHandConsistency, cr
 import { croupierManifest } from './manifest.ts'
 import { CORRECTED_LINE, DATA_DRIVEN_TURN, DEAL_TURN, EVIDENCE_LINE, NATURAL_REPAIRED_TURN, NATURAL_TURN, toJsonl } from './hands.fixture.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from '../../semantic-check.ts'
-import type { SemanticFinding } from '../../semantic-check.ts'
+import type { SemanticAction, SemanticFinding } from '../../semantic-check.ts'
 import type { Session } from '../../../agent/agent-transport.ts'
 import type { A2uiOutput, A2uiServerMessage } from '../../../protocol.ts'
 import { validateA2ui } from '../../../renderer/validate.ts'
@@ -1430,7 +1430,8 @@ describe('croupier checks: a poker table is never judged by the blackjack strip 
 
   it('the :65 round 1 deal again is one DEALT_IN_BETTING asking for the moves, never NEW_ROUND_NOT_BETTING', () => {
     const findings = all({ surfaces: semanticSurfaceViews({ turns: [] }, dealAgain), action: again })
-    expect(findings.map((f) => [f.code, f.path])).toEqual([['DEALT_IN_BETTING', 'table-2:root']])
+    // T-0371: the hand also opens on the settled 1060 with the blinds in a 20 pot, the chip drift it names.
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['DEALT_IN_BETTING', 'table-2:root'], ['POKER_CHIPS_MISMATCH', 'table-2:/bankroll']])
     expect(findings[0]!.message).toMatch(/Check, Bet and Fold/)
   })
 
@@ -1550,5 +1551,107 @@ describe('croupier rules check: a poker showdown settles in the turn it is reach
     expect(showdown(street('River', 'River: Q♠. Your move.', {}, { label: 'Check', action: { action: 'check' } }))).toEqual([])
     const unnamed: Session = { turns: [{ role: 'assistant', content: toJsonl(deal).replace('"Omaha"', '"Table"') }] }
     expect(judge(unnamed, recorded)).toEqual([])
+  })
+})
+
+// T-0371 (round 11, regress-croupier-omaha-haiku-2, traces :139 to :146): the replies price one Omaha hand as a 30 loss
+// and the next as a 10 loss on the same 960. The data models below are the recorded ones (the shipped round of each
+// turn); the components are trimmed to the GameHud that names the game and the status line.
+describe('croupier rules check: a poker table keeps its chips in step with the pot (T-0371)', () => {
+  const C = (rank: string, suit: string, faceDown = false) => ({ rank, suit, ...(faceDown ? { faceDown } : {}) })
+  const hud = (status: string) => [
+    { id: 'root', component: 'Card', children: ['hud', 'status'] },
+    { id: 'hud', component: 'GameHud', title: "Omaha hold'em", status, stats: { path: '/hudStats' } },
+    { id: 'status', component: 'Text', text: status, variant: 'body' },
+  ]
+  const stats = (bankroll: number, pot: number) => [{ label: 'Bankroll', value: bankroll }, { label: 'Pot', value: pot }, { label: 'Blinds', value: '5 / 10' }]
+  const data = (sid: string, value: Record<string, unknown>) => ({ version: 'v1.0', updateDataModel: { surfaceId: sid, value } })
+  const opening = (sid: string, bankroll: number, value: Record<string, unknown>): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui--croupier', sendDataModel: true } },
+    data(sid, { bankroll, pot: 20, hudStats: stats(bankroll, 20), board: [], ...value }),
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components: hud('Pre-flop') } },
+  ] as A2uiOutput
+  const hand1 = { playerHand: [C('A', 'hearts'), C('K', 'diamonds'), C('9', 'spades'), C('7', 'clubs')], dealerHand: [C('2', 'hearts', true), C('5', 'diamonds', true), C('J', 'clubs', true), C('4', 'spades', true)] }
+  const flop = [C('Q', 'spades'), C('8', 'hearts'), C('3', 'diamonds')]
+  const river = [...flop, C('2', 'clubs'), C('6', 'hearts')]
+  const hand2 = { playerHand: [C('K', 'spades'), C('Q', 'hearts'), C('6', 'clubs'), C('4', 'diamonds')], dealerHand: [C('A', 'clubs', true), C('10', 'hearts', true), C('7', 'diamonds'), C('3', 'spades', true)] }
+  const hand3 = { playerHand: [C('J', 'spades'), C('9', 'hearts'), C('8', 'clubs'), C('2', 'diamonds')], dealerHand: [C('K', 'clubs', true), C('5', 'hearts', true), C('A', 'diamonds'), C('7', 'spades', true)] }
+  // `bankrolls` are what each turn writes: as recorded, or as a conserving table writes them.
+  const recorded = { bet: 990, settle: 960, hand2: 960, hand3: 960 }
+  const conserved = { bet: 970, settle: 970, hand2: 960, hand3: 950 }
+  const turns = (b: typeof recorded) => {
+    const t139 = opening('table-1', 990, hand1)
+    const t140 = [data('table-1', { bankroll: 990, pot: 20, hudStats: stats(990, 20), ...hand1, board: flop })] as A2uiOutput
+    const t141 = [data('table-1', { bankroll: b.bet, pot: 60, hudStats: stats(b.bet, 60), ...hand1, board: [...flop, C('2', 'clubs')] })] as A2uiOutput
+    const t142 = [data('table-1', { bankroll: b.bet, pot: 60, hudStats: stats(b.bet, 60), board: river })] as A2uiOutput
+    const shown = { ...hand1, dealerHand: hand1.dealerHand.map(({ rank, suit }) => C(rank, suit)) }
+    const t143 = [
+      data('table-1', { bankroll: b.settle, pot: 0, hudStats: stats(b.settle, 0), ...shown, board: river }),
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-1', components: hud('Dealer wins') } },
+    ] as A2uiOutput
+    const t144 = opening('table-2', b.hand2, hand2)
+    const t145 = [
+      { version: 'v1.0', updateDataModel: { surfaceId: 'table-2', path: '/pot', value: 0 } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'table-2', path: '/hudStats', value: stats(b.hand2, 0) } },
+    ] as A2uiOutput
+    const t146 = opening('table-3', b.hand3, hand3)
+    return { t139, t140, t141, t142, t143, t144, t145, t146, shown }
+  }
+  const session = (...exchanges: [string, A2uiOutput][]): Session => ({
+    turns: exchanges.flatMap(([say, out]) => [{ role: 'user', content: say }, { role: 'assistant', content: toJsonl(out) }]),
+  })
+  const chips = (sess: Session, output: A2uiOutput, at: { intent?: string; action?: SemanticAction }) =>
+    croupierSemanticChecks
+      .flatMap((c) => c.check({ surfaces: semanticSurfaceViews(sess, output), ...at }))
+      .filter((f) => f.code === 'POKER_CHIPS_MISMATCH')
+  const dealAgain = (surfaceId: string, dataModel: Record<string, unknown>): SemanticAction => ({ name: 'deal_again', surfaceId, context: { newRound: true }, dataModel })
+  const CHECK = 'Check, or call if there is a bet.'
+
+  /** Every turn of the sequence judged as `produce()` judges it, each finding as `<trace line> <path>`. */
+  function sequence(b: typeof recorded): { fired: string[]; messages: string[] } {
+    const t = turns(b)
+    const s139 = session(["Let's play Omaha.", t.t139])
+    const s141 = session(["Let's play Omaha.", t.t139], [CHECK, t.t140])
+    const s143 = session(["Let's play Omaha.", t.t139], [CHECK, t.t140], ['Bet the pot.', t.t141], [CHECK, t.t142])
+    const s145 = session(['deal_again', t.t144])
+    const judged: [string, SemanticFinding[]][] = [
+      [':140', chips(s139, t.t140, { intent: CHECK })],
+      [':141', chips(s141, t.t141, { intent: 'Bet the pot.' })],
+      [':143', chips(s143, t.t143, { intent: CHECK })],
+      [':144', chips({ turns: [] }, t.t144, { action: dealAgain('table-1', { bankroll: b.settle, pot: 0, ...t.shown, board: river }) })],
+      [':145', chips(s145, t.t145, { intent: 'Fold.' })],
+      [':146', chips({ turns: [] }, t.t146, { action: dealAgain('table-2', { bankroll: b.hand2, pot: 0, ...hand2, board: [] }) })],
+    ]
+    return { fired: judged.flatMap(([line, fs]) => fs.map((f) => `${line} ${f.path}`)), messages: judged.flatMap(([, fs]) => fs.map((f) => f.message)) }
+  }
+
+  it('the recorded sequence fires on the bet that left the bankroll and on both new hands that never took the blind', () => {
+    const { fired, messages } = sequence(recorded)
+    expect(fired).toEqual([':141 table-1:/bankroll', ':144 table-2:/bankroll', ':146 table-3:/bankroll'])
+    expect(messages[0]).toMatch(/grows the pot from 20 to 60, and the bankroll still reads 990/)
+    expect(messages[0]).toMatch(/write 970/)
+    expect(messages[1]).toMatch(/settled with a bankroll of 960, and table-2 opens with 20 in the pot but the bankroll at 960/)
+  })
+
+  it('a hand whose chips conserve gives none', () => {
+    expect(sequence(conserved).fired).toEqual([])
+  })
+
+  it('a fold that moves the bankroll fires; a pressed bet is priced at its amount; a check that grows nothing gives none', () => {
+    const t = turns(conserved)
+    const s = session(['deal_again', t.t144])
+    const fold = [data('table-2', { bankroll: 950, pot: 0, hudStats: stats(950, 0), ...hand2, board: [] })] as A2uiOutput
+    expect(chips(s, fold, { intent: 'Fold.' }).map((f) => f.message)).toEqual([expect.stringMatching(/goes from 960 to 950.*write 960/)])
+    const raised = [data('table-2', { bankroll: 960, pot: 80, hudStats: stats(960, 80), ...hand2, board: [] })] as A2uiOutput
+    const press: SemanticAction = { name: 'raise', surfaceId: 'table-2', context: { amount: 30 }, dataModel: { bankroll: 960, pot: 20 } }
+    expect(chips(s, raised, { action: press }).map((f) => f.message)).toEqual([expect.stringMatching(/write 930, and keep/)])
+    expect(chips(s, [data('table-2', { bankroll: 960, pot: 20, ...hand2, board: flop })] as A2uiOutput, { intent: CHECK })).toEqual([])
+  })
+
+  it('a table that names no poker game is not judged', () => {
+    const t = turns(recorded)
+    const plain = (out: A2uiOutput) => JSON.parse(JSON.stringify(out).replaceAll("Omaha hold'em", 'Table')) as A2uiOutput
+    const s = session(["Let's play.", plain(t.t139)], [CHECK, plain(t.t140)])
+    expect(chips(s, plain(t.t141), { intent: 'Bet the pot.' })).toEqual([])
   })
 })
