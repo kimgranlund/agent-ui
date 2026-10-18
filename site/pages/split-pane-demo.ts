@@ -42,7 +42,9 @@ function panel(title: string, spec: string, body: string): HTMLElement {
 
 // frame: the specimen frame a split fills (a ui-split has no intrinsic size); each call site names its block-size
 // as a literal so the dogfood lint sees it, and the dogfood-rules.json exemption owns it (T-0190).
-const FRAME = 'inline-size:100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:var(--md-sys-card-radius); overflow:hidden;'
+// The frame scrolls inline (T-0187): at a narrow column the panes' summed min widths outgrow it, and the split keeps
+// every pane's floor, so the frame scrolls the overflow instead of clipping the last pane.
+const FRAME = 'inline-size:100%; border:1px solid var(--md-sys-color-neutral-outline-variant); border-radius:var(--md-sys-card-radius); overflow-x:auto; overflow-y:hidden;'
 
 // ── the shared panel log ────────────────────────────────────────────────────────────────────────────────────
 const log = document.createElement('ul')

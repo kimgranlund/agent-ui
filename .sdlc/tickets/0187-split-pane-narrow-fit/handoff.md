@@ -23,3 +23,9 @@ Filed by T-0170 (lint allowlist owners, 2026-10-14), which repointed the allowli
 
 ## Constraints
 Never add an allowlist entry without an owner (T-0170 format check). No em dashes.
+
+## Acceptance criteria
+- `scripts/dogfood-render-allowlist.json` has no `demo/split-pane-demo` key.
+- `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts site/pages/split-pane-demo.browser.test.ts` exits 0 in chromium and webkit (the stale-entry check included).
+- `npm run check` exits 0.
+- At a 400px viewport the bounded split's frame scrolls inline (scrollLeft > 0 after scrolling) and the Inspector pane is visible once scrolled.
