@@ -19,13 +19,15 @@
 // guess or a give-up at the targeted board answered in prose alone, or a give-up with no ResultCard; T-0291 judges one
 // typed with no target against the open word game, and a Play again answered in prose; T-0322, a word game asked for
 // with no board. T-0284: a
-// Battleship board opened with no GameHud. T-0296: a Battleship surrender answered with no ResultCard.
+// Battleship board opened with no GameHud. T-0296: a Battleship surrender answered with no ResultCard. T-0366: a move
+// typed at an open board-less game (the Negotiator's deal sheet, the Dungeon Master's quest log) answered in prose alone.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
 // and a committed fleet with no word cue is never judged for a word.
 // DOM-less and node-free, like `semantic-check.ts`: both server hosts import it.
 
 import type { A2uiComponent } from '../protocol.ts'
+import { GAME_WORDS } from './composite-moments.ts'
 import { readPointer } from './semantic-check.ts'
 import type { SemanticAction, SemanticCheck, SemanticFinding, SurfaceView } from './semantic-check.ts'
 
@@ -493,5 +495,62 @@ function isFleetGame(id: string, surfaces: readonly SurfaceView[], open: readonl
   return [...surfaces, ...(open ?? [])].some((v) => v.surfaceId === id && hasFleetCue(v) && !hasWordCue(v))
 }
 
+/** T-0366: the surfaces another check owns a move on (a board, a card table, a booking), so one move gets one finding. */
+const OWNED_ELSEWHERE = new Set(['BoardGrid', 'CardTable', 'PlayingCard', 'BookingForm', 'BookingConfirmation'])
+/** T-0366: a question about the game or its rules, which may stay prose ("What are the rules?", "Explain the rules."). */
+const RULES_ASK = /\b(?:rules?|how (?:do|does|can) (?:i|you|we|this|it|the game) (?:play|work|win)|how to (?:play|win)|what (?:is|are) (?:the )?(?:goal|point|aim))\b|^\s*(?:explain|remind me|tell me (?:about|more))\b/i
+/** T-0366: a question that still plays a move: an offer, a price or a counter put as a question ("How about 20 gold?"). */
+const MOVE_QUESTION = /\d|\b(?:how about|what about|would you (?:take|accept|sell|do)|will you (?:take|accept|sell|do)|i(?:'ll| will)? (?:offer|pay|give))\b/i
+/** T-0366: a question in form: a question mark, or a wh-opener ("What is your lowest price"); is, do, when, help and
+ *  tell me also open imperatives ("When the goblin swings, I dodge left"), so they make no question. */
+const QUESTION = /\?\s*$|^\s*(?:what|how|why|who|where|which)\b/i
+/** T-0366: small talk: thanks, a laugh or a greeting with no move word after it ("Thanks, I appreciate it."); "Okay,
+ *  deal." and "Ok, 20 gold then." are moves. */
+const SMALL_TALK = /^\s*(?:thanks|thank you|cheers|haha|ha|lol|wow|nice|cool|great|hi|hello|hey)\b/i
+const MOVE_WORD = /\d|\b(?:deal|offer|accept|pay|take|give|sell|buy|counter|open|go|walk|step|enter|attack|fight|run|climb|search|grab|pick|use|cast|drink|read|light|help|dodge|hide|talk)\b/i
+
+/** T-0366: whether a say turn plays a move rather than asking about the game or chatting. */
+function playsMove(intent: string): boolean {
+  if (RULES_ASK.test(intent)) return false
+  if (QUESTION.test(intent)) return MOVE_QUESTION.test(intent)
+  return !(SMALL_TALK.test(intent) && !MOVE_WORD.test(intent))
+}
+
+/** T-0366: the player's words as a repair message may quote them: one line, no quotes, at most 60 characters. */
+function quoted(intent: string): string {
+  const flat = intent.replace(/["'“”‘’`]/g, '').replace(/\s+/g, ' ').trim()
+  return flat.length <= 60 ? flat : `${flat.slice(0, 57).trimEnd()}...`
+}
+
+/**
+ * T-0366 (the T-0362 smoke re-record, Haiku 5.5, traces 4 and 6): "I offer 20." targeting deal-1 and "I open the door
+ * and step inside." targeting quest-log were each answered in one round with a reply and no render_surface call, so
+ * the HUD kept the old price and the log the old scene. ACTION_NOT_APPLIED: a say turn whose meta-line declares an open
+ * game surface its target (the surface it says it will change: a GameHud, or the shared game words) and plays a move
+ * there sends that target no update; only an update to that surface id applies the move. A surface another check owns
+ * (a board, a card table, a booking) is left to that check, so a move gets one ACTION_NOT_APPLIED.
+ */
+export const boardlessMoveAppliedCheck: SemanticCheck = {
+  id: 'boardless-move-applied',
+  requires: ['GameHud'],
+  check({ surfaces, action, intent, target, open }) {
+    if (action !== undefined || intent === undefined || target === undefined || !playsMove(intent.trim())) return []
+    const game = (open ?? []).find((v) => v.surfaceId === target)
+    if (game === undefined || surfaces.some((v) => v.surfaceId === target)) return []
+    const comps = [...game.components.values()]
+    if (comps.some((c) => OWNED_ELSEWHERE.has(c.component)) || hasFleetCue(game) || hasWordCue(game)) return []
+    if (!comps.some((c) => c.component === 'GameHud') && !GAME_WORDS.test(`${target} ${JSON.stringify(comps)}`)) return []
+    return [
+      {
+        code: 'ACTION_NOT_APPLIED',
+        path: `${target}:move`,
+        message:
+          `The game check found that the player made a move on ${target} ("${quoted(intent)}") and this turn sends it no update, so the move exists only in prose. ` +
+          `Call render_surface with an updateDataModel or updateComponents for ${target} that applies what the move changed (its stats, status and story), not only prose.`,
+      },
+    ]
+  },
+}
+
 /** Every hidden-state check, in the order the hosts run them. */
-export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck, fleetConcedeCheck]
+export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck, fleetConcedeCheck, boardlessMoveAppliedCheck]

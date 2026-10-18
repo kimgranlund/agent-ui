@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
-import { fleetConcedeCheck, fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
+import { boardlessMoveAppliedCheck, fleetConcedeCheck, fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
@@ -357,8 +357,8 @@ describe('T-0296: fleet-concede', () => {
     } as A2uiServerMessage,
   ]
 
-  it('rides every catalog last', () => {
-    expect(HIDDEN_STATE_CHECKS.map((c) => c.id)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied', 'fleet-hud', 'fleet-concede'])
+  it('rides every catalog after the fleet HUD check', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id).slice(0, 6)).toEqual(['word-secret', 'fleet-secret', 'fleet-shot-applied', 'word-move-applied', 'fleet-hud', 'fleet-concede'])
   })
 
   it('the recorded surrender that reveals the fleet on the board with no ResultCard is RESULT_CARD_MISSING', () => {
@@ -410,5 +410,94 @@ describe('T-0322: a word game asked for with no surface', () => {
     expect(said('How does the word game work?')).toEqual([])
     expect(said('Battleship, please.')).toEqual([])
     expect(wordMoveAppliedCheck.check({ surfaces: [], action: { name: 'guess', surfaceId: 'word-forge', context: {}, dataModel: {} } })).toEqual([])
+  })
+})
+
+// T-0366 (the T-0362 smoke re-record, round 2026-10-18-t0362-smoke, Haiku 5.5, traces 4 and 6): "I offer 20." targeting
+// deal-1 and "I open the door and step inside." targeting quest-log were answered in prose alone and passed. The
+// sessions here are the recorded turn 0 surfaces of the two replays.
+describe('T-0366: boardless-move-applied', () => {
+  const recorded = (name: string): SemanticTurnLog => {
+    const fixture = JSON.parse(readFileSync(join(import.meta.dirname, `../../../../../scripts/e2e-admin/probe/replays/${name}.json`), 'utf8')) as { turns: { lines: string[] }[] }
+    return { turns: [assistant(wire(fixture.turns[0]!.lines))] }
+  }
+  const deal = recorded('smoke-negotiator-first-offer-haiku')
+  const quest = recorded('smoke-dungeon-master-first-scene-haiku')
+  const said = (session: SemanticTurnLog, intent: string, target: string | undefined, out: A2uiOutput = []) =>
+    boardlessMoveAppliedCheck.check({ surfaces: semanticSurfaceViews(session, out), intent, open: sessionSurfaceViews(session), ...(target !== undefined ? { target } : {}) })
+  const fires = (session: SemanticTurnLog, target: string) => (intent: string) => said(session, intent, target).map((f) => f.code)
+  const atDeal = fires(deal, 'deal-1')
+  const atQuest = fires(quest, 'quest-log')
+  const create = (sid: string): A2uiServerMessage => ({ version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui' } })
+
+  it('rides every catalog last', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id).at(-1)).toBe('boardless-move-applied')
+  })
+
+  it('the recorded prose-only offer and quest move are ACTION_NOT_APPLIED, framed as a check result', () => {
+    const offer = said(deal, 'I offer 20.', 'deal-1')
+    expect(offer.map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'deal-1:move']])
+    expect(offer[0]!.message).toMatch(/^The game check found that the player made a move on deal-1 \("I offer 20\."\)/)
+    expect(offer[0]!.message).toMatch(/Call render_surface with an updateDataModel or updateComponents for deal-1/)
+    expect(offer[0]!.message.match(/\bshows?\b/g)).toBeNull()
+    expect(said(quest, 'I open the door and step inside.', 'quest-log').map((f) => [f.code, f.path])).toEqual([['ACTION_NOT_APPLIED', 'quest-log:move']])
+  })
+
+  it('an offer put as a question is a move', () => {
+    for (const intent of ['How about 20 gold?', 'Would you take 150?', 'What about 200 and the lantern?']) expect(atDeal(intent), intent).toEqual(['ACTION_NOT_APPLIED'])
+  })
+
+  it('an okay that closes or names a deal is a move; thanks or a laugh is small talk', () => {
+    expect(atDeal('Okay, deal.')).toEqual(['ACTION_NOT_APPLIED'])
+    expect(atDeal('Ok, 20 gold then.')).toEqual(['ACTION_NOT_APPLIED'])
+    expect(atDeal('Thanks, I appreciate it.')).toEqual([])
+    expect(atQuest('Haha, I love this.')).toEqual([])
+  })
+
+  it('an imperative that opens with help, do, tell me, is or when is a move', () => {
+    for (const intent of ['Help the prisoner out.', 'Do a backflip over the pit.', 'Tell me the password, guard, or I draw my dagger.', 'Is that the exit? I run for it.', 'When the goblin swings, I dodge left.'])
+      expect(atQuest(intent), intent).toEqual(['ACTION_NOT_APPLIED'])
+  })
+
+  it('a question about the game or its rules stays prose', () => {
+    for (const intent of ['Why is it so expensive?', 'What is your lowest price', 'What are the rules?', 'Explain the rules.', 'How do I win this game?']) expect(atDeal(intent), intent).toEqual([])
+    expect(atQuest('Tell me more about the Undervault.')).toEqual([])
+  })
+
+  it('caps the quoted words at one line of 60 characters with no quotes', () => {
+    const long = 'I say "fine" and\nthen I offer twenty gold, a silver ring, my old boots and a song about the sea.'
+    const message = said(deal, long, 'deal-1')[0]!.message
+    const words = /deal-1 \("(.*?)"\) and this turn/.exec(message)![1]!
+    expect(words.length).toBeLessThanOrEqual(60)
+    expect(words).not.toMatch(/["\n]/)
+    expect(words.endsWith('...')).toBe(true)
+  })
+
+  it('only an update to the declared target applies the move', () => {
+    expect(said(deal, 'I offer 20.', 'deal-1', [data('deal-1', { deal: { asking: '230 gold', onTable: '20 gold' } })])).toEqual([])
+    expect(said(deal, 'I offer 20.', 'deal-1', [create('deal_1'), data('deal_1', { deal: { asking: '230 gold' } })]).map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+    expect(said(quest, 'I open the door and step inside.', 'quest-log', [create('toast-1')]).map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
+  })
+
+  it('a turn with no target, or a click, passes', () => {
+    expect(said(deal, 'I offer 20.', undefined)).toEqual([])
+    expect(boardlessMoveAppliedCheck.check({ surfaces: [], action: { name: 'offer', surfaceId: 'deal-1', context: {}, dataModel: {} } })).toEqual([])
+  })
+
+  it('a non-game storefront stays quiet, with or without an update', () => {
+    const shop: SemanticTurnLog = {
+      turns: [assistant([create('storefront-1'), { version: 'v1.0', updateComponents: { surfaceId: 'storefront-1', components: [{ id: 'root', component: 'Text', text: 'Lanterns and lamps' }] } } as A2uiServerMessage])],
+    }
+    expect(said(shop, 'Add that one to the cart.', 'storefront-1', [data('storefront-1', { cart: ['lantern'] })])).toEqual([])
+    expect(said(shop, 'Add that one to the cart.', 'storefront-1')).toEqual([])
+  })
+
+  it('a prose move at a board the fleet or word check owns gets one ACTION_NOT_APPLIED, from that check', () => {
+    const run = (session: SemanticTurnLog, intent: string, target: string) =>
+      HIDDEN_STATE_CHECKS.flatMap((c) => c.check({ surfaces: semanticSurfaceViews(session, []), intent, target, open: sessionSurfaceViews(session) }).map((f) => `${c.id} ${f.code}`))
+    const fleetSession: SemanticTurnLog = { turns: [assistant([...waters('enemy-waters'), data('enemy-waters', { secret: { fleet, playerFleet: fleet }, cells: [] })])] }
+    expect(run(fleetSession, 'Fire at A2.', 'enemy-waters')).toEqual(['fleet-shot-applied ACTION_NOT_APPLIED'])
+    const words: SemanticTurnLog = { turns: [assistant([...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [] })])] }
+    expect(run(words, 'My guess: crane.', 'word-forge')).toEqual(['word-move-applied ACTION_NOT_APPLIED'])
   })
 })

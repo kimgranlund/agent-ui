@@ -9,17 +9,20 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-// expectedFail: T-0366 (turn 1); turn 0 needs a live re-record. Turn 0: Haiku 5.5 built the quest log with "HP 12 / 12"
-// and "Gold 0" as Texts in a Row and the scenes as a Column, so round 1 now gets GAME_HUD_MISSING (T-0365) beside
-// TIMELINE_MISSING; the trace carries only the last round's feedback, so neither shows here. The recorded round 2
-// answers neither (just the Timeline nodes: IDGRAPH root-missing, SURFACE_NOT_CREATED) and round 3 ships the Timeline
-// with HP and Gold as Badges at the bound (SEMANTIC_UNCORRECTED), so no GameHud ships; no round is left to author. Turn 1 ("I open the door and
-// step inside.") is answered in one round in prose with a meta-line targeting quest-log and no render_surface call.
-it('smoke-dungeon-master-first-scene-haiku: turn 0 ships no GameHud; turn 1 answers the move in prose alone', async () => {
+// expectedFail: turn 0 needs a live re-record. Turn 0: Haiku 5.5 built the quest log with "HP 12 / 12" and "Gold 0"
+// as Texts in a Row and the scenes as a Column, so round 1 now gets GAME_HUD_MISSING (T-0365) beside TIMELINE_MISSING;
+// the trace carries only the last round's feedback, so neither shows here. The recorded round 2 answers neither (just
+// the Timeline nodes: IDGRAPH root-missing, SURFACE_NOT_CREATED) and round 3 ships the Timeline with HP and Gold as
+// Badges at the bound (SEMANTIC_UNCORRECTED), so no GameHud ships; no round is left to author. Turn 1 ("I open the door
+// and step inside.") is answered in prose with a meta-line targeting quest-log and no render_surface call. T-0366: the
+// boardless-move-applied check now sends it back with ACTION_NOT_APPLIED. The fixture records no repaired round, so the
+// turn ships SEMANTIC_UNCORRECTED and its probe checks stay red here.
+// The scripted provider replays the one recorded prose round for each repair, so the turn runs to the bound (3 rounds).
+it('smoke-dungeon-master-first-scene-haiku: turn 0 ships no GameHud; the prose-only move on turn 1 gets ACTION_NOT_APPLIED', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-dungeon-master-first-scene-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 0], ['action-updates-surface', 1], ['expect-component', 1], ['expect-component', null]])
   const trace = (i) => report.records[i].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
   expect(trace(0)).toMatchObject({ rounds: 3, failureCodes: ['IDGRAPH', 'SURFACE_NOT_CREATED', 'SEMANTIC_UNCORRECTED'] })
-  expect(trace(1)).toMatchObject({ rounds: 1, failureCodes: [] })
+  expect(trace(1)).toMatchObject({ rounds: 3, failureCodes: ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'] })
 })
