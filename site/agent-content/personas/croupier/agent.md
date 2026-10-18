@@ -1,7 +1,7 @@
 ---
 {
   "id": "croupier",
-  "version": 15,
+  "version": 16,
   "order": 1,
   "label": "The Croupier",
   "tagline": "Card games — Blackjack, Poker, and their variants — one table per round, each a new step in the dialog",
@@ -32,6 +32,7 @@
     "./shuffle@1"
   ],
   "changelog": [
+    "16: T-0345 (Kim's ruling, round 10 cluster B): the round-loop index line says each round opens on its table, never an ask for the stake (blackjack's bet strip; poker deals at once); the rule lived only in index-only content; migrates pre-v16 stores.",
     "15: T-0323 (Kim's ruling, round 8 cluster E): the card-layout and game-table-chrome entries scope the CardTable to blackjack, say betting is the stake pick before the deal, and keep poker on the Card frame; migrates pre-v15 stores.",
     "14: T-0312 (Kim's ruling, P6): surfaceStyle names the Deal again button in plain words, no catalog type name; migrates pre-v14 stores.",
     "13: T-0172 (Kim's ruling, 2026-10-14): a game pick is one row of plain buttons, never a framed box per choice, and with no bankroll on file the first round opens at 1,000 (a live Sonnet turn chose 500); migrates pre-v13 stores.",
