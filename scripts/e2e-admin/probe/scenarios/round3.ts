@@ -105,6 +105,7 @@ export const LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario 
     // The bet after Deal again is a click, so a new round dealt without the bet strip fails click-target (T-0232).
     scenario: {
       name: 'blackjack-hand',
+      tags: ['long'],
       steps: [
         say("Let's play blackjack.", { domains: ['croupier'], exemplars: { include: [CARD_TABLE], exclude: [WORD_BOARD, BATTLESHIP_BOARD] } }, 'CardTable'),
         click('100', 'CardTable'),
@@ -121,6 +122,7 @@ export const LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario 
     agent: 'concierge',
     scenario: {
       name: 'booking',
+      tags: ['long'],
       steps: [
         say('What spa services can I book during my stay?', undefined, 'ProductCard'),
         say('Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', { domains: ['concierge'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),

@@ -68,6 +68,7 @@ export const ROUND5_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundSc
     covers: ['T-0285'],
     scenario: {
       name: 'facility-hours',
+      tags: ['long'],
       steps: [
         // T-0285: a step's expect is any-of, so the ruled Card plus DescriptionList is pinned by DescriptionList alone.
         say('What are the opening hours of the pool, gym and spa? Check the property-knowledge-base.', { domains: ['concierge'], references: KB_FULL }, 'DescriptionList'),

@@ -75,6 +75,7 @@ export const ROUND4_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundSc
     covers: ['T-0266'],
     scenario: {
       name: 'booking-confirm',
+      tags: ['long'],
       steps: [
         say(BOOK_ASK, { domains: ['concierge'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),
         say('Those details are right, please confirm the booking.', undefined, 'BookingConfirmation'),
@@ -88,6 +89,7 @@ export const ROUND4_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundSc
     covers: ['T-0267', 'T-0266'],
     scenario: {
       name: 'spa-services',
+      tags: ['long'],
       steps: [
         say('What spa services can I book during my stay?', { domains: ['concierge'] }, 'ProductCard'),
         say('Book the first one for Thursday 19 November 2026 at 15:00, one guest, name Alex Moreau.', undefined, 'BookingForm'),
@@ -100,6 +102,7 @@ export const ROUND4_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundSc
     covers: ['T-0268', 'T-0274'],
     scenario: {
       name: 'game-give-up',
+      tags: ['long'],
       steps: [
         say('Start a new word game.', { exemplars: { include: [WORD_BOARD] } }, 'BoardGrid'),
         say('My guess: crane.', undefined, 'BoardGrid'),

@@ -16,20 +16,32 @@ const fire = (cell: string): ProbeStep => say(`Fire at ${cell}.`, 'BoardGrid')
 export const ADMIRAL_SCENARIOS: readonly RoundScenario[] = [
   {
     name: 'opening-salvo',
+    tags: ['regression'],
     steps: [say("Let's play Battleship.", 'BoardGrid'), fire('A1'), fire('C3'), fire('D4'), fire('F6')],
     expectComponents: ['BoardGrid', 'GameHud'],
   },
   {
     name: 'concede',
+    tags: ['regression'],
     steps: [say('New game of Battleship.', 'BoardGrid'), fire('B2'), fire('B3'), say('I surrender. Reveal your fleet.', 'ResultCard')],
     expectComponents: ['BoardGrid', 'GameHud', 'ResultCard'],
   },
   {
     name: 'row-sweep',
+    tags: ['regression'],
     steps: [say('Battleship, please.', 'BoardGrid'), fire('A1'), fire('A2'), fire('A3'), fire('A4'), fire('A5'), fire('A6'), say('How many of your ships are still afloat?')],
     expectComponents: ['BoardGrid', 'GameHud'],
   },
 ]
+
+/** T-0343: the smoke case, the game start and one shot, each on the board; kept apart from the round scenarios, whose
+ *  finished rounds' `live-commands.sh` files are pinned. */
+export const ADMIRAL_SMOKE: RoundScenario = {
+  name: 'first-shot',
+  tags: ['smoke'],
+  steps: [say("Let's play Battleship.", 'BoardGrid'), fire('A1')],
+  expectComponents: ['BoardGrid', 'GameHud'],
+}
 
 export const ADMIRAL_MODELS: ReadonlyArray<{ id: string; short: string }> = [
   { id: 'claude-haiku-5-5', short: 'haiku' },

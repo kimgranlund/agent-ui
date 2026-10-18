@@ -22,6 +22,7 @@ const say = (text: string, ...expect: string[]): ProbeStep => (expect.length ? {
 export const CONCIERGE_SCENARIOS: readonly RoundScenario[] = [
   {
     name: 'spa-booking',
+    tags: ['regression'],
     steps: [
       say('What spa services can I book during my stay?', 'ProductCard'),
       say('Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', 'BookingForm'),
@@ -32,6 +33,7 @@ export const CONCIERGE_SCENARIOS: readonly RoundScenario[] = [
   },
   {
     name: 'dinner-at-vela',
+    tags: ['regression'],
     steps: [
       say("I'd like a table at Vela on Friday 20 November 2026 at 20:00 for two, name Alex Moreau.", 'BookingForm'),
       say('Actually make it four people, same time.', 'BookingForm'),
@@ -43,6 +45,7 @@ export const CONCIERGE_SCENARIOS: readonly RoundScenario[] = [
   },
   {
     name: 'facilities-then-tour',
+    tags: ['regression'],
     steps: [
       say('What are the opening hours of the pool, gym and spa? Check the property-knowledge-base.', 'DescriptionList'),
       say('Is late check-out possible?'),
@@ -53,6 +56,18 @@ export const CONCIERGE_SCENARIOS: readonly RoundScenario[] = [
     expectComponents: ['DescriptionList', 'BookingForm', 'BookingConfirmation', 'ProductCard'],
   },
 ]
+
+/** T-0343: the smoke case, a complete booking ask and its confirm; kept apart from the round scenarios, whose finished
+ *  rounds' `live-commands.sh` files are pinned. */
+export const CONCIERGE_SMOKE: RoundScenario = {
+  name: 'booking',
+  tags: ['smoke'],
+  steps: [
+    say('Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', 'BookingForm'),
+    say('Those details are right, please confirm the booking.', 'BookingConfirmation'),
+  ],
+  expectComponents: ['BookingForm', 'BookingConfirmation'],
+}
 
 export const CONCIERGE_MODELS: ReadonlyArray<{ id: string; short: string }> = [
   { id: 'claude-haiku-5-5', short: 'haiku' },

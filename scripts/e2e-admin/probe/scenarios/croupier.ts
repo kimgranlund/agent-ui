@@ -15,9 +15,11 @@
 // Run `node --experimental-strip-types scripts/e2e-admin/probe/scenarios/croupier.ts` to print the script.
 
 import { stepArgv, type ProbeStep } from '../model.ts'
+import type { ScenarioTag } from './round.ts'
 
 export interface CroupierScenario {
   name: string
+  tags: readonly ScenarioTag[]
   /** The `GAMES_RULES` label the scenario plays. */
   game: string
   steps: ProbeStep[]
@@ -34,24 +36,28 @@ export const STUD_STREET = 'Check, or call if there is a bet. If the hand is alr
 const SCENARIOS: readonly CroupierScenario[] = [
   {
     name: 'blackjack-rounds',
+    tags: ['regression'],
     game: 'blackjack',
     steps: [say("Let's play blackjack."), click('100'), click('Stand'), DEAL_AGAIN, click('50'), click('Hit'), click('Stand'), DEAL_AGAIN, click('25'), click('Stand')],
     expectComponents: ['CardTable'],
   },
   {
     name: 'blackjack-moves',
+    tags: ['regression'],
     game: 'blackjack',
     steps: [say('Blackjack, please.'), click('250'), say('Double down.'), DEAL_AGAIN, click('100'), say('Hit me until I bust.'), say('Hit me again.'), DEAL_AGAIN, click('75'), say('Split if you can, otherwise stand.')],
     expectComponents: ['CardTable'],
   },
   {
     name: 'spanish-21',
+    tags: ['regression'],
     game: 'spanish-21',
     steps: [say("Let's play Spanish 21."), click('100'), click('Stand'), DEAL_AGAIN, click('100'), say('Late surrender.'), DEAL_AGAIN, click('50'), say('Hit.'), say('Stand.')],
     expectComponents: ['CardTable'],
   },
   {
     name: 'pontoon',
+    tags: ['regression'],
     game: 'pontoon',
     steps: [say("Let's play pontoon."), click('100'), say('Twist.'), say('Stick.'), DEAL_AGAIN, click('100'), say('Buy a card.'), say('Stick.'), DEAL_AGAIN, click('50'), say('Stick.')],
     expectComponents: ['CardTable'],
@@ -60,24 +66,28 @@ const SCENARIOS: readonly CroupierScenario[] = [
   // so each street is one "check, or call" move and round 1 plays every street to the showdown before Deal again.
   {
     name: 'texas-holdem',
+    tags: ['regression'],
     game: 'texas-holdem',
     steps: [say("Let's play Texas hold'em."), say(CHECK_OR_CALL), say('Bet 50.'), say(CHECK_OR_CALL), say(CHECK_OR_CALL), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Raise 100.'), say(CHECK_OR_CALL)],
     expectComponents: ['PlayingCard'],
   },
   {
     name: 'omaha',
+    tags: ['regression'],
     game: 'omaha',
     steps: [say("Let's play Omaha."), say(CHECK_OR_CALL), say('Bet the pot.'), say(CHECK_OR_CALL), say(CHECK_OR_CALL), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet the pot.'), say(CHECK_OR_CALL)],
     expectComponents: ['PlayingCard'],
   },
   {
     name: 'five-card-draw',
+    tags: ['regression'],
     game: 'five-card-draw',
     steps: [say("Let's play five-card draw."), say(CHECK_OR_CALL), say('Discard my two lowest cards and draw.'), say('Bet 50.'), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say(CHECK_OR_CALL), say('Stand pat, no discards.'), say(CHECK_OR_CALL)],
     expectComponents: ['PlayingCard'],
   },
   {
     name: 'seven-card-stud',
+    tags: ['regression'],
     game: 'seven-card-stud',
     steps: [say("Let's play seven-card stud."), say('Bring it in, or check, or call.'), say('Bet 25.'), say(CHECK_OR_CALL), say(CHECK_OR_CALL), say(CHECK_OR_CALL), DEAL_AGAIN, say('Fold.'), DEAL_AGAIN, say('Bet 50.')],
     expectComponents: ['PlayingCard'],
@@ -131,6 +141,16 @@ export const withoutSkipMarks = (script: string): string => script.replaceAll(` 
 
 /** The live-round scenarios: SCENARIOS with the round's fixes. */
 export const CROUPIER_ROUND_SCENARIOS: readonly CroupierScenario[] = SCENARIOS.map((s) => withDealExpect(skipOnNatural({ ...s, steps: ROUND_STEPS[s.name] ?? s.steps })))
+
+/** T-0343: the smoke case, the deal and a bet, each on the table. A natural after the bet still leaves the table, so no
+ *  step needs `--skip-if-phase`. */
+export const CROUPIER_SMOKE: CroupierScenario = {
+  name: 'blackjack-deal',
+  game: 'blackjack',
+  tags: ['smoke'],
+  steps: [{ say: "Let's play blackjack.", expect: ['CardTable'] }, { click: '100', expect: ['CardTable'] }],
+  expectComponents: ['CardTable'],
+}
 
 /** The picker's Anthropic 5.5 models in spend order (Opus 5.5 joined the picker in T-0185; live round 2, T-0225). */
 export const CROUPIER_MODELS: ReadonlyArray<{ id: string; short: string }> = [
