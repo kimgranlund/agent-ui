@@ -31,7 +31,7 @@ declare const process: { cwd(): string }
 //   `open` prop, not bypass it via a raw `handle.toggle()`; includes the ticket #28 click-open→
 //   selection regression) · select-selection-click · select-selection-enter ·
 //   select-value-two-way · select-label-reflects · select-placeholder ·
-//   select-geometry (B2: anatomy structure + [size] attr + caret aria-hidden) ·
+//   select-geometry (B2: anatomy structure + [size] attr + caret has no host aria-hidden) ·
 //   select-closed-arrow · select-disabled (B3: keyboard-inert + trigger-disabled) ·
 //   select-form-value · select-form-validity · select-form-reset · select-c10-residue ·
 //   select-c10-stacking · select-c10-cleanup · select-descriptor-schema ·
@@ -1192,10 +1192,11 @@ describe('ui-select — trigger geometry structure (select-geometry)', () => {
     el.remove()
   })
 
-  it('select-geometry: the caret span is aria-hidden (decorative glyph, not part of the accessible label)', () => {
+  it('select-geometry: the caret is a decorative glyph with no host aria-hidden (ui-glyph hides itself through internals)', () => {
     const { el, trigger } = makeSelect()
     const caret = trigger.querySelector('[data-part="caret"]')!
-    expect(caret.getAttribute('aria-hidden')).toBe('true')
+    expect(caret.hasAttribute('aria-hidden')).toBe(false)
+    expect(caret.getAttribute('label')).toBe(null)
     el.remove()
   })
 

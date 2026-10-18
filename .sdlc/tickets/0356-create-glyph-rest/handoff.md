@@ -19,6 +19,11 @@ Every control that builds a ui-glyph goes through `createGlyph(symbol)` from gly
 - Done when: `git grep -n "createElement('ui-glyph')" packages/agent-ui/components/src/controls` matches only glyph.ts; `npm run check` plus those seven folders' jsdom and browser tests and `npm run test:visual` exit 0 with no golden change.
 - If Do needs more steps than this level allows (L1-L2 3, L3 6, L4 10, L5 15), file two tickets.
 
+## Acceptance criteria
+- `git grep -n "createElement('ui-glyph')" packages/agent-ui/components/src/controls` lists only the glyph folder (glyph.ts and its own tests).
+- No control in the seven folders sets a host `aria-hidden` on a ui-glyph.
+- `npm run check`, the seven folders' jsdom and browser tests, and `npm run test:visual` exit 0 with no golden change.
+
 ## Context
 Follow-up from T-0351 (closed, #2117), which added createGlyph and moved six controls.
 

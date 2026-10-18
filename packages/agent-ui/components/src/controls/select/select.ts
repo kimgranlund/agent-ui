@@ -22,7 +22,7 @@
 //     <button data-part="trigger" type="button" aria-haspopup="listbox"
 //             aria-expanded="…" aria-controls="ui-select-listbox-N">
 //       <span data-part="label">…selected label or placeholder…</span>
-//       <ui-glyph data-part="caret" aria-hidden="true" symbol="caret-down"></ui-glyph>
+//       <ui-glyph data-part="caret" symbol="caret-down"></ui-glyph>
 //     </button>
 //     <span data-part="aria-label">…visually-hidden `label` prop text…</span>
 //     <div data-part="listbox" role="listbox" id="ui-select-listbox-N"
@@ -72,7 +72,7 @@ import { selectionCommit } from '../../traits/selection-commit.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
 import { activeElementIndex, centerInViewport, seedOpenFocus } from '../../traits/open-scroll.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
-import '../glyph/glyph.ts' // the trigger's caret mark (T-0148)
+import { createGlyph } from '../glyph/glyph.ts' // the trigger's caret mark (T-0148)
 
 // ── Module-level stable-id counter (one per listbox panel, never reused across instances) ──────
 
@@ -555,11 +555,10 @@ export class UISelectElement extends UIFormElement {
     labelSpan.id = `ui-select-value-${seq}`
     labelSpan.textContent = this.placeholder || ''
 
-    // the caret is a functional mark, so it is ui-glyph's caret-down, not pack art (ADR-0245 cl.5, T-0148)
-    const caretSpan = document.createElement('ui-glyph')
+    // the caret is a functional mark, so it is ui-glyph's caret-down, not pack art (ADR-0245 cl.5, T-0148);
+    // decorative, so ui-glyph hides itself through its own internals, never a host aria-hidden
+    const caretSpan = createGlyph('caret-down')
     caretSpan.setAttribute('data-part', 'caret')
-    caretSpan.setAttribute('aria-hidden', 'true')
-    caretSpan.setAttribute('symbol', 'caret-down')
 
     trigger.appendChild(labelSpan)
     trigger.appendChild(caretSpan)

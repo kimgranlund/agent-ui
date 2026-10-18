@@ -17,7 +17,7 @@
 
 import { UIElement } from '../../dom/element.ts'
 import type { PropsSchema } from '../../dom/props.ts'
-import '../glyph/glyph.ts' // the paddle carets are functional marks, ui-glyph (ADR-0245 cl.5)
+import { createGlyph } from '../glyph/glyph.ts' // the paddle carets are functional marks, ui-glyph (ADR-0245 cl.5)
 import type { UIButtonElement } from '../button/button.ts'
 
 export class UISwiperPaddlesElement extends UIElement {
@@ -48,7 +48,7 @@ export class UISwiperPaddlesElement extends UIElement {
     this.#prev.setAttribute('variant', 'ghost')
     this.#prev.setAttribute('icon-only', '')
     this.#prev.setAttribute('aria-label', 'Previous slide')
-    this.#prevIcon = document.createElement('ui-glyph')
+    this.#prevIcon = createGlyph('caret-left') // fill() rotates both symbols to the orientation
     this.#prevIcon.setAttribute('slot', 'leading')
     // the caret role, not icon: a glyph keeps its own glyph box 2n - 2c inside the icon cell (ADR-0245 Amendment 6)
     this.#prevIcon.setAttribute('data-role', 'caret')
@@ -60,7 +60,7 @@ export class UISwiperPaddlesElement extends UIElement {
     this.#next.setAttribute('variant', 'ghost')
     this.#next.setAttribute('icon-only', '')
     this.#next.setAttribute('aria-label', 'Next slide')
-    this.#nextIcon = document.createElement('ui-glyph')
+    this.#nextIcon = createGlyph('caret-right')
     this.#nextIcon.setAttribute('slot', 'leading')
     this.#nextIcon.setAttribute('data-role', 'caret')
     this.#next.appendChild(this.#nextIcon)

@@ -43,7 +43,7 @@
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import { UIElement } from '../../dom/index.ts'
 import { overlay, type OverlayHandle, type OverlayPlacement } from '../../traits/overlay.ts'
-import '../glyph/glyph.ts' // registers <ui-glyph>, the trigger's caret mark (ADR-0245 cl.5)
+import { createGlyph } from '../glyph/glyph.ts' // the trigger's caret mark (ADR-0245 cl.5)
 
 // ── Placement enum values (mirrors the OverlayPlacement union from overlay.ts — popover.ts precedent) ──
 
@@ -180,9 +180,8 @@ export class UIFormPopoverElement extends UIElement {
     labelSpan.textContent = this.label
 
     // the caret is a ui-glyph mark on its glyph box (T-0149), decorative (aria-hidden through its own internals)
-    const caretSpan = document.createElement('ui-glyph')
+    const caretSpan = createGlyph('caret-down')
     caretSpan.setAttribute('data-part', 'caret')
-    caretSpan.setAttribute('symbol', 'caret-down')
 
     trigger.appendChild(labelSpan)
     trigger.appendChild(caretSpan)
