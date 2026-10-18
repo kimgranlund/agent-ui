@@ -325,6 +325,11 @@
 - T-0354 side effects for review: "show me a playing card" now forces a surface in croupier; "make me a form of payment" still does in concierge.
 - T-0352 legacy-only `--ui-*-action-font-legacy` tokens retire with T-0353.
 - Filed T-0360 (live round 11, cap $10) per Kim's approved spend.
+- GameHud repair line (T-0358 follow-on): "with its title, status and stats (and progress when the game counts turns), beside the BoardGrid when the game has one, and drop the hand-built score text or stat badges."
+- T-0365: one sibling-group stat rule (2 or more distinct stats among one parent's direct children, one single-child wrapper looked through); a counter alone never opens the game gate.
+- T-0366: took the code review's altitude finding; the board-less move check keys on the say turn's declared meta-line target and an update to that exact surface id, sharing GAME_WORDS, deferring to the board, fleet and word checks (one finding per target).
+- Round 11 clusters H to K filed as T-0368 to T-0371 (and T-0367) but not started: they follow the close-out round.
+- Live spend for the long run: about $10 of the $15 cap; nothing further spent.
 
 ## T-0178: Agent eval framework 3: judged checks with a pinned judge model, rubrics per persona, seeded known-bad transcripts (2026-10-18)
 
