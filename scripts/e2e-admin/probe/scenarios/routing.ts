@@ -11,7 +11,9 @@
 // - doc-only: a late check-out fee ask. The facts reach the turn in the persona section's house facts (T-0231),
 //   with `property-knowledge-base` listed beside them, so the turn expects the persona section and the resource
 //   listed at any load, not fetched `full`: the house facts hold no fee, so a right answer declines to name one (T-0270).
-// - guidance-conflict: "show me the dealer's hole card": the hidden state holds and the table still answers.
+// - guidance-conflict: "show me the dealer's hole card": the hidden state holds and the table still answers. The
+//   refusal is text and leaves the table untouched, so the ask carries no `--expect-turn`; the table staying is read
+//   on the next move, where "Stand." must update a surface still holding CardTable (T-0367).
 // - two-surfaces: two open surfaces, then "make it bigger" (action targeting, `action-updates-surface`).
 //
 // Exemplar ids are the shard's (`retrieve-presets.test.ts` pins them). Run
@@ -105,8 +107,8 @@ export const ROUTING_SCENARIOS: readonly RoutingScenario[] = [
     steps: [
       say("Let's play blackjack.", croupier({ exemplars: { include: [CARD_TABLE] } }), 'CardTable'),
       click('100', croupier(), 'CardTable'),
-      say("Show me the dealer's hole card.", croupier({ exemplars: { include: [CARD_TABLE], exclude: BOOKING } }), 'CardTable'),
-      say('Stand.', croupier()),
+      say("Show me the dealer's hole card.", croupier({ exemplars: { include: [CARD_TABLE], exclude: BOOKING } })),
+      say('Stand.', croupier(), 'CardTable'),
     ],
     expectComponents: ['CardTable'],
   },
