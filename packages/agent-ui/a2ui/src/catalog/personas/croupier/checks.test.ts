@@ -1632,7 +1632,8 @@ describe('croupier rules check: a poker table keeps its chips in step with the p
     const { fired, messages } = sequence(recorded)
     expect(fired).toEqual([':141 table-1:/bankroll', ':144 table-2:/bankroll', ':146 table-3:/bankroll'])
     expect(messages[0]).toMatch(/grows the pot from 20 to 60, and the bankroll still reads 990/)
-    expect(messages[0]).toMatch(/write 970/)
+    expect(messages[0]).toMatch(/lower it by the player's own chips this turn, never the opponent's/)
+    expect(messages[0]).not.toMatch(/write \d/) // a typed "Bet the pot." with a dealer call is never priced exactly
     expect(messages[1]).toMatch(/settled with a bankroll of 960, and table-2 opens with 20 in the pot but the bankroll at 960/)
   })
 
@@ -1640,15 +1641,89 @@ describe('croupier rules check: a poker table keeps its chips in step with the p
     expect(sequence(conserved).fired).toEqual([])
   })
 
-  it('a fold that moves the bankroll fires; a pressed bet is priced at its amount; a check that grows nothing gives none', () => {
-    const t = turns(conserved)
-    const s = session(['deal_again', t.t144])
-    const fold = [data('table-2', { bankroll: 950, pot: 0, hudStats: stats(950, 0), ...hand2, board: [] })] as A2uiOutput
-    expect(chips(s, fold, { intent: 'Fold.' }).map((f) => f.message)).toEqual([expect.stringMatching(/goes from 960 to 950.*write 960/)])
-    const raised = [data('table-2', { bankroll: 960, pot: 80, hudStats: stats(960, 80), ...hand2, board: [] })] as A2uiOutput
-    const press: SemanticAction = { name: 'raise', surfaceId: 'table-2', context: { amount: 30 }, dataModel: { bankroll: 960, pot: 20 } }
-    expect(chips(s, raised, { action: press }).map((f) => f.message)).toEqual([expect.stringMatching(/write 930, and keep/)])
-    expect(chips(s, [data('table-2', { bankroll: 960, pot: 20, ...hand2, board: flop })] as A2uiOutput, { intent: CHECK })).toEqual([])
+  // A street of table-2 (conserved hand 2, 960 behind a 20 pot); `extra` merges into the data model.
+  const t2 = (value: Record<string, unknown>, comps?: Record<string, unknown>[]): A2uiOutput => [
+    data('table-2', { ...hand2, board: flop, ...value }),
+    ...(comps === undefined ? [] : [{ version: 'v1.0', updateComponents: { surfaceId: 'table-2', components: comps } }]),
+  ] as A2uiOutput
+  const s2 = () => session(['deal_again', turns(conserved).t144])
+
+  it('a turn that settles the hand is not judged for its move: a river call won, a run-out at the showdown, a bet the opponent folds to', () => {
+    expect(chips(s2(), t2({ bankroll: 1060, pot: 120 }), { intent: 'Call.' })).toEqual([])
+    expect(chips(s2(), t2({ bankroll: 960, pot: 120, phase: 'showdown' }), { intent: 'Call.' })).toEqual([])
+    expect(chips(s2(), t2({ bankroll: 960, pot: 120 }, [{ id: 'status', component: 'Text', text: 'All in, run it out: the dealer wins with two pair.' }]), { intent: 'Call.' })).toEqual([])
+    expect(chips(s2(), t2({ bankroll: 1000, pot: 0 }), { intent: 'Bet 20.' })).toEqual([])
+  })
+
+  it('a typed turn with two moves or a condition is not judged; one typed bet with its number is priced', () => {
+    expect(chips(s2(), t2({ bankroll: 960, pot: 60 }), { intent: "Call, or check if there's no bet." })).toEqual([])
+    expect(chips(s2(), t2({ bankroll: 960, pot: 60 }), { intent: 'Bet 20.' }).map((f) => f.message)).toEqual([expect.stringMatching(/write 940, and keep/)])
+  })
+
+  it('a press is priced only when its chips are certain: a bet amount, a raise increment; a raise amount is a raise-to', () => {
+    const press = (name: string, context: Record<string, unknown>): SemanticAction => ({ name, surfaceId: 'table-2', context, dataModel: { bankroll: 960, pot: 20 } })
+    const grown = t2({ bankroll: 960, pot: 80 })
+    expect(chips(s2(), grown, { action: press('bet', { amount: 20 }) }).map((f) => f.message)).toEqual([expect.stringMatching(/write 940/)])
+    expect(chips(s2(), grown, { action: press('raise', { raiseBy: 30 }) }).map((f) => f.message)).toEqual([expect.stringMatching(/write 930/)])
+    const to = chips(s2(), grown, { action: press('raise', { amount: 30 }) })
+    expect(to.map((f) => f.message)).toEqual([expect.stringMatching(/never the opponent's/)])
+    expect(to[0]!.message).not.toMatch(/write \d/)
+  })
+
+  it('a fold that raises the bankroll fires; one that lowers it (an earlier bet left undebited) does not', () => {
+    expect(chips(s2(), t2({ bankroll: 980, pot: 0 }), { intent: 'Fold.' }).map((f) => f.message)).toEqual([expect.stringMatching(/rises from 960 to 980.*write 960/)])
+    expect(chips(s2(), t2({ bankroll: 950, pot: 0 }), { intent: 'Fold.' })).toEqual([])
+  })
+
+  it('a new hand fires only where the player posted: heads-up blinds, a named player blind; not an opponent-only blind, a stud bring-in, a recap, a bust', () => {
+    const again = (dataModel: Record<string, unknown>): SemanticAction => dealAgain('table-1', dataModel)
+    const fresh = (value: Record<string, unknown>, title = "Omaha hold'em"): A2uiOutput => {
+      const out = opening('table-4', 960, value)
+      ;((out[2] as { updateComponents: { components: Record<string, unknown>[] } }).updateComponents.components[1]!)['title'] = title
+      return out
+    }
+    const threeHanded = { ...hand2, dealerHand: undefined, seat2Hand: hand2.dealerHand, seat3Hand: hand3.dealerHand }
+    const judge = (out: A2uiOutput, settled = 960) => chips({ turns: [] }, out, { action: again({ bankroll: settled, pot: 0 }) }).map((f) => f.path)
+    expect(judge(fresh(hand2))).toEqual(['table-4:/bankroll'])
+    expect(judge(fresh(threeHanded))).toEqual([])
+    expect(judge(fresh({ ...threeHanded, playerBlind: 10 }))).toEqual(['table-4:/bankroll'])
+    expect(judge(fresh(hand2, 'Seven-card stud'))).toEqual([]) // the opponent's bring-in
+    expect(judge(fresh({ playerHand: [], dealerHand: [] }))).toEqual([]) // a recap, no dealt hand
+    expect(judge(fresh(hand2), 0)).toEqual([]) // busted
+    // The pressed table reset in place with an updateDataModel alone.
+    const sess = session(['deal_again', turns(recorded).t144])
+    const reset = [data('table-2', { bankroll: 960, pot: 20, ...hand3, board: [] })] as A2uiOutput
+    expect(chips(sess, reset, { action: dealAgain('table-2', { bankroll: 960, pot: 0, ...hand2, board: [] }) }).map((f) => f.path)).toEqual(['table-2:/bankroll'])
+  })
+
+  it('reads the CardTable bindings and numeric strings, and skips a count it cannot read', () => {
+    const table = (bankroll: unknown): A2uiOutput => [
+      data('table-2', { stack: { chips: bankroll }, potTotal: '$60', ...hand2, board: flop }),
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-2', components: [
+        { id: 'root', component: 'CardTable', title: "Omaha hold'em", bankroll: { path: '/stack/chips' }, bet: { path: '/potTotal' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' } },
+      ] } },
+    ] as A2uiOutput
+    const bound = session(["Let's play Omaha.", [
+      { version: 'v1.0', createSurface: { surfaceId: 'table-2', catalogId: 'agent-ui--croupier' } },
+      ...table('960').map((m) => JSON.parse(JSON.stringify(m).replace('"$60"', '"20"'))),
+    ] as A2uiOutput])
+    expect(chips(bound, table('960'), { intent: 'Bet 20.' }).map((f) => f.path)).toEqual(['table-2:/stack/chips'])
+    expect(chips(bound, table('lots'), { intent: 'Bet 20.' })).toEqual([])
+  })
+
+  it('the blackjack carry-over BANKROLL_MISMATCH skips a poker table and keeps baccarat and a table that only says poker', () => {
+    const next = (title: string, status: string, bankroll: number, pot?: number): A2uiOutput => [
+      { version: 'v1.0', createSurface: { surfaceId: 'table-9', catalogId: 'agent-ui--croupier' } },
+      data('table-9', { bankroll, ...(pot === undefined ? {} : { pot }), dealerHand: [], playerHand: [] }),
+      { version: 'v1.0', updateComponents: { surfaceId: 'table-9', components: [
+        { id: 'root', component: 'CardTable', title, status, phase: 'betting', betAction: 'deal', bankroll: { path: '/bankroll' }, bet: { path: pot === undefined ? '/bet' : '/pot' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' } },
+      ] } },
+    ] as A2uiOutput
+    const carry = (out: A2uiOutput) =>
+      croupierActionApplied.check({ surfaces: semanticSurfaceViews({ turns: [] }, out), action: dealAgain('table-1', { bankroll: 960 }) }).filter((f) => f.code === 'BANKROLL_MISMATCH').length
+    expect(carry(next("Texas hold'em", '21 big blinds behind', 950, 15))).toBe(0)
+    expect(carry(next('Baccarat', 'Place your bet', 950))).toBe(1)
+    expect(carry(next('Blackjack (no poker here)', 'Place your bet', 950))).toBe(1)
   })
 
   it('a table that names no poker game is not judged', () => {
