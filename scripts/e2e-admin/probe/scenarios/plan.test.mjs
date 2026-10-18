@@ -1,14 +1,17 @@
 // T-0343: a round planned from tags is well-formed before any credit is spent. Keyless: the smoke plan holds one run per
 // roster preset (read from the persona files, not a count), every smoke step expects a type the preset's catalog holds,
 // the run names carry their tag's prefix the way `signals.ts` reads it back, the regression, routing and long tags
-// replan round 9's 87 runs, and a usage problem exits 2.
-import { readdirSync, readFileSync } from 'node:fs'
+// replan round 9's 87 runs, `--affected` keeps only the presets whose content changed since a baseline round, and a
+// usage problem exits 2.
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { nodeCatalogResolver } from '../../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
 import { parseProbeCli } from '../cli.ts'
 import { describeCommands } from '../run-capped.ts'
 import { tagOf } from '../signals.ts'
-import { planMain, planRuns, parsePlanArgs, scenarioRegistry, SMOKE_PRESETS, TAG_PREFIX } from './plan.ts'
+import { affectedPresets, planMain, planRuns, parsePlanArgs, scenarioRegistry, SMOKE_PRESETS, TAG_PREFIX } from './plan.ts'
 import { SCENARIO_TAGS } from './round.ts'
 import { round9Runs } from './round9.ts'
 
@@ -22,12 +25,38 @@ const roster = readdirSync(personasDir)
   })
   .sort()
 
-const run = (argv) => {
+const run = (argv, compile) => {
   let out = ''
   let err = ''
-  const code = planMain(argv, (t) => (out += t), (t) => (err += t))
+  const code = planMain(argv, (t) => (out += t), (t) => (err += t), compile)
   return { code, out, err }
 }
+
+const entry = (kind, id, digest) => ({ kind, id, version: 1, digest, source: 'seed' })
+/** A baseline round folder whose trace lines record quant, croupier (whose bankroll moves after its opening turn) and
+ *  admiral, each run on a model the seed does not name. */
+function baseline() {
+  const dir = mkdtempSync(join(tmpdir(), 'plan-affected-'))
+  mkdirSync(join(dir, 'traces'))
+  const line = (resolution) => JSON.stringify({ at: '2026-10-18T00:00:00Z', bundle: { digest: 'sha256:x', resolution } })
+  const lines = [
+    line([entry('persona', 'quant', 'q1'), entry('skill', 'dashboard-kpi-grid', 's1'), entry('setting', 'model', 'haiku')]),
+    line([entry('persona', 'croupier', 'c1'), entry('setting', 'model', 'haiku')]),
+    line([entry('persona', 'croupier', 'c1-after-bet'), entry('setting', 'bankroll', 'b2'), entry('setting', 'model', 'haiku')]),
+    line([entry('persona', 'admiral', 'a1'), entry('setting', 'model', 'haiku')]),
+    JSON.stringify({ at: '2026-10-18T00:00:01Z', outcome: 'error' }),
+  ]
+  writeFileSync(join(dir, 'traces', '2026-10-18.jsonl'), `${lines.join('\n')}\n`)
+  return dir
+}
+/** The current tree as the compiler would report it: quant and croupier unchanged (no model setting, the seed's), the
+ *  admiral's persona edited. */
+const compile = (agent) =>
+  ({
+    quant: [entry('skill', 'dashboard-kpi-grid', 's1'), entry('persona', 'quant', 'q1')],
+    croupier: [entry('persona', 'croupier', 'c1')],
+    admiral: [entry('persona', 'admiral', 'a2')],
+  })[agent] ?? [entry('persona', agent, 'new')]
 
 describe('plan.ts', () => {
   it('plans one smoke run per roster preset on Haiku, named <scenario>-haiku-1, which the capped runner describes', () => {
@@ -93,12 +122,33 @@ describe('plan.ts', () => {
     expect(runs.map((r) => r.name)).toEqual(['smoke-quant-kpi-dashboard-sonnet-1', 'smoke-admiral-first-shot-sonnet-1', 'smoke-quant-kpi-dashboard-sonnet-2', 'smoke-admiral-first-shot-sonnet-2'])
   })
 
-  it('exits 2 on a usage problem, an empty selection and --affected (SPEC CL-R10)', () => {
-    for (const argv of [[], ['--tag', 'nightly'], ['--tag', 'smoke', '--model', 'gpt'], ['--tag', 'smoke', '--persona', 'nobody'], ['--tag', 'smoke', '--samples', '0'], ['--tag', 'routing', '--persona', 'quant'], ['--tag', 'smoke', '--affected', '2026-10-17-r9-matrix']]) {
-      const { code, out, err } = run(argv)
+  it('--affected compares each preset with its first recorded resolution, settings aside (SPEC CL-R10)', () => {
+    const dir = baseline()
+    try {
+      const got = affectedPresets(['quant', 'croupier', 'admiral', 'curator'], dir, compile)
+      expect(Object.fromEntries(got)).toEqual({
+        quant: { affected: false, why: 'unchanged' },
+        croupier: { affected: false, why: 'unchanged' },
+        admiral: { affected: true, why: 'content changed' },
+        curator: { affected: true, why: 'no recorded resolution' },
+      })
+      const plan = run(['--tag', 'smoke', '--model', 'haiku', '--persona', 'quant', '--persona', 'admiral', '--persona', 'curator', '--affected', dir], compile)
+      expect(plan.code).toBe(0)
+      expect(plan.out).toContain(`# Affected since ${dir} (SPEC CL-R10): quant unchanged, curator no recorded resolution, admiral content changed.`)
+      expect(plan.out.split('\n').filter((l) => l.startsWith('npm run')).map((l) => /--name (\S+)/.exec(l)[1])).toEqual(['smoke-curator-collection-haiku-1', 'smoke-admiral-first-shot-haiku-1'])
+      const none = run(['--tag', 'smoke', '--persona', 'quant', '--persona', 'croupier', '--affected', dir], compile)
+      expect([none.code, none.out]).toEqual([2, ''])
+      expect(none.err).toContain("no selected preset's agent content changed since")
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('exits 2 on a usage problem, an empty selection and a baseline with no traces', () => {
+    for (const argv of [[], ['--tag', 'nightly'], ['--tag', 'smoke', '--model', 'gpt'], ['--tag', 'smoke', '--persona', 'nobody'], ['--tag', 'smoke', '--samples', '0'], ['--tag', 'routing', '--persona', 'quant'], ['--tag', 'smoke', '--affected', 'no-such-round']]) {
+      const { code, out, err } = run(argv, compile)
       expect([code, out], argv.join(' ')).toEqual([2, ''])
       expect(err, argv.join(' ')).toMatch(/^plan: .*\nusage: /)
     }
-    expect(run(['--tag', 'smoke', '--affected', 'x']).err).toContain('CL-R10')
   })
 })

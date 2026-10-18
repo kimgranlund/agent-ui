@@ -1,0 +1,746 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "smoke-dungeon-master-first-scene-haiku-1",
+  "mode": "live",
+  "agent": "dungeon-master",
+  "model": "claude-haiku-5-5",
+  "runId": "smoke-dungeon-master-first-scene-haiku-1-ddbab433",
+  "at": "2026-10-18T01:35:02.330Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since this is the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" start of the adventure, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should set up the quest log as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the single pers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent surface for the whole\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" crawl, tracking sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enes, HP and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Gold, and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" capped inventory. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll open with scene one at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the entrance, giving the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player two or three choices to beg\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"in.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est log entries can\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" just be short scene summaries\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'm laying out the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card structure now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": header with title\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", content hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" HP/Gold badges\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", scene list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inventory badges, and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" footer with three choice butt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ons for desc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ending, pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying the grate, or listening\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at the door, each w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ired to a \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"choose\\\" action with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its own\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" context.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Building the root Card sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face using createSurface with id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"quest-log\\\" and cat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"alog \\\"agent-ui\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\", making\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure each message includ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es a version. I'll p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"air it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a short three\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-sentence nar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ration of the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" opening scene.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"The st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"air\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" down is crac\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ked and slick\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" water, and the air\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" sm\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ells of old i\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ron and cold st\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"one. A torch fl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ickers in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" your hand, and ahead\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\",\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the first\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" step\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dr\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ops into dar\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"kness. Three pa\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ths lie\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" before you: the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stair, a rusted gr\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ate in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the wall, and an iron\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" door with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a fa\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"int sound beh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ind it.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"quest-log\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"quest-log\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"hd\\\",\\\"ct\\\",\\\"ft\\\"]},{\\\"id\\\":\\\"hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Quest log: The Undervault\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"strip\\\",\\\"scenes_lbl\\\",\\\"scenes\\\",\\\"inv_lbl\\\",\\\"inv\\\"]},{\\\"id\\\":\\\"strip\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"hp\\\",\\\"gold\\\"]},{\\\"id\\\":\\\"hp\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"HP 12/12\\\",\\\"intent\\\":\\\"success\\\"},{\\\"id\\\":\\\"gold\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Gold 0\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"id\\\":\\\"scenes_lbl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Scenes\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"scenes\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"xs\\\",\\\"children\\\":[\\\"s1\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"1. The stair down, at the Undervault's entrance.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"inv_lbl\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Inventory (2/6)\\\",\\\"variant\\\":\\\"label\\\"},{\\\"id\\\":\\\"inv\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"i1\\\",\\\"i2\\\"]},{\\\"id\\\":\\\"i1\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Torch\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"i2\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Dagger\\\",\\\"intent\\\":\\\"neutral\\\"},{\\\"id\\\":\\\"ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"choice_row\\\"]},{\\\"id\\\":\\\"choice_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"c1\\\",\\\"c2\\\",\\\"c3\\\"]},{\\\"id\\\":\\\"c1\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Descend the stair\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"descend\\\"}}},{\\\"id\\\":\\\"c2\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Pry the rusted grate\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"grate\\\"}}},{\\\"id\\\":\\\"c3\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Listen at the iron door\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"door\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The stair down is cracked and slick with water, and the air smells of old iron and cold stone. A torch flickers in your hand, and ahead, the first step drops into darkness. Three paths lie before you: the stair, a rusted grate in the wall, and an iron door with a faint sound behind it.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Start the adventure.\",\"k\":3},\"exemplarIds\":[\"listing-photo-grid\",\"frontier-review-split\",\"five-day-weather\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":53685,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5736},{\"id\":\"mini-skills\",\"chars\":804},{\"id\":\"persona\",\"chars\":1865}],\"over\":false},\"usage\":{\"inputTokens\":3665,\"outputTokens\":2424,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"quest-log\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quest-log\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Quest log: The Undervault\",\"variant\":\"h4\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"strip\",\"scenes_lbl\",\"scenes\",\"inv_lbl\",\"inv\"]},{\"id\":\"strip\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"hp\",\"gold\"]},{\"id\":\"hp\",\"component\":\"Badge\",\"label\":\"HP 12/12\",\"intent\":\"success\"},{\"id\":\"gold\",\"component\":\"Badge\",\"label\":\"Gold 0\",\"intent\":\"warning\"},{\"id\":\"scenes_lbl\",\"component\":\"Text\",\"text\":\"Scenes\",\"variant\":\"label\"},{\"id\":\"scenes\",\"component\":\"Column\",\"gap\":\"xs\",\"children\":[\"s1\"]},{\"id\":\"s1\",\"component\":\"Text\",\"text\":\"1. The stair down, at the Undervault's entrance.\",\"variant\":\"body\"},{\"id\":\"inv_lbl\",\"component\":\"Text\",\"text\":\"Inventory (2/6)\",\"variant\":\"label\"},{\"id\":\"inv\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"i1\",\"i2\"]},{\"id\":\"i1\",\"component\":\"Badge\",\"label\":\"Torch\",\"intent\":\"neutral\"},{\"id\":\"i2\",\"component\":\"Badge\",\"label\":\"Dagger\",\"intent\":\"neutral\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"choice_row\"]},{\"id\":\"choice_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Button\",\"label\":\"Descend the stair\",\"variant\":\"solid\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"descend\"}}},{\"id\":\"c2\",\"component\":\"Button\",\"label\":\"Pry the rusted grate\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"grate\"}}},{\"id\":\"c3\",\"component\":\"Button\",\"label\":\"Listen at the iron door\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"door\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "The stair down is cracked and slick with water, and the air smells of old iron and cold stone. A torch flickers in your hand, and ahead, the first step drops into darkness. Three paths lie before you: the stair, a rusted grate in the wall, and an iron door with a faint sound behind it.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your quest log is open. Choose your first move below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quest-log",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quest-log",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Quest log: The Undervault",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "strip",
+                            "scenes_lbl",
+                            "scenes",
+                            "inv_lbl",
+                            "inv"
+                          ]
+                        },
+                        {
+                          "id": "strip",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "hp",
+                            "gold"
+                          ]
+                        },
+                        {
+                          "id": "hp",
+                          "component": "Badge",
+                          "label": "HP 12/12",
+                          "intent": "success"
+                        },
+                        {
+                          "id": "gold",
+                          "component": "Badge",
+                          "label": "Gold 0",
+                          "intent": "warning"
+                        },
+                        {
+                          "id": "scenes_lbl",
+                          "component": "Text",
+                          "text": "Scenes",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "scenes",
+                          "component": "Column",
+                          "gap": "xs",
+                          "children": [
+                            "s1"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "Text",
+                          "text": "1. The stair down, at the Undervault's entrance.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "inv_lbl",
+                          "component": "Text",
+                          "text": "Inventory (2/6)",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "inv",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "i1",
+                            "i2"
+                          ]
+                        },
+                        {
+                          "id": "i1",
+                          "component": "Badge",
+                          "label": "Torch",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "i2",
+                          "component": "Badge",
+                          "label": "Dagger",
+                          "intent": "neutral"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "choice_row"
+                          ]
+                        },
+                        {
+                          "id": "choice_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "c1",
+                            "c2",
+                            "c3"
+                          ]
+                        },
+                        {
+                          "id": "c1",
+                          "component": "Button",
+                          "label": "Descend the stair",
+                          "variant": "solid",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "descend"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c2",
+                          "component": "Button",
+                          "label": "Pry the rusted grate",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "grate"
+                            }
+                          }
+                        },
+                        {
+                          "id": "c3",
+                          "component": "Button",
+                          "label": "Listen at the iron door",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "choose",
+                            "context": {
+                              "choice": "door"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-18.jsonl:23",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          821
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "listing-photo-grid",
+          "frontier-review-split",
+          "five-day-weather"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quest-log",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Start the adventure.",
+        "expect": [
+          "GameHud"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Start the adventure. The stair down is cracked and slick with water, and the air smells of old iron and cold stone. A torch flickers in your hand, and ahead, the first step drops into darkness. Three paths lie before you: the stair, a rusted grate in the wall, and an iron door with a faint sound behind it.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-18-smoke/smoke-dungeon-master-first-scene-haiku-1/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" character steps through the iron door\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" into sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ene 2 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"— I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m picturing a small cham\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ber, maybe with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ripping well or a rat-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"gnawed chest to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" disc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"over. I need to update the qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est-log surface with this new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" scene entry while keeping\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the HP/Gold str\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inventory, and \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2-3 choices int\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"act, with narration sta\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying in ch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"at r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than duplicated in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Let me sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"le on the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ene details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": a b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"one-strewn vault with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"at nest and g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old glinting in a crac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked urn, giving the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player a small coin purse wor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"th 3 gold,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with choices to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" take the g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old, check an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" archway, or retreat.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll update the surface by\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" adding the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" scene entry, updating the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gold badge, and changing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the choice row with new labels\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and actions, while leaving\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inventory unt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouched. I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also include the target\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m updating an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" existing surface rather than cre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new one.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"The iron door gro\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ans open on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"to a low\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" vault.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Bones cr\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"un\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ch under\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"foot, and the tor\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ch sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ows a cracked urn near\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the wall, gl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"inting with coins\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". A d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ry\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" r\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"as\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" com\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es from the far arch\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"way, then\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" fal\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ls silent. Your cho\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ices are the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" urn, the arch\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"way, or the way\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" back to the stair.\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"quest-log\\\",\\\"components\\\":[{\\\"id\\\":\\\"scenes\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"xs\\\",\\\"children\\\":[\\\"s1\\\",\\\"s2\\\"]},{\\\"id\\\":\\\"s2\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"2. The iron door: a bone-littered vault with a coin-filled urn.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"gold\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Gold 3\\\",\\\"intent\\\":\\\"warning\\\"},{\\\"id\\\":\\\"choice_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"sm\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"c1\\\",\\\"c2\\\",\\\"c3\\\"]},{\\\"id\\\":\\\"c1\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Take the urn's coins\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"urn\\\"}}},{\\\"id\\\":\\\"c2\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Cross to the far archway\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"archway\\\"}}},{\\\"id\\\":\\\"c3\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Slip back to the stair\\\",\\\"variant\\\":\\\"ghost\\\",\\\"action\\\":{\\\"action\\\":\\\"choose\\\",\\\"context\\\":{\\\"choice\\\":\\\"retreat\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The iron door groans open onto a low vault. Bones crunch underfoot, and the torch shows a cracked urn near the wall, glinting with coins. A dry rasp comes from the far archway, then falls silent. Your choices are the urn, the archway, or the way back to the stair.\",\"target\":{\"surfaceId\":\"quest-log\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I open the door and step inside.\",\"k\":3},\"exemplarIds\":[\"frontier-game-hud-quest\",\"frontier-service-gateway\",\"plan-and-execute-approve-ask\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":51224,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4079},{\"id\":\"persona\",\"chars\":1865}],\"over\":false},\"usage\":{\"inputTokens\":3385,\"outputTokens\":1244,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quest-log\",\"components\":[{\"id\":\"scenes\",\"component\":\"Column\",\"gap\":\"xs\",\"children\":[\"s1\",\"s2\"]},{\"id\":\"s2\",\"component\":\"Text\",\"text\":\"2. The iron door: a bone-littered vault with a coin-filled urn.\",\"variant\":\"body\"},{\"id\":\"gold\",\"component\":\"Badge\",\"label\":\"Gold 3\",\"intent\":\"warning\"},{\"id\":\"choice_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Button\",\"label\":\"Take the urn's coins\",\"variant\":\"solid\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"urn\"}}},{\"id\":\"c2\",\"component\":\"Button\",\"label\":\"Cross to the far archway\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"archway\"}}},{\"id\":\"c3\",\"component\":\"Button\",\"label\":\"Slip back to the stair\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"retreat\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"quest-log\"}}}\nThe iron door groans open onto a low vault. Bones crunch underfoot, and the torch shows a cracked urn near the wall, glinting with coins. A dry rasp comes from the far archway, then falls silent. Your choices are the urn, the archway, or the way back to the stair.\n\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quest-log\",\"components\":[{\"id\":\"scenes\",\"component\":\"Column\",\"gap\":\"xs\",\"children\":[\"s1\",\"s2\"]},{\"id\":\"s2\",\"component\":\"Text\",\"text\":\"2. The iron door: a bone-littered vault with a coin-filled urn.\",\"variant\":\"body\"},{\"id\":\"gold\",\"component\":\"Badge\",\"label\":\"Gold 3\",\"intent\":\"warning\"},{\"id\":\"choice_row\",\"component\":\"Row\",\"gap\":\"sm\",\"wrap\":true,\"children\":[\"c1\",\"c2\",\"c3\"]},{\"id\":\"c1\",\"component\":\"Button\",\"label\":\"Take the urn's coins\",\"variant\":\"solid\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"urn\"}}},{\"id\":\"c2\",\"component\":\"Button\",\"label\":\"Cross to the far archway\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"archway\"}}},{\"id\":\"c3\",\"component\":\"Button\",\"label\":\"Slip back to the stair\",\"variant\":\"ghost\",\"action\":{\"action\":\"choose\",\"context\":{\"choice\":\"retreat\"}}}]}}",
+          "tools": []
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-18.jsonl:24",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          861
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-game-hud-quest",
+          "frontier-service-gateway",
+          "plan-and-execute-approve-ask"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quest-log",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "I open the door and step inside.",
+        "expect": [
+          "GameHud"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Start the adventure. The stair down is cracked and slick with water, and the air smells of old iron and cold stone. A torch flickers in your hand, and ahead, the first step drops into darkness. Three paths lie before you: the stair, a rusted grate in the wall, and an iron door with a faint sound behind it. You I open the door and step inside. The iron door groans open onto a low vault. Bones crunch underfoot, and the torch shows a cracked urn near the wall, glinting with coins. A dry rasp comes from the far archway, then falls silent. Your choices are the urn, the archway, or the way back to the stair.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-18-smoke/smoke-dungeon-master-first-scene-haiku-1/turn-2.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "311 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "286 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [quest-log], open [quest-log] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "fail",
+      "detail": "no surface this turn updated holds GameHud (touched quest-log)"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "821 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "613 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "264 chars of reply beside 1 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [quest-log] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "quest-log updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "fail",
+      "detail": "no surface this turn updated holds GameHud (touched quest-log)"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "861 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "fail",
+      "detail": "missing GameHud, Timeline (shipped Card, CardHeader, Text, CardContent, Row, Badge, Column, CardFooter, Button)"
+    }
+  ],
+  "verdict": "fail"
+}

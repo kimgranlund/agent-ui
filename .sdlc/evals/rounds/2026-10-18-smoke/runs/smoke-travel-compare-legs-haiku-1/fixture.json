@@ -1,0 +1,290 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-travel-compare-legs-haiku-1",
+  "agent": "travel",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-18T01:29:36.889Z, traces 2026-10-18.jsonl:7",
+  "steps": [
+    {
+      "say": "Compare the train and a flight from London to Paris on Friday 20 November 2026.",
+      "expect": [
+        "ProductCard",
+        "Table"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm planning a side-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"by-side comparison of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Eurostar train\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" versus flight for that London\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-Paris tr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip, showing mode, du\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ration, and illustrative p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ricing with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a note that prices are estim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ates, plus a choose action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for each option.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Confirming\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Fri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"day chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ks out. I'll skip\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" formal \\\"ask\\\" w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rapper since the choose bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons are just actions, not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ision pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompt,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll build a com\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"parison table with columns for option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", journey time, door\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-to-door time, price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", baggage, and comf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ort. Now I'm struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face as a root Column contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the intro and com\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"parison components.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm laying out a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Row with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" two \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ProductCards side\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" by side—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"one for the Eurostar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" train with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"are and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Choose train\\\" action, one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for the flight with its f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"are and \\\"Choose flight\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" action—followed by a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Table comparing journ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ey time, door-to-door\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" time\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" check-in requirements between\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the two modes.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the baggage row, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" want to avoid over\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"stating specifics, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll keep it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"edged—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"something like gener\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ous allowance with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no check-in for the train vers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us typical check-in f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ees for the flight. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll add a short\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" note cl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"arifying that all\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ices and times are illustrative\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" demo values r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than live schedules, refer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"encing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sample date of Friday \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20 November 2026.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"trip-compare-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"trip-compare-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"options\\\",\\\"compare\\\"]},{\\\"id\\\":\\\"options\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"train_card\\\",\\\"flight_card\\\"]},{\\\"id\\\":\\\"train_card\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Eurostar\\\",\\\"subtitle\\\":\\\"London St Pancras to Paris Gare du Nord, direct\\\",\\\"price\\\":\\\"£69\\\",\\\"priceNote\\\":\\\"Illustrative one-way fare\\\",\\\"badge\\\":\\\"City centre to centre\\\",\\\"badgeIntent\\\":\\\"success\\\",\\\"actionLabel\\\":\\\"Choose train\\\",\\\"action\\\":{\\\"action\\\":\\\"choose_leg\\\",\\\"context\\\":{\\\"leg\\\":\\\"train\\\",\\\"date\\\":\\\"2026-11-20\\\"}}},{\\\"id\\\":\\\"flight_card\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Flight\\\",\\\"subtitle\\\":\\\"London airport to Paris airport\\\",\\\"price\\\":\\\"£95\\\",\\\"priceNote\\\":\\\"Illustrative one-way fare\\\",\\\"badge\\\":\\\"Shortest in the air\\\",\\\"badgeIntent\\\":\\\"info\\\",\\\"actionLabel\\\":\\\"Choose flight\\\",\\\"action\\\":{\\\"action\\\":\\\"choose_leg\\\",\\\"context\\\":{\\\"leg\\\":\\\"flight\\\",\\\"date\\\":\\\"2026-11-20\\\"}}},{\\\"id\\\":\\\"compare\\\",\\\"component\\\":\\\"Table\\\",\\\"label\\\":\\\"Train vs flight, Friday 20 November 2026\\\",\\\"columns\\\":[{\\\"key\\\":\\\"factor\\\",\\\"label\\\":\\\"Factor\\\"},{\\\"key\\\":\\\"train\\\",\\\"label\\\":\\\"Train\\\"},{\\\"key\\\":\\\"flight\\\",\\\"label\\\":\\\"Flight\\\"}],\\\"rows\\\":[{\\\"factor\\\":\\\"Journey time\\\",\\\"train\\\":\\\"About 2h 16m\\\",\\\"flight\\\":\\\"About 1h 15m in the air\\\"},{\\\"factor\\\":\\\"Approx. door to door\\\",\\\"train\\\":\\\"About 2h 45m\\\",\\\"flight\\\":\\\"About 4h\\\"},{\\\"factor\\\":\\\"Illustrative fare\\\",\\\"train\\\":\\\"£69\\\",\\\"flight\\\":\\\"£95\\\"},{\\\"factor\\\":\\\"Check-in\\\",\\\"train\\\":\\\"Light, about 30 min before departure\\\",\\\"flight\\\":\\\"Earlier, security and boarding\\\"},{\\\"factor\\\":\\\"Baggage\\\",\\\"train\\\":\\\"Generous, no check-in bag fee\\\",\\\"flight\\\":\\\"Bag fees usually apply\\\"},{\\\"factor\\\":\\\"Comfort\\\",\\\"train\\\":\\\"Spacious seats, able to move around\\\",\\\"flight\\\":\\\"Compact cabin, shorter ground time\\\"}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's how the Eurostar and a flight compare for Friday 20 November 2026. All times and fares are illustrative demo values, not live schedules.\\n\\nThe train is the quicker trip city centre to city centre, with no airport check-in. The flight is shorter in the air but usually takes longer door to door.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare the train and a flight from London to Paris on Friday 20 November 2026.\",\"k\":3},\"exemplarIds\":[\"frontier-result-card-win\",\"crud-entry-list-drawer\",\"frontier-review-split\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":55891,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6802},{\"id\":\"mini-skills\",\"chars\":1432},{\"id\":\"persona\",\"chars\":2377}],\"over\":false},\"usage\":{\"inputTokens\":4315,\"outputTokens\":2634,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":17385},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"trip-compare-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"trip-compare-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"options\",\"compare\"]},{\"id\":\"options\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"train_card\",\"flight_card\"]},{\"id\":\"train_card\",\"component\":\"ProductCard\",\"title\":\"Eurostar\",\"subtitle\":\"London St Pancras to Paris Gare du Nord, direct\",\"price\":\"£69\",\"priceNote\":\"Illustrative one-way fare\",\"badge\":\"City centre to centre\",\"badgeIntent\":\"success\",\"actionLabel\":\"Choose train\",\"action\":{\"action\":\"choose_leg\",\"context\":{\"leg\":\"train\",\"date\":\"2026-11-20\"}}},{\"id\":\"flight_card\",\"component\":\"ProductCard\",\"title\":\"Flight\",\"subtitle\":\"London airport to Paris airport\",\"price\":\"£95\",\"priceNote\":\"Illustrative one-way fare\",\"badge\":\"Shortest in the air\",\"badgeIntent\":\"info\",\"actionLabel\":\"Choose flight\",\"action\":{\"action\":\"choose_leg\",\"context\":{\"leg\":\"flight\",\"date\":\"2026-11-20\"}}},{\"id\":\"compare\",\"component\":\"Table\",\"label\":\"Train vs flight, Friday 20 November 2026\",\"columns\":[{\"key\":\"factor\",\"label\":\"Factor\"},{\"key\":\"train\",\"label\":\"Train\"},{\"key\":\"flight\",\"label\":\"Flight\"}],\"rows\":[{\"factor\":\"Journey time\",\"train\":\"About 2h 16m\",\"flight\":\"About 1h 15m in the air\"},{\"factor\":\"Approx. door to door\",\"train\":\"About 2h 45m\",\"flight\":\"About 4h\"},{\"factor\":\"Illustrative fare\",\"train\":\"£69\",\"flight\":\"£95\"},{\"factor\":\"Check-in\",\"train\":\"Light, about 30 min before departure\",\"flight\":\"Earlier, security and boarding\"},{\"factor\":\"Baggage\",\"train\":\"Generous, no check-in bag fee\",\"flight\":\"Bag fees usually apply\"},{\"factor\":\"Comfort\",\"train\":\"Spacious seats, able to move around\",\"flight\":\"Compact cabin, shorter ground time\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here's how the Eurostar and a flight compare for Friday 20 November 2026. All times and fares are illustrative demo values, not live schedules.\n\nThe train is the quicker trip city centre to city centre, with no airport check-in. The flight is shorter in the air but usually takes longer door to door.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's the side-by-side for Friday 20 November 2026. Pick one to build your itinerary.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "trip-compare-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "trip-compare-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "options",
+                            "compare"
+                          ]
+                        },
+                        {
+                          "id": "options",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "train_card",
+                            "flight_card"
+                          ]
+                        },
+                        {
+                          "id": "train_card",
+                          "component": "ProductCard",
+                          "title": "Eurostar",
+                          "subtitle": "London St Pancras to Paris Gare du Nord, direct",
+                          "price": "£69",
+                          "priceNote": "Illustrative one-way fare",
+                          "badge": "City centre to centre",
+                          "badgeIntent": "success",
+                          "actionLabel": "Choose train",
+                          "action": {
+                            "action": "choose_leg",
+                            "context": {
+                              "leg": "train",
+                              "date": "2026-11-20"
+                            }
+                          }
+                        },
+                        {
+                          "id": "flight_card",
+                          "component": "ProductCard",
+                          "title": "Flight",
+                          "subtitle": "London airport to Paris airport",
+                          "price": "£95",
+                          "priceNote": "Illustrative one-way fare",
+                          "badge": "Shortest in the air",
+                          "badgeIntent": "info",
+                          "actionLabel": "Choose flight",
+                          "action": {
+                            "action": "choose_leg",
+                            "context": {
+                              "leg": "flight",
+                              "date": "2026-11-20"
+                            }
+                          }
+                        },
+                        {
+                          "id": "compare",
+                          "component": "Table",
+                          "label": "Train vs flight, Friday 20 November 2026",
+                          "columns": [
+                            {
+                              "key": "factor",
+                              "label": "Factor"
+                            },
+                            {
+                              "key": "train",
+                              "label": "Train"
+                            },
+                            {
+                              "key": "flight",
+                              "label": "Flight"
+                            }
+                          ],
+                          "rows": [
+                            {
+                              "factor": "Journey time",
+                              "train": "About 2h 16m",
+                              "flight": "About 1h 15m in the air"
+                            },
+                            {
+                              "factor": "Approx. door to door",
+                              "train": "About 2h 45m",
+                              "flight": "About 4h"
+                            },
+                            {
+                              "factor": "Illustrative fare",
+                              "train": "£69",
+                              "flight": "£95"
+                            },
+                            {
+                              "factor": "Check-in",
+                              "train": "Light, about 30 min before departure",
+                              "flight": "Earlier, security and boarding"
+                            },
+                            {
+                              "factor": "Baggage",
+                              "train": "Generous, no check-in bag fee",
+                              "flight": "Bag fees usually apply"
+                            },
+                            {
+                              "factor": "Comfort",
+                              "train": "Spacious seats, able to move around",
+                              "flight": "Compact cabin, shorter ground time"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-result-card-win",
+          "crud-entry-list-drawer",
+          "frontier-review-split"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-plan",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-planning-notes",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

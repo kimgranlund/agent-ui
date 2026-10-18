@@ -1,0 +1,659 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "smoke-curator-collection-haiku-1",
+  "mode": "live",
+  "agent": "curator",
+  "model": "claude-haiku-5-5",
+  "runId": "smoke-curator-collection-haiku-1-27196012",
+  "at": "2026-10-18T01:29:55.507Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm plan\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ning to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" present the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" five Lisbon museums\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" image-free swip\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eable card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" car\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ousel, using ic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ons as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" symbols with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" titles and short desc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"riptions per tile, built\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a single fresh surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Swiper lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Skipping the active-index\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" binding,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" la\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ying out the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree: a root Swi\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"per hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding five SwiperItems\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", each w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rapping a Card with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a CardHeader (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icon pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us title\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\") and CardContent (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" short description and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" caption no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the neighbourhood\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\").\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm drafting\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the content for each museum card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" — Gulbenkian\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with its palette icon and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"den set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting, the Azulejo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Museum's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tile history\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the convent, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the National Museum of \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Ancient Art's Bos\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ch painting among\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its collection.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"4. Ber\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ardo Collection Museum\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" — icon \\\"image\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"; caption \\\"Belém\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"; body high\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lighting\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Picasso, Warhol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and Dalí, plus\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Pop Art and Sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"realism at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the Belém Cultural\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Centre.\\n5. M\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"AAT — icon \\\"comp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ass\\\"; caption no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" riverside location in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Belém; body describing archit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ecture, technology and art with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rooftop walk and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rotating exhibitions\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\\n\\nI'm ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" header title\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as an h4 text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" element\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for the muse\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"um name,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" working\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the layout structure.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring the swiper children and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"embling the full message list, including\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Surface and updateCompon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ents for the \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lisbon-museums\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface, making\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sure there's exactly one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with id \\\"root\\\" and that the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" swiper's children proper\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly reference each\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" SwiperItem's id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'm also ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"essible labels to the icon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Here\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" are five museums wor\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"th your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" time,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" from\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the G\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ulbenkian's\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" private\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" collection to the ri\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"verside MAAT.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Swipe through them or\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" use the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" arrows.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"lisbon-museums\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"lisbon-museums\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Swiper\\\",\\\"pagination\\\":true,\\\"paddles\\\":true,\\\"align\\\":\\\"start\\\",\\\"children\\\":[\\\"s1\\\",\\\"s2\\\",\\\"s3\\\",\\\"s4\\\",\\\"s5\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"SwiperItem\\\",\\\"children\\\":[\\\"c1\\\"]},{\\\"id\\\":\\\"c1\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"h1\\\",\\\"ct1\\\"]},{\\\"id\\\":\\\"h1\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"i1\\\",\\\"t1\\\"]},{\\\"id\\\":\\\"i1\\\",\\\"component\\\":\\\"Icon\\\",\\\"name\\\":\\\"palette\\\",\\\"label\\\":\\\"Art\\\"},{\\\"id\\\":\\\"t1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Calouste Gulbenkian Museum\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct1\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"cap1\\\",\\\"b1\\\"]},{\\\"id\\\":\\\"cap1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Avenidas Novas\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"b1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"A private collection spanning Egyptian, Islamic, Asian and European art, set in a quiet garden. Strong on Rembrandt, Turner and Lalique.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"s2\\\",\\\"component\\\":\\\"SwiperItem\\\",\\\"children\\\":[\\\"c2\\\"]},{\\\"id\\\":\\\"c2\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"h2\\\",\\\"ct2\\\"]},{\\\"id\\\":\\\"h2\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"i2\\\",\\\"t2\\\"]},{\\\"id\\\":\\\"i2\\\",\\\"component\\\":\\\"Icon\\\",\\\"name\\\":\\\"grid\\\",\\\"label\\\":\\\"Tiles\\\"},{\\\"id\\\":\\\"t2\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"National Azulejo Museum\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct2\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"cap2\\\",\\\"b2\\\"]},{\\\"id\\\":\\\"cap2\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Xabregas\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"b2\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Five centuries of Portuguese tilework, housed in a former convent. The Great View of Lisbon panel is the highlight.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"s3\\\",\\\"component\\\":\\\"SwiperItem\\\",\\\"children\\\":[\\\"c3\\\"]},{\\\"id\\\":\\\"c3\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"h3\\\",\\\"ct3\\\"]},{\\\"id\\\":\\\"h3\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"i3\\\",\\\"t3\\\"]},{\\\"id\\\":\\\"i3\\\",\\\"component\\\":\\\"Icon\\\",\\\"name\\\":\\\"scroll\\\",\\\"label\\\":\\\"Old masters\\\"},{\\\"id\\\":\\\"t3\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"National Museum of Ancient Art\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct3\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"cap3\\\",\\\"b3\\\"]},{\\\"id\\\":\\\"cap3\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Santos\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"b3\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Portugal's largest collection of paintings, gold and sculpture, including Bosch's Temptation of Saint Anthony, in a 17th-century palace.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"s4\\\",\\\"component\\\":\\\"SwiperItem\\\",\\\"children\\\":[\\\"c4\\\"]},{\\\"id\\\":\\\"c4\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"h4\\\",\\\"ct4\\\"]},{\\\"id\\\":\\\"h4\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"i4\\\",\\\"t4\\\"]},{\\\"id\\\":\\\"i4\\\",\\\"component\\\":\\\"Icon\\\",\\\"name\\\":\\\"image\\\",\\\"label\\\":\\\"Modern\\\"},{\\\"id\\\":\\\"t4\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Berardo Collection Museum\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct4\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"cap4\\\",\\\"b4\\\"]},{\\\"id\\\":\\\"cap4\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Belém\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"b4\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Modern and contemporary art from Picasso, Warhol and Dalí, with strong Pop Art and Surrealism rooms in the Belém Cultural Centre.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"s5\\\",\\\"component\\\":\\\"SwiperItem\\\",\\\"children\\\":[\\\"c5\\\"]},{\\\"id\\\":\\\"c5\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"h5\\\",\\\"ct5\\\"]},{\\\"id\\\":\\\"h5\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"i5\\\",\\\"t5\\\"]},{\\\"id\\\":\\\"i5\\\",\\\"component\\\":\\\"Icon\\\",\\\"name\\\":\\\"compass\\\",\\\"label\\\":\\\"Architecture\\\"},{\\\"id\\\":\\\"t5\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"MAAT\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"ct5\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"cap5\\\",\\\"b5\\\"]},{\\\"id\\\":\\\"cap5\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Belém, by the river\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"b5\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Art, architecture and technology in a riverside building with a rooftop walk. Exhibitions change often, so check what is on before you go.\\\",\\\"variant\\\":\\\"body\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are five museums worth your time, from the Gulbenkian's private collection to the riverside MAAT. Swipe through them or use the arrows.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Show me five museums worth visiting in Lisbon.\",\"k\":3},\"exemplarIds\":[\"five-day-weather\",\"features-list-card\",\"frontier-onboarding-tour\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":141100,\"total\":52786,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6009},{\"id\":\"persona\",\"chars\":1497}],\"over\":false},\"usage\":{\"inputTokens\":3375,\"outputTokens\":3257,\"cacheReadInputTokens\":17109,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":45280}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"lisbon-museums\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"lisbon-museums\",\"components\":[{\"id\":\"root\",\"component\":\"Swiper\",\"pagination\":true,\"paddles\":true,\"align\":\"start\",\"children\":[\"s1\",\"s2\",\"s3\",\"s4\",\"s5\"]},{\"id\":\"s1\",\"component\":\"SwiperItem\",\"children\":[\"c1\"]},{\"id\":\"c1\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"h1\",\"ct1\"]},{\"id\":\"h1\",\"component\":\"CardHeader\",\"children\":[\"i1\",\"t1\"]},{\"id\":\"i1\",\"component\":\"Icon\",\"name\":\"palette\",\"label\":\"Art\"},{\"id\":\"t1\",\"component\":\"Text\",\"text\":\"Calouste Gulbenkian Museum\",\"variant\":\"h4\"},{\"id\":\"ct1\",\"component\":\"CardContent\",\"children\":[\"cap1\",\"b1\"]},{\"id\":\"cap1\",\"component\":\"Text\",\"text\":\"Avenidas Novas\",\"variant\":\"caption\"},{\"id\":\"b1\",\"component\":\"Text\",\"text\":\"A private collection spanning Egyptian, Islamic, Asian and European art, set in a quiet garden. Strong on Rembrandt, Turner and Lalique.\",\"variant\":\"body\"},{\"id\":\"s2\",\"component\":\"SwiperItem\",\"children\":[\"c2\"]},{\"id\":\"c2\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"h2\",\"ct2\"]},{\"id\":\"h2\",\"component\":\"CardHeader\",\"children\":[\"i2\",\"t2\"]},{\"id\":\"i2\",\"component\":\"Icon\",\"name\":\"grid\",\"label\":\"Tiles\"},{\"id\":\"t2\",\"component\":\"Text\",\"text\":\"National Azulejo Museum\",\"variant\":\"h4\"},{\"id\":\"ct2\",\"component\":\"CardContent\",\"children\":[\"cap2\",\"b2\"]},{\"id\":\"cap2\",\"component\":\"Text\",\"text\":\"Xabregas\",\"variant\":\"caption\"},{\"id\":\"b2\",\"component\":\"Text\",\"text\":\"Five centuries of Portuguese tilework, housed in a former convent. The Great View of Lisbon panel is the highlight.\",\"variant\":\"body\"},{\"id\":\"s3\",\"component\":\"SwiperItem\",\"children\":[\"c3\"]},{\"id\":\"c3\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"h3\",\"ct3\"]},{\"id\":\"h3\",\"component\":\"CardHeader\",\"children\":[\"i3\",\"t3\"]},{\"id\":\"i3\",\"component\":\"Icon\",\"name\":\"scroll\",\"label\":\"Old masters\"},{\"id\":\"t3\",\"component\":\"Text\",\"text\":\"National Museum of Ancient Art\",\"variant\":\"h4\"},{\"id\":\"ct3\",\"component\":\"CardContent\",\"children\":[\"cap3\",\"b3\"]},{\"id\":\"cap3\",\"component\":\"Text\",\"text\":\"Santos\",\"variant\":\"caption\"},{\"id\":\"b3\",\"component\":\"Text\",\"text\":\"Portugal's largest collection of paintings, gold and sculpture, including Bosch's Temptation of Saint Anthony, in a 17th-century palace.\",\"variant\":\"body\"},{\"id\":\"s4\",\"component\":\"SwiperItem\",\"children\":[\"c4\"]},{\"id\":\"c4\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"h4\",\"ct4\"]},{\"id\":\"h4\",\"component\":\"CardHeader\",\"children\":[\"i4\",\"t4\"]},{\"id\":\"i4\",\"component\":\"Icon\",\"name\":\"image\",\"label\":\"Modern\"},{\"id\":\"t4\",\"component\":\"Text\",\"text\":\"Berardo Collection Museum\",\"variant\":\"h4\"},{\"id\":\"ct4\",\"component\":\"CardContent\",\"children\":[\"cap4\",\"b4\"]},{\"id\":\"cap4\",\"component\":\"Text\",\"text\":\"Belém\",\"variant\":\"caption\"},{\"id\":\"b4\",\"component\":\"Text\",\"text\":\"Modern and contemporary art from Picasso, Warhol and Dalí, with strong Pop Art and Surrealism rooms in the Belém Cultural Centre.\",\"variant\":\"body\"},{\"id\":\"s5\",\"component\":\"SwiperItem\",\"children\":[\"c5\"]},{\"id\":\"c5\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"h5\",\"ct5\"]},{\"id\":\"h5\",\"component\":\"CardHeader\",\"children\":[\"i5\",\"t5\"]},{\"id\":\"i5\",\"component\":\"Icon\",\"name\":\"compass\",\"label\":\"Architecture\"},{\"id\":\"t5\",\"component\":\"Text\",\"text\":\"MAAT\",\"variant\":\"h4\"},{\"id\":\"ct5\",\"component\":\"CardContent\",\"children\":[\"cap5\",\"b5\"]},{\"id\":\"cap5\",\"component\":\"Text\",\"text\":\"Belém, by the river\",\"variant\":\"caption\"},{\"id\":\"b5\",\"component\":\"Text\",\"text\":\"Art, architecture and technology in a riverside building with a rooftop walk. Exhibitions change often, so check what is on before you go.\",\"variant\":\"body\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here are five museums worth your time, from the Gulbenkian's private collection to the riverside MAAT. Swipe through them or use the arrows.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are five museums worth your time, from a private art collection to a riverside museum of architecture and technology. Swipe or use the arrows to browse.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "lisbon-museums",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "lisbon-museums",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Swiper",
+                          "pagination": true,
+                          "paddles": true,
+                          "align": "start",
+                          "children": [
+                            "s1",
+                            "s2",
+                            "s3",
+                            "s4",
+                            "s5"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "SwiperItem",
+                          "children": [
+                            "c1"
+                          ]
+                        },
+                        {
+                          "id": "c1",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "h1",
+                            "ct1"
+                          ]
+                        },
+                        {
+                          "id": "h1",
+                          "component": "CardHeader",
+                          "children": [
+                            "i1",
+                            "t1"
+                          ]
+                        },
+                        {
+                          "id": "i1",
+                          "component": "Icon",
+                          "name": "palette",
+                          "label": "Art"
+                        },
+                        {
+                          "id": "t1",
+                          "component": "Text",
+                          "text": "Calouste Gulbenkian Museum",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct1",
+                          "component": "CardContent",
+                          "children": [
+                            "cap1",
+                            "b1"
+                          ]
+                        },
+                        {
+                          "id": "cap1",
+                          "component": "Text",
+                          "text": "Avenidas Novas",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "b1",
+                          "component": "Text",
+                          "text": "A private collection spanning Egyptian, Islamic, Asian and European art, set in a quiet garden. Strong on Rembrandt, Turner and Lalique.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "s2",
+                          "component": "SwiperItem",
+                          "children": [
+                            "c2"
+                          ]
+                        },
+                        {
+                          "id": "c2",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "h2",
+                            "ct2"
+                          ]
+                        },
+                        {
+                          "id": "h2",
+                          "component": "CardHeader",
+                          "children": [
+                            "i2",
+                            "t2"
+                          ]
+                        },
+                        {
+                          "id": "i2",
+                          "component": "Icon",
+                          "name": "grid",
+                          "label": "Tiles"
+                        },
+                        {
+                          "id": "t2",
+                          "component": "Text",
+                          "text": "National Azulejo Museum",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct2",
+                          "component": "CardContent",
+                          "children": [
+                            "cap2",
+                            "b2"
+                          ]
+                        },
+                        {
+                          "id": "cap2",
+                          "component": "Text",
+                          "text": "Xabregas",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "b2",
+                          "component": "Text",
+                          "text": "Five centuries of Portuguese tilework, housed in a former convent. The Great View of Lisbon panel is the highlight.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "s3",
+                          "component": "SwiperItem",
+                          "children": [
+                            "c3"
+                          ]
+                        },
+                        {
+                          "id": "c3",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "h3",
+                            "ct3"
+                          ]
+                        },
+                        {
+                          "id": "h3",
+                          "component": "CardHeader",
+                          "children": [
+                            "i3",
+                            "t3"
+                          ]
+                        },
+                        {
+                          "id": "i3",
+                          "component": "Icon",
+                          "name": "scroll",
+                          "label": "Old masters"
+                        },
+                        {
+                          "id": "t3",
+                          "component": "Text",
+                          "text": "National Museum of Ancient Art",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct3",
+                          "component": "CardContent",
+                          "children": [
+                            "cap3",
+                            "b3"
+                          ]
+                        },
+                        {
+                          "id": "cap3",
+                          "component": "Text",
+                          "text": "Santos",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "b3",
+                          "component": "Text",
+                          "text": "Portugal's largest collection of paintings, gold and sculpture, including Bosch's Temptation of Saint Anthony, in a 17th-century palace.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "s4",
+                          "component": "SwiperItem",
+                          "children": [
+                            "c4"
+                          ]
+                        },
+                        {
+                          "id": "c4",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "h4",
+                            "ct4"
+                          ]
+                        },
+                        {
+                          "id": "h4",
+                          "component": "CardHeader",
+                          "children": [
+                            "i4",
+                            "t4"
+                          ]
+                        },
+                        {
+                          "id": "i4",
+                          "component": "Icon",
+                          "name": "image",
+                          "label": "Modern"
+                        },
+                        {
+                          "id": "t4",
+                          "component": "Text",
+                          "text": "Berardo Collection Museum",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct4",
+                          "component": "CardContent",
+                          "children": [
+                            "cap4",
+                            "b4"
+                          ]
+                        },
+                        {
+                          "id": "cap4",
+                          "component": "Text",
+                          "text": "Belém",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "b4",
+                          "component": "Text",
+                          "text": "Modern and contemporary art from Picasso, Warhol and Dalí, with strong Pop Art and Surrealism rooms in the Belém Cultural Centre.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "s5",
+                          "component": "SwiperItem",
+                          "children": [
+                            "c5"
+                          ]
+                        },
+                        {
+                          "id": "c5",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "h5",
+                            "ct5"
+                          ]
+                        },
+                        {
+                          "id": "h5",
+                          "component": "CardHeader",
+                          "children": [
+                            "i5",
+                            "t5"
+                          ]
+                        },
+                        {
+                          "id": "i5",
+                          "component": "Icon",
+                          "name": "compass",
+                          "label": "Architecture"
+                        },
+                        {
+                          "id": "t5",
+                          "component": "Text",
+                          "text": "MAAT",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "ct5",
+                          "component": "CardContent",
+                          "children": [
+                            "cap5",
+                            "b5"
+                          ]
+                        },
+                        {
+                          "id": "cap5",
+                          "component": "Text",
+                          "text": "Belém, by the river",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "b5",
+                          "component": "Text",
+                          "text": "Art, architecture and technology in a riverside building with a rooftop walk. Exhibitions change often, so check what is on before you go.",
+                          "variant": "body"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-18.jsonl:8",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          1483
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "five-day-weather",
+          "features-list-card",
+          "frontier-onboarding-tour"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "collection-carousel",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-tabs",
+            "load": "index-only"
+          },
+          {
+            "name": "city-notes",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Show me five museums worth visiting in Lisbon.",
+        "expect": [
+          "Swiper"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Show me five museums worth visiting in Lisbon. Here are five museums worth your time, from the Gulbenkian's private collection to the riverside MAAT. Swipe through them or use the arrows.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-18-smoke/smoke-curator-collection-haiku-1/turn-1.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "191 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "140 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [lisbon-museums], open [lisbon-museums] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "lisbon-museums holds Swiper"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "1483 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found Swiper"
+    }
+  ],
+  "verdict": "pass"
+}

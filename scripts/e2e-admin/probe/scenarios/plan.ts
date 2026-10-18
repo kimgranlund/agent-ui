@@ -13,14 +13,23 @@
 // Runs go by model (Haiku, Sonnet, Opus), then sample, then registry order, so a stop at the cap leaves the cheap
 // cells and every scenario's first sample filled.
 //
+// `--affected <baseline round>` (SPEC CL-R10) keeps only the presets whose agent content changed since that round: each
+// preset's current resolution (`node scripts/agent-content.mjs compile <id> --json`, T-0163) is compared with the first
+// one the round's trace lines record (`bundle.resolution`, a run's opening turn: play can change the persona's state,
+// such as the Croupier's bankroll after a bet), every item but the `setting` entries, which name the model and effort a
+// probe overrides. A preset the round never recorded counts as affected; nothing is approximated.
+//
 // usage: node --experimental-strip-types scripts/e2e-admin/probe/scenarios/plan.ts --tag <tag> [--tag <tag>]...
 //          [--persona <preset id>]... [--model <haiku | sonnet | opus | model id>]... [--samples <n>] [--cap <usd>]
-//          [--round <slug>]
+//          [--round <slug>] [--affected <baseline round folder>]
 // Prints the script; exit 2 on a usage problem or an empty selection. `--model` defaults to all three, `--samples` to
-// 1; `--cap` and `--round` only fill in the runner line of the header. `--affected` (SPEC CL-R10) is refused: no
-// committed round records the bundle digests it would compare against, so it is never approximated.
-// `plan.test.mjs` pins the smoke plan.
+// 1; `--cap` and `--round` only fill in the runner line of the header. `plan.test.mjs` pins the smoke plan.
 
+import { spawnSync } from 'node:child_process'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { isAbsolute, join } from 'node:path'
+import type { ResolutionEntry } from '../../../../packages/agent-ui/a2ui/src/agent/agent-bundle.ts'
+import { EVALS_ROUNDS } from '../ledger.ts'
 import { stepArgv } from '../model.ts'
 import { ADMIRAL_SMOKE } from './admiral.ts'
 import { ALCHEMIST_SCENARIOS } from './alchemist.ts'
@@ -43,7 +52,8 @@ import { STYLIST_SCENARIOS } from './stylist.ts'
 import { TRAVEL_SCENARIOS } from './travel.ts'
 
 export const PLAN_FILE = 'scripts/e2e-admin/probe/scenarios/plan.ts'
-export const PLAN_USAGE = `usage: node --experimental-strip-types ${PLAN_FILE} --tag <${SCENARIO_TAGS.join(' | ')}> [--tag ...] [--persona <preset id>]... [--model <haiku | sonnet | opus | model id>]... [--samples <n>] [--cap <usd>] [--round <slug>]`
+export const PLAN_USAGE = `usage: node --experimental-strip-types ${PLAN_FILE} --tag <${SCENARIO_TAGS.join(' | ')}> [--tag ...] [--persona <preset id>]... [--model <haiku | sonnet | opus | model id>]... [--samples <n>] [--cap <usd>] [--round <slug>] [--affected <baseline round folder>]`
+const ROOT = new URL('../../../../', import.meta.url).pathname
 
 /** The run-name prefix of a scenario's first tag. */
 export const TAG_PREFIX: Readonly<Record<ScenarioTag, string>> = { smoke: 'smoke', regression: 'regress', routing: 'routing', long: 'long' }
@@ -98,11 +108,13 @@ export interface PlanOptions {
   samples: number
   cap?: number
   round?: string
+  /** The baseline round folder `--affected` compares against. */
+  affected?: string
 }
 
 export class PlanUsageError extends Error {}
 
-const VALUE_FLAGS = ['--tag', '--persona', '--model', '--samples', '--cap', '--round'] as const
+const VALUE_FLAGS = ['--tag', '--persona', '--model', '--samples', '--cap', '--round', '--affected'] as const
 
 /** Parse the CLI; every problem is a `PlanUsageError` (exit 2). */
 export function parsePlanArgs(argv: readonly string[], registry: readonly PlannedScenario[] = scenarioRegistry()): PlanOptions {
@@ -112,7 +124,6 @@ export function parsePlanArgs(argv: readonly string[], registry: readonly Planne
   const single = new Map<string, string>()
   for (let i = 0; i < argv.length; i += 2) {
     const flag = argv[i]!
-    if (flag === '--affected') throw new PlanUsageError('--affected is refused (SPEC CL-R10): no committed round records the bundle digests it would compare against, and it is never approximated')
     if (!(VALUE_FLAGS as readonly string[]).includes(flag)) throw new PlanUsageError(`unknown argument "${flag}"`)
     const value = argv[i + 1]
     if (value === undefined || value === '') throw new PlanUsageError(`${flag} needs a value`)
@@ -139,6 +150,7 @@ export function parsePlanArgs(argv: readonly string[], registry: readonly Planne
   if (cap !== undefined && !(Number.isFinite(cap) && cap > 0)) throw new PlanUsageError('--cap takes a positive number of USD')
   const round = single.get('--round')
   if (round !== undefined && !/^[a-z0-9][a-z0-9-]*$/.test(round)) throw new PlanUsageError('--round takes lowercase letters, digits and dashes')
+  const affected = single.get('--affected')
   return {
     tags,
     personas,
@@ -146,8 +158,52 @@ export function parsePlanArgs(argv: readonly string[], registry: readonly Planne
     samples,
     ...(cap !== undefined ? { cap } : {}),
     ...(round !== undefined ? { round } : {}),
+    ...(affected !== undefined ? { affected } : {}),
   }
 }
+
+/** One preset's current content resolution, from the one agent compiler (T-0163). */
+export type CompileResolution = (agent: string) => ResolutionEntry[]
+
+export const compileResolution: CompileResolution = (agent) => {
+  const r = spawnSync(process.execPath, ['scripts/agent-content.mjs', 'compile', agent, '--json'], { cwd: ROOT, encoding: 'utf8' })
+  if (r.status !== 0) throw new PlanUsageError(`agent-content compile ${agent} exited ${r.status}: ${r.stderr.trim()}`)
+  return (JSON.parse(r.stdout) as { resolution: ResolutionEntry[] }).resolution
+}
+
+/** The content items of a resolution, canonical: every entry but the `setting` ones a probe overrides, sorted. */
+const contentKey = (resolution: readonly ResolutionEntry[]): string =>
+  JSON.stringify(
+    resolution
+      .filter((e) => e.kind !== 'setting')
+      .map((e) => [e.kind, e.id, e.version, e.digest])
+      .sort((a, b) => String(a).localeCompare(String(b))),
+  )
+
+/** CL-R10: per preset, whether its content changed since the baseline round, and why. */
+export function affectedPresets(agents: readonly string[], baselineDir: string, compile: CompileResolution = compileResolution): Map<string, { affected: boolean; why: string }> {
+  const traces = join(baselineDir, 'traces')
+  if (!existsSync(traces)) throw new PlanUsageError(`--affected: no traces/ in ${baselineDir}`)
+  const recorded = new Map<string, readonly ResolutionEntry[]>()
+  for (const file of readdirSync(traces).filter((f) => f.endsWith('.jsonl')).sort()) {
+    for (const raw of readFileSync(join(traces, file), 'utf8').split('\n')) {
+      if (raw.trim() === '') continue
+      // The resolution's persona entry names the preset: the trace's own `agent` is absent on the base catalog.
+      const resolution = (JSON.parse(raw) as { bundle?: { resolution?: ResolutionEntry[] } }).bundle?.resolution
+      const agent = resolution?.find((e) => e.kind === 'persona')?.id
+      if (agent !== undefined && !recorded.has(agent)) recorded.set(agent, resolution as ResolutionEntry[])
+    }
+  }
+  return new Map(
+    agents.map((agent) => {
+      const then = recorded.get(agent)
+      const v = then === undefined ? { affected: true, why: 'no recorded resolution' } : contentKey(compile(agent)) === contentKey(then) ? { affected: false, why: 'unchanged' } : { affected: true, why: 'content changed' }
+      return [agent, v] as const
+    }),
+  )
+}
+
+const baselinePath = (round: string): string => (isAbsolute(round) || round.includes('/') ? round : join(ROOT, EVALS_ROUNDS, round))
 
 export interface PlannedRun {
   name: string
@@ -171,8 +227,10 @@ export function planArgv(s: PlannedScenario, model: RoundModel, name: string): s
 }
 
 /** The selected runs in script order: by model, then sample, then registry order. */
-export function planRuns(o: PlanOptions, registry: readonly PlannedScenario[] = scenarioRegistry()): PlannedRun[] {
-  const picked = registry.filter((s) => s.scenario.tags.some((t) => o.tags.includes(t)) && (o.personas.length === 0 || o.personas.includes(s.agent)))
+export function planRuns(o: PlanOptions, registry: readonly PlannedScenario[] = scenarioRegistry(), only?: ReadonlySet<string>): PlannedRun[] {
+  const picked = registry.filter(
+    (s) => s.scenario.tags.some((t) => o.tags.includes(t)) && (o.personas.length === 0 || o.personas.includes(s.agent)) && (only === undefined || only.has(s.agent)),
+  )
   return o.models.flatMap((model) =>
     Array.from({ length: o.samples }, (_, i) => i + 1).flatMap((sample) =>
       picked.map((s) => {
@@ -184,8 +242,9 @@ export function planRuns(o: PlanOptions, registry: readonly PlannedScenario[] = 
 }
 
 /** The `live-commands.sh` for a plan; `argv` is the plan's own command line, echoed in the header. */
-export function planScript(o: PlanOptions, argv: readonly string[], registry: readonly PlannedScenario[] = scenarioRegistry()): string {
-  const runs = planRuns(o, registry)
+export function planScript(o: PlanOptions, argv: readonly string[], registry: readonly PlannedScenario[] = scenarioRegistry(), affected?: Map<string, { affected: boolean; why: string }>): string {
+  const only = affected === undefined ? undefined : new Set([...affected].filter(([, v]) => v.affected).map(([a]) => a))
+  const runs = planRuns(o, registry, only)
   const per = o.models.map((m) => `${m.short} ${runs.filter((r) => r.model.id === m.id).length}`).join(', ')
   const lines = [
     '#!/usr/bin/env bash',
@@ -196,6 +255,7 @@ export function planScript(o: PlanOptions, argv: readonly string[], registry: re
     '#   node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts --describe <this file>',
     `#   node --experimental-strip-types scripts/e2e-admin/probe/run-capped.ts <this file> --cap ${o.cap ?? '<usd>'} --round ${o.round ?? '<slug>'}`,
     '# A probe exits 1 when a check fails.',
+    ...(affected === undefined ? [] : [`# Affected since ${o.affected} (SPEC CL-R10): ${[...affected].map(([a, v]) => `${a} ${v.why}`).join(', ')}.`]),
   ]
   let current = ''
   for (const run of runs) {
@@ -209,12 +269,14 @@ export function planScript(o: PlanOptions, argv: readonly string[], registry: re
 }
 
 /** The CLI: the script on stdout and exit 0, or the problem and the usage on stderr and exit 2. */
-export function planMain(argv: readonly string[], out: (text: string) => void, err: (text: string) => void): number {
+export function planMain(argv: readonly string[], out: (text: string) => void, err: (text: string) => void, compile: CompileResolution = compileResolution): number {
   try {
     const registry = scenarioRegistry()
     const o = parsePlanArgs(argv, registry)
     if (planRuns(o, registry).length === 0) throw new PlanUsageError(`no scenario is tagged ${o.tags.join(' or ')}${o.personas.length > 0 ? ` for ${o.personas.join(', ')}` : ''}`)
-    out(planScript(o, argv, registry))
+    const affected = o.affected === undefined ? undefined : affectedPresets([...new Set(planRuns(o, registry).map((r) => r.agent))], baselinePath(o.affected), compile)
+    if (affected !== undefined && ![...affected.values()].some((v) => v.affected)) throw new PlanUsageError(`no selected preset's agent content changed since ${o.affected}`)
+    out(planScript(o, argv, registry, affected))
     return 0
   } catch (e) {
     if (!(e instanceof PlanUsageError)) throw e
