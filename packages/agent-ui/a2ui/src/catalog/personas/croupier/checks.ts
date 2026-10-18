@@ -515,9 +515,11 @@ const BLACKJACK_GAMES = /\b(blackjack|black jack|twenty[- ]one|spanish 21|pontoo
 /** Hold'em in any spelling ("hold'em", "hold’em", "holdem", "hold-em", "hold em"); shared by every game pattern. */
 const HOLDEM_WORDS = "hold[- ]?['’]?em"
 const HOLDEM = new RegExp(`\\b(${HOLDEM_WORDS})\\b`, 'i')
-const OTHER_GAMES = new RegExp(`\\b(poker|stud|${HOLDEM_WORDS}|omaha|razz|five[- ]card draw|draw poker|baccarat|roulette|craps)\\b`, 'i')
+/** T-0368: the draw family, one list for every game pattern that names a game other than blackjack or hold'em. */
+const DRAW_FAMILY_WORDS = "five[- ]card draw|draw poker|triple draw|badugi|lowball|deuce[- ]to[- ]seven|2[- ]7( triple)? draw"
+const OTHER_GAMES = new RegExp(`\\b(poker|stud|${HOLDEM_WORDS}|omaha|razz|${DRAW_FAMILY_WORDS}|baccarat|roulette|craps)\\b`, 'i')
 /** A game other than hold'em that a hold'em mention can sit beside (a picker, or stud prose that says "not hold'em"). */
-const NOT_HOLDEM_GAMES = /\b(stud|omaha|razz|five[- ]card draw|draw poker|triple draw|badugi|lowball|deuce[- ]to[- ]seven|2[- ]7( triple)? draw|baccarat|roulette|craps)\b/i
+const NOT_HOLDEM_GAMES = new RegExp(`\\b(stud|omaha|razz|${DRAW_FAMILY_WORDS}|baccarat|roulette|craps)\\b`, 'i')
 /** Words that name hold'em as the game and no other (a picker or stud prose that mentions hold'em does not). */
 const namesHoldemAlone = (words: string): boolean => HOLDEM.test(words) && !NOT_HOLDEM_GAMES.test(words) && !BLACKJACK_GAMES.test(words)
 const textOf = (v: unknown): string => (typeof v === 'string' ? v : bindingPath(v) ?? '')

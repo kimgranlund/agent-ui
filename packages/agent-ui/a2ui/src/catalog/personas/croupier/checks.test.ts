@@ -935,8 +935,14 @@ describe('croupier bet controls: a hold\'em table whose hands are empty template
 
   it('a hand that holds cards, a stud turn, or a lowball or 2-7 turn passes', () => {
     expect(run(table([card('A', 'hearts'), card('K', 'clubs')]), HOLDEM_ASK)).toEqual([])
-    for (const intent of ["Let's play seven-card stud.", "Let's play lowball, not hold'em.", "Let's play deuce-to-seven, not hold'em.", "Let's play 2-7 draw, not hold'em."])
+    const asks = ["Let's play seven-card stud.", "Let's play lowball, not hold'em.", "Let's play deuce-to-seven, not hold'em.", "Let's play 2-7 draw, not hold'em."]
+    for (const intent of [...asks, "Let's play lowball.", "Let's play 2-7 triple draw.", "Let's play badugi."]) {
       expect(run(table(), intent), intent).toEqual([])
+      expect(run(withStake(table()), intent), `${intent} with a bet Slider`).toEqual([])
+    }
+    const lowball = edit(withStake(table()), {}, [{ id: 'content', component: 'CardContent', children: ['title', 'header', 'board', 'hand'] }, { id: 'title', component: 'Text', text: 'Lowball', variant: 'h4' }])
+    expect(run(lowball)).toEqual([])
+    expect(run(lowball, "Let's play lowball.")).toEqual([])
   })
 
   it('hands cleared after a fold or the showdown, beside a newRound Deal again, stay quiet with no /phase key', () => {
