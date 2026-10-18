@@ -17,7 +17,7 @@
 
 import { UIElement } from '../../dom/element.ts'
 import type { PropsSchema } from '../../dom/props.ts'
-import '../glyph/glyph.ts' // the paddle carets are functional marks, ui-glyph (ADR-0245 cl.5)
+import { createGlyph, type GlyphSymbol, type UIGlyphElement } from '../glyph/glyph.ts' // the paddle carets are functional marks, ui-glyph (ADR-0245 cl.5)
 import type { UIButtonElement } from '../button/button.ts'
 
 export class UISwiperPaddlesElement extends UIElement {
@@ -25,30 +25,35 @@ export class UISwiperPaddlesElement extends UIElement {
 
   #prev: UIButtonElement | null = null
   #next: UIButtonElement | null = null
-  #prevIcon: HTMLElement | null = null
-  #nextIcon: HTMLElement | null = null
+  #prevIcon: UIGlyphElement | null = null
+  #nextIcon: UIGlyphElement | null = null
 
   /**
    * Coordinator command (swiper.ts's `#driveChrome`) — fill this anchor with two real, wired `ui-button`s
    * (idempotent: built once, reused on every re-drive) and rotate their glyphs to `orientation`.
    */
   fill(onPrev: () => void, onNext: () => void, orientation: 'horizontal' | 'vertical'): void {
-    this.#ensureButtons()
-    this.#prevIcon!.setAttribute('symbol', orientation === 'vertical' ? 'caret-up' : 'caret-left')
-    this.#nextIcon!.setAttribute('symbol', orientation === 'vertical' ? 'caret-down' : 'caret-right')
+    const prevSymbol: GlyphSymbol = orientation === 'vertical' ? 'caret-up' : 'caret-left'
+    const nextSymbol: GlyphSymbol = orientation === 'vertical' ? 'caret-down' : 'caret-right'
+    // the first drive builds the glyphs at the right symbols; a re-drive rotates them through the typed prop
+    if (!this.#ensureButtons(prevSymbol, nextSymbol)) {
+      this.#prevIcon!.symbol = prevSymbol
+      this.#nextIcon!.symbol = nextSymbol
+    }
     this.#prev!.onclick = () => onPrev() // reassigning .onclick replaces cleanly — no accumulation across re-drives
     this.#next!.onclick = () => onNext()
   }
 
-  #ensureButtons(): void {
-    if (this.#prev) return
+  /** Builds the two buttons once, their glyphs at the given symbols; false when they already exist. */
+  #ensureButtons(prevSymbol: GlyphSymbol, nextSymbol: GlyphSymbol): boolean {
+    if (this.#prev) return false
 
     this.#prev = document.createElement('ui-button') as UIButtonElement
     this.#prev.setAttribute('data-part', 'prev')
     this.#prev.setAttribute('variant', 'ghost')
     this.#prev.setAttribute('icon-only', '')
     this.#prev.setAttribute('aria-label', 'Previous slide')
-    this.#prevIcon = document.createElement('ui-glyph')
+    this.#prevIcon = createGlyph(prevSymbol)
     this.#prevIcon.setAttribute('slot', 'leading')
     // the caret role, not icon: a glyph keeps its own glyph box 2n - 2c inside the icon cell (ADR-0245 Amendment 6)
     this.#prevIcon.setAttribute('data-role', 'caret')
@@ -60,11 +65,12 @@ export class UISwiperPaddlesElement extends UIElement {
     this.#next.setAttribute('variant', 'ghost')
     this.#next.setAttribute('icon-only', '')
     this.#next.setAttribute('aria-label', 'Next slide')
-    this.#nextIcon = document.createElement('ui-glyph')
+    this.#nextIcon = createGlyph(nextSymbol)
     this.#nextIcon.setAttribute('slot', 'leading')
     this.#nextIcon.setAttribute('data-role', 'caret')
     this.#next.appendChild(this.#nextIcon)
     this.appendChild(this.#next)
+    return true
   }
 }
 

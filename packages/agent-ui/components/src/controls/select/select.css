@@ -289,7 +289,7 @@
 
   /* The caret part: a ui-glyph caret-down (T-0148), an icon-sized CELL (box-sizing border-box). The mark inside is
      the glyph box, centred by padding = ½(icon − glyph), the §4.1 caret law (same as button.css [data-role='caret']);
-     glyph.css draws it with the token stroke. aria-hidden is set in select.ts; the mark is decorative. */
+     glyph.css draws it with the token stroke. The mark is decorative: ui-glyph hides itself through its own internals. */
   :scope > [data-part='trigger'] > [data-part='caret'] {
     inline-size: var(--ui-select-icon);
     block-size: var(--ui-select-icon);

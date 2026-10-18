@@ -49,7 +49,7 @@ import { UIFormElement, type FormValue, type ValidityResult, type FieldLabelling
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
-import '../glyph/glyph.ts' // the trailing caret mark (T-0148)
+import { createGlyph } from '../glyph/glyph.ts' // the trailing caret mark (T-0148)
 
 // ── Module-level stable-id counters ─────────────────────────────────────────────────────────────
 
@@ -454,10 +454,8 @@ export class UIComboBoxElement extends UIFormElement {
     this.#syncEmptyState()
 
     // ── Trailing caret part (T-0148) ─────────────────────────────────────────────────────────
-    const caret = document.createElement('ui-glyph')
+    const caret = createGlyph('caret-down') // decorative: ui-glyph hides itself through its own internals
     caret.setAttribute('data-part', 'caret')
-    caret.setAttribute('aria-hidden', 'true')
-    caret.setAttribute('symbol', 'caret-down')
     this.#caret = caret
 
     this.append(editor, caret, listbox)

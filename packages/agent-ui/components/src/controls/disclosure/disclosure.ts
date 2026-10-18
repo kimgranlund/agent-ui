@@ -54,7 +54,7 @@
 // caret is a library mark in its glyph box, not pack art), composed from its sibling control folder.
 
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
-import '../glyph/glyph.ts' // registers <ui-glyph>, the chevron's caret mark (ADR-0245 cl.5)
+import { createGlyph } from '../glyph/glyph.ts' // the chevron's caret mark (ADR-0245 cl.5)
 // ADR-0173 (props generation): the descriptor (disclosure.md `attributes[]`) is the props ground truth —
 // edit the descriptor and `node scripts/generate-props.mjs disclosure` to regenerate; never hand-edit
 // disclosure.props.gen.ts. The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps the two
@@ -288,9 +288,8 @@ export class UIDisclosureElement extends UIElement {
 
     // decorative (an empty-label ui-glyph is aria-hidden through its own internals): disclosure meaning rides the
     // native summary/details, never the glyph (anatomy.md §5); rotated 90deg under [open] in disclosure.css
-    const chevron = document.createElement('ui-glyph')
+    const chevron = createGlyph('caret-right')
     chevron.setAttribute('data-part', 'chevron')
-    chevron.setAttribute('symbol', 'caret-right')
 
     const summaryText = document.createElement('span')
     summaryText.setAttribute('data-part', 'summary-text')
