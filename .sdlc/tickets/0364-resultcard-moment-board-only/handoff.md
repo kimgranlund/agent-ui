@@ -31,8 +31,8 @@ The failing test lands before or with the fix, never after.
 ## Acceptance criteria
 verifier: L3
 
-1. `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the repro (a Card with "You won! The answer was a cat." and a Play again Button, no BoardGrid) and a Negotiator and a Dungeon Master ending yield `['RESULT_CARD_MISSING']` and none with a ResultCard; a sales dashboard, an order receipt, a booking confirmation, a podcast player, a round result Toast and two croupier hands (CardTable, PlayingCards) yield no RESULT_CARD_MISSING, and each fires with the game gate, the croupier `lacks` and the Toast skip removed.
-2. `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0, its mutation dropping the row's croupier guard.
+1. `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts` exits 0: the repro (a Card with "You won! The answer was a cat." and a Play again Button, no BoardGrid), a Negotiator, a Dungeon Master and a quizmaster final-round ending yield `['RESULT_CARD_MISSING']` and none with a ResultCard; mid-game progress, a sales dashboard, an order receipt, a booking confirmation, a concierge Gold level, a podcast player, a lone "Game over? Not yet" notice, a round result Toast, two croupier hands and a quizmaster mid-run reveal yield no RESULT_CARD_MISSING and each fires with the board-less gate opened; a BoardGrid ending in a Toast still fires; a CardTable or PlayingCard never answers a carried RESULT_CARD_MISSING.
+2. `npx vitest run packages/agent-ui/a2ui/src/live-agent/check-contracts.test.ts` exits 0, its mutation opening the row's board-less gate.
 3. `npx vitest run --project scripts scripts/e2e-admin/probe/` exits 0 (no replay re-pinned).
 4. `npm run check` exits 0.
 5. The ResultCard repair wording is unchanged.

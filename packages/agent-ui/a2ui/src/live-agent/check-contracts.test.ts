@@ -519,10 +519,11 @@ describe('T-0314: every shipped semantic check has a pass and a fail fixture, cr
     expect(Object.keys(KNOWN_CROSS_FIRES).filter((k) => !seen.has(k))).toEqual([])
   })
 
-  // T-0364: the row runs with no BoardGrid now; its croupier guard (`lacks` CardTable, PlayingCard) is what the mutation drops.
-  it('a mutated check makes the cross-run red: the ResultCard row with its croupier guard removed fires on another check’s fixture', () => {
+  // T-0364: the row runs with no BoardGrid now; the mutation opens its board-less gate (any words name a game and end it,
+  // no croupier stand-aside, Toasts read).
+  it('a mutated check makes the cross-run red: the ResultCard row with its board-less gate opened fires on another check’s fixture', () => {
     const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'ResultCard')!
-    const mutant = compositeMomentCheck({ ...row, lacks: [] })
+    const mutant = compositeMomentCheck({ ...row, boardless: { game: /./, end: /./ } })
     const mutated = (catalog: Catalog) => checksOn(catalog).map((c) => (c.id === mutant.id ? mutant : c))
     const before = new Set(run.cross.map((v) => v.key))
     const added = crossRun(CONTRACTS, mutated).cross.filter((v) => !before.has(v.key))
