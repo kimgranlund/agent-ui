@@ -130,6 +130,29 @@ export function braceSpans(src) {
   return spans
 }
 
+/** Every `[ ... ]` span of the (comment-free) source, outside strings and template literals: [open, close] index pairs. */
+export function bracketSpans(src) {
+  const spans = []
+  const open = []
+  let i = 0
+  while (i < src.length) {
+    const ch = src[i]
+    if (ch === "'" || ch === '"') {
+      i++
+      while (i < src.length && src[i] !== ch && src[i] !== '\n') i += src[i] === '\\' ? 2 : 1
+    } else if (ch === '`') {
+      i++
+      while (i < src.length && src[i] !== '`') i += src[i] === '\\' ? 2 : 1
+    } else if (ch === '[') open.push(i)
+    else if (ch === ']') {
+      const from = open.pop()
+      if (from !== undefined) spans.push([from, i])
+    }
+    i++
+  }
+  return spans
+}
+
 /** Every `ui-*` element the source creates: createElement / el / h calls and `<ui-x` markup, with indices. */
 export function createdTags(src) {
   const out = []
@@ -178,7 +201,7 @@ export function payloadComponents(src, spans = braceSpans(src)) {
     const explicit = flat.match(/['"]?\bchildren['"]?\s*:\s*\[([^\]]*)\]/)?.[1]
     const children = explicit ? [...explicit.matchAll(/['"]([^'"]+)['"]/g)].map((r) => r[1]) : []
     const child = flat.match(/['"]?\bchild['"]?\s*:\s*['"]([^'"]+)['"]/)?.[1] ?? null
-    comps.push({ id, component: m[1], index: m.index, refs, template, children, child })
+    comps.push({ id, component: m[1], index: m.index, start: span[0], refs, template, children, child })
   }
   return comps
 }
@@ -228,13 +251,17 @@ export function findingsIn(path, raw) {
 
   // lone-button-frame (T-0172, T-0369): a Card whose whole subtree holds one Button and nothing text-bearing; the walk is
   // the producer's own (`lone-button-frame.ts`), so a Row, Column, List or Grid around the Button is seen through
-  // one source can hold several payloads that reuse ids (head, body, foot), so a walk reads one payload's scope: a new
-  // scope starts where an id repeats, which a single payload (unique ids) never does
-  const scopes = []
+  // one source can hold several payloads that reuse ids (head, body, foot), so a walk reads one payload's scope: the
+  // innermost `[ ... ]` array around the component's own object, the array its siblings sit in (null at top level)
+  const arrays = bracketSpans(src)
+  const arrayOf = (c) => arrays.filter((a) => a[0] < c.start && c.start < a[1]).reduce((best, a) => (best === null || a[0] > best[0] ? a : best), null)
+  const scopeMaps = new Map()
   for (const c of comps) {
-    if (scopes.length === 0 || scopes[scopes.length - 1].has(c.id)) scopes.push(new Map())
-    scopes[scopes.length - 1].set(c.id, c)
+    const key = arrayOf(c)?.[0] ?? -1
+    if (!scopeMaps.has(key)) scopeMaps.set(key, new Map())
+    scopeMaps.get(key).set(c.id, c)
   }
+  const scopes = [...scopeMaps.values()]
   for (const scope of scopes) {
     const frameNode = (id) => {
       const k = scope.get(id)
@@ -433,6 +460,8 @@ function selftest() {
   rule('lone-button-frame', 'a Button four wrappers deep (CardContent, Column, List, Row) is found, with no depth cap (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', child: 'c' }, { id: 'c', component: 'CardContent', child: 'col' }, { id: 'col', component: 'Column', children: ['l'] }, { id: 'l', component: 'List', children: ['r'] }, { id: 'r', component: 'Row', children: ['a'] }, { id: 'a', component: 'Button', label: 'Go' }]`, 'lone-button-frame') === 1)
   rule('lone-button-frame', 'a Column of the Button and a Divider, and a Grid around the Button, are found (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', children: ['col'] }, { id: 'col', component: 'Column', children: ['a', 'd'] }, { id: 'd', component: 'Divider' }, { id: 'a', component: 'Button' }, { id: 'k2', component: 'Card', children: ['g'] }, { id: 'g', component: 'Grid', children: ['b'] }, { id: 'b', component: 'Button' }]`, 'lone-button-frame') === 2)
   rule('lone-button-frame', 'a Button beside a Text or a Badge, and under a template list, pass (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', children: ['r'] }, { id: 'r', component: 'Row', children: ['t', 'a'] }, { id: 't', component: 'Text', text: 'Hi' }, { id: 'a', component: 'Button' }, { id: 'k2', component: 'Card', children: ['b', 'g'] }, { id: 'b', component: 'Badge' }, { id: 'g', component: 'Button' }, { id: 'k3', component: 'Card', children: { componentId: 'tpl', path: '/x' } }, { id: 'tpl', component: 'Button' }]`, 'lone-button-frame') === 0)
+  rule('lone-button-frame', 'a later payload that reuses an earlier payload id is walked on its own (T-0369)', n(F, `const a = [{ id: 'k', component: 'Card', children: ['t'] }, { id: 'b', component: 'Text' }]; const c = [{ id: 'k2', component: 'Card', children: ['b'] }, { id: 'b', component: 'Button', label: 'Go' }]`, 'lone-button-frame') === 1)
+  rule('lone-button-frame', 'the same reuse behind a Row is found too, and the earlier Text-card still passes (T-0369)', n(F, `const a = [{ id: 'k', component: 'Card', children: ['b'] }, { id: 'b', component: 'Text' }]; const c = [{ id: 'k2', component: 'Card', children: ['r'] }, { id: 'r', component: 'Row', children: ['b'] }, { id: 'b', component: 'Button', label: 'Go' }]`, 'lone-button-frame') === 1)
   rule('lone-button-frame', 'child and children are both read, and a cycle ends (T-0369)', n(F, `const p = [{ id: 'k', component: 'Card', child: 'r', children: ['r'] }, { id: 'r', component: 'Row', child: 'a', children: ['r'] }, { id: 'a', component: 'Button' }]`, 'lone-button-frame') === 1)
 
   rule('inline-geometry', 'style.padding = 12px is found', n(F, `function f() { x.style.padding = '12px' }`, 'inline-geometry') === 1)

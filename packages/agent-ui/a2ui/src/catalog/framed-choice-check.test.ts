@@ -119,6 +119,12 @@ describe('LONE_BUTTON_FRAME (T-0300)', () => {
     expect(findings([{ id: 'k', component: 'Card', children: ['h', 'a'] }, { id: 'h', component: 'CardHeader', children: [] }, button('a', 'Go')]).map((f) => f.code)).toEqual(['LONE_BUTTON_FRAME'])
   })
 
+  it('the repair names only the wrappers on the path to the Button, not an empty CardHeader or Divider beside it', () => {
+    const [f] = findings([{ id: 'k', component: 'Card', children: ['h', 'f'] }, { id: 'h', component: 'CardHeader', children: [] }, { id: 'f', component: 'CardFooter', child: 'a' }, button('a', 'Go')])
+    expect(f!.message).toContain('drop k and its CardFooter.')
+    expect(f!.message).not.toContain('CardHeader')
+  })
+
   it('a Row of two Buttons, a Button beside Text or a Badge, a header Text, a template list and an unknown child pass', () => {
     expect(findings([{ id: 'c', component: 'Card', child: 'f' }, { id: 'f', component: 'CardFooter', child: 'r' }, { id: 'r', component: 'Row', children: ['a', 'b'] }, button('a', 'A'), button('b', 'B')])).toEqual([])
     expect(findings([{ id: 'c', component: 'Card', children: ['h', 'a'] }, { id: 'h', component: 'CardHeader', children: ['t'] }, { id: 't', component: 'Text', text: 'Title' }, button('a', 'A')])).toEqual([])

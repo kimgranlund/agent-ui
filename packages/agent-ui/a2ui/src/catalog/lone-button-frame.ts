@@ -23,14 +23,16 @@ export const TRANSPARENT: ReadonlySet<string> = new Set(['CardHeader', 'CardCont
 /** The Card-level wrapper types a repair drops with the Card (never Row or Column, which a Button group legitimately uses). */
 export const CARD_PARTS: ReadonlySet<string> = new Set(['CardHeader', 'CardContent', 'CardFooter'])
 
-/** The lone Button a Card frames and the wrapper component types met on the way, or undefined when the Card holds more. */
+/** The lone Button a Card frames and the component types between the Card and that Button (its ancestors, never an
+ *  empty sibling such as a bare CardHeader), or undefined when the Card holds more. */
 export function loneButtonFrame(cardId: string, get: (id: string) => FrameNode | undefined): { button: string; wrappers: string[] } | undefined {
   const card = get(cardId)
   if (card === undefined || card.template) return undefined
   const seen = new Set<string>([cardId])
-  const wrappers = new Set<string>()
+  const parent = new Map<string, string>()
   const buttons: string[] = []
   const queue = [...card.ids]
+  for (const id of card.ids) parent.set(id, cardId)
   while (queue.length > 0) {
     const id = queue.shift()!
     if (seen.has(id)) continue
@@ -42,8 +44,11 @@ export function loneButtonFrame(cardId: string, get: (id: string) => FrameNode |
       continue
     }
     if (!TRANSPARENT.has(node.component) || node.template) return undefined
-    wrappers.add(node.component)
+    for (const kid of node.ids) if (!parent.has(kid)) parent.set(kid, id)
     queue.push(...node.ids)
   }
-  return buttons.length === 1 ? { button: buttons[0]!, wrappers: [...wrappers] } : undefined
+  if (buttons.length !== 1) return undefined
+  const wrappers = new Set<string>()
+  for (let up = parent.get(buttons[0]!); up !== undefined && up !== cardId; up = parent.get(up)) wrappers.add(get(up)!.component)
+  return { button: buttons[0]!, wrappers: [...wrappers].reverse() }
 }
