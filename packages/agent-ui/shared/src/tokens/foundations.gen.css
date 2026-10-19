@@ -39,7 +39,8 @@
   --md-sys-type-title: calc(var(--md-sys-type-body) + var(--md-sys-title-bump, 1) * 1px);
   --md-sys-type-body: max(9px, calc((12 + 1 * (var(--md-sys-n) - 5)) * 1px));
   --md-sys-type-control: max(9px, calc((11 + 1 * (var(--md-sys-n) - 5)) * 1px));
-  --md-sys-type-field-label: max(9px, calc((9 + 1 * (var(--md-sys-n) - 5)) * 1px));
+  --md-sys-type-field-label: max(9px, calc((10 + 1 * (var(--md-sys-n) - 5)) * 1px));
+  --md-sys-type-small-control: max(9px, calc((9 + 1 * (var(--md-sys-n) - 5)) * 1px));
   --md-sys-type-group-kicker: max(9px, calc((9 + 0.5 * (var(--md-sys-n) - 5)) * 1px));
   --md-sys-type-floor: 9px;
   --md-sys-chip-margin: var(--md-sys-c);

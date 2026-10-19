@@ -44,9 +44,9 @@
   --md-sys-typescale-body-small-size: var(--md-sys-bridge-body-sm);
   --md-sys-typescale-body-medium-size: var(--md-sys-bridge-body-md);
   --md-sys-typescale-body-large-size: var(--md-sys-bridge-body-lg);
-  --md-sys-typescale-label-small-size: max(9px, calc((9 + 1 * (var(--md-sys-bridge-n-sm) - 5)) * 1px));
-  --md-sys-typescale-label-medium-size: max(9px, calc((9 + 1 * (var(--md-sys-bridge-n-md) - 5)) * 1px));
-  --md-sys-typescale-label-large-size: max(9px, calc((9 + 1 * (var(--md-sys-bridge-n-lg) - 5)) * 1px));
+  --md-sys-typescale-label-small-size: max(9px, calc((10 + 1 * (var(--md-sys-bridge-n-sm) - 5)) * 1px));
+  --md-sys-typescale-label-medium-size: max(9px, calc((10 + 1 * (var(--md-sys-bridge-n-md) - 5)) * 1px));
+  --md-sys-typescale-label-large-size: max(9px, calc((10 + 1 * (var(--md-sys-bridge-n-lg) - 5)) * 1px));
   --md-sys-typescale-kicker-small-size: max(9px, calc((9 + 0.5 * (var(--md-sys-bridge-n-sm) - 5)) * 1px));
   --md-sys-typescale-kicker-medium-size: max(9px, calc((9 + 0.5 * (var(--md-sys-bridge-n-md) - 5)) * 1px));
   --md-sys-typescale-kicker-large-size: max(9px, calc((9 + 0.5 * (var(--md-sys-bridge-n-lg) - 5)) * 1px));
@@ -92,6 +92,7 @@
   --md-sys-type-body: initial;
   --md-sys-type-control: initial;
   --md-sys-type-field-label: initial;
+  --md-sys-type-small-control: initial;
   --md-sys-type-group-kicker: initial;
   --md-sys-type-floor: initial;
   --md-sys-chip-margin: initial;

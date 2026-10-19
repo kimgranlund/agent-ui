@@ -42,7 +42,8 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Emitted) => number]> = [
   ['type-title', (r) => r.type.title],
   ['type-body', (r) => r.type.body],
   ['type-control', (r) => r.type.control],
-  ['type-field-label', (r) => r.type.fieldLabel],
+  ['type-field-label', (r) => r.type.fieldLabel], // T-0374 step 2: the skill's 10 + 1 per step
+  ['type-small-control', (r) => r.type.smallControl], // T-0374 step 2: the skill's small control role, 9 + 1 per step
   ['type-group-kicker', (r) => r.type.groupKicker],
   // T-0373: the old label names, aliases of the kickers in foundations.gen.css on every cell, undefined in the legacy opt-out
   ['type-section-label', (r) => r.type.sectionKicker],
@@ -134,6 +135,21 @@ describe('foundations.gen.css: the 36 cells compute what resolve() gives (ADR-02
       const svg = (host.querySelector('svg') as SVGSVGElement).getBoundingClientRect()
       expect([box.width, box.height], `${at}: the 3n slot`).toEqual([3 * r.n, 3 * r.n])
       expect([svg.width, svg.height], `${at}: the n + 6 mark`).toEqual([r.n + 6, r.n + 6])
+      cells++
+    }
+    expect(cells).toBe(36)
+  })
+
+  it('field label 10 and the small control role', () => {
+    // T-0374 step 2: the field label is the skill's n + 5 (10 at n 5) and the small control role its n + 4, both on
+    // the 9px floor. At the root register (n 8) they read back 13 and 12; on every cell they equal the model.
+    let cells = 0
+    for (const tier of TIERS) for (const scale of STEPS) for (const size of STEPS) {
+      const r = resolve(tier, scale, size)
+      const got = labelled(readTokens(`<div data-tier="${tier}" data-scale="${scale}"><div data-size="${size}" data-probe></div></div>`))
+      const pair = [got['type-field-label'], got['type-small-control']]
+      expect(pair, `${tier} / ${scale} / ${size}`).toEqual([r.type.fieldLabel, r.type.smallControl])
+      if (tier === 'product' && scale === 'md' && size === 'md') expect(pair).toEqual([13, 12])
       cells++
     }
     expect(cells).toBe(36)

@@ -39,10 +39,11 @@ const CURRENT_CURVATURE_SHA = 'cc1639f495299070ac02f86825589e970aff9286933fe6a3b
  *  {section,group}-kicker`); the sheet aliases the old names to them for one release (one rule beside the derived
  *  block) and the bridge resets them in the legacy opt-out.
  *  T-0374 moves them again with each visible change. Step 1: the glyph box is n + 6 and the new `--md-sys-glyph-slot`
- *  is 3n (both sheets: the bridge resets the slot in the legacy opt-out). */
+ *  is 3n (both sheets: the bridge resets the slot in the legacy opt-out). Step 2: the field label is the skill's
+ *  10 + 1 per step (the bridge's label rows alias it) and the new `--md-sys-type-small-control` is 9 + 1. */
 const PARITY_SHA = {
-  foundations: 'b8b7cb7b3094d17d2ec87548676ba7ec27790e93144186f2770a07f7d092fdb5',
-  bridge: '0a580d027e590d257770e5105bd10f3b6d81bb90ce67d89bf101e5278d799c47',
+  foundations: 'b679079ce233a3a2dd01e0884bb2e7e649a9716ddddb5f22079dc832b9bfeb62',
+  bridge: '73df83609e042af080b004d183f00bb071a10f346d0fa1f6486253d4ecb241d4',
 }
 const textSha = (text: string): string => createHash('sha256').update(text).digest('hex')
 
@@ -199,9 +200,12 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
           .toEqual([r.n, r.m, r.c, r.h, r.n, r.labelMargin, r.n, r.icon, r.parts.checkboxRadius])
         // T-0374: the glyph is the skill's n + 6 in its 3n slot, the model's own beside the frozen resolver.
         expect([e.glyphBox, e.glyphSlot], at).toEqual([r.n + 6, 3 * r.n])
-        // The skill's role names (T-0373): the kickers carry the former section and group labels' values.
+        // The skill's role names (T-0373): the kickers carry the former section and group labels' values. T-0374
+        // step 2: the field label (n + 5) and the small control role (n + 4) are the skill's, on the 9px floor.
         const { sectionLabel, groupLabel, ...rest } = r.type
-        expect(e.type, at).toEqual({ ...rest, sectionKicker: sectionLabel, groupKicker: groupLabel })
+        expect(e.type, at).toEqual({
+          ...rest, sectionKicker: sectionLabel, groupKicker: groupLabel, fieldLabel: Math.max(9, r.n + 5), smallControl: Math.max(9, r.n + 4),
+        })
         expect(e.surface, at).toEqual({
           slot: 3 * r.n, margin: r.n / 2, height: r.h, icon: r.icon, iconInset: r.n / 2, glyph: r.n + 6, glyphInset: (3 * r.n - (r.n + 6)) / 2,
         })
@@ -307,6 +311,7 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     const declared = [...block.matchAll(/^ {2}(--md-sys-[\w-]+):/gm)].map((m) => m[1])
     expect([...DERIVED].sort()).toEqual(declared.sort())
     expect(declared, 'T-0374: the 3n glyph slot is derived').toContain('--md-sys-glyph-slot')
+    expect(declared, 'T-0374 step 2: the small control role is derived').toContain('--md-sys-type-small-control')
   })
 
   it('declares every ADR-0245 clause 1 output name (Amendment 3: m; T-0373: the section and group kickers; Amendment 4: the label inset and the chip level; Amendment 5: the control pill and the checkbox radius)', () => {

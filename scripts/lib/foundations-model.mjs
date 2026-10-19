@@ -17,14 +17,15 @@ import { ROOT_REGISTER, STEP } from './foundations-rules.mjs'
  * What stays on the repo's scale.mjs, because the current resolver gives a different value (T-0374 moves each one,
  * behind an approved mockup): the content and brand tier rows (current 11/3 and 15/4 against 10/2 and 14/2; all four
  * rows stay so `check()` validates the rows it emits), the density axis and m (current: five multipliers of n), and
- * the field label and group kicker values (current 10 + 1 per step for both, against 9 + 1 and 9 + 0.5): the group
- * kicker takes the skill's name with the former group label's value. Every token the current resolver has no field
+ * the group kicker value (current 10 + 1 per step, against 9 + 0.5): the group kicker takes the skill's name with the
+ * former group label's value. The field label (10 + 1) and the small control role (9 + 1) read the current resolver
+ * (T-0374 step 2). Every token the current resolver has no field
  * for (inset, label inset, radii, chip, checkbox and group levels) keeps its own formula below.
  */
 export const LEGACY_PATH = {
   tiers: LEGACY_CFG.tiers,
   density: LEGACY_CFG.density,
-  linear: { fieldLabel: LEGACY_CFG.linear.fieldLabel, groupKicker: LEGACY_CFG.linear.groupLabel },
+  linear: { groupKicker: LEGACY_CFG.linear.groupLabel },
 }
 
 /**
@@ -56,7 +57,10 @@ export function anchors() {
     floor: CFG.floor,
     titleBump: { ...CFG.titleBump },
     kicker: CFG.kicker,
-    linear: { body: [...CFG.linear.body], control: [...CFG.linear.control], ...LEGACY_PATH.linear },
+    linear: {
+      body: [...CFG.linear.body], control: [...CFG.linear.control], fieldLabel: [...CFG.linear.fieldLabel],
+      smallControl: [...CFG.linear.smallControl], ...LEGACY_PATH.linear,
+    },
   }
 }
 
@@ -70,7 +74,7 @@ export function roomyLevels(a = anchors()) {
   return ROOMY.map(([token, margin, gutter]) => [token, at(margin), at(gutter)])
 }
 
-const ROLES = ['display', 'heading', 'subhead', 'sectionKicker', 'body', 'control', 'fieldLabel', 'groupKicker']
+const ROLES = ['display', 'heading', 'subhead', 'sectionKicker', 'body', 'control', 'fieldLabel', 'smallControl', 'groupKicker']
 
 /** The type roles at n, as the sheet computes them (CSS round(nearest) is Math.round for these positive sizes). */
 function typeAt(n, size, a) {
@@ -80,7 +84,8 @@ function typeAt(n, size, a) {
   return {
     display: Math.round(body * q ** 3), heading: Math.round(body * q ** 2), subhead: Math.round(body * q),
     sectionKicker: Math.round(body * a.kicker), title: body + a.titleBump[size], body,
-    control: lin(a.linear.control), fieldLabel: lin(a.linear.fieldLabel), groupKicker: lin(a.linear.groupKicker),
+    control: lin(a.linear.control), fieldLabel: lin(a.linear.fieldLabel),
+    smallControl: lin(a.linear.smallControl), groupKicker: lin(a.linear.groupKicker),
   }
 }
 

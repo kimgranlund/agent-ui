@@ -14,7 +14,7 @@ export interface Anchors {
   floor: number
   titleBump: Record<Step, number>
   kicker: number
-  linear: Record<'body' | 'control' | 'fieldLabel' | 'groupKicker', [number, number]>
+  linear: Record<'body' | 'control' | 'fieldLabel' | 'smallControl' | 'groupKicker', [number, number]>
 }
 
 export interface EmittedLevel {
@@ -50,7 +50,7 @@ export interface Emitted {
   readonly glyphStroke: number
   readonly checkboxRadius: number
   readonly surface: ControlSurface
-  readonly type: Readonly<Record<'display' | 'heading' | 'subhead' | 'sectionKicker' | 'title' | 'body' | 'control' | 'fieldLabel' | 'groupKicker', number>>
+  readonly type: Readonly<Record<'display' | 'heading' | 'subhead' | 'sectionKicker' | 'title' | 'body' | 'control' | 'fieldLabel' | 'smallControl' | 'groupKicker', number>>
   readonly chip: EmittedLevel
   readonly group: EmittedLevel
   readonly widget: EmittedLevel
@@ -61,7 +61,7 @@ export interface Emitted {
 export const LEGACY_PATH: {
   tiers: Record<Tier, [number, number, number, number]>
   density: Record<Density, number>
-  linear: Record<'fieldLabel' | 'groupKicker', [number, number]>
+  linear: Record<'groupKicker', [number, number]>
 }
 export function anchors(): Anchors
 export function heightPerN(a?: Anchors): number
