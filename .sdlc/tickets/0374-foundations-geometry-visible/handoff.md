@@ -27,3 +27,6 @@ Differences found 2026-10-18: content/brand tier rows; control height 3n + 2 mar
 
 ## Constraints
 Kim approves each mockup before its step builds. The three rulings are recorded above.
+
+## Plan review
+- plan review: replan: specgate refused the plan (8 duplicate spans): each step repeats `npm run test:visual` and the foundations browser command verbatim from an earlier step. Give each step criteria that name only what that step moves (its own -t filter, test file or token assertion); run the shared whole-suite gates once, in the final gates step.
