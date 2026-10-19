@@ -1857,7 +1857,7 @@ describe('croupier rules check: a poker table keeps its chips in step with the p
 // pot bet of $15 the opponent calls takes the $15 pot to $30 on the table and in the reply, and the second hand opens on
 // the settled $1,020 with the blinds in a $15 pot (:257). The data models, stats and replies below are the recorded
 // ones (the shipped round of each turn); the table components are trimmed to the cards, the title and the moves.
-describe('croupier rules check: a poker reply states the chips the table shows, and the bankroll carries across hands (T-0379)', () => {
+describe('croupier rules check: a called bet puts both bets in the pot, and a HUD carries the bankroll across hands (T-0379)', () => {
   const C = (rank: string, suit: string, faceDown = false) => ({ rank, suit, ...(faceDown ? { faceDown } : {}) })
   const down = (cards: { rank: string; suit: string }[]) => cards.map(({ rank, suit }) => C(rank, suit, true))
   const data = (sid: string, value: unknown, path?: string) => ({ version: 'v1.0', updateDataModel: { surfaceId: sid, ...(path === undefined ? {} : { path }), value } })
@@ -1969,41 +1969,69 @@ describe('croupier rules check: a poker reply states the chips the table shows, 
 
   it('the recorded run fires on the called bet that lost chips from the pot and on the hand that opens on the settled bankroll', () => {
     const { fired, messages } = sequence(recorded)
-    expect(fired).toEqual([':254 hud-1:root.stats', ':257 hud-1:root.stats'])
+    expect(fired).toEqual([':254 hud-1:/bankroll', ':257 hud-1:/bankroll'])
     expect(messages[0]).toMatch(/player bets 15 and the opponent calls, so the pot grows by 30, from 15 to 45, but hud-1 shows 30/)
-    expect(messages[1]).toMatch(/settled with a bankroll of 1020, and the next hand opens with 15 in the pot but the bankroll at 1020/)
+    expect(messages[1]).toMatch(/settled with a bankroll of 1020, and hud-1 opens with 15 in the pot but the bankroll at 1020/)
   })
 
   it('a run whose replies and table keep the chips in step gives none', () => {
     expect(sequence(conserved).fired).toEqual([])
   })
 
-  // The table after :253 (recorded): $1,000 behind a $15 pot on hud-1, the flop on table-1.
+  // The table after :253 (recorded): $1,000 behind a $15 pot on hud-1, the flop on table-1. `stats` replaces the HUD's
+  // stats this turn (literal strings); `null` leaves the HUD alone.
   const at253 = (): Session => {
     const sess: Session = { turns: [] }
     for (const t of turns(recorded).slice(0, 2)) sess.turns = [...sess.turns, { role: 'user', content: t.say! }, { role: 'assistant', content: toJsonl(t.out) }]
     return sess
   }
-  const say = (reply: string, chips: Chips | null, extra: unknown[] = [], intent = 'Bet the pot.', sess = at253()) =>
-    judgeTurn(sess, { line: '', say: intent, reply, out: withHud({ ...recorded, hud: { t: chips } }, 't', 'Turn: your action', [data('table-1', turn1, '/board'), table('table-1', 'Turn', moves), ...extra]) }).map((f) => f.path)
+  const hudStats = (status: string, stats: { label: string; value: unknown }[]) => comps('hud-1', [{ id: 'root', component: 'GameHud', title: "Omaha hold'em", status, stats }])
+  const say = (reply: string, stats: [unknown, unknown] | null, opts: { intent?: string; status?: string; labels?: [string, string]; sess?: Session } = {}) => {
+    const [bl, pl] = opts.labels ?? ['Bankroll', 'Pot']
+    const out = [data('table-1', turn1, '/board'), table('table-1', 'Turn', moves), ...(stats === null ? [] : [hudStats(opts.status ?? 'Turn: your action', [{ label: bl, value: stats[0] }, { label: pl, value: stats[1] }])])] as A2uiOutput
+    return judgeTurn(opts.sess ?? at253(), { line: '', say: opts.intent ?? 'Bet the pot.', reply, out }).map((f) => f.path)
+  }
+  const CALLED = 'You bet the pot at $15. The opponent calls.'
 
-  it('reads only the reply\'s present claims of the player\'s chips, the last one, and never one chips moved after', () => {
-    expect(say('Your bankroll is $990.', [1000, 15], [], CHECK)).toEqual(['reply:bankroll'])
-    expect(say('Bankroll: **$1,000**. The pot is 15.', [1000, 15], [], CHECK)).toEqual([])
-    expect(say('Your bankroll goes from $990 to $1,000.', [1000, 15], [], CHECK)).toEqual([])
-    expect(say('Check or bet the pot ($30)? You bet the pot at $40 last time; the pot was 30.', [1000, 15], [], CHECK)).toEqual([])
-    expect(say("The opponent's bankroll is 980, and the pot is 15.", [1000, 15], [], CHECK)).toEqual([])
-    expect(say('The pot is 25 after the blinds. The opponent bets 10. Call 10 or fold.', [1000, 35], [], CHECK)).toEqual([])
-    expect(say('The pot is 25 after the blinds. The turn is the 9♠.', [1000, 15], [], CHECK)).toEqual(['reply:pot'])
+  it('a called bet fires on the pot short of both bets; a pot that holds both, a fold, a call not made, an all-in and a settled HUD do not', () => {
+    expect(say(CALLED, ['$985', '$30'])).toEqual(['hud-1:/bankroll'])
+    expect(say('You bet $15, and I call.', ['$985', '$30'])).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['$985', '$45'])).toEqual([])
+    expect(say('You bet $15 and the opponent folds. You take the $30 pot.', ['$1,015', '$0'])).toEqual([])
+    expect(say('You bet $15. If you bet again, the opponent calls.', ['$985', '$30'])).toEqual([])
+    expect(say("You bet $15. The opponent would call a smaller bet, and I'll call the river.", ['$985', '$30'])).toEqual([])
+    expect(say('You bet $15. Does the opponent call?', ['$985', '$30'])).toEqual([])
+    expect(say('You bet $15, all in, and the opponent calls.', ['$985', '$30'])).toEqual([])
+    expect(say(CALLED, ['$985', '$30'], { status: 'Round settled: you won' })).toEqual([])
+    expect(say(CALLED, ['$985', '$30'], { intent: 'Raise.' })).toEqual([]) // a raise's call matches the raise alone
+    expect(say(CALLED, null)).toEqual([]) // no surface this round shows the pot
+    // The player owed a call (a bring-in or a bet in the street): the opponent calls only the difference.
+    const owed = { turns: at253().turns.map((t) => ({ ...t, content: t.content.replaceAll('"label":"Check","action":{"action":"check"}', '"label":"Call 5","action":{"action":"call"}') })) }
+    expect(owed.turns.some((t) => t.content.includes('"Call 5"'))).toBe(true)
+    expect(say(CALLED, ['$985', '$30'], { sess: owed })).toEqual([])
   })
 
-  it('a called bet fires on the pot short of both bets; a bet the opponent folds to, a pot that holds both, a settled hand do not', () => {
-    expect(say('You bet $15 and the opponent calls. The pot is $45.', [985, 45])).toEqual([])
-    expect(say('You bet $15 and the opponent calls. The pot is $30.', [985, 30])).toEqual(['hud-1:root.stats'])
-    expect(say('You bet $15 and the opponent folds. You take the $30 pot.', [1015, 0])).toEqual([])
-    expect(say('You bet $15 and the opponent calls. Your straight beats a pair: you win the $45 pot.', [1030, 0])).toEqual([])
-    // A HUD this round leaves alone shows no pot this round grew: the called bet is judged on the surfaces it touches.
-    expect(say('You bet $15 and the opponent calls.', null)).toEqual([])
+  it('reads the stats by their whole label, through counts written as words, and skips one it cannot read', () => {
+    expect(say(CALLED, ['985 chips', '€30'])).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['985', '30'], { labels: ['Chips', 'Pot:'] })).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['985', '30'], { labels: ['Stack', 'Pot'] })).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['$985', '$30'], { labels: ['Bankroll', 'Chips in pot'] })).toEqual([])
+    expect(say(CALLED, ['$985', '$30'], { labels: ['Bankroll', 'Pot odds'] })).toEqual([])
+    expect(say(CALLED, ['$985', '$30'], { labels: ['Opponent chips', 'Pot'] })).toEqual([])
+    expect(say(CALLED, ['$985', '1,5'])).toEqual([]) // never the HUD's stale data model in its place
+    // A thousands dot, a k and a euro sign: 1.000 € behind a 15 pot, the bet takes 0.015k to 985.
+    const euro = { turns: at253().turns.map((t) => ({ ...t, content: t.content.replaceAll('"$1,000"', '"1.000 €"') })) }
+    expect(say(CALLED, ['0.985k', '€30'], { sess: euro })).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['1.5k', '€30'], { sess: euro })).toEqual([]) // the bankroll rose: not a bet
+  })
+
+  it('an old settled table in view never silences the next hand', () => {
+    const run = turns(recorded)
+    const sess: Session = { turns: [] }
+    for (const t of run.slice(0, 8)) sess.turns = [...sess.turns, { role: 'user', content: t.say ?? 'deal_again' }, { role: 'assistant', content: toJsonl(t.out) }]
+    // :260 with the HUD moved from $1,010 and $0 to $995 and $15: table-1 (won) and table-2 (folded) are still open.
+    const out = withHud({ ...recorded, hud: { t: [995, 15] } }, 't', 'Flop: your action', [data('table-3', flop3, '/board'), table('table-3', 'Flop', moves)])
+    expect(judgeTurn(sess, { line: ':260', say: 'Bet the pot.', reply: 'You bet the pot at $15, and the opponent calls.', out }).map((f) => f.path)).toEqual(['hud-1:/bankroll'])
   })
 
   it('a new hand fires only where the GameHud settled with an empty pot and the player posted', () => {
@@ -2013,30 +2041,18 @@ describe('croupier rules check: a poker reply states the chips the table shows, 
     const press = run[5]!
     const judge = (out: A2uiOutput, s = sess) => judgeTurn(s, { ...press, out }).map((f) => f.path)
     const swap = (from: string, to: string) => JSON.parse(JSON.stringify(press.out).replaceAll(from, to)) as A2uiOutput
-    expect(judge(press.out)).toEqual(['hud-1:root.stats'])
+    expect(judge(press.out)).toEqual(['hud-1:/bankroll'])
     expect(judge(swap('"$1,020"', '"$1,010"'))).toEqual([]) // the blind left the bankroll
-    expect(judge(swap("Omaha hold'em · Preflop", "Seven-card stud · Third street"))).toEqual([]) // the opponent's bring-in
+    expect(judge(swap("Omaha hold'em · Preflop", 'Seven-card stud · Third street'))).toEqual([]) // the opponent's bring-in
     // The last hand left chips in the pot: the settled count is not known.
     const unsettled: Session = { turns: [...sess.turns, { role: 'user', content: CHECK }, { role: 'assistant', content: toJsonl([hud('River', [1020, 45])] as A2uiOutput) }] }
     expect(judge(press.out, unsettled)).toEqual([])
   })
 
-  it('a surface that names a poker game but holds no table (a game picker) is not judged', () => {
-    const picker = [
-      { version: 'v1.0', createSurface: { surfaceId: 'pick-1', catalogId: 'agent-ui--croupier' } },
-      comps('pick-1', [
-        { id: 'root', component: 'Card', children: ['hud', 'holdem'] },
-        { id: 'hud', component: 'GameHud', title: "Texas hold'em or Omaha", stats: [{ label: 'Bankroll', value: '$1,000' }] },
-        button('holdem', "Texas hold'em", 'pick', { game: 'holdem' }),
-      ]),
-    ] as A2uiOutput
-    expect(judgeTurn({ turns: [] }, { line: '', say: 'Poker, please.', reply: 'Your bankroll is $990. Pick a game.', out: picker })).toEqual([])
-  })
-
-  it('a blackjack table is never judged for its chips in the reply', () => {
+  it('a blackjack table is never judged for a called bet', () => {
     const bj = (out: unknown[]) => JSON.parse(JSON.stringify(out).replaceAll("Omaha hold'em", 'Blackjack')) as A2uiOutput
     const sess: Session = { turns: turns(recorded).slice(0, 2).flatMap((t) => [{ role: 'user', content: t.say! }, { role: 'assistant', content: toJsonl(bj(t.out)) }]) }
-    const out = bj([...withHud({ ...recorded, hud: { t: [1000, 15] } }, 't', 'Your action', [table('table-1', 'Turn', [button('hitBtn', 'Hit', 'hit')])])])
-    expect(judgeTurn(sess, { line: '', say: 'Hit.', reply: 'Your bankroll is $990.', out })).toEqual([])
+    const out = bj([table('table-1', 'Turn', [button('betBtn', 'Bet', 'bet')]), hud('Your action', [985, 30])])
+    expect(judgeTurn(sess, { line: '', say: 'Bet 15.', reply: CALLED, out })).toEqual([])
   })
 })
