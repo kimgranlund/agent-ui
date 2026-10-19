@@ -380,3 +380,26 @@ describe('ui-playing-card — forced-colors keeps both faces legible (WHCM)', ()
     }
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+//  Type floor — the sm card's index and pip hold the 9px floor at the widget tier (T-0381)
+// ════════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-playing-card — [size=sm] holds the type floor at the widget tier (T-0381)', () => {
+  it('the corner index, its suit glyph and a pip render at or above --md-sys-type-floor', () => {
+    const tier = document.createElement('div')
+    tier.setAttribute('data-tier', 'widget')
+    tier.setAttribute('data-scale', 'md')
+    tier.innerHTML = '<ui-playing-card rank="5" suit="hearts" size="sm"></ui-playing-card>'
+    document.body.append(tier)
+    mounted.push(tier)
+    const card = tier.firstElementChild as HTMLElement
+    const floor = px(getComputedStyle(card).getPropertyValue('--md-sys-type-floor'))
+    expect(floor, 'the foundations declare a type floor').toBeGreaterThan(0)
+    for (const part of ["[data-part='index']", "[data-part='index-suit']", "[data-part='pip']"]) {
+      const el = card.querySelector(part) as HTMLElement
+      expect(el, `${part} rendered`).not.toBeNull()
+      expect(px(getComputedStyle(el).fontSize), `${part} font-size`).toBeGreaterThanOrEqual(floor - 0.01)
+    }
+  })
+})

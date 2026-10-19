@@ -201,7 +201,7 @@
     flex-direction: column;
     align-items: center;
     line-height: 1.05;
-    font-size: calc(var(--ui-playing-card-inline-size) * 0.15);
+    font-size: max(var(--md-sys-type-floor, 9px), calc(var(--ui-playing-card-inline-size) * 0.15)); /* the type floor: 0.15 alone reads 8.4px on the sm box at the widget tier (T-0381) */
     font-weight: bold;
   }
 
@@ -231,7 +231,7 @@
   }
 
   [data-part='pip'] {
-    font-size: calc(var(--ui-playing-card-inline-size) * 0.16);
+    font-size: max(var(--md-sys-type-floor, 9px), calc(var(--ui-playing-card-inline-size) * 0.16)); /* the type floor (T-0381) */
     line-height: 1;
   }
 
