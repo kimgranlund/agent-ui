@@ -124,7 +124,7 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
 })
 
 // ADR-0245 clause 3 and Amendment 3: inside an opt-in region the circle is 2n and the dot the glyph minus 2
-// (2n - 2c - 2), against scale.mjs resolve().
+// (icon box - 2c - 2), against scale.mjs resolve().
 describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () => {
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {

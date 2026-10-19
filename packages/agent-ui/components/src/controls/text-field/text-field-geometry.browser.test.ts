@@ -427,7 +427,8 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     // Each mark must itself render at a real size, not just its containing button/span (the ui-slider
     // "collapsed dot" lesson: a container can pass every bounding-box check while its content renders at
     // 0×0). The magnifier svg (setIcon) is sized to the derived icon box (--ui-text-field-svg); the clear x is a
-    // ui-glyph whose host is the same 2n slot and whose svg is the glyph box inside it (T-0351).
+    // ui-glyph whose host is its own square 3n glyph slot (T-0374) and whose svg, the mark, is the n + 6 glyph box
+    // centred in it, so the mark sits centred in the 2n cell (T-0351).
     const { field: searchField } = mount('<ui-text-field type="search" value="x"></ui-text-field>')
     const magnifier = searchField.querySelector('[data-part="leading-adornment"]') as HTMLElement
     const clearBtn = searchField.querySelector('[data-part="clear-button"]') as HTMLElement
@@ -435,17 +436,18 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     // box the geometry law pins is its parent `[slot='trailing']` cell (icon-sized, text-field.css's
     // slot rule); measuring against the button's own box would be vacuous (box == content, always).
     const clearSlot = clearBtn.closest('[slot="trailing"]') as HTMLElement
-    for (const [label, el, slotEl] of [
-      ['magnifier', magnifier, magnifier],
-      ['clear-button', clearBtn, clearSlot],
+    const md = rootResolve('md')
+    for (const [label, el, slotEl, want] of [
+      ['magnifier', magnifier, magnifier, md.icon],
+      ['clear-button', clearBtn, clearSlot, glyphBox(md)],
     ] as const) {
-      // the icon-box element: the magnifier's own svg, or the clear mark's ui-glyph host (its 2n slot)
-      const svg = (el.querySelector('ui-glyph') ?? el.querySelector('svg'))!
+      // the drawn mark: the magnifier's own svg (the 2n icon box), or the clear mark's svg (the n + 6 glyph box)
+      const svg = el.querySelector('svg')!
       const r = svg.getBoundingClientRect()
       expect(r.width, `${server.browser}: ${label} svg collapsed to zero width`).toBeGreaterThan(0)
       expect(r.height, `${server.browser}: ${label} svg collapsed to zero height`).toBeGreaterThan(0)
-      // the injected svg paints at the derived icon box (2n, ADR-0245 cl.3), not 1em: md at the root register is 14px.
-      expect(r.width, `${server.browser}: ${label} svg is not the derived icon box`).toBeCloseTo(rootResolve('md').icon, 0)
+      // the svg paints at its derived box (ADR-0245 cl.3 and cl.4), not 1em
+      expect(r.width, `${server.browser}: ${label} svg is not its derived box`).toBeCloseTo(want, 0)
 
       // GH #634 displacement gap: the svg's own size was pinned, but never its POSITION within the
       // adornment slot — a regression from align-items/justify-content:center to flex-start on the slot
@@ -463,9 +465,11 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
       expect(Math.abs(gapY1 - gapY2), `${server.browser}: ${label} glyph not vertically centered in its slot`).toBeLessThanOrEqual(1)
     }
 
-    // the clear x itself is drawn in the glyph box 2n - 2c, inset c in its slot (ADR-0245 cl.4, T-0351)
+    // the clear x is a ui-glyph in its own square 3n slot with the n + 6 glyph box centred (ADR-0245 cl.4, T-0351, T-0374)
+    const clearHost = clearBtn.querySelector('ui-glyph')!.getBoundingClientRect()
+    expect(clearHost.width, `${server.browser}: the clear glyph host is not the 3n slot`).toBeCloseTo(3 * md.n, 0)
     const clearMark = clearBtn.querySelector('ui-glyph svg')!.getBoundingClientRect()
-    expect(clearMark.width, `${server.browser}: the clear mark is not the glyph box`).toBeCloseTo(glyphBox(rootResolve('md')), 0)
+    expect(clearMark.width, `${server.browser}: the clear mark is not the glyph box`).toBeCloseTo(glyphBox(md), 0)
 
     const { field: numberField } = mount('<ui-text-field type="number"></ui-text-field>')
     const stepUp = numberField.querySelector('[data-part="step-up"]') as HTMLElement

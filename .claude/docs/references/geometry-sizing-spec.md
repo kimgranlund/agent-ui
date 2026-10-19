@@ -47,7 +47,8 @@ check M7 since T-0373), are:
 | radius | `n` (`corner-shape: squircle`) for a surface; the pill `2n` (circular) for every single-line control and a textarea, Amendment 5 | `--md-sys-radius`, `--md-sys-control-radius` |
 | chip and checkbox radius | chip pill `n + c` (h/2 of the `2n + 2c` chip); checkbox `ceil(n/2)` | `--md-sys-chip-radius`, `--md-sys-checkbox-radius` |
 | icon box | `2n` | `--md-sys-icon-box` |
-| glyph box | `max(8px, 2n - 2c)` (ADR-0245 Amendment 7) | `--md-sys-glyph-box` |
+| glyph box | `n + 6` (T-0374; the Amendment 7 floor retired) | `--md-sys-glyph-box` |
+| glyph slot | `3n`, the square wrapper the glyph box centres in | `--md-sys-glyph-slot` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | type | linear `n + 6` for controls, `pow` for display, heading and subhead | `--md-sys-type-*` |
 | type | linear roles never below 9px; the section kicker `round(body · 9/8)` and the group kicker `n/2 + 6.5` (the former section and group labels stay aliases until W7) | `--md-sys-type-section-kicker`, `--md-sys-type-group-kicker` |
@@ -136,9 +137,11 @@ column sets `data-tier="content"`. `[scale]` survives one release as a bridge al
 
 A functional mark (a caret, check, plus, minus, dot, x, ellipsis, warning, info) is a `ui-glyph`, drawn from
 one path table in `components` as a stroke path in a fixed viewBox with `vector-effect: non-scaling-stroke`,
-so the stroke is the token `--md-sys-glyph-stroke`. Its box is `max(8px, 2n - 2c)` (8 / 12 / 14 at the root's sm /
-md / lg; the 8px floor holds n 5 and below, ADR-0245 Amendment 7), always inside a `2n` slot, so an icon and a glyph in neighbouring slots share the slot box and the centre
-line. A caret is no longer drawn at the control font. A control with a child slot renders `<ui-glyph>`; a
+so the stroke is the token `--md-sys-glyph-stroke`. Its box is `n + 6` (12 / 14 / 16 at the root's sm /
+md / lg; at least 10 on the whole ladder, so the retired 8px floor of ADR-0245 Amendment 7 never binds), centred in its
+own square `3n` glyph slot (`--md-sys-glyph-slot`, T-0374, Kim's 2026-10-19 ruling, the skill's glyph wrapper). A host
+that gives the glyph a smaller cell (an icon-sized caret cell) sizes that cell `max(icon, glyph box)`, so the mark is
+never clipped where `n + 6` outgrows `2n` (n 4 and 5). A caret is no longer drawn at the control font. A control with a child slot renders `<ui-glyph>`; a
 control that drew on a pseudo-element either gains a `ui-glyph` child or reads a generated mask token from the
 same table, and never re-draws a mark by hand.
 
@@ -169,10 +172,10 @@ replaced ADR-0046's fixed 6 / 12 / 8 paddings and the nested 12 to 6 to 6 step-d
 
 What a mark IS decides its box, not where it sits: an **icon** (a pictorial pack symbol: a field's leading
 icon, a status icon, the search magnifier) is the `2n` box; a **glyph** (a caret, chevron, stepper arrow, clear
-`x`, disclosure marker, calendar-nav caret) is the `2n - 2c` box. The old bug class, an inline affordance sized
+`x`, disclosure marker, calendar-nav caret) is the `n + 6` box in its `3n` slot. The old bug class, an inline affordance sized
 to the icon ramp so it renders about 1.3 times the text, is now closed by construction: a mark is a
 `<ui-glyph>` or a glyph-box token, never an icon-sized pack caret. A nav icon in a standalone control button
-(a swiper paddle, a pagination chevron) takes the glyph in its `2n` slot.
+(a swiper paddle, a pagination chevron) takes the glyph in its `3n` slot.
 
 ### 4.7 · Display marks: no ramp row, type-context-derived boxes (2026-07-08)
 
@@ -183,7 +186,7 @@ size relative to their own **type context** (em/lh-derived), the same "no contro
 
 - `ui-icon` is the `2n` icon box (`--md-sys-icon-box`, ADR-0245 cl.4) inside a control cell or a `[data-tier]`
   region and follows the surrounding text, `1em`, anywhere else (ADR-0245 Amendment 6); `ui-glyph` is the
-  `2n - 2c` glyph box everywhere. Neither is a control row (§4.6).
+  `n + 6` glyph box in its `3n` slot everywhere. Neither is a control row (§4.6).
 - `ui-sparkline` defaults to an explicit `8em × 1lh` box (SPEC-R9 AC1), a deterministic floor, not
   a derived one, because a zero-size default would make the whole-shape law (§ below) unenforceable
   on an inline mark with no intrinsic content size.
@@ -250,7 +253,7 @@ goldens; the cut flipped the root with one config field. A consumer opts a regio
 ### 5.2 · The compact box ramp, retired
 
 ADR-0041's 14 / 16 / 18 widget ramp (`--md-sys-compact-*`, Kim's eight-value `12 to 28` ladder) and the flat
-2px `--md-sys-widget-inset` retired. An indicator's box is `2n`, its thumb `2n - 2c`, a progress track `2c`;
+2px `--md-sys-widget-inset` retired. An indicator's box is `2n`, its thumb the icon box - 2c, a progress track `2c`;
 `--md-sys-compact-*` and `--md-sys-widget-inset` survive only as bridge aliases (`2n` and `c`) until W7.
 
 ---

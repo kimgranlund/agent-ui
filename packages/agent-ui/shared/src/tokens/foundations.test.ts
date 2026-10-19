@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { CFG, check, resolve, type Resolved } from './scale.mjs'
 import { BRIDGE_REL, EMITTED_M7, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
-import { DERIVED, GLYPH_FLOOR, RENAMED, ROOT_REGISTER, STEP, glyphBox, findingsIn } from '../../../../../scripts/lib/foundations-rules.mjs'
+import { DERIVED, RENAMED, ROOT_REGISTER, STEP, glyphBox, findingsIn } from '../../../../../scripts/lib/foundations-rules.mjs'
 import { anchors, checkAnchors, checkEmitted, resolve as resolveEmitted, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
 import { CFG as VENDORED_CFG } from './vendor/mathematical-design-system/scale.mjs'
 
@@ -38,10 +38,11 @@ const CURRENT_CURVATURE_SHA = 'cc1639f495299070ac02f86825589e970aff9286933fe6a3b
  *  names foundations-model.mjs, and the section and group labels take the skill's kicker names (`--md-sys-type-
  *  {section,group}-kicker`); the sheet aliases the old names to them for one release (one rule beside the derived
  *  block) and the bridge resets them in the legacy opt-out.
- *  T-0374 moves them again with each visible change. */
+ *  T-0374 moves them again with each visible change. Step 1: the glyph box is n + 6 and the new `--md-sys-glyph-slot`
+ *  is 3n (both sheets: the bridge resets the slot in the legacy opt-out). */
 const PARITY_SHA = {
-  foundations: 'f720f2a2c9c328c259b066b1feeca56534df3aa75ec8fecb73c75f52b9d97a1e',
-  bridge: 'a77f9ec5b9d2889bc249ca122b42bdc81214356279dc627918eabc9c95076dd3',
+  foundations: 'b8b7cb7b3094d17d2ec87548676ba7ec27790e93144186f2770a07f7d092fdb5',
+  bridge: '0a580d027e590d257770e5105bd10f3b6d81bb90ce67d89bf101e5278d799c47',
 }
 const textSha = (text: string): string => createHash('sha256').update(text).digest('hex')
 
@@ -56,7 +57,7 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     expect(sha(`${VENDOR}/curvature.mjs`)).toBe(CURRENT_CURVATURE_SHA)
   })
 
-  it('T-0372 parity: both sheets render byte-identical to the pinned tokens (moved once by the T-0373 renames)', () => {
+  it('T-0372 parity: both sheets render byte-identical to the pinned tokens (moved by the T-0373 renames and the T-0374 glyph)', () => {
     expect(textSha(renderFoundationsCss())).toBe(PARITY_SHA.foundations)
     expect(textSha(renderBridgeCss())).toBe(PARITY_SHA.bridge)
   })
@@ -144,11 +145,12 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     expect([e.widget, e.card, e.layout].map((l) => [l.margin / e.m, l.gutter / e.m])).toEqual([[2, 1], [3, 2], [4, 3]])
   })
 
-  it('T-0373 control surface: the 3n slot plus two n/2 margins is the 4n control, the 2n icon centered in its slot', () => {
+  it('T-0373 control surface: the 3n slot plus two n/2 margins is the 4n control, the 2n icon and the n + 6 glyph centered in their slots', () => {
     const a = anchors()
     expect([a.slotPerN, a.marginPerN, a.iconPerN]).toEqual([3, 0.5, 2])
     const e = resolveEmitted()
-    expect(e.surface).toEqual({ slot: 24, margin: 4, height: 32, icon: 16, iconInset: 4, glyph: 12, glyphInset: 6 })
+    expect(e.surface).toEqual({ slot: 24, margin: 4, height: 32, icon: 16, iconInset: 4, glyph: 14, glyphInset: 5 })
+    expect([e.glyphBox, e.glyphSlot]).toEqual([14, 24])
     expect(e.surface.slot + 2 * e.surface.margin).toBe(e.height)
   })
 
@@ -195,12 +197,13 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
         const at = `${tier}/${s}/${z} ${d}`
         expect([e.n, e.m, e.c, e.height, e.inset, e.labelInset, e.radius, e.iconBox, e.checkboxRadius], at)
           .toEqual([r.n, r.m, r.c, r.h, r.n, r.labelMargin, r.n, r.icon, r.parts.checkboxRadius])
-        expect(e.glyphBox, at).toBe(glyphBox(r))
+        // T-0374: the glyph is the skill's n + 6 in its 3n slot, the model's own beside the frozen resolver.
+        expect([e.glyphBox, e.glyphSlot], at).toEqual([r.n + 6, 3 * r.n])
         // The skill's role names (T-0373): the kickers carry the former section and group labels' values.
         const { sectionLabel, groupLabel, ...rest } = r.type
         expect(e.type, at).toEqual({ ...rest, sectionKicker: sectionLabel, groupKicker: groupLabel })
         expect(e.surface, at).toEqual({
-          slot: 3 * r.n, margin: r.n / 2, height: r.h, icon: r.icon, iconInset: r.n / 2, glyph: glyphBox(r), glyphInset: (3 * r.n - glyphBox(r)) / 2,
+          slot: 3 * r.n, margin: r.n / 2, height: r.h, icon: r.icon, iconInset: r.n / 2, glyph: r.n + 6, glyphInset: (3 * r.n - (r.n + 6)) / 2,
         })
         expect([e.group, e.widget, e.card, e.layout], at).toEqual([r.group, r.widget, r.card, r.page])
         // The chip pill n + c (Amendment 5) and the control pill h/2 are the sheet's own, beside the resolver.
@@ -229,26 +232,27 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     expect(check()).toEqual([])
   })
 
-  it('the radio dot is the glyph minus 2 and never shrinks as n grows (the skill M14); the retired 2n - 4c did', () => {
+  it('the radio dot is the icon box - 2c - 2 (not the n + 6 glyph minus 2) and never shrinks as n grows (the skill M14); the retired 2n - 4c did', () => {
     const steps = ['sm', 'md', 'lg']
     const rungs = Object.keys(CFG.tiers).flatMap((t) => steps.flatMap((s) => steps.map((z) => resolve(t, s, z))))
     const shrinks = (size: (r: Resolved) => number): boolean =>
       rungs.some((a) => rungs.some((b) => a.n < b.n && size(b) < size(a)))
-    for (const r of rungs) expect(r.parts.radioDot, `n ${r.n}`).toBe(r.glyph - 2)
+    for (const r of rungs) expect(r.parts.radioDot, `n ${r.n}`).toBe(r.icon - 2 * r.c - 2)
     expect(shrinks((r) => r.parts.radioDot)).toBe(false)
     expect(shrinks((r) => r.icon - 4 * r.c)).toBe(true) // the control: 8 to 6 at n 8 to 9
   })
 
-  it('the glyph box token is glyphBox(r) = max(8, 2n - 2c): the local floor (Amendment 7) binds below n 6 only, never in scale.mjs', () => {
+  it('the glyph box token is glyphBox(r) = n + 6 in its 3n slot (T-0374): at least 10 on the whole ladder, so no floor binds', () => {
     const steps = ['sm', 'md', 'lg']
     const rungs = Object.keys(CFG.tiers).flatMap((t) => steps.flatMap((s) => steps.map((z) => resolve(t, s, z))))
-    expect(GLYPH_FLOOR).toBe(8)
-    for (const r of rungs) expect(r.glyph, `n ${r.n}: scale.mjs keeps the skill's 2n - 2c`).toBe(2 * r.n - 2 * r.c)
-    for (const r of rungs) expect(glyphBox(r), `n ${r.n}`).toBe(Math.max(GLYPH_FLOOR, 2 * r.n - 2 * r.c))
-    expect(rungs.some((r) => r.n === 5 && glyphBox(r) === 8 && r.glyph === 6), 'anti-vacuous: an n 5 rung, where the floor binds').toBe(true)
-    expect(glyphBox(resolve('product', 'sm', 'md'))).toBe(8) // md and lg unchanged at product / sm (the root before Amendment 8)
-    expect(glyphBox(resolve('product', 'sm', 'lg'))).toBe(10)
-    expect(committed).toContain(`--md-sys-glyph-box: max(${GLYPH_FLOOR}px, calc(var(--md-sys-n) * 2px - 2 * var(--md-sys-c)));`)
+    for (const r of rungs) expect(glyphBox(r), `n ${r.n}`).toBe(r.n + 6)
+    for (const r of rungs) expect(glyphBox(r), `n ${r.n}: fits its 3n slot`).toBeLessThanOrEqual(3 * r.n)
+    const [lo] = CFG.ladder
+    expect(lo + 6, 'the retired 8px floor never binds on the ladder').toBeGreaterThanOrEqual(10)
+    expect(rungs.some((r) => r.n === 5 && glyphBox(r) === 11), 'anti-vacuous: an n 5 rung, where the glyph outgrows the 2n icon box').toBe(true)
+    expect(glyphBox(resolve('product', 'md', 'md'))).toBe(14) // the root register
+    expect(committed).toContain('--md-sys-glyph-box: calc(var(--md-sys-n) * 1px + 6px);')
+    expect(committed).toContain('--md-sys-glyph-slot: calc(var(--md-sys-n) * 3px);')
   })
 })
 
@@ -302,11 +306,12 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     const block = committed.slice(committed.lastIndexOf('{'), committed.lastIndexOf('}'))
     const declared = [...block.matchAll(/^ {2}(--md-sys-[\w-]+):/gm)].map((m) => m[1])
     expect([...DERIVED].sort()).toEqual(declared.sort())
+    expect(declared, 'T-0374: the 3n glyph slot is derived').toContain('--md-sys-glyph-slot')
   })
 
   it('declares every ADR-0245 clause 1 output name (Amendment 3: m; T-0373: the section and group kickers; Amendment 4: the label inset and the chip level; Amendment 5: the control pill and the checkbox radius)', () => {
     const names = [
-      'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'checkbox-radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
+      'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'checkbox-radius', 'icon-box', 'glyph-box', 'glyph-slot', 'glyph-stroke', 'corner-shape',
       ...['display', 'heading', 'subhead', 'section-kicker', 'title', 'body', 'control', 'field-label', 'group-kicker'].map((r) => `type-${r}`),
       ...['chip', 'group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),
     ]

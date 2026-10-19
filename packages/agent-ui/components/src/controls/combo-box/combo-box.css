@@ -57,6 +57,7 @@
      cell plus the control gutter c, so the value stops n before the cell, as the select label does. */
   --ui-combo-box-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
   --ui-combo-box-glyph: var(--md-sys-glyph-box, var(--ui-combo-box-font));
+  --ui-combo-box-caret-cell: max(var(--ui-combo-box-icon), var(--ui-combo-box-glyph)); /* the icon cell, never smaller than the n + 6 glyph (T-0374) */
   --ui-combo-box-caret-gap: var(--md-sys-c, var(--md-sys-gap-md));
   --ui-combo-box-caret-edge: calc((var(--ui-combo-box-height) - var(--ui-combo-box-icon)) / 2);
   --ui-combo-box-caret-ink: var(--md-sys-color-neutral-on-surface-variant); /* the value ink, never the placeholder ink */
@@ -282,7 +283,8 @@
     overflow: hidden;
   }
 
-  /* The trailing caret part (T-0148): a decorative ui-glyph caret-down in an icon-sized cell, centred in the frame at
+  /* The trailing caret part (T-0148): a decorative ui-glyph caret-down in an icon-sized cell (never smaller than the
+     glyph box, T-0374), centred in the frame at
      the select trigger's caret edge ½(h − icon), the mark at the glyph box inside it. Pointer-inert, so a click on it
      lands on the editor beneath. */
   :scope > [data-part='caret'] {
@@ -290,9 +292,9 @@
     inset-block-start: var(--ui-combo-box-caret-edge);
     inset-inline-end: var(--ui-combo-box-caret-edge);
     box-sizing: border-box;
-    inline-size: var(--ui-combo-box-icon);
-    block-size: var(--ui-combo-box-icon);
-    padding: calc((var(--ui-combo-box-icon) - var(--ui-combo-box-glyph)) / 2);
+    inline-size: var(--ui-combo-box-caret-cell);
+    block-size: var(--ui-combo-box-caret-cell);
+    padding: calc((var(--ui-combo-box-caret-cell) - var(--ui-combo-box-glyph)) / 2);
     color: var(--ui-combo-box-caret-ink);
     pointer-events: none;
   }

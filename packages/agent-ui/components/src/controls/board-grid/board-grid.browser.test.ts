@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 import '@agent-ui/components/foundation-styles.css'
 import './board-grid.css'
@@ -107,7 +107,7 @@ describe('ui-board-grid: the ADR-0046 box model (Amendment 7)', () => {
 })
 
 describe('ui-board-grid: the corner glyph (ADR-0245 Amendment 6)', () => {
-  it('sits in its own glyph box 2n - 2c, inset c from the cell corner', async () => {
+  it('sits in its own glyph box n + 6, inset c from the cell corner', async () => {
     const el = mount('<ui-board-grid rows="2" cols="2"></ui-board-grid>') as Board
     el.cells = [{ row: 0, col: 0, mark: '', intent: 'success' }]
     await el.updateComplete

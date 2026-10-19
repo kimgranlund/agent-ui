@@ -35,7 +35,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
-import { GLYPH_FLOOR, RENAMED, ROOT_REGISTER, STEP } from './lib/foundations-rules.mjs'
+import { RENAMED, ROOT_REGISTER, STEP } from './lib/foundations-rules.mjs'
 import { LEGACY_PATH, anchors, checkAnchors, checkEmitted, heightPerN, roomyLevels } from './lib/foundations-model.mjs'
 
 export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
@@ -78,9 +78,10 @@ function derivedDeclarations(a = anchors()) {
     // takes its row's 2n plus its own inset, so rows nest concentrically.
     ['--md-sys-control-radius', 'calc(var(--md-sys-height) / 2)'],
     ['--md-sys-icon-box', `calc(${N} * ${a.iconPerN}px)`],
-    // The glyph floor (ADR-0245 Amendment 7): 2n - 2c, never below GLYPH_FLOOR, so the n 5 marks stay legible. Local to
-    // agent-ui (neither resolver carries it); JS and TS readers use glyphBox() from the same module.
-    ['--md-sys-glyph-box', `max(${GLYPH_FLOOR}px, calc(${N} * 2px - 2 * ${C}))`],
+    // The glyph (T-0374, resolveControlSurface): the n + 6 artwork centred in its square 3n slot. n + 6 is at least 10
+    // on the whole ladder, so the retired 8px floor never binds; JS and TS readers use glyphBox() in foundations-rules.mjs.
+    ['--md-sys-glyph-box', `calc(${N} * 1px + 6px)`],
+    ['--md-sys-glyph-slot', `calc(${N} * ${a.slotPerN}px)`],
     ['--md-sys-glyph-stroke', `max(1.5px, ${C} / 2)`],
     ['--md-sys-corner-shape', 'squircle'],
     ['--md-sys-type-display', headingRole(a, 3)],

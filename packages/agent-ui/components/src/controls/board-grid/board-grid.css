@@ -51,7 +51,7 @@
 
   /* Type: the mark is sized from the cell, half its side, bold (T-0146: a letter board's letters read small
      at the control font in their square). The corner mark is a glyph (ADR-0245 Amendment 6):
-     its own glyph box 2n - 2c, its cap height filling the box, inset c from the cell corner; the label-small
+     its own glyph box n + 6 (T-0374), its cap height filling the box, inset c from the cell corner; the label-small
      row and the old 3px / 1px inset under the legacy opt-out. */
   --ui-board-grid-mark-size: calc(var(--ui-board-grid-cell-size) / 2);
   --ui-board-grid-mark-weight: 700;

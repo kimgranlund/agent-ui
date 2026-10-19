@@ -21,7 +21,8 @@ import './choice-card.css'
 import './choice-card.ts'
 import type { UIChoiceCardElement } from './choice-card.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
 
 interface CdpSession {
   send(method: string, params?: Record<string, unknown>): Promise<unknown>
@@ -264,7 +265,7 @@ describe('ui-choice-card — forced-colors (Chromium CDP emulation; WebKit basel
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-//  [5] Badge + tick geometry (ADR-0245 cl.4): 2n slot and 2n - 2c mark box inside an opt-in region
+//  [5] Badge + tick geometry (ADR-0245 cl.4): max(2n, n + 6) badge and n + 6 mark box inside an opt-in region
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-choice-card: badge and tick geometry', () => {
@@ -281,7 +282,7 @@ describe('ui-choice-card: badge and tick geometry', () => {
   })
 
   for (const scale of ['sm', 'md'] as const) {
-    it(`product / ${scale}: badge 2n, tick 2n - 2c, centred on the badge`, () => {
+    it(`product / ${scale}: badge max(2n, n + 6), tick n + 6, centred on the badge`, () => {
       const r = resolve('product', scale, 'md')
       const region = document.createElement('div')
       region.setAttribute('data-tier', 'product')
@@ -292,10 +293,45 @@ describe('ui-choice-card: badge and tick geometry', () => {
       card.setAttribute('value', 'deluxe')
       card.innerHTML = '<strong>Deluxe</strong><span>$185/night</span>'
       region.append(card)
-      expect([px(after(card).width), px(after(card).height)]).toEqual([r.icon, r.icon])
+      const badge = Math.max(r.icon, glyphBox(r))
+      expect([px(after(card).width), px(after(card).height)]).toEqual([badge, badge])
       expect(px(before(card).width)).toBeCloseTo(glyphBox(r), 1)
       expect(px(before(card).height)).toBeCloseTo((glyphBox(r) * 13) / 15, 1)
       expect(centreX(before(card))).toBeCloseTo(centreX(after(card)), 1)
     })
   }
+
+  // T-0374: the tick stays n + 6 and the badge grows to hold it (the skill's wrapper never shrinks the artwork), so on
+  // every cell the selected tick sits inside the badge, centred. Choice-card has no size prop: a data-size wrapper sets
+  // the cell. Oracle: the model's resolve(), which mirrors the sheet.
+  it('the n plus 6 mark stays inside its box on every cell', () => {
+    let cells = 0
+    for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const scale of ['sm', 'md', 'lg'] as const) for (const size of ['sm', 'md', 'lg'] as const) {
+      const at = `${tier} / ${scale} / ${size}`
+      const r = model(tier, scale, size)
+      const region = document.createElement('div')
+      region.setAttribute('data-tier', tier)
+      region.setAttribute('data-scale', scale)
+      region.innerHTML = `<div data-size="${size}"><ui-choice-card value="deluxe"><strong>Deluxe</strong><span>$185/night</span></ui-choice-card></div>`
+      document.body.append(region)
+      mounted.push(region)
+      const card = region.querySelector('ui-choice-card') as UIChoiceCardElement
+      card.setSelected(true)
+      const box = after(card)
+      const mark = before(card)
+      const boxStart = px(box.left)
+      const boxEnd = boxStart + px(box.width)
+      const start = px(mark.left)
+      const end = start + px(mark.width)
+      expect(px(mark.width), `${at}: the tick is n + 6`).toBeCloseTo(r.glyphBox, 1)
+      expect(px(box.width), `${at}: the badge is max(2n, n + 6)`).toBe(Math.max(r.iconBox, r.glyphBox))
+      expect(start, `${at}: the tick starts inside the badge`).toBeGreaterThanOrEqual(boxStart - 0.05)
+      expect(end, `${at}: the tick ends inside the badge`).toBeLessThanOrEqual(boxEnd + 0.05)
+      expect(Math.abs(start - boxStart - (boxEnd - end)), `${at}: the tick is centred`).toBeLessThanOrEqual(0.5)
+      expect(px(mark.height), `${at}: the tick's block size fits the badge`).toBeLessThanOrEqual(px(box.height))
+      region.remove()
+      cells++
+    }
+    expect(cells).toBe(36)
+  })
 })

@@ -27,7 +27,11 @@ function figureFor(symbol: string, slot?: string): HTMLElement {
   figure.style.cssText = 'display:flex; flex-direction:column; gap:0.35rem; align-items:center; margin:0;'
   const glyph = document.createElement('ui-glyph')
   glyph.setAttribute('symbol', symbol)
-  if (slot) glyph.style.setProperty('--ui-glyph-slot', slot) // the documented per-mark override
+  if (slot) {
+    // the documented per-mark override: the inset follows the slot (T-0374), so the enlarged mark sets it too
+    glyph.style.setProperty('--ui-glyph-slot', slot)
+    glyph.style.setProperty('--ui-glyph-inset', `calc(${slot} / 8)`)
+  }
   const caption = document.createElement('figcaption')
   caption.style.fontSize = '0.75rem'
   const code = document.createElement('code')
@@ -53,7 +57,7 @@ function renderMarks(): HTMLElement {
   return section
 }
 
-/** One line of large text with an icon and a glyph in it: the icon grows to 1em, the glyph stays 2n - 2c. */
+/** One line of large text with an icon and a glyph in it: the icon grows to 1em, the glyph stays n + 6 in its 3n slot. */
 function iconBesideGlyph(): HTMLElement {
   const line = document.createElement('p')
   line.style.cssText = 'display:flex; align-items:center; gap:0.5rem; font-size:1.5rem; margin:0;'

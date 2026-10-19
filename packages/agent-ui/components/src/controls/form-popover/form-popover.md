@@ -68,7 +68,7 @@ parts:
   - name: label
     description: A `<span data-part="label">` inside the trigger. Shows the `label` prop's text, updated by a scope-owned reactive effect. Also the trigger's accessible name (content-only — no hidden-span concatenation, unlike select, since there is no separate selection-value text to preserve).
   - name: caret
-    description: A `<ui-glyph data-part="caret" symbol="caret-down">` inside the trigger (T-0149, the icon versus glyph ruling; decorative, so aria-hidden through its own internals). It fills an icon-sized cell and insets its own glyph box max(8px, 2n - 2c) within it.
+    description: A `<ui-glyph data-part="caret" symbol="caret-down">` inside the trigger (T-0149, the icon versus glyph ruling; decorative, so aria-hidden through its own internals). It fills an icon-sized cell (never smaller than its glyph box) and centres its own glyph box n + 6 within it (T-0374).
   - name: panel
     description: The control-created `<div data-part="panel" data-box tabindex="-1">`. Container/surface in the Popover API top layer when open. ALL author children are moved here at connect time. The overlay controller sets popover="auto" + position:fixed + inset; `[data-box]` (ADR-0046) provides the inner spacing + z-scope (ADR-0052) — this control's CSS adds bg/border/radius + a min/max inline-size floor+clamp only. tabindex="-1" allows fallback focus when the panel has no interactive descendants.
 
@@ -97,7 +97,7 @@ geometry:
     height: var(--ui-form-popover-height)     # Control class — 4n off --md-sys-height (ADR-0245 cl.3)
     font: var(--ui-form-popover-font)
     icon: var(--ui-form-popover-icon)         # the caret CELL is icon-wide
-    glyph: ui-glyph's own glyph box          # max(8px, 2n - 2c) inset in the icon cell by ui-glyph itself (T-0149)
+    glyph: ui-glyph's own glyph box          # n + 6, centred in the icon cell by ui-glyph itself (T-0149, T-0374)
     radius: var(--ui-form-popover-radius)     # = var(--md-sys-radius) n under data-tier (ADR-0245 cl.3), --md-sys-shape-corner-base elsewhere
     minInlineSize: var(--ui-form-popover-min-inline-size)  # the 10ch CONTENT floor, ACTIVE IN THE [inline] HUG STATE ONLY (ADR-0223 §E ruling); the R3(a) squareness floor (min-inline-size: height) survives ALL states so an empty-label trigger stays hittable
   panel:

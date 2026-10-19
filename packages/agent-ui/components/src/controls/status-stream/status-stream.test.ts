@@ -195,15 +195,17 @@ describe('GH #722 — the header-marker literals mirror timeline-item\'s default
       expect(m, `${prop} must be declared`).not.toBeNull()
       return m![1]!.trim()
     }
-    // The literal is the fallback of the derived token (ADR-0245 dark launch): `var(--md-sys-icon-box, 16px)`.
-    const fallback = (v: string): string => v.replace(/^var\(--md-sys-[\w-]+,\s*(.+)\)$/, '$1')
+    // The literal is the fallback of the derived token (ADR-0245 dark launch): `var(--md-sys-glyph-box, 8px)`, or for the
+    // marker box the max form `max(var(--md-sys-icon-box, 16px), var(--md-sys-glyph-box, 0px))` (T-0374).
+    const fallback = (v: string): string =>
+      v.replace(/^max\(var\(--md-sys-icon-box,\s*([^)]+)\),\s*var\(--md-sys-glyph-box,\s*0px\)\)$/, '$1').replace(/^var\(--md-sys-[\w-]+,\s*(.+)\)$/, '$1')
     // timeline-item's DEFAULT register is its bare :root block (the FIRST declaration of each row var).
     expect(fallback(pick(streamCss, '--ui-status-stream-header-marker-box'))).toBe(pick(itemCss, '--ui-timeline-item-marker-box-md'))
     expect(fallback(pick(streamCss, '--ui-status-stream-header-dot-size'))).toBe(pick(itemCss, '--ui-timeline-item-dot-size-md'))
     // and inside a region the two controls read the SAME derived tokens, so the rail still aligns
-    expect(pick(streamCss, '--ui-status-stream-header-marker-box')).toMatch(/^var\(--md-sys-icon-box,/)
+    expect(pick(streamCss, '--ui-status-stream-header-marker-box')).toMatch(/^max\(var\(--md-sys-icon-box,.*var\(--md-sys-glyph-box, 0px\)\)$/)
     expect(pick(streamCss, '--ui-status-stream-header-dot-size')).toMatch(/^var\(--md-sys-glyph-box,/)
-    expect(itemCss).toMatch(/--ui-timeline-item-marker-box: var\(--md-sys-icon-box,/)
+    expect(itemCss).toMatch(/--ui-timeline-item-marker-box: max\(var\(--md-sys-icon-box,.*var\(--md-sys-glyph-box, 0px\)\);/)
     expect(itemCss).toMatch(/--ui-timeline-item-dot-size: var\(--md-sys-glyph-box,/)
   })
 })

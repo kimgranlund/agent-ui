@@ -40,7 +40,7 @@
      at every ambient font size — a LITERAL mirror, never a var() read: the family-coherence trip-wire
      forbids cross-family token consumption, and timeline-item keeps its ramp deliberately file-local.
      status-stream.test.ts's GH #722 drift gate asserts the two files' values stay byte-equal. */
-  --ui-status-stream-header-marker-box: var(--md-sys-icon-box, 16px);
+  --ui-status-stream-header-marker-box: max(var(--md-sys-icon-box, 16px), var(--md-sys-glyph-box, 0px));
   --ui-status-stream-header-dot-size: var(--md-sys-glyph-box, 8px);
 
   /* T-0173: the strip's ONE geometry grid, every value derived from the strip's own n (ADR-0245), so the
@@ -49,7 +49,8 @@
        inset        n, the inline edge both the header and the entries start at
        gap          n, marker to label and label to the trailing cell
        row-gap      2n, step row to step row (Kim 2026-10-14)
-       mark-box     2n, the marker column (the header marker, every step marker and the rail centre on it)
+       mark-box     max(2n, n + 6), the marker column (the header marker, every step marker and the rail centre on it);
+                    it grows past 2n only at n 4 and 5, to hold the n + 6 dot
        label-start  2n + n, from a row's inline edge to its label column; every nested block starts here
        trail-box    n + 2n, the header caret's slot, reserved at the end of every entry row so the
                     durations and the header's "Done in" end on one trailing edge
@@ -97,7 +98,7 @@
   --ui-status-stream-action-gap: var(--md-sys-space-xs);
 
   /* GH #239/ADR-0159 — the receipt pattern's header cells: the meta ("12s" / "5 steps · 3.2s") ink. The caret
-     affordance is a ui-glyph since the ADR-0245 cut, sized by its own 2n slot. */
+     affordance is a ui-glyph since the ADR-0245 cut, sized by its own square 3n slot (T-0374). */
   --ui-status-stream-header-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
   /* T-0019: the settled header chip ("1 retry", finalize/fail's `badge` option): warning ink, the same
      role the header's own warning status glyph reads, so the chip and the glyph agree. */
@@ -404,7 +405,7 @@
   /* The caret — points down (expand) collapsed, rotates open when expanded (aria-expanded is the one
      source of truth the CSS keys off — the state the a11y layer already carries). */
   :scope > [data-part='header'] [data-part='header-caret'] {
-    flex: 0 0 auto; /* a ui-glyph: its own 2n slot with the 2n - 2c mark inside (glyph.css, ADR-0245 cl.4) */
+    flex: 0 0 auto; /* a ui-glyph: its own square 3n slot with the n + 6 mark centred (glyph.css, ADR-0245 cl.4, T-0374) */
     color: var(--ui-status-stream-header-meta-ink);
     transition: rotate 0.15s ease;
   }

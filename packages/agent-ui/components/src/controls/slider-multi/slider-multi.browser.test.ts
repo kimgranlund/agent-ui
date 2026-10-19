@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest'
 //       selection holds; lo≤hi invariant maintained during drag.
 //   AC3 (forced-colors) — @media forced-colors: the rail/fill/thumbs have forced-color-adjust:none;
 //       stylesheet assertions (verified by reading the CSS @media block).
-//   AC4 (derived geometry, ADR-0245): inside an opt-in data-tier region the box is 2n, the thumb 2n - 2c and the
+//   AC4 (derived geometry, ADR-0245): inside an opt-in data-tier region the box is 2n, the thumb icon box - 2c and the
 //       rail 2c thick against scale.mjs resolve(); outside, today's ramp stands.
 //   C10 (zero-residue) — connect→disconnect produces no stacked listeners; reconnect re-arms exactly once.
 
@@ -261,9 +261,9 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
   // ── density-invariance — thumb/host geometry HOLDS across [density] (widget-box is scale-only) ──
   //
-  // ADR-0245 cl.3: the slider thumb takes the switch rule, 2n - 2c, at the region's n (one n moves it).
+  // ADR-0245 cl.3: the slider thumb takes the switch rule, icon box - 2c, at the region's n (one n moves it).
 
-  it('the thumb is 2n - 2c at the root and follows a region data-scale', () => {
+  it('the thumb is icon box - 2c at the root and follows a region data-scale', () => {
     function makeWithDensity(scale: string | null): number {
       const wrapper = document.createElement('div')
       if (scale !== null) wrapper.setAttribute('data-scale', scale)
@@ -434,7 +434,7 @@ describe('ui-slider-multi geometry inside an opt-in data-tier region (ADR-0245)'
 
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      it(`product / ${scale} / ${size}: box 2n, thumb 2n - 2c, rail 2c`, () => {
+      it(`product / ${scale} / ${size}: box 2n, thumb icon box - 2c, rail 2c`, () => {
         const r = resolve('product', scale, size)
         const wrapper = document.createElement('div')
         wrapper.setAttribute('data-tier', 'product')

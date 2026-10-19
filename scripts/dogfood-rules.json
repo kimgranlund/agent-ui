@@ -108,10 +108,10 @@
     },
     {
       "id": "glyph-box",
-      "source": "ADR-0245 Amendment 6: icon and glyph are distinct; a glyph sits in its own glyph box 2n - 2c",
+      "source": "ADR-0245 Amendment 6: icon and glyph are distinct; a glyph sits in its own glyph box n + 6, centred in its square 3n slot (T-0374)",
       "selector": "ui-glyph svg, ui-board-grid [data-part='intent'], ui-game-hud [data-part='glyph'], ui-result-card [data-part='glyph']",
       "measure": "the visible glyph box, both axes",
-      "expect": "max(8px, 2 * resolve(register).n - 2 * resolve(register).c) (the 8px floor: T-0143)"
+      "expect": "resolve(register).n + 6, in the 3n slot (T-0374; the T-0143 8px floor retired, n + 6 is at least 10)"
     },
     {
       "id": "dash-scale",

@@ -8,7 +8,7 @@ import type { UIGlyphElement } from './glyph.ts'
 
 // ui-glyph visual baseline (ADR-0245 clause 5, the ADR-0110 harness): the closed twelve-mark set at the
 // library root register (data-tier product, data-scale sm) for sizes sm, md and lg, one row per size, each
-// slot outlined so the 2n slot and the 2n - 2c mark read as pixels. Chromium-only. Baselines commit under
+// slot outlined so the 3n slot and the n + 6 mark read as pixels. Chromium-only. Baselines commit under
 // `__baselines__/glyph.visual.browser.test.ts/`; re-baseline only via `npm run test:visual:update`.
 
 describe('ui-glyph: visual regression', () => {

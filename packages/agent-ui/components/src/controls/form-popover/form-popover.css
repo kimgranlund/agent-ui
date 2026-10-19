@@ -49,6 +49,7 @@
   --ui-form-popover-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-form-popover-gap: var(--md-sys-inset, var(--md-sys-gap-md));
   --ui-form-popover-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));
+  --ui-form-popover-caret-cell: max(var(--ui-form-popover-icon), var(--md-sys-glyph-box, 0px)); /* the caret's icon cell, never smaller than its n + 6 glyph (T-0374) */
   --ui-form-popover-corner-shape: var(--md-sys-corner-shape, round);
   --ui-form-popover-pad-start: var(--md-sys-inset, calc(var(--ui-form-popover-height) / 2)); /* h/2 label edge; derived: n (ADR-0245 cl.3) */
 
@@ -150,11 +151,10 @@
     white-space: nowrap;
   }
 
-  /* The caret: a ui-glyph caret-down in an icon-sized cell (T-0149). ui-glyph insets its own glyph box
-     max(8px, 2n - 2c) in that cell, so only the cell size is set here. */
+  /* The caret: a ui-glyph caret-down in an icon-sized cell (T-0149), never smaller than the n + 6 glyph box (T-0374).
+     ui-glyph centres its own glyph box in the slot it is given, so only the slot is set here. */
   :scope > [data-part='trigger'] > [data-part='caret'] {
-    inline-size: var(--ui-form-popover-icon);
-    block-size: var(--ui-form-popover-icon);
+    --ui-glyph-slot: var(--ui-form-popover-caret-cell);
   }
 
   /* Standard four interaction states (interaction-states.md, no deviation) — repoint background

@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 // game-hud.browser.test.ts: the real-engine painted proof for ui-game-hud (ADR-0243, GameHud fork sheet).
 // jsdom is blind to layout, so this covers the whole-shape fill and hug, the stat wrap with no overflow,
@@ -145,7 +145,7 @@ describe('ui-game-hud: intent glyphs', () => {
     expect(getComputedStyle(delta).color, 'the glyph strokes in the same intent ink as the delta').toBe(getComputedStyle(glyphs[0]!).color)
   })
 
-  it('a stat glyph is its own glyph box 2n - 2c, n clear of its label (ADR-0245 Amendment 6)', async () => {
+  it('a stat glyph is its own glyph box n + 6, n clear of its label (ADR-0245 Amendment 6)', async () => {
     const r = rootResolve('md') // the root register (ADR-0245 Amendment 8)
     const el = hud(container('640px'), (h) => {
       h.stats = [{ label: 'Chips', value: 1, intent: 'success' }]

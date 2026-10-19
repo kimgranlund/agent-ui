@@ -8,6 +8,7 @@ import { server, userEvent } from 'vitest/browser'
 import { readNdjsonLines } from '../../../../../../site/lib/ndjson-lines.ts'
 import type { UIStatusStreamElement } from './status-stream.ts'
 import type { UITimelineItemElement } from '../timeline-item/timeline-item.ts'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
 
 // timeline-family.lld.md §4 · SPEC-R10/R11/R19 — the cross-engine tail-follow + completion-invariant +
 // REAL-stream proof for ui-status-stream. The real-stream leg feeds the in-repo arena flagship match
@@ -270,6 +271,36 @@ describe('ui-status-stream — GH #722: hidden scroller, aligned marker rail, no
     expect(getComputedStyle(firstMarker, '::after').display, 'a non-terminal entry keeps its connector').not.toBe('none')
     expect(last.hasAttribute('data-last')).toBe(true)
     expect(getComputedStyle(lastMarker, '::after').display, 'the terminal entry paints NO dangling stub').toBe('none')
+  })
+})
+
+describe('ui-status-stream — the header dot inside its marker box (T-0374)', () => {
+  // The dot stays n + 6 and the header marker box grows to hold it (the skill's wrapper never shrinks the artwork), so on
+  // every cell the in-progress header dot sits inside the marker, centred. Oracle: the model's resolve(), which mirrors the sheet.
+  it('the n plus 6 mark stays inside its box on every cell', async () => {
+    let cells = 0
+    for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const scale of ['sm', 'md', 'lg'] as const) for (const size of ['sm', 'md', 'lg'] as const) {
+      const at = `${tier} / ${scale} / ${size}`
+      const r = model(tier, scale, size)
+      const { wrap, stream } = mount(
+        `<div data-tier="${tier}" data-scale="${scale}"><ui-status-stream header label="Agent activity" size="${size}"></ui-status-stream></div>`,
+      )
+      await raf2()
+      const part = stream.querySelector('[data-part="header-marker"]') as HTMLElement
+      const mark = getComputedStyle(part, '::before')
+      const side = part.getBoundingClientRect().width
+      const start = Number.parseFloat(mark.left)
+      const end = start + Number.parseFloat(mark.width)
+      expect(Number.parseFloat(mark.width), `${at}: the dot is n + 6`).toBeCloseTo(r.glyphBox, 1)
+      expect(side, `${at}: the marker box is max(2n, n + 6)`).toBe(Math.max(r.iconBox, r.glyphBox))
+      expect(start, `${at}: the dot starts inside the box`).toBeGreaterThanOrEqual(-0.05)
+      expect(end, `${at}: the dot ends inside the box`).toBeLessThanOrEqual(side + 0.05)
+      expect(Math.abs(start - (side - end)), `${at}: the dot is centred`).toBeLessThanOrEqual(0.5)
+      expect(Number.parseFloat(mark.height), `${at}: the dot's block size fits the box`).toBeLessThanOrEqual(part.getBoundingClientRect().height)
+      wrap.remove()
+      cells++
+    }
+    expect(cells).toBe(36)
   })
 })
 

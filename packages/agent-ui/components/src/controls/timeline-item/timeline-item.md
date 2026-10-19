@@ -104,10 +104,10 @@ keyboard:
 
 geometry:
   sizeClass: pattern
-  markerBox: var(--ui-timeline-item-marker-box)      # the explicit per-(scale×size) integer table (ADR-0122 F2, timeline-family.lld.md §5)
+  markerBox: var(--ui-timeline-item-marker-box)      # max(2n, n + 6) at the element's own n (ADR-0245 cl.3/4; it grows past 2n only at n 4 and 5, to hold the n + 6 dot, T-0374); the per-size literal rows are the legacy fallback
   dotSize: var(--ui-timeline-item-dot-size)
   connectorWidth: var(--ui-timeline-item-connector-width)
-  gutter: var(--ui-timeline-item-gutter)            # T-0173: the 2n marker column (the mark box), so the label sits n past the mark
+  gutter: var(--ui-timeline-item-gutter)            # T-0173: the max(2n, n + 6) marker column (the mark box), so the label sits n past the mark
   rowGap: var(--ui-timeline-item-row-gap)            # T-0173: 2n at the element's own n; realized as the item's own margin-block-end
   note: A NEW bespoke marker-system table (the second per-(scale×size) explicit lookup after the calendar's date-grid, ADR-0048) — connector-width is deliberately 2px across every size AND scale tier (the ADR-0038 stepping lesson a probe must not assume away).
 

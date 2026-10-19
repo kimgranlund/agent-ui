@@ -953,7 +953,7 @@ export class UIStatusStreamElement extends UIContainerElement {
       header.setAttribute('tabindex', '0')
       header.setAttribute('aria-expanded', String(!this.#collapsed))
       if (!this.#headerCaret) {
-        const caret = createGlyph('caret-down') // a library mark in the 2n slot, not pack art (ADR-0245 cl.5)
+        const caret = createGlyph('caret-down') // a library mark in its 3n glyph slot, not pack art (ADR-0245 cl.5, T-0374)
         caret.dataset.part = 'header-caret'
         header.append(caret)
         this.#headerCaret = caret

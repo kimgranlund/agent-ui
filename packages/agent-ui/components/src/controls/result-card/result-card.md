@@ -64,7 +64,7 @@ parts:
   - name: stat
     description: One stat tile, reused by index across updates (the ui-game-hud stat look). Carries `data-intent` only when the stat has an intent; an intent never tints the tile.
   - name: glyph
-    description: The intent shape inside a stat, a `<ui-glyph data-part="glyph">` whose mark comes from the badge's shared intent table (info `info`, success `check`, warning `warning`, danger `x`; T-0351, ADR-0245 cl.5). Decorative: ui-glyph hides itself through ElementInternals. Present only when the stat has an intent, sized to the glyph box 2n - 2c and n clear of its label (ADR-0245 Amendment 6).
+    description: The intent shape inside a stat, a `<ui-glyph data-part="glyph">` whose mark comes from the badge's shared intent table (info `info`, success `check`, warning `warning`, danger `x`; T-0351, ADR-0245 cl.5). Decorative: ui-glyph hides itself through ElementInternals. Present only when the stat has an intent, sized to the glyph box n + 6 and n clear of its label (ADR-0245 Amendment 6).
   - name: label
     description: The stat label, small uppercase text.
   - name: value

@@ -89,7 +89,7 @@ export const EXEMPT = {
   'ui-playing-card': 'a preset widget sized by its own card ratio (ADR-0245 lane 4b)',
   'ui-status-stream': 'a display atom; its 2n marker box is pinned by timeline-item-foundations.browser.test.ts',
   'ui-timeline': 'a display atom list; its items carry the 2n marker box (timeline-item-foundations)',
-  'ui-timeline-item': 'a display atom; its 2n marker box and 2n - 2c dot are pinned by timeline-item-foundations',
+  'ui-timeline-item': 'a display atom; its 2n marker box and n + 6 glyph-box dot are pinned by timeline-item-foundations',
 }
 
 /** Every control tag whose descriptor declares a `size` attribute. */

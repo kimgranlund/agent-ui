@@ -80,6 +80,7 @@
   --ui-select-gap: var(--md-sys-c, var(--md-sys-gap-md)); /* the control gutter c (Amendment 4); gutter + label inset = n to the caret cell */
   --ui-select-icon: var(--md-sys-icon-box, var(--md-sys-icon-md));        /* the icon-cell size (caret CELL is icon-wide) */
   --ui-select-glyph: var(--md-sys-glyph-box, var(--ui-select-font));   /* caret GLYPH = font (§4.1 caret law) */
+  --ui-select-caret-cell: max(var(--ui-select-icon), var(--ui-select-glyph)); /* the icon cell, never smaller than the n + 6 glyph (T-0374) */
   /* The caret is a ui-glyph mark (caret-down, token stroke), inked at the value ink, never the placeholder ink: it is
      the one cue that the pill opens a list (T-0148). */
   --ui-select-caret-ink: var(--md-sys-color-neutral-on-surface-variant);
@@ -287,14 +288,15 @@
     border: 0;
   }
 
-  /* The caret part: a ui-glyph caret-down (T-0148), an icon-sized CELL (box-sizing border-box). The mark inside is
-     the glyph box, centred by padding = ½(icon − glyph), the §4.1 caret law (same as button.css [data-role='caret']);
-     glyph.css draws it with the token stroke. The mark is decorative: ui-glyph hides itself through its own internals. */
+  /* The caret part: a ui-glyph caret-down (T-0148), an icon-sized CELL (box-sizing border-box), never smaller than the
+     glyph box (T-0374: the n + 6 mark outgrows the 2n icon at n 4 and 5). The mark inside is the glyph box, centred by
+     padding = ½(cell − glyph), the §4.1 caret law (same as button.css [data-role='caret']); glyph.css draws it with
+     the token stroke. The mark is decorative: ui-glyph hides itself through its own internals. */
   :scope > [data-part='trigger'] > [data-part='caret'] {
-    inline-size: var(--ui-select-icon);
-    block-size: var(--ui-select-icon);
+    inline-size: var(--ui-select-caret-cell);
+    block-size: var(--ui-select-caret-cell);
     box-sizing: border-box;
-    padding: calc((var(--ui-select-icon) - var(--ui-select-glyph)) / 2);
+    padding: calc((var(--ui-select-caret-cell) - var(--ui-select-glyph)) / 2);
     display: flex;
     align-items: center;
     justify-content: center;

@@ -54,8 +54,8 @@ geometry:
   radius: var(--ui-choice-card-radius)     # = var(--md-sys-shape-corner-base), the family-tunnel mint (ADR-0124)
   padding: var(--ui-choice-card-padding)   # off the --md-sys-space ladder, minted into this control's own chain
   border: 2px solid var(--ui-choice-card-border)
-  badgeSize: --ui-choice-card-badge-size   # the 2n icon slot inside an opt-in data-tier region (ADR-0245 cl.4), 1.25rem outside
-  tickSize: --ui-choice-card-tick-size     # the 2n − 2c mark box inside a region, 0.75rem outside; centred on the badge
+  badgeSize: --ui-choice-card-badge-size   # max(2n, n + 6) inside an opt-in data-tier region (ADR-0245 cl.4; it grows past 2n only at n 4 and 5, to hold the tick, T-0374), 1.25rem outside
+  tickSize: --ui-choice-card-tick-size     # the n + 6 glyph box inside a region (T-0374), 0.75rem outside; centred on the badge
 
 forcedColors: A `@media (forced-colors: active)` block maps the idle frame to ButtonText, the selected frame to Highlight, and the selected badge/tick to Highlight/HighlightText — the system's own guaranteed-contrast reading pair.
 ---

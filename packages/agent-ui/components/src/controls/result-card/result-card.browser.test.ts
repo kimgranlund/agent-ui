@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 /** The derived root register (product / md / md, ADR-0245 Amendment 8). */
 const ROOT = rootResolve('md')
@@ -232,7 +232,7 @@ const foundationsPair = (tag: string, attrs: string): { out: HTMLElement; inside
 const REGION = resolve('product', 'sm', 'md')
 
 describe('ui-result-card: the stat glyph (ADR-0245 Amendment 6)', () => {
-  it('a stat glyph is its own glyph box 2n - 2c, n clear of its label', async () => {
+  it('a stat glyph is its own glyph box n + 6, n clear of its label', async () => {
     const el = card(container('480px'), (c) => {
       c.stats = [{ label: 'Hits', value: 3, intent: 'danger' }]
     })

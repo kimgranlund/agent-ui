@@ -11,7 +11,7 @@
 
 import { CFG as LEGACY_CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 import { CFG, SPACING_ROLES, resolveControlSurface, resolveGeometry } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
-import { GLYPH_FLOOR, ROOT_REGISTER, STEP } from './foundations-rules.mjs'
+import { ROOT_REGISTER, STEP } from './foundations-rules.mjs'
 
 /**
  * What stays on the repo's scale.mjs, because the current resolver gives a different value (T-0374 moves each one,
@@ -19,7 +19,7 @@ import { GLYPH_FLOOR, ROOT_REGISTER, STEP } from './foundations-rules.mjs'
  * rows stay so `check()` validates the rows it emits), the density axis and m (current: five multipliers of n), and
  * the field label and group kicker values (current 10 + 1 per step for both, against 9 + 1 and 9 + 0.5): the group
  * kicker takes the skill's name with the former group label's value. Every token the current resolver has no field
- * for (inset, label inset, radii, glyph box, chip, checkbox and group levels) keeps its own formula below.
+ * for (inset, label inset, radii, chip, checkbox and group levels) keeps its own formula below.
  */
 export const LEGACY_PATH = {
   tiers: LEGACY_CFG.tiers,
@@ -87,10 +87,12 @@ function typeAt(n, size, a) {
 /**
  * The tokens foundations.gen.css declares on one element, in px (the bare numbers n and m excepted), at a tier,
  * scale, size and density. It mirrors the derived block term for term; foundations.test.ts holds it to the repo's
- * scale.mjs resolve() on every cell. `surface` is the control anatomy of resolveControlSurface() at today's artwork
- * sizes (the glyph box, not the skill's n + 6, until T-0374); the sheet emits its height and icon box only. The rest
- * is not gated: its n/2 margin and insets are fractional at odd n, so T-0374 adds a surface value to checkEmitted()
- * before the sheet emits it (foundations.test.ts fails on a surface token in the derived block until then).
+ * scale.mjs resolve() on every cell, the glyph box and slot aside. `surface` is the control anatomy of
+ * resolveControlSurface(): the glyph is the skill's n + 6 artwork in the square 3n glyph slot (T-0374), emitted as
+ * `glyphBox` and `glyphSlot`, both whole px on every cell. The sheet emits the surface's height, icon box, glyph box
+ * and slot only. The rest is not gated: its n/2 margin and icon inset are fractional at odd n, so a later step adds
+ * a surface value to checkEmitted() before the sheet emits it (foundations.test.ts fails on a surface token in the
+ * derived block until then).
  */
 export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, size = 'md', density = 'default', a = anchors()) {
   const [n0, ta, k, g] = LEGACY_PATH.tiers[tier]
@@ -102,11 +104,11 @@ export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, 
   const height = n * heightPerN(a)
   const slot = n * a.slotPerN
   const iconBox = n * a.iconPerN
-  const glyphBox = Math.max(GLYPH_FLOOR, 2 * n - 2 * c)
+  const glyphBox = n + 6
   const levels = Object.fromEntries(roomyLevels(a).map(([token, margin, gutter]) => [token, { margin: m * margin, gutter: m * gutter, radius: m * margin }]))
   return {
     n, m, c, height, inset: n, labelInset: n - c, radius: n, controlRadius: height / 2, iconBox,
-    glyphBox, glyphStroke: Math.max(1.5, c / 2), checkboxRadius: Math.ceil(n / 2),
+    glyphBox, glyphSlot: slot, glyphStroke: Math.max(1.5, c / 2), checkboxRadius: Math.ceil(n / 2),
     surface: { slot, margin: n * a.marginPerN, height, icon: iconBox, iconInset: (slot - iconBox) / 2, glyph: glyphBox, glyphInset: (slot - glyphBox) / 2 },
     type: typeAt(n, size, a),
     chip: { margin: c, gutter: c, radius: n + c },

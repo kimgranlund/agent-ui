@@ -80,7 +80,7 @@
   --ui-nav-rail-flyout-pad: var(--md-sys-space-xs);
   --ui-nav-rail-flyout-radius: var(--md-sys-shape-corner-base);
   /* SPEC-R11c/AC19: the trigger's chevron is a <ui-glyph symbol="caret-down"> child since the ADR-0245 cut (clause 5),
-     so its box is the shared 2n slot with the 2n - 2c mark inside, sized by glyph.css, never a token here. */
+     so its box is the square 3n glyph slot with the n + 6 mark centred inside, sized by glyph.css, never a token here. */
 
   /* GH #368 — the open `collapse="menu"` flyout's own sizing dials. The panel is a shrink-to-fit
      position:fixed box in the top layer, so this floor/ceiling pair is the ONLY thing that sizes it: it is

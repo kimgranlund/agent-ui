@@ -42,9 +42,9 @@ keyboard: []           # NOT interactive and NOT focusable: no tabindex, no keyb
 
 geometry:
   sizeClass: display
-  inlineSize: var(--ui-glyph-slot)   # the shared icon slot, `--md-sys-icon-box` (2n) everywhere the root tokens reach; 1em under the legacy opt-out (ADR-0245 Amendment 6: a glyph never follows the text)
+  inlineSize: var(--ui-glyph-slot)   # the square glyph slot, `--md-sys-glyph-slot` (3n, T-0374) everywhere the root tokens reach; 1em under the legacy opt-out (ADR-0245 Amendment 6: a glyph never follows the text)
   blockSize: var(--ui-glyph-slot)
-  padding: var(--ui-glyph-inset)     # (slot - glyph box) / 2 on each side, so the mark box is the glyph box max(8px, 2n - 2c) (`--md-sys-glyph-box`)
+  padding: var(--ui-glyph-inset)     # (slot - glyph box) / 2 on each side, never below 0, so the mark box is the glyph box n + 6 (`--md-sys-glyph-box`)
 
 forcedColors: No dedicated `@media (forced-colors: active)` block. The host paints nothing of its own; `color: inherit` means the svg's `currentColor` stroke tracks whatever forced-colors ink the consuming context resolves to.
 ---
@@ -77,15 +77,17 @@ the drawing; `dot` and `more` are filled.
 
 ## Sizing
 
-The host is the shared **icon slot**: `2n` wide and tall, with the glyph box `max(8px, 2n - 2c)` centred in it
-(the inset is `c` on each side wherever `2n - 2c` clears the 8px floor), so an icon and a glyph in neighbouring
-slots share the slot box and the centre line. The slot reads the derived foundation tokens
-(`--md-sys-icon-box`, `--md-sys-glyph-box`, `--md-sys-glyph-stroke`, ADR-0245), which the library root
+The host is the square **glyph slot**: `3n` wide and tall, with the glyph box `n + 6` centred in it (the inset is
+`(3n - (n + 6)) / 2` on each side: 1px at n 4, 2px at n 5, 5px at n 8), the skill's glyph wrapper (T-0374). A host
+that gives the glyph a different cell sets `--ui-glyph-slot` to it and the inset follows, never below 0. The slot
+reads the derived foundation tokens
+(`--md-sys-glyph-slot`, `--md-sys-glyph-box`, `--md-sys-glyph-stroke`, ADR-0245), which the library root
 declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale md) the mark is
-8 / 12 / 14 px for sizes sm / md / lg with a 1.5px stroke (the 8px floor holds sm, Amendment 7). This is the line between a glyph and an icon
+12 / 14 / 16 px in an 18 / 24 / 30 px slot for sizes sm / md / lg with a 1.5px stroke. This is the line between a glyph and an icon
 (ADR-0245 Amendment 6): a standalone `ui-icon` follows the surrounding text (`1em`), a glyph never does. Under
 the `data-foundations="legacy"` opt-out the slot is `1em` with a `0.125em` inset. Override `--ui-glyph-slot`,
-`--ui-glyph-inset` or `--ui-glyph-stroke` on the host to resize one mark.
+`--ui-glyph-inset` or `--ui-glyph-stroke` on the host to resize one mark: the inset follows the slot, so a slot
+override alone re-centres the same mark, and an enlarged mark sets the inset too.
 
 ## Accessibility
 
