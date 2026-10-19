@@ -19,7 +19,7 @@
 
 :where(ui-checkbox) {
   /* Widget-box size — the compact-class square, per ADR-0041. Default size = md (16px at ui-md scale). */
-  --ui-checkbox-box: var(--md-sys-icon-box, var(--md-sys-compact-md));
+  --ui-checkbox-box: max(var(--md-sys-icon-box, var(--md-sys-compact-md)), var(--md-sys-glyph-box, 0px));
 
   /* Colour channel: unchecked = neutral border on transparent; checked/indeterminate = primary fill + ink.
      The checked border-color and bg-checked ride --md-sys-color-primary-fill, button.css's solid fill (T-0340), so
@@ -36,10 +36,11 @@
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 
   /* Mark box: the check and the dash span the n + 6 glyph box (--md-sys-glyph-box, ADR-0245 cl.3/4, T-0374) inside an opt-in region,
-     centred in the 2n box (inset c); outside, today's 60% of the box inset 20%. The pseudo-element marks stay
+     centred in the max(2n, n + 6) box (the box grows to hold the mark at n 4 and 5, never shrinks it); outside,
+     today's 60% of the box inset 20%, which the centring formula yields unchanged. The pseudo-element marks stay
      (a ui-glyph child would swap the filled clip-path tick for a stroke and move the default render). */
   --ui-checkbox-mark: var(--md-sys-glyph-box, calc(var(--ui-checkbox-box) * 0.6));
-  --ui-checkbox-mark-inset: var(--md-sys-c, calc(var(--ui-checkbox-box) * 0.2));
+  --ui-checkbox-mark-inset: calc((var(--ui-checkbox-box) - var(--ui-checkbox-mark)) / 2);
   --ui-checkbox-dash: var(--md-sys-glyph-stroke, 2px);
 
   /* user-invalid (ADR-0051) — the danger border, appearing only AFTER the first interaction (the
@@ -59,11 +60,11 @@
 
 /* [size] → widget-box tier (ADR-0041 clause 2: sm/md/lg at the default ui-md scale = 14/16/18 px). */
 :where(ui-checkbox[size='sm']) {
-  --ui-checkbox-box: var(--md-sys-icon-box, var(--md-sys-compact-sm));
+  --ui-checkbox-box: max(var(--md-sys-icon-box, var(--md-sys-compact-sm)), var(--md-sys-glyph-box, 0px));
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
 }
 :where(ui-checkbox[size='lg']) {
-  --ui-checkbox-box: var(--md-sys-icon-box, var(--md-sys-compact-lg));
+  --ui-checkbox-box: max(var(--md-sys-icon-box, var(--md-sys-compact-lg)), var(--md-sys-glyph-box, 0px));
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
 }
 

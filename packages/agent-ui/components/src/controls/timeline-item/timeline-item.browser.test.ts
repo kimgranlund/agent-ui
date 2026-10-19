@@ -44,13 +44,13 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
   it('[size] sm→md→lg resolves the EXACT frozen integers at the default [scale] (marker-box/dot/connector/gutter/row-gap)', () => {
     // a plain unstatused dot: the glyph box (the status markers take the disc diameter since T-0149)
     const { item } = mount('<ui-timeline-item label="x"></ui-timeline-item>')
-    // marker-box / dot ride the derived icon box (2n) and glyph box at the root register (ADR-0245 cl.2, cl.4); the
-    // gutter is the same 2n marker column and the row gap 2n (T-0173); only the connector width stays a literal.
+    // marker-box / dot ride max(2n, n + 6) and the glyph box at the root register (ADR-0245 cl.2, cl.4, T-0374); the
+    // gutter is the same marker column and the row gap 2n (T-0173); only the connector width stays a literal.
     for (const size of ['sm', 'md', 'lg'] as const) {
       item.setAttribute('size', size)
       const r = rootResolve(size)
-      const [mb, dot] = [r.icon, glyphBox(r)]
-      const [cw, gut, rg] = [2, 2 * r.n, 2 * r.n]
+      const [mb, dot] = [Math.max(r.icon, glyphBox(r)), glyphBox(r)]
+      const [cw, gut, rg] = [2, mb, 2 * r.n]
       expect(markerBox(item), `size=${size} marker-box`).toBeCloseTo(mb, 0)
       expect(dotSize(item), `size=${size} dot-size`).toBeCloseTo(dot, 0)
       expect(connectorWidth(item), `size=${size} connector-width`).toBeCloseTo(cw, 0)
@@ -76,13 +76,14 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
     expect(allDistinct(boxes), `marker-box should step across sizes: ${boxes.join()}`).toBe(true)
   })
 
-  it('the marker box is the 2n icon slot at every region register (ADR-0245 cl.2 and cl.4)', () => {
+  it('the marker box is max(2n, n + 6) at every region register (ADR-0245 cl.2 and cl.4, T-0374)', () => {
     const { wrap, item } = mount('<ui-timeline-item size="md"></ui-timeline-item>')
     const registers = [['widget', 'sm'], ['product', 'sm'], ['product', 'md'], ['content', 'sm'], ['content', 'md'], ['content', 'lg']] as const
     for (const [tier, scale] of registers) {
       wrap.setAttribute('data-tier', tier)
       wrap.setAttribute('data-scale', scale)
-      expect(markerBox(item), `${tier} / ${scale}`).toBe(resolve(tier, scale, 'md').icon)
+      const r = resolve(tier, scale, 'md')
+      expect(markerBox(item), `${tier} / ${scale}`).toBe(Math.max(r.icon, glyphBox(r)))
     }
   })
 })

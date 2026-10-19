@@ -1,13 +1,15 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 import '@agent-ui/icons/phosphor'
 
 // ui-timeline-item and ui-status-stream geometry (ADR-0245 clauses 3 and 4, dark launch): inside an opt-in region
-// the marker box is the 2n icon slot and the dot the n + 6 glyph box at the item's own size, and the status
+// the marker box is max(2n, n + 6) (the 2n icon slot grown to hold the dot at n 4 and 5, T-0374) and the dot the n + 6
+// glyph box at the item's own size, and the status
 // stream's header marker reads the same two tokens so the rail still aligns; outside one the [scale] rows (covered by
 // timeline-item.browser.test.ts) and the stream's literal mirror (16 / 8) answer exactly as before.
 
@@ -38,11 +40,11 @@ function streamTokens(stream: HTMLElement): { box: number; dot: number } {
 
 describe('ui-timeline-item geometry inside an opt-in region', () => {
   for (const size of ['sm', 'md', 'lg'] as const) {
-    it(`product / sm / ${size}: marker box 2n, dot n + 6`, () => {
+    it(`product / sm / ${size}: marker box max(2n, n + 6), dot n + 6`, () => {
       const wrap = mount(`<div data-tier="product" data-scale="sm"><ui-timeline-item size="${size}"></ui-timeline-item></div>`)
       const item = wrap.querySelector('ui-timeline-item')!
       const r = resolve('product', 'sm', size)
-      expect(markerBox(item)).toBe(r.icon)
+      expect(markerBox(item)).toBe(Math.max(r.icon, glyphBox(r)))
       expect(dotSize(item)).toBe(glyphBox(r))
     })
   }
@@ -52,8 +54,34 @@ describe('ui-timeline-item geometry inside an opt-in region', () => {
       `<div data-tier="product" data-scale="sm"><ui-status-stream></ui-status-stream><ui-timeline-item size="md"></ui-timeline-item></div>`,
     )
     const r = resolve('product', 'sm', 'md')
-    expect(streamTokens(wrap.querySelector('ui-status-stream') as HTMLElement)).toEqual({ box: r.icon, dot: glyphBox(r) })
-    expect(markerBox(wrap.querySelector('ui-timeline-item')!)).toBe(r.icon)
+    const box = Math.max(r.icon, glyphBox(r))
+    expect(streamTokens(wrap.querySelector('ui-status-stream') as HTMLElement)).toEqual({ box, dot: glyphBox(r) })
+    expect(markerBox(wrap.querySelector('ui-timeline-item')!)).toBe(box)
+  })
+
+  // T-0374: the dot stays n + 6 and the marker box grows to hold it (the skill's wrapper never shrinks the artwork), so
+  // on every cell the plain dot sits inside the marker part, centred. Oracle: the model's resolve(), which mirrors the sheet.
+  it('the n plus 6 mark stays inside its box on every cell', () => {
+    let cells = 0
+    for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const scale of ['sm', 'md', 'lg'] as const) for (const size of ['sm', 'md', 'lg'] as const) {
+      const at = `${tier} / ${scale} / ${size}`
+      const r = model(tier, scale, size)
+      const wrap = mount(`<div data-tier="${tier}" data-scale="${scale}"><ui-timeline-item size="${size}" label="Step"></ui-timeline-item></div>`)
+      const part = wrap.querySelector('[data-part="marker"]') as HTMLElement
+      const mark = getComputedStyle(part, '::before')
+      const side = part.getBoundingClientRect().width
+      const start = px(mark.left)
+      const end = start + px(mark.width)
+      expect(px(mark.width), `${at}: the dot is n + 6`).toBeCloseTo(r.glyphBox, 1)
+      expect(side, `${at}: the marker box is max(2n, n + 6)`).toBe(Math.max(r.iconBox, r.glyphBox))
+      expect(start, `${at}: the dot starts inside the box`).toBeGreaterThanOrEqual(-0.05)
+      expect(end, `${at}: the dot ends inside the box`).toBeLessThanOrEqual(side + 0.05)
+      expect(Math.abs(start - (side - end)), `${at}: the dot is centred`).toBeLessThanOrEqual(0.5)
+      expect(px(mark.height), `${at}: the dot's block size fits the box`).toBeLessThanOrEqual(side)
+      wrap.remove()
+      cells++
+    }
+    expect(cells).toBe(36)
   })
 })
 

@@ -17,6 +17,7 @@ import './checkbox.css'                             // the control stylesheet (d
 import './checkbox.ts'                             // self-define (registers ui-checkbox)
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
 
 const num = (v: string): number => Number.parseFloat(v)
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
@@ -215,8 +216,8 @@ describe('ui-checkbox -- ADR-0223 two postures (fill default / [inline] hug, bot
   })
 })
 
-// ADR-0245 clauses 3 and 4: inside an opt-in region the box is 2n, the radius n/2, and the check and dash span the
-// n + 6 glyph box (T-0374), inset c; the dash is max(1.5px, c/2) tall. Against scale.mjs resolve().
+// ADR-0245 clauses 3 and 4: inside an opt-in region the box is max(2n, n + 6), the radius n/2, and the check and dash
+// span the n + 6 glyph box (T-0374), centred in the box; the dash is max(1.5px, c/2) tall. Against scale.mjs resolve().
 describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', () => {
   const mountIn = (scale: string, size: string, props: Record<string, boolean> = {}): { wrap: HTMLElement; el: HTMLElement } => {
     const wrap = document.createElement('div')
@@ -233,29 +234,63 @@ describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', ()
 
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      it(`product / ${scale} / ${size}: box 2n, radius ceil(n/2), check n + 6 inset c`, () => {
+      it(`product / ${scale} / ${size}: box max(2n, n + 6), radius ceil(n/2), check n + 6 centred`, () => {
         const r = resolve('product', scale, size)
+        const side = Math.max(r.icon, glyphBox(r))
         const { wrap, el } = mountIn(scale, size, { checked: true })
         const box = getComputedStyle(el, '::before')
-        expect(num(box.width)).toBe(r.icon)
-        expect(num(box.height)).toBe(r.icon)
+        expect(num(box.width)).toBe(side)
+        expect(num(box.height)).toBe(side)
         expect(num(box.borderTopLeftRadius)).toBeCloseTo(r.parts.checkboxRadius, 1) // ceil(n/2), the chip radius (ADR-0245 Amendment 4)
         const check = getComputedStyle(el, '::after')
         expect(num(check.width)).toBeCloseTo(glyphBox(r), 1)
         expect(num(check.height)).toBeCloseTo((glyphBox(r) * 11) / 12, 1)
-        expect(num(check.left)).toBeCloseTo(r.c, 1)
+        expect(num(check.left)).toBeCloseTo((side - glyphBox(r)) / 2, 1)
         wrap.remove()
       })
 
-      it(`product / ${scale} / ${size}: dash n + 6 wide, max(1.5px, c/2) tall`, () => {
+      it(`product / ${scale} / ${size}: dash n + 6 wide, max(1.5px, c/2) tall, centred`, () => {
         const r = resolve('product', scale, size)
+        const side = Math.max(r.icon, glyphBox(r))
         const { wrap, el } = mountIn(scale, size, { indeterminate: true })
         const dash = getComputedStyle(el, '::after')
         expect(num(dash.width)).toBeCloseTo(glyphBox(r), 1)
         expect(num(dash.height)).toBeCloseTo(Math.max(1.5, r.c / 2), 1)
-        expect(num(dash.left)).toBeCloseTo(r.c, 1)
+        expect(num(dash.left)).toBeCloseTo((side - glyphBox(r)) / 2, 1)
         wrap.remove()
       })
     }
   }
+
+  // T-0374: the mark stays n + 6 and the box grows to hold it (the skill's wrapper never shrinks the artwork), so
+  // on every cell the check sits inside the ::before box, centred. Oracle: the model's resolve(), which mirrors the sheet.
+  it('the n plus 6 mark stays inside its box on every cell', () => {
+    let cells = 0
+    for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const scale of ['sm', 'md', 'lg'] as const) for (const size of ['sm', 'md', 'lg'] as const) {
+      const at = `${tier} / ${scale} / ${size}`
+      const r = model(tier, scale, size)
+      const wrap = document.createElement('div')
+      wrap.setAttribute('data-tier', tier)
+      wrap.setAttribute('data-scale', scale)
+      const el = document.createElement('ui-checkbox')
+      el.setAttribute('size', size)
+      el.setAttribute('checked', '')
+      wrap.append(el)
+      document.body.append(wrap)
+      const box = getComputedStyle(el, '::before')
+      const mark = getComputedStyle(el, '::after')
+      const side = num(box.width)
+      const start = num(mark.left)
+      const end = start + num(mark.width)
+      expect(num(mark.width), `${at}: the mark is n + 6`).toBeCloseTo(r.glyphBox, 1)
+      expect(side, `${at}: the box is max(2n, n + 6)`).toBe(Math.max(r.iconBox, r.glyphBox))
+      expect(start, `${at}: the mark starts inside the box`).toBeGreaterThanOrEqual(-0.05)
+      expect(end, `${at}: the mark ends inside the box`).toBeLessThanOrEqual(side + 0.05)
+      expect(Math.abs(start - (side - end)), `${at}: the mark is centred`).toBeLessThanOrEqual(0.5)
+      expect(num(mark.height), `${at}: the mark's block size fits the box`).toBeLessThanOrEqual(num(box.height))
+      wrap.remove()
+      cells++
+    }
+    expect(cells).toBe(36)
+  })
 })

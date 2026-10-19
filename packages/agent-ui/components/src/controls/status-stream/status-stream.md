@@ -369,7 +369,7 @@ register and its type from the ramp's body step (Kim 2026-10-14), no size or fon
 | Column or gap | Value | What sits on it |
 |---|---|---|
 | inline edge | `n` | the header's and every entry's inline start (and end) |
-| marker column | `2n` | the header marker, each step marker, the rail (all centred on it) |
+| marker column | `max(2n, n + 6)` (grows past `2n` only at n 4 and 5, to hold the `n + 6` dot) | the header marker, each step marker, the rail (all centred on it) |
 | column gap | `n` | marker to label, label to the trailing cell, header to the first row |
 | label column | edge + `2n` + `n` | the header label, step labels and descriptions, the plan text, and every nested block: an expand's summary (its chevron slot starts here), its detail text, the raw output box and its Copy button |
 | trailing edge | edge, plus `n + 2n` with the receipt caret | each step duration and the header's meta ("Done in 39s") end here, in tabular figures |

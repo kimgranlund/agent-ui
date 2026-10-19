@@ -55,17 +55,17 @@
 
 :where(ui-timeline-item) {
   --ui-timeline-item-truncated-border: var(--md-sys-color-warning); /* TKT-0066: was a direct role read in @scope */
-  /* ADR-0245: the marker box is the 2n icon slot and the dot the n + 6 glyph box (T-0374) (clauses 3 and 4), at the
-     element's own n; the per-size literal rows above are their fallback under [data-foundations="legacy"].
+  /* ADR-0245: the marker box is max(2n, n + 6), the 2n icon slot grown to hold the n + 6 glyph-box dot at n 4 and 5
+     (T-0374) (clauses 3 and 4), at the element's own n; the per-size literal rows above are their fallback under [data-foundations="legacy"].
      size picks the row for the connector, gutter and row gap. The [scale] rows and the [density] multiplier
      retired at the cut (a region's data-scale moves n instead). */
-  --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-md));
+  --ui-timeline-item-marker-box: max(var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-md)), var(--md-sys-glyph-box, 0px));
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-md));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-md);
-  /* T-0173: the gutter IS the 2n marker column (it was a 20px ramp row, wider than the mark, so the label sat
-     off a grid that started at the mark) and the row gap is 2n, both at the element's own n; the per-size rows
-     above stay their fallback under [data-foundations="legacy"]. */
-  --ui-timeline-item-gutter: var(--md-sys-icon-box, var(--ui-timeline-item-gutter-md));
+  /* T-0173: the gutter IS the marker column (it was a 20px ramp row, wider than the mark, so the label sat
+     off a grid that started at the mark), max(2n, n + 6) with the marker box (T-0374), and the row gap is 2n,
+     both at the element's own n; the per-size rows above stay their fallback under [data-foundations="legacy"]. */
+  --ui-timeline-item-gutter: max(var(--md-sys-icon-box, var(--ui-timeline-item-gutter-md)), var(--md-sys-glyph-box, 0px));
   --ui-timeline-item-column-gap: var(--md-sys-space-sm); /* TKT-0066 item 5 ruling: constants route through the own chain */
   --ui-timeline-item-row-gap: var(--md-sys-icon-box, var(--ui-timeline-item-row-gap-md));
   /* a slotted/consumer marker icon reads the CONTENT-ICON register, not this table (LLD §5). */
@@ -80,18 +80,18 @@
   --ui-timeline-item-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 :where(ui-timeline-item[size='sm']) {
-  --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-sm));
+  --ui-timeline-item-marker-box: max(var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-sm)), var(--md-sys-glyph-box, 0px));
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-sm));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-sm);
-  --ui-timeline-item-gutter: var(--md-sys-icon-box, var(--ui-timeline-item-gutter-sm));
+  --ui-timeline-item-gutter: max(var(--md-sys-icon-box, var(--ui-timeline-item-gutter-sm)), var(--md-sys-glyph-box, 0px));
   --ui-timeline-item-row-gap: var(--md-sys-icon-box, var(--ui-timeline-item-row-gap-sm));
   --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-sm));
 }
 :where(ui-timeline-item[size='lg']) {
-  --ui-timeline-item-marker-box: var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-lg));
+  --ui-timeline-item-marker-box: max(var(--md-sys-icon-box, var(--ui-timeline-item-marker-box-lg)), var(--md-sys-glyph-box, 0px));
   --ui-timeline-item-dot-size: var(--md-sys-glyph-box, var(--ui-timeline-item-dot-size-lg));
   --ui-timeline-item-connector-width: var(--ui-timeline-item-connector-width-lg);
-  --ui-timeline-item-gutter: var(--md-sys-icon-box, var(--ui-timeline-item-gutter-lg));
+  --ui-timeline-item-gutter: max(var(--md-sys-icon-box, var(--ui-timeline-item-gutter-lg)), var(--md-sys-glyph-box, 0px));
   --ui-timeline-item-row-gap: var(--md-sys-icon-box, var(--ui-timeline-item-row-gap-lg));
   --ui-timeline-item-icon-size: var(--md-sys-icon-box, var(--md-sys-icon-lg));
 }
