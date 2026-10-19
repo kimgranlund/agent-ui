@@ -23,3 +23,9 @@ Round 12 archive `.sdlc/evals/rounds/2026-10-19-r12-targeted/` (report.md "Why i
 
 ## Constraints
 Recorded rounds are never rewritten.
+
+## Acceptance criteria
+- The r12 `omaha-haiku-3` sequence test fires at :254 (a called pot bet the pot holds once) and :257 (the new hand opens on the settled $1,020 with the blinds in), and its conserving twin and the quiet cases pass: `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.test.ts -t "T-0379"` exits 0.
+- The croupier folder and the croupier replays stay green: `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier scripts/e2e-admin/probe/replays` exits 0.
+- The croupier sweep (every recorded croupier round, base against built) loses no hit: `node --experimental-strip-types --no-warnings .sdlc/runtime/tasks/0379-r12-poker-chip-drift/sweep.ts . .sdlc/runtime/tasks/0379-r12-poker-chip-drift/base-checks.ts packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts` exits 0 (it exits 1 on any LOST hit).
+- `npm run check` exits 0.
