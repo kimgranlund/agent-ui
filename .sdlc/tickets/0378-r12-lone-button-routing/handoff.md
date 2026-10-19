@@ -23,3 +23,10 @@ Round 12 archive `.sdlc/evals/rounds/2026-10-19-r12-targeted/` (report.md "Why i
 
 ## Constraints
 Debate rule for any model-read text. grammar.md changes only by Kim's ruling.
+
+## Acceptance criteria
+verifier: L3
+- `npx vitest run --project site site/pages/agent-admin-presets.test.ts -t T-0378` exits 0: the compiled croupier persona holds "A row holds two or more buttons, never one." and "update the table’s footer so the Deal again button is its only child", names no "actions row", and the composed prompts of the r12 :57 turn (game-hud) and a "Fold." turn (no mini-skill) carry the rule.
+- `npx vitest run --project site site/pages/agent-admin-presets.test.ts site/pages/agent-admin-seed-digests.test.ts site/pages/agent-admin-prompt-budget.test.ts site/lib/agent-manifest/ site/agent-content/registry-freshness.test.ts` exits 0 (seedVersion 17, croupier row and PRESETS_DIGEST, manifest seedDigest, registries fresh).
+- `npx vitest run packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.test.ts` exits 0 with no baseline recapture; no mini-skill, grammar.md, checks.ts or `.sdlc/evals/rounds/` file changes.
+- `npm run check` exits 0.
