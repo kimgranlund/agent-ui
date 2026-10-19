@@ -538,7 +538,7 @@ gate lands with (or after) the mop-up wave's conversions, never with a red or gr
 
 *REV 2026-10-13 (T-0121, ADR-0245 cl.6): the ladder (b) tests against is the derived levels at the
 root register (c, n, the group, widget, card and layout margins and gutters, the control height 4n)
-plus the shell's n multiples (8n, 24n, 36n), computed from `scale.mjs`; a foundations token's own
+plus the shell's n multiples (8n, 24n, 36n), computed from `@agent-ui/shared/src/tokens/scale.mjs` (the repo's own resolver; the skill's current one is vendored under `tokens/vendor/mathematical-design-system/` since T-0372); a foundations token's own
 fallback is not a mint; the allowlist (c) is EMPTY (the module's root literal is gone, and the
 resizer's 4px ink equals no derived level).*
 

@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 // generate-foundations.mjs: writes packages/agent-ui/shared/src/tokens/foundations.gen.css and its consumer bridge
-// foundations-bridge.gen.css from the vendored skill config `scale.mjs` beside them (ADR-0245 clauses 1 and 10a).
-// Changing the system means editing CFG in scale.mjs, never a generated sheet. The generator refuses to emit when
-// `check()` returns any failure (M1 to M16; M14, no size that depends on n alone shrinks as n grows, is the
-// skill's own since ADR-0245 Amendment 3), so a broken config can never reach a stylesheet.
+// foundations-bridge.gen.css from two resolvers (ADR-0245 clauses 1 and 10a, T-0372): the skill's current one,
+// vendored untouched under tokens/vendor/mathematical-design-system/, and the repo's own `scale.mjs` beside the
+// sheets (the skill's former revision, frozen) for every input the current one cannot reproduce byte for byte.
+// scripts/lib/foundations-model.mjs says which input comes from where (anchors(), LEGACY_PATH) and mirrors the
+// sheet as px (resolve()). Never edit a generated sheet. The generator refuses to emit when the repo's `check()`
+// returns any failure (M1 to M16; M14, no size that depends on n alone shrinks as n grows, is the skill's own since
+// ADR-0245 Amendment 3) or checkAnchors() does (the vendored anchors), so a broken config never reaches a stylesheet.
 //
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes, and one derived block (`--md-sys-n`, the container unit
@@ -27,8 +30,9 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
-import { CFG, check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
 import { GLYPH_FLOOR, ROOT_REGISTER, STEP } from './lib/foundations-rules.mjs'
+import { LEGACY_PATH, anchors, checkAnchors, roomyLevels } from './lib/foundations-model.mjs'
 
 export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
 export const BRIDGE_REL = 'packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css'
@@ -38,38 +42,19 @@ export const ROOT_INPUTS = ROOT_REGISTER
 
 const N = 'var(--md-sys-n)'
 const C = 'var(--md-sys-c)'
-// scale.mjs measures the linear type anchors and Q from n = 5 (its `n - 5`), independent of the ladder, and never
-// lets a linear role below its floor (9px: field label and group label are held there at n 4).
-const lin = ([at5, perStep], n = N) => `max(${CFG.floor}px, calc((${at5} + ${perStep} * (${n} - 5)) * 1px))`
-const q = `(${CFG.Q[0]} + ${CFG.Q[1]} * (${N} - 5))`
-const headingRole = (power) => `round(nearest, var(--md-sys-type-body) * pow(${q}, ${power}), 1px)`
+// Both resolvers measure the linear type anchors and Q from n = 5 (their `n - 5`), independent of the ladder; the
+// emitted role never drops below the floor (9px: field label and group label are held there at n 4).
+const lin = (a, [at5, perStep], n = N) => `max(${a.floor}px, calc((${at5} + ${perStep} * (${n} - 5)) * 1px))`
+const headingRole = (a, power) => `round(nearest, var(--md-sys-type-body) * pow((${a.Q[0]} + ${a.Q[1]} * (${N} - 5)), ${power}), 1px)`
 
 const M = 'var(--md-sys-m)'
 
-/** The skill's roomy level -> its token name: the skill renamed `layout` to `page`; the tokens keep `layout`. */
-const LEVEL_TOKEN = { widget: 'widget', card: 'card', page: 'layout' }
-
-/**
- * The roomy levels as multiples of m, walked off CFG.levels the way scale.mjs `at()` walks them: a roomy level
- * is one m more than its child (the control counts as m), with the child's span as its gutter. Yields widget
- * 2m / m / 2m, card 3m / 2m / 3m, page 4m / 3m / 4m; the reserved levels (tray, lane, shell) have no token,
- * and the chip level (a tight wrap of a mark, on n) is declared beside the group level below.
- */
-function roomyLevels() {
-  const span = { control: 1 }
-  const out = []
-  for (const [level, [wrap, child]] of Object.entries(CFG.levels)) {
-    if (wrap !== 'roomy') continue
-    span[level] = span[child] + 1
-    out.push([LEVEL_TOKEN[level], span[level], span[child]])
-  }
-  return out
-}
-
-/** The derived block: every quantity scale.mjs `at()` returns, as a formula of this element's n (and m for the
+/** The derived block: every quantity the resolvers return, as a formula of this element's n (and m for the
  *  widget, card and layout levels: density moves container spacing only, never a control or the group level). */
-function derivedDeclarations() {
-  const levels = roomyLevels().flatMap(([level, margin, gutter]) => [
+function derivedDeclarations(a = anchors()) {
+  // The roomy factors are the vendored container margins over n at regular density, emitted against m: this assumes
+  // d == m, true at default density (the vendored d is n at regular, the legacy m is n at default on the ladder).
+  const levels = roomyLevels(a).flatMap(([level, margin, gutter]) => [
     [`--md-sys-${level}-margin`, `calc(${M} * ${margin}px)`],
     [`--md-sys-${level}-gutter`, `calc(${M} * ${gutter}px)`],
     [`--md-sys-${level}-radius`, `calc(${M} * ${margin}px)`],
@@ -79,7 +64,7 @@ function derivedDeclarations() {
     // m = max(n + a*d, floor((n + c) / 2) + 1): one tier step a per density step, floored so a widget out-margins a group.
     ['--md-sys-m', `max(calc(${N} + var(--md-sys-tier-a) * var(--md-sys-density-d, 0)), calc(round(down, (${N} + round(up, ${N} / 4, 1)) / 2, 1) + 1))`],
     ['--md-sys-c', `calc(round(up, ${N} / 4, 1) * 1px)`],
-    ['--md-sys-height', `calc(${N} * 4px)`],
+    ['--md-sys-height', `calc(${N} * ${a.heightPerN}px)`],
     ['--md-sys-inset', `calc(${N} * 1px)`],
     // The control rule (Amendment 4): the text slot carries the label inset n - c, so gutter c + inset = margin n.
     ['--md-sys-label-inset', `calc(var(--md-sys-inset) - ${C})`],
@@ -87,22 +72,22 @@ function derivedDeclarations() {
     // The pill (Amendment 5): every single-line control takes h/2 = 2n; a textarea takes it too, and a panel
     // takes its row's 2n plus its own inset, so rows nest concentrically.
     ['--md-sys-control-radius', 'calc(var(--md-sys-height) / 2)'],
-    ['--md-sys-icon-box', `calc(${N} * 2px)`],
+    ['--md-sys-icon-box', `calc(${N} * ${a.iconPerN}px)`],
     // The glyph floor (ADR-0245 Amendment 7): 2n - 2c, never below GLYPH_FLOOR, so the n 5 marks stay legible. Local to
-    // agent-ui (scale.mjs stays the skill's byte for byte); JS and TS readers use glyphBox() from the same module.
+    // agent-ui (neither resolver carries it); JS and TS readers use glyphBox() from the same module.
     ['--md-sys-glyph-box', `max(${GLYPH_FLOOR}px, calc(${N} * 2px - 2 * ${C}))`],
     ['--md-sys-glyph-stroke', `max(1.5px, ${C} / 2)`],
     ['--md-sys-corner-shape', 'squircle'],
-    ['--md-sys-type-display', headingRole(3)],
-    ['--md-sys-type-heading', headingRole(2)],
-    ['--md-sys-type-subhead', headingRole(1)],
+    ['--md-sys-type-display', headingRole(a, 3)],
+    ['--md-sys-type-heading', headingRole(a, 2)],
+    ['--md-sys-type-subhead', headingRole(a, 1)],
     ['--md-sys-type-section-label', 'round(nearest, var(--md-sys-type-body) * var(--md-sys-tier-ratio), 1px)'],
-    ['--md-sys-type-title', `calc(var(--md-sys-type-body) + var(--md-sys-title-bump, ${CFG.titleBump.md}) * 1px)`],
-    ['--md-sys-type-body', lin(CFG.linear.body)],
-    ['--md-sys-type-control', lin(CFG.linear.control)],
-    ['--md-sys-type-field-label', lin(CFG.linear.fieldLabel)],
-    ['--md-sys-type-group-label', lin(CFG.linear.groupLabel)],
-    ['--md-sys-type-floor', `${CFG.floor}px`],
+    ['--md-sys-type-title', `calc(var(--md-sys-type-body) + var(--md-sys-title-bump, ${a.titleBump.md}) * 1px)`],
+    ['--md-sys-type-body', lin(a, a.linear.body)],
+    ['--md-sys-type-control', lin(a, a.linear.control)],
+    ['--md-sys-type-field-label', lin(a, a.linear.fieldLabel)],
+    ['--md-sys-type-group-label', lin(a, a.linear.groupLabel)],
+    ['--md-sys-type-floor', `${a.floor}px`],
     // The chip level (tag, badge, kbd): margin c, gutter c, and the chip pill n + c, h/2 of the 2n + 2c chip
     // (Amendment 5). The checkbox box stays a rounded square at ceil(n/2), the skill's checkboxRadius.
     ['--md-sys-chip-margin', C],
@@ -116,8 +101,8 @@ function derivedDeclarations() {
   ]
 }
 
-const tierInputs = ([n0, a, k, g]) =>
-  `--md-sys-tier-n0: ${n0}; --md-sys-tier-a: ${a}; --md-sys-tier-k: ${k}; --md-sys-tier-g: ${g}; --md-sys-tier-ratio: ${CFG.sectionRatio};`
+const tierInputs = ([n0, ta, k, g], a) =>
+  `--md-sys-tier-n0: ${n0}; --md-sys-tier-a: ${ta}; --md-sys-tier-k: ${k}; --md-sys-tier-g: ${g}; --md-sys-tier-ratio: ${a.kicker};`
 
 /** Where the derived block is declared: everywhere an input changes (the cut), or inside opt-in regions only. */
 export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
@@ -125,14 +110,14 @@ export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
     ? ':root, [data-tier], [data-scale], [data-size], [size], [data-density]'
     : '[data-tier], [data-tier] :is([data-scale], [data-size], [size], [data-density])'
 
-const refuseOnFailure = () => {
-  const failures = check()
+const refuseOnFailure = (a) => {
+  const failures = [...check(), ...checkAnchors(a)]
   if (failures.length) throw new Error(`scale.mjs check() failed, refusing to emit:\n  ${failures.join('\n  ')}`)
 }
 
 /** Render the whole sheet. Throws (writes nothing) when check() reports a failure. */
-export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT } = {}) {
-  refuseOnFailure()
+export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = anchors() } = {}) {
+  refuseOnFailure(a)
   // Scoped: an attribute counts only on a region root or inside one. Unscoped (the cut): anywhere.
   const scoped = (sel) => (rootDefault ? sel : `[data-tier]${sel}, [data-tier] ${sel}`)
   const out = [
@@ -142,17 +127,16 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT } = {}) {
     `/* ${rootDefault ? `Root default (the cut): :root is ${ROOT_INPUTS.tier} at scale ${ROOT_INPUTS.scale} and every element derives from one n.` : 'Dark launch: tokens exist only inside an opt-in [data-tier] region; nothing is declared on :root.'} */`,
   ]
   if (rootDefault) {
-    const [n0, a, k, g] = CFG.tiers[ROOT_INPUTS.tier]
-    out.push(`:root { ${tierInputs([n0, a, k, g])} --md-sys-scale-s: ${STEP[ROOT_INPUTS.scale]}; }`)
+    out.push(`:root { ${tierInputs(LEGACY_PATH.tiers[ROOT_INPUTS.tier], a)} --md-sys-scale-s: ${STEP[ROOT_INPUTS.scale]}; }`)
   }
-  for (const [tier, constants] of Object.entries(CFG.tiers)) out.push(`[data-tier='${tier}'] { ${tierInputs(constants)} }`)
+  for (const [tier, constants] of Object.entries(LEGACY_PATH.tiers)) out.push(`[data-tier='${tier}'] { ${tierInputs(constants, a)} }`)
   for (const [step, s] of Object.entries(STEP)) out.push(`${scoped(`[data-scale='${step}']`)} { --md-sys-scale-s: ${s}; }`)
   for (const [step, z] of Object.entries(STEP)) {
-    out.push(`${scoped(`:is([data-size='${step}'], [size='${step}'])`)} { --md-sys-size-z: ${z}; --md-sys-title-bump: ${CFG.titleBump[step]}; }`)
+    out.push(`${scoped(`:is([data-size='${step}'], [size='${step}'])`)} { --md-sys-size-z: ${z}; --md-sys-title-bump: ${a.titleBump[step]}; }`)
   }
-  for (const [density, d] of Object.entries(CFG.density)) out.push(`${scoped(`[data-density='${density}']`)} { --md-sys-density-d: ${d}; }`)
+  for (const [density, d] of Object.entries(LEGACY_PATH.density)) out.push(`${scoped(`[data-density='${density}']`)} { --md-sys-density-d: ${d}; }`)
   out.push(`${recomputeList(rootDefault)} {`)
-  for (const [name, value] of derivedDeclarations()) out.push(`  ${name}: ${value};`)
+  for (const [name, value] of derivedDeclarations(a)) out.push(`  ${name}: ${value};`)
   out.push('}')
   return `${out.join('\n')}\n`
 }
@@ -206,33 +190,33 @@ function typescaleLegacy(rows) {
 const bridgeN = (z) =>
   `calc(var(--md-sys-tier-n0) + var(--md-sys-tier-a) * var(--md-sys-scale-s, 0) + (var(--md-sys-tier-k) + var(--md-sys-tier-g) * var(--md-sys-scale-s, 0)) * ${z})`
 
-/** A skill type role at the bridge n of `step` (scale.mjs `at()`, as CSS). */
-function roleAt(role, step) {
+/** A type role at the bridge n of `step` (the resolvers' type roles, as CSS). */
+function roleAt(role, step, a) {
   const n = `var(--md-sys-bridge-n-${step})`
   const body = `var(--md-sys-bridge-body-${step})`
-  const heading = (power) => `round(nearest, ${body} * pow((${CFG.Q[0]} + ${CFG.Q[1]} * (${n} - 5)), ${power}), 1px)`
+  const heading = (power) => `round(nearest, ${body} * pow((${a.Q[0]} + ${a.Q[1]} * (${n} - 5)), ${power}), 1px)`
   switch (role) {
     case 'display': return heading(3)
     case 'heading': return heading(2)
     case 'subhead': return heading(1)
-    case 'sectionLabel': return `round(nearest, ${body} * ${CFG.sectionRatio}, 1px)`
-    case 'title': return `calc(${body} + ${CFG.titleBump[step]}px)`
+    case 'sectionLabel': return `round(nearest, ${body} * ${a.kicker}, 1px)`
+    case 'title': return `calc(${body} + ${a.titleBump[step]}px)`
     case 'body': return body
-    default: return lin(CFG.linear[role], n)
+    default: return lin(a, a.linear[role], n)
   }
 }
 
 /** The bridge aliases: old name -> its derived value at the element's tier and scale. */
-function bridgeDeclarations() {
+function bridgeDeclarations(a) {
   const decls = []
   for (const [step, z] of Object.entries(STEP)) decls.push([`--md-sys-bridge-n-${step}`, bridgeN(z)])
-  for (const step of Object.keys(STEP)) decls.push([`--md-sys-bridge-body-${step}`, lin(CFG.linear.body, `var(--md-sys-bridge-n-${step})`)])
+  for (const step of Object.keys(STEP)) decls.push([`--md-sys-bridge-body-${step}`, lin(a, a.linear.body, `var(--md-sys-bridge-n-${step})`)])
   for (const step of Object.keys(STEP)) {
     const n = `var(--md-sys-bridge-n-${step})`
     decls.push(
-      [`--md-sys-height-${step}`, `calc(${n} * 4px)`],
-      [`--md-sys-font-${step}`, roleAt('control', step)],
-      [`--md-sys-icon-${step}`, `calc(${n} * 2px)`],
+      [`--md-sys-height-${step}`, `calc(${n} * ${a.heightPerN}px)`],
+      [`--md-sys-font-${step}`, roleAt('control', step, a)],
+      [`--md-sys-icon-${step}`, `calc(${n} * ${a.iconPerN}px)`],
       [`--md-sys-gap-${step}`, `calc(${n} * 1px)`],
       [`--md-sys-compact-${step}`, `calc(${n} * 2px)`],
     )
@@ -250,7 +234,7 @@ function bridgeDeclarations() {
     ['--md-sys-space-2xl', 'var(--md-sys-layout-margin)'],
   )
   for (const [role, skillRole] of Object.entries(TYPESCALE_ROLE)) {
-    for (const [m3, step] of Object.entries(M3_SIZE)) decls.push([`--md-sys-typescale-${role}-${m3}-size`, roleAt(skillRole, step)])
+    for (const [m3, step] of Object.entries(M3_SIZE)) decls.push([`--md-sys-typescale-${role}-${m3}-size`, roleAt(skillRole, step, a)])
   }
   decls.push(['--ui-bar-inline-inset', 'var(--md-sys-layout-margin)'])
   return decls
@@ -264,15 +248,15 @@ function legacyInitialNames() {
 }
 
 /** Render the bridge sheet. It loads after foundations.gen.css. */
-export function renderBridgeCss({ rootDefault = ROOT_DEFAULT } = {}) {
-  refuseOnFailure()
+export function renderBridgeCss({ rootDefault = ROOT_DEFAULT, anchors: a = anchors() } = {}) {
+  refuseOnFailure(a)
   const out = [
     '/* foundations-bridge.gen.css: GENERATED by scripts/generate-foundations.mjs (ADR-0245 clause 10a). DO NOT EDIT. */',
     '/* The old names alias the derived values; the retired scale and density attributes are no longer mapped (T-0169); */',
     '/* [data-foundations="legacy"] opts a region out (clause 10e). The whole sheet retires at W7. */',
   ]
   out.push(`${recomputeList(rootDefault)} {`)
-  for (const [name, value] of bridgeDeclarations()) out.push(`  ${name}: ${value};`)
+  for (const [name, value] of bridgeDeclarations(a)) out.push(`  ${name}: ${value};`)
   out.push('}')
   out.push("[data-foundations='legacy'] {")
   for (const name of legacyInitialNames()) out.push(`  ${name}: initial;`)

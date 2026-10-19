@@ -36,8 +36,9 @@ export const DERIVED = new Set([
 ].map((name) => `--md-sys-${name}`))
 
 /** The glyph floor (ADR-0245 Amendment 7): the glyph box never drops below 8px. It is local to agent-ui, not in the
- *  vendored scale.mjs (byte for byte the skill's; P15 proposes it upstream), so the generator emits it and the browser
- *  tests read the glyph box through glyphBox(), never resolve().glyph alone (the render lint inlines the same max). */
+ *  repo's scale.mjs (the skill's former revision, frozen; P15 proposes it upstream), so the generator emits it and
+ *  the browser tests read the glyph box through glyphBox(), never resolve().glyph alone (the render lint inlines the
+ *  same max). */
 export const GLYPH_FLOOR = 8
 
 /** The glyph box of a resolved register: max(GLYPH_FLOOR, 2n - 2c), where scale.mjs resolve() supplies 2n - 2c. */
