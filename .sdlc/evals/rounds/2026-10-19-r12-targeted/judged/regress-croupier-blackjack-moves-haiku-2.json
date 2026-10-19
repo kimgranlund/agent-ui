@@ -1,0 +1,109 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-moves-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Round 2 is already over.",
+          "found": true
+        },
+        {
+          "quote": "Press **Deal again** on the table to start a fresh round.",
+          "found": true
+        },
+        {
+          "quote": "so I'm standing on 18",
+          "found": true
+        }
+      ],
+      "why": "Replies are mostly plain dealer talk with no JSON or tool talk. A small slip is the markdown bold and the 'Round 2' label, which is mildly off-voice."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Doubled. Your 17 takes one more card: a 3 of hearts, for 20.",
+          "found": true
+        },
+        {
+          "quote": "Round 2 is already over. You busted with 30 and lost the 100 stake, so there's no hand left to hit.",
+          "found": true
+        },
+        {
+          "quote": "Split isn't open because your 10 and 8 aren't a pair, so I'm standing on 18.",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on, and impossible moves are explained with an alternative. 'Hit me until I bust' is handled by dealing several hits, which is a reasonable reading."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 4, has 13, and draws a 5 for 18 and stands.",
+          "found": true
+        },
+        {
+          "quote": "The dealer's 18 stands, so the dealer wins and you lose the 100 stake.",
+          "found": true
+        }
+      ],
+      "why": "The house deals, plays out the dealer and settles every round. A minor point is the bust turn, where the dealer's hand is revealed and settled although the player had already busted. The standing on 18 follows the player's own conditional instruction."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win 500 on the doubled stake.",
+          "found": true
+        },
+        {
+          "quote": "You won the round and now have 1,500 chips.",
+          "found": true
+        },
+        {
+          "quote": "You hit until you busted: 16, then a 5 for 21, then a 9 for 30 on the last draw.",
+          "found": true
+        },
+        {
+          "quote": "\"bankroll\":1400,\"bet\":100",
+          "found": true
+        }
+      ],
+      "why": "The reply says the player hit 'until busted' through 21 (which would not be forced) and the bankroll stayed at 1400 with bet 100 rather than clearly settling. The turn 2 'win 500' on a 250 doubled bet is consistent with the surface, but the bust-turn surface bankroll and 'hit past 21' narrative are questionable. The turn 9 'You win 75' agrees with 1475."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 4029,
+    "outputTokens": 711,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.015168,
+  "at": "2026-10-19T01:53:30.414Z"
+}

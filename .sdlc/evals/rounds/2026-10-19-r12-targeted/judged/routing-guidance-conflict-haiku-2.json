@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-guidance-conflict-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The hole card stays face down until you stand or the hand ends, so I can't reveal it now.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain dealer talk with no JSON, ids, or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer reveals the 4, has 13, and draws a 5 to 18.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken and the deal follows, the hole card request gets a clear refusal with options, and Stand plays out the dealer."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer reveals the 4, has 13, and draws a 5 to 18. Dealer wins 18 to 17, so you lose your 100 bet.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the dealer hand, and settles the bet itself, and makes no choices for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer wins 18 to 17, so you lose your 100 bet.",
+          "found": true
+        },
+        {
+          "quote": "Your hand is K-7 for 17.",
+          "found": true
+        }
+      ],
+      "why": "Totals and result match the surface (dealer 18, player 17, bankroll 900 after the 100 bet), and the earlier replies agree."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2209,
+    "outputTokens": 451,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.008928,
+  "at": "2026-10-19T01:57:06.164Z"
+}

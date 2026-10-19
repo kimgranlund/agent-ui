@@ -1,0 +1,105 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-five-card-draw-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Now the draw: pick up to three cards to discard (four if you keep an Ace), then press Draw.",
+          "found": true
+        },
+        {
+          "quote": "The round is over. Your pair of kings beats my pair of nines. The cards are:",
+          "found": true
+        }
+      ],
+      "why": "The replies are mostly short and plain, in dealer vocabulary, with no JSON or system talk. Turn 3 uses markdown bullets and bold, which is a small slip."
+    },
+    {
+      "id": "C2",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Discard my two lowest cards and draw.",
+          "found": true
+        },
+        {
+          "quote": "Final betting round. You have a pair of kings and I have a pair of nines.",
+          "found": true
+        },
+        {
+          "quote": "Dealing a new hand. Ante is in; your bankroll stands at 1,050 chips.",
+          "found": true
+        }
+      ],
+      "why": "Most moves are answered. In turn 2 the discard and draw is not described, so the player never sees which cards were thrown or drawn. In turn 4 the reply says an ante is in while the pot stays at 0."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You check, and I check behind you.",
+          "found": true
+        },
+        {
+          "quote": "I turn my hand over: K♦ 9♠ 7♥ 4♠ 2♣, no pair.",
+          "found": true
+        },
+        {
+          "quote": "You take the 100-chip pot, so your bankroll is now 1,050 chips.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, acts for the house, reveals the hands and settles each hand itself, and it never hands those jobs to the player. The one blemish is turn 2, where it skipped the dealer's draw. It never says what the dealer discarded or drew, and the dealer's hand changed between turns."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You take the 100-chip pot, so your bankroll is now 1,050 chips.",
+          "found": true
+        },
+        {
+          "quote": "You take the 100-chip pot: +50 chips.",
+          "found": true
+        },
+        {
+          "quote": "Nobody bet, so there's no pot to win.",
+          "found": true
+        }
+      ],
+      "why": "In turn 3 the reply says the pot is 100 chips while earlier replies kept it at 0. The bankroll moved only +50, and the surface shows Pot: 0. Turn 9 says the dealer's hand is K♦ 9♠ 7♥ 4♠ 2♣, and the reply and surface text agree on that. The pot and bankroll in turn 3 are inconsistent."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 5785,
+    "outputTokens": 724,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01881,
+  "at": "2026-10-19T01:54:14.429Z"
+}

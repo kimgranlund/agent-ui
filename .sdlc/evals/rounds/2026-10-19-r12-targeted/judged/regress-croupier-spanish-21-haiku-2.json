@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-spanish-21-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Spanish 21 it is. We start with 1,000 chips.",
+          "found": true
+        },
+        {
+          "quote": "You drew an Ace, so your hand is now 19. Hit or stand?",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain dealer talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 50 placed. Dealing your hand.",
+          "found": true
+        },
+        {
+          "quote": "You surrendered. Half your 100 bet comes back, so you lose 50 chips and your bankroll is 850.",
+          "found": true
+        }
+      ],
+      "why": "Each bet, hit, stand, surrender and deal-again click gets the matching action in the same turn."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You stand on 17. Dealer reveals the hole card.",
+          "found": true
+        },
+        {
+          "quote": "You win with 19 against the dealer's 17. You gain 50 chips, and your bankroll is 900.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays out the dealer and settles each bet itself. It never made a bet or move choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bankroll stays at 900; the bet is 100 again.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll is 850; the bet is 100 again.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankroll in the replies match the surface data and earlier turns: 900, then 850 after the surrender, then 900 after the win."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3824,
+    "outputTokens": 1078,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.018428,
+  "at": "2026-10-19T01:56:16.037Z"
+}

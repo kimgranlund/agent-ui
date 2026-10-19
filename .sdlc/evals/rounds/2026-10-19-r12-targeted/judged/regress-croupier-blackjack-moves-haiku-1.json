@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-moves-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Press **Deal again** on the table to start a new round, and set your bet there.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 250 is down. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "Replies are plain dealer talk with no JSON or tool talk. A small slip is the stray markdown bold in turn 6, and some lines are a bit clipped."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "That round is already over: you busted at 24, so there's nothing to hit.",
+          "found": true
+        },
+        {
+          "quote": "A 9 and 7 aren't a pair, so there's no split. I stood on 16.",
+          "found": true
+        }
+      ],
+      "why": "Every move is acted on. The impossible hit is refused plainly with a next step, the no-pair split is explained, and the conditional instruction is followed correctly."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Hit me until I bust.",
+          "found": true
+        },
+        {
+          "quote": "Doubled down: you drew a 3 for 20, against the dealer's 19.",
+          "found": true
+        }
+      ],
+      "why": "The dealer plays out and bets are settled by the croupier. The one slip is turn 5, where 'hit until I bust' was treated as a single hit, though the player did ask for it. In turn 2 the double-down was the player's own call."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You win 500 on the doubled bet, so your bankroll is 1,500.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll stays at 1,400.",
+          "found": true
+        },
+        {
+          "quote": "The dealer turned up 16 and drew a 4 to 20",
+          "found": true
+        }
+      ],
+      "why": "Totals and results mostly match the surface. In turn 2 the bankroll math is off: 750 minus 250 for the double is 500, and winning 500 would give 1,500, but the surface bet of 500 was won, so it is only consistent if the stake is returned. The 'Bankroll stays at 1,400' wording is also loose, since it was already deducted."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3952,
+    "outputTokens": 589,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.013794,
+  "at": "2026-10-19T01:57:32.695Z"
+}

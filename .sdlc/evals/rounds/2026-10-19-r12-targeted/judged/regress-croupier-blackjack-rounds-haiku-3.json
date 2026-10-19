@@ -1,0 +1,101 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-rounds-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You stand on 18. The dealer's hole card is a King, so the dealer stands on 17.",
+          "found": true
+        },
+        {
+          "quote": "New round. Place your bet to deal.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk with no JSON, ids, or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "You draw a 5 — soft 20 becomes hard 15.",
+          "found": true
+        },
+        {
+          "quote": "Stand on 15. The dealer reveals the 6 for 16",
+          "found": true
+        }
+      ],
+      "why": "Each bet is taken, each Hit draws, and each Stand plays out the dealer and settles."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer draws a 10 to 23 and busts, so you win 100",
+          "found": true
+        },
+        {
+          "quote": "must draw, and gets a 9 for 25, a bust.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays the dealer hand and settles the bet every time. It never makes a choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your 15 wins 50.",
+          "found": true
+        },
+        {
+          "quote": "your bankroll goes to 1,100",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll is now 1,175.",
+          "found": true
+        }
+      ],
+      "why": "Totals and bankroll agree with the surface and earlier turns. The turn 6 reply does not state the bankroll, but it omits rather than contradicts, and the turn 4 reply says nothing about the bet being taken."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4118,
+    "outputTokens": 464,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.012876,
+  "at": "2026-10-19T01:53:52.399Z"
+}

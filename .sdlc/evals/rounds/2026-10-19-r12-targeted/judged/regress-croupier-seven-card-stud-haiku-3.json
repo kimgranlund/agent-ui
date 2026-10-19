@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-seven-card-stud-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You check, and so do I.",
+          "found": true
+        },
+        {
+          "quote": "Next hand. Same seven-card stud, same 1,000 bankroll.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You fold, so I take the pot.",
+          "found": true
+        },
+        {
+          "quote": "You bet 50 and I call, so the pot is 100.",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the player's move: checks advance the streets, the fold ends the hand, the bet is taken and called, and Deal again deals a new hand."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The hand goes to showdown. Nobody bet, so no chips move.",
+          "found": true
+        },
+        {
+          "quote": "Fourth street: you receive the 6 of spades, and I show the 9 of diamonds.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals every street, plays the dealer's checks and call, reveals the hidden cards and settles the showdown itself. It never makes a choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your king-high (K-Q-9-7-6) beats my queen-high (Q-10-9-8-5).",
+          "found": true
+        },
+        {
+          "quote": "You bet 50 and I call, so the pot is 100.",
+          "found": true
+        }
+      ],
+      "why": "The showdown hands and the result text match the cards on the surface, and the pot of 100 and bankroll of 950 match the surface text. The 1,000 bankroll quoted in earlier replies is also consistent."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 5422,
+    "outputTokens": 1127,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.022114,
+  "at": "2026-10-19T01:55:59.876Z"
+}

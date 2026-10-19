@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-omaha-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Omaha it is.",
+          "found": true
+        },
+        {
+          "quote": "You fold and lose the $10 big blind. The opponent wins the $15 pot.",
+          "found": true
+        }
+      ],
+      "why": "Every reply uses short, plain dealer language. No JSON, ids, or tool talk appears."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet the pot at $15. The opponent calls, so the pot is $30.",
+          "found": true
+        },
+        {
+          "quote": "You bet the pot at $15, and the opponent calls. The pot is $45.",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the player's move: it takes the check, the bet, the fold, or the deal. The one weak spot is that 'pot' bets of $15 are accepted without comment, which is minor."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The opponent calls, so the pot is $30.",
+          "found": true
+        },
+        {
+          "quote": "At showdown, your J♥ 10♦ plus Q♦ 9♠ 8♣ make a queen-high straight.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the opponent, reveals the hands and settles the pot itself. Choosing the generic 'Check, or call if there is a bet' phrasing as the player's own is not a house error. The Croupier also never makes a player choice."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The pot is $45 and your bankroll is $975.",
+          "found": true
+        },
+        {
+          "quote": "You bet the pot at $15. The opponent calls, so the pot is $30.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll: $1,010.",
+          "found": true
+        }
+      ],
+      "why": "The numbers drift. The pot after a $15 bet and a call should be $45 (15 + 15 + 15), not $30. Bankroll after folding the big blind in the first hand is shown as $1,010, which fits $1,020 minus 10, but the pot is also called $15 after a $10 big blind. Turn 8's pot of $45 repeats the same arithmetic as earlier turns."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 4839,
+    "outputTokens": 606,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.015738,
+  "at": "2026-10-19T01:54:30.777Z"
+}

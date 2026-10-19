@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-omaha-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I should have posted blinds at the start, so this hand had nothing at stake.",
+          "found": true
+        },
+        {
+          "quote": "Chip delta is -10, and your bankroll is 990.",
+          "found": true
+        }
+      ],
+      "why": "Mostly plain dealer voice with no JSON or ids. One slip: the turn 4 reply talks about its own mistake ('I should have posted blinds'), which is meta commentary."
+    },
+    {
+      "id": "C2",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The pot is empty, so betting the pot isn't possible yet. Your options are check or fold.",
+          "found": true
+        },
+        {
+          "quote": "You raise the pot, putting in 50 more to make it 60 total.",
+          "found": true
+        }
+      ],
+      "why": "Most moves are answered, and the impossible bet is explained with alternatives. But in turn 8 'Bet the pot' was used as a pre-flop raise with an odd amount, and the dealer's call was auto-played."
+    },
+    {
+      "id": "C3",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You raise the pot, putting in 50 more to make it 60 total.",
+          "found": true
+        },
+        {
+          "quote": "Dealing a new Omaha hand.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the dealer and settles hands itself. The turn 7 deal-again silently posted a 10 blind with the same hand and the same dealer cards. The bankroll went 990 to 980 with no mention of the prior hand, and the exact bet size is dubious."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The pot is 30. Call 10, raise, or fold.",
+          "found": true
+        },
+        {
+          "quote": "You raise the pot, putting in 50 more to make it 60 total. The dealer calls, the pot is 120",
+          "found": true
+        },
+        {
+          "quote": "Chip delta is -10, and your bankroll is 990.",
+          "found": true
+        }
+      ],
+      "why": "Turn 8 math is inconsistent: 60 each makes 120, but the bankroll fell by 50 to 930 (from 980) when the player put in 60 total, a 10 blind plus 50, which matches. Meanwhile turn 6 shows the pot at 30 with the player losing 10, and turn 7 starts at 980 although the reply never explains the second blind. Also, turn 2 said the pot is empty although turn 4 later calls it 0 consistently, but the surface said 'check or fold' while the reply earlier offered bet, a mild contradiction."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 5257,
+    "outputTokens": 722,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.017734,
+  "at": "2026-10-19T01:57:40.637Z"
+}

@@ -1,0 +1,105 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-texas-holdem-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I check, the dealer checks behind me, and we go to showdown.",
+          "found": true
+        },
+        {
+          "quote": "My J♥ 10♠ with the board makes an 8-to-Queen straight",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain table talk with no JSON or tool talk. The one slip is Turn 4, where the dealer speaks as the player ('I check', 'My J♥ 10♠')."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You call the 10 to match the dealer's big blind.",
+          "found": true
+        },
+        {
+          "quote": "You bet 50 and the dealer calls, so the pot is 140.",
+          "found": true
+        },
+        {
+          "quote": "You raise to 100 and the dealer calls.",
+          "found": true
+        }
+      ],
+      "why": "Every reply acts on the player's latest message or click: the bet, call, check, raise, fold and Deal again are each carried out."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer's K♣ 4♦ is a King-high hand.",
+          "found": true
+        },
+        {
+          "quote": "so I win the 140 pot. Net +70, bankroll 1,070.",
+          "found": true
+        },
+        {
+          "quote": "New hand. You're in the small blind again",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals streets, plays the dealer's actions, reveals the hand at showdown and settles the pot itself. It uses the bet sizes the player chose."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Net +70, bankroll 1,070.",
+          "found": true
+        },
+        {
+          "quote": "New hand. You're in the small blind again, bankroll 1,070.",
+          "found": true
+        },
+        {
+          "quote": "You raise to 100 and the dealer calls. The pot is 200 and your bankroll is 960.",
+          "found": true
+        }
+      ],
+      "why": "The showdown, pot and bankroll math match the surface and earlier replies. A minor slip: new-hand replies quote the bankroll before the blind (1,070, 1,060) while the surface shows it after (1,060, 1,050)."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 5397,
+    "outputTokens": 1464,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.025434,
+  "at": "2026-10-19T01:56:36.269Z"
+}

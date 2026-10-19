@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-texas-holdem-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Texas hold'em it is. You start with 1,000 chips.",
+          "found": true
+        },
+        {
+          "quote": "New hand. Your bankroll is 1,050. The dealer shuffles and deals.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk with no JSON, ids or tool talk. The turn 2 line naming the face-down 2♦ is odd, but it is still dealer voice."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet 50 and the dealer calls.",
+          "found": true
+        },
+        {
+          "quote": "A raise needs a bet to raise, and nothing is in the pot yet, so your 100 is an opening bet.",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the latest move. The impossible raise is explained plainly and treated as the 100 opening bet the player asked for."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "the dealer checks behind you. The flop comes J♠ 5♣ 9♦.",
+          "found": true
+        },
+        {
+          "quote": "You win the 100 pot, +100 chips. Bankroll is now 1,050.",
+          "found": true
+        }
+      ],
+      "why": "The dealer deals each street, acts for the house, reveals the hole card at showdown and settles the pot itself. It never asks the player to do the house's job or makes a choice for them."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The pot is 100.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll is now 1,050.",
+          "found": true
+        },
+        {
+          "quote": "The pot is 200 and your bankroll is 950.",
+          "found": true
+        }
+      ],
+      "why": "Pot, bankroll and results match the surface data and earlier replies throughout. 950 after the bet becomes 1,050 after the 100 win, and 1,050 minus 100 gives 950 on the later hand."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 5384,
+    "outputTokens": 1606,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.026828,
+  "at": "2026-10-19T01:56:48.411Z"
+}

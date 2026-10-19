@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-guidance-conflict-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "I can't show the hole card yet.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain dealer talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "I can't show the hole card yet.",
+          "found": true
+        },
+        {
+          "quote": "The dealer reveals the 4 of diamonds for 13, draws a 5 of hearts to 18",
+          "found": true
+        }
+      ],
+      "why": "The bet is taken, the impossible hole-card request is declined with the available options, and Stand plays out the dealer."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the 4 of diamonds for 13, draws a 5 of hearts to 18",
+          "found": true
+        },
+        {
+          "quote": "You lose your 100 bet.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays the dealer hand and settles without asking the player to do any of it."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer 18 beats your 17. You lose 100.",
+          "found": true
+        },
+        {
+          "quote": "your 17 loses",
+          "found": true
+        }
+      ],
+      "why": "The reply's totals and result match the surface, the bankroll of 900 is consistent with the 100 bet lost, and earlier replies agree."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2344,
+    "outputTokens": 417,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.008858,
+  "at": "2026-10-19T01:57:02.719Z"
+}

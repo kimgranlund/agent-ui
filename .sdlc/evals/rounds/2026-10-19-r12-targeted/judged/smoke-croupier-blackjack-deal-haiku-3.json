@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "smoke-croupier-blackjack-deal-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "Blackjack it is. Dealer stands on 17, a natural pays 3:2, and a push returns your bet.",
+          "found": true
+        }
+      ],
+      "why": "Both replies are short, plain dealer talk with no JSON, ids or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The 100 click is taken as the bet and the hand is dealt in the same turn; the opening request got a game start."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Set your bet on the table and deal.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals the cards itself after the bet and chooses no move for the player. Turn 0 words 'and deal' as if the player deals, which is slightly ambiguous, but the dealing still happens automatically."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "\"bankroll\":900,\"bet\":100",
+          "found": true
+        }
+      ],
+      "why": "The reply's bet of 100 matches the surface, where bankroll is 900 after the 100 bet, and the 1,000 starting chips match turn 0."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 1729,
+    "outputTokens": 423,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.007688,
+  "at": "2026-10-19T01:57:19.795Z"
+}

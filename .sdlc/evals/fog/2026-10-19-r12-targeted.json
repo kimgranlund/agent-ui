@@ -1,0 +1,20 @@
+{
+  "round": "2026-10-19-r12-targeted",
+  "ticket": "T-0376",
+  "reportId": "6bae5f5b20e6a9741951dd4a",
+  "mapping": ".sdlc/evals/fog-manifest.json",
+  "mappingHash": "1999c4dd1cdcc857672d0f0773828353efd6c6f1ca231109f0864dc32a38aed1",
+  "mappingNote": "the same manifest as rounds 10 and 11, so detector coverage compares with round 11 directly",
+  "bundleFingerprint": "4abdc29695c3ce35ed2e9879c7f7e1c241ea515973eebe605fa5d1d04c7c14e4",
+  "engineeringRun": "run-6a2d889e7fc9714bdce95b65",
+  "events": 954,
+  "sources": 299,
+  "decisions": 6,
+  "findings": 6,
+  "diagnosticFindings": 0,
+  "excluded": "none: the 296 trace lines are 296 completed produce turns (no halt, no provider-error line), so nothing was blanked",
+  "ingest": "python3 ~/.claude/skills/context-fog-of-war/scripts/engineer.py ingest .sdlc/evals/rounds/2026-10-19-r12-targeted --mapping .sdlc/evals/fog-manifest.json --out <dir>",
+  "publish": "python3 ~/.claude/skills/context-fog-of-war/scripts/library.py publish <dir>/final.json",
+  "analysis": "T-0376 decision analysis: d1 is T-0359 and the ContrastPair nested-card render lint (cluster L), d2 the poker hand settled in data model only with no Deal again (M), d3 PlayingCard sm under the type floor (N), d4 T-0371 against the judged C4 rate (K stays open), d5 T-0375 not reaching poker Deal again turns (O), d6 the T-0367 and T-0370 oracles holding, with 1 guidance edge and 6 reviewed findings.",
+  "hydrate": "decisions, guidanceEdges and findings added to the ingested session.json with exact excerpts and event ids, then diagnostics.py --data --out, fog.py validate and library.py publish (references/investigation.md)"
+}

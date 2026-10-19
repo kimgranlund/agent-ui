@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-seven-card-stud-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Each player antes 10, so the pot is 20 and your bankroll starts at 1,000 minus the ante.",
+          "found": true
+        },
+        {
+          "quote": "The dealer's king-high hand (K-10-9-8-6) beats your queen-high hand (Q-J-9-7-5)",
+          "found": true
+        }
+      ],
+      "why": "The replies are mostly plain dealer talk with no JSON or tool talk. A few lines read like analysis, such as the bankroll arithmetic, and the Turn 1 \"you act first\" is slightly wordy, so one small slip."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You checked. The dealer checked too, so the hand moves to fourth street.",
+          "found": true
+        },
+        {
+          "quote": "The hand is over: the dealer's king-high beat your queen-high",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the check, and on the final turn it says the hand is over and offers another hand or a new game. The Turn 6 click found no button and no agent turn ran, so there is no reply to judge there."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "seventh street was dealt: you drew the 2 of hearts and the dealer drew the 10 of diamonds",
+          "found": true
+        },
+        {
+          "quote": "so the dealer takes the 20 pot",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals every street, reveals the hidden cards at showdown and settles the pot itself. It makes no choices for the player beyond the check the player requested."
+    },
+    {
+      "id": "C4",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer's king-high hand (K-10-9-8-6) beats your queen-high hand (Q-J-9-7-5)",
+          "found": true
+        },
+        {
+          "quote": "Your bankroll stays at 990.",
+          "found": true
+        }
+      ],
+      "why": "The reply and surface agree on the winner, the pot and the bankroll of 990. The Turn 4 surface cards are 7, 9, Q, J, 3, 5, 2 against 4, K, 6, 2, 9, 8, 10, so the claimed best-five hands are questionable, since the dealer has a pair of nines and the player a pair of twos. Calling both hands high-card looks wrong and the dealer would still win, so this is a few slips the player would shrug off."
+    }
+  ],
+  "score": 3,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4610,
+    "outputTokens": 687,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01609,
+  "at": "2026-10-19T01:55:46.263Z"
+}

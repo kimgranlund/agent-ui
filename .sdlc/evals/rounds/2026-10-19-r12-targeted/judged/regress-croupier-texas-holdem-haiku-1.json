@@ -1,0 +1,85 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-texas-holdem-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I check, so the pot stays at zero and we move to the flop: 7♠, 2♥, Q♣.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and in plain dealer voice with no JSON or tool talk. The surface status text has an odd 'straight... no pair' self-correction, but that is surface rather than the reply."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I check, so the pot stays at zero and we move to the flop",
+          "found": true
+        },
+        {
+          "quote": "I call your 50. Pot is 100 and your bankroll is 950.",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on: check, bet, check, check to showdown. The turn 1 'check or call' was handled as a check. The final 'Deal again' click found no button, so it was not answered, though that is not the agent's reply."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "we go to showdown. My K-Q-8-7-5 (king high) beats your J-9-8-7-5 (jack high), so I take the 100 pot.",
+          "found": true
+        }
+      ],
+      "why": "The dealer deals streets, calls the bet, reveals the hole cards and settles the pot itself, and never asks the player to do the house's work. The showdown is correct in the sense that the dealer wins, but the bankroll treatment is questionable."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Pot is 100 and your bankroll is 950.",
+          "found": true
+        },
+        {
+          "quote": "You lose 50, and your bankroll stays at 950.",
+          "found": true
+        }
+      ],
+      "why": "The dealer called 50 and the pot was 100, which is the player's 50 plus the dealer's 50. At showdown the dealer takes the pot and the player loses 50, yet the bankroll stays at 950, so the reply is consistent with the surface but muddled. The 'stays at 950' after 'lose 50' is misleading, since the 50 was already deducted. The surface status also contains the garbled 'King-high straight... no pair'."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 3225,
+    "outputTokens": 623,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.01268,
+  "at": "2026-10-19T01:56:24.926Z"
+}

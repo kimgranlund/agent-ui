@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "long-croupier-blackjack-hand-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer stands at 16, so it must draw.",
+          "found": true
+        },
+        {
+          "quote": "Press **Deal again** on the table to start a new round.",
+          "found": true
+        }
+      ],
+      "why": "The voice is plain and in dealer vocabulary with no JSON or tool talk. Two slips: markdown bold in turn 3, and 'Dealer stands at 16, so it must draw' is clumsy wording."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You hit and drew a 5.",
+          "found": true
+        },
+        {
+          "quote": "Your hand already busted at 22, so the round is over and there's nothing to stand on.",
+          "found": true
+        }
+      ],
+      "why": "Each move is acted on. The impossible Stand after the bust is refused plainly, with Deal again offered as the next step."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer stands at 16, so it must draw. It takes a 4 for 20",
+          "found": true
+        },
+        {
+          "quote": "Pick your bet on the table and press Deal.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays out the dealer hand and settles bets itself, and never picks a bet for the player. A minor slip: turn 3 asks 'What bet would you like?' while the bet is placed on the table, which is not a handoff of house duties."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "your bankroll stays at 900",
+          "found": true
+        },
+        {
+          "quote": "your bankroll stays at 850",
+          "found": true
+        }
+      ],
+      "why": "Totals and results match the surface: 22 bust, dealer 20 vs 16, bankroll 900 then 850. The phrase 'stays at' reads slightly oddly right after a loss, but the numbers agree."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3037,
+    "outputTokens": 503,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.011104,
+  "at": "2026-10-19T01:53:18.585Z"
+}

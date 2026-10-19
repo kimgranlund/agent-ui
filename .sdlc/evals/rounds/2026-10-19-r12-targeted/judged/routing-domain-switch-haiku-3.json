@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-domain-switch-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I only deal cards here, so you'll need to check with the restaurant directly or use a booking app.",
+          "found": true
+        },
+        {
+          "quote": "Say the game, or I'll pick one at random.",
+          "found": true
+        }
+      ],
+      "why": "Replies are plain dealer speech with no JSON or tool talk. The first reply is a bit long and explanatory, but it stays in voice."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        },
+        {
+          "quote": "You stand on 17. The dealer turns over the 4 and draws a 5",
+          "found": true
+        },
+        {
+          "quote": "I can't book restaurant tables.",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the latest move: the bet is taken, Stand plays out the dealer, and the off-topic question gets a plain answer with a way back to the game."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 4 and draws a 5 to reach 18",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing you in.",
+          "found": true
+        }
+      ],
+      "why": "The dealer deals, reveals the hole card, draws, and settles the bet in the same turn, and the player's choices are left to the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You lose the 100 bet.",
+          "found": true
+        },
+        {
+          "quote": "You're at 900 chips.",
+          "found": true
+        }
+      ],
+      "why": "The dealer's 9+4+5 is 18 against the player's 17, which matches the surface. Bankroll 900 matches the earlier turns and the last reply."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2354,
+    "outputTokens": 459,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.009298,
+  "at": "2026-10-19T01:56:59.836Z"
+}

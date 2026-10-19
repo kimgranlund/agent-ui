@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-spanish-21-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Spanish 21 it is.",
+          "found": true
+        },
+        {
+          "quote": "You stand on 18. The dealer turns the 5 for 12 and draws a 6 of spades to reach 18.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and plain, in dealer vocabulary, with no JSON, markup, ids or talk of tools."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing your Spanish 21 hand now.",
+          "found": true
+        },
+        {
+          "quote": "You hit and draw a 3 of clubs, bringing you to 18.",
+          "found": true
+        }
+      ],
+      "why": "Every bet, Hit, Stand and Deal again click was acted on correctly. Nothing was impossible or ignored."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the hole card and draws.",
+          "found": true
+        },
+        {
+          "quote": "The dealer turns the 5 for 12 and draws a 6 of spades to reach 18.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays out the dealer hand and settles the bet itself. It never makes the player's choices and never asks the player to do the house's job."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 50 placed.",
+          "found": true
+        },
+        {
+          "quote": "your bankroll returns to 1,050",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankroll agree with the surface in nearly every turn. One slip: in Turn 3 the surface still shows the previous bet of 100 and the bankroll at 900, so the bet shown was never set by the player."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3931,
+    "outputTokens": 483,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.012692,
+  "at": "2026-10-19T01:56:19.606Z"
+}
