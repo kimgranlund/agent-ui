@@ -45,3 +45,12 @@ Kim approves each mockup before its step builds. The three rulings are recorded 
 - Kim 2026-10-19: approved step 2 side-by-side.png for merge (gate b).
 - Kim 2026-10-19: approved step 3 side-by-side.png for merge (gate b).
 - Kim 2026-10-19: approved step 4 side-by-side.png for merge (gate b); button radius at spacious and loose left to step 6.
+
+## Debate: step 5 wording
+Debate rule (Kim 2026-10-16): the Opus architect authors or defends the model-read wording, the fable plan-reviewer challenges it, unresolved points go to Kim. Scope is only the density clause of `packages/agent-ui/a2ui/src/agent/prompts/genui-dogfood-teaching.md:31-36` (the "Size and density are attributes, not styles." bullet); step 4 has merged, so the five densities and height = 3n + 2 x (q - 2)n/4 are live on main.
+- Current: "an ancestor `data-density` (`compact` / `default` / `spacious`) moves rhythm only: the icon↔label gaps, never the frame."
+- Proposed (planner-L3-4.md step 5): "an ancestor `data-density` (`tight` / `compact` / `regular` / `spacious` / `loose`, `regular` when absent) sets the control height and the spacing around it, never n or the type."
+- Questions: is it true against `scripts/lib/foundations-model.mjs` and `foundations.gen.css` on main; does it contradict the same bullet's "data-tier and data-scale set the frame every descendant control derives (height, icon size, padding)"; will a producer model read it as permission to set density per control or to hand-size; is it the shortest wording that stays true.
+- Architect: write the final wording (kept or revised) with reasons as `## Recommendation`. Plan-reviewer: challenge that recommendation, not the plan; pass, replan (with the wording you would ship instead), or blocked (a point only Kim can decide).
+- Architect recommendation: `.sdlc/runtime/tasks/0374-foundations-geometry-visible/architect-L1.md` (`### Recommendation`). Plan-reviewer: review that file.
+- Debate outcome 2026-10-19: plan-reviewer-L1-4.md passed the architect's revision, nothing unresolved for Kim. Recorded wording (step 5 builder uses it): lines 34-36 of genui-dogfood-teaching.md become the four lines in architect-L1.md `### Recommendation` code block; the clause reads "an ancestor `data-density` (`tight` / `compact` / `regular` / `spacious` / `loose`, `regular` when absent) moves that frame's height and the card and panel spacing, never the type or icon size." (Reviewer note: lg/xl/2xl layout gaps also move with density; the clause stays true because it does not say "only".)
