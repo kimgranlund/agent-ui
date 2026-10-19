@@ -18,7 +18,7 @@ import '@agent-ui/icons/phosphor'
 import './lib/component-gallery.ts'
 import { galleryMembers } from './lib/component-gallery.ts'
 import { whenFlushed } from '@agent-ui/components'
-import { resolve } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { resolve } from '../scripts/lib/foundations-model.mjs'
 import { rootResolve } from '../scripts/lib/foundations-rules.mjs'
 import type { UISelectElement } from '@agent-ui/components/controls/select'
 
@@ -176,10 +176,10 @@ describe('<component-gallery> — the ONE <ui-theme-provider> drives every speci
 
     await chooseOption(selectFor(gallery, 'Scale'), 'sm')
     const heightSm = Number.parseFloat(getComputedStyle(live).blockSize)
-    expect(heightSm, 'data-scale=sm did not change the specimen height').toBe(resolve('product', 'sm', 'md').h)
+    expect(heightSm, 'data-scale=sm did not change the specimen height').toBe(resolve('product', 'sm', 'md').height)
 
     await chooseOption(selectFor(gallery, 'Tier'), 'content')
-    expect(Number.parseFloat(getComputedStyle(live).blockSize), 'data-tier=content did not change the height').toBe(resolve('content', 'sm', 'md').h)
+    expect(Number.parseFloat(getComputedStyle(live).blockSize), 'data-tier=content did not change the height').toBe(resolve('content', 'sm', 'md').height)
 
     await chooseOption(selectFor(gallery, 'Tier'), 'product') // back to the defaults
     await chooseOption(selectFor(gallery, 'Scale'), 'md')

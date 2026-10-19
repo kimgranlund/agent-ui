@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import { server, cdp } from 'vitest/browser'
 
@@ -83,7 +83,7 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
       wrap.setAttribute('data-tier', tier)
       wrap.setAttribute('data-scale', scale)
       const r = resolve(tier, scale, 'md')
-      expect(markerBox(item), `${tier} / ${scale}`).toBe(Math.max(r.icon, glyphBox(r)))
+      expect(markerBox(item), `${tier} / ${scale}`).toBe(Math.max(r.iconBox, glyphBox(r)))
     }
   })
 })

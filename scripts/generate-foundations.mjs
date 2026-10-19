@@ -36,6 +36,7 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
 import { RENAMED, ROOT_REGISTER, STEP } from './lib/foundations-rules.mjs'
+import { CFG } from '../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
 import { LEGACY_PATH, anchors, checkAnchors, checkEmitted, heightPerN, roomyLevels } from './lib/foundations-model.mjs'
 
 export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
@@ -142,9 +143,9 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = 
     `/* ${rootDefault ? `Root default (the cut): :root is ${ROOT_INPUTS.tier} at scale ${ROOT_INPUTS.scale} and every element derives from one n.` : 'Dark launch: tokens exist only inside an opt-in [data-tier] region; nothing is declared on :root.'} */`,
   ]
   if (rootDefault) {
-    out.push(`:root { ${tierInputs(LEGACY_PATH.tiers[ROOT_INPUTS.tier], a)} --md-sys-scale-s: ${STEP[ROOT_INPUTS.scale]}; }`)
+    out.push(`:root { ${tierInputs(CFG.tiers[ROOT_INPUTS.tier], a)} --md-sys-scale-s: ${STEP[ROOT_INPUTS.scale]}; }`)
   }
-  for (const [tier, constants] of Object.entries(LEGACY_PATH.tiers)) out.push(`[data-tier='${tier}'] { ${tierInputs(constants, a)} }`)
+  for (const [tier, constants] of Object.entries(CFG.tiers)) out.push(`[data-tier='${tier}'] { ${tierInputs(constants, a)} }`)
   for (const [step, s] of Object.entries(STEP)) out.push(`${scoped(`[data-scale='${step}']`)} { --md-sys-scale-s: ${s}; }`)
   for (const [step, z] of Object.entries(STEP)) {
     out.push(`${scoped(`:is([data-size='${step}'], [size='${step}'])`)} { --md-sys-size-z: ${z}; --md-sys-title-bump: ${a.titleBump[step]}; }`)

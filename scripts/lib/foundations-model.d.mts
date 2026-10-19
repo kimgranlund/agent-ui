@@ -2,6 +2,9 @@
  *  as px, plus the control surface anatomy) and the guards on both. */
 import type { Density, Step, Tier } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 
+/** The axes resolve() takes: the tier and step names are the vendored resolver's too; density is the legacy axis. */
+export type { Density, Step, Tier }
+
 export type SpacingRole = 'page' | 'container' | 'group' | 'control'
 
 export interface Anchors {
@@ -59,7 +62,6 @@ export interface Emitted {
 }
 
 export const LEGACY_PATH: {
-  tiers: Record<Tier, [number, number, number, number]>
   density: Record<Density, number>
   linear: Record<'groupKicker', [number, number]>
 }

@@ -13,7 +13,7 @@
 
 `n = n0 + a·s + k·z + g·s·z`, with the **tier** constants `(n0, a, k, g)` and three inheriting axes, n in 4 to 24:
 
-- **Tier** `data-tier` = `widget` 6/1/1/0 · `product` 8/2/2/1 · `content` 10/2/2/1 · `brand` 14/2/2/1 (what a region is for).
+- **Tier** `data-tier` = `widget` 6/1/1/0 · `product` 8/2/2/1 · `content` 11/3/2/1 · `brand` 15/4/2/1 (what a region is for; the skill's rows, T-0374).
 - **Scale** `data-scale` = `sm` / `md` / `lg` → s = -1 / 0 / +1 (a whole region: controls, type and spacing together).
 - **Size** z = a control's reflected `size` prop (`sm` / `md` / `lg`), or `data-size` on any other element → -1 / 0 / +1.
 - **Density** `data-density` = `compact` / `default` / `spacious` → d = -1 / 0 / +1, container spacing only:
@@ -141,7 +141,7 @@ its margin's, so widget 50 / 25, card 75 / 50 and layout 100 / 75 percent of 4m.
 `ui-text`'s API stands (nine variants, `size`, `as`, the ADR-0106/0109/0114 axes); each variant maps to a
 derived role (`--md-sys-type-*`) and `size` is z. The `--md-sys-typescale-*` rows are a generated alias
 layer until W7. Display is small in a product region by design; a hero takes its own tier (content md
-display 47, brand md display 75). ADR-0150's compact-window body drop is superseded: body at the root md is 15.
+display 53, brand md display 84). ADR-0150's compact-window body drop is superseded: body at the root md is 15.
 Linear roles never go below 9px. The two small uppercase roles take the skill's names (T-0373): the **section
 kicker** (`--md-sys-type-section-kicker`, round(body · 9/8)) and the **group kicker** (`--md-sys-type-group-kicker`,
 n/2 + 6.5, the only half-pixel role); the `kicker` and `overline` variants both read the group kicker. The former

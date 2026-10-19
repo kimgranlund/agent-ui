@@ -5,7 +5,7 @@ import { CFG, check, resolve, type Resolved } from './scale.mjs'
 import { BRIDGE_REL, EMITTED_M7, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
 import { DERIVED, RENAMED, ROOT_REGISTER, STEP, glyphBox, findingsIn } from '../../../../../scripts/lib/foundations-rules.mjs'
 import { anchors, checkAnchors, checkEmitted, resolve as resolveEmitted, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
-import { CFG as VENDORED_CFG } from './vendor/mathematical-design-system/scale.mjs'
+import { CFG as VENDORED_CFG, resolveGeometry } from './vendor/mathematical-design-system/scale.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
 // The 36-cell computed leg (tokens equal resolve() in both engines) is foundations.browser.test.ts.
@@ -40,9 +40,10 @@ const CURRENT_CURVATURE_SHA = 'cc1639f495299070ac02f86825589e970aff9286933fe6a3b
  *  block) and the bridge resets them in the legacy opt-out.
  *  T-0374 moves them again with each visible change. Step 1: the glyph box is n + 6 and the new `--md-sys-glyph-slot`
  *  is 3n (both sheets: the bridge resets the slot in the legacy opt-out). Step 2: the field label is the skill's
- *  10 + 1 per step (the bridge's label rows alias it) and the new `--md-sys-type-small-control` is 9 + 1. */
+ *  10 + 1 per step (the bridge's label rows alias it) and the new `--md-sys-type-small-control` is 9 + 1. Step 3: the
+ *  content and brand tier rows are the skill's 11/3/2/1 and 15/4/2/1 (the sheet only: the bridge reads no tier row). */
 const PARITY_SHA = {
-  foundations: 'b679079ce233a3a2dd01e0884bb2e7e649a9716ddddb5f22079dc832b9bfeb62',
+  foundations: '8a71f1eb9166b7602ae152b1e6a2059b0a1422aee4fc121b63d9a97c5193292d',
   bridge: '73df83609e042af080b004d183f00bb071a10f346d0fa1f6486253d4ecb241d4',
 }
 const textSha = (text: string): string => createHash('sha256').update(text).digest('hex')
@@ -107,6 +108,15 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
       expect(textSha(renderFoundationsCss())).not.toBe(PARITY_SHA.foundations)
     } finally {
       VENDORED_CFG.Q[0] = q
+    }
+    expect(textSha(renderFoundationsCss())).toBe(PARITY_SHA.foundations)
+    // The tier rows are read from the vendored CFG at render time too (T-0374 step 3): a nudged row moves the sheet.
+    const n0 = VENDORED_CFG.tiers.content[0]
+    try {
+      VENDORED_CFG.tiers.content[0] = n0 + 1
+      expect(textSha(renderFoundationsCss())).not.toBe(PARITY_SHA.foundations)
+    } finally {
+      VENDORED_CFG.tiers.content[0] = n0
     }
     expect(textSha(renderFoundationsCss())).toBe(PARITY_SHA.foundations)
   })
@@ -194,8 +204,15 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const s of steps) for (const z of steps) {
       for (const d of ['compact', 'default', 'spacious'] as const) {
         const e = resolveEmitted(tier, s, z, d)
-        const r = resolve(tier, s, z, d)
         const at = `${tier}/${s}/${z} ${d}`
+        cells++
+        // T-0374 step 3: the content and brand rows are the skill's (11/3/2/1, 15/4/2/1), not the frozen resolver's
+        // (10/2/2/1, 14/2/2/1), so n and every field derived from it leave the legacy comparison on those tiers.
+        if (tier === 'content' || tier === 'brand') {
+          expect(e.n, at).toBe(resolveGeometry(tier, s, z, 'regular').n)
+          continue
+        }
+        const r = resolve(tier, s, z, d)
         expect([e.n, e.m, e.c, e.height, e.inset, e.labelInset, e.radius, e.iconBox, e.checkboxRadius], at)
           .toEqual([r.n, r.m, r.c, r.h, r.n, r.labelMargin, r.n, r.icon, r.parts.checkboxRadius])
         // T-0374: the glyph is the skill's n + 6 in its 3n slot, the model's own beside the frozen resolver.
@@ -213,7 +230,6 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
         // The chip pill n + c (Amendment 5) and the control pill h/2 are the sheet's own, beside the resolver.
         expect(e.chip, at).toEqual({ margin: r.chip.margin, gutter: r.chip.gutter, radius: r.n + r.c })
         expect(e.controlRadius, at).toBe(r.h / 2)
-        cells++
       }
     }
     expect(cells).toBe(108)

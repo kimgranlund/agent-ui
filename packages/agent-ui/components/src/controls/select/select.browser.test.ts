@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UISelectElement } from './select.ts'
@@ -671,8 +671,8 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     ).not.toBe(Math.round(lgTrigger.getBoundingClientRect().height))
   })
 
-  it('a content / lg region moves the md trigger to 4n = 52px (anti-vacuous region proof, ADR-0245 cl.2)', () => {
-    // A data-tier="content" data-scale="lg" ancestor (the old content-lg register) raises n to 13 for a md control,
+  it('a content / lg region moves the md trigger to 4n = 56px (anti-vacuous region proof, ADR-0245 cl.2)', () => {
+    // A data-tier="content" data-scale="lg" ancestor (the old content-lg register) raises n to 14 for a md control,
     // proving the region inputs propagate into the control's height token chain.
     const wrapper = document.createElement('div')
     wrapper.setAttribute('data-tier', 'content')
@@ -694,7 +694,7 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     const trigger = el.querySelector<HTMLElement>('[data-part="trigger"]')!
     const h = Math.round(trigger.getBoundingClientRect().height)
 
-    expect(h, `${server.browser}: a content / lg md trigger should be 4n`).toBe(resolve('content', 'lg', 'md').h)
+    expect(h, `${server.browser}: a content / lg md trigger should be 4n`).toBe(resolve('content', 'lg', 'md').height)
 
     // Anti-vacuous: the region value must differ from the root's 28px
     expect(h, `${server.browser}: the region height must differ from the root 28px — did the region propagate?`).not.toBe(28)

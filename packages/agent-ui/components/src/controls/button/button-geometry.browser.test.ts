@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import { server, cdp } from 'vitest/browser'
 
@@ -101,7 +101,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
         wrap.setAttribute('data-tier', tier)
         wrap.setAttribute('data-scale', scale)
         const r = resolve(tier, scale, 'md')
-        expect(frameHeight(btn), `height @ ${tier} / ${scale}`).toBeCloseTo(r.h, 1)
+        expect(frameHeight(btn), `height @ ${tier} / ${scale}`).toBeCloseTo(r.height, 1)
         expect(fontPx(btn), `font @ ${tier} / ${scale}`).toBe(r.type.control)
       }
     }
@@ -127,7 +127,7 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     for (const [size, tier, scale] of cells) {
       const r = resolve(tier ?? 'product', scale ?? 'md', size)
       const got = read(size, tier, scale)
-      expect(got, `${size} @ ${tier ?? 'root'} / ${scale ?? 'md'}`).toEqual({ h: r.h, f: r.type.control, icon: r.icon })
+      expect(got, `${size} @ ${tier ?? 'root'} / ${scale ?? 'md'}`).toEqual({ h: r.height, f: r.type.control, icon: r.iconBox })
       expect(Number.isInteger(got.f) && Number.isInteger(got.icon), 'derived values are whole px (M7)').toBe(true)
     }
   })
@@ -142,8 +142,8 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
       distances.push(gapPx(btn) + labelInsetPx(btn))
     }
     // ADR-0245 Amendment 4: the column-gap is the control gutter c, and the label inset n - c makes icon to text n
-    expect(gutters).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').control.gutter))
-    expect(distances).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').control.margin))
+    expect(gutters).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').c))
+    expect(distances).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').inset))
     expect(allDistinct(distances), `icon to label did not change across data-scale: ${distances.join()}`).toBe(true)
   })
 
@@ -152,10 +152,10 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     for (const scale of ['sm', 'md', 'lg'] as const) {
       wrap.setAttribute('data-scale', scale)
       const r = resolve('product', scale, 'md')
-      expect(frameHeight(btn), `height @ ${scale}`).toBeCloseTo(r.h, 0)
-      expect(padStartPx(btn), `leading box margin @ ${scale}`).toBeCloseTo(r.control.margin, 0)
-      expect(padEndPx(btn), `trailing box margin @ ${scale}`).toBeCloseTo(r.control.margin, 0)
-      expect(labelInsetPx(btn), `label inset @ ${scale}`).toBeCloseTo(r.labelMargin, 0)
+      expect(frameHeight(btn), `height @ ${scale}`).toBeCloseTo(r.height, 0)
+      expect(padStartPx(btn), `leading box margin @ ${scale}`).toBeCloseTo(r.inset, 0)
+      expect(padEndPx(btn), `trailing box margin @ ${scale}`).toBeCloseTo(r.inset, 0)
+      expect(labelInsetPx(btn), `label inset @ ${scale}`).toBeCloseTo(r.labelInset, 0)
       expect(padStartPx(btn) + labelInsetPx(btn), `text edge 2n - c @ ${scale}`).toBeCloseTo(2 * r.n - r.c, 0)
     }
   })

@@ -15,15 +15,14 @@ import { ROOT_REGISTER, STEP } from './foundations-rules.mjs'
 
 /**
  * What stays on the repo's scale.mjs, because the current resolver gives a different value (T-0374 moves each one,
- * behind an approved mockup): the content and brand tier rows (current 11/3 and 15/4 against 10/2 and 14/2; all four
- * rows stay so `check()` validates the rows it emits), the density axis and m (current: five multipliers of n), and
- * the group kicker value (current 10 + 1 per step, against 9 + 0.5): the group kicker takes the skill's name with the
- * former group label's value. The field label (10 + 1) and the small control role (9 + 1) read the current resolver
- * (T-0374 step 2). Every token the current resolver has no field
+ * behind an approved mockup): the density axis and m (current: five multipliers of n), and the group kicker value
+ * (current 10 + 1 per step, against 9 + 0.5): the group kicker takes the skill's name with the former group label's
+ * value. The field label (10 + 1) and the small control role (9 + 1) read the current resolver (T-0374 step 2), and
+ * so do the four tier rows (T-0374 step 3: content 11/3/2/1 and brand 15/4/2/1; checkAnchors() holds them to the
+ * ladder and to growth along size and scale). Every token the current resolver has no field
  * for (inset, label inset, radii, chip, checkbox and group levels) keeps its own formula below.
  */
 export const LEGACY_PATH = {
-  tiers: LEGACY_CFG.tiers,
   density: LEGACY_CFG.density,
   linear: { groupKicker: LEGACY_CFG.linear.groupLabel },
 }
@@ -100,7 +99,7 @@ function typeAt(n, size, a) {
  * derived block until then).
  */
 export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, size = 'md', density = 'default', a = anchors()) {
-  const [n0, ta, k, g] = LEGACY_PATH.tiers[tier]
+  const [n0, ta, k, g] = CFG.tiers[tier]
   const s = STEP[scale]
   const z = STEP[size]
   const n = n0 + ta * s + k * z + g * s * z
@@ -157,6 +156,18 @@ function anchorFailures(a) {
     if (i && !(levels[i - 1][1] < margin)) bad.push(`A4 ${token} margin ${margin}m does not nest outside ${levels[i - 1][0]}`)
   })
   const [lo, hi] = LEGACY_CFG.ladder
+  // The legacy check() validates its own rows only, so the vendored rows the sheet emits take M1 and M2 here: every
+  // cell's n an integer on the ladder, and n growing along size and along scale in every tier.
+  for (const [tier, [n0, ta, k, g]] of Object.entries(CFG.tiers)) {
+    const rung = (s, z) => n0 + ta * s + k * z + g * s * z
+    const ix = Object.values(STEP)
+    for (const s of ix) for (const z of ix) {
+      const n = rung(s, z)
+      if (!Number.isInteger(n) || n < lo || n > hi) bad.push(`M1 ${tier} ${s}/${z}: n ${n} is not an integer on the ladder ${lo} to ${hi}`)
+      if (z > ix[0] && !(n > rung(s, z - 1))) bad.push(`M2 ${tier} ${s}/${z}: n does not grow along size`)
+      if (s > ix[0] && !(n > rung(s - 1, z))) bad.push(`M2 ${tier} ${s}/${z}: n does not grow along scale`)
+    }
+  }
   let was = null
   for (let n = lo; n <= hi; n++) {
     const t = typeAt(n, 'md', a)
@@ -169,7 +180,7 @@ function anchorFailures(a) {
 }
 
 /** The steps of each axis checkEmitted() walks: every tier, scale, size and density the sheet can declare. */
-const CELLS = () => Object.keys(LEGACY_PATH.tiers).flatMap((t) => Object.keys(STEP).flatMap((s) => Object.keys(STEP).flatMap((z) =>
+const CELLS = () => Object.keys(CFG.tiers).flatMap((t) => Object.keys(STEP).flatMap((s) => Object.keys(STEP).flatMap((z) =>
   Object.keys(LEGACY_PATH.density).map((d) => [t, s, z, d]))))
 /** resolve() fields checkEmitted() holds to the 0.5px grid or leaves ungated, not to whole px. */
 const NOT_WHOLE = new Set(['type', 'glyphStroke', 'surface'])

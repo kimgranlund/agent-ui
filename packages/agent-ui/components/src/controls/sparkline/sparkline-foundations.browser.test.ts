@@ -1,11 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import './sparkline.css'
 import './sparkline.ts'
 
 // ui-sparkline geometry under ADR-0245 (the dark launch): inside an opt-in [data-tier] region the control reads the
-// derived tokens and measures against scale.mjs resolve(); outside one it still measures today's values.
+// derived tokens and measures against the model's resolve() (scripts/lib/foundations-model.mjs); outside one it still measures today's values.
 
 const mounted: HTMLElement[] = []
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()))
@@ -27,18 +27,18 @@ function mount(html: string, region = true): HTMLElement {
 const px = (v: string): number => Number.parseFloat(v)
 
 describe('ui-sparkline stroke (ADR-0245 cl.5: the mark stroke max(1.5px, c/2))', () => {
-  it('inside a region the line stroke is the glyph stroke (c = 4 at content / lg / lg, so 2px)', () => {
+  it('inside a region the line stroke is the glyph stroke (c = 5 at content / lg / lg, so 2.5px)', () => {
     const wrap = document.createElement('div')
     wrap.setAttribute('data-tier', 'content')
     wrap.setAttribute('data-scale', 'lg')
-    wrap.setAttribute('data-size', 'lg') // c is 3 at content / lg / md (stroke floors at 1.5px); the lg step is the first with c = 4
+    wrap.setAttribute('data-size', 'lg') // n 17, c 5: the stroke is c / 2, above its 1.5px floor
     wrap.innerHTML = '<ui-sparkline values="[1,3,2,4]"></ui-sparkline>'
     document.body.append(wrap)
     mounted.push(wrap)
     const r = resolve('content', 'lg', 'lg')
     const line = wrap.querySelector('[data-part="line"]') as SVGElement
     expect(px(getComputedStyle(line).strokeWidth)).toBe(Math.max(1.5, r.c / 2))
-    expect(Math.max(1.5, r.c / 2)).toBe(2)
+    expect(Math.max(1.5, r.c / 2)).toBe(2.5)
   })
 
   it('under data-foundations=legacy the stroke stays 1.5px', () => {

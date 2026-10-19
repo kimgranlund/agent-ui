@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp, page } from 'vitest/browser'
 import type { UITextElement } from './text.ts'
@@ -108,7 +108,7 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
 // ── [scale] subtree re-multiplication (the `*` ramp pre-substitution law, ADR-0078 cl.2 / dimensions.css) ──
 
 describe('ui-text in a region — the type roles derive from the region n (ADR-0245 cl.7)', () => {
-  it('display/lg in a content / lg region resolves to the derived display role at n 16', () => {
+  it('display/lg in a content / lg region resolves to the derived display role at n 17', () => {
     const wrap = document.createElement('div')
     wrap.setAttribute('data-tier', 'content')
     wrap.setAttribute('data-scale', 'lg')
