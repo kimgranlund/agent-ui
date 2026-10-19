@@ -1851,3 +1851,208 @@ describe('croupier rules check: a poker table keeps its chips in step with the p
     expect(chips(s, plain(t.t141), { intent: 'Bet the pot.' })).toEqual([])
   })
 })
+
+// T-0379 (round 12, regress-croupier-omaha-haiku-3, traces :252 to :261): the chips live on a separate `hud-1` surface,
+// in GameHud stats written as literal strings, and its data model keeps the opening 1000 and 15 for the run. At :254 a
+// pot bet of $15 the opponent calls takes the $15 pot to $30 on the table and in the reply, and the second hand opens on
+// the settled $1,020 with the blinds in a $15 pot (:257). The data models, stats and replies below are the recorded
+// ones (the shipped round of each turn); the table components are trimmed to the cards, the title and the moves.
+describe('croupier rules check: a called bet puts both bets in the pot, and a HUD carries the bankroll across hands (T-0379)', () => {
+  const C = (rank: string, suit: string, faceDown = false) => ({ rank, suit, ...(faceDown ? { faceDown } : {}) })
+  const down = (cards: { rank: string; suit: string }[]) => cards.map(({ rank, suit }) => C(rank, suit, true))
+  const data = (sid: string, value: unknown, path?: string) => ({ version: 'v1.0', updateDataModel: { surfaceId: sid, ...(path === undefined ? {} : { path }), value } })
+  const comps = (sid: string, components: Record<string, unknown>[]) => ({ version: 'v1.0', updateComponents: { surfaceId: sid, components } })
+  const button = (id: string, label: string, action: string, context?: Record<string, unknown>) => ({ id, component: 'Button', label, action: { action, ...(context === undefined ? {} : { context }) } })
+  const moves = [button('foldBtn', 'Fold', 'fold'), button('checkBtn', 'Check', 'check'), button('betBtn', 'Bet $20', 'bet', { amount: 20 })]
+  const again = [button('dealBtn', 'Deal again', 'deal_again', { newRound: true })]
+  const table = (sid: string, street: string, buttons: Record<string, unknown>[]) =>
+    comps(sid, [
+      { id: 'root', component: 'Card', children: ['title', 'oppRow', 'boardRow', 'youRow', ...buttons.map((b) => b['id'] as string)] },
+      { id: 'title', component: 'Text', text: `Omaha hold'em · ${street}`, variant: 'h4' },
+      { id: 'oppRow', component: 'Row', children: { componentId: 'oppCard', path: '/opponentHand' } },
+      { id: 'oppCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+      { id: 'boardRow', component: 'Row', children: { componentId: 'boardCard', path: '/board' } },
+      { id: 'boardCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' } },
+      { id: 'youRow', component: 'Row', children: { componentId: 'youCard', path: '/playerHand' } },
+      { id: 'youCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' } },
+      ...buttons,
+    ])
+  const money = (n: number) => `$${n.toLocaleString('en-US')}`
+  const hud = (status: string, [bankroll, pot]: readonly [number, number]) =>
+    comps('hud-1', [{ id: 'root', component: 'GameHud', title: "Omaha hold'em", status, stats: [{ label: 'Bankroll', value: money(bankroll) }, { label: 'Pot', value: money(pot) }] }])
+  const hand1 = { opponentHand: down([C('K', 'clubs'), C('5', 'hearts'), C('5', 'diamonds'), C('2', 'spades')]), playerHand: [C('A', 'spades'), C('J', 'hearts'), C('10', 'diamonds'), C('6', 'clubs')] }
+  const hand2 = { opponentHand: down([C('7', 'hearts'), C('7', 'clubs'), C('A', 'diamonds'), C('Q', 'spades')]), playerHand: [C('K', 'spades'), C('K', 'diamonds'), C('4', 'hearts'), C('2', 'clubs')] }
+  const hand3 = { opponentHand: down([C('9', 'diamonds'), C('8', 'hearts'), C('6', 'spades'), C('3', 'clubs')]), playerHand: [C('A', 'hearts'), C('A', 'clubs'), C('7', 'diamonds'), C('5', 'spades')] }
+  const flop1 = [C('Q', 'diamonds'), C('8', 'clubs'), C('3', 'hearts')]
+  const turn1 = [...flop1, C('9', 'spades')]
+  const river1 = [...turn1, C('4', 'clubs')]
+  const flop3 = [C('A', 'diamonds'), C('6', 'clubs'), C('2', 'hearts')]
+
+  type Chips = readonly [bankroll: number, pot: number]
+  /** What each turn's HUD writes and each reply says: as recorded, or as a conserving table writes them. `null` is a
+   *  turn that leaves the HUD as it was. */
+  interface Book {
+    hud: Record<string, Chips | null>
+    said254: string
+  }
+  const recorded: Book = {
+    hud: { t252: [1000, 15], t253: [1000, 15], t254: [985, 30], t255: [975, 45], t256: [1020, 0], t257: [1020, 15], t258: [1010, 0], t259: null, t260: [995, 45], t261: [995, 45] },
+    said254: 'You bet the pot at $15. The opponent calls, so the pot is $30. The turn is the 9♠. Check or bet the pot ($30)?',
+  }
+  const conserved: Book = {
+    hud: { t252: [990, 15], t253: [990, 15], t254: [975, 45], t255: [975, 45], t256: [1020, 0], t257: [1010, 15], t258: [1010, 0], t259: [1000, 15], t260: [985, 45], t261: [985, 45] },
+    said254: 'You bet the pot at $15. The opponent calls, so the pot is $45. The turn is the 9♠. Check or bet the pot ($45)?',
+  }
+  const withHud = (b: Book, turn: string, status: string, out: unknown[]): A2uiOutput => {
+    const chips = b.hud[turn]
+    return [...out, ...(chips === null || chips === undefined ? [] : [hud(status, chips)])] as A2uiOutput
+  }
+  const STAKE = "Let's play Omaha."
+  const CHECK = 'Check, or call if there is a bet.'
+  const deal = (sid: string): SemanticAction => ({ name: 'deal_again', surfaceId: sid, context: { newRound: true }, dataModel: undefined })
+
+  /** Every turn of the run, as `produce()` judges it: a say turn with its intent, the session's open surfaces and the
+   *  reply; a Deal again press with its action (the pressed table's click-time data model) and the reply. */
+  function turns(b: Book): { line: string; say?: string; press?: string; out: A2uiOutput; reply: string }[] {
+    return [
+      { line: ':252', say: STAKE, reply: "Omaha it is. I've posted the blinds (you're in the big blind at 10, with the small blind at 5) and dealt you in with a $1,000 bankroll. Your move: check or bet, or fold.", out: [
+        { version: 'v1.0', createSurface: { surfaceId: 'hud-1', catalogId: 'agent-ui--croupier' } },
+        data('hud-1', { bankroll: 1000, pot: 15 }),
+        ...withHud(b, 't252', 'Preflop: your action', []),
+        { version: 'v1.0', createSurface: { surfaceId: 'table-1', catalogId: 'agent-ui--croupier' } },
+        data('table-1', { ...hand1, board: [] }),
+        table('table-1', 'Preflop', moves),
+      ] as A2uiOutput },
+      { line: ':253', say: CHECK, reply: 'You check. The opponent checks behind you, and the flop comes Q♦ 8♣ 3♥. Check or bet $20?', out: withHud(b, 't253', 'Flop: your action', [data('table-1', flop1, '/board'), table('table-1', 'Flop', moves)]) },
+      { line: ':254', say: 'Bet the pot.', reply: b.said254, out: withHud(b, 't254', 'Turn: your action', [data('table-1', turn1, '/board'), table('table-1', 'Turn', moves)]) },
+      { line: ':255', say: CHECK, reply: 'The river is the 4♣, so the board is Q♦ 8♣ 3♥ 9♠ 4♣. The pot is $45 and your bankroll is $975. Your move: check, or bet the pot ($45).', out: withHud(b, 't255', 'River: your action', [data('table-1', river1, '/board'), table('table-1', 'River', moves)]) },
+      { line: ':256', say: CHECK, reply: "You check, and the opponent checks behind you. At showdown, your J♥ 10♦ plus Q♦ 9♠ 8♣ make a queen-high straight. The opponent's K♣ 5♥ 5♦ 2♠ can only make a pair of fives with the board. You win the $45 pot, so your bankroll goes from $975 to $1,020.", out: withHud(b, 't256', 'Round settled: you won', [
+        data('table-1', hand1.opponentHand.map(({ rank, suit }) => ({ rank, suit, faceDown: false })), '/opponentHand'),
+        table('table-1', 'Showdown', again),
+        comps('table-1', [{ id: 'resultText', component: 'Text', text: 'You win $45 with a queen-high straight. The opponent holds a pair of fives. Bankroll: $1,020.', variant: 'body' }]),
+      ]) },
+      { line: ':257', press: 'table-1', reply: "New hand. Blinds are posted again: you're in the big blind at 10, the small blind is 5. Your move: check or bet, or fold.", out: withHud(b, 't257', 'Preflop: your action', [
+        { version: 'v1.0', createSurface: { surfaceId: 'table-2', catalogId: 'agent-ui--croupier' } },
+        data('table-2', { ...hand2, board: [] }),
+        table('table-2', 'Preflop', moves),
+      ]) },
+      { line: ':258', say: 'Fold.', reply: 'You fold and lose the $10 big blind. The opponent wins the $15 pot.', out: withHud(b, 't258', 'Round settled: you folded', [table('table-2', 'Folded', again)]) },
+      { line: ':259', press: 'table-2', reply: "New hand. Blinds are posted: you're in the big blind at 10, the small blind is 5. Your move: check, bet $20, or fold.", out: withHud(b, 't259', 'Preflop: your action', [
+        { version: 'v1.0', createSurface: { surfaceId: 'table-3', catalogId: 'agent-ui--croupier' } },
+        data('table-3', { ...hand3, board: [] }),
+        table('table-3', 'Preflop', moves),
+      ]) },
+      { line: ':260', say: 'Bet the pot.', reply: 'You bet the pot at $15, and the opponent calls. The pot is $45. The flop is A♦ 6♣ 2♥. Your A♥ A♣ with the A♦ make three aces. Check, or bet the pot ($45)?', out: withHud(b, 't260', 'Flop: your action', [data('table-3', flop3, '/board'), table('table-3', 'Flop', moves)]) },
+      { line: ':261', say: CHECK, reply: 'You check, and the opponent checks behind. The turn is the K♠, so the board is A♦ 6♣ 2♥ K♠. You have three aces. Check, or bet the pot ($45)?', out: withHud(b, 't261', 'Turn: your action', [data('table-3', [...flop3, C('K', 'spades')], '/board'), table('table-3', 'Turn', moves)]) },
+    ]
+  }
+
+  const judgeTurn = (sess: Session, t: ReturnType<typeof turns>[number]): SemanticFinding[] => {
+    const surfaces = semanticSurfaceViews(sess, t.out)
+    const at =
+      t.press !== undefined
+        ? { action: { ...deal(t.press), dataModel: sessionSurfaceViews(sess).find((v) => v.surfaceId === t.press)?.dataModel } }
+        : { intent: t.say!, open: sessionSurfaceViews(sess) }
+    return croupierSemanticChecks.flatMap((c) => c.check({ surfaces, ...at, reply: t.reply })).filter((f) => f.code === 'POKER_CHIPS_MISMATCH')
+  }
+
+  /** The run judged turn by turn, each turn on the session the turns before it left; each finding as `<line> <path>`. */
+  function sequence(b: Book): { fired: string[]; messages: string[] } {
+    const sess: Session = { turns: [] }
+    const judged: [string, SemanticFinding[]][] = []
+    for (const t of turns(b)) {
+      judged.push([t.line, judgeTurn(sess, t)])
+      sess.turns = [...sess.turns, { role: 'user', content: t.say ?? 'deal_again' }, { role: 'assistant', content: toJsonl(t.out) }]
+    }
+    return { fired: judged.flatMap(([line, fs]) => fs.map((f) => `${line} ${f.path}`)), messages: judged.flatMap(([, fs]) => fs.map((f) => f.message)) }
+  }
+
+  it('the recorded run fires on the called bet that lost chips from the pot and on the hand that opens on the settled bankroll', () => {
+    const { fired, messages } = sequence(recorded)
+    expect(fired).toEqual([':254 hud-1:/bankroll', ':257 hud-1:/bankroll'])
+    expect(messages[0]).toMatch(/player bets 15 and the opponent calls, so the pot grows by 30, from 15 to 45, but hud-1 shows 30/)
+    expect(messages[1]).toMatch(/settled with a bankroll of 1020, and hud-1 opens with 15 in the pot but the bankroll at 1020/)
+  })
+
+  it('a run whose replies and table keep the chips in step gives none', () => {
+    expect(sequence(conserved).fired).toEqual([])
+  })
+
+  // The table after :253 (recorded): $1,000 behind a $15 pot on hud-1, the flop on table-1. `stats` replaces the HUD's
+  // stats this turn (literal strings); `null` leaves the HUD alone.
+  const at253 = (): Session => {
+    const sess: Session = { turns: [] }
+    for (const t of turns(recorded).slice(0, 2)) sess.turns = [...sess.turns, { role: 'user', content: t.say! }, { role: 'assistant', content: toJsonl(t.out) }]
+    return sess
+  }
+  const hudStats = (status: string, stats: { label: string; value: unknown }[]) => comps('hud-1', [{ id: 'root', component: 'GameHud', title: "Omaha hold'em", status, stats }])
+  const say = (reply: string, stats: [unknown, unknown] | null, opts: { intent?: string; status?: string; labels?: [string, string]; sess?: Session } = {}) => {
+    const [bl, pl] = opts.labels ?? ['Bankroll', 'Pot']
+    const out = [data('table-1', turn1, '/board'), table('table-1', 'Turn', moves), ...(stats === null ? [] : [hudStats(opts.status ?? 'Turn: your action', [{ label: bl, value: stats[0] }, { label: pl, value: stats[1] }])])] as A2uiOutput
+    return judgeTurn(opts.sess ?? at253(), { line: '', say: opts.intent ?? 'Bet the pot.', reply, out }).map((f) => f.path)
+  }
+  const CALLED = 'You bet the pot at $15. The opponent calls.'
+
+  it('a called bet fires on the pot short of both bets; a pot that holds both, a fold, a call not made, an all-in and a settled HUD do not', () => {
+    expect(say(CALLED, ['$985', '$30'])).toEqual(['hud-1:/bankroll'])
+    expect(say('You bet $15, and I call.', ['$985', '$30'])).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['$985', '$45'])).toEqual([])
+    expect(say('You bet $15 and the opponent folds. You take the $30 pot.', ['$1,015', '$0'])).toEqual([])
+    expect(say('You bet $15. If you bet again, the opponent calls.', ['$985', '$30'])).toEqual([])
+    expect(say("You bet $15. The opponent would call a smaller bet, and I'll call the river.", ['$985', '$30'])).toEqual([])
+    expect(say('You bet $15. Does the opponent call?', ['$985', '$30'])).toEqual([])
+    expect(say('You bet $15, all in, and the opponent calls.', ['$985', '$30'])).toEqual([])
+    expect(say(CALLED, ['$985', '$30'], { status: 'Round settled: you won' })).toEqual([])
+    expect(say(CALLED, ['$985', '$30'], { intent: 'Raise.' })).toEqual([]) // a raise's call matches the raise alone
+    expect(say(CALLED, null)).toEqual([]) // no surface this round shows the pot
+    // The player owed a call (a bring-in or a bet in the street): the opponent calls only the difference.
+    const owed = { turns: at253().turns.map((t) => ({ ...t, content: t.content.replaceAll('"label":"Check","action":{"action":"check"}', '"label":"Call 5","action":{"action":"call"}') })) }
+    expect(owed.turns.some((t) => t.content.includes('"Call 5"'))).toBe(true)
+    expect(say(CALLED, ['$985', '$30'], { sess: owed })).toEqual([])
+  })
+
+  it('reads the stats by their whole label, through counts written as words, and skips one it cannot read', () => {
+    expect(say(CALLED, ['985 chips', '€30'])).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['985', '30'], { labels: ['Chips', 'Pot:'] })).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['985', '30'], { labels: ['Stack', 'Pot'] })).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['$985', '$30'], { labels: ['Bankroll', 'Chips in pot'] })).toEqual([])
+    expect(say(CALLED, ['$985', '$30'], { labels: ['Bankroll', 'Pot odds'] })).toEqual([])
+    expect(say(CALLED, ['$985', '$30'], { labels: ['Opponent chips', 'Pot'] })).toEqual([])
+    expect(say(CALLED, ['$985', '1,5'])).toEqual([]) // never the HUD's stale data model in its place
+    // A thousands dot, a k and a euro sign: 1.000 € behind a 15 pot, the bet takes 0.015k to 985.
+    const euro = { turns: at253().turns.map((t) => ({ ...t, content: t.content.replaceAll('"$1,000"', '"1.000 €"') })) }
+    expect(say(CALLED, ['0.985k', '€30'], { sess: euro })).toEqual(['hud-1:/bankroll'])
+    expect(say(CALLED, ['1.5k', '€30'], { sess: euro })).toEqual([]) // the bankroll rose: not a bet
+  })
+
+  it('an old settled table in view never silences the next hand', () => {
+    const run = turns(recorded)
+    const sess: Session = { turns: [] }
+    for (const t of run.slice(0, 8)) sess.turns = [...sess.turns, { role: 'user', content: t.say ?? 'deal_again' }, { role: 'assistant', content: toJsonl(t.out) }]
+    // :260 with the HUD moved from $1,010 and $0 to $995 and $15: table-1 (won) and table-2 (folded) are still open.
+    const out = withHud({ ...recorded, hud: { t: [995, 15] } }, 't', 'Flop: your action', [data('table-3', flop3, '/board'), table('table-3', 'Flop', moves)])
+    expect(judgeTurn(sess, { line: ':260', say: 'Bet the pot.', reply: 'You bet the pot at $15, and the opponent calls.', out }).map((f) => f.path)).toEqual(['hud-1:/bankroll'])
+  })
+
+  it('a new hand fires only where the GameHud settled with an empty pot and the player posted', () => {
+    const run = turns(recorded)
+    const sess: Session = { turns: [] }
+    for (const t of run.slice(0, 5)) sess.turns = [...sess.turns, { role: 'user', content: t.say ?? 'deal_again' }, { role: 'assistant', content: toJsonl(t.out) }]
+    const press = run[5]!
+    const judge = (out: A2uiOutput, s = sess) => judgeTurn(s, { ...press, out }).map((f) => f.path)
+    const swap = (from: string, to: string) => JSON.parse(JSON.stringify(press.out).replaceAll(from, to)) as A2uiOutput
+    expect(judge(press.out)).toEqual(['hud-1:/bankroll'])
+    expect(judge(swap('"$1,020"', '"$1,010"'))).toEqual([]) // the blind left the bankroll
+    expect(judge(swap("Omaha hold'em · Preflop", 'Seven-card stud · Third street'))).toEqual([]) // the opponent's bring-in
+    // The last hand left chips in the pot: the settled count is not known.
+    const unsettled: Session = { turns: [...sess.turns, { role: 'user', content: CHECK }, { role: 'assistant', content: toJsonl([hud('River', [1020, 45])] as A2uiOutput) }] }
+    expect(judge(press.out, unsettled)).toEqual([])
+  })
+
+  it('a blackjack table is never judged for a called bet', () => {
+    const bj = (out: unknown[]) => JSON.parse(JSON.stringify(out).replaceAll("Omaha hold'em", 'Blackjack')) as A2uiOutput
+    const sess: Session = { turns: turns(recorded).slice(0, 2).flatMap((t) => [{ role: 'user', content: t.say! }, { role: 'assistant', content: toJsonl(bj(t.out)) }]) }
+    const out = bj([table('table-1', 'Turn', [button('betBtn', 'Bet', 'bet')]), hud('Your action', [985, 30])])
+    expect(judgeTurn(sess, { line: '', say: 'Bet 15.', reply: CALLED, out })).toEqual([])
+  })
+})

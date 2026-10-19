@@ -1359,11 +1359,22 @@ const STATUS_ENDED = new RegExp(
   'i',
 )
 
-/** A chip count: a finite number, or a numeric string ("990", "$60", "1,060"). */
+/** A chip count: a finite number, or a numeric string ("990", "$60", "1,060"; T-0379: "985 chips", "€30", "1.000 €",
+ *  "1.5k"). Thousands group by commas, or by dots when every group after the first has three digits; anything else
+ *  ("1,5", "lots") is undefined. */
 function chipNumber(v: unknown): number | undefined {
   if (typeof v === 'number') return Number.isFinite(v) ? v : undefined
-  const m = typeof v === 'string' ? /^\s*\$?\s*(\d[\d,]*(?:\.\d+)?)\s*$/.exec(v) : null
-  return m === null ? undefined : Number(m[1]!.replaceAll(',', ''))
+  const m = typeof v === 'string' ? /^\s*[$€£]?\s*(\d[\d.,]*)\s*(k)?\s*(?:[$€£]|chips?)?\s*$/i.exec(v) : null
+  if (m === null) return undefined
+  const digits = m[1]!
+  const n = /^\d{1,3}(?:,\d{3})+(?:\.\d+)?$/.test(digits)
+    ? Number(digits.replaceAll(',', ''))
+    : m[2] === undefined && /^\d{1,3}(?:\.\d{3})+$/.test(digits)
+      ? Number(digits.replaceAll('.', ''))
+      : /^\d+(?:\.\d+)?$/.test(digits)
+        ? Number(digits)
+        : undefined
+  return n === undefined ? undefined : m[2] === undefined ? n : n * 1000
 }
 
 /** Where a poker surface keeps its bankroll and pot: the CardTable's bound `bankroll`, and its bound `pot` (or a `bet`
@@ -1442,28 +1453,116 @@ function certainChips(move: string, action: SemanticAction | undefined, intent: 
   return /^(bet|call)/i.test(move) && numbers?.length === 1 ? chipNumber(numbers[0]) : undefined
 }
 
-/** POKER_CHIPS_MISMATCH (T-0371; round 11 :139 to :146, Haiku 5.5 Omaha): a poker table's chips move between the
- *  bankroll and the pot, never out of thin air. Read through the table's bankroll and pot bindings (`chipPaths`)
- *  against the surface's prior data model (the click-time one on an action turn), on the player's move: the press,
- *  or the one move word a typed turn holds (a turn with two moves or a condition, "Check, or call if there is a bet.",
- *  is never judged). A bet, raise or call that grows the pot takes the player's chips out of the bankroll (:141 bet
- *  the pot, 20 to 60, and left 990); a fold never raises the bankroll; a new hand the player posted into opens below
- *  the bankroll the last hand settled at (:144 and :146 posted 10 and opened on 960). A turn that settles the hand is
- *  not judged for its move: one turn may hold a final call or a run-out, and a turn-local prior cannot tell. */
-function pokerChips(view: SurfaceView, input: SemanticCheckInput): SemanticFinding[] {
-  if (!isPokerTable(view)) return []
+/** A GameHud stat that is the player's bankroll or the pot, by its whole label: "Chips in pot", "Pot limit", "Pot odds"
+ *  and a label naming another player are neither. */
+const BANKROLL_STAT = /^\s*(bankroll|chips|stack)\s*:?\s*$/i
+const POT_STAT = /^\s*pot\s*:?\s*$/i
+
+interface ShownChips {
+  bankroll: number | undefined
+  pot: number | undefined
+  /** The GameHud whose stats show the chips, when a GameHud does. */
+  hud: string | undefined
+}
+
+/** T-0379: the bankroll and pot a surface shows, read off `components` and `model`. A GameHud with a stats list (literal,
+ *  or bound whole) shows them in its Bankroll, Chips or Stack stat and its Pot stat, each literal or bound: that is the
+ *  count the player sees, and the surface's data model is never read in its place (round 12 hud-1 kept 1000 and 15 in
+ *  its data model for the whole run while its stats moved); a count its stats leave out is read at the table's chip
+ *  paths (`chipPaths`) only where a component binds that pointer. A surface with no such GameHud keeps both at the chip
+ *  paths. A stat `chipNumber` cannot read is undefined, never a fallback. */
+function shownChips(view: SurfaceView, components: ReadonlyMap<string, A2uiComponent> | undefined, model: unknown): ShownChips {
   const paths = chipPaths(view)
-  const chips = (model: unknown) => ({ bankroll: chipNumber(readPointer(model, paths.bankroll)), pot: chipNumber(readPointer(model, paths.pot)) })
-  const { bankroll, pot } = chips(view.dataModel)
+  const fromModel = (key: 'bankroll' | 'pot'): number | undefined => chipNumber(readPointer(model, paths[key]))
+  for (const c of components?.values() ?? []) {
+    if (c.component !== 'GameHud') continue
+    const bound = bindingPath(c['stats'])
+    const stats: unknown = bound === undefined ? c['stats'] : readPointer(model, bound)
+    if (!Array.isArray(stats)) continue
+    const stat = (label: RegExp): { found: boolean; n: number | undefined } => {
+      const s: unknown = stats.find((x) => isRecord(x) && typeof x['label'] === 'string' && label.test(x['label']))
+      if (!isRecord(s)) return { found: false, n: undefined }
+      const p = bindingPath(s['value'])
+      return { found: true, n: chipNumber(p === undefined ? s['value'] : readPointer(model, p)) }
+    }
+    const bankroll = stat(BANKROLL_STAT)
+    const pot = stat(POT_STAT)
+    if (!bankroll.found && !pot.found) continue
+    // A count the stats leave out is read from the data model only where a component shows it (binds its pointer).
+    const shown = JSON.stringify([...(components?.values() ?? [])])
+    const elsewhere = (key: 'bankroll' | 'pot'): number | undefined => (shown.includes(JSON.stringify({ path: paths[key] })) ? fromModel(key) : undefined)
+    return { bankroll: bankroll.found ? bankroll.n : elsewhere('bankroll'), pot: pot.found ? pot.n : elsewhere('pot'), hud: c.id }
+  }
+  return { bankroll: fromModel('bankroll'), pot: fromModel('pot'), hud: undefined }
+}
+
+/** The opponent calls, said as done: "The opponent calls", "the dealer called", "I call" in the dealer's own voice. A
+ *  sentence that is conditional, future or hypothetical ("If you bet 30, the opponent calls.", "I'll call", "they
+ *  would call") or a question says nothing happened. */
+const OPPONENT_CALLS = /\b(?:(?:the|your)\s+(?:opponent|dealer|house)|they|I)\s+call(?:s|ed)?\b/i
+const NOT_DONE = /\b(?:if|unless|when|whenever|whether|would|could|might|may|will|shall|should|can|wants?|likely|probably|expect)\b|'ll\b|'d\b|\?/i
+const ALL_IN = /\ball[- ]in\b/i
+function opponentCalled(reply: string | undefined): boolean {
+  if (reply === undefined || ALL_IN.test(reply)) return false
+  return reply.split(/(?<=[.!?])\s+|\n+/).some((s) => OPPONENT_CALLS.test(s) && !NOT_DONE.test(s))
+}
+
+const CALL_MOVE: ReadonlySet<string> = new Set(['call'])
+/** Before this turn the player owed a call: a surface in view offered a Call. The opponent then has chips in this
+ *  street already (a bring-in, a blind, a bet), and calls only the difference (the stud replay's 5 bring-in raised to
+ *  50, called for 45 more). */
+function callOwed(input: SemanticCheckInput): boolean {
+  const ids = new Set(input.surfaces.map((v) => v.surfaceId))
+  const before = [
+    ...input.surfaces.map((v) => [v.priorComponents, v.priorDataModel] as const),
+    ...(input.open ?? []).filter((v) => !ids.has(v.surfaceId)).map((v) => [v.components, v.dataModel] as const),
+  ]
+  return before.some(([comps, model]) => [...(comps?.values() ?? [])].some((c) => c.component === 'Button' && offersMove(c, model, CALL_MOVE)))
+}
+
+/** POKER_CHIPS_MISMATCH (T-0371; round 11 :139 to :146, Haiku 5.5 Omaha): a poker table's chips move between the
+ *  bankroll and the pot, never out of thin air. Read as the surface shows them (`shownChips`; T-0379: a GameHud's
+ *  stats first, so a HUD beside the table is judged on the counts the model updates) against the surface's prior
+ *  state (the click-time data model on an action turn), on the player's move: the press, or the one move word a typed
+ *  turn holds (a turn with two moves or a condition, "Check, or call if there is a bet.", is never judged). A bet,
+ *  raise or call that grows the pot takes the player's chips out of the bankroll (:141 bet the pot, 20 to 60, and left
+ *  990); a fold never raises the bankroll; a new hand the player posted into opens below the bankroll the last hand
+ *  settled at (:144 and :146 posted 10 and opened on 960; T-0379, round 12 :257: a HUD beside the new table that
+ *  settled at $1,020 with an empty pot and opens on $1,020 with the blinds in). T-0379 (round 12 :254): a bet the reply
+ *  says the opponent called puts both bets in the pot, so the pot grows by at least twice what left the bankroll ("You
+ *  bet the pot at $15. The opponent calls, so the pot is $30." on a $15 pot); judged on a surface that shows the pot,
+ *  a GameHud Pot stat or a pot the data model moved, never on an all-in, and never when the player owed a call
+ *  (`callOwed`). A turn that settles the hand on the
+ *  surface judged is not judged for its move: one turn may hold a final call or a run-out, and a turn-local prior
+ *  cannot tell. */
+function pokerChips(view: SurfaceView, input: SemanticCheckInput): SemanticFinding[] {
+  const now = shownChips(view, view.components, view.dataModel)
+  const ids = new Set(input.surfaces.map((v) => v.surfaceId))
+  const beside = (): boolean => [...input.surfaces, ...(input.open ?? []).filter((v) => !ids.has(v.surfaceId))].some(isPokerTable)
+  if (!isPokerTable(view) && !(now.hud !== undefined && isPokerView(view) && beside())) return []
+  const { bankroll, pot } = now
   if (bankroll === undefined || pot === undefined) return []
   const { action } = input
-  const finding = (message: string): SemanticFinding[] => [{ code: 'POKER_CHIPS_MISMATCH', path: `${view.surfaceId}:${paths.bankroll}`, message }]
+  const finding = (message: string): SemanticFinding[] => [{ code: 'POKER_CHIPS_MISMATCH', path: `${view.surfaceId}:${chipPaths(view).bankroll}`, message }]
+  const dealt = (v: SurfaceView): boolean => deckCards(v.dataModel, '', []).some((c) => /player|hero|you/i.test(c.path))
   if (action !== undefined && isNewRound(action.name, action.context)) {
-    // The pressed table reset in place, or a new surface that replaces it; a surface with no dealt hand is a recap.
-    if (view.surfaceId !== action.surfaceId && view.priorDataModel !== undefined) return []
-    if (!deckCards(view.dataModel, '', []).some((c) => /player|hero|you/i.test(c.path))) return []
-    const settled = chips(action.dataModel).bankroll
-    if (settled === undefined || settled <= 0 || pot <= 0 || bankroll < settled || !playerPosted(view)) return []
+    let settled: number | undefined
+    let posted: boolean
+    if (dealt(view)) {
+      // The pressed table reset in place, or a new surface that replaces it.
+      if (view.surfaceId !== action.surfaceId && view.priorDataModel !== undefined) return []
+      settled = shownChips(view, undefined, action.dataModel).bankroll
+      posted = playerPosted(view)
+    } else {
+      // T-0379: a GameHud beside the table, shown before this turn with the last hand settled (an empty pot); a surface
+      // with no GameHud and no dealt hand is a recap.
+      if (now.hud === undefined || view.priorComponents === undefined) return []
+      const before = shownChips(view, view.priorComponents, view.priorDataModel)
+      if (before.pot === undefined || before.pot > 0) return []
+      settled = before.bankroll
+      posted = input.surfaces.some((v) => isPokerTable(v) && dealt(v) && playerPosted(v))
+    }
+    if (settled === undefined || settled <= 0 || pot <= 0 || bankroll < settled || !posted) return []
     return finding(
       `The last hand settled with a bankroll of ${settled}, and ${view.surfaceId} opens with ${pot} in the pot but the bankroll at ${bankroll}. ` +
         `The blind or ante the player posts leaves the bankroll as it enters the pot: write ${settled} less what the player posted.`,
@@ -1475,13 +1574,22 @@ function pokerChips(view: SurfaceView, input: SemanticCheckInput): SemanticFindi
     if (words.length !== 1 || /\b(if|or)\b/i.test(input.intent ?? '')) return []
     move = words[0]![1]
   }
-  const prior = chips(view.priorDataModel ?? (action?.surfaceId === view.surfaceId ? action.dataModel : undefined))
+  const prior = shownChips(view, view.priorComponents, view.priorDataModel ?? (action?.surfaceId === view.surfaceId ? action.dataModel : undefined))
   if (move === undefined || prior.bankroll === undefined || prior.pot === undefined) return []
   if (/^fold/i.test(move) && bankroll > prior.bankroll)
     return finding(
       `The player folds, and the bankroll rises from ${prior.bankroll} to ${bankroll}. A fold wins nothing: the chips already in the pot stay there, so write ${prior.bankroll}.`,
     )
-  if (!CHIPS_IN.test(move) || pot <= prior.pot || bankroll !== prior.bankroll || settlesHand(view)) return []
+  if (!CHIPS_IN.test(move) || pot <= prior.pot || settlesHand(view)) return []
+  if (bankroll < prior.bankroll) {
+    const put = prior.bankroll - bankroll
+    if (!/^bet/i.test(move) || pot - prior.pot >= 2 * put || !opponentCalled(input.reply) || callOwed(input)) return []
+    return finding(
+      `The player bets ${put} and the opponent calls, so the pot grows by ${2 * put}, from ${prior.pot} to ${prior.pot + 2 * put}, but ${view.surfaceId} shows ${pot}. ` +
+        `Both bets go in the pot: write ${prior.pot + 2 * put}, and say the same pot in the reply.`,
+    )
+  }
+  if (bankroll !== prior.bankroll) return []
   const put = certainChips(move, action, input.intent)
   return finding(
     `The player's ${move.toLowerCase()} grows the pot from ${prior.pot} to ${pot}, and the bankroll still reads ${bankroll}. The chips the player puts in leave the bankroll: ` +
