@@ -17,6 +17,7 @@ import conciergeFragmentRaw from './personas/concierge/catalog.json'
 import stylistFragmentRaw from './personas/stylist/catalog.json'
 import defaultSelection from './default/selection.json'
 import conciergeSelection from './personas/concierge/selection.json'
+import stylistSelection from './personas/stylist/selection.json'
 
 const view = (components: A2uiComponent[], surfaceId = 's1'): SurfaceView => ({
   surfaceId,
@@ -69,6 +70,11 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
     { id: 'title', component: 'Text', text: 'A calm blue palette', variant: 'h4' },
     { id: 'list', component: 'Text', text: 'Primary navy #1f3a5f, secondary steel blue #4a6f8a, accent sky #9cc3e0' },
   ],
+  // T-0377: a wrap-only row; its hand-built shape is the composite inside a Card.
+  ContrastPair: [
+    { id: 'root', component: 'Card', children: ['pair'] },
+    { id: 'pair', component: 'ContrastPair', label: 'Body on page', foreground: '#1f3a5f', background: '#ffffff' },
+  ],
 }
 
 const COMPOSED: Record<string, A2uiComponent[]> = {
@@ -101,9 +107,17 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
     { id: 'navy', component: 'Swatch', label: 'Primary navy', value: '#1f3a5f' },
     { id: 'blues', component: 'Ramp', label: 'Navy', steps: [{ label: '500', value: '#3d5f86' }] },
   ],
+  ContrastPair: [
+    { id: 'root', component: 'Column', children: ['pair'] },
+    { id: 'pair', component: 'ContrastPair', label: 'Body on page', foreground: '#1f3a5f', background: '#ffffff' },
+  ],
 }
 
-const codeOf = (composite: string): string => `${composite.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_MISSING`
+/** T-0377: rows with no hand-built detector, only `notInside`: their hand-built shape is the wrapped composite. */
+const WRAP_ONLY: ReadonlySet<string> = new Set(['ContrastPair'])
+
+const codeOf = (composite: string): string =>
+  `${composite.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_${WRAP_ONLY.has(composite) ? 'WRAPPED' : 'MISSING'}`
 
 describe('composite moment checks (T-0208)', () => {
   for (const { composite } of COMPOSITE_MOMENTS) {
@@ -148,6 +162,47 @@ describe('composite moment checks (T-0208)', () => {
     expect(f!.path).toBe('ask-2:root')
     expect(f!.message).toContain('wraps its BookingConfirmation in root (a Card)')
     expect(codes([{ id: 'root', component: 'Column', children: ['confirmation'] }, recorded[2]!])).toEqual([])
+  })
+
+  // T-0377: round 12 :3 (2026-10-19-r12-targeted, smoke-stylist-palette-haiku-1, Haiku 5.5), the recorded components.
+  const R12_PALETTE: A2uiComponent[] = [
+    { id: 'root', component: 'Card', elevation: '1', children: ['root_header', 'root_content'] },
+    { id: 'root_header', component: 'CardHeader', children: ['title'] },
+    { id: 'title', component: 'Text', text: 'Calm blue palette for banking', variant: 'h4' },
+    { id: 'root_content', component: 'CardContent', children: ['col'] },
+    { id: 'col', component: 'Column', gap: 'md', children: ['roles_caption', 'roles_row', 'tonal_caption', 'tonal_ramp', 'pairs_caption', 'pairs_col'] },
+    { id: 'roles_caption', component: 'Text', text: 'Anchor colors', variant: 'caption' },
+    { id: 'roles_row', component: 'Row', gap: 'lg', wrap: true, children: ['sw_primary', 'sw_secondary', 'sw_accent', 'sw_surface'] },
+    { id: 'sw_primary', component: 'Swatch', label: { path: '/primary/label' }, value: { path: '/primary/value' } },
+    { id: 'sw_secondary', component: 'Swatch', label: { path: '/secondary/label' }, value: { path: '/secondary/value' } },
+    { id: 'sw_accent', component: 'Swatch', label: { path: '/accent/label' }, value: { path: '/accent/value' } },
+    { id: 'sw_surface', component: 'Swatch', label: { path: '/surface/label' }, value: { path: '/surface/value' } },
+    { id: 'tonal_caption', component: 'Text', text: 'Primary tonal range', variant: 'caption' },
+    { id: 'tonal_ramp', component: 'Ramp', label: 'Primary tonal range', steps: { path: '/tonal' } },
+    { id: 'pairs_caption', component: 'Text', text: 'Text and button pairings', variant: 'caption' },
+    { id: 'pairs_col', component: 'Column', gap: 'md', children: ['pair_1', 'pair_2', 'pair_3'] },
+    { id: 'pair_1', component: 'ContrastPair', label: 'Primary text on surface', foreground: 'oklch(0.45 0.12 250)', background: 'oklch(0.99 0.005 250)', sample: 'Your balance' },
+    { id: 'pair_2', component: 'ContrastPair', label: 'Button label', foreground: 'oklch(0.99 0.005 250)', background: 'oklch(0.45 0.12 250)', sample: 'Transfer money' },
+    { id: 'pair_3', component: 'ContrastPair', label: 'Body text on tint', foreground: 'oklch(0.25 0.07 250)', background: 'oklch(0.96 0.015 250)', sample: '2 payments pending' },
+  ]
+
+  it('T-0377: the recorded r12 :3 palette (ContrastPairs in a root Card) yields CONTRAST_PAIR_WRAPPED, naming the Card', () => {
+    expect(codes(R12_PALETTE)).toEqual(['CONTRAST_PAIR_WRAPPED'])
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(R12_PALETTE, 'banking-palette')] }).findings
+    expect(f!.path).toBe('banking-palette:root')
+    expect(f!.message).toContain('wraps its ContrastPair in root (a Card)')
+    expect(f!.message).toContain('a root Card needs the surface re-created')
+    expect(f!.message).toContain('in a root Column')
+  })
+
+  it('T-0377 negative controls: the same palette rooted at its Column, and a Card of Swatches and a Ramp, yield none', () => {
+    const unwrapped = R12_PALETTE.filter((c) => !['root', 'root_header', 'title', 'root_content'].includes(c.id)).map((c) => (c.id === 'col' ? { ...c, id: 'root' } : c))
+    expect(unwrapped.some((c) => c.component === 'Card')).toBe(false)
+    expect(codes(unwrapped)).toEqual([])
+    const pairsPart = new Set(['pairs_caption', 'pairs_col', 'pair_1', 'pair_2', 'pair_3'])
+    const noPairs = R12_PALETTE.filter((c) => !pairsPart.has(c.id)).map((c) => (c.id === 'col' ? { ...c, children: (c.children as string[]).filter((id) => !pairsPart.has(id)) } : c))
+    expect(noPairs.map((c) => c.component)).toContain('Card')
+    expect(codes(noPairs)).toEqual([])
   })
 
   it('the recorded Lexicographer guess field yields BOARD_GRID_MISSING', () => {
@@ -1071,7 +1126,7 @@ describe('composite moment checks (T-0208)', () => {
   })
 
   it("every row's moment is one of its composite's selection intents", () => {
-    const types = { ...defaultSelection.types, ...conciergeSelection.types } as Record<string, { intents: string[] }>
+    const types = { ...defaultSelection.types, ...conciergeSelection.types, ...stylistSelection.types } as Record<string, { intents: string[] }>
     for (const m of COMPOSITE_MOMENTS) expect(types[m.composite]?.intents, m.composite).toContain(m.moment)
   })
 
@@ -1085,9 +1140,10 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-timeline',
       'composite-moment-product-card',
       'composite-moment-swatch',
+      'composite-moment-contrast-pair',
       'composite-prose-swatch',
     ])
-    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'SWATCH_MISSING'])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })

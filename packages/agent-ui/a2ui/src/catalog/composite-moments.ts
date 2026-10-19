@@ -6,8 +6,8 @@
 // surface ONE composite. A row's `notInside` also sends back a composite wrapped in a card of its own (T-0262,
 // `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
 // keeps a row on exactly the catalogs that can emit it: the booking rows ride `<base>--concierge`, the games rows
-// ride `agent-ui` until the games types move to a domain, the ProductCard and Swatch rows ride `agent-ui`, and
-// `a2ui-basic` gets none.
+// ride `agent-ui` until the games types move to a domain, the ProductCard and Swatch rows ride `agent-ui`, the
+// ContrastPair row (T-0377) rides `agent-ui--stylist`, and `a2ui-basic` gets none.
 //
 // The link to the sidecar is a test, not an import (`composite-moments.test.ts`: every `moment` is one of its
 // composite's intents): the module imports no JSON, so plain Node (`scripts/e2e-admin/probe/trace.ts`) and both
@@ -317,6 +317,18 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       listed: proseColors,
       surface: 'one Swatch per anchor color with its label and value, one Ramp per color family, and one ContrastPair per text pairing',
     },
+  },
+  {
+    // T-0377 (round 12 :3, :96, :197, Haiku 5.5): a palette rooted a Card > CardContent > Column holding its ContrastPairs.
+    // A ContrastPair draws its own card (the approved mockup, ADR-0244), so the render lint failed nested-card. The row has
+    // no hand-built detector: it only sends back a ContrastPair wrapped in a Card (CONTRAST_PAIR_WRAPPED).
+    composite: 'ContrastPair',
+    moment: 'a text color on a background with its contrast rating',
+    repair:
+      'per text pairing with its foreground, background and label, never inside a Card: drop the Card around them (a root Card ' +
+      'needs the surface re-created and its data model sent again) and hold each Swatch, Ramp and ContrastPair in a root Column.',
+    lacks: [],
+    notInside: ['Card'],
   },
 ]
 

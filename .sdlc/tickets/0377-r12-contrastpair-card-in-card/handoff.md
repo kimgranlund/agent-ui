@@ -23,3 +23,10 @@ Round 12 archive `.sdlc/evals/rounds/2026-10-19-r12-targeted/` (report.md "Why i
 
 ## Constraints
 Recorded rounds are never rewritten; replays only gain authored rounds. A prompt change follows the debate rule.
+
+## Acceptance criteria
+verifier: L3
+- The recorded r12 :3 components (a Card > CardContent > Column holding three ContrastPairs) yield exactly `CONTRAST_PAIR_WRAPPED` from the composite-moment checks, and the same palette rooted at its Column, or a Card of Swatches and a Ramp with no ContrastPair, yields none: `npx vitest run packages/agent-ui/a2ui/src/catalog/composite-moments.test.ts -t T-0377` exits 0.
+- The new check carries a pass and a fail contract and cross-runs clean on the Stylist catalog: `npx vitest run packages/agent-ui/a2ui/src/catalog packages/agent-ui/a2ui/src/live-agent` exits 0.
+- The ContrastPair factory still renders a `ui-card` (the approved mockup is unchanged): `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/stylist/factories.test.ts` exits 0.
+- `npm run check` exits 0.
