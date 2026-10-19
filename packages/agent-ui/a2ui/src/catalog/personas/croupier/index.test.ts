@@ -9,6 +9,8 @@ import { defaultCatalog } from '../../default/index.ts'
 import { defaultFactories } from '../../default/factories.ts'
 import { a2uiBasicCatalog } from '../../a2ui-basic/index.ts'
 import { a2uiBasicFactories } from '../../a2ui-basic/factories.ts'
+import { validateCatalogConformance } from '../../conformance.ts'
+import type { A2uiComponent } from '../../../protocol.ts'
 
 describe('croupier persona (SPEC-R1, GH #497)', () => {
   it('AC1 — lands entirely under catalog/personas/croupier/, a stable kebab persona id', () => {
@@ -64,5 +66,17 @@ describe('croupier persona (SPEC-R1, GH #497)', () => {
         { ...a2uiBasicFactories, ...croupierFactories },
       ),
     ).not.toThrow()
+  })
+
+  // T-0381 (Kim 2026-10-19): sm cannot hold the 9px type floor at the widget tier, so the catalog no longer offers it.
+  it('PlayingCard size offers md and lg only; sm fails catalog validation on either base', () => {
+    expect(croupierFragment.components.PlayingCard?.properties.size?.type).toEqual({ type: 'string', enum: ['md', 'lg'] })
+    const card = (size: string): A2uiComponent => ({ id: 'c', component: 'PlayingCard', rank: 'K', suit: 'spades', size }) as A2uiComponent
+    for (const base of [defaultCatalog, a2uiBasicCatalog]) {
+      const composed = { ...base, catalogId: `${base.catalogId}--croupier`, components: { ...base.components, ...croupierFragment.components } }
+      expect(validateCatalogConformance(card('sm'), composed)).toEqual([{ code: 'CATALOG', path: 'c.size' }])
+      expect(validateCatalogConformance(card('md'), composed)).toEqual([])
+      expect(validateCatalogConformance(card('lg'), composed)).toEqual([])
+    }
   })
 })

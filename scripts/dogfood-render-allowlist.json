@@ -1,5 +1,6 @@
 {
   "demo/icon-demo#figure-parity": "owner T-0336: baseline ramp: glyphs share a text baseline by design",
   "demo/line-chart-demo#dash-scale": "ruled exemption (Kim 2026-10-17, T-0188): the projected line's 3px 2px dash is a screen-px texture (--ui-line-chart-projected-dash) under non-scaling-stroke; the plot is viewBox 0 0 100 100 with preserveAspectRatio none, so a user-unit dash stretches non-uniformly with the box on each axis and distorts. T-0141 targets length-encoding dashes like the gauge's, not textures",
+  "demo/playing-card-demo#type-floor": "ruled exemption (Kim 2026-10-17, T-0338 close-out, T-0189): the playing card's corner index is pictorial card art, not UI text, so it scales with the card face (6.8px on the smallest specimen) and sits outside the 9px type floor (ADR-0245 M5)",
   "demo/product-card-demo#icon-box": "ruled exemption (Kim 2026-10-17, T-0338): the image-free icon header (exhibit mode, data-part=icon) is pictorial media, the card's stand-in for its image, so it keeps its 48px 4n glyph on the tinted tile (T-0142) and is not an inline icon under the 2n icon box"
 }

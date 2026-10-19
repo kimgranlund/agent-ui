@@ -13,7 +13,7 @@
           "mapsTo": "suit"
         },
         "faceDown": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "faceDown" },
-        "size": { "type": { "type": "string", "enum": ["sm", "md", "lg"] }, "bindable": true, "mapsTo": "size" }
+        "size": { "type": { "type": "string", "enum": ["md", "lg"] }, "bindable": true, "mapsTo": "size" }
       }
     },
     "CardTable": {

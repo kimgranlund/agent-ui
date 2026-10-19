@@ -11,11 +11,18 @@ router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
 ## Goal
-ui-playing-card at size sm renders its index and pip at or above the 9px type floor at the widget tier.
+No agent can choose PlayingCard size sm: the croupier catalog offers md and lg only. ui-playing-card itself is unchanged from main.
 
 ## Intent
-- Do: fix the sm geometry in `packages/agent-ui/components/src/controls/playing-card/` (derive from the foundations, no one-off literal), or drop sm from the croupier catalog enum if sm cannot meet the floor.
-- Done when: a browser test renders PlayingCard sm at `data-tier="widget"` with the index at or above the floor; the playing-card tests, the dogfood render lint and `npm run check` exit 0; a screenshot against main is attached.
+- Ruling (Kim 2026-10-19): drop sm from the catalog instead of enlarging its index; the 9px floor on the control was built, verified and then reverted.
+- Do: remove "sm" from the PlayingCard size enum in `packages/agent-ui/a2ui/src/catalog/personas/croupier/catalog.json` (the only catalog that exposes PlayingCard); regenerate what derives from catalogs (`npm run generate:registry`, `generate-agent-assets.mjs`, `generate-agent-content.mjs`: all wrote no diff, the enum is not embedded).
+- Done when: a croupier test shows a PlayingCard with size sm fails `validateCatalogConformance` (CATALOG at `<id>.size`) on both bases while md and lg pass; `git diff main -- packages/agent-ui/components scripts` is empty; the a2ui package tests, the dogfood render lint and `npm run check` exit 0.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/index.test.ts` exit 0 (red on main: sm accepted)
+- `npx vitest run packages/agent-ui/a2ui` exit 0
+- `git diff 4d5a18d43 --exit-code -- packages/agent-ui/components scripts` exit 0
+- `npm run check` exit 0
 
 ## Context
 Round 12 archive `.sdlc/evals/rounds/2026-10-19-r12-targeted/` (report.md "Why it failed and how to fix it", fog report 6bae5f5b20e6a9741951dd4a). Trace lines `:n` are 1-based lines of its `traces/2026-10-19.jsonl`. Kim chose to ticket this cluster on 2026-10-19. Cluster N: `five-card-draw-haiku-1` (:63 to :72) sizes every PlayingCard sm; the render lint reads the index at 7.875px and the pip at 8.4px. T-0189 exempted the corner index as card art at the default size only.
