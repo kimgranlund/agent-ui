@@ -60,8 +60,6 @@
   --md-sys-typescale-quote-medium-size: round(nearest, var(--md-sys-bridge-body-md) * pow((1.25 + 0.03125 * (var(--md-sys-bridge-n-md) - 5)), 1), 1px);
   --md-sys-typescale-quote-large-size: round(nearest, var(--md-sys-bridge-body-lg) * pow((1.25 + 0.03125 * (var(--md-sys-bridge-n-lg) - 5)), 1), 1px);
   --ui-bar-inline-inset: var(--md-sys-layout-margin);
-  --md-sys-type-section-label: var(--md-sys-type-section-kicker);
-  --md-sys-type-group-label: var(--md-sys-type-group-kicker);
 }
 [data-foundations='legacy'] {
   --md-sys-tier-n0: initial;

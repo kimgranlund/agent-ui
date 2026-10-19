@@ -10,7 +10,7 @@
 // `check()`. anchors() reads the vendored CFG on every call, so a change to it reaches the next render.
 
 import { CFG as LEGACY_CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import { CFG, SPACING_ROLES, composeContainer, resolveControlSurface, resolveGeometry } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
+import { CFG, SPACING_ROLES, resolveControlSurface, resolveGeometry } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
 import { GLYPH_FLOOR, ROOT_REGISTER, STEP } from './foundations-rules.mjs'
 
 /**
@@ -63,14 +63,11 @@ export function anchors() {
 /** The control height per n, the slot plus a margin above and below (the skill's H = 3n + 2m). */
 export const heightPerN = (a = anchors()) => a.slotPerN + 2 * a.marginPerN
 
-/** The roomy levels as [token, margin, gutter] multiples of m: composeContainer() of the margin reference at each
- *  level's two role percentages. */
+/** The roomy levels as [token, margin, gutter] multiples of m: the margin reference at each level's two role
+ *  percentages (the skill's composeContainer() arithmetic, which throws on a bad input where this never does). */
 export function roomyLevels(a = anchors()) {
-  return ROOMY.map(([token, margin, gutter]) => [
-    token,
-    composeContainer(a.marginReference, a.roles[margin]).gutter,
-    composeContainer(a.marginReference, a.roles[gutter]).gutter,
-  ])
+  const at = (role) => (a.marginReference * a.roles[role]) / 100
+  return ROOMY.map(([token, margin, gutter]) => [token, at(margin), at(gutter)])
 }
 
 const ROLES = ['display', 'heading', 'subhead', 'sectionKicker', 'body', 'control', 'fieldLabel', 'groupKicker']
@@ -91,7 +88,9 @@ function typeAt(n, size, a) {
  * The tokens foundations.gen.css declares on one element, in px (the bare numbers n and m excepted), at a tier,
  * scale, size and density. It mirrors the derived block term for term; foundations.test.ts holds it to the repo's
  * scale.mjs resolve() on every cell. `surface` is the control anatomy of resolveControlSurface() at today's artwork
- * sizes (the glyph box, not the skill's n + 6, until T-0374); the sheet emits its height and icon box only.
+ * sizes (the glyph box, not the skill's n + 6, until T-0374); the sheet emits its height and icon box only. The rest
+ * is not gated: its n/2 margin and insets are fractional at odd n, so T-0374 adds a surface value to checkEmitted()
+ * before the sheet emits it (foundations.test.ts fails on a surface token in the derived block until then).
  */
 export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, size = 'md', density = 'default', a = anchors()) {
   const [n0, ta, k, g] = LEGACY_PATH.tiers[tier]
@@ -119,11 +118,20 @@ export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, 
 /**
  * The guard on the anchors (the refuse-to-emit rule beside the repo's check()): every anchor finite, the heading
  * ratio and the linear roles never falling as n grows, the type order and the floor held on the whole ladder, the
- * title bump rising with size, the icon inside its slot and the roomy levels nesting. Returns the failures.
+ * title bump rising with size, the icon inside its slot, the margin reference and role percentages in range and the
+ * roomy levels nesting. Returns the failures; never throws (a malformed anchor set is an A1 failure).
  */
 export function checkAnchors(a = anchors()) {
+  try {
+    return anchorFailures(a)
+  } catch (err) {
+    return [`A1 the anchors are malformed: ${err instanceof Error ? err.message : String(err)}`]
+  }
+}
+
+function anchorFailures(a) {
   const bad = []
-  const nums = [a.slotPerN, a.marginPerN, a.iconPerN, a.marginReference, ...Object.values(a.roles), ...a.Q, a.floor, a.kicker, ...Object.values(a.titleBump), ...Object.values(a.linear).flat()]
+  const nums = [a.slotPerN, a.marginPerN, a.iconPerN, a.marginReference, ...Object.keys(SPACING_ROLES).map((r) => a.roles?.[r]), ...a.Q, a.floor, a.kicker, ...Object.values(a.titleBump), ...Object.values(a.linear).flat()]
   if (!nums.every(Number.isFinite)) return ['A1 an anchor is not finite']
   if (!(a.Q[0] > 1) || a.Q[1] < 0) bad.push(`A2 heading ratio ${a.Q[0]} + ${a.Q[1]} per step must be above 1 and never fall`)
   for (const [role, [, perStep]] of Object.entries(a.linear)) if (perStep < 0) bad.push(`A2 ${role} falls as n grows`)
@@ -131,6 +139,11 @@ export function checkAnchors(a = anchors()) {
   if (!(a.titleBump.sm >= 0 && a.titleBump.sm <= a.titleBump.md && a.titleBump.md <= a.titleBump.lg)) bad.push('A3 title bump does not rise with size')
   if (!(a.iconPerN > 0 && a.iconPerN <= a.slotPerN)) bad.push(`A4 icon ${a.iconPerN}n does not fit the ${a.slotPerN}n slot`)
   if (!(a.marginPerN >= 0)) bad.push(`A4 control margin ${a.marginPerN}n is negative`)
+  if (!(a.marginReference >= 0)) bad.push(`A5 margin reference ${a.marginReference}m is negative`)
+  for (const role of Object.keys(SPACING_ROLES)) {
+    const pct = a.roles[role]
+    if (!(pct >= 0 && pct <= 200)) bad.push(`A5 ${role} role ${pct}% is outside 0 to 200`)
+  }
   const levels = roomyLevels(a)
   levels.forEach(([token, margin, gutter], i) => {
     if (!(gutter < margin)) bad.push(`A4 ${token} gutter ${gutter}m is not below its margin ${margin}m`)

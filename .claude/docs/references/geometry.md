@@ -143,7 +143,8 @@ display 47, brand md display 75). ADR-0150's compact-window body drop is superse
 Linear roles never go below 9px. The two small uppercase roles take the skill's names (T-0373): the **section
 kicker** (`--md-sys-type-section-kicker`, round(body · 9/8)) and the **group kicker** (`--md-sys-type-group-kicker`,
 n/2 + 6.5, the only half-pixel role); the `kicker` and `overline` variants both read the group kicker. The former
-names `--md-sys-type-section-label` and `--md-sys-type-group-label` are bridge aliases of them until W7.
+names `--md-sys-type-section-label` and `--md-sys-type-group-label` stay aliases of them in `foundations.gen.css`
+until W7, for an outside reader only: no consumer reads them, and the foundations census flags a new read.
 
 ## Minimum inline size (the bare-control floor)
 

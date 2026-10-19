@@ -40,7 +40,7 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['type-control', (r) => r.type.control],
   ['type-field-label', (r) => r.type.fieldLabel],
   ['type-group-kicker', (r) => r.type.groupLabel],
-  // T-0373: the old label names, bridge aliases of the kickers on every cell and undefined in the legacy opt-out
+  // T-0373: the old label names, aliases of the kickers in foundations.gen.css on every cell, undefined in the legacy opt-out
   ['type-section-label', (r) => r.type.sectionLabel],
   ['type-group-label', (r) => r.type.groupLabel],
   // the tokens keep the name `layout` (ADR-0140 names); the skill calls that level `page`

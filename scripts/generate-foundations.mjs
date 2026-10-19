@@ -5,23 +5,24 @@
 // sheets (the skill's former revision, frozen) for every input the current one cannot reproduce byte for byte.
 // scripts/lib/foundations-model.mjs says which input comes from where (anchors(), LEGACY_PATH) and mirrors the
 // sheet as px (resolve()). Never edit a generated sheet. The generator refuses to emit when the repo's `check()`
-// returns any failure but M7 (M1 to M16; M14, no size that depends on n alone shrinks as n grows, is the skill's own
-// since ADR-0245 Amendment 3), checkAnchors() does (the vendored anchors) or checkEmitted() does (T-0373: the whole-px
-// rule M7 held on the emitted values, not in the model), so a broken config never reaches a stylesheet.
+// returns a failure (M1 to M16; M14, no size that depends on n alone shrinks as n grows, is the skill's own since
+// ADR-0245 Amendment 3) other than the two M7 forms checkEmitted() now holds on the emitted values (EMITTED_M7,
+// T-0373), when checkAnchors() does (the vendored anchors) or when checkEmitted() does, so a broken config never
+// reaches a stylesheet.
 //
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes, and one derived block (`--md-sys-n`, the container unit
 // `--md-sys-m`, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4),
 // the control pill 2n (Amendment 5), the type roles under the skill's names (T-0373: the section and group
 // kickers), the chip level and the four container levels) re-declared
-// wherever an input changes, so each element computes its own n and m. ROOT_DEFAULT is the cut (clause 10a): true, so `:root` takes ROOT_INPUTS (product at
+// wherever an input changes (beside it, for one release, the type labels the kickers were renamed from,
+// `--md-sys-type-{section,group}-label`, so a foundations-only importer keeps them; W7 removes them), so each element computes its own n and m. ROOT_DEFAULT is the cut (clause 10a): true, so `:root` takes ROOT_INPUTS (product at
 // scale md since Amendment 8) and the full recompute list. Set it to false to roll the cut back: every declaration then sits
 // inside an opt-in `[data-tier]` region and each `var(<derived>, <today>)` resolves to today's value again.
 //
 // The bridge (clause 10a, one release after the cut, removed at W7) keeps the old names working: the
 // hand-tabled `--md-sys-{height,font,icon,gap,compact}-{sm,md,lg}`, `--md-sys-widget-inset`,
-// `--md-sys-shape-corner-base`, `--md-sys-space-*`, `--md-sys-typescale-*-size`, `--ui-bar-inline-inset` and the
-// type labels the kickers were renamed from (`--md-sys-type-{section,group}-label`, T-0373)
+// `--md-sys-shape-corner-base`, `--md-sys-space-*`, `--md-sys-typescale-*-size` and `--ui-bar-inline-inset`
 // alias the derived values (the retired `scale` and `density` attribute mappings were removed by T-0169), and
 // `[data-foundations="legacy"]` is the per-region opt-out (clause 10e): every derived token is `initial`, so the
 // fleet's `var(<derived>, <today>)` fallbacks render today's geometry there, and the old names pin LEGACY.
@@ -114,16 +115,22 @@ export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
     ? ':root, [data-tier], [data-scale], [data-size], [size], [data-density]'
     : '[data-tier], [data-tier] :is([data-scale], [data-size], [size], [data-density])'
 
-// M7 (whole px in the model) retired in T-0373: checkEmitted() holds the rule on the emitted values instead.
+/** The M7 forms (whole px in the model) that T-0373 retired: a level margin or gutter, and type off the 0.5px grid.
+ *  checkEmitted() holds both on the emitted values. M7's third form, a chip, control, group or component part that
+ *  is not whole px, still refuses: the parts (checkbox, switch, badge, table row and kin) are not emitted, and the
+ *  browser tests read them from scale.mjs resolve(). */
+export const EMITTED_M7 = /^M7 h\d+: (?:\w+ not whole px|type off the 0\.5px grid)$/
+
 const refuseOnFailure = (a) => {
-  const failures = [...check().filter((f) => !f.startsWith('M7 ')), ...checkAnchors(a)]
+  const failures = [...check().filter((f) => !EMITTED_M7.test(f)), ...checkAnchors(a)]
   if (!failures.length) failures.push(...checkEmitted(a))
   if (failures.length) throw new Error(`foundations check() failed (scale.mjs check(), checkAnchors(), checkEmitted()), refusing to emit:\n  ${failures.join('\n  ')}`)
 }
 
-/** Render the whole sheet. Throws (writes nothing) when check() reports a failure. */
-export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = anchors() } = {}) {
-  refuseOnFailure(a)
+/** Render the whole sheet. Throws (writes nothing) when a guard reports a failure; `checked` skips the guards when
+ *  the caller already ran them on the same anchors (main(), once for both sheets). */
+export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = anchors(), checked = false } = {}) {
+  if (!checked) refuseOnFailure(a)
   // Scoped: an attribute counts only on a region root or inside one. Unscoped (the cut): anywhere.
   const scoped = (sel) => (rootDefault ? sel : `[data-tier]${sel}, [data-tier] ${sel}`)
   const out = [
@@ -141,6 +148,8 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = 
     out.push(`${scoped(`:is([data-size='${step}'], [size='${step}'])`)} { --md-sys-size-z: ${z}; --md-sys-title-bump: ${a.titleBump[step]}; }`)
   }
   for (const [density, d] of Object.entries(LEGACY_PATH.density)) out.push(`${scoped(`[data-density='${density}']`)} { --md-sys-density-d: ${d}; }`)
+  out.push('/* The type labels the skill\'s kickers replaced (T-0373), kept for one release so old readers resolve; W7 removes them. */')
+  out.push(`${recomputeList(rootDefault)} { ${Object.entries(RENAMED).map(([old, name]) => `${old}: var(${name});`).join(' ')} }`)
   out.push(`${recomputeList(rootDefault)} {`)
   for (const [name, value] of derivedDeclarations(a)) out.push(`  ${name}: ${value};`)
   out.push('}')
@@ -243,21 +252,20 @@ function bridgeDeclarations(a) {
     for (const [m3, step] of Object.entries(M3_SIZE)) decls.push([`--md-sys-typescale-${role}-${m3}-size`, roleAt(skillRole, step, a)])
   }
   decls.push(['--ui-bar-inline-inset', 'var(--md-sys-layout-margin)'])
-  for (const [old, name] of Object.entries(RENAMED)) decls.push([old, `var(${name})`])
   return decls
 }
 
 /** Every name the legacy opt-out sets to `initial`: the inputs, the derived block, the bridge's own n and the
  *  renamed type labels, so a consumer's `var(--md-sys-type-group-label, <fallback>)` takes its fallback there. */
-function legacyInitialNames() {
+function legacyInitialNames(a) {
   const inputs = ['tier-n0', 'tier-a', 'tier-k', 'tier-g', 'tier-ratio', 'scale-s', 'size-z', 'title-bump', 'density-d'].map((n) => `--md-sys-${n}`)
   const bridge = Object.keys(STEP).flatMap((step) => [`--md-sys-bridge-n-${step}`, `--md-sys-bridge-body-${step}`])
-  return [...inputs, ...derivedDeclarations().map(([name]) => name), ...bridge, ...Object.keys(RENAMED)]
+  return [...inputs, ...derivedDeclarations(a).map(([name]) => name), ...bridge, ...Object.keys(RENAMED)]
 }
 
-/** Render the bridge sheet. It loads after foundations.gen.css. */
-export function renderBridgeCss({ rootDefault = ROOT_DEFAULT, anchors: a = anchors() } = {}) {
-  refuseOnFailure(a)
+/** Render the bridge sheet. It loads after foundations.gen.css. `checked` as for renderFoundationsCss(). */
+export function renderBridgeCss({ rootDefault = ROOT_DEFAULT, anchors: a = anchors(), checked = false } = {}) {
+  if (!checked) refuseOnFailure(a)
   const out = [
     '/* foundations-bridge.gen.css: GENERATED by scripts/generate-foundations.mjs (ADR-0245 clause 10a). DO NOT EDIT. */',
     '/* The old names alias the derived values; the retired scale and density attributes are no longer mapped (T-0169); */',
@@ -267,7 +275,7 @@ export function renderBridgeCss({ rootDefault = ROOT_DEFAULT, anchors: a = ancho
   for (const [name, value] of bridgeDeclarations(a)) out.push(`  ${name}: ${value};`)
   out.push('}')
   out.push("[data-foundations='legacy'] {")
-  for (const name of legacyInitialNames()) out.push(`  ${name}: initial;`)
+  for (const name of legacyInitialNames(a)) out.push(`  ${name}: initial;`)
   for (const [name, value] of Object.entries(LEGACY)) out.push(`  ${name}: ${value};`)
   out.push('}')
   out.push(`[data-foundations='legacy'] :is(${recomputeList(true).replace(':root, [data-tier], ', '')}) {`)
@@ -285,7 +293,9 @@ function main() {
   const root = fileURLToPath(new URL('..', import.meta.url))
   let rendered
   try {
-    rendered = SHEETS.map(([rel, render]) => [rel, render()])
+    const a = anchors()
+    refuseOnFailure(a)
+    rendered = SHEETS.map(([rel, render]) => [rel, render({ anchors: a, checked: true })])
   } catch (err) {
     console.error(`generate-foundations: ${err.message}`)
     process.exit(1)

@@ -50,7 +50,7 @@ check M7 since T-0373), are:
 | glyph box | `max(8px, 2n - 2c)` (ADR-0245 Amendment 7) | `--md-sys-glyph-box` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | type | linear `n + 6` for controls, `pow` for display, heading and subhead | `--md-sys-type-*` |
-| type | linear roles never below 9px; the section kicker `round(body · 9/8)` and the group kicker `n/2 + 6.5` (the former section and group labels, bridge-aliased until W7) | `--md-sys-type-section-kicker`, `--md-sys-type-group-kicker` |
+| type | linear roles never below 9px; the section kicker `round(body · 9/8)` and the group kicker `n/2 + 6.5` (the former section and group labels stay aliases until W7) | `--md-sys-type-section-kicker`, `--md-sys-type-group-kicker` |
 | container unit | `m` (n at default density) | `--md-sys-m` |
 | container levels | group (n) and widget / card / layout (m) margin, gutter, radius | `--md-sys-{level}-{margin,gutter,radius}` |
 

@@ -83,16 +83,16 @@
   --ui-text-line-height: var(--md-sys-typescale-label-medium-line-height);
   --ui-text-tracking: var(--md-sys-typescale-label-medium-tracking);
 }
-/* kicker is an alias of the group-label role (ADR-0245 Amendment 3), not the section label: the variant is a small
+/* kicker is an alias of the group-kicker role (ADR-0245 Amendment 3, T-0373), not the section kicker: the variant is a small
    uppercase label over a group (11 / 12 / 14px before ADR-0245), not an eyebrow above a heading (T-0117). */
 :where(ui-text[variant='kicker']) {
-  --ui-text-size: var(--md-sys-type-group-label, var(--md-sys-typescale-kicker-medium-size));
+  --ui-text-size: var(--md-sys-type-group-kicker, var(--md-sys-typescale-kicker-medium-size));
   --ui-text-weight: var(--md-sys-typescale-kicker-medium-weight);
   --ui-text-line-height: var(--md-sys-typescale-kicker-medium-line-height);
   --ui-text-tracking: var(--md-sys-typescale-kicker-medium-tracking);
 }
 :where(ui-text[variant='overline']) {
-  --ui-text-size: var(--md-sys-type-group-label, var(--md-sys-typescale-overline-medium-size));
+  --ui-text-size: var(--md-sys-type-group-kicker, var(--md-sys-typescale-overline-medium-size));
   --ui-text-weight: var(--md-sys-typescale-overline-medium-weight);
   --ui-text-line-height: var(--md-sys-typescale-overline-medium-line-height);
   --ui-text-tracking: var(--md-sys-typescale-overline-medium-tracking);
@@ -163,25 +163,25 @@
   --ui-text-tracking: var(--md-sys-typescale-label-large-tracking);
 }
 :where(ui-text[variant='kicker'][size='sm']) {
-  --ui-text-size: var(--md-sys-type-group-label, var(--md-sys-typescale-kicker-small-size));
+  --ui-text-size: var(--md-sys-type-group-kicker, var(--md-sys-typescale-kicker-small-size));
   --ui-text-weight: var(--md-sys-typescale-kicker-small-weight);
   --ui-text-line-height: var(--md-sys-typescale-kicker-small-line-height);
   --ui-text-tracking: var(--md-sys-typescale-kicker-small-tracking);
 }
 :where(ui-text[variant='kicker'][size='lg']) {
-  --ui-text-size: var(--md-sys-type-group-label, var(--md-sys-typescale-kicker-large-size));
+  --ui-text-size: var(--md-sys-type-group-kicker, var(--md-sys-typescale-kicker-large-size));
   --ui-text-weight: var(--md-sys-typescale-kicker-large-weight);
   --ui-text-line-height: var(--md-sys-typescale-kicker-large-line-height);
   --ui-text-tracking: var(--md-sys-typescale-kicker-large-tracking);
 }
 :where(ui-text[variant='overline'][size='sm']) {
-  --ui-text-size: var(--md-sys-type-group-label, var(--md-sys-typescale-overline-small-size));
+  --ui-text-size: var(--md-sys-type-group-kicker, var(--md-sys-typescale-overline-small-size));
   --ui-text-weight: var(--md-sys-typescale-overline-small-weight);
   --ui-text-line-height: var(--md-sys-typescale-overline-small-line-height);
   --ui-text-tracking: var(--md-sys-typescale-overline-small-tracking);
 }
 :where(ui-text[variant='overline'][size='lg']) {
-  --ui-text-size: var(--md-sys-type-group-label, var(--md-sys-typescale-overline-large-size));
+  --ui-text-size: var(--md-sys-type-group-kicker, var(--md-sys-typescale-overline-large-size));
   --ui-text-weight: var(--md-sys-typescale-overline-large-weight);
   --ui-text-line-height: var(--md-sys-typescale-overline-large-line-height);
   --ui-text-tracking: var(--md-sys-typescale-overline-large-tracking);
