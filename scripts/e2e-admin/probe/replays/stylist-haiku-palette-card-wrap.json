@@ -1,0 +1,497 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "stylist-haiku-palette-card-wrap",
+  "agent": "stylist",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-19.jsonl:3 (catalog agent-ui--stylist)",
+  "steps": [
+    {
+      "say": "Propose a calm blue palette for a banking app.",
+      "expect": [
+        "Swatch",
+        "Ramp",
+        "ContrastPair"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"A calm banking palette should feel steady and trustworthy, so I've kept the blues deep and slightly desaturated, with a soft teal-blue secondary and a light sky accent for highlights. The surface is a near-white with a faint blue tint. The three text and button pairings are rendered below so you can check their contrast before anything is committed.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"A calm banking palette should feel steady and trustworthy, so I've kept the blues deep and slightly desaturated, with a soft teal-blue secondary and a light sky accent for highlights. The surface is a near-white with a faint blue tint. The three text and button pairings are rendered below so you can check their contrast before anything is committed.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Propose a calm blue palette for a banking app.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"CONTRAST_PAIR_WRAPPED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":143300,\"total\":46574,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":19868},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":46574}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"banking-palette\",\"catalogId\":\"agent-ui--stylist\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"banking-palette\",\"value\":{\"primary\":{\"label\":\"Primary\",\"value\":\"oklch(0.45 0.12 250)\"},\"secondary\":{\"label\":\"Secondary\",\"value\":\"oklch(0.65 0.08 220)\"},\"accent\":{\"label\":\"Accent\",\"value\":\"oklch(0.75 0.13 235)\"},\"surface\":{\"label\":\"Surface\",\"value\":\"oklch(0.99 0.005 250)\"},\"tonal\":[{\"label\":\"100\",\"value\":\"oklch(0.96 0.015 250)\"},{\"label\":\"300\",\"value\":\"oklch(0.85 0.05 250)\"},{\"label\":\"500\",\"value\":\"oklch(0.65 0.10 250)\"},{\"label\":\"700\",\"value\":\"oklch(0.45 0.12 250)\"},{\"label\":\"900\",\"value\":\"oklch(0.25 0.07 250)\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"banking-palette\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"title\",\"roles_caption\",\"roles_row\",\"tonal_caption\",\"tonal_ramp\",\"pairs_caption\",\"pairs_col\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Calm blue palette for banking\",\"variant\":\"h4\"},{\"id\":\"roles_caption\",\"component\":\"Text\",\"text\":\"Anchor colors\",\"variant\":\"caption\"},{\"id\":\"roles_row\",\"component\":\"Row\",\"gap\":\"lg\",\"wrap\":true,\"children\":[\"sw_primary\",\"sw_secondary\",\"sw_accent\",\"sw_surface\"]},{\"id\":\"sw_primary\",\"component\":\"Swatch\",\"label\":{\"path\":\"/primary/label\"},\"value\":{\"path\":\"/primary/value\"}},{\"id\":\"sw_secondary\",\"component\":\"Swatch\",\"label\":{\"path\":\"/secondary/label\"},\"value\":{\"path\":\"/secondary/value\"}},{\"id\":\"sw_accent\",\"component\":\"Swatch\",\"label\":{\"path\":\"/accent/label\"},\"value\":{\"path\":\"/accent/value\"}},{\"id\":\"sw_surface\",\"component\":\"Swatch\",\"label\":{\"path\":\"/surface/label\"},\"value\":{\"path\":\"/surface/value\"}},{\"id\":\"tonal_caption\",\"component\":\"Text\",\"text\":\"Primary tonal range\",\"variant\":\"caption\"},{\"id\":\"tonal_ramp\",\"component\":\"Ramp\",\"label\":\"Primary tonal range\",\"steps\":{\"path\":\"/tonal\"}},{\"id\":\"pairs_caption\",\"component\":\"Text\",\"text\":\"Text and button pairings\",\"variant\":\"caption\"},{\"id\":\"pairs_col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"pair_1\",\"pair_2\",\"pair_3\"]},{\"id\":\"pair_1\",\"component\":\"ContrastPair\",\"label\":\"Primary text on surface\",\"foreground\":\"oklch(0.45 0.12 250)\",\"background\":\"oklch(0.99 0.005 250)\",\"sample\":\"Your balance\"},{\"id\":\"pair_2\",\"component\":\"ContrastPair\",\"label\":\"Button label\",\"foreground\":\"oklch(0.99 0.005 250)\",\"background\":\"oklch(0.45 0.12 250)\",\"sample\":\"Transfer money\"},{\"id\":\"pair_3\",\"component\":\"ContrastPair\",\"label\":\"Body text on tint\",\"foreground\":\"oklch(0.25 0.07 250)\",\"background\":\"oklch(0.96 0.015 250)\",\"sample\":\"2 payments pending\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "A calm banking palette should feel steady and trustworthy, so I've kept the blues deep and slightly desaturated, with a soft teal-blue secondary and a light sky accent for highlights. The surface is a near-white with a faint blue tint. The three text and button pairings are rendered below so you can check their contrast before anything is committed.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's a calm blue palette for a banking app: anchors, the primary tonal range, and three text pairings with their contrast ratings.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "banking-palette",
+                      "catalogId": "agent-ui--stylist"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "banking-palette",
+                      "value": {
+                        "primary": {
+                          "label": "Primary",
+                          "value": "oklch(0.45 0.12 250)"
+                        },
+                        "secondary": {
+                          "label": "Secondary",
+                          "value": "oklch(0.65 0.08 220)"
+                        },
+                        "accent": {
+                          "label": "Accent",
+                          "value": "oklch(0.75 0.13 235)"
+                        },
+                        "surface": {
+                          "label": "Surface",
+                          "value": "oklch(0.99 0.005 250)"
+                        },
+                        "tonal": [
+                          {
+                            "label": "100",
+                            "value": "oklch(0.96 0.015 250)"
+                          },
+                          {
+                            "label": "300",
+                            "value": "oklch(0.85 0.05 250)"
+                          },
+                          {
+                            "label": "500",
+                            "value": "oklch(0.65 0.10 250)"
+                          },
+                          {
+                            "label": "700",
+                            "value": "oklch(0.45 0.12 250)"
+                          },
+                          {
+                            "label": "900",
+                            "value": "oklch(0.25 0.07 250)"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "banking-palette",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "root_header",
+                            "root_content"
+                          ]
+                        },
+                        {
+                          "id": "root_header",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Calm blue palette for banking",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "root_content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "roles_caption",
+                            "roles_row",
+                            "tonal_caption",
+                            "tonal_ramp",
+                            "pairs_caption",
+                            "pairs_col"
+                          ]
+                        },
+                        {
+                          "id": "roles_caption",
+                          "component": "Text",
+                          "text": "Anchor colors",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "roles_row",
+                          "component": "Row",
+                          "gap": "lg",
+                          "wrap": true,
+                          "children": [
+                            "sw_primary",
+                            "sw_secondary",
+                            "sw_accent",
+                            "sw_surface"
+                          ]
+                        },
+                        {
+                          "id": "sw_primary",
+                          "component": "Swatch",
+                          "label": {
+                            "path": "/primary/label"
+                          },
+                          "value": {
+                            "path": "/primary/value"
+                          }
+                        },
+                        {
+                          "id": "sw_secondary",
+                          "component": "Swatch",
+                          "label": {
+                            "path": "/secondary/label"
+                          },
+                          "value": {
+                            "path": "/secondary/value"
+                          }
+                        },
+                        {
+                          "id": "sw_accent",
+                          "component": "Swatch",
+                          "label": {
+                            "path": "/accent/label"
+                          },
+                          "value": {
+                            "path": "/accent/value"
+                          }
+                        },
+                        {
+                          "id": "sw_surface",
+                          "component": "Swatch",
+                          "label": {
+                            "path": "/surface/label"
+                          },
+                          "value": {
+                            "path": "/surface/value"
+                          }
+                        },
+                        {
+                          "id": "tonal_caption",
+                          "component": "Text",
+                          "text": "Primary tonal range",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "tonal_ramp",
+                          "component": "Ramp",
+                          "label": "Primary tonal range",
+                          "steps": {
+                            "path": "/tonal"
+                          }
+                        },
+                        {
+                          "id": "pairs_caption",
+                          "component": "Text",
+                          "text": "Text and button pairings",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "pairs_col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "pair_1",
+                            "pair_2",
+                            "pair_3"
+                          ]
+                        },
+                        {
+                          "id": "pair_1",
+                          "component": "ContrastPair",
+                          "label": "Primary text on surface",
+                          "foreground": "oklch(0.45 0.12 250)",
+                          "background": "oklch(0.99 0.005 250)",
+                          "sample": "Your balance"
+                        },
+                        {
+                          "id": "pair_2",
+                          "component": "ContrastPair",
+                          "label": "Button label",
+                          "foreground": "oklch(0.99 0.005 250)",
+                          "background": "oklch(0.45 0.12 250)",
+                          "sample": "Transfer money"
+                        },
+                        {
+                          "id": "pair_3",
+                          "component": "ContrastPair",
+                          "label": "Body text on tint",
+                          "foreground": "oklch(0.25 0.07 250)",
+                          "background": "oklch(0.96 0.015 250)",
+                          "sample": "2 payments pending"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "A calm banking palette should feel steady and trustworthy, so I've kept the blues deep and slightly desaturated, with a soft teal-blue secondary and a light sky accent for highlights. The surface is a near-white with a faint blue tint. The three text and button pairings are rendered below so you can check their contrast before anything is committed.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's a calm blue palette for a banking app: anchors, the primary tonal range, and three text pairings with their contrast ratings.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "banking-palette",
+                      "catalogId": "agent-ui--stylist"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "banking-palette",
+                      "value": {
+                        "primary": {
+                          "label": "Primary",
+                          "value": "oklch(0.45 0.12 250)"
+                        },
+                        "secondary": {
+                          "label": "Secondary",
+                          "value": "oklch(0.65 0.08 220)"
+                        },
+                        "accent": {
+                          "label": "Accent",
+                          "value": "oklch(0.75 0.13 235)"
+                        },
+                        "surface": {
+                          "label": "Surface",
+                          "value": "oklch(0.99 0.005 250)"
+                        },
+                        "tonal": [
+                          {
+                            "label": "100",
+                            "value": "oklch(0.96 0.015 250)"
+                          },
+                          {
+                            "label": "300",
+                            "value": "oklch(0.85 0.05 250)"
+                          },
+                          {
+                            "label": "500",
+                            "value": "oklch(0.65 0.10 250)"
+                          },
+                          {
+                            "label": "700",
+                            "value": "oklch(0.45 0.12 250)"
+                          },
+                          {
+                            "label": "900",
+                            "value": "oklch(0.25 0.07 250)"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "banking-palette",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "title",
+                            "roles_caption",
+                            "roles_row",
+                            "tonal_caption",
+                            "tonal_ramp",
+                            "pairs_caption",
+                            "pairs_col"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Calm blue palette for banking",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "roles_caption",
+                          "component": "Text",
+                          "text": "Anchor colors",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "roles_row",
+                          "component": "Row",
+                          "gap": "lg",
+                          "wrap": true,
+                          "children": [
+                            "sw_primary",
+                            "sw_secondary",
+                            "sw_accent",
+                            "sw_surface"
+                          ]
+                        },
+                        {
+                          "id": "sw_primary",
+                          "component": "Swatch",
+                          "label": {
+                            "path": "/primary/label"
+                          },
+                          "value": {
+                            "path": "/primary/value"
+                          }
+                        },
+                        {
+                          "id": "sw_secondary",
+                          "component": "Swatch",
+                          "label": {
+                            "path": "/secondary/label"
+                          },
+                          "value": {
+                            "path": "/secondary/value"
+                          }
+                        },
+                        {
+                          "id": "sw_accent",
+                          "component": "Swatch",
+                          "label": {
+                            "path": "/accent/label"
+                          },
+                          "value": {
+                            "path": "/accent/value"
+                          }
+                        },
+                        {
+                          "id": "sw_surface",
+                          "component": "Swatch",
+                          "label": {
+                            "path": "/surface/label"
+                          },
+                          "value": {
+                            "path": "/surface/value"
+                          }
+                        },
+                        {
+                          "id": "tonal_caption",
+                          "component": "Text",
+                          "text": "Primary tonal range",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "tonal_ramp",
+                          "component": "Ramp",
+                          "label": "Primary tonal range",
+                          "steps": {
+                            "path": "/tonal"
+                          }
+                        },
+                        {
+                          "id": "pairs_caption",
+                          "component": "Text",
+                          "text": "Text and button pairings",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "pairs_col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "pair_1",
+                            "pair_2",
+                            "pair_3"
+                          ]
+                        },
+                        {
+                          "id": "pair_1",
+                          "component": "ContrastPair",
+                          "label": "Primary text on surface",
+                          "foreground": "oklch(0.45 0.12 250)",
+                          "background": "oklch(0.99 0.005 250)",
+                          "sample": "Your balance"
+                        },
+                        {
+                          "id": "pair_2",
+                          "component": "ContrastPair",
+                          "label": "Button label",
+                          "foreground": "oklch(0.99 0.005 250)",
+                          "background": "oklch(0.45 0.12 250)",
+                          "sample": "Transfer money"
+                        },
+                        {
+                          "id": "pair_3",
+                          "component": "ContrastPair",
+                          "label": "Body text on tint",
+                          "foreground": "oklch(0.25 0.07 250)",
+                          "background": "oklch(0.96 0.015 250)",
+                          "sample": "2 payments pending"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Propose a calm blue palette for a banking app."
+      },
+      "routing": {
+        "domains": [
+          "stylist"
+        ],
+        "exemplars": [
+          "brand-palette",
+          "color-picker-form",
+          "pattern-schedule-picker"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "palette-presentation",
+            "load": "index-only"
+          },
+          {
+            "name": "contrast-floors",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

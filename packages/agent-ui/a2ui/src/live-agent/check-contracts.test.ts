@@ -353,6 +353,19 @@ const CONTRACTS: Record<string, Contract> = {
     pass: { catalog: UI, output: palette },
     fail: { catalog: UI, output: surface('palette-1', UI, [{ id: 'root', component: 'Text', text: 'Primary navy #1f3a5f, accent sky #9cc3e0' }]) },
   },
+  // T-0377: a ContrastPair draws its own card, so one inside a Card is sent back.
+  'composite-moment-contrast-pair': {
+    code: 'CONTRAST_PAIR_WRAPPED',
+    pass: { catalog: STYLIST, output: surface('pairs-1', STYLIST, [
+      { id: 'root', component: 'Column', children: ['pair'] },
+      { id: 'pair', component: 'ContrastPair', label: 'Body on page', foreground: '#1f3a5f', background: '#ffffff' },
+    ]) },
+    fail: { catalog: STYLIST, output: surface('pairs-1', STYLIST, [
+      { id: 'root', component: 'Card', children: ['body'] },
+      { id: 'body', component: 'CardContent', children: ['pair'] },
+      { id: 'pair', component: 'ContrastPair', label: 'Body on page', foreground: '#1f3a5f', background: '#ffffff' },
+    ]) },
+  },
   // Kim, 2026-10-18: judged on the reply, on the Stylist alone.
   'composite-prose-swatch': {
     code: 'SURFACE_MISSING',
@@ -739,6 +752,7 @@ const ROW_PROPS: Record<string, readonly string[]> = {
   Timeline: ['label'],
   ProductCard: ['title', 'price', 'priceNote', 'action'],
   Swatch: ['label', 'value'],
+  ContrastPair: ['foreground', 'background', 'label'],
 }
 
 /** A composite's declared props, with the item props of its array props (`rows[].label`). */
