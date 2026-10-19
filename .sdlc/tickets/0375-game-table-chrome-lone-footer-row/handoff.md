@@ -23,3 +23,11 @@ Found by the T-0369 code review: the teaching "CardFooter = Row of action Button
 
 ## Constraints
 Model-read text: debate rule applies. grammar.md unchanged.
+
+## Acceptance criteria
+verifier: L3
+- The two module bodies match architect-L1-3.md Interfaces verbatim, pinned by the new `T-0375: a lone action Button carries no Row` describe (each pin was red before `assets.gen.ts` was regenerated) and the blue-sky calibration pins: `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/mini-skills.test.ts packages/agent-ui/a2ui/src/live-agent/system-prompt-grammar.test.ts`
+- The baseline moved only `blueSky` and the `card-game-sheet` and `game-table-chrome` mini-skill bodies, and the prompt tests are green: `npx vitest run --project packages packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.test.ts packages/agent-ui/a2ui/src/live-agent/prompt-budget.test.ts packages/agent-ui/a2ui/src/live-agent/domain-guidance.test.ts packages/agent-ui/a2ui/src/live-agent/a2ui-surface-toggle.test.ts packages/agent-ui/a2ui/src/agent/agent-assets-freshness.test.ts`
+- Registry, site budget and the croupier replays stay green, and no recorded round changed: `npx vitest run packages/agent-ui/a2ui/tools/registry/generate.test.ts site/pages/agent-admin-prompt-budget.test.ts scripts/e2e-admin/probe/replays/croupier- scripts/e2e-admin/probe/replays/smoke-croupier-blackjack-deal-haiku`
+- grammar.md and the replay fixtures are untouched: `git diff --quiet HEAD -- packages/agent-ui/a2ui/src/agent/prompts/grammar.md scripts/e2e-admin/probe/replays`
+- `npm run check`
