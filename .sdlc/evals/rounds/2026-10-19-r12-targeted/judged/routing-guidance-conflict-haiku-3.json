@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-guidance-conflict-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The hole card stays face down until the round reaches the dealer's turn, which happens when you stand or double.",
+          "found": true
+        },
+        {
+          "quote": "Hit, Stand, or Double are all live on the table.",
+          "found": true
+        }
+      ],
+      "why": "Mostly plain dealer voice with no JSON or tool talk. \"Live on the table\" is slightly off, and Turn 2 is wordier than the short sentences asked for, but these are tiny slips."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "You can't see it before then.",
+          "found": true
+        },
+        {
+          "quote": "Your 16 loses to 19, so you lose your 100 bet.",
+          "found": true
+        }
+      ],
+      "why": "Every reply acts on the player's move. The bet is taken, the hole-card request gets a plain refusal with options, and Stand plays out the dealer."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer reveals the 7♦ for 16 and must draw. The dealer takes the 3♣ for 19 and stands.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the dealer hand and settles the bet in the right turns. It makes no choices for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer wins 19 to 16. You lose 100 chips.",
+          "found": true
+        },
+        {
+          "quote": "Your hand is K♥ 6♠ for 16, and the dealer shows a 9.",
+          "found": true
+        }
+      ],
+      "why": "Reply totals match the surface: dealer 19, player 16, bankroll 900 after the 100 loss. Nothing contradicts earlier replies."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2345,
+    "outputTokens": 519,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.00988,
+  "at": "2026-10-19T01:57:09.815Z"
+}

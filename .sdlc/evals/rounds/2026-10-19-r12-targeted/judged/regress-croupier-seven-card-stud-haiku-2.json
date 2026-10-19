@@ -1,0 +1,101 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-seven-card-stud-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "by my count it should be 1,030",
+          "found": true
+        },
+        {
+          "quote": "The bankroll on the table reads 1,015",
+          "found": true
+        }
+      ],
+      "why": "Mostly plain dealer talk with no JSON, but turn 5 talks about the table's own bookkeeping discrepancy, which breaks the dealer voice."
+    },
+    {
+      "id": "C2",
+      "score": 3,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You check, and the opponent checks behind you.",
+          "found": true
+        },
+        {
+          "quote": "You fold and forfeit your 10 ante.",
+          "found": true
+        }
+      ],
+      "why": "Most moves are answered. In turn 1 the player said check or call, and the reply called 5, which was reasonable. Turn 9 correctly refuses the illegal bet and lists the options. Turn 7's fold is acted on, but the pot/bankroll story is off."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "At showdown your K-high straight (K-Q-J-10-9) beats their 9-high, so you win the 30 pot",
+          "found": true
+        },
+        {
+          "quote": "Dealing a new seven-card stud hand.",
+          "found": true
+        }
+      ],
+      "why": "The house deals, plays the showdown and settles itself without handing any job to the player. Only the turn 5 mention of a wrong count is a flaw, and that is not a handoff."
+    },
+    {
+      "id": "C4",
+      "score": 1,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "you're at 990 with a 25 pot",
+          "found": true
+        },
+        {
+          "quote": "your bankroll goes to 1,015",
+          "found": true
+        },
+        {
+          "quote": "you're at 1,005 after your ante",
+          "found": true
+        },
+        {
+          "quote": "you're at 995 after your ante",
+          "found": true
+        }
+      ],
+      "why": "The numbers contradict each other. The 30 pot win moved the bankroll 985 to 1,015, and the reply in turn 5 admits a mismatch with 1,030. Hand 2 starts at 1,005 after a 1,015 bankroll, and hand 3 starts at 995 after the fold left it at 1,005, so the bankroll never adds up."
+    }
+  ],
+  "score": 1,
+  "passed": false,
+  "usage": {
+    "inputTokens": 5748,
+    "outputTokens": 582,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.017316,
+  "at": "2026-10-19T01:55:51.032Z"
+}

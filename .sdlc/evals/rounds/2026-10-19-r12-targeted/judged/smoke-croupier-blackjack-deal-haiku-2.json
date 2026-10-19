@@ -1,0 +1,85 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "smoke-croupier-blackjack-deal-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "Table's open with 1,000 chips. Set your bet on the table and deal.",
+          "found": true
+        }
+      ],
+      "why": "Short, plain dealer talk with no JSON, ids, or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The 100 bet click is taken and the hand is dealt in that same turn, and the opening request gets a table opened."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The croupier deals both hands itself and keeps the dealer's hole card face down, and it makes no move or bet choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Table's open with 1,000 chips.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed.",
+          "found": true
+        }
+      ],
+      "why": "The 1,000 starting chips match the surface, and the 100 bet matches the surface bet with bankroll 900."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 1645,
+    "outputTokens": 344,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.00673,
+  "at": "2026-10-19T01:57:16.012Z"
+}

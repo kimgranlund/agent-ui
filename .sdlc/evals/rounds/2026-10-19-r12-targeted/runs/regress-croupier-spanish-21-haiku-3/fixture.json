@@ -1,0 +1,2006 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "regress-croupier-spanish-21-haiku-3",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-19T01:38:54.638Z, traces 2026-10-19.jsonl:222,2026-10-19.jsonl:223,2026-10-19.jsonl:224,2026-10-19.jsonl:225,2026-10-19.jsonl:226,2026-10-19.jsonl:227,2026-10-19.jsonl:228,2026-10-19.jsonl:229,2026-10-19.jsonl:230",
+  "steps": [
+    {
+      "say": "Let's play Spanish 21.",
+      "expect": [
+        "CardTable"
+      ],
+      "expectRouting": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": {
+          "include": [
+            "domain-croupier-card-table-round"
+          ],
+          "exclude": [
+            "domain-lexicographer-word-board",
+            "domain-admiral-battleship-board"
+          ]
+        }
+      }
+    },
+    {
+      "click": "100"
+    },
+    {
+      "click": "Stand",
+      "skipIfPhase": "settled"
+    },
+    {
+      "click": "Deal again",
+      "expect": [
+        "CardTable"
+      ]
+    },
+    {
+      "click": "100"
+    },
+    {
+      "click": "Deal again",
+      "expect": [
+        "CardTable"
+      ]
+    },
+    {
+      "click": "50"
+    },
+    {
+      "say": "Hit.",
+      "skipIfPhase": "settled"
+    },
+    {
+      "say": "Stand.",
+      "skipIfPhase": "settled"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since there's no bankro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll on file y\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et, I'll open the first\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round at 1,000. The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" user w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ants\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Spanish 21 but\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" didn't specify a bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" amount,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I need to set up the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" betting phase and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" let the bet strip handle\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than ass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uming a number\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"No bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons during\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" betting,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so children stays empty; I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll set phase to betting\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", status to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Place your bet\\\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll 1000,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet 50,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and empty hands in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data model. I'll sk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line since there\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s nothing to declare,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and lead with a short\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose recap of the Sp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"anish 21 rules before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the tool call.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Spanish 21 it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. The sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"oe is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 48 cards with the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" tens removed.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" A player 21 always be\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ats a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dealer 21, and player\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" blackjack beats deal\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"er blackjack. B\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"onu\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ses pay for a five-pl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"us-card 21 and for\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 6-7-8 or\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 7-7-7.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Double after\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" split and late surrender are all\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"owed. Your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bankroll star\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ts at 1,000.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Set your bet on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the table and deal.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":1000,\\\"bet\\\":50,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet to deal\\\",\\\"result\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Spanish 21 it is. The shoe is 48 cards with the tens removed. A player 21 always beats a dealer 21, and player blackjack beats dealer blackjack. Bonuses pay for a five-plus-card 21 and for 6-7-8 or 7-7-7. Double after split and late surrender are allowed. Your bankroll starts at 1,000. Set your bet on the table and deal.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### spanish-21 (resource)\\nspanish 21, no-tens deck, bonus 21s, late surrender\\n\\nBlackjack on a 48-card Spanish deck — every 10-spot removed, faces stay. A player 21 ALWAYS wins, and player blackjack beats dealer blackjack. Bonus payouts for a five-plus-card 21 and for 6-7-8 or 7-7-7; double-after-split and late surrender allowed. Deal and settle as blackjack otherwise.\\n\\nLet's play Spanish 21.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"listing-photo-grid\",\"frontier-round-outcome\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":57965,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3429},{\"id\":\"mini-skills\",\"chars\":2225},{\"id\":\"persona\",\"chars\":5088}],\"over\":false},\"usage\":{\"inputTokens\":4453,\"outputTokens\":1570,\"cacheReadInputTokens\":17843,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"game-table-chrome\",\"card-layout\",\"card-game-sheet\"],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"bet\":50,\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\",\"phase\":\"betting\",\"status\":\"Place your bet to deal\",\"result\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"result\":{\"path\":\"/result\"},\"betAction\":\"deal\",\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Spanish 21 it is. The shoe is 48 cards with the tens removed. A player 21 always beats a dealer 21, and player blackjack beats dealer blackjack. Bonuses pay for a five-plus-card 21 and for 6-7-8 or 7-7-7. Double after split and late surrender are allowed. Your bankroll starts at 1,000. Set your bet on the table and deal.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Spanish 21 table is set. Bankroll 1,000. Set your bet and deal.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "bet": 50,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": "",
+                        "phase": "betting",
+                        "status": "Place your bet to deal",
+                        "result": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "betAction": "deal",
+                          "children": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "listing-photo-grid",
+          "frontier-round-outcome"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"faceDown\\\":true,\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"dealerTotal\\\":\\\"showing 9\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerTotal\\\":17,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move\\\",\\\"result\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"children\\\":[\\\"hitBtn\\\",\\\"standBtn\\\",\\\"doubleBtn\\\"]},{\\\"id\\\":\\\"hitBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"standBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}},{\\\"id\\\":\\\"doubleBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Bet of 100 placed. Dealing your Spanish 21 hand now.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":100,\\\"bankrollAfterBet\\\":900}. Current surface data model: {\\\"bankroll\\\":1000,\\\"bet\\\":100,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet to deal\\\",\\\"result\\\":\\\"\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"agent-roster-drawer\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":58632,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3894},{\"id\":\"mini-skills\",\"chars\":2358},{\"id\":\"persona\",\"chars\":5157}],\"over\":false},\"usage\":{\"inputTokens\":5500,\"outputTokens\":656,\"cacheReadInputTokens\":17842,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"game-hud\",\"game-table-chrome\",\"card-layout\"],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":900,\"bet\":100,\"dealerHand\":[{\"rank\":\"9\",\"suit\":\"clubs\"},{\"faceDown\":true,\"rank\":\"4\",\"suit\":\"diamonds\"}],\"dealerTotal\":\"showing 9\",\"playerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"spades\"}],\"playerTotal\":17,\"phase\":\"playing\",\"status\":\"Your move\",\"result\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"result\":{\"path\":\"/result\"},\"children\":[\"hitBtn\",\"standBtn\",\"doubleBtn\"]},{\"id\":\"hitBtn\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"soft\",\"action\":{\"action\":\"hit\"}},{\"id\":\"standBtn\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"solid\",\"action\":{\"action\":\"stand\"}},{\"id\":\"doubleBtn\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Bet of 100 placed. Dealing your Spanish 21 hand now.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 900,
+                        "bet": 100,
+                        "dealerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "clubs"
+                          },
+                          {
+                            "faceDown": true,
+                            "rank": "4",
+                            "suit": "diamonds"
+                          }
+                        ],
+                        "dealerTotal": "showing 9",
+                        "playerHand": [
+                          {
+                            "rank": "K",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "spades"
+                          }
+                        ],
+                        "playerTotal": 17,
+                        "phase": "playing",
+                        "status": "Your move",
+                        "result": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "children": [
+                            "hitBtn",
+                            "standBtn",
+                            "doubleBtn"
+                          ]
+                        },
+                        {
+                          "id": "hitBtn",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "soft",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "standBtn",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "doubleBtn",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "agent-roster-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":19,\\\"playerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerTotal\\\":17,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Dealer wins\\\",\\\"result\\\":\\\"Dealer wins 19 to 17. You lose the 100 bet, chips now 900.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"danger\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"children\\\":[\\\"dealAgainBtn\\\"]},{\\\"id\\\":\\\"dealAgainBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You stand on 17. The dealer reveals the hole card and draws.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"The user triggered the \\\"stand\\\" action (from component standBtn). Current surface data model: {\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"faceDown\\\":true,\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"dealerTotal\\\":\\\"showing 9\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerTotal\\\":17,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move\\\",\\\"result\\\":\\\"\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"frontier-rating-review\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":57876,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3222},{\"id\":\"mini-skills\",\"chars\":2275},{\"id\":\"persona\",\"chars\":5156}],\"over\":false},\"usage\":{\"inputTokens\":5961,\"outputTokens\":614,\"cacheReadInputTokens\":17842,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-layout\",\"game-hud\",\"structured-container\"],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":900,\"bet\":100,\"dealerHand\":[{\"rank\":\"9\",\"suit\":\"clubs\"},{\"rank\":\"4\",\"suit\":\"diamonds\"},{\"rank\":\"6\",\"suit\":\"hearts\"}],\"dealerTotal\":19,\"playerHand\":[{\"rank\":\"K\",\"suit\":\"hearts\"},{\"rank\":\"7\",\"suit\":\"spades\"}],\"playerTotal\":17,\"phase\":\"settled\",\"status\":\"Dealer wins\",\"result\":\"Dealer wins 19 to 17. You lose the 100 bet, chips now 900.\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"danger\",\"result\":{\"path\":\"/result\"},\"children\":[\"dealAgainBtn\"]},{\"id\":\"dealAgainBtn\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You stand on 17. The dealer reveals the hole card and draws.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 900,
+                        "bet": 100,
+                        "dealerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "dealerTotal": 19,
+                        "playerHand": [
+                          {
+                            "rank": "K",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "spades"
+                          }
+                        ],
+                        "playerTotal": 17,
+                        "phase": "settled",
+                        "status": "Dealer wins",
+                        "result": "Dealer wins 19 to 17. You lose the 100 bet, chips now 900."
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "danger",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "children": [
+                            "dealAgainBtn"
+                          ]
+                        },
+                        {
+                          "id": "dealAgainBtn",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "frontier-rating-review"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet to deal\\\",\\\"result\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Next round. Set your bet and deal.\",\"target\":{\"surfaceId\":\"table-2\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component dealAgainBtn). Action context: {\\\"newRound\\\":true}. Current surface data model: {\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"4\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":19,\\\"playerHand\\\":[{\\\"rank\\\":\\\"K\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"playerTotal\\\":17,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Dealer wins\\\",\\\"result\\\":\\\"Dealer wins 19 to 17. You lose the 100 bet, chips now 900.\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"frontier-result-card-win\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":58252,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3515},{\"id\":\"mini-skills\",\"chars\":2358},{\"id\":\"persona\",\"chars\":5156}],\"over\":false},\"usage\":{\"inputTokens\":6920,\"outputTokens\":484,\"cacheReadInputTokens\":17842,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-layout\",\"game-hud\",\"game-table-chrome\"],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-2\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":900,\"bet\":100,\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\",\"phase\":\"betting\",\"status\":\"Place your bet to deal\",\"result\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"result\":{\"path\":\"/result\"},\"betAction\":\"deal\",\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Next round. Set your bet and deal.",
+                "target": "table-2",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-2",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 900,
+                        "bet": 100,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": "",
+                        "phase": "betting",
+                        "status": "Place your bet to deal",
+                        "result": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "betAction": "deal",
+                          "children": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":800,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"faceDown\\\":true,\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":\\\"showing 8\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerTotal\\\":\\\"21\\\",\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Blackjack\\\",\\\"result\\\":\\\"Natural blackjack. Dealer's hole card stays down since the round ends on the deal, but you win 3:2 on the 100 bet, +150, chips now 950.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"success\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"children\\\":[\\\"dealAgainBtn\\\"]},{\\\"id\\\":\\\"dealAgainBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":800,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"faceDown\\\":true,\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":\\\"showing 8\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerTotal\\\":\\\"21\\\",\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Blackjack\\\",\\\"result\\\":\\\"Natural blackjack. Dealer's hole card stays down since the round ends on the deal, but you win 3:2 on the 100 bet, +150, chips now 950.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"success\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"children\\\":[\\\"dealAgainBtn\\\"]},{\\\"id\\\":\\\"dealAgainBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\",\"codes\":[\"NATURAL_ACTIONS\",\"BANKROLL_MISMATCH\"],\"detail\":\"Round 1 failed:\\n  NATURAL_ACTIONS: at table-2:root (The player's cards in root (A, Q) are a natural blackjack, which ends the round on the deal, but the surface still shows a face-down card in root. Settle the round in this same turn: turn the dealer's hole card face up, state the result (the player wins 3:2 unless the dealer also has a natural blackjack, then a push) with the chip delta and the updated bankroll, and leave only the Deal again Button in the actions row, with no Hit, Stand or Double.)\\n  BANKROLL_MISMATCH: at table-2:/bankroll (The round settles as a natural blackjack (3:2) on a stake of 100, so the bankroll goes from 900 to 1050 (100 taken out now, 250 paid back), but it reads 800. Write 1050.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to verify the bank\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"roll math -\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" started at 900, d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ropped to 800 after the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et was placed, and a nat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ural blackjack win\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" at 3:2 od\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ds adds back\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 150.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king the dealer's hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": they show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an 8 with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a hid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"den Queen, totaling\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 18,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" not a bl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ackjack, so the player's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" nat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ural wins outright r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than pushing. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to 18, player total to \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"21 (as a number), set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" phase to settled with success\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and write the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" result\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text announ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"cing the bl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ackjack win with the corr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ected final\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" chip count of 1050.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need to send the full data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model update along with the components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the root and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" deal-again button, kee\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ping everything else\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" unchanged.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":18,\\\"playerHand\\\":[{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerTotal\\\":21,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Blackjack\\\",\\\"result\\\":\\\"Natural blackjack: your A and Q beat the dealer's 18. You win 3:2 on the 100 bet, +150, chips now 1,050.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"success\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"children\\\":[\\\"dealAgainBtn\\\"]},{\\\"id\\\":\\\"dealAgainBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Blackjack. Your A and Q pay 3:2, so you win 150 on the 100 bet. The dealer's 8 and Q total 18, and the chips now read 1,050.\",\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":100,\\\"bankrollAfterBet\\\":800}. Current surface data model: {\\\"bankroll\\\":900,\\\"bet\\\":100,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet to deal\\\",\\\"result\\\":\\\"\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"agent-roster-drawer\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"NATURAL_ACTIONS\",\"BANKROLL_MISMATCH\",\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":58631,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3894},{\"id\":\"mini-skills\",\"chars\":2358},{\"id\":\"persona\",\"chars\":5156}],\"over\":false},\"usage\":{\"inputTokens\":16128,\"outputTokens\":1836,\"cacheReadInputTokens\":35685,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"game-hud\",\"game-table-chrome\",\"card-layout\"],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"bet\":100,\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"spades\"},{\"rank\":\"Q\",\"suit\":\"clubs\"}],\"dealerTotal\":18,\"playerHand\":[{\"rank\":\"A\",\"suit\":\"diamonds\"},{\"rank\":\"Q\",\"suit\":\"hearts\"}],\"playerTotal\":21,\"phase\":\"settled\",\"status\":\"Blackjack\",\"result\":\"Natural blackjack: your A and Q beat the dealer's 18. You win 3:2 on the 100 bet, +150, chips now 1,050.\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"success\",\"result\":{\"path\":\"/result\"},\"children\":[\"dealAgainBtn\"]},{\"id\":\"dealAgainBtn\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Bet of 100 placed. Dealing the next hand.",
+                "target": "table-2",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-2",
+                      "value": {
+                        "bankroll": 800,
+                        "bet": 100,
+                        "dealerHand": [
+                          {
+                            "rank": "8",
+                            "suit": "spades"
+                          },
+                          {
+                            "faceDown": true,
+                            "rank": "Q",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "dealerTotal": "showing 8",
+                        "playerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "Q",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "playerTotal": "21",
+                        "phase": "settled",
+                        "status": "Blackjack",
+                        "result": "Natural blackjack. Dealer's hole card stays down since the round ends on the deal, but you win 3:2 on the 100 bet, +150, chips now 950."
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "success",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "children": [
+                            "dealAgainBtn"
+                          ]
+                        },
+                        {
+                          "id": "dealAgainBtn",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Blackjack. Your A and Q pay 3:2, so you win 150 on the 100 bet. The dealer's 8 and Q total 18, and the chips now read 1,050.\n\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-2\",\"value\":{\"bankroll\":1050,\"bet\":100,\"dealerHand\":[{\"rank\":\"8\",\"suit\":\"spades\"},{\"rank\":\"Q\",\"suit\":\"clubs\"}],\"dealerTotal\":18,\"playerHand\":[{\"rank\":\"A\",\"suit\":\"diamonds\"},{\"rank\":\"Q\",\"suit\":\"hearts\"}],\"playerTotal\":21,\"phase\":\"settled\",\"status\":\"Blackjack\",\"result\":\"Natural blackjack: your A and Q beat the dealer's 18. You win 3:2 on the 100 bet, +150, chips now 1,050.\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-2\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"success\",\"result\":{\"path\":\"/result\"},\"children\":[\"dealAgainBtn\"]},{\"id\":\"dealAgainBtn\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "agent-roster-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"bet\\\":100,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet to deal\\\",\\\"result\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"betAction\\\":\\\"deal\\\",\\\"children\\\":[]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Next round. Set your bet and deal.\",\"trace\":{\"turnIndex\":10,\"query\":{\"intent\":\"The user triggered the \\\"deal_again\\\" action (from component dealAgainBtn). Action context: {\\\"newRound\\\":true}. Current surface data model: {\\\"bankroll\\\":1050,\\\"bet\\\":100,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"8\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"dealerTotal\\\":18,\\\"playerHand\\\":[{\\\"rank\\\":\\\"A\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"Q\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"playerTotal\\\":21,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Blackjack\\\",\\\"result\\\":\\\"Natural blackjack: your A and Q beat the dealer's 18. You win 3:2 on the 100 bet, +150, chips now 1,050.\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-result-card-win\",\"frontier-review-split\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":58951,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4213},{\"id\":\"mini-skills\",\"chars\":2358},{\"id\":\"persona\",\"chars\":5157}],\"over\":false},\"usage\":{\"inputTokens\":8590,\"outputTokens\":462,\"cacheReadInputTokens\":17842,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-layout\",\"game-hud\",\"game-table-chrome\"],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-3\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"bankroll\":1050,\"bet\":100,\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\",\"phase\":\"betting\",\"status\":\"Place your bet to deal\",\"result\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"result\":{\"path\":\"/result\"},\"betAction\":\"deal\",\"children\":[]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Next round. Set your bet and deal.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-3",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "bankroll": 1050,
+                        "bet": 100,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": "",
+                        "phase": "betting",
+                        "status": "Place your bet to deal",
+                        "result": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "betAction": "deal",
+                          "children": []
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-result-card-win",
+          "frontier-review-split"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"bankroll\\\":1000,\\\"bet\\\":50,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"faceDown\\\":true,\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":\\\"showing 7\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"}],\\\"playerTotal\\\":15,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move\\\",\\\"result\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"children\\\":[\\\"hitBtn\\\",\\\"standBtn\\\",\\\"doubleBtn\\\"]},{\\\"id\\\":\\\"hitBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"standBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}},{\\\"id\\\":\\\"doubleBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Bet of 50 placed. Dealing your hand.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":12,\"query\":{\"intent\":\"The user triggered the \\\"deal\\\" action (from component root). Action context: {\\\"bet\\\":50,\\\"bankrollAfterBet\\\":1000}. Current surface data model: {\\\"bankroll\\\":1050,\\\"bet\\\":50,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet to deal\\\",\\\"result\\\":\\\"\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"agent-roster-drawer\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":58632,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3894},{\"id\":\"mini-skills\",\"chars\":2358},{\"id\":\"persona\",\"chars\":5157}],\"over\":false},\"usage\":{\"inputTokens\":9062,\"outputTokens\":649,\"cacheReadInputTokens\":17842,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"game-hud\",\"game-table-chrome\",\"card-layout\"],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"bankroll\":1000,\"bet\":50,\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"clubs\"},{\"faceDown\":true,\"rank\":\"5\",\"suit\":\"hearts\"}],\"dealerTotal\":\"showing 7\",\"playerHand\":[{\"rank\":\"9\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"diamonds\"}],\"playerTotal\":15,\"phase\":\"playing\",\"status\":\"Your move\",\"result\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"result\":{\"path\":\"/result\"},\"children\":[\"hitBtn\",\"standBtn\",\"doubleBtn\"]},{\"id\":\"hitBtn\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"soft\",\"action\":{\"action\":\"hit\"}},{\"id\":\"standBtn\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"solid\",\"action\":{\"action\":\"stand\"}},{\"id\":\"doubleBtn\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Bet of 50 placed. Dealing your hand.",
+                "target": "table-3",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "bankroll": 1000,
+                        "bet": 50,
+                        "dealerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "clubs"
+                          },
+                          {
+                            "faceDown": true,
+                            "rank": "5",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "dealerTotal": "showing 7",
+                        "playerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "diamonds"
+                          }
+                        ],
+                        "playerTotal": 15,
+                        "phase": "playing",
+                        "status": "Your move",
+                        "result": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "children": [
+                            "hitBtn",
+                            "standBtn",
+                            "doubleBtn"
+                          ]
+                        },
+                        {
+                          "id": "hitBtn",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "soft",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "standBtn",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "doubleBtn",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "agent-roster-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"At\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table 3, the player has \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"15 and needs a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it card—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"since Spanish 21 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"remov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es tens, I'll dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w a 3 of club\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 18, put\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting them \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ahead of the dealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"7 showing.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" update the player's hand and total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" via updateDataModel without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" needing a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component change, and I won't wor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ry about small\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inconsistencies from ear\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lier turns—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"they\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'re not my concern now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I need to rem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ember the meta-line requ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irement for table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-3's re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply format\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and include\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the first line.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"it and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" draw a 3 of cl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ubs, b\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ringing you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to 18. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" dealer sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ows a 7.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"ACTION_NOT_APPLIED\"],\"detail\":\"Round 1 failed:\\n  ACTION_NOT_APPLIED: at table-3:hit (The player typed \\\"Hit.\\\" at table-3, and this turn sends it no update, so the table still shows the old state. Call render_surface with an updateDataModel for table-3: the new cards, totals, phase, result and bankroll, and the moves the player has now, not only prose.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"bankroll\\\":1000,\\\"bet\\\":50,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"faceDown\\\":true,\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"hearts\\\"}],\\\"dealerTotal\\\":\\\"showing 7\\\",\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"playerTotal\\\":18,\\\"phase\\\":\\\"playing\\\",\\\"status\\\":\\\"Your move\\\",\\\"result\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"children\\\":[\\\"hitBtn\\\",\\\"standBtn\\\",\\\"doubleBtn\\\"]},{\\\"id\\\":\\\"hitBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Hit\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"hit\\\"}},{\\\"id\\\":\\\"standBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Stand\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"stand\\\"}},{\\\"id\\\":\\\"doubleBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Double\\\",\\\"variant\\\":\\\"soft\\\",\\\"action\\\":{\\\"action\\\":\\\"double\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You hit and draw a 3 of clubs, bringing you to 18. The dealer shows a 7. Stand, or hit again?\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":14,\"query\":{\"intent\":\"Hit.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"ACTION_NOT_APPLIED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":53734,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":1354},{\"id\":\"persona\",\"chars\":5157}],\"over\":false},\"usage\":{\"inputTokens\":15430,\"outputTokens\":1677,\"cacheReadInputTokens\":35685,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"bankroll\":1000,\"bet\":50,\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"clubs\"},{\"faceDown\":true,\"rank\":\"5\",\"suit\":\"hearts\"}],\"dealerTotal\":\"showing 7\",\"playerHand\":[{\"rank\":\"9\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"diamonds\"},{\"rank\":\"3\",\"suit\":\"clubs\"}],\"playerTotal\":18,\"phase\":\"playing\",\"status\":\"Your move\",\"result\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"result\":{\"path\":\"/result\"},\"children\":[\"hitBtn\",\"standBtn\",\"doubleBtn\"]},{\"id\":\"hitBtn\",\"component\":\"Button\",\"label\":\"Hit\",\"variant\":\"soft\",\"action\":{\"action\":\"hit\"}},{\"id\":\"standBtn\",\"component\":\"Button\",\"label\":\"Stand\",\"variant\":\"solid\",\"action\":{\"action\":\"stand\"}},{\"id\":\"doubleBtn\",\"component\":\"Button\",\"label\":\"Double\",\"variant\":\"soft\",\"action\":{\"action\":\"double\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"You hit and draw a 3 of clubs, for 18 against the dealer's showing 7.\",\"target\":{\"surfaceId\":\"table-3\"}}}\n\nYou hit and draw a 3 of clubs, bringing you to 18. The dealer shows a 7.",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You hit and draw a 3 of clubs, bringing you to 18. The dealer shows a 7. Stand, or hit again?",
+                "target": "table-3",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "bankroll": 1000,
+                        "bet": 50,
+                        "dealerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "clubs"
+                          },
+                          {
+                            "faceDown": true,
+                            "rank": "5",
+                            "suit": "hearts"
+                          }
+                        ],
+                        "dealerTotal": "showing 7",
+                        "playerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "playerTotal": 18,
+                        "phase": "playing",
+                        "status": "Your move",
+                        "result": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "children": [
+                            "hitBtn",
+                            "standBtn",
+                            "doubleBtn"
+                          ]
+                        },
+                        {
+                          "id": "hitBtn",
+                          "component": "Button",
+                          "label": "Hit",
+                          "variant": "soft",
+                          "action": {
+                            "action": "hit"
+                          }
+                        },
+                        {
+                          "id": "standBtn",
+                          "component": "Button",
+                          "label": "Stand",
+                          "variant": "solid",
+                          "action": {
+                            "action": "stand"
+                          }
+                        },
+                        {
+                          "id": "doubleBtn",
+                          "component": "Button",
+                          "label": "Double",
+                          "variant": "soft",
+                          "action": {
+                            "action": "double"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to resolve the d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's hand against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" player's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 18.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Dealer shows a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 7 with a \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"5 hole card, tot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aling 12, and must ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep drawing until re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aching 17 or more\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I'll de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al the next card to see\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" where they land.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Dealer dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ws a 6 to h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it 18, mat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ching the player's 18 ex\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"actly, so this is a push\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". The bankroll should return\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bet,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bringing it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1050,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to update the table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-3 surface with the d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealer's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" final hand, the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" push result, the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new bankroll, and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Deal again button.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stand on 18. The d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ealer turns the 5 \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"for 12 and draws a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 6 of spades to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" re\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ach 18. That\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'s a push, so your 50\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" bet com\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es back and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" your bankroll retur\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ns to 1,050.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"ACTION_NOT_APPLIED\"],\"detail\":\"Round 1 failed:\\n  ACTION_NOT_APPLIED: at table-3:stand (The player typed \\\"Stand.\\\" at table-3, and this turn sends it no update, so the table still shows the old state. Call render_surface with an updateDataModel for table-3: the new cards, totals, phase, result and bankroll, and the moves the player has now, not only prose.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"value\\\":{\\\"bankroll\\\":1050,\\\"bet\\\":50,\\\"dealerHand\\\":[{\\\"rank\\\":\\\"7\\\",\\\"suit\\\":\\\"clubs\\\"},{\\\"rank\\\":\\\"5\\\",\\\"suit\\\":\\\"hearts\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"spades\\\"}],\\\"dealerTotal\\\":18,\\\"playerHand\\\":[{\\\"rank\\\":\\\"9\\\",\\\"suit\\\":\\\"spades\\\"},{\\\"rank\\\":\\\"6\\\",\\\"suit\\\":\\\"diamonds\\\"},{\\\"rank\\\":\\\"3\\\",\\\"suit\\\":\\\"clubs\\\"}],\\\"playerTotal\\\":18,\\\"phase\\\":\\\"settled\\\",\\\"status\\\":\\\"Push\\\",\\\"result\\\":\\\"Push at 18 to 18. Your 50 bet is returned, chips stay at 1,050.\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-3\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"neutral\\\",\\\"result\\\":{\\\"path\\\":\\\"/result\\\"},\\\"children\\\":[\\\"dealAgainBtn\\\"]},{\\\"id\\\":\\\"dealAgainBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Deal again\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"deal_again\\\",\\\"context\\\":{\\\"newRound\\\":true}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"You stand on 18. The dealer turns the 5 for 12 and draws a 6 of spades to reach 18. That's a push, so your 50 bet comes back and your bankroll returns to 1,050.\",\"target\":{\"surfaceId\":\"table-3\"},\"trace\":{\"turnIndex\":16,\"query\":{\"intent\":\"Stand.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-result-card-win\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"ACTION_NOT_APPLIED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":143300,\"total\":54697,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":20517},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":2317},{\"id\":\"persona\",\"chars\":5157}],\"over\":false},\"usage\":{\"inputTokens\":17569,\"outputTokens\":2277,\"cacheReadInputTokens\":35685,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":47223}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-3\",\"value\":{\"bankroll\":1050,\"bet\":50,\"dealerHand\":[{\"rank\":\"7\",\"suit\":\"clubs\"},{\"rank\":\"5\",\"suit\":\"hearts\"},{\"rank\":\"6\",\"suit\":\"spades\"}],\"dealerTotal\":18,\"playerHand\":[{\"rank\":\"9\",\"suit\":\"spades\"},{\"rank\":\"6\",\"suit\":\"diamonds\"},{\"rank\":\"3\",\"suit\":\"clubs\"}],\"playerTotal\":18,\"phase\":\"settled\",\"status\":\"Push\",\"result\":\"Push at 18 to 18. Your 50 bet is returned, chips stay at 1,050.\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-3\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Spanish 21\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"neutral\",\"result\":{\"path\":\"/result\"},\"children\":[\"dealAgainBtn\"]},{\"id\":\"dealAgainBtn\",\"component\":\"Button\",\"label\":\"Deal again\",\"variant\":\"solid\",\"action\":{\"action\":\"deal_again\",\"context\":{\"newRound\":true}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Push on 18 to 18. Your bankroll is back to 1,050.\",\"target\":{\"surfaceId\":\"table-3\"}}}\n\nYou stand on 18. The dealer turns the 5 for 12 and draws a 6 of spades to reach 18. That's a push, so your 50 bet comes back and your bankroll returns to 1,050.",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "You stand on 18. The dealer turns the 5 for 12 and draws a 6 of spades to reach 18. That's a push, so your 50 bet comes back and your bankroll returns to 1,050.",
+                "target": "table-3",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-3",
+                      "value": {
+                        "bankroll": 1050,
+                        "bet": 50,
+                        "dealerHand": [
+                          {
+                            "rank": "7",
+                            "suit": "clubs"
+                          },
+                          {
+                            "rank": "5",
+                            "suit": "hearts"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "spades"
+                          }
+                        ],
+                        "dealerTotal": 18,
+                        "playerHand": [
+                          {
+                            "rank": "9",
+                            "suit": "spades"
+                          },
+                          {
+                            "rank": "6",
+                            "suit": "diamonds"
+                          },
+                          {
+                            "rank": "3",
+                            "suit": "clubs"
+                          }
+                        ],
+                        "playerTotal": 18,
+                        "phase": "settled",
+                        "status": "Push",
+                        "result": "Push at 18 to 18. Your 50 bet is returned, chips stay at 1,050."
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-3",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Spanish 21",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "neutral",
+                          "result": {
+                            "path": "/result"
+                          },
+                          "children": [
+                            "dealAgainBtn"
+                          ]
+                        },
+                        {
+                          "id": "dealAgainBtn",
+                          "component": "Button",
+                          "label": "Deal again",
+                          "variant": "solid",
+                          "action": {
+                            "action": "deal_again",
+                            "context": {
+                              "newRound": true
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "full"
+          }
+        ]
+      }
+    }
+  ]
+}

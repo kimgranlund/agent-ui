@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "routing-domain-switch-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I'm The Croupier, and I only run card games here.",
+          "found": true
+        },
+        {
+          "quote": "the table is waiting on \"Deal again.\"",
+          "found": true
+        }
+      ],
+      "why": "Mostly plain dealer talk with no JSON or tool talk. Saying 'I'm The Croupier' and the off-topic redirect are slightly out of dealer voice but minor."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "I can't book restaurant tables.",
+          "found": true
+        },
+        {
+          "quote": "You stand on 17. The dealer turns over the 4 for 13 and draws a 5 to reach 18.",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the move: bet taken and dealt, stand plays out dealer, off-topic question answered plainly with an alternative and a way back to the game."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 4 for 13 and draws a 5 to reach 18.",
+          "found": true
+        },
+        {
+          "quote": "Dealing your hand now.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier dealt, revealed the hole card, played the dealer hand and settled the bet itself, without making player choices."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer wins 18 to 17, so you lose 100. Bankroll is 900.",
+          "found": true
+        },
+        {
+          "quote": "Dealer wins 18 to 17. Your 17 loses to the dealer's 18. You lose 100. Bankroll 900.",
+          "found": true
+        }
+      ],
+      "why": "Totals, result and bankroll match the surface and earlier turns; the later bankroll of 900 is consistent."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 2418,
+    "outputTokens": 485,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.009686,
+  "at": "2026-10-19T01:56:55.473Z"
+}

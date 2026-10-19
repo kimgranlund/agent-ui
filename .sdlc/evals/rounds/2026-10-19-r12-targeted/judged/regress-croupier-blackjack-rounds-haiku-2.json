@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-rounds-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        },
+        {
+          "quote": "You stood on 17. The dealer's hole card is revealed",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain dealer talk with game vocabulary. No JSON, component ids or tool talk appears."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You hit and drew a 4, giving you 21 on the table.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 25 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "Each bet, Hit, Stand and Deal again click gets the matching action: bets are taken, Hit draws, Stand plays out the dealer, and Deal again resets the table."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer turns over the 6 for 16, then draws a 3 to reach 19 and stops.",
+          "found": true
+        },
+        {
+          "quote": "The dealer reveals the 5 for 12 and draws a 10 to reach 22, which busts.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole card, plays the dealer hand and settles each bet in the turn that calls for it. It never makes a move or bet choice for the player."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer wins, so you lose your 100-chip stake and your bankroll stays at 900.",
+          "found": true
+        },
+        {
+          "quote": "you win 50 chips and your bankroll goes to 950.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankrolls in each reply match the surface status and bankroll data of the same turn. They also carry through consistently across rounds (900, 850, 950, 925, 975)."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4016,
+    "outputTokens": 916,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.017192,
+  "at": "2026-10-19T01:53:49.109Z"
+}

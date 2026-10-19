@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "long-croupier-blackjack-hand-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your move: you have ... (King ... 7) against the dealer's showing 9. Hit, Stand, or Double?",
+          "found": true
+        },
+        {
+          "quote": "Set your bet on the table and deal.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short and dealer-like with no JSON, markup or tool talk. The turn 1 chat log shows stray ellipses, but that looks like a log rendering artifact rather than the agent's wording."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You draw a 3 — 20 now. Stand, or hit again?",
+          "found": true
+        },
+        {
+          "quote": "Bet of 50 placed.",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the click: bets are taken, Hit draws, Stand plays out the dealer. In turn 4 the bet shown is 100 while the player had not chosen a bet, a minor default."
+    },
+    {
+      "id": "C3",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer reveals the 4 and draws a 5 for 18, which must stand.",
+          "found": true
+        },
+        {
+          "quote": "Dealer reveals the 6 for 16, draws a 4 for 20, and stands.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals, plays the dealer hand and settles itself. A small flaw is that turn 4 leaves a prefilled 100 bet that the player never chose."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your bankroll is 1,100.",
+          "found": true
+        },
+        {
+          "quote": "Your 17 loses, so you lose 50 chips.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankrolls agree with the surface (1100 then 1050), and the dealer totals match. A small slip: the turn 1 reply says 'dealer's showing 9' while the surface shows 'showing 9', and the turn 4 surface prefills a bet of 100 while the turn 5 bet is 50. Neither is a real contradiction."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 3202,
+    "outputTokens": 584,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.012244,
+  "at": "2026-10-19T01:53:10.857Z"
+}

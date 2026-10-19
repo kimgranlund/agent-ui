@@ -1,0 +1,97 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-rounds-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The table opens with no stake on the felt yet, so you place your bet on the table itself.",
+          "found": true
+        },
+        {
+          "quote": "Rules in brief: two cards each, the dealer shows one and hides one.",
+          "found": true
+        }
+      ],
+      "why": "The replies are mostly short and in dealer voice, with no JSON or tool talk. The opening reply is a little long and has a slightly stilted line."
+    },
+    {
+      "id": "C2",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You stand on 17. The dealer reveals the 4 (13), then draws to 17 and must stand.",
+          "found": true
+        },
+        {
+          "quote": "You hit and draw a 3, making 20 with 9-8-3.",
+          "found": true
+        }
+      ],
+      "why": "Every bet, hit and stand is acted on. The typed 'Stand.' in turn 6 is handled correctly. The turn 2 reply misdescribes the dealer's play, which is a small flaw in how the move is answered."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Dealer reveals the hole card for 16 and draws a 2 to 18.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals, plays the dealer hand and settles each bet itself. It never asks the player to do the house's work and never chooses a move for the player."
+    },
+    {
+      "id": "C4",
+      "score": 2,
+      "passed": false,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer reveals the 4 (13), then draws to 17 and must stand.",
+          "found": true
+        },
+        {
+          "quote": "Dealer busts with 23. You win 100.",
+          "found": true
+        },
+        {
+          "quote": "Dealer busts with 22, so you win 25 with your 16 (Q-6).",
+          "found": true
+        }
+      ],
+      "why": "In turn 2 the reply says the dealer draws to 17 and stands, but the surface shows the dealer bust with 23 and the player win 100. The reply therefore contradicts the surface about the result. Turn 9 is consistent."
+    }
+  ],
+  "score": 2,
+  "passed": false,
+  "usage": {
+    "inputTokens": 4188,
+    "outputTokens": 576,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.014136,
+  "at": "2026-10-19T01:53:42.440Z"
+}

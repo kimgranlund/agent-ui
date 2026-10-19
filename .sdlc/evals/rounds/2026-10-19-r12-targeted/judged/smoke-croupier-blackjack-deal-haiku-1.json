@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "smoke-croupier-blackjack-deal-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Blackjack rules in brief: the dealer shows one card and hides the other.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "Voice is dealer-like, plain, with no JSON or tool talk. The rules paragraph is a bit long and wordy but still table vocabulary."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Let's play blackjack. I'll open the table at 1,000 chips.",
+          "found": true
+        },
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The game request opens a table, and the bet click is taken and the hand dealt."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed. Dealing now.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals both hands itself and takes the bet without choosing anything for the player. The bet size was the player's click."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Bet of 100 placed.",
+          "found": true
+        },
+        {
+          "quote": "\"bankroll\":900,\"bet\":100",
+          "found": true
+        }
+      ],
+      "why": "The reply agrees with the surface: a bet of 100, bankroll 900 from 1000, and the hand is in play."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 1920,
+    "outputTokens": 384,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.00768,
+  "at": "2026-10-19T01:57:13.297Z"
+}

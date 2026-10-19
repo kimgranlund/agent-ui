@@ -1,0 +1,89 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-blackjack-moves-haiku-3",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Tap **Deal again** on the table to start a new round, and set your bet there.",
+          "found": true
+        }
+      ],
+      "why": "Replies are short, plain and in dealer vocabulary, with no JSON or tool talk. The one slip is the markdown bold in the turn 6 reply."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "That hand is already over. You busted at 26, so there's nothing left to hit.",
+          "found": true
+        },
+        {
+          "quote": "You can't split a 10 and a 9. Standing on 19.",
+          "found": true
+        }
+      ],
+      "why": "Every move gets acted on. The impossible hit and the impossible split are each declined plainly, with a clear next step or the fallback the player asked for."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "The dealer's hole card was a 5 for 12, so they drew an 8 for 20 and stood.",
+          "found": true
+        },
+        {
+          "quote": "Hit: 3 of diamonds, 17. Hit: 9 of hearts, 26.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier reveals the hole card, plays out the dealer hand and settles the bet itself. The hits and the double were the player's own choices."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Your 20 beats their 18: you win 500 chips, and your bankroll is now 1,500.",
+          "found": true
+        },
+        {
+          "quote": "Your 19 loses to 20, so you lose 75 chips. Your bankroll stays at 1,325.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankrolls in each reply match that turn's surface and the earlier turns. The dealer arithmetic checks out too."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4173,
+    "outputTokens": 1039,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.018736,
+  "at": "2026-10-19T01:53:37.921Z"
+}

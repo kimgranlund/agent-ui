@@ -1,0 +1,101 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-pontoon-haiku-1",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Pontoon it is. Both dealer cards stay face-down, and the dealer wins all ties.",
+          "found": true
+        },
+        {
+          "quote": "Stake of 100 is in. Dealing you a pontoon hand.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk in game vocabulary. None shows JSON, ids, or tool talk."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You drew the 4 of clubs for 19. Twist again or stick?",
+          "found": true
+        },
+        {
+          "quote": "You bought a card: your stake is now 200 and a face-down card has been dealt.",
+          "found": true
+        },
+        {
+          "quote": "Pontoon! Ace and jack pays 2:1, so you win 100 on your 50 stake.",
+          "found": true
+        }
+      ],
+      "why": "Each bet, twist, buy, stick and deal-again click is acted on in the same turn. No impossible move comes up."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "the hole cards turn up: 8 and 6, then a 5 of hearts for 19. Dealer wins the tie at 19",
+          "found": true
+        },
+        {
+          "quote": "Bankroll is 700.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, reveals the hole cards, plays out the dealer and settles every bet itself. The player only chooses stakes and moves such as twist, stick and buy."
+    },
+    {
+      "id": "C4",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You stuck on 22 (7, 5 and a K), which is bust.",
+          "found": true
+        },
+        {
+          "quote": "Bust on 22. Dealer wins. You lose 200. Bankroll 700.",
+          "found": true
+        },
+        {
+          "quote": "Bankroll is 800.",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankrolls in each reply match that turn's surface status and the earlier turns. The 700 → 800 bankroll after the 50-chip pontoon at 2:1 is consistent."
+    }
+  ],
+  "score": 5,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4119,
+    "outputTokens": 1313,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.021368,
+  "at": "2026-10-19T01:54:40.407Z"
+}

@@ -1,0 +1,93 @@
+{
+  "kind": "agent-ui-judge",
+  "version": 1,
+  "run": "regress-croupier-five-card-draw-haiku-2",
+  "rubric": {
+    "id": "croupier",
+    "version": 1,
+    "sha256": "b12dc712efecd65eefe24f0841cdc7d53f18cd5060900a7d5868082ae2449bc1"
+  },
+  "model": "claude-sonnet-5-5",
+  "temperature": null,
+  "threshold": 3,
+  "criteria": [
+    {
+      "id": "C1",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Check. The dealer checks behind you, so there's no bet.",
+          "found": true
+        },
+        {
+          "quote": "New round, bankroll at 1,050. Your opening action first.",
+          "found": true
+        }
+      ],
+      "why": "Every reply is short, plain table talk in game vocabulary. None shows JSON, component ids or talk about tools."
+    },
+    {
+      "id": "C2",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "You bet 50 and the dealer calls.",
+          "found": true
+        },
+        {
+          "quote": "Stood pat, and the dealer stands too, so no cards change.",
+          "found": true
+        }
+      ],
+      "why": "Each reply acts on the latest move: the bet is taken, the fold is settled, the stand pat is applied and the discard-and-draw happens. No move is ignored or misread."
+    },
+    {
+      "id": "C3",
+      "score": 5,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "At showdown your king-high hand beats the dealer's jack-high, so you win the 100 pot",
+          "found": true
+        },
+        {
+          "quote": "At showdown the dealer's hand is king high with no pair.",
+          "found": true
+        }
+      ],
+      "why": "The Croupier deals, plays the dealer's checks, calls and draws, reveals the hand and settles the pot itself. The player's bet size and discards came from the player's own messages."
+    },
+    {
+      "id": "C4",
+      "score": 4,
+      "passed": true,
+      "supported": true,
+      "evidence": [
+        {
+          "quote": "Ante up, then the cards go out.",
+          "found": true
+        },
+        {
+          "quote": "Pot: 0   Bankroll: 1050",
+          "found": true
+        }
+      ],
+      "why": "Totals, results and bankroll match the surfaces and earlier replies every turn. The one small slip is the \"Ante up\" line in a game where the pot stays at 0 with no ante."
+    }
+  ],
+  "score": 4,
+  "passed": true,
+  "usage": {
+    "inputTokens": 4774,
+    "outputTokens": 1586,
+    "cacheReadInputTokens": 0,
+    "cacheCreationInputTokens": 0
+  },
+  "costUsd": 0.025408,
+  "at": "2026-10-19T01:54:08.982Z"
+}

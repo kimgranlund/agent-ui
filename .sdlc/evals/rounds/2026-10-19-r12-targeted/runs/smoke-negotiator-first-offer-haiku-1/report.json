@@ -1,0 +1,1149 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "smoke-negotiator-first-offer-haiku-1",
+  "mode": "live",
+  "agent": "negotiator",
+  "model": "claude-haiku-5-5",
+  "runId": "smoke-negotiator-first-offer-haiku-1-beaf3db0",
+  "at": "2026-10-19T00:53:20.479Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm playing Selim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bazaar merchant,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and planning a neg\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"otiation deal sheet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for the brass lantern with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the required\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" elements: item\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" history, mood, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a move card feat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring a slider,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Offer/Accept/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Walk away options, and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single Send button per\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the skill's const\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"raints.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since this is a haggling\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" game, I need one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" HUD surface and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one ask surface per\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" turn—the deal she\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"et holds the GameHud\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", item card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and sparkline,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while the ask surface st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ays min\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"imal with just the sl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ider and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" commit button. I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" setting the asking price at \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"120 coins and designing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" off\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er slider with a re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"asonable range and default value.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm structuring the G\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ameHud with a title, status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and stats show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" asking price and round number, pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sparkline t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"racking price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" history star\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting at 120. For the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a header,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompt to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" name a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" price, the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" off\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er slider, and a single send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the footer rather than multi\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple compet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing actions.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Setting up the ask sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face's data model,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then mo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ving to the HUD surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" design\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a Column root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding a GameHud, an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" item Card, and a S\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"parkline for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" trends\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the HUD, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m filling in the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" item details: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" brass lantern with an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" opening offer,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stats for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" asking price, round, and m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ood, plus a card show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the item's title and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"avorful description.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding a sparkline tr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"end component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for price history and th\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inking about how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" neg\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"otiation\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mood and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dire\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ction,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lik\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ely just fol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding it into the exist\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing stats. Then I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m starting the \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" section with a card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the player's move, including a header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eled \\\"Your move.\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Continuing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I'm w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"iring up its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" content with a pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompt text, a segmented\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" control for cho\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"osing offer/accept/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"walk, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a slider for ent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ering the offer amount,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" plus a footer with a send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ied to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"send_move\\\" action. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m settling on a sl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ider range and default offer value,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" working out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the final\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reply's met\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"adata note that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" will carry the in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-character prose question for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm drafting\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Selim's opening line in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" character\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", rev\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealing the as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king price and in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"viting the buyer to coun\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ter, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the full\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" nar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ration\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" living\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in the meta note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"side the A2UI structure\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self, and planning to also create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the hud-1 surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" alongside \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1 with sendD\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ataModel enabled.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Writing component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" JSON...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"value\\\":{\\\"item\\\":{\\\"name\\\":\\\"Brass lantern\\\",\\\"desc\\\":\\\"Old, polished and still bright. Worth every coin, I promise you.\\\"},\\\"asking\\\":120,\\\"history\\\":[120],\\\"round\\\":1,\\\"mood\\\":\\\"Amused\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"item\\\",\\\"trend\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Deal: brass lantern\\\",\\\"status\\\":\\\"Opening offer\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Asking\\\",\\\"value\\\":\\\"120 coins\\\"},{\\\"label\\\":\\\"Round\\\",\\\"value\\\":\\\"1\\\"},{\\\"label\\\":\\\"Mood\\\",\\\"value\\\":\\\"Amused\\\"}]},{\\\"id\\\":\\\"item\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"item_hd\\\",\\\"item_ct\\\"]},{\\\"id\\\":\\\"item_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"item_title\\\"]},{\\\"id\\\":\\\"item_title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Brass lantern\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"item_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"item_desc\\\"]},{\\\"id\\\":\\\"item_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Old, polished and still bright. Worth every coin, I promise you.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"trend\\\",\\\"component\\\":\\\"Sparkline\\\",\\\"values\\\":[120],\\\"label\\\":\\\"Price history\\\",\\\"variant\\\":\\\"line\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"draft\\\":{\\\"move\\\":\\\"offer\\\",\\\"offer\\\":60}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"ask_hd\\\",\\\"ask_ct\\\",\\\"ask_ft\\\"]},{\\\"id\\\":\\\"ask_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"ask_label\\\"]},{\\\"id\\\":\\\"ask_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Your move\\\",\\\"variant\\\":\\\"h5\\\"},{\\\"id\\\":\\\"ask_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"ask_q\\\",\\\"ask_seg\\\",\\\"ask_slider\\\"]},{\\\"id\\\":\\\"ask_q\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Name your number, accept my price, or walk away.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"ask_seg\\\",\\\"component\\\":\\\"SegmentedControl\\\",\\\"name\\\":\\\"move\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/move\\\"},\\\"children\\\":[\\\"seg_offer\\\",\\\"seg_accept\\\",\\\"seg_walk\\\"]},{\\\"id\\\":\\\"seg_offer\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"offer\\\",\\\"label\\\":\\\"Offer\\\"},{\\\"id\\\":\\\"seg_accept\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"accept\\\",\\\"label\\\":\\\"Accept\\\"},{\\\"id\\\":\\\"seg_walk\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"walk\\\",\\\"label\\\":\\\"Walk away\\\"},{\\\"id\\\":\\\"ask_slider\\\",\\\"component\\\":\\\"Slider\\\",\\\"name\\\":\\\"offer\\\",\\\"label\\\":\\\"Your offer\\\",\\\"layout\\\":\\\"standard\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/offer\\\"},\\\"min\\\":30,\\\"max\\\":120,\\\"step\\\":1},{\\\"id\\\":\\\"ask_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"ask_send\\\"]},{\\\"id\\\":\\\"ask_send\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Send\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"send_move\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Selim has opened the deal on the brass lantern. Make your move below.\",\"ask\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to buy your brass lantern. What's your price?\",\"k\":3},\"exemplarIds\":[\"travel-itinerary\",\"five-day-weather\",\"comparison-pricing-table\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142300,\"total\":57014,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7327},{\"id\":\"mini-skills\",\"chars\":1515},{\"id\":\"persona\",\"chars\":1936}],\"over\":false},\"usage\":{\"inputTokens\":4645,\"outputTokens\":3879,\"cacheReadInputTokens\":17445,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"product-presentation\",\"greeting-card\"],\"cacheBoundary\":46236}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"hud-1\",\"value\":{\"item\":{\"name\":\"Brass lantern\",\"desc\":\"Old, polished and still bright. Worth every coin, I promise you.\"},\"asking\":120,\"history\":[120],\"round\":1,\"mood\":\"Amused\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"item\",\"trend\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal: brass lantern\",\"status\":\"Opening offer\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Asking\",\"value\":\"120 coins\"},{\"label\":\"Round\",\"value\":\"1\"},{\"label\":\"Mood\",\"value\":\"Amused\"}]},{\"id\":\"item\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"item_hd\",\"item_ct\"]},{\"id\":\"item_hd\",\"component\":\"CardHeader\",\"children\":[\"item_title\"]},{\"id\":\"item_title\",\"component\":\"Text\",\"text\":\"Brass lantern\",\"variant\":\"h4\"},{\"id\":\"item_ct\",\"component\":\"CardContent\",\"children\":[\"item_desc\"]},{\"id\":\"item_desc\",\"component\":\"Text\",\"text\":\"Old, polished and still bright. Worth every coin, I promise you.\",\"variant\":\"body\"},{\"id\":\"trend\",\"component\":\"Sparkline\",\"values\":[120],\"label\":\"Price history\",\"variant\":\"line\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"draft\":{\"move\":\"offer\",\"offer\":60}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"ask_hd\",\"ask_ct\",\"ask_ft\"]},{\"id\":\"ask_hd\",\"component\":\"CardHeader\",\"children\":[\"ask_label\"]},{\"id\":\"ask_label\",\"component\":\"Text\",\"text\":\"Your move\",\"variant\":\"h5\"},{\"id\":\"ask_ct\",\"component\":\"CardContent\",\"children\":[\"ask_q\",\"ask_seg\",\"ask_slider\"]},{\"id\":\"ask_q\",\"component\":\"Text\",\"text\":\"Name your number, accept my price, or walk away.\",\"variant\":\"body\"},{\"id\":\"ask_seg\",\"component\":\"SegmentedControl\",\"name\":\"move\",\"value\":{\"path\":\"/draft/move\"},\"children\":[\"seg_offer\",\"seg_accept\",\"seg_walk\"]},{\"id\":\"seg_offer\",\"component\":\"Segment\",\"value\":\"offer\",\"label\":\"Offer\"},{\"id\":\"seg_accept\",\"component\":\"Segment\",\"value\":\"accept\",\"label\":\"Accept\"},{\"id\":\"seg_walk\",\"component\":\"Segment\",\"value\":\"walk\",\"label\":\"Walk away\"},{\"id\":\"ask_slider\",\"component\":\"Slider\",\"name\":\"offer\",\"label\":\"Your offer\",\"layout\":\"standard\",\"value\":{\"path\":\"/draft/offer\"},\"min\":30,\"max\":120,\"step\":1},{\"id\":\"ask_ft\",\"component\":\"CardFooter\",\"children\":[\"ask_send\"]},{\"id\":\"ask_send\",\"component\":\"Button\",\"label\":\"Send\",\"variant\":\"solid\",\"action\":{\"action\":\"send_move\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Ah, a connoisseur! That lantern has lit three centuries of midnight bargains, and I am not giving it away. My asking price is 120 coins. Name your opening offer with the slider, or pick Accept or Walk away. The deal sheet is open beside this, and I am watching your face.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Selim has opened the deal on the brass lantern. Make your move below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "hud-1",
+                      "value": {
+                        "item": {
+                          "name": "Brass lantern",
+                          "desc": "Old, polished and still bright. Worth every coin, I promise you."
+                        },
+                        "asking": 120,
+                        "history": [
+                          120
+                        ],
+                        "round": 1,
+                        "mood": "Amused"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "item",
+                            "trend"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Deal: brass lantern",
+                          "status": "Opening offer",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Asking",
+                              "value": "120 coins"
+                            },
+                            {
+                              "label": "Round",
+                              "value": "1"
+                            },
+                            {
+                              "label": "Mood",
+                              "value": "Amused"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "item",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "item_hd",
+                            "item_ct"
+                          ]
+                        },
+                        {
+                          "id": "item_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "item_title"
+                          ]
+                        },
+                        {
+                          "id": "item_title",
+                          "component": "Text",
+                          "text": "Brass lantern",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "item_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "item_desc"
+                          ]
+                        },
+                        {
+                          "id": "item_desc",
+                          "component": "Text",
+                          "text": "Old, polished and still bright. Worth every coin, I promise you.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "trend",
+                          "component": "Sparkline",
+                          "values": [
+                            120
+                          ],
+                          "label": "Price history",
+                          "variant": "line"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "draft": {
+                          "move": "offer",
+                          "offer": 60
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "ask_hd",
+                            "ask_ct",
+                            "ask_ft"
+                          ]
+                        },
+                        {
+                          "id": "ask_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "ask_label"
+                          ]
+                        },
+                        {
+                          "id": "ask_label",
+                          "component": "Text",
+                          "text": "Your move",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "ask_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "ask_q",
+                            "ask_seg",
+                            "ask_slider"
+                          ]
+                        },
+                        {
+                          "id": "ask_q",
+                          "component": "Text",
+                          "text": "Name your number, accept my price, or walk away.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "ask_seg",
+                          "component": "SegmentedControl",
+                          "name": "move",
+                          "value": {
+                            "path": "/draft/move"
+                          },
+                          "children": [
+                            "seg_offer",
+                            "seg_accept",
+                            "seg_walk"
+                          ]
+                        },
+                        {
+                          "id": "seg_offer",
+                          "component": "Segment",
+                          "value": "offer",
+                          "label": "Offer"
+                        },
+                        {
+                          "id": "seg_accept",
+                          "component": "Segment",
+                          "value": "accept",
+                          "label": "Accept"
+                        },
+                        {
+                          "id": "seg_walk",
+                          "component": "Segment",
+                          "value": "walk",
+                          "label": "Walk away"
+                        },
+                        {
+                          "id": "ask_slider",
+                          "component": "Slider",
+                          "name": "offer",
+                          "label": "Your offer",
+                          "layout": "standard",
+                          "value": {
+                            "path": "/draft/offer"
+                          },
+                          "min": 30,
+                          "max": 120,
+                          "step": 1
+                        },
+                        {
+                          "id": "ask_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "ask_send"
+                          ]
+                        },
+                        {
+                          "id": "ask_send",
+                          "component": "Button",
+                          "label": "Send",
+                          "variant": "solid",
+                          "action": {
+                            "action": "send_move"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-19.jsonl:6",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          2350
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "travel-itinerary",
+          "five-day-weather",
+          "comparison-pricing-table"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "deal-sheet",
+            "load": "index-only"
+          },
+          {
+            "name": "negotiation-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "I'd like to buy your brass lantern. What's your price?",
+        "expect": [
+          "GameHud"
+        ]
+      },
+      "domHosts": 2,
+      "proseText": "You I'd like to buy your brass lantern. What's your price? Selim has opened the deal on the brass lantern. Make your move below.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-19-r12-targeted/smoke-negotiator-first-offer-haiku-1/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20 is below the slider's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" flo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"or of 30, so Sel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"im needs to counter r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than accept.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm also we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ighing whether the user\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s typed off\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er counts as answering\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the open\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since they respon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ded in pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose rather than committing through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"techn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ically an ask should be res\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"olved via expl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icit commit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ment, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ays unresolved and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to update the m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ood,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" history, and round state according\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For ask-1, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll strip the footer with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action buttons and update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the question\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text to reflect that the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" offer is now p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ending, keeping only the header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and content. Then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask-2, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" build a fresh move card with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Offer/Accept/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Walk controls,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"umping Selim's asking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" price down to 100 with history\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" [120,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"100] and an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ated mood like \\\"Intr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"igued\\\" or \\\"Offended\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" depending on the fram\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20-coin offer as ins\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ulting, so m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ood go\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es \\\"Offended,\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status becomes \\\"Counter\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-offer,\\\" and I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" write d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ialogue like \\\"Your \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"20 is an insult, but\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm a merchant of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" patience.\\\" The slider for this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round run\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s from 20 to 100\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a default around\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 60,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I'll update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and components for the off\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ft, history\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"parkline, and hud st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ats accordingly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"No\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model update is needed for hud\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-1 itself since I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m just resending the component with new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" literal values. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply, I'll put the in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-character prose in the note field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep the meta line first, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" target\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ud-1 and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask-2 since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" only one ask is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" active this turn.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The card structure: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root Card hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding a header, content, and foot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er. Content holds the question\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", segments with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" values, and a slider lab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eled \\\"Your offer.\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" The footer just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" has the send button, ot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"herwise everything stays as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Deal: brass lantern\\\",\\\"status\\\":\\\"Counter-offer\\\",\\\"statusIntent\\\":\\\"warning\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Asking\\\",\\\"value\\\":\\\"100 coins\\\"},{\\\"label\\\":\\\"Round\\\",\\\"value\\\":\\\"2\\\"},{\\\"label\\\":\\\"Mood\\\",\\\"value\\\":\\\"Offended\\\"}]},{\\\"id\\\":\\\"trend\\\",\\\"component\\\":\\\"Sparkline\\\",\\\"values\\\":[120,100],\\\"label\\\":\\\"Price history\\\",\\\"variant\\\":\\\"line\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"ask_hd\\\",\\\"ask_ct\\\"]},{\\\"id\\\":\\\"ask_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"ask_q\\\"]},{\\\"id\\\":\\\"ask_q\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"You offered 20 coins. Selim has answered.\\\",\\\"variant\\\":\\\"body\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-2\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-2\\\",\\\"value\\\":{\\\"draft\\\":{\\\"move\\\":\\\"offer\\\",\\\"offer\\\":60}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"ask_hd\\\",\\\"ask_ct\\\",\\\"ask_ft\\\"]},{\\\"id\\\":\\\"ask_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"ask_label\\\"]},{\\\"id\\\":\\\"ask_label\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Your move\\\",\\\"variant\\\":\\\"h5\\\"},{\\\"id\\\":\\\"ask_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"ask_q\\\",\\\"ask_seg\\\",\\\"ask_slider\\\"]},{\\\"id\\\":\\\"ask_q\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Name your number, accept my price of 100, or walk away.\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"ask_seg\\\",\\\"component\\\":\\\"SegmentedControl\\\",\\\"name\\\":\\\"move\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/move\\\"},\\\"children\\\":[\\\"seg_offer\\\",\\\"seg_accept\\\",\\\"seg_walk\\\"]},{\\\"id\\\":\\\"seg_offer\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"offer\\\",\\\"label\\\":\\\"Offer\\\"},{\\\"id\\\":\\\"seg_accept\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"accept\\\",\\\"label\\\":\\\"Accept\\\"},{\\\"id\\\":\\\"seg_walk\\\",\\\"component\\\":\\\"Segment\\\",\\\"value\\\":\\\"walk\\\",\\\"label\\\":\\\"Walk away\\\"},{\\\"id\\\":\\\"ask_slider\\\",\\\"component\\\":\\\"Slider\\\",\\\"name\\\":\\\"offer\\\",\\\"label\\\":\\\"Your offer\\\",\\\"layout\\\":\\\"standard\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/offer\\\"},\\\"min\\\":20,\\\"max\\\":100,\\\"step\\\":1},{\\\"id\\\":\\\"ask_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"ask_send\\\"]},{\\\"id\\\":\\\"ask_send\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Send\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"send_move\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Twenty? Ha! Ask the lantern's ghost to bid that low. My price drops to 100, and you may reconsider.\",\"ask\":{\"surfaceId\":\"ask-2\"},\"target\":{\"surfaceId\":\"hud-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I offer 20.\",\"k\":3},\"exemplarIds\":[\"frontier-suggestions-chips\",\"frontier-result-card-win\",\"frontier-breadcrumb-trail\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":142300,\"total\":50953,\"sections\":[{\"id\":\"grammar\",\"chars\":26561},{\"id\":\"components\",\"chars\":19530},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":2781},{\"id\":\"persona\",\"chars\":1936}],\"over\":false},\"usage\":{\"inputTokens\":3180,\"outputTokens\":2827,\"cacheReadInputTokens\":17445,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":46236}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal: brass lantern\",\"status\":\"Counter-offer\",\"statusIntent\":\"warning\",\"stats\":[{\"label\":\"Asking\",\"value\":\"100 coins\"},{\"label\":\"Round\",\"value\":\"2\"},{\"label\":\"Mood\",\"value\":\"Offended\"}]},{\"id\":\"trend\",\"component\":\"Sparkline\",\"values\":[120,100],\"label\":\"Price history\",\"variant\":\"line\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"ask_hd\",\"ask_ct\"]},{\"id\":\"ask_ct\",\"component\":\"CardContent\",\"children\":[\"ask_q\"]},{\"id\":\"ask_q\",\"component\":\"Text\",\"text\":\"You offered 20 coins. Selim has answered.\",\"variant\":\"body\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-2\",\"value\":{\"draft\":{\"move\":\"offer\",\"offer\":60}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"ask_hd\",\"ask_ct\",\"ask_ft\"]},{\"id\":\"ask_hd\",\"component\":\"CardHeader\",\"children\":[\"ask_label\"]},{\"id\":\"ask_label\",\"component\":\"Text\",\"text\":\"Your move\",\"variant\":\"h5\"},{\"id\":\"ask_ct\",\"component\":\"CardContent\",\"children\":[\"ask_q\",\"ask_seg\",\"ask_slider\"]},{\"id\":\"ask_q\",\"component\":\"Text\",\"text\":\"Name your number, accept my price of 100, or walk away.\",\"variant\":\"body\"},{\"id\":\"ask_seg\",\"component\":\"SegmentedControl\",\"name\":\"move\",\"value\":{\"path\":\"/draft/move\"},\"children\":[\"seg_offer\",\"seg_accept\",\"seg_walk\"]},{\"id\":\"seg_offer\",\"component\":\"Segment\",\"value\":\"offer\",\"label\":\"Offer\"},{\"id\":\"seg_accept\",\"component\":\"Segment\",\"value\":\"accept\",\"label\":\"Accept\"},{\"id\":\"seg_walk\",\"component\":\"Segment\",\"value\":\"walk\",\"label\":\"Walk away\"},{\"id\":\"ask_slider\",\"component\":\"Slider\",\"name\":\"offer\",\"label\":\"Your offer\",\"layout\":\"standard\",\"value\":{\"path\":\"/draft/offer\"},\"min\":20,\"max\":100,\"step\":1},{\"id\":\"ask_ft\",\"component\":\"CardFooter\",\"children\":[\"ask_send\"]},{\"id\":\"ask_send\",\"component\":\"Button\",\"label\":\"Send\",\"variant\":\"solid\",\"action\":{\"action\":\"send_move\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Twenty? Ha! Ask the lantern's ghost to bid that low. My price drops to 100, and you may reconsider.\",\"target\":{\"surfaceId\":\"hud-1\"},\"ask\":{\"surfaceId\":\"ask-2\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Twenty? Ha! Ask the lantern's ghost to bid that low. My price drops to 100, and you may reconsider.",
+                "target": "hud-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Deal: brass lantern",
+                          "status": "Counter-offer",
+                          "statusIntent": "warning",
+                          "stats": [
+                            {
+                              "label": "Asking",
+                              "value": "100 coins"
+                            },
+                            {
+                              "label": "Round",
+                              "value": "2"
+                            },
+                            {
+                              "label": "Mood",
+                              "value": "Offended"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "trend",
+                          "component": "Sparkline",
+                          "values": [
+                            120,
+                            100
+                          ],
+                          "label": "Price history",
+                          "variant": "line"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "ask_hd",
+                            "ask_ct"
+                          ]
+                        },
+                        {
+                          "id": "ask_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "ask_q"
+                          ]
+                        },
+                        {
+                          "id": "ask_q",
+                          "component": "Text",
+                          "text": "You offered 20 coins. Selim has answered.",
+                          "variant": "body"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-2",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-2",
+                      "value": {
+                        "draft": {
+                          "move": "offer",
+                          "offer": 60
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "ask_hd",
+                            "ask_ct",
+                            "ask_ft"
+                          ]
+                        },
+                        {
+                          "id": "ask_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "ask_label"
+                          ]
+                        },
+                        {
+                          "id": "ask_label",
+                          "component": "Text",
+                          "text": "Your move",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "ask_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "ask_q",
+                            "ask_seg",
+                            "ask_slider"
+                          ]
+                        },
+                        {
+                          "id": "ask_q",
+                          "component": "Text",
+                          "text": "Name your number, accept my price of 100, or walk away.",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "ask_seg",
+                          "component": "SegmentedControl",
+                          "name": "move",
+                          "value": {
+                            "path": "/draft/move"
+                          },
+                          "children": [
+                            "seg_offer",
+                            "seg_accept",
+                            "seg_walk"
+                          ]
+                        },
+                        {
+                          "id": "seg_offer",
+                          "component": "Segment",
+                          "value": "offer",
+                          "label": "Offer"
+                        },
+                        {
+                          "id": "seg_accept",
+                          "component": "Segment",
+                          "value": "accept",
+                          "label": "Accept"
+                        },
+                        {
+                          "id": "seg_walk",
+                          "component": "Segment",
+                          "value": "walk",
+                          "label": "Walk away"
+                        },
+                        {
+                          "id": "ask_slider",
+                          "component": "Slider",
+                          "name": "offer",
+                          "label": "Your offer",
+                          "layout": "standard",
+                          "value": {
+                            "path": "/draft/offer"
+                          },
+                          "min": 20,
+                          "max": 100,
+                          "step": 1
+                        },
+                        {
+                          "id": "ask_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "ask_send"
+                          ]
+                        },
+                        {
+                          "id": "ask_send",
+                          "component": "Button",
+                          "label": "Send",
+                          "variant": "solid",
+                          "action": {
+                            "action": "send_move"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-19.jsonl:7",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          1660
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-suggestions-chips",
+          "frontier-result-card-win",
+          "frontier-breadcrumb-trail"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "deal-sheet",
+            "load": "index-only"
+          },
+          {
+            "name": "negotiation-loop",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "I offer 20.",
+        "expect": [
+          "GameHud"
+        ]
+      },
+      "domHosts": 3,
+      "proseText": "You I'd like to buy your brass lantern. What's your price? Selim has opened the deal on the brass lantern. Make your move below. You I offer 20. Twenty? Ha! Ask the lantern's ghost to bid that low. My price drops to 100, and you may reconsider.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-19-r12-targeted/smoke-negotiator-first-offer-haiku-1/turn-2.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "128 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "69 chars of reply beside 6 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [hud-1, ask-1], open [hud-1, ask-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "hud-1 holds GameHud"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "2350 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "244 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "99 chars of reply beside 5 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [ask-2], open [hud-1, ask-1, ask-2] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "hud-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "pass",
+      "detail": "hud-1 holds GameHud"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "1660 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "pass",
+      "detail": "found GameHud"
+    }
+  ],
+  "verdict": "pass"
+}
