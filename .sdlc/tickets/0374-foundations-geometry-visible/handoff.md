@@ -44,3 +44,4 @@ Kim approves each mockup before its step builds. The three rulings are recorded 
 - Kim 2026-10-19: approved step 1 side-by-side.png and marks-side-by-side.png for merge (gate b).
 - Kim 2026-10-19: approved step 2 side-by-side.png for merge (gate b).
 - Kim 2026-10-19: approved step 3 side-by-side.png for merge (gate b).
+- Kim 2026-10-19: approved step 4 side-by-side.png for merge (gate b); button radius at spacious and loose left to step 6.
