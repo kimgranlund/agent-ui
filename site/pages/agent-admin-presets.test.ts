@@ -40,6 +40,9 @@ import { ROSTER_ORDER_KEY } from '@agent-ui/app/agent-admin-roster-source'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (capability-registry.test.ts precedent)
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { compileAgent } from '../lib/agent-compile.ts'
+import { buildSystemPrompt } from '../../packages/agent-ui/a2ui/src/agent/system-prompt.ts'
+import { MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from '../../packages/agent-ui/a2ui/src/agent/mini-skills.ts'
+import { catalogForId } from '../../packages/agent-ui/a2ui/tools/agent/prompt-budget-matrix.ts'
 import {
   COMMERCE_SKILLS,
   CORE_PLAYBOOKS,
@@ -586,7 +589,7 @@ describe('the Croupier table entries scope the CardTable to blackjack (T-0323)',
   })
 
   it('the bump migrates saved Croupier stores', () => {
-    expect(croupier.seedVersion).toBe(16)
+    expect(croupier.seedVersion).toBe(17)
   })
 })
 
@@ -607,6 +610,31 @@ describe('the Croupier round-loop index line opens each round on its table (T-03
     expect(croupier.workflows.find((w) => w.id === 'round-loop')?.description).toBe(
       'Open each round on its table, never an ask for the stake: in blackjack the table’s own bet strip takes the bet and deals (hands empty until then); poker deals the hands at once. Then moves, then settle, on that one round surface; Deal again opens the next round on a fresh surface.',
     )
+  })
+})
+
+// T-0378 (round 12 cluster O): 12 poker turns that ended a hand cut the Check / Bet / Fold Row down to a lone
+// Deal again. Their mini-skills were game-hud (a bet) or none (a fold names no trigger), so neither T-0375
+// module reached them; the rule rides the always-loaded persona line instead.
+describe('the Croupier persona drops the one-button row when a poker hand ends (T-0378)', () => {
+  const RULE = 'update the table’s footer so the Deal again button is its only child'
+
+  it('the persona says a row holds two or more buttons and names no actions row', async () => {
+    const system = (await compileAgent('croupier')).bundle.system
+    expect(system).toContain('A row holds two or more buttons, never one.')
+    expect(system).toContain(RULE)
+    expect(system).not.toContain('actions row')
+  })
+
+  it.each([
+    [57, 'Check, or call if there is a bet.', ['game-hud']],
+    [68, 'Fold.', []],
+  ])('the r12 :%i turn composes the rule into its prompt', async (_line, intent, modules) => {
+    const persona = (await compileAgent('croupier')).bundle.system
+    const selection = selectMiniSkills(intent, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier')
+    expect(selection.map((m) => m.id)).toEqual(modules) // the trace's routing.miniSkills: no T-0375 module
+    const prompt = buildSystemPrompt(catalogForId('agent-ui--croupier')!.catalog, [], undefined, selection, persona)
+    expect(prompt).toContain(RULE)
   })
 })
 

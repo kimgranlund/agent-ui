@@ -13,7 +13,7 @@ import { ADMIN_LIBRARIES, setLiveIntegrations, setLiveServices } from './agent-a
 import { canonicalDigest } from '../lib/agent-manifest/agent-manifest.ts'
 
 const PERSONA_DIGESTS: Record<string, string> = {
-  croupier: 'sha256:2cdf692d9a046c012bd82c6357e8d517877196ccac9ec11a3fc634616d188379',
+  croupier: 'sha256:046bbc442fb41f84d5d7abc6b9f1693846d2b9ec4fd6f51fdbe00ae1dbd9c566',
   quant: 'sha256:2f361b72b293456b7b83ddde5da2594d2e0d6c6719cac70ae9024329e9cd16ea',
   concierge: 'sha256:04c40e6690e3b27492c21a0746efaebc9b92f5e5c71f80923b4a28a147a9b4bc',
   restaurant: 'sha256:092d927d4284358bda7fbe00ab1bd1e8d6b6c95a24d0c4c858164c9c4e41364d',
@@ -30,7 +30,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
   'dungeon-master': 'sha256:28338295337eb41790cef55fb3cec257ff2bf3d3bca165cc4fac072280add2c8',
 }
 const BUILDER_DIGEST = 'sha256:3127b77df486f0a96fec2cd99ec93fbeacade3aac9545b5e66f689925eac94c6'
-const PRESETS_DIGEST = 'sha256:0baedd0dd221af5463e5d4f93fbaafc7351e666b9970dc452e0519898057825a'
+const PRESETS_DIGEST = 'sha256:1d503c658b6849d993b838071a410f249eb98d687227daf340e935692ccfd08d'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
 const LIBRARIES_DIGEST = 'sha256:32036b2f20ad5f02a6bce3d33df804677a028fab625017f003b88cf6aae11ea8'
 
