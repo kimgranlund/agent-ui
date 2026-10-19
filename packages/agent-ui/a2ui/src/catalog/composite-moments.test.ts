@@ -113,11 +113,14 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
   ],
 }
 
-/** T-0377: rows with no hand-built detector, only `notInside`: their hand-built shape is the wrapped composite. */
-const WRAP_ONLY: ReadonlySet<string> = new Set(['ContrastPair'])
+/** T-0377: a row with `notInside` and no hand-built detector is wrap-only; its hand-built shape is the wrapped composite. */
+const DETECTORS = ['words', 'inputs', 'readBack', 'inputCue', 'logOf', 'gridOf', 'tableColumn', 'pricedRows', 'boardless', 'has'] as const
+const wrapOnly = (m: CompositeMoment): boolean => m.notInside !== undefined && DETECTORS.every((k) => m[k] === undefined)
 
-const codeOf = (composite: string): string =>
-  `${composite.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_${WRAP_ONLY.has(composite) ? 'WRAPPED' : 'MISSING'}`
+const codeOf = (composite: string): string => {
+  const row = COMPOSITE_MOMENTS.find((m) => m.composite === composite)!
+  return `${composite.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_${wrapOnly(row) ? 'WRAPPED' : 'MISSING'}`
+}
 
 describe('composite moment checks (T-0208)', () => {
   for (const { composite } of COMPOSITE_MOMENTS) {
@@ -193,6 +196,18 @@ describe('composite moment checks (T-0208)', () => {
     expect(f!.message).toContain('wraps its ContrastPair in root (a Card)')
     expect(f!.message).toContain('a root Card needs the surface re-created')
     expect(f!.message).toContain('in a root Column')
+    expect(f!.message).toContain("the Card's title Text first")
+    expect(f!.message).toContain('with its CardHeader and CardContent')
+  })
+
+  it('T-0377: a ContrastPair stamped by a template under a Card yields CONTRAST_PAIR_WRAPPED; under a root Column none', () => {
+    const templated: A2uiComponent[] = [
+      { id: 'root', component: 'Card', children: ['col'] },
+      { id: 'col', component: 'Column', children: { path: '/pairs', componentId: 'pair' } },
+      { id: 'pair', component: 'ContrastPair', label: { path: 'label' }, foreground: { path: 'fg' }, background: { path: 'bg' } },
+    ]
+    expect(codes(templated)).toEqual(['CONTRAST_PAIR_WRAPPED'])
+    expect(codes(templated.slice(1).map((c) => (c.id === 'col' ? { ...c, id: 'root' } : c)))).toEqual([])
   })
 
   it('T-0377 negative controls: the same palette rooted at its Column, and a Card of Swatches and a Ramp, yield none', () => {

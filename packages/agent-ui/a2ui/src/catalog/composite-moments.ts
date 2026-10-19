@@ -325,8 +325,9 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     composite: 'ContrastPair',
     moment: 'a text color on a background with its contrast rating',
     repair:
-      'per text pairing with its foreground, background and label, never inside a Card: drop the Card around them (a root Card ' +
-      'needs the surface re-created and its data model sent again) and hold each Swatch, Ramp and ContrastPair in a root Column.',
+      'per text pairing with its foreground, background and label, never inside a Card: drop the Card around them with its ' +
+      'CardHeader and CardContent (a root Card needs the surface re-created and its data model sent again), and hold the ' +
+      "Card's title Text first, then each Swatch, Ramp and ContrastPair, in a root Column.",
     lacks: [],
     notInside: ['Card'],
   },
@@ -592,10 +593,23 @@ const childIds = (c: A2uiComponent): string[] => [
   ...(Array.isArray(c.children) ? c.children.filter((id): id is string => typeof id === 'string') : []),
 ]
 
-/** T-0262: the components of `view` of a `notInside` type whose subtree holds `m`'s composite, or `[]`. */
+/** T-0377: the component a template ChildList stamps (`{path, componentId}`), or undefined. */
+const templateChild = (c: A2uiComponent): string | undefined => {
+  const kids = c.children as unknown
+  return typeof kids === 'object' && kids !== null && !Array.isArray(kids) && typeof (kids as { componentId?: unknown }).componentId === 'string'
+    ? (kids as { componentId: string }).componentId
+    : undefined
+}
+
+/** T-0262: the components of `view` of a `notInside` type whose subtree holds `m`'s composite, or `[]`. T-0377: a
+ *  template's stamped component counts as its child, since each stamped copy renders inside the container. */
 function wrappers(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
   if (m.notInside === undefined) return []
   const parent = parentsOf(view)
+  for (const c of view.components.values()) {
+    const stamped = templateChild(c)
+    if (stamped !== undefined && !parent.has(stamped)) parent.set(stamped, c)
+  }
   const found = new Map<string, A2uiComponent>()
   for (const c of view.components.values()) {
     if (c.component !== m.composite) continue
