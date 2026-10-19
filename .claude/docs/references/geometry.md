@@ -16,24 +16,28 @@
 - **Tier** `data-tier` = `widget` 6/1/1/0 · `product` 8/2/2/1 · `content` 11/3/2/1 · `brand` 15/4/2/1 (what a region is for; the skill's rows, T-0374).
 - **Scale** `data-scale` = `sm` / `md` / `lg` → s = -1 / 0 / +1 (a whole region: controls, type and spacing together).
 - **Size** z = a control's reflected `size` prop (`sm` / `md` / `lg`), or `data-size` on any other element → -1 / 0 / +1.
-- **Density** `data-density` = `compact` / `default` / `spacious` → d = -1 / 0 / +1, container spacing only:
-  `m = max(n + a·d, floor((n + c) / 2) + 1)`. The widget, card and layout levels read m; the group level and
-  every control value keep n.
+- **Density** `data-density` = `tight` / `compact` / `regular` / `spacious` / `loose` → q = 2 / 3 / 4 / 5 / 6
+  (the skill's DENSITIES; no attribute means regular, T-0374). It moves the control margin `(q - 2)n/4`, so the
+  control height `3n + 2 · margin` runs from 3n at tight to 5n at loose, and the container unit
+  `m = max(nq/4, floor((n + c) / 2) + 1)`. The widget, card and layout levels read m; the group level and every
+  other control value keep n.
 
 The nearest ancestor wins on each axis. **The root is `product` at scale `md`** (ADR-0245 Amendment 8): sizes
-sm / md / lg are n 6 / 8 / 10, so heights **24 / 32 / 40**, body 13 / 15 / 17 and control type 12 / 14 / 16. A2UI
+sm / md / lg are n 6 / 8 / 10, so heights **24 / 32 / 40** at regular density, body 13 / 15 / 17 and control type 12 / 14 / 16. A2UI
 surfaces sit at `data-tier="widget" data-scale="md"` (the canvas register, n 5 / 6 / 7, heights 20 / 24 / 28;
 Amendment 2), one step below the page and deliberately denser (Kim, Amendment 8), so a catalog size means what it says: a composite's `lg` action is 28px. A
 page opts a region into another register with `data-tier` / `data-scale` / `data-density`; `[scale]` was
 retired into the first two and `[density]` into `data-density` (the bridge maps them for one release, W7
 removes it), and `[data-foundations="legacy"]` opts a region out for the same release.
 
-Let `c = ceil(n / 4)`. Every box value is a whole-pixel multiple of n or c (the emit-time whole-px gate,
-`checkEmitted()` in `scripts/lib/foundations-model.mjs`, which took over the model's check M7 in T-0373):
+Let `c = ceil(n / 4)`. Every box value is a multiple of n or c. Fractional px ship (Kim, 2026-10-19): the
+emit-time gate, `checkEmitted()` in `scripts/lib/foundations-model.mjs`, holds every emitted value finite and
+never falling as n grows at each density (T-0374; it took over the model's check M7 in T-0373):
 
 | quantity | value | token |
 |---|---|---|
-| control height | `4n` | `--md-sys-height` |
+| control margin (above and below the 3n slot) | `(q - 2)n/4`, `n/2` at regular | `--md-sys-control-margin` |
+| control height | `3n + 2 · margin`: 3n tight, 4n regular, 5n loose | `--md-sys-height` |
 | inset (a boxed child's own margin) | `n` | `--md-sys-inset` |
 | gap between a mark and its label | `n` | |
 | radius of a surface (attachment, disclosure, swatch tile) | `n`, `corner-shape: squircle` | `--md-sys-radius` |
@@ -43,7 +47,7 @@ Let `c = ceil(n / 4)`. Every box value is a whole-pixel multiple of n or c (the 
 | glyph slot (the glyph's square wrapper) | `3n` | `--md-sys-glyph-slot` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | control text | `n + 6` px | `--md-sys-type-control` |
-| container unit | `m` (n at default density) | `--md-sys-m` |
+| container unit | `m = max(nq/4, floor((n + c) / 2) + 1)` (n at regular density) | `--md-sys-m` |
 
 ## The centering law
 
@@ -107,7 +111,7 @@ The full per-control table is ADR-0245 clause 3 and Appendix B; the geometry pro
 
 ## Containers and placement
 
-Four levels, each at the container's own n and m (root md: n 8, c 2, m 8 at default density):
+Four levels, each at the container's own n and m (root md: n 8, c 2, m 8 at regular density):
 
 | level | margin | gutter | radius | members |
 |---|---|---|---|---|
@@ -116,8 +120,8 @@ Four levels, each at the container's own n and m (root md: n 8, c 2, m 8 at defa
 | card | `3m` | `2m` | `3m` | card, modal, drawer, command-modal, the A2UI artboard |
 | layout | `4m` | `3m` | `4m` | super-shell frame and bars, the docs page frame |
 
-`data-density` moves m one tier step `a` (compact down, spacious up), floored so a widget always
-out-margins a group: at the root md, compact m 6 gives card 18 / 12 / 18 and spacious m 10 gives 30 / 20 / 30.
+`data-density` moves m to nq/4, floored so a widget always out-margins a group: at the root md, m is 6 / 6 / 8 /
+10 / 12 from tight to loose, so the card is 18 / 12 / 18 at tight and compact and 36 / 24 / 36 at loose.
 
 A container pads with its **margin**; a boxed child at an edge sits at `margin - its own inset` through a
 negative margin of `--md-sys-inset` that resolves on the child, so its label lines up with the card's text.
@@ -131,7 +135,7 @@ level tokens. Padding now moves with n.
 
 `--md-sys-space-{xs..2xl}` is a generated alias layer over the same n, so the six A2UI `gap` enums keep
 their names and prompt bytes: `xs` c, `sm` n, `md` n + c, `lg` 2m, `xl` 3m, `2xl` 4m (2 / 8 / 10 / 16 / 24 /
-32 at the root md, n 8, default density). It is the space *between* components, not control geometry. The
+32 at the root md, n 8, regular density). It is the space *between* components, not control geometry. The
 widget, card and layout levels are one margin reference, the skill's section margin 4m, at its spacing role
 percentages (page 100, container 75, group 50, control 25; T-0373): each level's gutter is the role one step below
 its margin's, so widget 50 / 25, card 75 / 50 and layout 100 / 75 percent of 4m.

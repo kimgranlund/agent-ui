@@ -24,7 +24,7 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for button.
     values: [sm, md, lg]
     default: md
     reflect: true      # reflects so the [size] dimensional-ramp repoint applies to JS-set values
-    description: A step on the dimensional ramp (sm, md default, lg); an ancestor data-tier/data-scale/data-density also apply.
+    description: A step on the dimensional ramp (sm, md default, lg); an ancestor data-tier/data-scale/data-density (tight to loose) also apply.
   - name: disabled
     type: boolean
     default: false
@@ -122,7 +122,8 @@ ADR-0006). ARIA `role="button"` is applied through `ElementInternals`, never as 
 
 `size` selects a step on the dimensional ramp (`sm` · `md` (default) · `lg`), setting the control
 height and font; an ancestor `data-tier` and `data-scale` (ADR-0245) set the n the ramp derives from,
-and an ancestor `data-density` (`compact/default/spacious`) moves the icon↔label gap. The block-size is the vertical lever — `padding-block` is always `0`.
+and an ancestor `data-density` (`tight` / `compact` / `regular` / `spacious` / `loose`) moves the control margin, so the
+height runs 3n at tight to 5n at loose (24 / 28 / 32 / 36 / 40 at the root md, T-0374). The block-size is the vertical lever — `padding-block` is always `0`.
 
 ## States
 

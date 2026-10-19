@@ -6,13 +6,13 @@
 // scripts/lib/foundations-model.mjs says which input comes from where (anchors(), LEGACY_PATH) and mirrors the
 // sheet as px (resolve()). Never edit a generated sheet. The generator refuses to emit when the repo's `check()`
 // returns a failure (M1 to M16; M14, no size that depends on n alone shrinks as n grows, is the skill's own since
-// ADR-0245 Amendment 3) other than the two M7 forms checkEmitted() now holds on the emitted values (EMITTED_M7,
-// T-0373), when checkAnchors() does (the vendored anchors) or when checkEmitted() does, so a broken config never
+// ADR-0245 Amendment 3) other than the two M7 forms T-0373 moved to the emitted values and T-0374 retired with
+// fractional px (EMITTED_M7), when checkAnchors() does (the vendored anchors) or when checkEmitted() does, so a broken config never
 // reaches a stylesheet.
 //
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
-// scale, size and density on their attributes, and one derived block (`--md-sys-n`, the container unit
-// `--md-sys-m`, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4),
+// scale, size and density on their attributes (density as the vendored q, tight 2 to loose 6, T-0374), and one
+// derived block (`--md-sys-n`, the container unit `--md-sys-m`, the control margin and height, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4),
 // the control pill 2n (Amendment 5), the type roles under the skill's names (T-0373: the section and group
 // kickers), the chip level and the four container levels) re-declared
 // wherever an input changes (beside it, for one release, the type labels the kickers were renamed from,
@@ -36,8 +36,8 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
 import { RENAMED, ROOT_REGISTER, STEP } from './lib/foundations-rules.mjs'
-import { CFG } from '../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
-import { LEGACY_PATH, anchors, checkAnchors, checkEmitted, heightPerN, roomyLevels } from './lib/foundations-model.mjs'
+import { CFG, DENSITIES } from '../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
+import { anchors, checkAnchors, checkEmitted, heightPerN, marginPerNAt, roomyLevels } from './lib/foundations-model.mjs'
 
 export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
 export const BRIDGE_REL = 'packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css'
@@ -54,11 +54,13 @@ const headingRole = (a, power) => `round(nearest, var(--md-sys-type-body) * pow(
 
 const M = 'var(--md-sys-m)'
 
-/** The derived block: every quantity the resolvers return, as a formula of this element's n (and m for the
- *  widget, card and layout levels: density moves container spacing only, never a control or the group level). */
+const Q = `var(--md-sys-density-q, ${DENSITIES.regular})`
+
+/** The derived block: every quantity the resolvers return, as a formula of this element's n (and the density q for
+ *  the control margin and height, and m for the widget, card and layout levels; the group level reads n only). */
 function derivedDeclarations(a = anchors()) {
-  // The roomy factors are the spacing roles of the vendored section reference 4d, emitted against m: this assumes
-  // d == m, true at default density (the vendored d is n at regular, the legacy m is n at default on the ladder).
+  // The roomy factors are the spacing roles of the vendored section reference 4d, emitted against m: m is the
+  // vendored d = nq/4, floored (containerUnit() in the model).
   const levels = roomyLevels(a).flatMap(([level, margin, gutter]) => [
     [`--md-sys-${level}-margin`, `calc(${M} * ${margin}px)`],
     [`--md-sys-${level}-gutter`, `calc(${M} * ${gutter}px)`],
@@ -66,11 +68,13 @@ function derivedDeclarations(a = anchors()) {
   ])
   return [
     ['--md-sys-n', 'calc(var(--md-sys-tier-n0) + var(--md-sys-tier-a) * var(--md-sys-scale-s, 0) + var(--md-sys-tier-k) * var(--md-sys-size-z, 0) + var(--md-sys-tier-g) * var(--md-sys-scale-s, 0) * var(--md-sys-size-z, 0))'],
-    // m = max(n + a*d, floor((n + c) / 2) + 1): one tier step a per density step, floored so a widget out-margins a group.
-    ['--md-sys-m', `max(calc(${N} + var(--md-sys-tier-a) * var(--md-sys-density-d, 0)), calc(round(down, (${N} + round(up, ${N} / 4, 1)) / 2, 1) + 1))`],
+    // m = max(nq/4, floor((n + c) / 2) + 1): the vendored d, floored so a widget out-margins a group at every density.
+    ['--md-sys-m', `max(calc(${N} * ${Q} / ${DENSITIES.regular}), calc(round(down, (${N} + round(up, ${N} / 4, 1)) / 2, 1) + 1))`],
     ['--md-sys-c', `calc(round(up, ${N} / 4, 1) * 1px)`],
-    // The control surface: the 3n slot plus a margin above and below (resolveControlSurface at regular density).
-    ['--md-sys-height', `calc(${N} * ${heightPerN(a)}px)`],
+    // The control surface (resolveControlSurface, T-0374 step 4): the 3n slot plus the density margin (q - 2)n/4 above
+    // and below, so the height runs 3n at tight to 5n at loose (4n at regular).
+    ['--md-sys-control-margin', `calc((${Q} - 2) * ${N} * ${marginPerNAt('regular', a) / (DENSITIES.regular - 2)}px)`],
+    ['--md-sys-height', `calc(${N} * ${a.slotPerN}px + 2 * var(--md-sys-control-margin))`],
     ['--md-sys-inset', `calc(${N} * 1px)`],
     // The control rule (Amendment 4): the text slot carries the label inset n - c, so gutter c + inset = margin n.
     ['--md-sys-label-inset', `calc(var(--md-sys-inset) - ${C})`],
@@ -119,7 +123,8 @@ export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
     : '[data-tier], [data-tier] :is([data-scale], [data-size], [size], [data-density])'
 
 /** The M7 forms (whole px in the model) that T-0373 retired: a level margin or gutter, and type off the 0.5px grid.
- *  checkEmitted() holds both on the emitted values. M7's third form, a chip, control, group or component part that
+ *  Fractional px ship (Kim's 2026-10-19 ruling, T-0374), so checkEmitted() holds neither: it holds every emitted value
+ *  finite and monotonic in n. M7's third form, a chip, control, group or component part that
  *  is not whole px, still refuses: the parts (checkbox, switch, badge, table row and kin) are not emitted, and the
  *  browser tests read them from scale.mjs resolve(). */
 export const EMITTED_M7 = /^M7 h\d+: (?:\w+ not whole px|type off the 0\.5px grid)$/
@@ -139,7 +144,8 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = 
   const out = [
     '/* foundations.gen.css: GENERATED by scripts/generate-foundations.mjs from scripts/lib/foundations-model.mjs (ADR-0245, T-0372). DO NOT EDIT. */',
     '/* n = n0 + a*s + k*z + g*s*z per element (s = data-scale, z = data-size or a control\'s size, each -1 / 0 / +1). */',
-    '/* m = max(n + a*d, floor((n + c) / 2) + 1) (d = data-density, -1 / 0 / +1): the widget, card and layout levels read m. */',
+    '/* q = data-density (tight 2, compact 3, regular 4, spacious 5, loose 6): control margin (q - 2)n/4, height 3n + 2 margin. */',
+    '/* m = max(nq/4, floor((n + c) / 2) + 1): the widget, card and layout levels read m. */',
     `/* ${rootDefault ? `Root default (the cut): :root is ${ROOT_INPUTS.tier} at scale ${ROOT_INPUTS.scale} and every element derives from one n.` : 'Dark launch: tokens exist only inside an opt-in [data-tier] region; nothing is declared on :root.'} */`,
   ]
   if (rootDefault) {
@@ -150,7 +156,7 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = 
   for (const [step, z] of Object.entries(STEP)) {
     out.push(`${scoped(`:is([data-size='${step}'], [size='${step}'])`)} { --md-sys-size-z: ${z}; --md-sys-title-bump: ${a.titleBump[step]}; }`)
   }
-  for (const [density, d] of Object.entries(LEGACY_PATH.density)) out.push(`${scoped(`[data-density='${density}']`)} { --md-sys-density-d: ${d}; }`)
+  for (const [density, q] of Object.entries(DENSITIES)) out.push(`${scoped(`[data-density='${density}']`)} { --md-sys-density-q: ${q}; }`)
   out.push('/* The type labels the skill\'s kickers replaced (T-0373), kept for one release so old readers resolve; W7 removes them. */')
   out.push(`${recomputeList(rootDefault)} { ${Object.entries(RENAMED).map(([old, name]) => `${old}: var(${name});`).join(' ')} }`)
   out.push(`${recomputeList(rootDefault)} {`)
@@ -261,7 +267,7 @@ function bridgeDeclarations(a) {
 /** Every name the legacy opt-out sets to `initial`: the inputs, the derived block, the bridge's own n and the
  *  renamed type labels, so a consumer's `var(--md-sys-type-group-label, <fallback>)` takes its fallback there. */
 function legacyInitialNames(a) {
-  const inputs = ['tier-n0', 'tier-a', 'tier-k', 'tier-g', 'tier-ratio', 'scale-s', 'size-z', 'title-bump', 'density-d'].map((n) => `--md-sys-${n}`)
+  const inputs = ['tier-n0', 'tier-a', 'tier-k', 'tier-g', 'tier-ratio', 'scale-s', 'size-z', 'title-bump', 'density-q'].map((n) => `--md-sys-${n}`)
   const bridge = Object.keys(STEP).flatMap((step) => [`--md-sys-bridge-n-${step}`, `--md-sys-bridge-body-${step}`])
   return [...inputs, ...derivedDeclarations(a).map(([name]) => name), ...bridge, ...Object.keys(RENAMED)]
 }

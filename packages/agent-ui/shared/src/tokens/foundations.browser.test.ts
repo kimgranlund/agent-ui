@@ -1,29 +1,35 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve, type Emitted } from '../../../../../scripts/lib/foundations-model.mjs'
+import './tokens.css' // the colour roles: a control's border colour token, so its 1px border computes
 import './foundations.gen.css'
 import './foundations-bridge.gen.css'
 import '../../../components/src/controls/glyph/glyph.css'
 import '../../../components/src/controls/glyph/glyph.ts'
+import '../../../components/src/controls/button/button.css'
+import '../../../components/src/controls/button/button.ts'
+import '../../../components/src/controls/text-field/text-field.css'
+import '../../../components/src/controls/text-field/text-field.ts'
 
 // ADR-0245 clause 9 and 10c, the 36-cell leg: each tier x scale x size cell is set on a real region, every
 // derived token is read back through layout (`inline-size: var(<token>)`, skill section 6 step 4, never the
 // raw custom-property text) and compared to the model's resolve() (scripts/lib/foundations-model.mjs, T-0374: the
 // oracle each visible step moves; foundations.test.ts holds it to scale.mjs resolve() wherever the two still agree),
-// in Chromium and WebKit; Amendment 3 repeats every cell at each data-density (m moves the widget, card and layout
-// levels only). The root leg proves the cut (the document is product at scale md with no attribute, Amendment 8), and
+// in Chromium and WebKit; every cell repeats at each of the five data-density values (T-0374 step 4: q moves the
+// control margin, so the control height, and m, so the widget, card and layout levels). The root leg proves the cut (the document is product at scale md with no attribute, Amendment 8), and
 // the legacy leg the clause 10e opt-out: inside [data-foundations="legacy"] every derived token is undefined, so each
 // fallback wins.
 
 const TIERS = ['widget', 'product', 'content', 'brand'] as const
 const STEPS = ['sm', 'md', 'lg'] as const
-const DENSITIES = ['compact', 'spacious'] as const
+const DENSITIES = ['tight', 'compact', 'regular', 'spacious', 'loose'] as const
 
 /** token -> the model quantity it must equal, in px. */
 const EXPECTED: ReadonlyArray<readonly [string, (r: Emitted) => number]> = [
   ['n', (r) => r.n],
   ['m', (r) => r.m],
   ['c', (r) => r.c],
-  ['height', (r) => r.height],
+  ['control-margin', (r) => r.controlMargin], // T-0374 step 4: (q - 2)n/4, n/2 at regular
+  ['height', (r) => r.height], // 3n + 2 control margin: 3n at tight to 5n at loose
   ['inset', (r) => r.inset],
   ['label-inset', (r) => r.labelInset], // the control rule (Amendment 4): gutter c + label inset = margin n
   ['radius', (r) => r.radius],
@@ -103,7 +109,7 @@ describe('foundations.gen.css: the 36 cells compute what resolve() gives (ADR-02
 
   for (const density of DENSITIES) {
     for (const tier of TIERS) {
-      it(`${tier} at data-density ${density}: every scale and size cell moves m and the container levels only`, () => {
+      it(`${tier} at data-density ${density}: every scale and size cell moves the control height, the control margin, m and the container levels`, () => {
         for (const scale of STEPS) {
           for (const size of STEPS) {
             const got = readTokens(
@@ -155,10 +161,34 @@ describe('foundations.gen.css: the 36 cells compute what resolve() gives (ADR-02
     expect(cells).toBe(36)
   })
 
-  it('the product sm/sm compact floor: m is 4, not n - a = 3, so a widget still out-margins a group', () => {
-    const got = labelled(readTokens('<div data-tier="product" data-scale="sm" data-density="compact"><i size="sm" data-probe></i></div>'))
-    expect(got).toEqual(labelled(cell(resolve('product', 'sm', 'sm', 'compact'))))
+  it('the product sm/sm tight floor: m is 4, not nq/4 = 2.5, so a widget still out-margins a group', () => {
+    const got = labelled(readTokens('<div data-tier="product" data-scale="sm" data-density="tight"><i size="sm" data-probe></i></div>'))
+    expect(got).toEqual(labelled(cell(resolve('product', 'sm', 'sm', 'tight'))))
     expect(got['m']).toBe(4)
+  })
+
+  it('a fractional cell keeps a whole sub-pixel border: ui-button and ui-text-field at widget sm/md at each data-density', async () => {
+    // Kim's 2026-10-19 ruling: fractional px ship. At n 5 the height is 15, 17.5, 20, 22.5 and 25 px from tight to
+    // loose; the 1px border stays whole and the control's box equals the model height.
+    let cells = 0
+    for (const density of DENSITIES) {
+      const r = resolve('widget', 'sm', 'md', density)
+      for (const tag of ['ui-button', 'ui-text-field']) {
+        const wrap = document.createElement('div')
+        wrap.innerHTML = `<div data-tier="widget" data-scale="sm" data-density="${density}"><${tag}>Go</${tag}></div>`
+        document.body.append(wrap)
+        mounted.push(wrap)
+        const host = wrap.querySelector(tag) as HTMLElement & { updateComplete?: Promise<unknown> }
+        await host.updateComplete
+        const at = `${tag} widget sm/md ${density}`
+        const border = parseFloat(getComputedStyle(host).borderTopWidth)
+        expect(Number.isInteger(border) && border >= 1, `${at}: border-top-width ${border}`).toBe(true)
+        expect(Math.abs(host.getBoundingClientRect().height - r.height), `${at}: height ${host.getBoundingClientRect().height} vs ${r.height}`).toBeLessThanOrEqual(0.05)
+        cells++
+      }
+    }
+    expect(resolve('widget', 'sm', 'md', 'compact').height, 'anti-vacuous: a fractional cell').toBe(17.5)
+    expect(cells).toBe(10)
   })
 
   it('a nested tier inherits its ancestor scale and size (each axis inherits on its own)', () => {

@@ -70,10 +70,11 @@
   --md-sys-scale-s: initial;
   --md-sys-size-z: initial;
   --md-sys-title-bump: initial;
-  --md-sys-density-d: initial;
+  --md-sys-density-q: initial;
   --md-sys-n: initial;
   --md-sys-m: initial;
   --md-sys-c: initial;
+  --md-sys-control-margin: initial;
   --md-sys-height: initial;
   --md-sys-inset: initial;
   --md-sys-label-inset: initial;

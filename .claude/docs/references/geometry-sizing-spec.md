@@ -20,8 +20,10 @@ stylesheet.
 ## 1 · The derivation
 
 `n = n0 + a·s + k·z + g·s·z`, n in 4 to 24. The tier supplies `(n0, a, k, g)`, the region supplies the scale
-s, and the control (or `data-size`) supplies the size z; s and z are each -1, 0 or +1. Density d (`data-density`
-compact / default / spacious, -1 / 0 / +1) moves only the container unit `m = max(n + a·d, floor((n + c)/2) + 1)`.
+s, and the control (or `data-size`) supplies the size z; s and z are each -1, 0 or +1. Density q (`data-density`
+tight / compact / regular / spacious / loose, 2 to 6, the skill's DENSITIES; regular when absent, T-0374) moves the
+control margin `(q - 2)n/4`, so the height `3n + 2 · margin` runs 3n to 5n, and the container unit
+`m = max(nq/4, floor((n + c)/2) + 1)`.
 
 | tier | n0 / a / k / g | use |
 |---|---|---|
@@ -52,11 +54,12 @@ check M7 since T-0373), are:
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | type | linear `n + 6` for controls, `pow` for display, heading and subhead | `--md-sys-type-*` |
 | type | linear roles never below 9px; the section kicker `round(body · 9/8)` and the group kicker `n/2 + 6.5` (the former section and group labels stay aliases until W7) | `--md-sys-type-section-kicker`, `--md-sys-type-group-kicker` |
-| container unit | `m` (n at default density) | `--md-sys-m` |
+| control margin | `(q - 2)n/4` above and below the 3n slot (`n/2` at regular) | `--md-sys-control-margin` |
+| container unit | `m` (n at regular density) | `--md-sys-m` |
 | container levels | group (n) and widget / card / layout (m) margin, gutter, radius | `--md-sys-{level}-{margin,gutter,radius}` |
 
 n depends on three attributes that inherit independently (m on a fourth), so the generated block is live
-`calc()` over the inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, `--md-sys-density-d`, declared
+`calc()` over the inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, `--md-sys-density-q`, declared
 on `:root, [data-tier], [data-scale], [data-size], [size], [data-density]` (the recompute list that replaced
 ADR-0007's `*` ramp), never a literal table per combination.
 
@@ -85,8 +88,9 @@ the cut, no rollback used); the law above does not.
 ### 1.4 · The families, retired
 
 The old "frame ∝ height, rhythm ∝ font" split retired with the hand-tabled ramp: under one n the frame and
-the rhythm move together, and a whole region grows or shrinks with one attribute, `data-scale`. Container air
-alone moves with `data-density` (m), never a control (Amendment 3).
+the rhythm move together, and a whole region grows or shrinks with one attribute, `data-scale`. `data-density`
+moves the control margin, so the control height, and m, so the container air; never the 3n slot, the icon, the
+glyph or the type (T-0374, the skill's resolveControlSurface).
 
 ### 1.5 · Slot-presence padding
 
@@ -126,8 +130,8 @@ ADR-0245 and retired from `dimensions.css`, which now holds only constants (focu
 pending and working states, typefaces, the typescale weight, line-height and tracking legs). A control reads
 its size prop as z and inherits tier and scale from its region; nothing in a stylesheet names a height.
 The root is product at scale md (Amendment 8); an A2UI surface root carries `data-tier="widget" data-scale="md"`; a reading
-column sets `data-tier="content"`. `[scale]` survives one release as a bridge alias of tier and scale,
-`[density]` of `data-density`.
+column sets `data-tier="content"`. `[scale]` and `[density]` are retired into `data-tier` / `data-scale` and
+`data-density`; their bridge mappings were removed in T-0169.
 
 ---
 
