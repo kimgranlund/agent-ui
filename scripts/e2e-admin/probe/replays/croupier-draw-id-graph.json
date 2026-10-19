@@ -5,7 +5,7 @@
   "agent": "croupier",
   "model": "claude-sonnet-5-5",
   "effort": "medium",
-  "source": "2026-10-15.jsonl:110,2026-10-15.jsonl:111,2026-10-15.jsonl:112 (catalog agent-ui--croupier); T-0220: the :113 heal round is turn 3's second round, :113 and :114 dropped",
+  "source": "2026-10-15.jsonl:110,2026-10-15.jsonl:111,2026-10-15.jsonl:112 (catalog agent-ui--croupier); T-0220: the :113 heal round is turn 3's second round, :113 and :114 dropped; T-0381: turn 0 gains an AUTHORED round 2 (round 1 resent with the PlayingCard size sm repaired to md, since the croupier catalog no longer offers sm)",
   "steps": [
     {
       "say": "Let's play five-card draw."
@@ -217,6 +217,283 @@
                             "path": "faceDown"
                           },
                           "size": "sm"
+                        },
+                        {
+                          "id": "playerLbl",
+                          "component": "Text",
+                          "text": "You — pair of kings",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "playerRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/playerHand",
+                            "componentId": "pCard"
+                          }
+                        },
+                        {
+                          "id": "pCard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "acts"
+                          ]
+                        },
+                        {
+                          "id": "acts",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": [
+                            "bCheck",
+                            "bBet",
+                            "bFold"
+                          ]
+                        },
+                        {
+                          "id": "bCheck",
+                          "component": "Button",
+                          "label": "Check",
+                          "variant": "soft",
+                          "action": {
+                            "action": "check"
+                          }
+                        },
+                        {
+                          "id": "bBet",
+                          "component": "Button",
+                          "label": "Bet 20",
+                          "variant": "solid",
+                          "action": {
+                            "action": "bet",
+                            "context": {
+                              "amount": 20
+                            }
+                          }
+                        },
+                        {
+                          "id": "bFold",
+                          "component": "Button",
+                          "label": "Fold",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "fold"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Five-card draw it is. Each of us gets five cards, then there's a betting round. After that we can each discard up to three cards (four if you keep an Ace) and draw replacements. Then comes a final betting round and a showdown, and ties split the pot. We each ante 10, so your bankroll starts at 1,000 and drops to 990. Your hand: a pair of kings. Your move is Check, Bet or Fold.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Cards are dealt. You hold a pair of kings. Check, bet 20 or fold?",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 990,
+                        "pot": 20,
+                        "playerHand": [
+                          {
+                            "rank": "K",
+                            "suit": "spades",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "K",
+                            "suit": "diamonds",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "7",
+                            "suit": "clubs",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "4",
+                            "suit": "hearts",
+                            "faceDown": false
+                          },
+                          {
+                            "rank": "2",
+                            "suit": "spades",
+                            "faceDown": false
+                          }
+                        ],
+                        "dealerHand": [
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          },
+                          {
+                            "rank": "A",
+                            "suit": "spades",
+                            "faceDown": true
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title",
+                            "phase"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Five-card draw",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "phase",
+                          "component": "Badge",
+                          "label": "First bet",
+                          "intent": "info",
+                          "slot": "trailing"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "bank",
+                            "dealerLbl",
+                            "dealerRow",
+                            "playerLbl",
+                            "playerRow"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Round 1",
+                          "status": "Ante 10 each",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Pot",
+                              "value": "20"
+                            },
+                            {
+                              "label": "Phase",
+                              "value": "Bet 1 of 2"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "bank",
+                          "component": "Stat",
+                          "label": "Bankroll",
+                          "value": {
+                            "path": "/bankroll"
+                          }
+                        },
+                        {
+                          "id": "dealerLbl",
+                          "component": "Text",
+                          "text": "Dealer — 5 cards face down",
+                          "variant": "label"
+                        },
+                        {
+                          "id": "dealerRow",
+                          "component": "Row",
+                          "gap": "sm",
+                          "wrap": true,
+                          "children": {
+                            "path": "/dealerHand",
+                            "componentId": "dCard"
+                          }
+                        },
+                        {
+                          "id": "dCard",
+                          "component": "PlayingCard",
+                          "rank": {
+                            "path": "rank"
+                          },
+                          "suit": {
+                            "path": "suit"
+                          },
+                          "faceDown": {
+                            "path": "faceDown"
+                          },
+                          "size": "md"
                         },
                         {
                           "id": "playerLbl",

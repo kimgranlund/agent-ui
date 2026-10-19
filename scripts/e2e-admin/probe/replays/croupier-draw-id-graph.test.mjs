@@ -12,6 +12,9 @@
 // seed reaches the same shipped lines (round 1 fails CARD_DUPLICATE instead), so this replay no longer isolates T-0220;
 // packages/agent-ui/a2ui/src/agent/surface-seeds.test.ts holds that proof. What it pins: turn 3 ships the heal, which
 // redelivers bCheck and bBet.
+// T-0381: the croupier catalog no longer offers PlayingCard size sm, and the recorded turn 1 deal used it, so its CATALOG
+// failure now costs a round. Turn 1 (index 0)'s round 2 is AUTHORED (T-0381): round 1's payload resent with size md. The replay proves
+// the repair, not the model's live compliance; recorded rounds are untouched.
 import { readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
@@ -21,6 +24,11 @@ it('croupier-draw-id-graph: the recorded turns replay with the known failing che
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-draw-id-graph.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => [c.check, c.turn])).toEqual([['no-internal-leak', 2]])
+  const deal = report.records[0].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(deal.failureCodes).toEqual(['CARD_DUPLICATE', 'SEMANTIC_UNCORRECTED']) // CATALOG (sm) is repaired in round 2; the T-0222 dup is what remains
+  const dealt = report.records[0].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? [])
+  expect(dealt.filter((c) => c.component === 'PlayingCard' && c.size === 'sm')).toEqual([])
+  expect(dealt.some((c) => c.component === 'PlayingCard' && c.size === 'md')).toBe(true)
   const trace = report.records[2].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
   expect(trace.rounds).toBe(3)
   expect(trace.failureCodes).toEqual(['CARD_DUPLICATE', 'SEMANTIC_UNCORRECTED'])
