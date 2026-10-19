@@ -280,8 +280,9 @@ modules.
 `references/geometry-sizing-spec.md`. Every size derives from one integer `n` per element,
 `n = n0 + a·s + k·z + g·s·z`, over three inheriting axes: the region's `data-tier`
 (`widget` / `product` / `content` / `brand`), its `data-scale` (`sm` / `md` / `lg`) and the control's
-reflected `size` prop. `data-density` moves container spacing only. The root is `product` at `md`, so
-controls take the library ramp **24 / 32 / 40 px** for `sm` / `md` / `lg`; an A2UI surface sits at
+reflected `size` prop. `data-density` (`tight` to `loose`) moves the control height, 3n to 5n, and the container
+spacing (T-0374). The root is `product` at `md`, so controls take the library ramp **24 / 32 / 40 px** for `sm` /
+`md` / `lg` at regular density; an A2UI surface sits at
 `data-tier="widget" data-scale="md"` (20 / 24 / 28). The numbers come from `@agent-ui/shared`'s
 `scale.mjs` through the generated `foundations.gen.css` (`node scripts/generate-foundations.mjs`,
 drift-gated), never from a hand-tabled stylesheet. Controls fill their container by default; the

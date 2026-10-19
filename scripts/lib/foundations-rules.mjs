@@ -30,7 +30,7 @@ export const LEGACY_TO_DERIVED = [
 
 /** Every derived token foundations.gen.css declares (generate-foundations.mjs); foundations.test.ts fails when they drift. */
 export const DERIVED = new Set([
-  'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'icon-box', 'glyph-box', 'glyph-slot', 'glyph-stroke', 'corner-shape',
+  'n', 'm', 'c', 'control-margin', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'icon-box', 'glyph-box', 'glyph-slot', 'glyph-stroke', 'corner-shape',
   'checkbox-radius',
   ...['display', 'heading', 'subhead', 'section-kicker', 'title', 'body', 'control', 'field-label', 'small-control', 'group-kicker', 'floor'].map((r) => `type-${r}`),
   ...['chip', 'group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),

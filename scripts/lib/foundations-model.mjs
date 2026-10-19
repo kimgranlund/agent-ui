@@ -1,29 +1,29 @@
 // foundations-model.mjs: the inputs scripts/generate-foundations.mjs emits, and resolve(), the same tokens as px
 // (T-0372), in the skill's structure (T-0373): its type role names, the control surface anatomy, the spacing roles
-// of one margin reference, and whole px checked on the emitted values (checkEmitted()), not in the model.
+// of one margin reference, and the emitted values checked finite and monotonic in n (checkEmitted(), T-0374).
 // Browser-safe, so a browser test can read it the way it reads foundations-rules.mjs.
 //
 // Two resolvers feed the sheets. The skill's current resolver is vendored untouched under
-// packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/ and read at regular density: it keeps
-// floats, and the generator rounds only at CSS emission. The repo's own `scale.mjs` (the skill's former revision,
+// packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/ and read at its five densities (T-0374): it
+// keeps floats, and fractional px ship. The repo's own `scale.mjs` (the skill's former revision,
 // sha 3c319761, frozen) supplies every input the current resolver cannot reproduce byte for byte (LEGACY_PATH) and
 // `check()`. anchors() reads the vendored CFG on every call, so a change to it reaches the next render.
 
 import { CFG as LEGACY_CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import { CFG, SPACING_ROLES, resolveControlSurface, resolveGeometry } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
+import { CFG, DENSITIES, SPACING_ROLES, resolveControlSurface, resolveGeometry } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
 import { ROOT_REGISTER, STEP } from './foundations-rules.mjs'
 
 /**
  * What stays on the repo's scale.mjs, because the current resolver gives a different value (T-0374 moves each one,
- * behind an approved mockup): the density axis and m (current: five multipliers of n), and the group kicker value
- * (current 10 + 1 per step, against 9 + 0.5): the group kicker takes the skill's name with the former group label's
- * value. The field label (10 + 1) and the small control role (9 + 1) read the current resolver (T-0374 step 2), and
- * so do the four tier rows (T-0374 step 3: content 11/3/2/1 and brand 15/4/2/1; checkAnchors() holds them to the
- * ladder and to growth along size and scale). Every token the current resolver has no field
- * for (inset, label inset, radii, chip, checkbox and group levels) keeps its own formula below.
+ * behind an approved mockup): the group kicker value (current 10 + 1 per step, against 9 + 0.5): the group kicker
+ * takes the skill's name with the former group label's value. The field label (10 + 1) and the small control role
+ * (9 + 1) read the current resolver (T-0374 step 2), and so do the four tier rows (T-0374 step 3: content 11/3/2/1
+ * and brand 15/4/2/1; checkAnchors() holds them to the ladder and to growth along size and scale) and the density
+ * axis (T-0374 step 4: the vendored DENSITIES, tight 2 to loose 6, moving the control margin and m). Every token the
+ * current resolver has no field for (inset, label inset, radii, chip, checkbox and group levels) keeps its own
+ * formula below.
  */
 export const LEGACY_PATH = {
-  density: LEGACY_CFG.density,
   linear: { groupKicker: LEGACY_CFG.linear.groupLabel },
 }
 
@@ -39,8 +39,8 @@ const ROOMY = [['widget', 'group', 'control'], ['card', 'container', 'group'], [
  * The anchors the generator reads from the current resolver, at regular density at the root register, as
  * coefficients of n. The control surface (resolveControlSurface): the 3n slot every icon, label and glyph wrapper
  * fills, its margin and the 2n icon artwork; the height is slot + 2 margin. The margin reference is the section
- * container's 4d, read as 4m: the current resolver's d is n at regular density, and the legacy m is n at default
- * density on the whole ladder. The spacing roles are the skill's percentages of it (SPACING_ROLES).
+ * container's 4d, read as 4m: m is the current resolver's d = nq/4 (containerUnit(), floored). The spacing roles are
+ * the skill's percentages of it (SPACING_ROLES).
  */
 export function anchors() {
   const g = resolveGeometry(ROOT_REGISTER.tier, ROOT_REGISTER.scale, 'md', 'regular')
@@ -63,8 +63,19 @@ export function anchors() {
   }
 }
 
-/** The control height per n, the slot plus a margin above and below (the skill's H = 3n + 2m). */
+/** The control height per n at regular density, the slot plus a margin above and below (the skill's H = 3n + 2m).
+ *  The bridge's `--md-sys-height-{sm,md,lg}` read it (they stay at regular until W7 retires them). */
 export const heightPerN = (a = anchors()) => a.slotPerN + 2 * a.marginPerN
+
+/** The control margin per n at a density: resolveControlSurface()'s (q - 2)n/4, the regular anchor scaled by q - 2
+ *  (q is 4 at regular, so a nudged anchor moves every density with it). */
+export const marginPerNAt = (density = 'regular', a = anchors()) =>
+  (a.marginPerN * (DENSITIES[density] - 2)) / (DENSITIES.regular - 2)
+
+/** The container unit m at n and a density: the vendored d = nq/4 (n at regular), floored at floor((n + c)/2) + 1 so
+ *  the widget margin 2m stays outside the group margin n + c at every density (checkAnchors() holds it). */
+export const containerUnit = (n, density = 'regular') =>
+  Math.max((n * DENSITIES[density]) / DENSITIES.regular, Math.floor((n + Math.ceil(n / 4)) / 2) + 1)
 
 /** The roomy levels as [token, margin, gutter] multiples of m: the margin reference at each level's two role
  *  percentages (the skill's composeContainer() arithmetic, which throws on a bad input where this never does). */
@@ -93,27 +104,27 @@ function typeAt(n, size, a) {
  * scale, size and density. It mirrors the derived block term for term; foundations.test.ts holds it to the repo's
  * scale.mjs resolve() on every cell, the glyph box and slot aside. `surface` is the control anatomy of
  * resolveControlSurface(): the glyph is the skill's n + 6 artwork in the square 3n glyph slot (T-0374), emitted as
- * `glyphBox` and `glyphSlot`, both whole px on every cell. The sheet emits the surface's height, icon box, glyph box
- * and slot only. The rest is not gated: its n/2 margin and icon inset are fractional at odd n, so a later step adds
- * a surface value to checkEmitted() before the sheet emits it (foundations.test.ts fails on a surface token in the
- * derived block until then).
+ * `glyphBox` and `glyphSlot`. Density (T-0374 step 4, the vendored DENSITIES; absent means regular) moves the control
+ * margin (q - 2)n/4, emitted as `controlMargin`, so the height 3n + 2 margin runs from 3n at tight to 5n at loose,
+ * and m. Values may be fractional px; checkEmitted() holds them finite and monotonic in n.
  */
-export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, size = 'md', density = 'default', a = anchors()) {
+export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, size = 'md', density = 'regular', a = anchors()) {
   const [n0, ta, k, g] = CFG.tiers[tier]
   const s = STEP[scale]
   const z = STEP[size]
   const n = n0 + ta * s + k * z + g * s * z
   const c = Math.ceil(n / 4)
-  const m = Math.max(n + ta * LEGACY_PATH.density[density], Math.floor((n + c) / 2) + 1)
-  const height = n * heightPerN(a)
+  const m = containerUnit(n, density)
   const slot = n * a.slotPerN
+  const controlMargin = n * marginPerNAt(density, a)
+  const height = slot + 2 * controlMargin
   const iconBox = n * a.iconPerN
   const glyphBox = n + 6
   const levels = Object.fromEntries(roomyLevels(a).map(([token, margin, gutter]) => [token, { margin: m * margin, gutter: m * gutter, radius: m * margin }]))
   return {
-    n, m, c, height, inset: n, labelInset: n - c, radius: n, controlRadius: height / 2, iconBox,
+    n, m, c, height, controlMargin, inset: n, labelInset: n - c, radius: n, controlRadius: height / 2, iconBox,
     glyphBox, glyphSlot: slot, glyphStroke: Math.max(1.5, c / 2), checkboxRadius: Math.ceil(n / 2),
-    surface: { slot, margin: n * a.marginPerN, height, icon: iconBox, iconInset: (slot - iconBox) / 2, glyph: glyphBox, glyphInset: (slot - glyphBox) / 2 },
+    surface: { slot, margin: controlMargin, height, icon: iconBox, iconInset: (slot - iconBox) / 2, glyph: glyphBox, glyphInset: (slot - glyphBox) / 2 },
     type: typeAt(n, size, a),
     chip: { margin: c, gutter: c, radius: n + c },
     group: { margin: n + c, gutter: c, radius: n + c },
@@ -124,12 +135,13 @@ export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, 
 /**
  * The guard on the anchors (the refuse-to-emit rule beside the repo's check()): every anchor finite, the heading
  * ratio and the linear roles never falling as n grows, the type order and the floor held on the whole ladder, the
- * title bump rising with size, the icon inside its slot, the margin reference and role percentages in range and the
- * roomy levels nesting. Returns the failures; never throws (a malformed anchor set is an A1 failure).
+ * title bump rising with size, the icon inside its slot, the margin reference and role percentages in range, the
+ * roomy levels nesting, and the widget margin outside the group margin at every density (widgetOverGroup()).
+ * Returns the failures; never throws (a malformed anchor set is an A1 failure).
  */
 export function checkAnchors(a = anchors()) {
   try {
-    return anchorFailures(a)
+    return [...anchorFailures(a), ...widgetOverGroup(a)]
   } catch (err) {
     return [`A1 the anchors are malformed: ${err instanceof Error ? err.message : String(err)}`]
   }
@@ -179,32 +191,55 @@ function anchorFailures(a) {
   return bad
 }
 
+/**
+ * The widget margin 2m sits outside the group margin n + c at every density on the whole ladder (T-0374 step 4): the
+ * floor in containerUnit() holds it at tight, where nq/4 alone is n/2 and the widget margin falls to n. `unit` is the
+ * container unit under test; the default is the one resolve() uses. Returns the failures.
+ */
+export function widgetOverGroup(a = anchors(), unit = containerUnit) {
+  const bad = []
+  const [, widgetMargin] = roomyLevels(a)[0]
+  const [lo, hi] = LEGACY_CFG.ladder
+  for (const density of Object.keys(DENSITIES)) for (let n = lo; n <= hi; n++) {
+    const widget = unit(n, density) * widgetMargin
+    const group = n + Math.ceil(n / 4)
+    if (!(widget > group)) bad.push(`A6 n ${n} ${density}: the widget margin ${widget} does not exceed the group margin ${group}`)
+  }
+  return bad
+}
+
 /** The steps of each axis checkEmitted() walks: every tier, scale, size and density the sheet can declare. */
 const CELLS = () => Object.keys(CFG.tiers).flatMap((t) => Object.keys(STEP).flatMap((s) => Object.keys(STEP).flatMap((z) =>
-  Object.keys(LEGACY_PATH.density).map((d) => [t, s, z, d]))))
-/** resolve() fields checkEmitted() holds to the 0.5px grid or leaves ungated, not to whole px. */
-const NOT_WHOLE = new Set(['type', 'glyphStroke', 'surface'])
+  Object.keys(DENSITIES).map((d) => [t, s, z, d]))))
+
+/** Every numeric field of a resolve() result as [key, value], nested objects flattened (`type title`, `widget margin`). */
+const fieldsOf = (r) => Object.entries(r).flatMap(([name, v]) =>
+  typeof v === 'object' ? Object.entries(v).map(([k, x]) => [`${name} ${k}`, x]) : [[name, v]])
 
 /**
- * The emit-time whole-px gate (T-0373), in place of the repo's model-level M7: the current resolver keeps floats and
- * rounds only at presentation, so the rule holds on what the sheet emits. On every tier, scale, size and density
- * cell, n and m are integers, every length is whole px, and the type roles and the glyph stroke sit on the 0.5px
- * grid (the group kicker steps 0.5 per n, the stroke is c / 2). The anatomy in `surface` is not emitted and is not
- * gated. Returns the failures.
+ * The emit-time gate (T-0373, relaxed by Kim's 2026-10-19 ruling in T-0374: fractional px ship), on the n-only
+ * quantities of the frozen resolver's M14 rule: at each density, with the cells sorted by n, every field of resolve()
+ * is finite and never falls as n grows. `type title` is checked finite only: it is the one size-bumped value (body +
+ * titleBump[size]), so a smaller-size cell at a higher n has a smaller title (widget lg/lg is n 8 with title 17,
+ * content md/sm n 9 with title 16). Returns the failures.
  */
 export function checkEmitted(a = anchors()) {
   const bad = []
-  const onGrid = (x, step) => Number.isInteger(x / step)
-  for (const [t, s, z, d] of CELLS()) {
-    const r = resolve(t, s, z, d, a)
-    const at = `${t}/${s}/${z} ${d}`
-    for (const [name, v] of Object.entries(r)) {
-      if (NOT_WHOLE.has(name)) continue
-      const parts = typeof v === 'object' ? Object.entries(v).map(([k, x]) => [`${name} ${k}`, x]) : [[name, v]]
-      for (const [key, x] of parts) if (!onGrid(x, 1)) bad.push(`E1 ${at}: ${key} ${x} is not whole px`)
+  for (const density of Object.keys(DENSITIES)) {
+    const cells = CELLS().filter(([, , , d]) => d === density).map(([t, s, z, d]) => [`${t}/${s}/${z} ${d}`, resolve(t, s, z, d, a)])
+    cells.sort(([, x], [, y]) => x.n - y.n)
+    let was = null
+    for (const [at, r] of cells) {
+      const fields = fieldsOf(r)
+      for (const [key, x] of fields) if (!Number.isFinite(x)) bad.push(`E1 ${at}: ${key} ${x} is not finite`)
+      if (was) {
+        const before = Object.fromEntries(fieldsOf(was[1]))
+        for (const [key, x] of fields) {
+          if (key !== 'type title' && x < before[key]) bad.push(`E1 ${was[0]} -> ${at}: ${key} falls ${before[key]} -> ${x} as n grows`)
+        }
+      }
+      was = [at, r]
     }
-    for (const [role, x] of Object.entries(r.type)) if (!onGrid(x, 0.5)) bad.push(`E1 ${at}: type ${role} ${x} is off the 0.5px grid`)
-    if (!onGrid(r.glyphStroke, 0.5)) bad.push(`E1 ${at}: glyph stroke ${r.glyphStroke} is off the 0.5px grid`)
   }
   return bad
 }

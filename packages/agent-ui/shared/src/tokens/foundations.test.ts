@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs'
 import { CFG, check, resolve, type Resolved } from './scale.mjs'
 import { BRIDGE_REL, EMITTED_M7, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
 import { DERIVED, RENAMED, ROOT_REGISTER, STEP, glyphBox, findingsIn } from '../../../../../scripts/lib/foundations-rules.mjs'
-import { anchors, checkAnchors, checkEmitted, resolve as resolveEmitted, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
-import { CFG as VENDORED_CFG, resolveGeometry } from './vendor/mathematical-design-system/scale.mjs'
+import { anchors, checkAnchors, checkEmitted, resolve as resolveEmitted, widgetOverGroup, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
+import { CFG as VENDORED_CFG, DENSITIES, resolveGeometry } from './vendor/mathematical-design-system/scale.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
 // The 36-cell computed leg (tokens equal resolve() in both engines) is foundations.browser.test.ts.
@@ -41,10 +41,12 @@ const CURRENT_CURVATURE_SHA = 'cc1639f495299070ac02f86825589e970aff9286933fe6a3b
  *  T-0374 moves them again with each visible change. Step 1: the glyph box is n + 6 and the new `--md-sys-glyph-slot`
  *  is 3n (both sheets: the bridge resets the slot in the legacy opt-out). Step 2: the field label is the skill's
  *  10 + 1 per step (the bridge's label rows alias it) and the new `--md-sys-type-small-control` is 9 + 1. Step 3: the
- *  content and brand tier rows are the skill's 11/3/2/1 and 15/4/2/1 (the sheet only: the bridge reads no tier row). */
+ *  content and brand tier rows are the skill's 11/3/2/1 and 15/4/2/1 (the sheet only: the bridge reads no tier row).
+ *  Step 4: density is the skill's q (tight 2 to loose 6) and moves the new `--md-sys-control-margin`, the height and
+ *  m (both sheets: the bridge resets `--md-sys-density-q` and the control margin in the legacy opt-out). */
 const PARITY_SHA = {
-  foundations: '8a71f1eb9166b7602ae152b1e6a2059b0a1422aee4fc121b63d9a97c5193292d',
-  bridge: '73df83609e042af080b004d183f00bb071a10f346d0fa1f6486253d4ecb241d4',
+  foundations: '0ac49c41ff74e045eebb593b366088d0df72718cdc65cd30fb7ef193e5cf9b4a',
+  bridge: '65a1ff2c2168b55f69668a0bfc56641eab7d4059f0bb75e6e32bb3d2afe45491',
 }
 const textSha = (text: string): string => createHash('sha256').update(text).digest('hex')
 
@@ -165,21 +167,37 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     expect(e.surface.slot + 2 * e.surface.margin).toBe(e.height)
   })
 
-  it('T-0373 emit-time whole px: every emitted length is whole px and type sits on the 0.5px grid; M7 no longer refuses', () => {
+  it('T-0374 emit-time finite and monotonic: a falling n-only value refuses, a falling title across sizes does not', () => {
+    // Kim's 2026-10-19 ruling: fractional px ship, so the gate holds every emitted value finite and never falling as n
+    // grows, at each density. A fractional value is no longer a finding.
     expect(checkEmitted()).toEqual([])
     const half = anchors()
-    half.iconPerN += 0.5 // 2.5n: fractional at every odd n
-    expect(checkEmitted(half).some((f) => f.startsWith('E1') && f.includes('iconBox'))).toBe(true)
-    expect(() => renderFoundationsCss({ anchors: half })).toThrow(/E1 .* iconBox .* is not whole px/)
-    const quarter = anchors()
-    quarter.linear.groupKicker = [9, 0.25] // the group kicker steps a quarter px: off the 0.5px grid at odd n
-    expect(checkAnchors(quarter)).toEqual([])
-    expect(() => renderFoundationsCss({ anchors: quarter })).toThrow(/E1 .* type groupKicker .* is off the 0.5px grid/)
-    expect(() => renderBridgeCss({ anchors: quarter })).toThrow(/E1/)
+    half.iconPerN += 0.5 // 2.5n: fractional at every odd n, and still rising
+    expect(checkEmitted(half)).toEqual([])
+    // A falling n-only value: a negative control margin falls as n grows.
+    const falling = anchors()
+    falling.marginPerN = -0.5
+    expect(checkEmitted(falling).some((f) => /^E1 .* controlMargin falls /.test(f))).toBe(true)
+    expect(() => renderFoundationsCss({ anchors: falling })).toThrow(/refusing to emit/)
+    const broken = anchors()
+    broken.linear.groupKicker = [Number.POSITIVE_INFINITY, 0]
+    expect(checkEmitted(broken).some((f) => /^E1 .* type groupKicker .* is not finite/.test(f))).toBe(true)
+    // The title is size-bumped (body + titleBump[size]): widget lg/lg is n 8 with title 17, content md/sm n 9 with
+    // title 16. It falls across sizes as n grows, and the gate checks it finite only.
+    const [lg, sm] = [resolveEmitted('widget', 'lg', 'lg'), resolveEmitted('content', 'md', 'sm')]
+    expect([lg.n, lg.type.title, sm.n, sm.type.title]).toEqual([8, 17, 9, 16])
     expect(checkEmitted()).toEqual([])
   })
 
-  it('T-0373 M7: the level and type forms are dropped from the refusal (E1 holds them), the component-part form still refuses', () => {
+  it('T-0374 the widget margin exceeds the group margin at every density on the whole ladder; without the floor it does not', () => {
+    expect(widgetOverGroup()).toEqual([])
+    // the red form: m = nq/4 alone puts the widget margin 2m at n at tight, inside the group margin n + c
+    const bare = widgetOverGroup(anchors(), (n, d) => (n * DENSITIES[d]) / DENSITIES.regular)
+    expect(bare).toContain('A6 n 8 tight: the widget margin 8 does not exceed the group margin 10')
+    expect(resolveEmitted('product', 'md', 'md', 'tight').widget.margin).toBe(12)
+  })
+
+  it('T-0373 M7: the level and type forms are dropped from the refusal (fractional px ship, T-0374), the component-part form still refuses', () => {
     // scale.mjs is sha-pinned, so its three M7 message forms cannot drift from these; the anti-vacuous line proves it.
     const src = read('packages/agent-ui/shared/src/tokens/scale.mjs')
     for (const form of ['`M7 h${4 * n}: ${l} not whole px`', '`M7 h${4 * n}: type off the 0.5px grid`', '`M7 h${4 * n}: a chip, control, group or component size is not whole px`']) {
@@ -191,9 +209,9 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
   })
 
   it('T-0373 surface: the anatomy is not gated, so no surface token is emitted until T-0374 gates it', () => {
-    // resolve().surface has fractional values at odd n (margin n/2, the insets). A derived token named for any of them
-    // reds here first: T-0374 adds the value to checkEmitted() and then changes this list.
-    const surfaceToken = /^--md-sys-(?:slot|control-margin|icon-inset|glyph-inset|surface)/
+    // resolve().surface has fractional values at odd n (the insets). A derived token named for any of them reds here
+    // first. T-0374 step 4 gates the control margin (a browser EXPECTED row at every density), so it leaves this list.
+    const surfaceToken = /^--md-sys-(?:slot|icon-inset|glyph-inset|surface)/
     expect([...DERIVED].filter((name) => surfaceToken.test(name))).toEqual([])
     expect(Object.keys(resolveEmitted().surface).sort()).toEqual(['glyph', 'glyphInset', 'height', 'icon', 'iconInset', 'margin', 'slot'])
   })
@@ -202,19 +220,28 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     const steps = ['sm', 'md', 'lg'] as const
     let cells = 0
     for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const s of steps) for (const z of steps) {
-      for (const d of ['compact', 'default', 'spacious'] as const) {
+      for (const d of Object.keys(DENSITIES) as Array<keyof typeof DENSITIES>) {
         const e = resolveEmitted(tier, s, z, d)
         const at = `${tier}/${s}/${z} ${d}`
         cells++
+        // T-0374 step 4: density is the skill's. The control margin and height are its surface at d, m its d floored.
+        const v = resolveGeometry(tier, s, z, d)
+        expect([e.n, e.controlMargin, e.height, e.surface.margin, e.surface.height], at)
+          .toEqual([v.n, v.surface.margin, v.surface.height, v.surface.margin, v.surface.height])
+        expect(e.m, at).toBe(Math.max(v.d, Math.floor((v.n + Math.ceil(v.n / 4)) / 2) + 1))
+        expect([e.widget, e.card, e.layout].map((l) => [l.margin / e.m, l.gutter / e.m]), at).toEqual([[2, 1], [3, 2], [4, 3]])
         // T-0374 step 3: the content and brand rows are the skill's (11/3/2/1, 15/4/2/1), not the frozen resolver's
         // (10/2/2/1, 14/2/2/1), so n and every field derived from it leave the legacy comparison on those tiers.
-        if (tier === 'content' || tier === 'brand') {
-          expect(e.n, at).toBe(resolveGeometry(tier, s, z, 'regular').n)
-          continue
+        if (tier === 'content' || tier === 'brand') continue
+        // The frozen resolver has the three legacy densities; its default is the skill's regular, and density moves
+        // nothing else, so every other field equals it at default.
+        const r = resolve(tier, s, z, 'default')
+        if (d === 'regular') {
+          expect([e.m, e.height, e.controlRadius], at).toEqual([r.m, r.h, r.h / 2])
+          expect([e.widget, e.card, e.layout], at).toEqual([r.widget, r.card, r.page])
         }
-        const r = resolve(tier, s, z, d)
-        expect([e.n, e.m, e.c, e.height, e.inset, e.labelInset, e.radius, e.iconBox, e.checkboxRadius], at)
-          .toEqual([r.n, r.m, r.c, r.h, r.n, r.labelMargin, r.n, r.icon, r.parts.checkboxRadius])
+        expect([e.n, e.c, e.inset, e.labelInset, e.radius, e.iconBox, e.checkboxRadius], at)
+          .toEqual([r.n, r.c, r.n, r.labelMargin, r.n, r.icon, r.parts.checkboxRadius])
         // T-0374: the glyph is the skill's n + 6 in its 3n slot, the model's own beside the frozen resolver.
         expect([e.glyphBox, e.glyphSlot], at).toEqual([r.n + 6, 3 * r.n])
         // The skill's role names (T-0373): the kickers carry the former section and group labels' values. T-0374
@@ -224,15 +251,15 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
           ...rest, sectionKicker: sectionLabel, groupKicker: groupLabel, fieldLabel: Math.max(9, r.n + 5), smallControl: Math.max(9, r.n + 4),
         })
         expect(e.surface, at).toEqual({
-          slot: 3 * r.n, margin: r.n / 2, height: r.h, icon: r.icon, iconInset: r.n / 2, glyph: r.n + 6, glyphInset: (3 * r.n - (r.n + 6)) / 2,
+          slot: 3 * r.n, margin: v.surface.margin, height: v.surface.height, icon: r.icon, iconInset: r.n / 2, glyph: r.n + 6, glyphInset: (3 * r.n - (r.n + 6)) / 2,
         })
-        expect([e.group, e.widget, e.card, e.layout], at).toEqual([r.group, r.widget, r.card, r.page])
+        expect(e.group, at).toEqual(r.group)
         // The chip pill n + c (Amendment 5) and the control pill h/2 are the sheet's own, beside the resolver.
         expect(e.chip, at).toEqual({ margin: r.chip.margin, gutter: r.chip.gutter, radius: r.n + r.c })
-        expect(e.controlRadius, at).toBe(r.h / 2)
+        expect(e.controlRadius, at).toBe(e.height / 2)
       }
     }
-    expect(cells).toBe(108)
+    expect(cells).toBe(180)
   })
 
   it('check() returns no failure (M1 to M16)', () => {
@@ -311,7 +338,8 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     expect(legacy).toContain('  --md-sys-n: initial;')
     expect(legacy).toContain('  --md-sys-m: initial;')
     expect(legacy).toContain('  --md-sys-tier-n0: initial;')
-    expect(legacy).toContain('  --md-sys-density-d: initial;')
+    expect(legacy).toContain('  --md-sys-density-q: initial;')
+    expect(legacy).toContain('  --md-sys-control-margin: initial;')
   })
 
   it('T-0169: the retired [scale] and [density] axes have no selector in either sheet', () => {

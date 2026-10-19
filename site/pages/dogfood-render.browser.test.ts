@@ -13,9 +13,9 @@ import { browsableNames, typesInSeed } from '../lib/a2ui-catalog-tiers.ts'
 import { applyScheme } from '../lib/theme-loader.ts'
 import { parseCss, over, flatten, contrast, inkContrast, flatLayers, CANVAS_LIGHT, CANVAS_DARK } from '../lib/dogfood-contrast.ts'
 import type { Rgba } from '../lib/dogfood-contrast.ts'
-import { CFG } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
+import { CFG, DENSITIES as DENSITY_Q } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
 import type { Step, Tier } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
-import { LEGACY_PATH, resolve, type Density, type Emitted } from '../../scripts/lib/foundations-model.mjs'
+import { resolve, type Density, type Emitted } from '../../scripts/lib/foundations-model.mjs'
 import { ROOT_REGISTER, STEP, glyphBox, hasOwner } from '../../scripts/lib/foundations-rules.mjs'
 import RULES from '../../scripts/dogfood-rules.json'
 import ALLOW from '../../scripts/dogfood-render-allowlist.json'
@@ -56,7 +56,7 @@ const settled = async (): Promise<void> => {
 const TOL = 0.5
 const STEPS = new Set(['sm', 'md', 'lg'])
 const TIERS = new Set(Object.keys(CFG.tiers))
-const DENSITIES = new Set(Object.keys(LEGACY_PATH.density)) // the legacy density axis until T-0374 step 4
+const DENSITIES = new Set(Object.keys(DENSITY_Q)) // the skill's five densities, tight to loose (T-0374 step 4)
 const WIDTHS = [400, 1000]
 const SCHEMES = ['light', 'dark'] as const
 const ENGINE = server.browser
@@ -93,7 +93,7 @@ export function registerOf(el: Element): Register {
   }
   const axes = {
     tier: (tier ?? ROOT_REGISTER.tier) as Tier, scale: (scale ?? ROOT_REGISTER.scale) as Step,
-    size: (size ?? 'md') as Step, density: (density ?? 'default') as Density,
+    size: (size ?? 'md') as Step, density: (density ?? 'regular') as Density,
   }
   return { ...axes, ...resolve(axes.tier, axes.scale, axes.size, axes.density) }
 }
@@ -1388,10 +1388,10 @@ describe('render lint: one injected violation per rule turns it red (negative co
     const outer = document.createElement('div')
     outer.setAttribute('data-tier', 'widget')
     outer.setAttribute('data-scale', 'md')
-    outer.innerHTML = '<div size="lg"><span data-density="compact"><b></b></span></div>'
+    outer.innerHTML = '<div size="lg"><span data-density="tight"><b></b></span></div>'
     document.body.append(outer)
     const r = registerOf(outer.querySelector('b')!)
-    expect([r.tier, r.scale, r.size, r.density]).toEqual(['widget', 'md', 'lg', 'compact'])
+    expect([r.tier, r.scale, r.size, r.density]).toEqual(['widget', 'md', 'lg', 'tight'])
     const root = registerOf(document.body)
     expect([root.tier, root.scale], 'the root default').toEqual([ROOT_REGISTER.tier, ROOT_REGISTER.scale])
   })
