@@ -60,6 +60,8 @@
   --md-sys-typescale-quote-medium-size: round(nearest, var(--md-sys-bridge-body-md) * pow((1.25 + 0.03125 * (var(--md-sys-bridge-n-md) - 5)), 1), 1px);
   --md-sys-typescale-quote-large-size: round(nearest, var(--md-sys-bridge-body-lg) * pow((1.25 + 0.03125 * (var(--md-sys-bridge-n-lg) - 5)), 1), 1px);
   --ui-bar-inline-inset: var(--md-sys-layout-margin);
+  --md-sys-type-section-label: var(--md-sys-type-section-kicker);
+  --md-sys-type-group-label: var(--md-sys-type-group-kicker);
 }
 [data-foundations='legacy'] {
   --md-sys-tier-n0: initial;
@@ -86,12 +88,12 @@
   --md-sys-type-display: initial;
   --md-sys-type-heading: initial;
   --md-sys-type-subhead: initial;
-  --md-sys-type-section-label: initial;
+  --md-sys-type-section-kicker: initial;
   --md-sys-type-title: initial;
   --md-sys-type-body: initial;
   --md-sys-type-control: initial;
   --md-sys-type-field-label: initial;
-  --md-sys-type-group-label: initial;
+  --md-sys-type-group-kicker: initial;
   --md-sys-type-floor: initial;
   --md-sys-chip-margin: initial;
   --md-sys-chip-gutter: initial;
@@ -115,6 +117,8 @@
   --md-sys-bridge-body-md: initial;
   --md-sys-bridge-n-lg: initial;
   --md-sys-bridge-body-lg: initial;
+  --md-sys-type-section-label: initial;
+  --md-sys-type-group-label: initial;
   --md-sys-height-sm: 24px;
   --md-sys-height-md: 28px;
   --md-sys-height-lg: 36px;

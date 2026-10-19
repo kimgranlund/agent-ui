@@ -31,9 +31,19 @@ export const LEGACY_TO_DERIVED = [
 export const DERIVED = new Set([
   'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
   'checkbox-radius',
-  ...['display', 'heading', 'subhead', 'section-label', 'title', 'body', 'control', 'field-label', 'group-label', 'floor'].map((r) => `type-${r}`),
+  ...['display', 'heading', 'subhead', 'section-kicker', 'title', 'body', 'control', 'field-label', 'group-kicker', 'floor'].map((r) => `type-${r}`),
   ...['chip', 'group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),
 ].map((name) => `--md-sys-${name}`))
+
+/** The type labels the skill's kicker names replaced (T-0373): old name -> the derived token the bridge aliases it
+ *  to. A consumer keeps the old name until W7; the lints read it as derived, like the name it aliases. */
+export const RENAMED = Object.freeze({
+  '--md-sys-type-section-label': '--md-sys-type-section-kicker',
+  '--md-sys-type-group-label': '--md-sys-type-group-kicker',
+})
+
+/** True for a derived token, or an old name the bridge aliases to one. */
+export const isDerived = (name) => DERIVED.has(name) || Object.hasOwn(RENAMED, name)
 
 /** The glyph floor (ADR-0245 Amendment 7): the glyph box never drops below 8px. It is local to agent-ui, not in the
  *  repo's scale.mjs (the skill's former revision, frozen; P15 proposes it upstream), so the generator emits it and
@@ -96,7 +106,7 @@ export function closeParen(src, open) {
 /** True when the legacy read at `index` already sits as the fallback of a derived token. */
 export function isWrapped(src, index) {
   const tail = DERIVED_FALLBACK_TAIL.exec(src.slice(Math.max(0, index - 80), index))
-  return tail !== null && DERIVED.has(tail[1])
+  return tail !== null && isDerived(tail[1])
 }
 
 function tokensFindings(code) {
@@ -114,7 +124,7 @@ function withoutDerived(value) {
   let out = value
   for (let i = out.indexOf('var('); i !== -1; i = out.indexOf('var(', i + 1)) {
     const name = /^var\(\s*(--md-sys-[\w-]+)/.exec(out.slice(i))
-    if (!name || !DERIVED.has(name[1])) continue
+    if (!name || !isDerived(name[1])) continue
     const end = closeParen(out, i + 3)
     if (end === -1) break
     out = out.slice(0, i) + ' '.repeat(end - i) + out.slice(end)

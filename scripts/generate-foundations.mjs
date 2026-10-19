@@ -5,20 +5,23 @@
 // sheets (the skill's former revision, frozen) for every input the current one cannot reproduce byte for byte.
 // scripts/lib/foundations-model.mjs says which input comes from where (anchors(), LEGACY_PATH) and mirrors the
 // sheet as px (resolve()). Never edit a generated sheet. The generator refuses to emit when the repo's `check()`
-// returns any failure (M1 to M16; M14, no size that depends on n alone shrinks as n grows, is the skill's own since
-// ADR-0245 Amendment 3) or checkAnchors() does (the vendored anchors), so a broken config never reaches a stylesheet.
+// returns any failure but M7 (M1 to M16; M14, no size that depends on n alone shrinks as n grows, is the skill's own
+// since ADR-0245 Amendment 3), checkAnchors() does (the vendored anchors) or checkEmitted() does (T-0373: the whole-px
+// rule M7 held on the emitted values, not in the model), so a broken config never reaches a stylesheet.
 //
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes, and one derived block (`--md-sys-n`, the container unit
 // `--md-sys-m`, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4),
-// the control pill 2n (Amendment 5), the type roles, the chip level and the four container levels) re-declared
+// the control pill 2n (Amendment 5), the type roles under the skill's names (T-0373: the section and group
+// kickers), the chip level and the four container levels) re-declared
 // wherever an input changes, so each element computes its own n and m. ROOT_DEFAULT is the cut (clause 10a): true, so `:root` takes ROOT_INPUTS (product at
 // scale md since Amendment 8) and the full recompute list. Set it to false to roll the cut back: every declaration then sits
 // inside an opt-in `[data-tier]` region and each `var(<derived>, <today>)` resolves to today's value again.
 //
 // The bridge (clause 10a, one release after the cut, removed at W7) keeps the old names working: the
 // hand-tabled `--md-sys-{height,font,icon,gap,compact}-{sm,md,lg}`, `--md-sys-widget-inset`,
-// `--md-sys-shape-corner-base`, `--md-sys-space-*`, `--md-sys-typescale-*-size` and `--ui-bar-inline-inset`
+// `--md-sys-shape-corner-base`, `--md-sys-space-*`, `--md-sys-typescale-*-size`, `--ui-bar-inline-inset` and the
+// type labels the kickers were renamed from (`--md-sys-type-{section,group}-label`, T-0373)
 // alias the derived values (the retired `scale` and `density` attribute mappings were removed by T-0169), and
 // `[data-foundations="legacy"]` is the per-region opt-out (clause 10e): every derived token is `initial`, so the
 // fleet's `var(<derived>, <today>)` fallbacks render today's geometry there, and the old names pin LEGACY.
@@ -31,8 +34,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 import { check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
-import { GLYPH_FLOOR, ROOT_REGISTER, STEP } from './lib/foundations-rules.mjs'
-import { LEGACY_PATH, anchors, checkAnchors, roomyLevels } from './lib/foundations-model.mjs'
+import { GLYPH_FLOOR, RENAMED, ROOT_REGISTER, STEP } from './lib/foundations-rules.mjs'
+import { LEGACY_PATH, anchors, checkAnchors, checkEmitted, heightPerN, roomyLevels } from './lib/foundations-model.mjs'
 
 export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
 export const BRIDGE_REL = 'packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css'
@@ -43,7 +46,7 @@ export const ROOT_INPUTS = ROOT_REGISTER
 const N = 'var(--md-sys-n)'
 const C = 'var(--md-sys-c)'
 // Both resolvers measure the linear type anchors and Q from n = 5 (their `n - 5`), independent of the ladder; the
-// emitted role never drops below the floor (9px: field label and group label are held there at n 4).
+// emitted role never drops below the floor (9px: field label and group kicker are held there at n 4).
 const lin = (a, [at5, perStep], n = N) => `max(${a.floor}px, calc((${at5} + ${perStep} * (${n} - 5)) * 1px))`
 const headingRole = (a, power) => `round(nearest, var(--md-sys-type-body) * pow((${a.Q[0]} + ${a.Q[1]} * (${N} - 5)), ${power}), 1px)`
 
@@ -52,7 +55,7 @@ const M = 'var(--md-sys-m)'
 /** The derived block: every quantity the resolvers return, as a formula of this element's n (and m for the
  *  widget, card and layout levels: density moves container spacing only, never a control or the group level). */
 function derivedDeclarations(a = anchors()) {
-  // The roomy factors are the vendored container margins over n at regular density, emitted against m: this assumes
+  // The roomy factors are the spacing roles of the vendored section reference 4d, emitted against m: this assumes
   // d == m, true at default density (the vendored d is n at regular, the legacy m is n at default on the ladder).
   const levels = roomyLevels(a).flatMap(([level, margin, gutter]) => [
     [`--md-sys-${level}-margin`, `calc(${M} * ${margin}px)`],
@@ -64,7 +67,8 @@ function derivedDeclarations(a = anchors()) {
     // m = max(n + a*d, floor((n + c) / 2) + 1): one tier step a per density step, floored so a widget out-margins a group.
     ['--md-sys-m', `max(calc(${N} + var(--md-sys-tier-a) * var(--md-sys-density-d, 0)), calc(round(down, (${N} + round(up, ${N} / 4, 1)) / 2, 1) + 1))`],
     ['--md-sys-c', `calc(round(up, ${N} / 4, 1) * 1px)`],
-    ['--md-sys-height', `calc(${N} * ${a.heightPerN}px)`],
+    // The control surface: the 3n slot plus a margin above and below (resolveControlSurface at regular density).
+    ['--md-sys-height', `calc(${N} * ${heightPerN(a)}px)`],
     ['--md-sys-inset', `calc(${N} * 1px)`],
     // The control rule (Amendment 4): the text slot carries the label inset n - c, so gutter c + inset = margin n.
     ['--md-sys-label-inset', `calc(var(--md-sys-inset) - ${C})`],
@@ -81,12 +85,12 @@ function derivedDeclarations(a = anchors()) {
     ['--md-sys-type-display', headingRole(a, 3)],
     ['--md-sys-type-heading', headingRole(a, 2)],
     ['--md-sys-type-subhead', headingRole(a, 1)],
-    ['--md-sys-type-section-label', 'round(nearest, var(--md-sys-type-body) * var(--md-sys-tier-ratio), 1px)'],
+    ['--md-sys-type-section-kicker', 'round(nearest, var(--md-sys-type-body) * var(--md-sys-tier-ratio), 1px)'],
     ['--md-sys-type-title', `calc(var(--md-sys-type-body) + var(--md-sys-title-bump, ${a.titleBump.md}) * 1px)`],
     ['--md-sys-type-body', lin(a, a.linear.body)],
     ['--md-sys-type-control', lin(a, a.linear.control)],
     ['--md-sys-type-field-label', lin(a, a.linear.fieldLabel)],
-    ['--md-sys-type-group-label', lin(a, a.linear.groupLabel)],
+    ['--md-sys-type-group-kicker', lin(a, a.linear.groupKicker)],
     ['--md-sys-type-floor', `${a.floor}px`],
     // The chip level (tag, badge, kbd): margin c, gutter c, and the chip pill n + c, h/2 of the 2n + 2c chip
     // (Amendment 5). The checkbox box stays a rounded square at ceil(n/2), the skill's checkboxRadius.
@@ -110,9 +114,11 @@ export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
     ? ':root, [data-tier], [data-scale], [data-size], [size], [data-density]'
     : '[data-tier], [data-tier] :is([data-scale], [data-size], [size], [data-density])'
 
+// M7 (whole px in the model) retired in T-0373: checkEmitted() holds the rule on the emitted values instead.
 const refuseOnFailure = (a) => {
-  const failures = [...check(), ...checkAnchors(a)]
-  if (failures.length) throw new Error(`scale.mjs check() failed, refusing to emit:\n  ${failures.join('\n  ')}`)
+  const failures = [...check().filter((f) => !f.startsWith('M7 ')), ...checkAnchors(a)]
+  if (!failures.length) failures.push(...checkEmitted(a))
+  if (failures.length) throw new Error(`foundations check() failed (scale.mjs check(), checkAnchors(), checkEmitted()), refusing to emit:\n  ${failures.join('\n  ')}`)
 }
 
 /** Render the whole sheet. Throws (writes nothing) when check() reports a failure. */
@@ -121,7 +127,7 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = 
   // Scoped: an attribute counts only on a region root or inside one. Unscoped (the cut): anywhere.
   const scoped = (sel) => (rootDefault ? sel : `[data-tier]${sel}, [data-tier] ${sel}`)
   const out = [
-    '/* foundations.gen.css: GENERATED by scripts/generate-foundations.mjs from scale.mjs (ADR-0245). DO NOT EDIT. */',
+    '/* foundations.gen.css: GENERATED by scripts/generate-foundations.mjs from scripts/lib/foundations-model.mjs (ADR-0245, T-0372). DO NOT EDIT. */',
     '/* n = n0 + a*s + k*z + g*s*z per element (s = data-scale, z = data-size or a control\'s size, each -1 / 0 / +1). */',
     '/* m = max(n + a*d, floor((n + c) / 2) + 1) (d = data-density, -1 / 0 / +1): the widget, card and layout levels read m. */',
     `/* ${rootDefault ? `Root default (the cut): :root is ${ROOT_INPUTS.tier} at scale ${ROOT_INPUTS.scale} and every element derives from one n.` : 'Dark launch: tokens exist only inside an opt-in [data-tier] region; nothing is declared on :root.'} */`,
@@ -147,13 +153,13 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = 
 const M3_SIZE = { small: 'sm', medium: 'md', large: 'lg' }
 /**
  * ui-text's typescale roles (ADR-0078) -> the skill role that derives them (ADR-0245 clause 7). `kicker` is an
- * alias of the group label, like `overline`: every consumer of the old kicker rows (nav-rail group labels, gauge
+ * alias of the group kicker, like `overline`: every consumer of the old kicker rows (nav-rail group labels, gauge
  * and select captions, ui-text itself) is a small uppercase label over a group, never an eyebrow above a heading
- * (T-0117, Amendment 3; the section label keeps its own token, `--md-sys-type-section-label`).
+ * (T-0117, Amendment 3; the section kicker keeps its own token, `--md-sys-type-section-kicker`).
  */
 const TYPESCALE_ROLE = {
   display: 'display', headline: 'heading', title: 'title', body: 'body', label: 'fieldLabel',
-  kicker: 'groupLabel', overline: 'groupLabel', lead: 'subhead', quote: 'subhead',
+  kicker: 'groupKicker', overline: 'groupKicker', lead: 'subhead', quote: 'subhead',
 }
 
 /**
@@ -199,7 +205,7 @@ function roleAt(role, step, a) {
     case 'display': return heading(3)
     case 'heading': return heading(2)
     case 'subhead': return heading(1)
-    case 'sectionLabel': return `round(nearest, ${body} * ${a.kicker}, 1px)`
+    case 'sectionKicker': return `round(nearest, ${body} * ${a.kicker}, 1px)`
     case 'title': return `calc(${body} + ${a.titleBump[step]}px)`
     case 'body': return body
     default: return lin(a, a.linear[role], n)
@@ -214,7 +220,7 @@ function bridgeDeclarations(a) {
   for (const step of Object.keys(STEP)) {
     const n = `var(--md-sys-bridge-n-${step})`
     decls.push(
-      [`--md-sys-height-${step}`, `calc(${n} * ${a.heightPerN}px)`],
+      [`--md-sys-height-${step}`, `calc(${n} * ${heightPerN(a)}px)`],
       [`--md-sys-font-${step}`, roleAt('control', step, a)],
       [`--md-sys-icon-${step}`, `calc(${n} * ${a.iconPerN}px)`],
       [`--md-sys-gap-${step}`, `calc(${n} * 1px)`],
@@ -237,14 +243,16 @@ function bridgeDeclarations(a) {
     for (const [m3, step] of Object.entries(M3_SIZE)) decls.push([`--md-sys-typescale-${role}-${m3}-size`, roleAt(skillRole, step, a)])
   }
   decls.push(['--ui-bar-inline-inset', 'var(--md-sys-layout-margin)'])
+  for (const [old, name] of Object.entries(RENAMED)) decls.push([old, `var(${name})`])
   return decls
 }
 
-/** Every name the legacy opt-out sets to `initial`: the inputs, the derived block and the bridge's own n. */
+/** Every name the legacy opt-out sets to `initial`: the inputs, the derived block, the bridge's own n and the
+ *  renamed type labels, so a consumer's `var(--md-sys-type-group-label, <fallback>)` takes its fallback there. */
 function legacyInitialNames() {
   const inputs = ['tier-n0', 'tier-a', 'tier-k', 'tier-g', 'tier-ratio', 'scale-s', 'size-z', 'title-bump', 'density-d'].map((n) => `--md-sys-${n}`)
   const bridge = Object.keys(STEP).flatMap((step) => [`--md-sys-bridge-n-${step}`, `--md-sys-bridge-body-${step}`])
-  return [...inputs, ...derivedDeclarations().map(([name]) => name), ...bridge]
+  return [...inputs, ...derivedDeclarations().map(([name]) => name), ...bridge, ...Object.keys(RENAMED)]
 }
 
 /** Render the bridge sheet. It loads after foundations.gen.css. */

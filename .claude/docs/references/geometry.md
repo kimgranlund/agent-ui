@@ -28,7 +28,8 @@ page opts a region into another register with `data-tier` / `data-scale` / `data
 retired into the first two and `[density]` into `data-density` (the bridge maps them for one release, W7
 removes it), and `[data-foundations="legacy"]` opts a region out for the same release.
 
-Let `c = ceil(n / 4)`. Every box value is a whole-pixel multiple of n or c (check M7):
+Let `c = ceil(n / 4)`. Every box value is a whole-pixel multiple of n or c (the emit-time whole-px gate,
+`checkEmitted()` in `scripts/lib/foundations-model.mjs`, which took over the model's check M7 in T-0373):
 
 | quantity | value | token |
 |---|---|---|
@@ -128,7 +129,10 @@ level tokens. Padding now moves with n.
 
 `--md-sys-space-{xs..2xl}` is a generated alias layer over the same n, so the six A2UI `gap` enums keep
 their names and prompt bytes: `xs` c, `sm` n, `md` n + c, `lg` 2m, `xl` 3m, `2xl` 4m (2 / 8 / 10 / 16 / 24 /
-32 at the root md, n 8, default density). It is the space *between* components, not control geometry.
+32 at the root md, n 8, default density). It is the space *between* components, not control geometry. The
+widget, card and layout levels are one margin reference, the skill's section margin 4m, at its spacing role
+percentages (page 100, container 75, group 50, control 25; T-0373): each level's gutter is the role one step below
+its margin's, so widget 50 / 25, card 75 / 50 and layout 100 / 75 percent of 4m.
 
 ## Type
 
@@ -136,9 +140,10 @@ their names and prompt bytes: `xs` c, `sm` n, `md` n + c, `lg` 2m, `xl` 3m, `2xl
 derived role (`--md-sys-type-*`) and `size` is z. The `--md-sys-typescale-*` rows are a generated alias
 layer until W7. Display is small in a product region by design; a hero takes its own tier (content md
 display 47, brand md display 75). ADR-0150's compact-window body drop is superseded: body at the root md is 15.
-Linear roles never go below 9px. The two small uppercase roles are the **section label** (`--md-sys-type-section-label`,
-round(body · 9/8)) and the **group label** (`--md-sys-type-group-label`, n/2 + 6.5, the only half-pixel role); the
-`kicker` and `overline` variants both read the group label.
+Linear roles never go below 9px. The two small uppercase roles take the skill's names (T-0373): the **section
+kicker** (`--md-sys-type-section-kicker`, round(body · 9/8)) and the **group kicker** (`--md-sys-type-group-kicker`,
+n/2 + 6.5, the only half-pixel role); the `kicker` and `overline` variants both read the group kicker. The former
+names `--md-sys-type-section-label` and `--md-sys-type-group-label` are bridge aliases of them until W7.
 
 ## Minimum inline size (the bare-control floor)
 
