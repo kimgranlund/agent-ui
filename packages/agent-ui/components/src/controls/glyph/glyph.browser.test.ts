@@ -45,6 +45,16 @@ describe('ui-glyph geometry inside an opt-in region', () => {
       })
     }
   }
+  // T-0374 merge-queue find: text-field's stepper put the glyph in a 2n inline-flex button, the slot shrank to 2n
+  // while its inset stayed (3n - (n + 6)) / 2, and the mark rendered 6px wide. The slot never shrinks as a flex item.
+  it('a flex cell narrower than the slot never squeezes the n + 6 mark', async () => {
+    const host = await mount(
+      `<div data-tier="product" data-scale="md"><span data-size="md" style="display:inline-flex;justify-content:center;inline-size:16px"><ui-glyph symbol="minus"></ui-glyph></span></div>`,
+    )
+    const r = resolve('product', 'md', 'md')
+    expect(boxOf(host)).toEqual({ w: 3 * r.n, h: 3 * r.n })
+    expect(boxOf(host.querySelector('svg')!)).toEqual({ w: glyphBox(r), h: glyphBox(r) })
+  })
 })
 
 describe('ui-glyph geometry outside any region (the dark launch)', () => {

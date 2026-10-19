@@ -31,6 +31,9 @@
     box-sizing: border-box;
     inline-size: var(--ui-glyph-slot);
     block-size: var(--ui-glyph-slot);
+    /* the slot never shrinks as a flex item: the inset is fixed, so a squeezed slot would crush the n + 6 mark
+       (a stepper's 2n cell took the 3n slot to 2n and the mark to 6px wide, T-0374); it overflows its cell centred instead */
+    flex-shrink: 0;
     padding: var(--ui-glyph-inset);
     color: inherit;
   }
