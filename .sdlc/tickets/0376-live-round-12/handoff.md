@@ -17,7 +17,7 @@ A live round measures the round 11 wave on Haiku, so each shipped fix is confirm
 - Do: plan the round with `scripts/e2e-admin/probe/scenarios/plan.ts --affected` over T-0345, T-0359, T-0363, T-0367 to T-0371 and T-0375; run it live; archive under `.sdlc/evals/rounds/`; fog analysis; a report comparing with round 11.
 - Non-goals: fixes (each finding becomes its own ticket).
 - Done when: the round archive and report exist and every fix in scope has a measured verdict.
-- (gap: live spend cap for this round; default: none until Kim sets one)
+- Live spend cap: $12 for the round, runs and judge together (Kim, 2026-10-18).
 
 ## Context
 Kim chose a full round 12 on 2026-10-18. Round 11 cost $8.66; the long-run cap of $15 has about $5 left, so this round needs a new cap.
