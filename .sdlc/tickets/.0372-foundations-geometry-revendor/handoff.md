@@ -2,7 +2,7 @@
 id: T-0372
 title: "Re-vendor the geometry resolver from the mathematical-design-system skill, no visual change"
 type: chore           # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,21 @@ verifier: L3
 
 ## Constraints
 Generated files only through their script. No visual change. ADR-0245 is not edited.
+
+## Outcome
+
+2026-10-18 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 62e95c5e0a98
+- Changed: Foundations derive from the vendored geometry resolver, byte parity (#2156)
+- Commits: c6a183a T-0372: Re-vendor the geometry resolver from the mathematical-design-system skill, no visual change (#2156)
+- Check: 1 `node scripts/generate-foundations.mjs --check` exits 0 and `git diff --exit-code main -- …founda...: pass
+- Check: 2 The skill's files are vendored untouched (`cmp` both): pass
+- Check: 3 `npx vitest run packages/agent-ui/shared` exits 0 with the parity, nudge, refuse-to-emit and reso...: pass
+- Check: 4 `node scripts/foundations-census.mjs --gate` exits 0 with an empty allowlist, and `selftest` exits 0: pass
+- Check: 5 `npm run check` exits 0: pass
+- Check: 6 Only the generator, `scripts/lib/foundations-model.mjs` and `foundations.test.ts` import the vend...: pass
+- Follow-up: decide: scripts/foundations-census.mjs:34 fix-now: SKIP_FILE's... -> notes.md
+- Follow-up: decide: .claude/docs/references/geometry-sizing-spec.md:13 fix-now: still... -> notes.md
+- Follow-up: decide: .claude/docs/references/geometry.md:9 note: with tokens.md:6, says... -> notes.md
+- Follow-up: decide: packages/agent-ui/shared/src/tokens/foundations.gen.css:1 note... -> notes.md
+- Follow-up: decide: .sdlc/tickets/0372-foundations-geometry-revendor/handoff.md:17... -> notes.md
+- Follow-up: decide: packages/agent-ui/shared/src/tokens/foundations.test.ts:57-70 note... -> notes.md

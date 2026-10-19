@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:88295f6450a3 -->
+<!-- sdlc-lite:managed:start v1 sha256:5a9b8d142bbb -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,24 +9,20 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 2
+- proposed: 1
   - T-0374 Visible geometry changes from the skill model: glyph, field label, tiers, density heights, curvature presets (0374-foundations-geometry-visible)
-  - T-0376 Live round 12: measure the round 11 wave (T-0345, T-0359, T-0363, T-0367 to T-0371) (0376-live-round-12)
-- ready: 9
+- ready: 6
   - T-0193 OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card (0193-option-deck)
   - T-0195 Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state (0195-confirm-receipt)
   - T-0196 Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit (0196-amount-picker)
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-  - T-0372 Re-vendor the geometry resolver from the mathematical-design-system skill, no visual change (0372-foundations-geometry-revendor)
-  - T-0373 Adopt the skill's geometry structure: type roles, control surface anatomy, spacing roles, emit-time rounding (0373-foundations-geometry-structure)
-  - T-0375 game-table-chrome teaches a Row around a lone Deal again Button, against grammar.md:179 (0375-game-table-chrome-lone-footer-row)
 - claimed: 0
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 359
+- done: 363
 - dropped: 4
 
 ## Procedures

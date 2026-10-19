@@ -2,7 +2,7 @@
 id: T-0373
 title: "Adopt the skill's geometry structure: type roles, control surface anatomy, spacing roles, emit-time rounding"
 type: chore           # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0372]          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -34,3 +34,18 @@ verifier: L3
 
 ## Constraints
 No rendered size change. Generated files only through their script.
+
+## Outcome
+
+2026-10-18 · lane: full L3 · verdict: pass · verifier: verifier-L3 (fable) · base: c6a183afd710
+- Changed: Foundations adopt the skill's structure, no rendered change (#2158)
+- Commits: none
+- Check: 1 `node scripts/generate-foundations.mjs --check` exits 0 and the derived sheet moved by header, tw...: pass
+- Check: 2 The frozen resolver and the vendored skill files are untouched: pass
+- Check: 3 `npx vitest run packages/agent-ui/shared packages/agent-ui/components` exits 0 with the named tests: pass
+- Check: 4 `npx vitest run --config vitest.browser.config.ts packages/agent-ui/shared/src/tokens/foundations...: pass
+- Check: 5 `node scripts/foundations-census.mjs --gate`, `selftest` and `node scripts/foundations-codemod.mj...: pass
+- Check: 6 `npm run check` exits 0: pass
+- Check: 7 No rendered change in the eight demo screenshots: pass
+- Follow-up: decide: .sdlc/runtime/tasks/0373-foundations-geometry-structure/screens/... -> notes.md
+- Follow-up: note: packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css:94,1... -> notes.md
