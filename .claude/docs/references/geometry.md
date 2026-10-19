@@ -39,7 +39,8 @@ Let `c = ceil(n / 4)`. Every box value is a whole-pixel multiple of n or c (the 
 | radius of a surface (attachment, disclosure, swatch tile) | `n`, `corner-shape: squircle` | `--md-sys-radius` |
 | radius of every single-line control (the pill, h/2) | `2n`, circular corners | `--md-sys-control-radius` |
 | icon box (pictorial art) | `2n` | `--md-sys-icon-box` |
-| glyph box (functional mark) | `max(8px, 2n - 2c)` (the floor holds n 5, Amendment 7) | `--md-sys-glyph-box` |
+| glyph box (functional mark) | `n + 6` (T-0374; at least 10, so the Amendment 7 floor retired) | `--md-sys-glyph-box` |
+| glyph slot (the glyph's square wrapper) | `3n` | `--md-sys-glyph-slot` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | control text | `n + 6` px | `--md-sys-type-control` |
 | container unit | `m` (n at default density) | `--md-sys-m` |
@@ -73,9 +74,9 @@ height.
 - **Tabs, segments, menu and listbox rows**: the control rule; tabs touch with the tight gutter `c`. Menu and
   listbox rows are pills (`2n`), and their panel (menu, select listbox, combo-box panel, multi-select) is the
   row radius plus its own inset, `2n + c`, so the rows nest concentrically (Amendment 5).
-- **Indicators**: checkbox box `2n` (radius `ceil(n/2)`, check glyph the glyph box `max(8px, 2n - 2c)`), radio `2n` circle (dot
-  `glyph - 2` = `2n - 2c - 2`, which never shrinks as n grows), switch track `2n` tall with padding `c` and
-  thumb `2n - 2c`, slider rail `2c` and thumb `2n - 2c`, progress track `2c` (radius `c`).
+- **Indicators**: checkbox box `2n` (radius `ceil(n/2)`, check glyph the glyph box `n + 6`, inset `c`), radio `2n` circle (dot
+  the icon box - 2c - 2, which never shrinks as n grows), switch track `2n` tall with padding `c` and
+  thumb the icon box - 2c, slider rail `2c` and thumb the icon box - 2c, progress track `2c` (radius `c`).
 - **Chips** (badge; the level `--md-sys-chip-{margin,gutter,radius}`): height `2n + 2c`, margin `c`, gutter
   `c`, label margin `c` (text edge `2c`), the chip pill radius `n + c` (h/2, Amendment 5). The checkbox box
   keeps `ceil(n/2)` on its own token, `--md-sys-checkbox-radius`.
@@ -97,8 +98,9 @@ The full per-control table is ADR-0245 clause 3 and Appendix B; the geometry pro
   control cell or a `[data-tier]` region; a standalone `ui-icon` anywhere else follows the text, `1em`
   (ADR-0245 Amendment 6).
 - A **glyph** is a functional mark from the closed set of twelve (`check`, `x`, `plus`, `minus`, the four
-  carets, `dot`, `more`, `warning`, `info`) in the glyph box `max(8px, 2n - 2c)`, always centred inside an
-  icon-sized `2n` slot (`c` clear on each side wherever `2n - 2c` clears the 8px floor, ADR-0245 Amendment 7). A caret is drawn at the glyph box, not at the control font.
+  carets, `dot`, `more`, `warning`, `info`) in the glyph box `n + 6`, always centred inside its square
+  `3n` glyph slot (`(3n - (n + 6)) / 2` clear on each side, T-0374, the skill's glyph wrapper). A host that gives a glyph a
+  smaller cell sizes it `max(icon box, glyph box)`. A caret is drawn at the glyph box, not at the control font.
 - `<ui-icon symbol>` and `<ui-glyph symbol>` share the `symbol` prop (`ui-icon`'s old `glyph` prop is a
   deprecated alias until W7). One path table in `components` owns mark geometry, so a control never
   re-draws a mark by hand; stroke width is the token above.
@@ -161,7 +163,7 @@ Read ADR-0223 for the exemption tables and cite them, never copy them.
 | Class | Examples | Lever |
 |---|---|---|
 | **Control** (full height) | button · text-field · select · field | `block-size: var(--ui-{cmp}-height)` off `--md-sys-height` (4n); `line-height: 1`; padding per class above |
-| **Indicator** (smaller box) | checkbox · radio · switch · slider · badge | box `2n` (a badge is a chip, `2n + 2c` tall), a thumb `2n - 2c`; the old 14/16/18 widget ramp and the flat 2px inset retired |
+| **Indicator** (smaller box) | checkbox · radio · switch · slider · badge | box `2n` (a badge is a chip, `2n + 2c` tall), a thumb the icon box - 2c; the old 14/16/18 widget ramp and the flat 2px inset retired |
 | **Pattern** (container plus control-height rows) | tabs · segmented-control · toolbar · menu · dialog | interactive rows are `4n`; the shell takes its container level |
 | **Container/layout** | row · column · grid · card | margin, gutter and radius from the level tokens; no control height |
 | **Display** | divider · icon · glyph · spinner · progress · tooltip · **text** | text reads the derived `--md-sys-type-*` roles; icon and glyph take their own boxes; no control height, no `padding-block` law |

@@ -40,7 +40,7 @@
      so the text edge stays 2c while the mark box sits at c. */
   --ui-badge-pad: var(--md-sys-chip-margin, calc(2px + var(--ui-badge-box) * 0.375 * var(--md-sys-density, 1))); /* the chip margin c (Amendment 4); today's compact pad under the legacy opt-out */
   --ui-badge-label-inset: var(--md-sys-chip-margin, 0px); /* a chip's label margin is c, so the text edge is 2c */
-  --ui-badge-glyph-inset: var(--md-sys-c, 0px); /* the mark is the 2n icon box; the glyph 2n - 2c sits c inside it */
+  --ui-badge-glyph-inset: var(--md-sys-c, 0px); /* the inset of the glyph box inside the 2n icon box */
 
   /* Corner: the chip pill n + c, h/2 of the 2n + 2c chip (ADR-0245 Amendment 5); box/2 under the legacy opt-out. */
   --ui-badge-radius: var(--md-sys-chip-radius, calc(var(--ui-badge-box) / 2)); /* the chip pill n + c (Amendment 5); the pill box/2 under the legacy opt-out */
@@ -54,7 +54,7 @@
   --ui-badge-gap: var(--md-sys-chip-gutter, var(--md-sys-gap-sm)); /* the chip gutter c (Amendment 4) */
 
   /* The mark box: the ui-glyph part's svg fills it (a content-mark, not an inline affordance).
-     Derived: the glyph box 2n - 2c (ADR-0245 cl.4); half the box under the legacy opt-out. */
+     Derived: the glyph box n + 6 (ADR-0245 cl.4, T-0374); half the box under the legacy opt-out. */
   --ui-badge-glyph: var(--md-sys-glyph-box, calc(var(--ui-badge-box) * 0.5));
 
   /* Colour channel — neutral default (the "tag" reading of the one component, ADR-0111 fork F3). */

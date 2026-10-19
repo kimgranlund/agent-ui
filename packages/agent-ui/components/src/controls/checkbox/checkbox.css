@@ -35,7 +35,7 @@
   /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --md-sys-gap-md). */
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 
-  /* Mark box: the check and the dash span 2n - 2c (--md-sys-glyph-box, ADR-0245 cl.3/4) inside an opt-in region,
+  /* Mark box: the check and the dash span the n + 6 glyph box (--md-sys-glyph-box, ADR-0245 cl.3/4, T-0374) inside an opt-in region,
      centred in the 2n box (inset c); outside, today's 60% of the box inset 20%. The pseudo-element marks stay
      (a ui-glyph child would swap the filled clip-path tick for a stroke and move the default render). */
   --ui-checkbox-mark: var(--md-sys-glyph-box, calc(var(--ui-checkbox-box) * 0.6));

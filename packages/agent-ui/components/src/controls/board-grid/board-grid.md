@@ -63,7 +63,7 @@ parts:
   - name: mark
     description: The `<span data-part="mark">` inside each cell, holding the cell's `mark` text, centered.
   - name: intent
-    description: The `aria-hidden` `<span data-part="intent">` corner glyph at the cell's bottom-right, present only when the cell has an intent (success `+`, warning `?`, neutral `-`, danger `!`, info `i`). The non-color signifier: intent never travels by color alone (ADR-0057). It is a glyph in its own glyph box `2n - 2c`, its cap height filling the box, inset `c` from the cell corner (ADR-0245 Amendment 6).
+    description: The `aria-hidden` `<span data-part="intent">` corner glyph at the cell's bottom-right, present only when the cell has an intent (success `+`, warning `?`, neutral `-`, danger `!`, info `i`). The non-color signifier: intent never travels by color alone (ADR-0057). It is a glyph in its own glyph box `n + 6`, its cap height filling the box, inset `c` from the cell corner (ADR-0245 Amendment 6).
 
 customStates: []       # no custom state: hover, focus and disabled paint key on the native parts and attributes
 

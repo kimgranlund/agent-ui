@@ -1,7 +1,7 @@
 // glyph.ts: UIGlyphElement, the functional-mark display atom (ADR-0245 clauses 4 and 5). <ui-glyph
 // symbol="caret-down"> draws one mark from the closed twelve-mark set as an inline SVG stroke path from the
 // library path table (glyph-paths.ts). An icon is pictorial pack art in a 2n box; a glyph is library geometry
-// in a 2n - 2c box. The host is the shared 2n slot, inset c on each side, so an icon and a glyph in
+// in an n + 6 box. The host is the square 3n glyph slot with the box centred, so an icon and a glyph in
 // neighbouring slots share the slot box and the centre line. Light-DOM, self-defining, no traits.
 //
 // Two props, two connected() effects, the ui-icon shape:

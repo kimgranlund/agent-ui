@@ -87,7 +87,7 @@ const rampNote = el('p', {}, [
   text(' cell ('), el('code', {}, [text('--md-sys-icon-size')]),
   text('): the consumer’s ambient font-size, or an explicit inline-size on the host, is the ONLY size lever. No ramp, no '),
   el('code', {}, [text('[size]')]), text(' attribute (geometry.md "intrinsic structural sizing"). '),
-  text('An icon follows the text it sits beside. Two places size it for you (ADR-0245 Amendment 6): a control cell makes it the 2n icon box, as in the buttons above, and so does an explicit data-tier region such as an A2UI surface. A functional mark (a plus, a caret, a tick) is a ui-glyph instead, which keeps its own 2n - 2c glyph box everywhere.'),
+  text('An icon follows the text it sits beside. Two places size it for you (ADR-0245 Amendment 6): a control cell makes it the 2n icon box, as in the buttons above, and so does an explicit data-tier region such as an A2UI surface. A functional mark (a plus, a caret, a tick) is a ui-glyph instead, which keeps its own n + 6 glyph box, centred in a 3n slot, everywhere.'),
 ])
 
 // ── a meaningful icon — `label` ⇒ role=img + aria-label via ElementInternals ─────────────────────────────

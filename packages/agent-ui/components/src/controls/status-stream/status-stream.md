@@ -378,7 +378,7 @@ register and its type from the ramp's body step (Kim 2026-10-14), no size or fon
 | nest gap | `c` | a row's text to its expand |
 
 Status marks keep the `2n` icon box (geometry-sizing-spec §4.6 lists a status mark as an icon); the
-in-progress dot is the `2n - 2c` glyph box, centred in the same column. The measured invariants are pinned in
+in-progress dot is the `n + 6` glyph box, centred in the same column. The measured invariants are pinned in
 two engines at two registers by `conversation.browser.test.ts` (T-0173).
 
 ## Accessibility

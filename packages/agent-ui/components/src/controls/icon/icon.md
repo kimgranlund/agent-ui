@@ -87,7 +87,7 @@ text) or an explicit `inline-size`/`block-size` override on the host. Two places
 Amendment 6): inside a control cell (a button, toggle, field or select slot) the control's slot rule makes it
 the `2n` icon box, and inside an explicit `[data-tier]` region (an A2UI surface) a standalone icon is that
 region's `2n` icon box (`--md-sys-icon-box`). A functional mark is a `ui-glyph` instead, which keeps its own
-`2n - 2c` glyph box everywhere. `color: inherit` means the icon's ink (the injected
+`n + 6` glyph box, centred in its `3n` slot, everywhere. `color: inherit` means the icon's ink (the injected
 `<svg fill="currentColor">`) always tracks the surrounding context with no per-icon color plumbing.
 
 ## Accessibility

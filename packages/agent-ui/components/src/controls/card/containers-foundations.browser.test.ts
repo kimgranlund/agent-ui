@@ -142,11 +142,12 @@ describe('popover, tooltip, toast: widget and group levels', () => {
   })
 })
 
-describe('form-popover and disclosure: 4n control height, n inset, radius n, 2n slot, max(8, 2n - 2c) glyph', () => {
+describe('form-popover and disclosure: 4n control height, n inset, radius n, max(2n, n + 6) slot, n + 6 glyph', () => {
+  // T-0374: the glyph box is n + 6; the icon cell is never smaller than it, so it outgrows 2n at n 5 (11, not 10)
   const STEPS = [
-    ['sm', 20, 5, 10, 8], // the glyph floor holds sm at 8 (ADR-0245 Amendment 7)
-    ['md', 24, 6, 12, 8],
-    ['lg', 28, 7, 14, 10],
+    ['sm', 20, 5, 11, 11],
+    ['md', 24, 6, 12, 12],
+    ['lg', 28, 7, 14, 13],
   ] as const
 
   for (const [size, height, n, slot, glyph] of STEPS) {

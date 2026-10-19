@@ -174,7 +174,7 @@ geometry:
   cellSize: --ui-calendar-cell-size     # ADR-0105: the track FLOOR + the point-layer circle diameter (default 2rem / 32px; [size=sm/lg] repoints) — no longer a fixed track width
   gap: --ui-calendar-gap                # inter-cell gap (default 0.125rem / 2px)
   panel: Container/surface              # bg + outline + radius from --ui-calendar-panel-* tokens (NOT a control height)
-  navButtons: ui-glyph caret-left/caret-right  # each mark sits on its own glyph box max(8px, 2n - 2c) in the 2n slot (ADR-0245 cl.4, T-0149)
+  navButtons: ui-glyph caret-left/caret-right  # each mark sits on its own glyph box n + 6 in its square 3n slot (ADR-0245 cl.4, T-0149, T-0374)
   weekdayHeader: 0.75 × cell-size tall  # slightly shorter than day cells; 85% font size
   maxInlineSize: --ui-calendar-max-inline-size   # ADR-0105 Amendment 2: the content cap, 7 tracks of 6n (1.5 × cellSize) + 6 gaps; the panel stops at it (plus inset and border) and keeps to the start edge of the filled host (T-0149)
   gridTracks: fluid — minmax(cellSize, 1fr)  # ADR-0105 — shrink-wrapped resolves to the floor exactly (byte-identical to pre-ADR-0105); given a definite width from an ancestor (a stretched flex/grid cell) the grid fills it, tracks sharing the surplus equally. Row block-size never changes — only inline-size adapts. Escape: `max-inline-size: max-content` on the host pins the old always-compact rendering (ADR-0102 override).

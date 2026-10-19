@@ -41,7 +41,8 @@
   --ui-button-font: var(--md-sys-type-control, var(--md-sys-font-md));
   --ui-button-gap: var(--md-sys-c, var(--md-sys-gap-md)); /* the control gutter c (ADR-0245 Amendment 4); the label inset below makes icon to text n */
   --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
-  --ui-button-glyph: var(--md-sys-glyph-box, var(--ui-button-font)); /* inline-affordance (caret): the glyph box 2n - 2c in a data-tier region, the font outside (ADR-0245 cl.4) */
+  --ui-button-glyph: var(--md-sys-glyph-box, var(--ui-button-font)); /* inline-affordance (caret): the glyph box n + 6 (T-0374), the font under the legacy opt-out (ADR-0245 cl.4) */
+  --ui-button-caret-cell: max(var(--ui-button-icon), var(--ui-button-glyph)); /* the caret's icon cell, never smaller than its glyph (T-0374) */
 
   /* The control rule (ADR-0245 Amendment 4): the box margin is n on every edge and the label carries the inset
      n - c, so the text edge is 2n - c and icon to text is c + (n - c) = n. Declared once here: both derive from
@@ -228,7 +229,10 @@
     padding: 0; /* fills its icon-sized cell */
   }
   :scope > [data-role='caret'] {
-    padding: calc((var(--ui-button-icon) - var(--ui-button-glyph)) / 2); /* inset the font glyph, centered in the icon cell */
+    /* the icon cell, never smaller than the n + 6 glyph box (T-0374: it outgrows the 2n icon at n 4 and 5) */
+    inline-size: var(--ui-button-caret-cell);
+    block-size: var(--ui-button-caret-cell);
+    padding: calc((var(--ui-button-caret-cell) - var(--ui-button-glyph)) / 2); /* inset the glyph, centered in the cell */
   }
 
   /* [leading | label] (no trailing): auto 1fr. Leading slot edge ½(h−icon), which is n at icon 2n; the label

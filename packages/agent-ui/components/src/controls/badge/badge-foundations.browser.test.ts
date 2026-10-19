@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import '@agent-ui/components/foundation-styles.css'
 import './badge.css'
 import './badge.ts'
@@ -29,7 +29,7 @@ const px = (v: string): number => Number.parseFloat(v)
 const root = resolve('product', 'sm', 'md')
 
 describe('ui-badge geometry (ADR-0245 cl.3)', () => {
-  it('inside a region, the chip level (ADR-0245 Amendment 4): height 2n + 2c, margin c plus the label margin c, the chip pill n + c (Amendment 5), field-label type, glyph box 2n - 2c', () => {
+  it('inside a region, the chip level (ADR-0245 Amendment 4): height 2n + 2c, margin c plus the label margin c, the chip pill n + c (Amendment 5), field-label type, glyph box n + 6', () => {
     const badge = mount('<ui-badge intent="success">New</ui-badge>').querySelector('ui-badge') as HTMLElement
     const cs = getComputedStyle(badge)
     expect(badge.getBoundingClientRect().height).toBeCloseTo(root.parts.badge, 1)

@@ -1,13 +1,13 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 import '@agent-ui/icons/phosphor'
 
 // ui-timeline-item and ui-status-stream geometry (ADR-0245 clauses 3 and 4, dark launch): inside an opt-in region
-// the marker box is the 2n icon slot and the dot the 2n - 2c glyph box at the item's own size, and the status
+// the marker box is the 2n icon slot and the dot the n + 6 glyph box at the item's own size, and the status
 // stream's header marker reads the same two tokens so the rail still aligns; outside one the [scale] rows (covered by
 // timeline-item.browser.test.ts) and the stream's literal mirror (16 / 8) answer exactly as before.
 
@@ -38,7 +38,7 @@ function streamTokens(stream: HTMLElement): { box: number; dot: number } {
 
 describe('ui-timeline-item geometry inside an opt-in region', () => {
   for (const size of ['sm', 'md', 'lg'] as const) {
-    it(`product / sm / ${size}: marker box 2n, dot 2n - 2c`, () => {
+    it(`product / sm / ${size}: marker box 2n, dot n + 6`, () => {
       const wrap = mount(`<div data-tier="product" data-scale="sm"><ui-timeline-item size="${size}"></ui-timeline-item></div>`)
       const item = wrap.querySelector('ui-timeline-item')!
       const r = resolve('product', 'sm', size)

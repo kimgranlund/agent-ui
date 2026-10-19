@@ -79,7 +79,7 @@
   --ui-tabs-ink-hover: var(--md-sys-color-neutral-on-surface); /* hover */
   --ui-tabs-trigger-bg: transparent; /* the overflow trigger is ghost at rest (T-0306, Kim; full ink keeps the dots legible, T-0149) */
   --ui-tabs-trigger-bg-hover: var(--md-sys-color-neutral-container-low); /* the overflow trigger's hover and press wash */
-  --ui-tabs-trigger-icon: var(--md-sys-icon-box, 1em); /* the overflow trigger's glyph slot (2n); the `more` mark's glyph box sits centred in it */
+  --ui-tabs-trigger-icon: max(var(--md-sys-icon-box, 1em), var(--md-sys-glyph-box, 0px)); /* the overflow trigger's glyph slot (2n, never smaller than the n + 6 glyph box, T-0374); the `more` mark's glyph box sits centred in it */
   --ui-tabs-ink-selected: var(--md-sys-color-neutral-on-surface); /* the active tab label */
   --ui-tabs-indicator: var(--md-sys-color-primary); /* the active-tab underline */
 }
@@ -343,9 +343,10 @@
     color: var(--ui-tabs-ink-hover);
     cursor: pointer;
   }
+  /* The mark's slot is the icon cell (never smaller than the n + 6 glyph box, T-0374), so glyph.css's inset centres
+     the mark in it and it is never clipped at n 4 and 5. */
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger'] > ui-glyph {
-    inline-size: var(--ui-tabs-trigger-icon);
-    block-size: var(--ui-tabs-trigger-icon);
+    --ui-glyph-slot: var(--ui-tabs-trigger-icon);
   }
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger']:hover,
   :scope[overflow='menu'] > [data-part='overflow'] > [data-part='trigger']:active {

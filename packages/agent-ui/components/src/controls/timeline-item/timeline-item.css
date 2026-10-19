@@ -55,7 +55,7 @@
 
 :where(ui-timeline-item) {
   --ui-timeline-item-truncated-border: var(--md-sys-color-warning); /* TKT-0066: was a direct role read in @scope */
-  /* ADR-0245: the marker box is the 2n icon slot and the dot the 2n - 2c glyph box (clauses 3 and 4), at the
+  /* ADR-0245: the marker box is the 2n icon slot and the dot the n + 6 glyph box (T-0374) (clauses 3 and 4), at the
      element's own n; the per-size literal rows above are their fallback under [data-foundations="legacy"].
      size picks the row for the connector, gutter and row gap. The [scale] rows and the [density] multiplier
      retired at the cut (a region's data-scale moves n instead). */

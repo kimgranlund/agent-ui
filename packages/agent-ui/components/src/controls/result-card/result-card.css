@@ -71,7 +71,7 @@
   --ui-result-card-value-weight: 700;
   --ui-result-card-delta-size: var(--md-sys-typescale-label-medium-size); /* mockup .75rem */
   --ui-result-card-delta-weight: 650;
-  /* The stat mark is a glyph: its own glyph box 2n - 2c, n clear of its label (the chip gap, ADR-0245
+  /* The stat mark is a glyph: its own glyph box n + 6, n clear of its label (the chip gap, ADR-0245
      Amendment 6); 0.6em and the space-xs step under the legacy opt-out. */
   --ui-result-card-glyph-size: var(--md-sys-glyph-box, 0.6em);
   --ui-result-card-glyph-gap: var(--md-sys-inset, var(--md-sys-space-xs));

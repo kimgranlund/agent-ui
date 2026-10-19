@@ -46,7 +46,7 @@
   --ui-breadcrumb-link-ink-hover: var(--md-sys-color-neutral-on-surface);
   --ui-breadcrumb-trigger-bg: var(--md-sys-color-neutral-container-low); /* the overflow trigger's resting fill: a shape at rest (T-0149) */
   --ui-breadcrumb-trigger-bg-hover: var(--md-sys-color-neutral-container); /* the overflow trigger's hover wash, one step up */
-  --ui-breadcrumb-trigger-icon: var(--md-sys-icon-box, 1em); /* the overflow trigger's glyph slot (2n), the tabs.css twin; the trigger never drops below it */
+  --ui-breadcrumb-trigger-icon: max(var(--md-sys-icon-box, 1em), var(--md-sys-glyph-box, 0px)); /* the overflow trigger's glyph slot (2n, never smaller than the n + 6 glyph box, T-0374), the tabs.css twin; the trigger never drops below it */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-breadcrumb) consumes ONLY --ui-breadcrumb-* ════════════════ */
@@ -129,9 +129,10 @@
     color: var(--ui-breadcrumb-current-ink);
     cursor: pointer;
   }
+  /* The mark's slot is the icon cell (never smaller than the n + 6 glyph box, T-0374), so glyph.css's inset centres
+     the mark in it and it is never clipped at n 4 and 5. */
   :scope > [data-part='overflow'] > [data-part='trigger'] > ui-glyph {
-    inline-size: var(--ui-breadcrumb-trigger-icon);
-    block-size: var(--ui-breadcrumb-trigger-icon);
+    --ui-glyph-slot: var(--ui-breadcrumb-trigger-icon);
   }
   :scope > [data-part='overflow'] > [data-part='trigger']:hover {
     color: var(--ui-breadcrumb-current-ink);

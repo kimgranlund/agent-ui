@@ -12,7 +12,10 @@
 // Run: node .claude/docs/references/foundations-derivation/derive.mjs > .claude/docs/references/foundations-derivation/derive.out.md
 import { resolve, check, CFG } from './scale-v1.mjs';
 import { resolve as resolve2, check as check2, CFG as CFG2 } from './scale.mjs';
-import { GLYPH_FLOOR, glyphBox } from '../../../../scripts/lib/foundations-rules.mjs';
+// The Amendment 7 glyph floor, frozen here for the history this file prints: T-0374 retired it from the library
+// (the glyph box is n + 6 in a 3n slot there), so derive.out.md keeps the floor as it was.
+const GLYPH_FLOOR = 8;
+const glyphBox = (r) => Math.max(GLYPH_FLOOR, r.glyph);
 
 const SZ = ['sm', 'md', 'lg'];
 const ROOT = ['product', 'sm']; // the proposed library root (clause 2)

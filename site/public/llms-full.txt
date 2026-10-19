@@ -2817,15 +2817,17 @@ the drawing; `dot` and `more` are filled.
 
 ## Sizing
 
-The host is the shared **icon slot**: `2n` wide and tall, with the glyph box `max(8px, 2n - 2c)` centred in it
-(the inset is `c` on each side wherever `2n - 2c` clears the 8px floor), so an icon and a glyph in neighbouring
-slots share the slot box and the centre line. The slot reads the derived foundation tokens
-(`--md-sys-icon-box`, `--md-sys-glyph-box`, `--md-sys-glyph-stroke`, ADR-0245), which the library root
+The host is the square **glyph slot**: `3n` wide and tall, with the glyph box `n + 6` centred in it (the inset is
+`(3n - (n + 6)) / 2` on each side: 1px at n 4, 2px at n 5, 5px at n 8), the skill's glyph wrapper (T-0374). A host
+that gives the glyph a different cell sets `--ui-glyph-slot` to it and the inset follows, never below 0. The slot
+reads the derived foundation tokens
+(`--md-sys-glyph-slot`, `--md-sys-glyph-box`, `--md-sys-glyph-stroke`, ADR-0245), which the library root
 declares, so a glyph keeps its own glyph box everywhere: at the root (product, scale md) the mark is
-8 / 12 / 14 px for sizes sm / md / lg with a 1.5px stroke (the 8px floor holds sm, Amendment 7). This is the line between a glyph and an icon
+12 / 14 / 16 px in an 18 / 24 / 30 px slot for sizes sm / md / lg with a 1.5px stroke. This is the line between a glyph and an icon
 (ADR-0245 Amendment 6): a standalone `ui-icon` follows the surrounding text (`1em`), a glyph never does. Under
 the `data-foundations="legacy"` opt-out the slot is `1em` with a `0.125em` inset. Override `--ui-glyph-slot`,
-`--ui-glyph-inset` or `--ui-glyph-stroke` on the host to resize one mark.
+`--ui-glyph-inset` or `--ui-glyph-stroke` on the host to resize one mark: the inset follows the slot, so a slot
+override alone re-centres the same mark, and an enlarged mark sets the inset too.
 
 ## Accessibility
 
@@ -2943,7 +2945,7 @@ text) or an explicit `inline-size`/`block-size` override on the host. Two places
 Amendment 6): inside a control cell (a button, toggle, field or select slot) the control's slot rule makes it
 the `2n` icon box, and inside an explicit `[data-tier]` region (an A2UI surface) a standalone icon is that
 region's `2n` icon box (`--md-sys-icon-box`). A functional mark is a `ui-glyph` instead, which keeps its own
-`2n - 2c` glyph box everywhere. `color: inherit` means the icon's ink (the injected
+`n + 6` glyph box, centred in its `3n` slot, everywhere. `color: inherit` means the icon's ink (the injected
 `<svg fill="currentColor">`) always tracks the surrounding context with no per-icon color plumbing.
 
 ## Accessibility
@@ -5815,7 +5817,7 @@ register and its type from the ramp's body step (Kim 2026-10-14), no size or fon
 | nest gap | `c` | a row's text to its expand |
 
 Status marks keep the `2n` icon box (geometry-sizing-spec §4.6 lists a status mark as an icon); the
-in-progress dot is the `2n - 2c` glyph box, centred in the same column. The measured invariants are pinned in
+in-progress dot is the `n + 6` glyph box, centred in the same column. The measured invariants are pinned in
 two engines at two registers by `conversation.browser.test.ts` (T-0173).
 
 ## Accessibility

@@ -680,7 +680,7 @@ describe('ui-slider browser smoke (GH #1162 — one visible label owner under ui
   })
 })
 
-// ADR-0245 clause 3: inside an opt-in region the hit area is 2n, the thumb 2n - 2c and the rail 2c thick (the
+// ADR-0245 clause 3: inside an opt-in region the hit area is 2n, the thumb icon box - 2c and the rail 2c thick (the
 // progress rule), against scale.mjs resolve(); outside, the rail keeps today's 3px.
 describe('ui-slider geometry inside an opt-in data-tier region (ADR-0245)', () => {
   const railHeight = (el: Element): number => Number.parseFloat(getComputedStyle(rail(el), '::before').height)
@@ -697,7 +697,7 @@ describe('ui-slider geometry inside an opt-in data-tier region (ADR-0245)', () =
 
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      it(`product / ${scale} / ${size}: hit area 2n, thumb 2n - 2c, rail 2c`, () => {
+      it(`product / ${scale} / ${size}: hit area 2n, thumb icon box - 2c, rail 2c`, () => {
         const r = resolve('product', scale, size)
         const wrapper = document.createElement('div')
         wrapper.setAttribute('data-tier', 'product')

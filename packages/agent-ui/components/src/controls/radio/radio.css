@@ -35,7 +35,7 @@
 
   /* Dot geometry: the SAME 22%-inset law as before (unchanged diameter maths), now sizing a real
      `::after` circle instead of an inset box-shadow annulus — the fix touches COLOUR, not proportion. */
-  /* Dot inset c + 1, so the dot is the glyph minus 2 (2n - 2c - 2, ADR-0245 Amendment 3: never shrinks as n grows,
+  /* Dot inset c + 1, so the dot is the icon box - 2c - 2 (not the n + 6 glyph box, ADR-0245 Amendment 3: never shrinks as n grows,
      where 2n - 4c stepped down each time c stepped up); under the legacy opt-out c falls back so the inset stays
      today's 22% of the box. */
   --ui-radio-dot-inset: calc(var(--md-sys-c, calc(var(--ui-radio-box) * 0.22 - 1px)) + 1px);

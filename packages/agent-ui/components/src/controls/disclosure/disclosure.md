@@ -55,7 +55,7 @@ parts:                 # the native <details>/<summary> is a component-owned PAR
   - name: summary
     description: The control-created `<summary data-part="summary">` inside the details part — a Pattern-class interactive CONTROL-height row ([chevron | label | slotted controls?], flex). Natively focusable and activatable (Enter/Space, click) — no tabindex/keyboard machinery added. Carries `aria-labelledby` → the summary-text span (ADR-0158 cl.4) so the fold's accessible name is always the `summary` prop, and the component-owned activation guard (a click inside a `slot="summary"` child never folds).
   - name: chevron
-    description: A `<ui-glyph data-part="chevron" symbol="caret-right">` inside the summary (T-0149: a caret is a library mark, not pack art; decorative, so aria-hidden through its own internals). It fills the 2n slot and insets its own glyph box max(8px, 2n - 2c). Rotates 90deg under `[open]` — orientation carries the state, never colour alone; NO transition (SPEC-R18 — cross-engine + reduced-motion honesty).
+    description: A `<ui-glyph data-part="chevron" symbol="caret-right">` inside the summary (T-0149: a caret is a library mark, not pack art; decorative, so aria-hidden through its own internals). It fills the 2n slot (never smaller than its glyph box) and centres its own glyph box n + 6 in it (T-0374). Rotates 90deg under `[open]` — orientation carries the state, never colour alone; NO transition (SPEC-R18 — cross-engine + reduced-motion honesty).
   - name: summary-text
     description: A `<span data-part="summary-text">` inside the summary, holding the `summary` prop's text (textContent-only, never markup). Updated by a scope-owned reactive effect; never touches `open`.
   - name: body
@@ -84,7 +84,7 @@ geometry:
   summary:
     height: var(--ui-disclosure-height)   # Pattern-class interactive row — 4n off --md-sys-height (ADR-0245 cl.3); scale-INVARIANT only where a control token pins it
     font: var(--ui-disclosure-font)
-    glyph: var(--ui-disclosure-glyph)     # = var(--md-sys-glyph-box) 2n - 2c under data-tier (centred in the 2n slot, --ui-disclosure-slot), = font elsewhere (geometry.md)
+    glyph: var(--ui-disclosure-glyph)     # = var(--md-sys-glyph-box) n + 6 wherever the root tokens reach (centred in the 2n slot, --ui-disclosure-slot, never smaller than the glyph), = font under the legacy opt-out (geometry.md)
     gap: var(--ui-disclosure-gap)         # the scale-bearing chevron↔label rhythm
   body:
     shellClass: layout-shell

@@ -134,7 +134,7 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     expect(new Set(heights.map((v) => v.toFixed(0))).size, 'all three sizes should render different track heights').toBe(3)
   })
 
-  it('ADR-0245: inside an opt-in data-tier region the track is 2n, the thumb 2n - 2c, the width 2 thumb + 2c', () => {
+  it('ADR-0245: inside an opt-in data-tier region the track is 2n, the thumb icon box - 2c, the width 2 thumb + 2c', () => {
     // Against scale.mjs resolve() in an explicit product / sm region and at the page root register (product / md).
     for (const scale of ['sm', 'md']) {
       for (const size of ['sm', 'md', 'lg']) {

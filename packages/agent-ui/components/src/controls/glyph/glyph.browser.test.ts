@@ -1,13 +1,13 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import '@agent-ui/components/foundation-styles.css'
 import './glyph.css'
 import './glyph.ts'
 import type { UIGlyphElement } from './glyph.ts'
 
-// ui-glyph geometry (ADR-0245 clause 4, Amendment 7): inside an opt-in region the host is the 2n icon slot and the
-// svg is the glyph box max(8px, 2n - 2c), both against scale.mjs resolve() at the library root (product / sm) for sm, md and lg
+// ui-glyph geometry (ADR-0245 clause 4, T-0374): inside an opt-in region the host is the square 3n glyph slot and the
+// svg is the glyph box n + 6 centred in it, both against scale.mjs resolve() at the library root (product / sm) for sm, md and lg
 // and at product / md, one data-scale up; outside a region the em fallbacks hold.
 
 const mounted: HTMLElement[] = []
@@ -31,13 +31,13 @@ const boxOf = (el: Element): { w: number; h: number } => {
 describe('ui-glyph geometry inside an opt-in region', () => {
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      it(`product / ${scale} / ${size}: slot 2n, mark max(8, 2n - 2c), stroke max(1.5px, c/2)`, async () => {
+      it(`product / ${scale} / ${size}: slot 3n, mark n + 6, stroke max(1.5px, c/2)`, async () => {
         const host = await mount(
           `<div data-tier="product" data-scale="${scale}"><span data-size="${size}"><ui-glyph symbol="check"></ui-glyph></span></div>`,
         )
         const r = resolve('product', scale, size)
-        expect(glyphBox(r), 'the glyph floor (Amendment 7)').toBe(Math.max(8, 2 * r.n - 2 * r.c))
-        expect(boxOf(host)).toEqual({ w: r.icon, h: r.icon })
+        expect(glyphBox(r), 'the glyph box (T-0374)').toBe(r.n + 6)
+        expect(boxOf(host)).toEqual({ w: 3 * r.n, h: 3 * r.n })
         expect(boxOf(host.querySelector('svg') as SVGSVGElement)).toEqual({ w: glyphBox(r), h: glyphBox(r) })
         expect(parseFloat(getComputedStyle(host.querySelector('path') as SVGPathElement).strokeWidth)).toBe(
           Math.max(1.5, r.c / 2),

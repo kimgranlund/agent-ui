@@ -458,7 +458,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[] | Promise<str
       if (!box) continue
       measured['glyph-box']++
       const r = registerOf(el)
-      const want = glyphBox(r) // T-0143: the glyph box floors at GLYPH_FLOOR (Kim's ruling)
+      const want = glyphBox(r) // T-0374: the glyph box is n + 6, centred in its square 3n slot (Kim's 2026-10-19 ruling)
       if (Math.abs(box.width - want) > TOL || Math.abs(box.height - want) > TOL) out.push(`${tagOf(el)} ${Math.round(box.width * 10) / 10}x${Math.round(box.height * 10) / 10} want ${want}`)
     }
     return out
@@ -1174,12 +1174,15 @@ const PLANTS: Record<string, { bad: string; good: string; width?: number; rule?:
     good: '<ui-text-field type="number" value="5"></ui-text-field>',
   },
   'entry-cell-radius': { bad: '<ui-otp-field length="4" style="--ui-otp-field-radius: 12px"></ui-otp-field>', good: '<ui-otp-field length="4"></ui-otp-field>' },
-  'glyph-box': { bad: '<ui-glyph symbol="check" style="--ui-glyph-slot: 30px"></ui-glyph>', good: '<ui-glyph symbol="check"></ui-glyph>' },
-  // at n 5 (product / sm at size sm; the root is product / md since Amendment 8) the bare formula 2n - 2c is 6px, the floor 8px (T-0143); ui-glyph centres the floored box in its 2n slot
-  // (inset (2n - glyph box) / 2 = 1px), so the plant restores the old inset c (2px) a side and draws the unfloored 6px mark
+  // the inset follows the slot (T-0374), so a slot override alone no longer moves the mark: the plant zeroes the inset,
+  // and the svg fills the whole 3n slot, 24px against want 14 at the root n 8
+  'glyph-box': { bad: '<ui-glyph symbol="check" style="--ui-glyph-inset: 0px"></ui-glyph>', good: '<ui-glyph symbol="check"></ui-glyph>' },
+  // at n 5 (product / sm at size sm; the root is product / md since Amendment 8) the glyph box n + 6 is 11px, centred in its
+  // 15px 3n slot; the plant is the regression T-0374 guards against, a glyph left in the retired 2n slot (10px): the
+  // inset clamps to 0, so the svg is 10px against want 11
   'glyph-box at n 5': {
     rule: 'glyph-box',
-    bad: '<div data-scale="sm" size="sm"><ui-glyph symbol="check" style="--ui-glyph-inset: 2px"></ui-glyph></div>',
+    bad: '<div data-scale="sm" size="sm"><ui-glyph symbol="check" style="--ui-glyph-slot: 10px"></ui-glyph></div>',
     good: '<div data-scale="sm" size="sm"><ui-glyph symbol="check"></ui-glyph></div>',
   },
   'dash-scale': { bad: GAUGE + '<style>ui-gauge [data-part="progress"] { vector-effect: non-scaling-stroke }</style>', good: GAUGE },

@@ -21,7 +21,7 @@ import './choice-card.css'
 import './choice-card.ts'
 import type { UIChoiceCardElement } from './choice-card.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 interface CdpSession {
   send(method: string, params?: Record<string, unknown>): Promise<unknown>
@@ -264,7 +264,7 @@ describe('ui-choice-card — forced-colors (Chromium CDP emulation; WebKit basel
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════
-//  [5] Badge + tick geometry (ADR-0245 cl.4): 2n slot and 2n - 2c mark box inside an opt-in region
+//  [5] Badge + tick geometry (ADR-0245 cl.4): 2n slot and n + 6 mark box inside an opt-in region
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-choice-card: badge and tick geometry', () => {
@@ -281,7 +281,7 @@ describe('ui-choice-card: badge and tick geometry', () => {
   })
 
   for (const scale of ['sm', 'md'] as const) {
-    it(`product / ${scale}: badge 2n, tick 2n - 2c, centred on the badge`, () => {
+    it(`product / ${scale}: badge 2n, tick n + 6, centred on the badge`, () => {
       const r = resolve('product', scale, 'md')
       const region = document.createElement('div')
       region.setAttribute('data-tier', 'product')

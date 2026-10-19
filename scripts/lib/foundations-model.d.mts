@@ -23,8 +23,8 @@ export interface EmittedLevel {
   readonly radius: number
 }
 
-/** The control anatomy (resolveControlSurface): a 3n slot per wrapper, the margin around it, and the icon and glyph
- *  artwork centered in square slots, at today's artwork sizes. Not emitted. */
+/** The control anatomy (resolveControlSurface): a 3n slot per wrapper, the margin around it, and the icon (2n) and
+ *  glyph (n + 6) artwork centered in square slots. Only height, icon, glyph and slot are emitted. */
 export interface ControlSurface {
   readonly slot: number
   readonly margin: number
@@ -46,6 +46,7 @@ export interface Emitted {
   readonly controlRadius: number
   readonly iconBox: number
   readonly glyphBox: number
+  readonly glyphSlot: number
   readonly glyphStroke: number
   readonly checkboxRadius: number
   readonly surface: ControlSurface

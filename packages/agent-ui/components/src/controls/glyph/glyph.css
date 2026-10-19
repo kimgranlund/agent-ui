@@ -1,23 +1,25 @@
 /* glyph.css: ui-glyph, the functional-mark display atom (ADR-0245 clauses 4 and 5). Two sectioned blocks:
  *
  *   [1] TOKEN BLOCK: `:where(ui-glyph)` declares the slot, its inset and the stroke. Each reads the derived
- *       foundation token first (`--md-sys-icon-box` 2n, `--md-sys-glyph-box` max(8px, 2n - 2c),
- *       `--md-sys-glyph-stroke` max(1.5px, c/2)), so the mark box is exactly the glyph box wherever the root
- *       tokens reach: a glyph keeps its own glyph box everywhere, unlike a standalone ui-icon, which follows the
- *       text (ADR-0245 Amendments 6 and 7).
+ *       foundation token first (`--md-sys-glyph-slot` 3n, `--md-sys-glyph-box` n + 6, `--md-sys-glyph-stroke`
+ *       max(1.5px, c/2)), so the mark box is exactly the glyph box wherever the root tokens reach: a glyph keeps
+ *       its own glyph box everywhere, unlike a standalone ui-icon, which follows the text (ADR-0245 Amendment 6).
+ *       The slot is the skill's square 3n glyph wrapper with the n + 6 artwork centred (T-0374, Kim's 2026-10-19
+ *       ruling). A host that gives the glyph a different cell sets `--ui-glyph-slot` to it, and the inset follows.
  *       Under the legacy opt-out the derived tokens are `initial` and the em fallbacks size it as a 1em cell.
- *   [2] STYLES BLOCK: `@scope (ui-glyph)` consumes ONLY --ui-glyph-*. The host is the shared icon-sized
- *       slot; its padding is the inset (slot - glyph box) / 2, so the svg (the mark box) fills what is left. `color: inherit`
+ *   [2] STYLES BLOCK: `@scope (ui-glyph)` consumes ONLY --ui-glyph-*. The host is the slot; its padding is the
+ *       inset (slot - glyph box) / 2, so the svg (the mark box) fills what is left. `color: inherit`
  *       lets the stroke track the surrounding ink, forced colors included, with no override of its own.
  */
 
 /* ════════════════ [1] TOKEN BLOCK: :where(ui-glyph) declares --ui-glyph-* ════════════════ */
 
 :where(ui-glyph) {
-  --ui-glyph-slot: var(--md-sys-icon-box, 1em);
-  /* The inset centres the glyph box in the slot: c at md and lg, less at sm where the glyph floor holds the box
-     at 8px (ADR-0245 Amendment 7); 0.125em each side under the legacy opt-out. */
-  --ui-glyph-inset: calc((var(--md-sys-icon-box, 1em) - var(--md-sys-glyph-box, 0.75em)) / 2);
+  --ui-glyph-slot: var(--md-sys-glyph-slot, 1em);
+  /* The inset centres the glyph box in whatever slot the element ends up with: (3n - (n + 6)) / 2 in its own 3n slot
+     (1px at n 4, 2px at n 5, 5px at n 8), never below 0 in a host's smaller cell; 0.125em each side under the
+     legacy opt-out. */
+  --ui-glyph-inset: max(0px, calc((var(--ui-glyph-slot) - var(--md-sys-glyph-box, 0.75em)) / 2));
   --ui-glyph-stroke: var(--md-sys-glyph-stroke, 1.5px);
 }
 

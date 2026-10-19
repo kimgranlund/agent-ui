@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import { server, cdp } from 'vitest/browser'
 
 // timeline-family.lld.md §5 · SPEC-R4/R13/R14/R15 — the cross-engine geometry + whole-shape + signifier +

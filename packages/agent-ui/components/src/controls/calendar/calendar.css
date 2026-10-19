@@ -224,7 +224,7 @@
   }
 
   /* The carets are ui-glyph marks (T-0149, the icon versus glyph ruling): each sizes itself to its own glyph box
-     max(8px, 2n - 2c) in the 2n slot, so no size rule lives here. */
+     n + 6 centred in its square 3n slot (T-0374), so no size rule lives here. */
 
   :scope [data-part='prev']:hover,
   :scope [data-part='next']:hover {

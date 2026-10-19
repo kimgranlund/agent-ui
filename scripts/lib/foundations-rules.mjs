@@ -30,7 +30,7 @@ export const LEGACY_TO_DERIVED = [
 
 /** Every derived token foundations.gen.css declares (generate-foundations.mjs); foundations.test.ts fails when they drift. */
 export const DERIVED = new Set([
-  'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
+  'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'icon-box', 'glyph-box', 'glyph-slot', 'glyph-stroke', 'corner-shape',
   'checkbox-radius',
   ...['display', 'heading', 'subhead', 'section-kicker', 'title', 'body', 'control', 'field-label', 'group-kicker', 'floor'].map((r) => `type-${r}`),
   ...['chip', 'group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),
@@ -47,14 +47,11 @@ export const RENAMED = Object.freeze({
  *  rename then clears the fallback too, so one fix is one finding). */
 const wrapsFallback = (name) => DERIVED.has(name) || Object.hasOwn(RENAMED, name)
 
-/** The glyph floor (ADR-0245 Amendment 7): the glyph box never drops below 8px. It is local to agent-ui, not in the
- *  repo's scale.mjs (the skill's former revision, frozen; P15 proposes it upstream), so the generator emits it and
- *  the browser tests read the glyph box through glyphBox(), never resolve().glyph alone (the render lint inlines the
- *  same max). */
-export const GLYPH_FLOOR = 8
-
-/** The glyph box of a resolved register: max(GLYPH_FLOOR, 2n - 2c), where scale.mjs resolve() supplies 2n - 2c. */
-export const glyphBox = (r) => Math.max(GLYPH_FLOOR, r.glyph)
+/** The glyph box of a register: the skill's n + 6 artwork, centred in its square 3n glyph slot (T-0374, Kim's
+ *  2026-10-19 ruling). It is at least 10 on the whole ladder n 4 to 24, so the retired 8px floor (ADR-0245
+ *  Amendment 7) never binds. The browser tests read the glyph box through glyphBox(), never the frozen scale.mjs
+ *  resolve().glyph, the retired formula; the render lint reads it here too. */
+export const glyphBox = (r) => r.n + 6
 
 /** The page root register (ADR-0245 Amendment 8): the tier and scale `:root` takes at the cut. The one definition:
  *  generate-foundations.mjs emits it as its ROOT_INPUTS, and every lint and test that means "the root" reads it here

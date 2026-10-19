@@ -73,7 +73,7 @@ Load the map skills as you go: [[component-standards]] (law),
    | Anatomy | slots × `data-role` roles; host-as-grid vs rendered cell |
    | Props | typed `prop.enum` unions; which reflect; defaults (`''`-first for inherit-ambient semantics) |
    | Events | ⊂ the closed set AGENTS.md §Hard conventions owns (`naming.md §4`, gated by `ALLOWED_EVENTS` — read it there; a copied list here drifted past `action`, GH #754) — a name OUTSIDE that set is a fleet-contract fork |
-   | Geometry | the control's n rule (`height = 4n`, padding, radius, icon box `2n`, glyph box `2n - 2c`) or its indicator box, per ADR-0245 cl.3; the control-class frame laws (floors, radius) |
+   | Geometry | the control's n rule (`height = 4n`, padding, radius, icon box `2n`, glyph box `n + 6` in its square `3n` slot) or its indicator box, per ADR-0245 cl.3; the control-class frame laws (floors, radius) |
    | Tokens | the `--ui-{name}-*` roles and which `--md-sys-color-{family}-{role}` each consumes; non-color signifier for any intent |
    | A11y | `internals` role/states (never host attributes); keyboard map; focus behavior |
    | Interaction states | hover/active/focus/disabled + `data-scale` participation are LAW-owned (`interaction-states.md`) — a row here only when the design DEVIATES from the four-state standard (that deviation is a fork) |

@@ -16,7 +16,7 @@ import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*)
 import './checkbox.css'                             // the control stylesheet (direct — pre-barrel)
 import './checkbox.ts'                             // self-define (registers ui-checkbox)
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 const num = (v: string): number => Number.parseFloat(v)
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
@@ -216,7 +216,7 @@ describe('ui-checkbox -- ADR-0223 two postures (fill default / [inline] hug, bot
 })
 
 // ADR-0245 clauses 3 and 4: inside an opt-in region the box is 2n, the radius n/2, and the check and dash span the
-// 2n - 2c glyph box centred in the box (inset c); the dash is max(1.5px, c/2) tall. Against scale.mjs resolve().
+// n + 6 glyph box (T-0374), inset c; the dash is max(1.5px, c/2) tall. Against scale.mjs resolve().
 describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', () => {
   const mountIn = (scale: string, size: string, props: Record<string, boolean> = {}): { wrap: HTMLElement; el: HTMLElement } => {
     const wrap = document.createElement('div')
@@ -233,7 +233,7 @@ describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', ()
 
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
-      it(`product / ${scale} / ${size}: box 2n, radius ceil(n/2), check 2n - 2c inset c`, () => {
+      it(`product / ${scale} / ${size}: box 2n, radius ceil(n/2), check n + 6 inset c`, () => {
         const r = resolve('product', scale, size)
         const { wrap, el } = mountIn(scale, size, { checked: true })
         const box = getComputedStyle(el, '::before')
@@ -247,7 +247,7 @@ describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', ()
         wrap.remove()
       })
 
-      it(`product / ${scale} / ${size}: dash 2n - 2c wide, max(1.5px, c/2) tall`, () => {
+      it(`product / ${scale} / ${size}: dash n + 6 wide, max(1.5px, c/2) tall`, () => {
         const r = resolve('product', scale, size)
         const { wrap, el } = mountIn(scale, size, { indeterminate: true })
         const dash = getComputedStyle(el, '::after')

@@ -52,7 +52,7 @@
      icon ramp (`--ui-ind`) — the named oversize-caret bug class this law fixes. */
   --ui-disclosure-glyph: var(--md-sys-glyph-box, var(--ui-disclosure-font));
   --ui-disclosure-pad-inline: var(--md-sys-inset, calc(var(--ui-disclosure-height) / 2)); /* h/2 slotless edge; derived: n (ADR-0245 cl.3) */
-  --ui-disclosure-slot: var(--md-sys-icon-box, var(--ui-disclosure-glyph)); /* the 2n slot the mark sits centred in (ADR-0245 cl.4) */
+  --ui-disclosure-slot: max(var(--md-sys-icon-box, var(--ui-disclosure-glyph)), var(--ui-disclosure-glyph)); /* the 2n slot the mark sits centred in (ADR-0245 cl.4), never smaller than the n + 6 glyph (T-0374) */
 
   /* Summary row inline layout — the icon↔label gap (rhythm family, ∝ font × density; geometry.md). */
   --ui-disclosure-gap: var(--md-sys-inset, var(--md-sys-gap-md));
@@ -118,6 +118,7 @@
     flex: none;
     inline-size: var(--ui-disclosure-slot);
     block-size: var(--ui-disclosure-slot);
+    --ui-glyph-slot: var(--ui-disclosure-slot); /* ui-glyph centres its glyph box in this slot, not its own 3n one */
     color: currentColor;
     rotate: 0deg;
   }

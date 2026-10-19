@@ -40,7 +40,7 @@
      inside @scope). */
   --ui-choice-card-padding: var(--md-sys-space-md);
 
-  /* Badge circle and its tick: the 2n icon slot and the 2n - 2c mark box inside an opt-in region (ADR-0245 cl.4);
+  /* Badge circle and its tick: the 2n icon slot and the n + 6 mark box (T-0374) inside an opt-in region (ADR-0245 cl.4);
      outside, today's 1.25rem circle and 0.75rem tick. The pseudo-element tick stays (a ui-glyph child would swap
      the filled clip-path for a stroke and move the default render). */
   --ui-choice-card-badge-size: var(--md-sys-icon-box, 1.25rem);

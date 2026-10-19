@@ -28,7 +28,8 @@
   --md-sys-radius: calc(var(--md-sys-n) * 1px);
   --md-sys-control-radius: calc(var(--md-sys-height) / 2);
   --md-sys-icon-box: calc(var(--md-sys-n) * 2px);
-  --md-sys-glyph-box: max(8px, calc(var(--md-sys-n) * 2px - 2 * var(--md-sys-c)));
+  --md-sys-glyph-box: calc(var(--md-sys-n) * 1px + 6px);
+  --md-sys-glyph-slot: calc(var(--md-sys-n) * 3px);
   --md-sys-glyph-stroke: max(1.5px, var(--md-sys-c) / 2);
   --md-sys-corner-shape: squircle;
   --md-sys-type-display: round(nearest, var(--md-sys-type-body) * pow((1.25 + 0.03125 * (var(--md-sys-n) - 5)), 3), 1px);

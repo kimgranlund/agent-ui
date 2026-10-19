@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve, type Resolved, type Step, type Tier } from '../../../shared/src/tokens/scale.mjs'
-import { glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs' // the glyph box floor, local to agent-ui (ADR-0245 Amendment 7)
+import { glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -181,7 +181,8 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         near(px(q(wrap, 'ui-combo-box [role="option"]'), 'padding-inline-start'), edge, 'combo-box option row text edge')
 
         const row = q(wrap, 'ui-multi-select [role="option"]')
-        near(edges(row, textRect(row)).start, r.control.margin + r.icon + r.control.margin, 'listbox row: tick cell at n, 2n wide, n to the text')
+        // the tick cell is the 2n icon cell, never smaller than the n + 6 glyph box (T-0374: 11 at n 5)
+        near(edges(row, textRect(row)).start, r.control.margin + Math.max(r.icon, glyphBox(r)) + r.control.margin, 'listbox row: tick cell at n, max(2n, n + 6) wide, n to the text')
         near(px(row, 'padding-inline-end'), edge, 'listbox row text edge, end')
       })
 

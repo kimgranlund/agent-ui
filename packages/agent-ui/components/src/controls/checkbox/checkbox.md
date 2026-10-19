@@ -108,7 +108,7 @@ geometry:
   blockSize: var(--ui-checkbox-box)
   boxRamp: --md-sys-icon-box (2n) with fallback --md-sys-compact-{size}   # the box is 2n (ADR-0245 cl.3); the --md-sys-compact-{size} bridge alias is the data-foundations="legacy" fallback until W7 (ADR-0041's widget ramp retired)
   radius: var(--md-sys-checkbox-radius) with fallback box/5   # ceil(n/2), a rounded square (the skill's checkboxRadius; ADR-0245 Amendment 5 moves it off the chip pill; 3px at md of the root, 4px at lg); box/5 under the legacy opt-out
-  markBox: --md-sys-glyph-box (2n - 2c) with fallback 60% of the box   # the check and dash width; centred, inset c (ADR-0245 cl.4); the dash is --md-sys-glyph-stroke tall
+  markBox: --md-sys-glyph-box (n + 6) with fallback 60% of the box   # the check and dash width; centred, inset c (ADR-0245 cl.4); the dash is --md-sys-glyph-stroke tall
 
 forcedColors: A `@media (forced-colors: active)` block maps unchecked to ButtonText border on ButtonFace; checked/indeterminate to Highlight fill with HighlightText glyph. The :focus-visible ring is free via --md-sys-color-focus-ring → Highlight from the token layer (ADR-0009).
 ---

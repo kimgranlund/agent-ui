@@ -195,9 +195,12 @@ describe('button.css — role-driven glyph sizing, caret = font (ADR-0012)', () 
     const m = stylesBlock.match(/:scope > \[data-role='caret'\]\s*\{([^}]*)\}/)
     expect(m, "[data-role='caret'] rule missing").not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    // inset = ½(icon − glyph) → the font glyph centers in the icon-sized cell, landing at the emergent ½(h−font).
+    // inset = ½(cell − glyph) → the glyph centers in the caret cell, the icon cell never smaller than the n + 6
+    // glyph box (T-0374), so the mark is never clipped at n 4 and 5.
     // The glyph reduces from icon to --ui-button-glyph (= font) — NOT left at --ui-ind (the oversize-caret bug).
-    expect(rule).toMatch(/padding:\s*calc\(\(var\(--ui-button-icon\)\s*-\s*var\(--ui-button-glyph\)\)\s*\/\s*2\)/)
+    expect(tokenBlock).toMatch(/--ui-button-caret-cell:\s*max\(var\(--ui-button-icon\), var\(--ui-button-glyph\)\)/)
+    expect(rule).toMatch(/inline-size:\s*var\(--ui-button-caret-cell\)/)
+    expect(rule).toMatch(/padding:\s*calc\(\(var\(--ui-button-caret-cell\)\s*-\s*var\(--ui-button-glyph\)\)\s*\/\s*2\)/)
     expect(rule).toContain('--ui-button-glyph') // sized to the font ramp, not the icon ramp
   })
 

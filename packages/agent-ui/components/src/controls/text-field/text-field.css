@@ -530,7 +530,7 @@
 
   /* Injected Phosphor icons (setIcon, @agent-ui/icons): magnifier · eye/eye-slash (reveal) · calendar-blank.
      The clear x and the stepper minus/plus are `ui-glyph` marks (T-0351, ADR-0245 cl.5) that size themselves
-     to the glyph box in their own 2n slot, so they are deliberately absent here. 1em tracks each part's own
+     to the glyph box in their own 3n slot (T-0374), so they are deliberately absent here. 1em tracks each part's own
      font-size, inherited (--ui-text-field-font) on the buttons, explicit on [data-part='leading-adornment'] above, at every
      [size] tier, matching the previous inline-text glyphs' rendered size exactly. Overrides the svg's own
      width/height="100%" presentational attributes (resolve.ts); [data-part='suffix'] carries NO icon (a
