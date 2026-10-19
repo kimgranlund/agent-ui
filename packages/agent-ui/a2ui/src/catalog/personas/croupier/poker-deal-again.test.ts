@@ -67,7 +67,17 @@ describe('croupier bet controls: a poker hand settled through the data model off
     expect(run(fixture.holdem, [...fixture.holdem.output, comps(disabled)])).toEqual([])
   })
 
+  it('a /status sentence in play that only mentions a rule word is no hand over', () => {
+    for (const status of [
+      "Pre-flop: your action. Dealer's hole cards stay face down until showdown.",
+      'Your move: check or bet 50. Fold costs nothing; whoever folds loses the pot.',
+      'Blinds settled, pre-flop: your action.',
+    ])
+      expect(run(fixture.holdem, [shipped(fixture.holdem, { phase: 'Pre-flop', status })]), status).toEqual([])
+  })
+
   it('a hand over is read from a settled /phase or /status, a fold ending, or a result on screen', () => {
+    expect(run(fixture.holdem, [shipped(fixture.holdem, { phase: 'River', status: 'You folded.' })])).toEqual([['DEAL_AGAIN_MISSING', 'table-1:btnCheck']])
     expect(run(fixture.holdem, [shipped(fixture.holdem, { phase: 'Settled', status: '' })])).toEqual([['DEAL_AGAIN_MISSING', 'table-1:btnCheck']])
     expect(run(fixture.holdem, [shipped(fixture.holdem, { phase: 'River', status: 'settled' })])).toEqual([['DEAL_AGAIN_MISSING', 'table-1:btnCheck']])
     expect(run(fixture.holdem, [shipped(fixture.holdem, { phase: 'River', status: 'The dealer folded. Hand over.' })])).toEqual([['DEAL_AGAIN_MISSING', 'table-1:btnCheck']])

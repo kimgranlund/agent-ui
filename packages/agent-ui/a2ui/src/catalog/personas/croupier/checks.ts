@@ -1351,6 +1351,13 @@ const PLAYER_POST_TEXT = /\byou(?:'ve| have)? posted\b|\byour (?:big |small )?(?
 const NOT_OPPONENT_LIST = /player|hero|you|board|community|flop|turn|river/i
 /** T-0380: the data-model words that end a hand; a bare "fold" is the move, "folded" or "folds" the ending. */
 const HAND_OVER = /(?<![\w-])(settled|showdown|hand over|folded|folds)(?![\w-])/i
+/** T-0380: a `/status` sentence that ends the hand: the whole sentence a state word or a player folding, or a player
+ *  named first with a result ("Dealer wins with ...", "You lose the pot"). "Whoever folds loses" names no one. */
+const STATUS_PLAYER = '(?:you|the dealer|dealer|the house|your opponent|opponent|villain)'
+const STATUS_ENDED = new RegExp(
+  `^(?:settled|showdown|(?:the )?hand(?: is)? over|game over|folded|${STATUS_PLAYER} (?:folded|folds|fold)|${STATUS_PLAYER} (?:wins?|won|lose[sd]?|lost|beats?|split|ties?|tied|push|chop)\\b.*)$`,
+  'i',
+)
 
 /** A chip count: a finite number, or a numeric string ("990", "$60", "1,060"). */
 function chipNumber(v: unknown): number | undefined {
@@ -1387,15 +1394,19 @@ const settlesHand = (view: SurfaceView): boolean => pokerHandOver(view) !== unde
 
 /** T-0380: a poker hand is over when the data model's `/phase`, `/street` or `/status` reads settled, the showdown
  *  ("Pre-showdown" is a street before) or a fold ending ("Hand over", "Folded"; a bare "or fold" offers the move), or
- *  the surface holds a ResultCard or a text naming a result. Returns what says so, for the repair text. */
+ *  the surface holds a ResultCard or a text naming a result. `/status` is prose: only a sentence that is itself the
+ *  ending counts ("Settled.", "You folded.", "Hand over."), never a rule word inside an in-play sentence ("face down
+ *  until showdown", "Blinds settled, pre-flop"); a text bound to `/status` is read by that rule alone. Returns what
+ *  says so, for the repair text. */
 function pokerHandOver(view: SurfaceView): string | undefined {
   for (const p of ['/phase', '/street', '/status']) {
     const v = readPointer(view.dataModel, p)
-    if (typeof v === 'string' && HAND_OVER.test(v)) return `${p} reads "${v}"`
+    if (typeof v !== 'string') continue
+    if (p === '/status' ? v.split(/[.!?;]/).some((s) => STATUS_ENDED.test(s.trim())) : HAND_OVER.test(v)) return `${p} reads "${v}"`
   }
   for (const c of view.components.values()) {
     if (c.component === 'ResultCard') return `${c.id} is a ResultCard`
-    const k = ['text', 'label', 'title', 'status', 'result'].find((key) => RESULT_WORDS.test(stringProp(view, c, key)))
+    const k = ['text', 'label', 'title', 'status', 'result'].find((key) => bindingPath(c[key]) !== '/status' && RESULT_WORDS.test(stringProp(view, c, key)))
     if (k !== undefined) return `${c.id} reads "${stringProp(view, c, k)}"`
   }
   return undefined
