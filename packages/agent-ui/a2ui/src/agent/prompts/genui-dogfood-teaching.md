@@ -31,8 +31,9 @@ Idioms — how a fleet component is actually authored:
   theme; a token role always does.
 - **Size and density are attributes, not styles.** An ancestor `data-tier` (`widget` / `product` /
   `content` / `brand`) and `data-scale` (`sm` / `md` / `lg`) set the frame every descendant control
-  derives (height, icon size, padding); an ancestor `data-density` (`compact` / `default` / `spacious`)
-  moves rhythm only: the icon↔label gaps, never the frame. Set these on a WRAPPING element, never
+  derives (height, icon size, padding); an ancestor `data-density`
+  (`tight` / `compact` / `regular` / `spacious` / `loose`, `regular` when absent) moves that frame's
+  height and the card and panel spacing, never the type or icon size. Set these on a WRAPPING element, never
   per-control CSS transforms or hand-scaled dimensions.
 - **Events follow one closed vocabulary.** Listen for `change` · `input` · `select` · `open` · `close` ·
   `toggle` · `action` — a fleet control never emits a bespoke event name; check the listed control's own
