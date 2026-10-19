@@ -786,3 +786,41 @@ describe('selectMiniSkills: ranking stability over the full registry (T-0209)', 
     expect(rankingDefects([...frozen, generic]).length).toBeGreaterThan(0)
   })
 })
+
+// T-0375: a CardFooter with one action Button holds it directly (grammar.md:188), and only 2+ share a Row.
+// card-game-sheet loaded on the r11 stud turns that rebuilt a separate actions Card, game-table-chrome on deal again.
+describe('T-0375: a lone action Button carries no Row', () => {
+  const body = (id: string): string => MINI_SKILLS.find((m) => m.id === id)!.body
+
+  it('game-table-chrome seats a lone Button in the CardFooter with no Row', () => {
+    expect(body('game-table-chrome')).toMatch(/CardFooter = one Button, no Row; 2\+ in one Row\./)
+    expect(body('game-table-chrome')).not.toMatch(/Row of action Buttons/)
+  })
+
+  it('card-game-sheet rides the bar in the hands Card footer, a lone Button with no Row', () => {
+    expect(body('card-game-sheet')).toMatch(
+      /action bar = 2\+ action Buttons in one Row, a lone Button \(a settled Deal again\) with no Row; the bar rides the CardFooter of the Card that holds the hands, or with no such Card sits below them, never in a separate actions Card\./,
+    )
+    expect(body('card-game-sheet')).not.toMatch(/action bar = a Row of Buttons/)
+  })
+
+  it('the r11 stud turn composes the card-game-sheet clause into the default-mode prompt', () => {
+    const selection = selectMiniSkills(
+      'Check, or call if there is a bet. If the hand is already over, leave the table as it is.',
+      MINI_SKILLS,
+      DEFAULT_MINI_SKILL_CAP,
+      'agent-ui--croupier',
+    )
+    expect(selection.map((m) => m.id)).toContain('card-game-sheet')
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, selection)
+    expect(prompt).toContain('a lone Button (a settled Deal again) with no Row')
+    expect(prompt).toContain('rides the CardFooter of the Card that holds the hands')
+  })
+
+  it('a deal again turn composes the game-table-chrome footer clause into the default-mode prompt', () => {
+    const selection = selectMiniSkills('deal again', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--croupier')
+    expect(selection.map((m) => m.id)).toContain('game-table-chrome')
+    const prompt = buildSystemPrompt(defaultCatalog, [], undefined, selection)
+    expect(prompt).toContain('CardFooter = one Button, no Row')
+  })
+})

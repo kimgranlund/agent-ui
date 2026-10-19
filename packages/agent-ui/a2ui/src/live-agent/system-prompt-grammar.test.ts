@@ -254,6 +254,10 @@ describe('buildSystemPrompt mode axis (ADR-0090 §1)', () => {
     expect(prompt).toMatch(/card-game component sheet/)
     expect(prompt).toMatch(/Row\(gap\) of Cards/)
     expect(prompt).toMatch(/drag-to-reorder, card-flip animation, and playing-card face art are not hosted/)
+    // T-0375: a lone action Button carries no Row, and the bar rides the hands Card footer.
+    expect(prompt).toMatch(/a lone Button \(a settled Deal again\) with no Row/)
+    expect(prompt).toMatch(/rides the CardFooter of the Card that holds the hands/)
+    expect(prompt).not.toMatch(/action bar = a Row of Buttons/)
     // 2. The settings screen — fully hosted, no wall.
     expect(prompt).toMatch(/settings screen/)
     expect(prompt).toMatch(/List of Field/)
