@@ -11,15 +11,15 @@ router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
 ---
 
 ## Goal
-The game-table-chrome mini-skill stops teaching a Row around a lone action Button, so a settled hand's single Deal again no longer costs a LONE_BUTTON_FRAME repair round.
+On every turn that loads card-game-sheet or game-table-chrome, the composed prompt teaches that a lone action Button (a settled hand's Deal again) carries no Row, two or more share one Row, and the action bar rides the CardFooter of the Card that holds the hands, never a separate actions Card.
 
 ## Intent
-- Do: reword `packages/agent-ui/a2ui/src/agent/prompts/mini-skills/game-table-chrome.md` so a CardFooter with one action Button holds it directly (grammar.md:179), and a Row of Buttons only when there are two or more; recapture the prompt-equivalence baseline through the a2ui-prompt-authoring flow; regenerate assets.
+- Do: reword `packages/agent-ui/a2ui/src/agent/prompts/mini-skills/game-table-chrome.md` and `packages/agent-ui/a2ui/src/agent/prompts/mini-skills/card-game-sheet.md` (the action-bar clause, the root cause on the r11 stud turns), with their pinned tests in `mini-skills.test.ts` and the composed-prompt tests, so a CardFooter with one action Button holds it directly (grammar.md:179), and a Row of Buttons only when there are two or more; recapture the prompt-equivalence baseline through the a2ui-prompt-authoring flow; regenerate assets.
 - Non-goals: the LONE_BUTTON_FRAME check (T-0369 shipped it).
 - Done when: the debate ran (Opus architect proposes the wording, a fable plan-reviewer challenges it); `npm run check`, the prompt-equivalence and system-prompt tests and the croupier replays exit 0; recorded rounds unchanged.
 
 ## Context
-Found by the T-0369 code review: the teaching "CardFooter = Row of action Buttons" sits beside a settled state with one Deal again Button, against grammar.md:179 ("A footer with exactly one action Button skips the Row"). Kim ruled 2026-10-18: ticket it and run the debate.
+Found by the T-0369 code review: the teaching "CardFooter = Row of action Buttons" sits beside a settled state with one Deal again Button, against grammar.md:179 ("A footer with exactly one action Button skips the Row"). Kim ruled 2026-10-18: ticket it and run the debate. Conductor call 2026-10-18: scope widened to card-game-sheet.md after the architect showed game-table-chrome was not loaded on the failing r11 turns (:159-:164). The rule is at grammar.md:188 (the :179 cite was stale).
 
 ## Constraints
 Model-read text: debate rule applies. grammar.md unchanged.
