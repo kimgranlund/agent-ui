@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the field label n + 5 (T-0374 step 2)
 import '@agent-ui/components/foundation-styles.css'
 import './stat.css'
 import './stat.ts'
@@ -26,6 +27,7 @@ function mount(html: string, region = true): HTMLElement {
 
 const px = (v: string): number => Number.parseFloat(v)
 const root = resolve('product', 'sm', 'md')
+const fieldLabel = model('product', 'sm', 'md').type.fieldLabel
 
 describe('ui-stat type (ADR-0245 cl.7)', () => {
   const part = (wrap: HTMLElement, p: string): HTMLElement => wrap.querySelector(`[data-part="${p}"]`) as HTMLElement
@@ -33,7 +35,7 @@ describe('ui-stat type (ADR-0245 cl.7)', () => {
 
   it('inside a region: label is the field-label role and the value is the heading role', () => {
     const wrap = mount(STAT)
-    expect(px(getComputedStyle(part(wrap, 'label')).fontSize)).toBeCloseTo(root.type.fieldLabel, 1)
+    expect(px(getComputedStyle(part(wrap, 'label')).fontSize)).toBeCloseTo(fieldLabel, 1)
     expect(px(getComputedStyle(part(wrap, 'value')).fontSize)).toBeCloseTo(root.type.heading, 1)
   })
 

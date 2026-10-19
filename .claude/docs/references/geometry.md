@@ -147,6 +147,9 @@ kicker** (`--md-sys-type-section-kicker`, round(body · 9/8)) and the **group ki
 n/2 + 6.5, the only half-pixel role); the `kicker` and `overline` variants both read the group kicker. The former
 names `--md-sys-type-section-label` and `--md-sys-type-group-label` stay aliases of them in `foundations.gen.css`
 until W7, for an outside reader only: no consumer reads them, and the foundations census flags a new read.
+The **field label** (`--md-sys-type-field-label`) is the skill's n + 5, 10 at n 5 and 13 at the root, and the
+`label` typescale rows alias it. The **small control** role (`--md-sys-type-small-control`) is the skill's n + 4,
+9 at n 5 and 12 at the root (T-0374); it is emitted and no control reads it yet.
 
 ## Minimum inline size (the bare-control floor)
 

@@ -92,6 +92,7 @@ function derivedDeclarations(a = anchors()) {
     ['--md-sys-type-body', lin(a, a.linear.body)],
     ['--md-sys-type-control', lin(a, a.linear.control)],
     ['--md-sys-type-field-label', lin(a, a.linear.fieldLabel)],
+    ['--md-sys-type-small-control', lin(a, a.linear.smallControl)],
     ['--md-sys-type-group-kicker', lin(a, a.linear.groupKicker)],
     ['--md-sys-type-floor', `${a.floor}px`],
     // The chip level (tag, badge, kbd): margin c, gutter c, and the chip pill n + c, h/2 of the 2n + 2c chip
