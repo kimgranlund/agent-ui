@@ -6732,7 +6732,7 @@ invisible to AT. Reserve `emphasis` for names/labels/key values where the surrou
 law, and no frame — its lever is the type scale, not `--md-sys-height-*`. It consumes only its component tokens
 (`--ui-text-size`/`-weight`/`-line-height`/`-tracking`), which the `[variant][size]` matrix repoints from the
 fleet `--md-sys-typescale-{role}-{size}-*` scale (ADR-0078 cl.2/cl.3) — the role-pure two-block pattern every
-control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase` (`kicker` reads the group-label size, the same as `overline`, so it stays the small label over a group);
+control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase` (`kicker` reads the group-kicker size, the same as `overline`, so it stays the small label over a group);
 `quote` adds italic + an inline-start rule + an indent. An allowed link (`--ui-text-link-ink`, defaulting to
 `--md-sys-color-primary`) always pairs an underline with its ink — never a color-only signifier (ADR-0057)
 — and keeps the fleet's shared `:focus-visible` ring. Text is **selectable** (`user-select` is enabled —

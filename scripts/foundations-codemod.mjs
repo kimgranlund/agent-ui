@@ -7,7 +7,8 @@
 //   tokens  each hand-tabled ramp read becomes the dark-launch form, the derived token with today's read as its
 //           fallback: `var(--md-sys-height-md)` -> `var(--md-sys-height, var(--md-sys-height-md))` (clause 10a).
 //           The derived value is the element's own n, so a rule that reads a size other than its element's own
-//           (a part one size down) needs a hand fix, usually `data-size` on that part.
+//           (a part one size down) needs a hand fix, usually `data-size` on that part. A read of a type label
+//           renamed to the skill's kicker is renamed: `var(--md-sys-type-group-label)` -> `--md-sys-type-group-kicker`.
 //   glyph   ui-icon's `glyph` call sites become `symbol` (clause 4): the attribute, the attribute calls, the
 //           attribute selector, and the object key and property when aimed at ui-icon.
 //   axes    a `scale="…"` attribute and a valued `[scale=…]` selector become `data-tier` plus `data-scale` by
@@ -23,7 +24,7 @@
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, relative, resolve } from 'node:path'
-import { LEGACY_TO_DERIVED, SCALE_TO_TIER, closeParen, findingsIn, kindOf, lineOf } from './lib/foundations-rules.mjs'
+import { LEGACY_TO_DERIVED, RENAMED, SCALE_TO_TIER, closeParen, findingsIn, kindOf, lineOf } from './lib/foundations-rules.mjs'
 
 const SKIP_DIRS = new Set(['node_modules', '__baselines__', '__fixtures__', '__screenshots__'])
 
@@ -35,6 +36,10 @@ export function rewrite(path, src) {
   const note = (rule, f, why) => manual.push({ rule, line: lineOf(src, f.index), text: f.text, why })
 
   for (const f of found.tokens) {
+    if (Object.hasOwn(RENAMED, f.text)) {
+      edits.push({ at: f.index, end: f.index + f.text.length, text: RENAMED[f.text], rule: 'tokens' })
+      continue
+    }
     const end = closeParen(src, src.indexOf('(', f.index))
     const derived = LEGACY_TO_DERIVED.find(([re]) => re.test(f.text))?.[1]
     if (end === -1 || !derived) {
@@ -129,6 +134,8 @@ function selftest() {
   const b = rewrite('x.ts', ts)
   check('glyph: key, attribute call, property and markup become symbol; a field not aimed at ui-icon stays', b.out === `const t = { glyph: '9♠' }\nel('ui-icon', { symbol: 'x' })\nicon.setAttribute('symbol', 'y')\nthis.#icon.symbol = z\nh(\`<div data-tier="product" data-scale="md"><ui-icon symbol="eye"></ui-icon></div>\`)\n`)
   check('idempotent: a second run on the stylesheet changes nothing', rewrite('x.css', a.out).out === a.out)
+  const label = rewrite('x.css', 'x { font-size: var(--md-sys-type-group-label, var(--md-sys-font-sm)); --t: var( --md-sys-type-section-label); }')
+  check('tokens: a renamed type label read becomes its kicker, its fallback kept', label.out === 'x { font-size: var(--md-sys-type-group-kicker, var(--md-sys-font-sm)); --t: var( --md-sys-type-section-kicker); }')
   check('idempotent: a second run on the code changes nothing', rewrite('x.ts', b.out).out === b.out)
   check('the rewritten tree has no tokens, glyph or valued-axes finding left', ['tokens', 'glyph'].every((r) => findingsIn('x.ts', b.out)[r].length === 0) && findingsIn('x.css', a.out).tokens.length === 0)
   check('md: a descriptor attribute row is manual', rewrite('x.md', '---\nattributes:\n  - name: glyph\n---\n').manual.length === 1)

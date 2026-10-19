@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { CFG, check, resolve, type Resolved } from './scale.mjs'
-import { BRIDGE_REL, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
-import { DERIVED, GLYPH_FLOOR, ROOT_REGISTER, STEP, glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs'
-import { anchors, checkAnchors, resolve as resolveEmitted, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
+import { BRIDGE_REL, EMITTED_M7, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
+import { DERIVED, GLYPH_FLOOR, RENAMED, ROOT_REGISTER, STEP, glyphBox, findingsIn } from '../../../../../scripts/lib/foundations-rules.mjs'
+import { anchors, checkAnchors, checkEmitted, resolve as resolveEmitted, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
 import { CFG as VENDORED_CFG } from './vendor/mathematical-design-system/scale.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
@@ -33,11 +33,15 @@ const VENDORED_SHA = '3c319761e5c8221e500077d62db65a555b95a85145cd022b58255b6e60
 const VENDOR = 'packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system'
 const CURRENT_SCALE_SHA = '5b370bdd0b6dda206db29f34c7f9aecaed00972ccdd4de41804d3117e68dd2b8'
 const CURRENT_CURVATURE_SHA = 'cc1639f495299070ac02f86825589e970aff9286933fe6a3b0435e71fba84a2f'
-/** T-0372 parity: both sheets as they stood before the re-vendor. A change that moves an emitted token changes these
- *  on purpose (T-0373, T-0374), never as a side effect of where an input is read. */
+/** T-0372 parity: both sheets byte for byte. A change that moves an emitted token changes these on purpose, never as
+ *  a side effect of where an input is read. T-0373 moved both, with no computed value changed: the sheet's header now
+ *  names foundations-model.mjs, and the section and group labels take the skill's kicker names (`--md-sys-type-
+ *  {section,group}-kicker`); the sheet aliases the old names to them for one release (one rule beside the derived
+ *  block) and the bridge resets them in the legacy opt-out.
+ *  T-0374 moves them again with each visible change. */
 const PARITY_SHA = {
-  foundations: '5a0dd7eef81aed81231a89c889f5c87a6c451c43c9406aa7fddf1516128d2aef',
-  bridge: '1ad5621277876b1f3c4073e5438a9fb50ead1bece8b708b98c74b403378f8952',
+  foundations: 'f720f2a2c9c328c259b066b1feeca56534df3aa75ec8fecb73c75f52b9d97a1e',
+  bridge: 'a77f9ec5b9d2889bc249ca122b42bdc81214356279dc627918eabc9c95076dd3',
 }
 const textSha = (text: string): string => createHash('sha256').update(text).digest('hex')
 
@@ -52,18 +56,31 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     expect(sha(`${VENDOR}/curvature.mjs`)).toBe(CURRENT_CURVATURE_SHA)
   })
 
-  it('T-0372 parity: both sheets render byte-identical to the pre-re-vendor tokens', () => {
+  it('T-0372 parity: both sheets render byte-identical to the pinned tokens (moved once by the T-0373 renames)', () => {
     expect(textSha(renderFoundationsCss())).toBe(PARITY_SHA.foundations)
     expect(textSha(renderBridgeCss())).toBe(PARITY_SHA.bridge)
   })
 
-  it('the parity pin bites: every anchor read from the vendored resolver moves a sheet when nudged', () => {
+  it('the parity pin bites: every anchor read from the vendored resolver moves a sheet, or refuses it, when nudged', () => {
+    // A nudge either renders a different sheet or trips a guard (an A code: a role that no longer nests; E1: a
+    // fractional px), and a refused sheet has moved too: it is not the pinned one. Any other throw is a bug and fails.
+    const shas = (a: Anchors): string[] | null => {
+      try {
+        return [textSha(renderFoundationsCss({ anchors: a })), textSha(renderBridgeCss({ anchors: a }))]
+      } catch (err) {
+        if (/\b(?:A\d|E1) /.test(String(err))) return null
+        throw err
+      }
+    }
     const nudges: Record<string, (a: Anchors) => void> = {
-      heightPerN: (a) => { a.heightPerN += 1 },
-      iconPerN: (a) => { a.iconPerN += 0.5 },
-      'containers.widget': (a) => { a.containers.widget += 0.5 },
-      'containers.card': (a) => { a.containers.card += 0.5 },
-      'containers.layout': (a) => { a.containers.layout += 0.5 },
+      slotPerN: (a) => { a.slotPerN += 1 },
+      marginPerN: (a) => { a.marginPerN += 0.5 },
+      iconPerN: (a) => { a.iconPerN += 1 },
+      marginReference: (a) => { a.marginReference += 4 },
+      'roles.page': (a) => { a.roles.page += 25 },
+      'roles.container': (a) => { a.roles.container += 25 },
+      'roles.group': (a) => { a.roles.group -= 25 },
+      'roles.control': (a) => { a.roles.control -= 25 },
       'Q[0]': (a) => { a.Q[0] += 0.01 },
       'Q[1]': (a) => { a.Q[1] += 0.01 },
       floor: (a) => { a.floor += 1 },
@@ -72,12 +89,15 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
       'linear.body': (a) => { a.linear.body = [a.linear.body[0] + 1, a.linear.body[1]] },
       'linear.control': (a) => { a.linear.control = [a.linear.control[0] + 1, a.linear.control[1]] },
     }
+    let rendered = 0
     for (const [name, nudge] of Object.entries(nudges)) {
       const a = anchors()
       nudge(a)
-      const moved = textSha(renderFoundationsCss({ anchors: a })) !== PARITY_SHA.foundations || textSha(renderBridgeCss({ anchors: a })) !== PARITY_SHA.bridge
-      expect(moved, name).toBe(true)
+      const got = shas(a)
+      expect(got === null || got[0] !== PARITY_SHA.foundations || got[1] !== PARITY_SHA.bridge, name).toBe(true)
+      if (got) rendered++
     }
+    expect(rendered, 'anti-vacuous: most nudges render a moved sheet rather than refuse').toBeGreaterThan(Object.keys(nudges).length / 2)
     // Read at render time: a nudge of the vendored CFG itself reaches the next render, with no injection.
     const q = VENDORED_CFG.Q[0]
     try {
@@ -89,7 +109,7 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
     expect(textSha(renderFoundationsCss())).toBe(PARITY_SHA.foundations)
   })
 
-  it('the generator refuses to emit on a broken vendored anchor (a falling heading ratio, a non-finite height)', () => {
+  it('the generator refuses to emit on a broken vendored anchor (a falling heading ratio, a non-finite slot)', () => {
     expect(checkAnchors()).toEqual([])
     const slope = VENDORED_CFG.Q[1]
     try {
@@ -101,11 +121,68 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
       VENDORED_CFG.Q[1] = slope
     }
     const broken = anchors()
-    broken.heightPerN = Number.NaN
+    broken.slotPerN = Number.NaN
     expect(() => renderFoundationsCss({ anchors: broken })).toThrow(/A1/)
     const flat = anchors()
-    flat.containers.card = flat.containers.widget
+    flat.roles.container = flat.roles.group
     expect(checkAnchors(flat).some((f) => f.startsWith('A4'))).toBe(true)
+    // checkAnchors never throws: a role out of 0 to 200, a negative reference and a malformed set are all A codes.
+    const wild = anchors()
+    wild.roles.group = 250
+    wild.marginReference = -4
+    expect(checkAnchors(wild)).toEqual(expect.arrayContaining(['A5 group role 250% is outside 0 to 200', 'A5 margin reference -4m is negative']))
+    expect(() => renderFoundationsCss({ anchors: wild })).toThrow(/A5 /)
+    const malformed = { ...anchors(), Q: undefined } as unknown as Anchors
+    expect(checkAnchors(malformed)).toEqual([expect.stringMatching(/^A1 /)])
+  })
+
+  it('T-0373 spacing roles: the roomy levels are one margin reference (the section\'s 4d) at the skill\'s role percentages', () => {
+    const a = anchors()
+    expect(a.marginReference).toBe(4)
+    expect(a.roles).toEqual({ page: 100, container: 75, group: 50, control: 25 })
+    const e = resolveEmitted()
+    expect([e.widget, e.card, e.layout].map((l) => [l.margin / e.m, l.gutter / e.m])).toEqual([[2, 1], [3, 2], [4, 3]])
+  })
+
+  it('T-0373 control surface: the 3n slot plus two n/2 margins is the 4n control, the 2n icon centered in its slot', () => {
+    const a = anchors()
+    expect([a.slotPerN, a.marginPerN, a.iconPerN]).toEqual([3, 0.5, 2])
+    const e = resolveEmitted()
+    expect(e.surface).toEqual({ slot: 24, margin: 4, height: 32, icon: 16, iconInset: 4, glyph: 12, glyphInset: 6 })
+    expect(e.surface.slot + 2 * e.surface.margin).toBe(e.height)
+  })
+
+  it('T-0373 emit-time whole px: every emitted length is whole px and type sits on the 0.5px grid; M7 no longer refuses', () => {
+    expect(checkEmitted()).toEqual([])
+    const half = anchors()
+    half.iconPerN += 0.5 // 2.5n: fractional at every odd n
+    expect(checkEmitted(half).some((f) => f.startsWith('E1') && f.includes('iconBox'))).toBe(true)
+    expect(() => renderFoundationsCss({ anchors: half })).toThrow(/E1 .* iconBox .* is not whole px/)
+    const quarter = anchors()
+    quarter.linear.groupKicker = [9, 0.25] // the group kicker steps a quarter px: off the 0.5px grid at odd n
+    expect(checkAnchors(quarter)).toEqual([])
+    expect(() => renderFoundationsCss({ anchors: quarter })).toThrow(/E1 .* type groupKicker .* is off the 0.5px grid/)
+    expect(() => renderBridgeCss({ anchors: quarter })).toThrow(/E1/)
+    expect(checkEmitted()).toEqual([])
+  })
+
+  it('T-0373 M7: the level and type forms are dropped from the refusal (E1 holds them), the component-part form still refuses', () => {
+    // scale.mjs is sha-pinned, so its three M7 message forms cannot drift from these; the anti-vacuous line proves it.
+    const src = read('packages/agent-ui/shared/src/tokens/scale.mjs')
+    for (const form of ['`M7 h${4 * n}: ${l} not whole px`', '`M7 h${4 * n}: type off the 0.5px grid`', '`M7 h${4 * n}: a chip, control, group or component size is not whole px`']) {
+      expect(src, form).toContain(form)
+    }
+    for (const l of ['group', 'widget', 'card', 'page']) expect(EMITTED_M7.test(`M7 h20: ${l} not whole px`), l).toBe(true)
+    expect(EMITTED_M7.test('M7 h20: type off the 0.5px grid')).toBe(true)
+    expect(EMITTED_M7.test('M7 h20: a chip, control, group or component size is not whole px')).toBe(false)
+  })
+
+  it('T-0373 surface: the anatomy is not gated, so no surface token is emitted until T-0374 gates it', () => {
+    // resolve().surface has fractional values at odd n (margin n/2, the insets). A derived token named for any of them
+    // reds here first: T-0374 adds the value to checkEmitted() and then changes this list.
+    const surfaceToken = /^--md-sys-(?:slot|control-margin|icon-inset|glyph-inset|surface)/
+    expect([...DERIVED].filter((name) => surfaceToken.test(name))).toEqual([])
+    expect(Object.keys(resolveEmitted().surface).sort()).toEqual(['glyph', 'glyphInset', 'height', 'icon', 'iconInset', 'margin', 'slot'])
   })
 
   it('resolve() mirrors the sheet: every emitted token equals the repo\'s resolve() on all 36 cells at every density', () => {
@@ -119,7 +196,12 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
         expect([e.n, e.m, e.c, e.height, e.inset, e.labelInset, e.radius, e.iconBox, e.checkboxRadius], at)
           .toEqual([r.n, r.m, r.c, r.h, r.n, r.labelMargin, r.n, r.icon, r.parts.checkboxRadius])
         expect(e.glyphBox, at).toBe(glyphBox(r))
-        expect(e.type, at).toEqual(r.type)
+        // The skill's role names (T-0373): the kickers carry the former section and group labels' values.
+        const { sectionLabel, groupLabel, ...rest } = r.type
+        expect(e.type, at).toEqual({ ...rest, sectionKicker: sectionLabel, groupKicker: groupLabel })
+        expect(e.surface, at).toEqual({
+          slot: 3 * r.n, margin: r.n / 2, height: r.h, icon: r.icon, iconInset: r.n / 2, glyph: glyphBox(r), glyphInset: (3 * r.n - glyphBox(r)) / 2,
+        })
         expect([e.group, e.widget, e.card, e.layout], at).toEqual([r.group, r.widget, r.card, r.page])
         // The chip pill n + c (Amendment 5) and the control pill h/2 are the sheet's own, beside the resolver.
         expect(e.chip, at).toEqual({ margin: r.chip.margin, gutter: r.chip.gutter, radius: r.n + r.c })
@@ -222,14 +304,22 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     expect([...DERIVED].sort()).toEqual(declared.sort())
   })
 
-  it('declares every ADR-0245 clause 1 output name (Amendment 3: m, and the section and group labels; Amendment 4: the label inset and the chip level; Amendment 5: the control pill and the checkbox radius)', () => {
+  it('declares every ADR-0245 clause 1 output name (Amendment 3: m; T-0373: the section and group kickers; Amendment 4: the label inset and the chip level; Amendment 5: the control pill and the checkbox radius)', () => {
     const names = [
       'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'checkbox-radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
-      ...['display', 'heading', 'subhead', 'section-label', 'title', 'body', 'control', 'field-label', 'group-label'].map((r) => `type-${r}`),
+      ...['display', 'heading', 'subhead', 'section-kicker', 'title', 'body', 'control', 'field-label', 'group-kicker'].map((r) => `type-${r}`),
       ...['chip', 'group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),
     ]
     for (const name of names) expect(committed, `--md-sys-${name}`).toMatch(new RegExp(`\\n  --md-sys-${name}: `))
-    expect(`${committed}${bridge}`).not.toMatch(/--md-sys-type-(?:section|group)-kicker/) // renamed to the labels
+    // T-0373: the old labels alias the kickers in foundations.gen.css for one release (so a foundations-only importer
+    // keeps them), outside the derived block, and the bridge resets them in the legacy opt-out so a fallback wins there.
+    // They are not derived: the census flags a read of one.
+    for (const [old, name] of Object.entries(RENAMED)) {
+      expect(committed.match(new RegExp(`${old}: [^;]*;`, 'g')), old).toEqual([`${old}: var(${name});`])
+      expect(bridge.match(new RegExp(`${old}: [^;]*;`, 'g')), old).toEqual([`${old}: initial;`])
+      expect([DERIVED.has(old), DERIVED.has(name)], old).toEqual([false, true])
+      expect(findingsIn('a.css', `x { font-size: var(${old}, 12px); }`).tokens.map((f) => f.text), old).toEqual([old])
+    }
     // the legacy opt-out resets the new names too, so a control's `var(--md-sys-label-inset, 0px)` reads 0 there
     for (const name of ['label-inset', 'chip-margin', 'chip-gutter', 'chip-radius', 'control-radius', 'checkbox-radius']) expect(bridge).toContain(`  --md-sys-${name}: initial;`)
   })

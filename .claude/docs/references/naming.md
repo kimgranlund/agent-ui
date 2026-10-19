@@ -132,10 +132,12 @@ The prefix IS the ownership boundary — no allowlist needed:
   typescale (`--md-sys-typescale-*`), and the dimensional foundation, which derives from one n per
   element (ADR-0245): the inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, `--md-sys-density-d`,
   the outputs `--md-sys-{n,m,c,height,inset,radius,icon-box,glyph-box,glyph-stroke,corner-shape}`,
-  `--md-sys-type-{display,heading,subhead,section-label,title,body,control,field-label,group-label}` and
+  `--md-sys-type-{display,heading,subhead,section-kicker,title,body,control,field-label,group-kicker}` and
   `--md-sys-{group,widget,card,layout}-{margin,gutter,radius}`, all in the generated `foundations.gen.css`;
   the old names `--md-sys-{height,font,icon,gap,compact,space}-*`, `--md-sys-shape-corner-base` and
-  `--md-sys-widget-inset` live on as bridge aliases until the W7 cleanup;
+  `--md-sys-widget-inset` live on as bridge aliases until the W7 cleanup, and the former type labels
+  `--md-sys-type-{section,group}-label` as aliases of the kickers in `foundations.gen.css` until then (T-0373; the
+  census flags any new read of them);
   `--md-sys-motion-{duration-fast,easing-standard}`, `--md-sys-state-focus-ring-{width,offset}`,
   `--md-sys-control-line-height` and `--md-sys-typeface-{sans,mono}` stay constants in `dimensions.css`.
   Some families are real

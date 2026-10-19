@@ -5,7 +5,8 @@
 // Four rules, each a list of findings per file:
 //   tokens  a read of a hand-tabled ramp token (`var(--md-sys-height-md)` and kin, `--md-sys-widget-inset`)
 //           that is not already the fallback of a derived token (`var(--md-sys-height, var(--md-sys-height-md))`
-//           is the dark-launch form, clause 10a, and passes)
+//           is the dark-launch form, clause 10a, and passes), and any read of a type label renamed to the skill's
+//           kicker (`var(--md-sys-type-group-label)`, T-0373), which the codemod renames
 //   px      a px literal in a geometry declaration of a stylesheet, other than 0 and the 1px hairline, and
 //           other than inside a derived token's fallback (clause 9's sibling rule, report shape)
 //   glyph   ui-icon's `glyph` prop, renamed `symbol` (clause 4): the attribute, the object key, the property,
@@ -31,9 +32,20 @@ export const LEGACY_TO_DERIVED = [
 export const DERIVED = new Set([
   'n', 'm', 'c', 'height', 'inset', 'label-inset', 'radius', 'control-radius', 'icon-box', 'glyph-box', 'glyph-stroke', 'corner-shape',
   'checkbox-radius',
-  ...['display', 'heading', 'subhead', 'section-label', 'title', 'body', 'control', 'field-label', 'group-label', 'floor'].map((r) => `type-${r}`),
+  ...['display', 'heading', 'subhead', 'section-kicker', 'title', 'body', 'control', 'field-label', 'group-kicker', 'floor'].map((r) => `type-${r}`),
   ...['chip', 'group', 'widget', 'card', 'layout'].flatMap((l) => ['margin', 'gutter', 'radius'].map((q) => `${l}-${q}`)),
 ].map((name) => `--md-sys-${name}`))
+
+/** The type labels the skill's kicker names replaced (T-0373): old name -> the derived token foundations.gen.css
+ *  aliases it to until W7. No consumer reads an old name: the tokens rule finds a new read and the codemod renames it. */
+export const RENAMED = Object.freeze({
+  '--md-sys-type-section-label': '--md-sys-type-section-kicker',
+  '--md-sys-type-group-label': '--md-sys-type-group-kicker',
+})
+
+/** True when a fallback sits inside a derived token, or inside an old label whose own read is already a finding (its
+ *  rename then clears the fallback too, so one fix is one finding). */
+const wrapsFallback = (name) => DERIVED.has(name) || Object.hasOwn(RENAMED, name)
 
 /** The glyph floor (ADR-0245 Amendment 7): the glyph box never drops below 8px. It is local to agent-ui, not in the
  *  repo's scale.mjs (the skill's former revision, frozen; P15 proposes it upstream), so the generator emits it and
@@ -96,13 +108,17 @@ export function closeParen(src, open) {
 /** True when the legacy read at `index` already sits as the fallback of a derived token. */
 export function isWrapped(src, index) {
   const tail = DERIVED_FALLBACK_TAIL.exec(src.slice(Math.max(0, index - 80), index))
-  return tail !== null && DERIVED.has(tail[1])
+  return tail !== null && wrapsFallback(tail[1])
 }
+
+// The finding sits on the old name itself (not on `var(`), so the codemod's rename replaces exactly it.
+const RENAMED_READ = /(?<=var\(\s*)--md-sys-type-(?:section|group)-label(?![\w-])/g
 
 function tokensFindings(code) {
   const out = []
   for (const m of code.matchAll(LEGACY_READ)) if (!isWrapped(code, m.index)) out.push({ index: m.index, text: m[1] })
-  return out
+  for (const m of code.matchAll(RENAMED_READ)) out.push({ index: m.index, text: m[0] })
+  return out.sort((a, b) => a.index - b.index)
 }
 
 const GEOMETRY_PROP =
@@ -114,7 +130,7 @@ function withoutDerived(value) {
   let out = value
   for (let i = out.indexOf('var('); i !== -1; i = out.indexOf('var(', i + 1)) {
     const name = /^var\(\s*(--md-sys-[\w-]+)/.exec(out.slice(i))
-    if (!name || !DERIVED.has(name[1])) continue
+    if (!name || !wrapsFallback(name[1])) continue
     const end = closeParen(out, i + 3)
     if (end === -1) break
     out = out.slice(0, i) + ' '.repeat(end - i) + out.slice(end)

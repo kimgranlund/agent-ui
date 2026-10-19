@@ -79,7 +79,7 @@ families):
 - **Dimensional tokens route through the own chain too** (TKT-0066 item 5, Kim-ruled
   2026-07-15; the names moved with ADR-0245): a `@scope` styles block never reads a foundation size
   (`--md-sys-{height,inset,label-inset,radius,control-radius,checkbox-radius,icon-box,glyph-box,type-*}`, the type roles including
-  `--md-sys-type-section-label` and `--md-sys-type-group-label`, the levels
+  `--md-sys-type-section-kicker` and `--md-sys-type-group-kicker`, the levels
   `--md-sys-{chip,group,widget,card,layout}-{margin,gutter,radius}`, or the bridge aliases of the old names)
   directly. It mints a role-named `--ui-{cmp}-*` token in the `:where()` block
   (`--ui-toast-radius: var(--md-sys-widget-radius)`) and consumes that, same as color roles. The

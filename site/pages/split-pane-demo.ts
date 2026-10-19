@@ -31,7 +31,7 @@ function panel(title: string, spec: string, body: string): HTMLElement {
   return el('div', { style: 'display:flex; flex-direction:column; block-size:100%; min-inline-size:0;' }, [
     el(
       'div',
-      { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-size:var(--md-sys-type-group-label); font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
+      { style: 'padding:var(--md-sys-space-sm) var(--md-sys-space-md); font-size:var(--md-sys-type-group-kicker); font-weight:600; letter-spacing:0.02em; text-transform:uppercase; ' +
         'color: var(--md-sys-color-neutral-on-surface-variant); border-block-end:1px solid var(--md-sys-color-neutral-outline-variant); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;' },
       [text(title)],
     ),

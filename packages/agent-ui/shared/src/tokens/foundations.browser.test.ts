@@ -34,11 +34,14 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Resolved) => number]> = [
   ['type-display', (r) => r.type.display],
   ['type-heading', (r) => r.type.heading],
   ['type-subhead', (r) => r.type.subhead],
-  ['type-section-label', (r) => r.type.sectionLabel],
+  ['type-section-kicker', (r) => r.type.sectionLabel],
   ['type-title', (r) => r.type.title],
   ['type-body', (r) => r.type.body],
   ['type-control', (r) => r.type.control],
   ['type-field-label', (r) => r.type.fieldLabel],
+  ['type-group-kicker', (r) => r.type.groupLabel],
+  // T-0373: the old label names, aliases of the kickers in foundations.gen.css on every cell, undefined in the legacy opt-out
+  ['type-section-label', (r) => r.type.sectionLabel],
   ['type-group-label', (r) => r.type.groupLabel],
   // the tokens keep the name `layout` (ADR-0140 names); the skill calls that level `page`
   ...([['chip', 'chip'], ['group', 'group'], ['widget', 'widget'], ['card', 'card'], ['layout', 'page']] as const).flatMap(([token, level]) =>
