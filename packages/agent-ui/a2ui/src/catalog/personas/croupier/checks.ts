@@ -753,14 +753,39 @@ function reachable(view: SurfaceView): A2uiComponent[] {
  *  to the next round. A table this turn settles (it reads settled now, and the surface or the table is new this turn
  *  or read another phase before, literal or bound) needs a forward: a new-round Button reachable on a surface this
  *  turn touches, or another touched blackjack-family surface whose CardTable has opened the next round (its phase
- *  resolves to betting or playing, as a Deal again answer that closes table-1 and opens table-2 does). */
+ *  resolves to betting or playing, as a Deal again answer that closes table-1 and opens table-2 does).
+ *  T-0380 (round 12 :52, :77): a poker table has no CardTable phase to read. One whose data model's `/phase` or
+ *  `/street` reads settled or showdown while a Check, Bet, Call, Raise or Fold Button stays live (reachable, not
+ *  disabled) needs the same forward, unless another touched poker table still offers live moves (the next hand). */
 function dealAgainMissing(surfaces: readonly SurfaceView[], round: number | undefined): SemanticFinding[] {
   if (surfaces.some((view) => reachable(view).some(offersNextRound))) return []
   const opened = (view: SurfaceView): boolean =>
     !namesOtherGame([...view.components.values()]) &&
     reachable(view).some((c) => c.component === 'CardTable' && ['betting', 'playing'].includes(stringProp(view, c, 'phase')))
+  const pokerMoves = new Set([...POKER_MOVES, 'bet'])
+  const liveMoves = (view: SurfaceView): A2uiComponent[] =>
+    isPokerTable(view)
+      ? reachable(view).filter((c) => c.component === 'Button' && resolveProp(c['disabled'], view.dataModel, undefined) !== true && offersMove(c, view.dataModel, pokerMoves))
+      : []
+  const pokerSettled = (view: SurfaceView): boolean =>
+    ['/phase', '/street'].some((p) => { const v = readPointer(view.dataModel, p); return typeof v === 'string' && SETTLED_STATE.test(v) })
   const findings: SemanticFinding[] = []
   for (const view of surfaces) {
+    const moves = liveMoves(view)
+    if (moves.length > 0 && pokerSettled(view)) {
+      if (surfaces.some((other) => other !== view && !pokerSettled(other) && liveMoves(other).length > 0)) continue
+      findings.push({
+        code: 'DEAL_AGAIN_MISSING',
+        path: `${view.surfaceId}:${moves[0]!.id}`,
+        message:
+          `${view.surfaceId}'s hand is over (the data model reads ${['/phase', '/street'].map((p) => readPointer(view.dataModel, p)).find((v) => typeof v === 'string' && SETTLED_STATE.test(v))}), ` +
+          `and the surface still offers ${listed(moves.map((c) => c.id))} with no Deal again Button, so the player has no way to the next hand. ` +
+          `${round !== undefined && round > 0 ? 'Components sent only in an answer the checks rejected never reached the player. ' : ''}` +
+          `Send updateComponents for ${view.surfaceId} in this answer: replace those moves with one Deal again Button whose action carries "context":{"newRound":true}, ` +
+          `beside the settled updateDataModel.`,
+      })
+      continue
+    }
     if (namesOtherGame([...view.components.values()]) || surfaces.some((other) => other !== view && opened(other))) continue
     for (const table of reachable(view)) {
       if (table.component !== 'CardTable' || phaseOf(table, view.dataModel) !== 'settled') continue
