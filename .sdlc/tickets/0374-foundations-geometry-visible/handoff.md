@@ -43,3 +43,4 @@ Kim approves each mockup before its step builds. The three rulings are recorded 
 - Kim 2026-10-19: approved a 4th planner run past the replan cap for the step 1 plan defect.
 - Kim 2026-10-19: approved step 1 side-by-side.png and marks-side-by-side.png for merge (gate b).
 - Kim 2026-10-19: approved step 2 side-by-side.png for merge (gate b).
+- Kim 2026-10-19: approved step 3 side-by-side.png for merge (gate b).

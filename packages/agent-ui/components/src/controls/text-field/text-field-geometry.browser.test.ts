@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp } from 'vitest/browser'
 
@@ -99,7 +99,7 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
 
   it('the region register CHANGES the frame height + the editor font px — on BOTH variants (ADR-0245: 4n and n + 6)', () => {
     // The md column at three registers (the old ui-sm, ui-md and content-lg): widget / sm, product / sm (the old root),
-    // and content / lg, read against scale.mjs resolve().
+    // and content / lg, read against the model's resolve() (scripts/lib/foundations-model.mjs).
     const REGISTERS = [['widget', 'sm'], ['product', 'sm'], ['content', 'lg']] as const
     for (const markup of [BARE, ICON]) {
       const { wrap, field, editor } = mount(markup) // size stays md (default)
@@ -120,8 +120,8 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
         const gapBottom = fieldRect.bottom - editorRect.bottom
         expect(Math.abs(gapTop - gapBottom), `[${markup}] scale=${scale}: editor not vertically centered in the frame`).toBeLessThanOrEqual(1)
       }
-      expect(heights).toEqual(REGISTERS.map(([t, sc]) => resolve(t, sc, 'md').h)) // 24 · 28 · 52
-      expect(fonts).toEqual(REGISTERS.map(([t, sc]) => resolve(t, sc, 'md').type.control)) // 12 · 13 · 19
+      expect(heights).toEqual(REGISTERS.map(([t, sc]) => resolve(t, sc, 'md').height)) // 20 · 24 · 56
+      expect(fonts).toEqual(REGISTERS.map(([t, sc]) => resolve(t, sc, 'md').type.control)) // 11 · 12 · 20
       // anti-vacuous: all three sampled tiers produce distinct heights and fonts
       expect(allDistinct(heights), `heights did not change across [scale]: ${heights.join()}`).toBe(true)
       expect(allDistinct(fonts), `editor fonts did not change across [scale]: ${fonts.join()}`).toBe(true)
@@ -197,10 +197,10 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
       bare.wrap.setAttribute('data-scale', scale)
       const r = resolve('product', scale, 'md')
       const editorInset = px(getComputedStyle(icon.field.querySelector('[data-part="editor"]') as HTMLElement).paddingInlineStart)
-      expect(px(getComputedStyle(icon.field).columnGap), `column-gap @ ${scale}`).toBeCloseTo(r.control.gutter, 1)
-      expect(px(getComputedStyle(icon.field).columnGap) + editorInset, `icon to text @ ${scale}`).toBeCloseTo(r.control.margin, 1)
-      expect(frameHeight(bare.field), `bare height @ ${scale}`).toBeCloseTo(r.h, 0)
-      expect(padStartPx(bare.field), `bare box margin @ ${scale}`).toBeCloseTo(r.control.margin, 0)
+      expect(px(getComputedStyle(icon.field).columnGap), `column-gap @ ${scale}`).toBeCloseTo(r.c, 1)
+      expect(px(getComputedStyle(icon.field).columnGap) + editorInset, `icon to text @ ${scale}`).toBeCloseTo(r.inset, 1)
+      expect(frameHeight(bare.field), `bare height @ ${scale}`).toBeCloseTo(r.height, 0)
+      expect(padStartPx(bare.field), `bare box margin @ ${scale}`).toBeCloseTo(r.inset, 0)
       const bareInset = px(getComputedStyle(bare.field.querySelector('[data-part="editor"]') as HTMLElement).paddingInlineStart)
       expect(padStartPx(bare.field) + bareInset, `bare value edge 2n - c @ ${scale}`).toBeCloseTo(2 * r.n - r.c, 0)
     }
@@ -308,7 +308,7 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
   })
 
   it('a content / lg region: the adornment font tracks the elevated control type — EXACT px at md size', () => {
-    // ADR-0245: control type n + 6 at content / lg / md (n 13) = 19px. The adornment must track the editor via
+    // ADR-0245: control type n + 6 at content / lg / md (n 14) = 20px. The adornment must track the editor via
     // the shared --ui-text-field-font token in every region.
     const { wrap, field, editor } = mount('<ui-text-field type="search"></ui-text-field>')
     const magnifier = field.querySelector('[data-part="leading-adornment"]') as HTMLElement

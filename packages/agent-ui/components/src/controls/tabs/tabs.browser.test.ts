@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 import { UITabsElement } from './tabs.ts'
@@ -182,11 +182,11 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
     const stripGapRoomy = px(getComputedStyle(tablist).columnGap)
     const panelPadRoomy = px(getComputedStyle(panel).paddingTop)
     const tabHeightRoomy = px(getComputedStyle(tabEls[0]).blockSize)
-    expect(tabHeightRoomy, `${server.browser}: the tab did not take 4n in the content region`).toBe(roomy.h)
+    expect(tabHeightRoomy, `${server.browser}: the tab did not take 4n in the content region`).toBe(roomy.height)
     expect(stripGapRoomy, 'strip-gap is the region c').toBe(roomy.c)
     expect(stripGapRoomy, 'strip-gap did not grow with n').toBeGreaterThan(stripGapBase)
     expect(panelPadRoomy, 'panel-pad did not grow with n').toBeGreaterThan(panelPadBase)
-    expect(px(getComputedStyle(tabEls[0]).paddingInlineStart), 'the tab padding is the region 2n - c').toBe(roomy.control.margin + roomy.labelMargin)
+    expect(px(getComputedStyle(tabEls[0]).paddingInlineStart), 'the tab padding is the region 2n - c').toBe(roomy.inset + roomy.labelInset)
   })
 })
 

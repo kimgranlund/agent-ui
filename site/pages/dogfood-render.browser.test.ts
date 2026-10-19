@@ -13,8 +13,9 @@ import { browsableNames, typesInSeed } from '../lib/a2ui-catalog-tiers.ts'
 import { applyScheme } from '../lib/theme-loader.ts'
 import { parseCss, over, flatten, contrast, inkContrast, flatLayers, CANVAS_LIGHT, CANVAS_DARK } from '../lib/dogfood-contrast.ts'
 import type { Rgba } from '../lib/dogfood-contrast.ts'
-import { resolve, CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import type { Resolved, Step, Tier } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { CFG } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
+import type { Step, Tier } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
+import { LEGACY_PATH, resolve, type Density, type Emitted } from '../../scripts/lib/foundations-model.mjs'
 import { ROOT_REGISTER, STEP, glyphBox, hasOwner } from '../../scripts/lib/foundations-rules.mjs'
 import RULES from '../../scripts/dogfood-rules.json'
 import ALLOW from '../../scripts/dogfood-render-allowlist.json'
@@ -25,7 +26,7 @@ vi.setConfig({ testTimeout: 60_000 })
 // dogfood-render.browser.test.ts: the render lint (T-0136, layer 1 of .claude/docs/references/dogfood-lint.md).
 // It visits every docs demo page, every browsable A2UI catalog widget and every persona seed with a persona widget
 // (T-0144) at 400 and 1000px, light and dark, and checks the computed style against the `render` rules of
-// scripts/dogfood-rules.json. Every geometry value comes from scale.mjs resolve() at the element's register: the
+// scripts/dogfood-rules.json. Every geometry value comes from the model's resolve() (scripts/lib/foundations-model.mjs, T-0374) at the element's register: the
 // nearest data-tier, data-scale, data-size or size and data-density on the element or an ancestor (the cascade
 // foundations.gen.css builds), the shared ROOT_REGISTER at the root (scripts/lib/foundations-rules.mjs, ADR-0245
 // Amendment 8), and widget at scale md on an A2UI canvas (the renderer stamps it). A finding is keyed `demo/<page>#<rule>`,
@@ -55,7 +56,7 @@ const settled = async (): Promise<void> => {
 const TOL = 0.5
 const STEPS = new Set(['sm', 'md', 'lg'])
 const TIERS = new Set(Object.keys(CFG.tiers))
-const DENSITIES = new Set(Object.keys(CFG.density))
+const DENSITIES = new Set(Object.keys(LEGACY_PATH.density)) // the legacy density axis until T-0374 step 4
 const WIDTHS = [400, 1000]
 const SCHEMES = ['light', 'dark'] as const
 const ENGINE = server.browser
@@ -72,8 +73,11 @@ const visible = (el: Element): DOMRect | null => {
   return box.width > 0 && box.height > 0 ? box : null
 }
 
+/** A register: the walked axes and the model's tokens there. */
+export type Register = Emitted & { readonly tier: Tier; readonly scale: Step; readonly size: Step; readonly density: Density }
+
 /** The register an element sits at: each axis from its nearest carrier, the root default otherwise. */
-export function registerOf(el: Element): Resolved {
+export function registerOf(el: Element): Register {
   let tier: string | null = null
   let scale: string | null = null
   let size: string | null = null
@@ -87,7 +91,11 @@ export function registerOf(el: Element): Resolved {
     }
     if (density === null && DENSITIES.has(up.getAttribute('data-density') ?? '')) density = up.getAttribute('data-density')
   }
-  return resolve(tier ?? ROOT_REGISTER.tier, scale ?? ROOT_REGISTER.scale, size ?? 'md', density ?? 'default')
+  const axes = {
+    tier: (tier ?? ROOT_REGISTER.tier) as Tier, scale: (scale ?? ROOT_REGISTER.scale) as Step,
+    size: (size ?? 'md') as Step, density: (density ?? 'default') as Density,
+  }
+  return { ...axes, ...resolve(axes.tier, axes.scale, axes.size, axes.density) }
 }
 
 let probe: HTMLElement | null = null
@@ -331,7 +339,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[] | Promise<str
       const box = visible(el)
       if (!box) continue
       measured['control-height']++
-      const want = registerOf(el).h
+      const want = registerOf(el).height
       if (Math.abs(box.height - want) > TOL) out.push(`${tagOf(el)} height=${Math.round(box.height * 10) / 10} want ${want}`)
     }
     return out
@@ -720,7 +728,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[] | Promise<str
       measured['icon-box']++
       const host = hostOf(el)
       const inside = el.parentElement?.closest('[data-tier]') != null || (host !== null && !LAYOUT.has(host.localName))
-      const want = inside ? registerOf(el).icon : px(getComputedStyle(el).fontSize)
+      const want = inside ? registerOf(el).iconBox : px(getComputedStyle(el).fontSize)
       if (Math.abs(box.width - want) > TOL || Math.abs(box.height - want) > TOL) {
         out.push(`${tagOf(el)} ${fmt(box.width)}x${fmt(box.height)} ${inside ? `inside <${host?.localName ?? 'data-tier'}>` : 'in prose'} want ${fmt(want)}`)
       }
