@@ -22,7 +22,7 @@ content.append(
       'region is for: widget, product, content, brand), an ancestor data-scale (the whole region: sm, md, lg) and the ' +
       'control’s own size (sm, md, lg). The document root is product at scale md, so sm / md / lg controls read ' +
       '24 / 32 / 40. Height, type, icon, padding and radius are all formulas of the same n, so they never drift apart; ' +
-      'an ancestor data-density (compact, default, spacious) moves container spacing only.',
+      'an ancestor data-density (tight, compact, regular, spacious, loose) moves the control margin, so control height is 3n plus twice that margin; regular keeps 24 / 32 / 40.',
   ),
 )
 
@@ -182,7 +182,7 @@ content.append(
   el('p', {}, [
     document.createTextNode(
       'A region’s data-scale moves n, so the height, the type and the icon-to-label gap move together (the old ' +
-        '[density] axis maps to data-density, which moves only container margins and gutters). The same button at scale sm, md and lg:',
+        '[density] axis maps to data-density, which moves the control margin and the container spacing). The same button at scale sm, md and lg:',
     ),
   ]),
 )
