@@ -251,6 +251,39 @@ const omaha = (board: { rank: string; suit: string; faceDown?: boolean }[]): A2u
     { board },
   )
 
+/** T-0380: a hold'em hand at the river on a Card, its Check and Fold live (round 12 :48 to :51), plus any extra Buttons. */
+const HOLDEM_RIVER = {
+  bankroll: 950,
+  pot: 100,
+  phase: 'River',
+  status: 'Your move: check or bet 50.',
+  dealerHand: [{ rank: 'K', suit: 'diamonds', faceDown: true }, { rank: '4', suit: 'clubs', faceDown: true }],
+  playerHand: [{ rank: 'J', suit: 'hearts' }, { rank: '9', suit: 'clubs' }],
+}
+const holdemSession = (extra: Record<string, unknown>[] = []) => [
+  {
+    say: "Let's play Texas hold'em.",
+    out: surface(
+      'table-1',
+      CROUPIER,
+      [
+        { id: 'root', component: 'Card', children: ['title', 'dealer', 'player', 'status', 'moves'] },
+        { id: 'title', component: 'Text', variant: 'h4', text: "Texas hold'em" },
+        { id: 'dealer', component: 'Row', gap: 'sm', children: { path: '/dealerHand', componentId: 'dCard' } },
+        { id: 'dCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' }, faceDown: { path: 'faceDown' } },
+        { id: 'player', component: 'Row', gap: 'sm', children: { path: '/playerHand', componentId: 'pCard' } },
+        { id: 'pCard', component: 'PlayingCard', rank: { path: 'rank' }, suit: { path: 'suit' } },
+        { id: 'status', component: 'Text', text: { path: '/status' } },
+        { id: 'moves', component: 'Row', gap: 'sm', children: ['check', 'fold', ...extra.map((c) => c['id'] as string)] },
+        { id: 'check', component: 'Button', label: 'Check', action: { action: 'check' } },
+        { id: 'fold', component: 'Button', label: 'Fold', action: { action: 'fold' } },
+        ...extra,
+      ],
+      HOLDEM_RIVER,
+    ),
+  },
+]
+
 /** One pass and one fail fixture per shipped check id. */
 const CONTRACTS: Record<string, Contract> = {
   'composite-moment-booking-form': {
@@ -703,7 +736,8 @@ const PROBES: Record<string, readonly Fixture[]> = {
   'boardless-move-applied': [{ catalog: UI, session: questSession, intent: 'I open the door and step inside.', target: 'quest-log', output: [] }],
   // T-0323: DEALT_IN_BETTING's two arms (round 8 :61 round 2 keeps the moves, :65 round 1 asks for them) and the
   // poker arms of the new-round and opening repair texts. T-0350: DEAL_AGAIN_MISSING, a table settled by data alone.
-  // T-0357: POKER_DEAL_MISSING, the round 10 :81 hold'em stake ask.
+  // T-0357: POKER_DEAL_MISSING, the round 10 :81 hold'em stake ask. T-0380: DEAL_AGAIN_MISSING's poker arm, a
+  // showdown sent as data alone (round 12 :52), with no Deal again and with one that lacks newRound.
   'croupier-bet-controls': [
     {
       catalog: CROUPIER,
@@ -720,6 +754,12 @@ const PROBES: Record<string, readonly Fixture[]> = {
       catalog: CROUPIER,
       session: tableSession,
       output: [data('table-1', { ...BETTING, bankroll: 1100, bet: 0, phase: 'settled', dealerHand: [{ rank: '7', suit: 'hearts' }, { rank: '9', suit: 'clubs' }], playerHand: [{ rank: 'A', suit: 'spades' }, { rank: 'Q', suit: 'diamonds' }] })],
+    },
+    { catalog: CROUPIER, session: holdemSession(), output: [data('table-1', { ...HOLDEM_RIVER, dealerHand: HOLDEM_RIVER.dealerHand.map(({ rank, suit }) => ({ rank, suit })), phase: 'Showdown', status: 'The dealer wins with a pair of kings.' })] },
+    {
+      catalog: CROUPIER,
+      session: holdemSession([{ id: 'again', component: 'Button', label: 'Deal again', action: { action: 'deal' } }]),
+      output: [data('table-1', { ...HOLDEM_RIVER, phase: 'Showdown', status: 'The dealer wins with a pair of kings.' })],
     },
   ],
 }

@@ -23,3 +23,8 @@ Round 12 archive `.sdlc/evals/rounds/2026-10-19-r12-targeted/` (report.md "Why i
 
 ## Constraints
 Recorded rounds are never rewritten.
+
+## Acceptance criteria
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/poker-deal-again.test.ts` exits 0: the r12 :52 hold'em and :77 stud repair rounds (fixture `__fixtures__/r12-poker-showdown-data-only.json`, copied unedited from the archive) fire DEAL_AGAIN_MISSING; the same showdown with the moves replaced by Deal again passes every croupier check; a hand still in play, a settled hand with no live move, and disabled moves stay quiet.
+- `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier` exits 0 (the blackjack CardTable DEAL_AGAIN_MISSING cases unchanged).
+- `npm run check` exits 0.

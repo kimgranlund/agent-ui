@@ -1,0 +1,1003 @@
+{
+ "source": "round 12 archive .sdlc/evals/rounds/2026-10-19-r12-targeted (cluster M, T-0380): each run's earlier turns from runs/<name>/fixture.json and the shipped round of the traced turn, copied unedited",
+ "holdem": {
+  "trace": ":52",
+  "turns": [
+   [
+    {
+     "version": "v1.0",
+     "createSurface": {
+      "surfaceId": "table-1",
+      "catalogId": "agent-ui--croupier",
+      "sendDataModel": true
+     }
+    },
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "value": {
+       "bankroll": 1000,
+       "pot": 0,
+       "dealerHand": [
+        {
+         "rank": "K",
+         "suit": "diamonds",
+         "faceDown": true
+        },
+        {
+         "rank": "4",
+         "suit": "clubs",
+         "faceDown": true
+        }
+       ],
+       "playerHand": [
+        {
+         "rank": "J",
+         "suit": "hearts"
+        },
+        {
+         "rank": "9",
+         "suit": "clubs"
+        }
+       ],
+       "board": [],
+       "status": "Pre-flop. Your move: check or bet 50."
+      }
+     }
+    },
+    {
+     "version": "v1.0",
+     "updateComponents": {
+      "surfaceId": "table-1",
+      "components": [
+       {
+        "id": "root",
+        "component": "Card",
+        "children": [
+         "hdr",
+         "body",
+         "foot"
+        ]
+       },
+       {
+        "id": "hdr",
+        "component": "CardHeader",
+        "children": [
+         "title",
+         "phase"
+        ]
+       },
+       {
+        "id": "title",
+        "component": "Text",
+        "variant": "h3",
+        "text": "Texas hold'em"
+       },
+       {
+        "id": "phase",
+        "component": "Badge",
+        "label": "Pre-flop",
+        "intent": "info"
+       },
+       {
+        "id": "body",
+        "component": "CardContent",
+        "children": [
+         "col"
+        ]
+       },
+       {
+        "id": "col",
+        "component": "Column",
+        "gap": "md",
+        "children": [
+         "stats",
+         "dealerLabel",
+         "dealerRow",
+         "boardLabel",
+         "boardRow",
+         "playerLabel",
+         "playerRow",
+         "status"
+        ]
+       },
+       {
+        "id": "stats",
+        "component": "Row",
+        "gap": "md",
+        "children": [
+         "stBank",
+         "stPot"
+        ]
+       },
+       {
+        "id": "stBank",
+        "component": "Stat",
+        "label": "Bankroll",
+        "value": {
+         "path": "/bankroll"
+        }
+       },
+       {
+        "id": "stPot",
+        "component": "Stat",
+        "label": "Pot",
+        "value": {
+         "path": "/pot"
+        }
+       },
+       {
+        "id": "dealerLabel",
+        "component": "Text",
+        "variant": "label",
+        "text": "Dealer"
+       },
+       {
+        "id": "dealerRow",
+        "component": "Row",
+        "gap": "sm",
+        "wrap": true,
+        "children": {
+         "path": "/dealerHand",
+         "componentId": "dealerCard"
+        }
+       },
+       {
+        "id": "dealerCard",
+        "component": "PlayingCard",
+        "rank": {
+         "path": "rank"
+        },
+        "suit": {
+         "path": "suit"
+        },
+        "faceDown": {
+         "path": "faceDown"
+        },
+        "size": "md"
+       },
+       {
+        "id": "boardLabel",
+        "component": "Text",
+        "variant": "label",
+        "text": "Board"
+       },
+       {
+        "id": "boardRow",
+        "component": "Row",
+        "gap": "sm",
+        "wrap": true,
+        "children": {
+         "path": "/board",
+         "componentId": "boardCard"
+        }
+       },
+       {
+        "id": "boardCard",
+        "component": "PlayingCard",
+        "rank": {
+         "path": "rank"
+        },
+        "suit": {
+         "path": "suit"
+        },
+        "size": "md"
+       },
+       {
+        "id": "playerLabel",
+        "component": "Text",
+        "variant": "label",
+        "text": "You"
+       },
+       {
+        "id": "playerRow",
+        "component": "Row",
+        "gap": "sm",
+        "wrap": true,
+        "children": {
+         "path": "/playerHand",
+         "componentId": "playerCard"
+        }
+       },
+       {
+        "id": "playerCard",
+        "component": "PlayingCard",
+        "rank": {
+         "path": "rank"
+        },
+        "suit": {
+         "path": "suit"
+        },
+        "size": "md"
+       },
+       {
+        "id": "status",
+        "component": "Text",
+        "variant": "body",
+        "text": {
+         "path": "/status"
+        }
+       },
+       {
+        "id": "foot",
+        "component": "CardFooter",
+        "children": [
+         "actRow"
+        ]
+       },
+       {
+        "id": "actRow",
+        "component": "Row",
+        "gap": "md",
+        "justify": "end",
+        "children": [
+         "btnCheck",
+         "btnBet",
+         "btnFold"
+        ]
+       },
+       {
+        "id": "btnCheck",
+        "component": "Button",
+        "label": "Check",
+        "variant": "ghost",
+        "action": {
+         "action": "check"
+        }
+       },
+       {
+        "id": "btnBet",
+        "component": "Button",
+        "label": "Bet 50",
+        "variant": "solid",
+        "action": {
+         "action": "bet",
+         "context": {
+          "amount": 50
+         }
+        }
+       },
+       {
+        "id": "btnFold",
+        "component": "Button",
+        "label": "Fold",
+        "variant": "ghost",
+        "action": {
+         "action": "fold"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   [
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "value": {
+       "bankroll": 1000,
+       "pot": 0,
+       "dealerHand": [
+        {
+         "rank": "K",
+         "suit": "diamonds",
+         "faceDown": true
+        },
+        {
+         "rank": "4",
+         "suit": "clubs",
+         "faceDown": true
+        }
+       ],
+       "playerHand": [
+        {
+         "rank": "J",
+         "suit": "hearts"
+        },
+        {
+         "rank": "9",
+         "suit": "clubs"
+        }
+       ],
+       "board": [
+        {
+         "rank": "7",
+         "suit": "spades"
+        },
+        {
+         "rank": "2",
+         "suit": "hearts"
+        },
+        {
+         "rank": "Q",
+         "suit": "clubs"
+        }
+       ],
+       "phase": "Flop",
+       "status": "Flop dealt. The dealer checked. Your move: check or bet 50."
+      }
+     }
+    },
+    {
+     "version": "v1.0",
+     "updateComponents": {
+      "surfaceId": "table-1",
+      "components": [
+       {
+        "id": "phase",
+        "component": "Badge",
+        "label": {
+         "path": "/phase"
+        },
+        "intent": "info"
+       }
+      ]
+     }
+    }
+   ],
+   [
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "value": {
+       "bankroll": 950,
+       "pot": 100,
+       "dealerHand": [
+        {
+         "rank": "K",
+         "suit": "diamonds",
+         "faceDown": true
+        },
+        {
+         "rank": "4",
+         "suit": "clubs",
+         "faceDown": true
+        }
+       ],
+       "playerHand": [
+        {
+         "rank": "J",
+         "suit": "hearts"
+        },
+        {
+         "rank": "9",
+         "suit": "clubs"
+        }
+       ],
+       "board": [
+        {
+         "rank": "7",
+         "suit": "spades"
+        },
+        {
+         "rank": "2",
+         "suit": "hearts"
+        },
+        {
+         "rank": "Q",
+         "suit": "clubs"
+        },
+        {
+         "rank": "5",
+         "suit": "diamonds"
+        }
+       ],
+       "phase": "Turn",
+       "status": "You bet 50, the dealer called. Turn dealt. Your move: check or bet 50."
+      }
+     }
+    }
+   ],
+   [
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "path": "/board",
+      "value": [
+       {
+        "rank": "7",
+        "suit": "spades"
+       },
+       {
+        "rank": "2",
+        "suit": "hearts"
+       },
+       {
+        "rank": "Q",
+        "suit": "clubs"
+       },
+       {
+        "rank": "5",
+        "suit": "diamonds"
+       },
+       {
+        "rank": "8",
+        "suit": "hearts"
+       }
+      ]
+     }
+    },
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "path": "/phase",
+      "value": "River"
+     }
+    },
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "path": "/status",
+      "value": "You checked, the dealer checked. River dealt. Your move: check or bet 50."
+     }
+    }
+   ]
+  ],
+  "output": [
+   {
+    "version": "v1.0",
+    "updateDataModel": {
+     "surfaceId": "table-1",
+     "value": {
+      "bankroll": 950,
+      "pot": 0,
+      "dealerHand": [
+       {
+        "rank": "K",
+        "suit": "diamonds"
+       },
+       {
+        "rank": "4",
+        "suit": "clubs"
+       }
+      ],
+      "playerHand": [
+       {
+        "rank": "J",
+        "suit": "hearts"
+       },
+       {
+        "rank": "9",
+        "suit": "clubs"
+       }
+      ],
+      "board": [
+       {
+        "rank": "7",
+        "suit": "spades"
+       },
+       {
+        "rank": "2",
+        "suit": "hearts"
+       },
+       {
+        "rank": "Q",
+        "suit": "clubs"
+       },
+       {
+        "rank": "5",
+        "suit": "diamonds"
+       },
+       {
+        "rank": "8",
+        "suit": "hearts"
+       }
+      ],
+      "phase": "Showdown",
+      "status": "Showdown. Dealer wins with King-high straight... no pair: K-Q-8-7-5 (king high). Your J-9-8-7-5 (jack high) loses. Dealer takes the 100 pot. You lose 50. Hand over."
+     }
+    }
+   }
+  ]
+ },
+ "stud": {
+  "trace": ":77",
+  "turns": [
+   [
+    {
+     "version": "v1.0",
+     "createSurface": {
+      "surfaceId": "table-1",
+      "catalogId": "agent-ui--croupier",
+      "sendDataModel": true
+     }
+    },
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "value": {
+       "bankroll": 990,
+       "pot": 20,
+       "bankrollLabel": "Bankroll: 990",
+       "potLabel": "Pot: 20",
+       "street": "Third street",
+       "status": "Your move: check, bet 20 or fold",
+       "playerHand": [
+        {
+         "rank": "7",
+         "suit": "clubs",
+         "faceDown": true
+        },
+        {
+         "rank": "9",
+         "suit": "hearts",
+         "faceDown": true
+        },
+        {
+         "rank": "Q",
+         "suit": "spades"
+        }
+       ],
+       "dealerHand": [
+        {
+         "rank": "4",
+         "suit": "diamonds",
+         "faceDown": true
+        },
+        {
+         "rank": "K",
+         "suit": "clubs",
+         "faceDown": true
+        },
+        {
+         "rank": "6",
+         "suit": "hearts"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "version": "v1.0",
+     "updateComponents": {
+      "surfaceId": "table-1",
+      "components": [
+       {
+        "id": "root",
+        "component": "Card",
+        "elevation": "1",
+        "children": [
+         "head",
+         "body",
+         "foot"
+        ]
+       },
+       {
+        "id": "head",
+        "component": "CardHeader",
+        "children": [
+         "title"
+        ]
+       },
+       {
+        "id": "title",
+        "component": "Text",
+        "text": "Seven-card stud",
+        "variant": "h4"
+       },
+       {
+        "id": "body",
+        "component": "CardContent",
+        "children": [
+         "dealerLabel",
+         "dealerRow",
+         "playerLabel",
+         "playerRow",
+         "statusText",
+         "potText",
+         "bankrollText"
+        ]
+       },
+       {
+        "id": "dealerLabel",
+        "component": "Text",
+        "text": "Dealer",
+        "variant": "label"
+       },
+       {
+        "id": "dealerRow",
+        "component": "Row",
+        "gap": "sm",
+        "wrap": true,
+        "children": {
+         "path": "/dealerHand",
+         "componentId": "dealerCard"
+        }
+       },
+       {
+        "id": "dealerCard",
+        "component": "PlayingCard",
+        "rank": {
+         "path": "rank"
+        },
+        "suit": {
+         "path": "suit"
+        },
+        "faceDown": {
+         "path": "faceDown"
+        },
+        "size": "md"
+       },
+       {
+        "id": "playerLabel",
+        "component": "Text",
+        "text": "You",
+        "variant": "label"
+       },
+       {
+        "id": "playerRow",
+        "component": "Row",
+        "gap": "sm",
+        "wrap": true,
+        "children": {
+         "path": "/playerHand",
+         "componentId": "playerCard"
+        }
+       },
+       {
+        "id": "playerCard",
+        "component": "PlayingCard",
+        "rank": {
+         "path": "rank"
+        },
+        "suit": {
+         "path": "suit"
+        },
+        "faceDown": {
+         "path": "faceDown"
+        },
+        "size": "md"
+       },
+       {
+        "id": "statusText",
+        "component": "Text",
+        "text": {
+         "path": "/status"
+        },
+        "emphasis": true
+       },
+       {
+        "id": "potText",
+        "component": "Text",
+        "text": {
+         "path": "/potLabel"
+        },
+        "variant": "caption"
+       },
+       {
+        "id": "bankrollText",
+        "component": "Text",
+        "text": {
+         "path": "/bankrollLabel"
+        },
+        "variant": "caption"
+       },
+       {
+        "id": "foot",
+        "component": "CardFooter",
+        "children": [
+         "actions"
+        ]
+       },
+       {
+        "id": "actions",
+        "component": "Row",
+        "gap": "sm",
+        "children": [
+         "btnCheck",
+         "btnBet",
+         "btnFold"
+        ]
+       },
+       {
+        "id": "btnCheck",
+        "component": "Button",
+        "label": "Check",
+        "variant": "soft",
+        "action": {
+         "action": "check"
+        }
+       },
+       {
+        "id": "btnBet",
+        "component": "Button",
+        "label": "Bet 20",
+        "variant": "solid",
+        "action": {
+         "action": "bet",
+         "context": {
+          "amount": 20
+         }
+        }
+       },
+       {
+        "id": "btnFold",
+        "component": "Button",
+        "label": "Fold",
+        "variant": "ghost",
+        "action": {
+         "action": "fold"
+        }
+       }
+      ]
+     }
+    }
+   ],
+   [
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "value": {
+       "bankroll": 990,
+       "pot": 20,
+       "bankrollLabel": "Bankroll: 990",
+       "potLabel": "Pot: 20",
+       "street": "Fourth street",
+       "status": "Fourth street. Your move: check, bet 20 or fold",
+       "playerHand": [
+        {
+         "rank": "7",
+         "suit": "clubs",
+         "faceDown": true
+        },
+        {
+         "rank": "9",
+         "suit": "hearts",
+         "faceDown": true
+        },
+        {
+         "rank": "Q",
+         "suit": "spades"
+        },
+        {
+         "rank": "J",
+         "suit": "diamonds"
+        }
+       ],
+       "dealerHand": [
+        {
+         "rank": "4",
+         "suit": "diamonds",
+         "faceDown": true
+        },
+        {
+         "rank": "K",
+         "suit": "clubs",
+         "faceDown": true
+        },
+        {
+         "rank": "6",
+         "suit": "hearts"
+        },
+        {
+         "rank": "2",
+         "suit": "spades"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   [
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "value": {
+       "bankroll": 990,
+       "pot": 20,
+       "bankrollLabel": "Bankroll: 990",
+       "potLabel": "Pot: 20",
+       "street": "Fifth street",
+       "status": "Fifth street. Your move: check, bet 20 or fold",
+       "playerHand": [
+        {
+         "rank": "7",
+         "suit": "clubs",
+         "faceDown": true
+        },
+        {
+         "rank": "9",
+         "suit": "hearts",
+         "faceDown": true
+        },
+        {
+         "rank": "Q",
+         "suit": "spades"
+        },
+        {
+         "rank": "J",
+         "suit": "diamonds"
+        },
+        {
+         "rank": "3",
+         "suit": "clubs"
+        }
+       ],
+       "dealerHand": [
+        {
+         "rank": "4",
+         "suit": "diamonds",
+         "faceDown": true
+        },
+        {
+         "rank": "K",
+         "suit": "clubs",
+         "faceDown": true
+        },
+        {
+         "rank": "6",
+         "suit": "hearts"
+        },
+        {
+         "rank": "2",
+         "suit": "spades"
+        },
+        {
+         "rank": "9",
+         "suit": "clubs"
+        }
+       ]
+      }
+     }
+    }
+   ],
+   [
+    {
+     "version": "v1.0",
+     "updateDataModel": {
+      "surfaceId": "table-1",
+      "value": {
+       "bankroll": 990,
+       "pot": 20,
+       "bankrollLabel": "Bankroll: 990",
+       "potLabel": "Pot: 20",
+       "street": "Sixth street",
+       "status": "Sixth street. Your move: check, bet 20 or fold",
+       "playerHand": [
+        {
+         "rank": "7",
+         "suit": "clubs",
+         "faceDown": true
+        },
+        {
+         "rank": "9",
+         "suit": "hearts",
+         "faceDown": true
+        },
+        {
+         "rank": "Q",
+         "suit": "spades"
+        },
+        {
+         "rank": "J",
+         "suit": "diamonds"
+        },
+        {
+         "rank": "3",
+         "suit": "clubs"
+        },
+        {
+         "rank": "5",
+         "suit": "hearts"
+        }
+       ],
+       "dealerHand": [
+        {
+         "rank": "4",
+         "suit": "diamonds",
+         "faceDown": true
+        },
+        {
+         "rank": "K",
+         "suit": "clubs",
+         "faceDown": true
+        },
+        {
+         "rank": "6",
+         "suit": "hearts"
+        },
+        {
+         "rank": "2",
+         "suit": "spades"
+        },
+        {
+         "rank": "9",
+         "suit": "clubs"
+        },
+        {
+         "rank": "8",
+         "suit": "spades"
+        }
+       ]
+      }
+     }
+    }
+   ]
+  ],
+  "output": [
+   {
+    "version": "v1.0",
+    "updateDataModel": {
+     "surfaceId": "table-1",
+     "value": {
+      "bankroll": 990,
+      "pot": 0,
+      "bankrollLabel": "Bankroll: 990",
+      "potLabel": "Pot: 0",
+      "street": "Showdown",
+      "status": "Dealer wins with K-10-9-8-6 high. You lose the 20 pot. Your Q-J-9-7-5 is queen high.",
+      "playerHand": [
+       {
+        "rank": "7",
+        "suit": "clubs"
+       },
+       {
+        "rank": "9",
+        "suit": "hearts"
+       },
+       {
+        "rank": "Q",
+        "suit": "spades"
+       },
+       {
+        "rank": "J",
+        "suit": "diamonds"
+       },
+       {
+        "rank": "3",
+        "suit": "clubs"
+       },
+       {
+        "rank": "5",
+        "suit": "hearts"
+       },
+       {
+        "rank": "2",
+        "suit": "hearts"
+       }
+      ],
+      "dealerHand": [
+       {
+        "rank": "4",
+        "suit": "diamonds"
+       },
+       {
+        "rank": "K",
+        "suit": "clubs"
+       },
+       {
+        "rank": "6",
+        "suit": "hearts"
+       },
+       {
+        "rank": "2",
+        "suit": "spades"
+       },
+       {
+        "rank": "9",
+        "suit": "clubs"
+       },
+       {
+        "rank": "8",
+        "suit": "spades"
+       },
+       {
+        "rank": "10",
+        "suit": "diamonds"
+       }
+      ]
+     }
+    }
+   }
+  ]
+ }
+}
