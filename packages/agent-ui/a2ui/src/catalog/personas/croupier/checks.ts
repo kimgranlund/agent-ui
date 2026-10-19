@@ -748,40 +748,57 @@ function reachable(view: SurfaceView): A2uiComponent[] {
   return out
 }
 
+/** T-0380: a Button that deals the next hand: labelled "Deal ..." or an action deal, deal_<anything>, new_hand or
+ *  next_hand. Narrower than `isDealPress`, which reads a bet as a deal. */
+const dealsNextHand = (c: A2uiComponent): boolean =>
+  c.component === 'Button' && (/^deal\b/i.test(textOf(c['label'])) || /^(deal(_[a-z]+)*|new_?hand|next_?hand)$/i.test(actionName(c)))
+
 /** T-0350 (round 10 :101): round 1 settled a pontoon on table-2 with its Deal again Button, the checks rejected it,
  *  and the repair sent only `updateDataModel`, so the bare CardTable (no bet strip once settled) shipped with no way
  *  to the next round. A table this turn settles (it reads settled now, and the surface or the table is new this turn
  *  or read another phase before, literal or bound) needs a forward: a new-round Button reachable on a surface this
  *  turn touches, or another touched blackjack-family surface whose CardTable has opened the next round (its phase
  *  resolves to betting or playing, as a Deal again answer that closes table-1 and opens table-2 does).
- *  T-0380 (round 12 :52, :77): a poker table has no CardTable phase to read. One whose data model's `/phase` or
- *  `/street` reads settled or showdown while a Check, Bet, Call, Raise or Fold Button stays live (reachable, not
- *  disabled) needs the same forward, unless another touched poker table still offers live moves (the next hand). */
+ *  T-0380 (round 12 :52, :77): a poker table has no CardTable phase to read. One whose hand is over (`pokerHandOver`)
+ *  while a Check, Call, Raise or Fold Button stays live (reachable, not disabled; a bet is left out, as a next-hand
+ *  deal may be named one) needs the same forward, unless another touched surface has opened the next hand: a surface
+ *  new this turn with a deal press, or a poker table whose hand is not over and still offers live moves. A Deal Button
+ *  already there with no newRound context is named in the repair. */
 function dealAgainMissing(surfaces: readonly SurfaceView[], round: number | undefined): SemanticFinding[] {
   if (surfaces.some((view) => reachable(view).some(offersNextRound))) return []
   const opened = (view: SurfaceView): boolean =>
     !namesOtherGame([...view.components.values()]) &&
     reachable(view).some((c) => c.component === 'CardTable' && ['betting', 'playing'].includes(stringProp(view, c, 'phase')))
-  const pokerMoves = new Set([...POKER_MOVES, 'bet'])
-  const liveMoves = (view: SurfaceView): A2uiComponent[] =>
-    isPokerTable(view)
-      ? reachable(view).filter((c) => c.component === 'Button' && resolveProp(c['disabled'], view.dataModel, undefined) !== true && offersMove(c, view.dataModel, pokerMoves))
-      : []
-  const pokerSettled = (view: SurfaceView): boolean =>
-    ['/phase', '/street'].some((p) => { const v = readPointer(view.dataModel, p); return typeof v === 'string' && SETTLED_STATE.test(v) })
+  const poker = new Map(
+    surfaces.map((view) => {
+      const shown = reachable(view)
+      const moves = isPokerTable(view)
+        ? shown.filter((c) => c.component === 'Button' && !dealsNextHand(c) && resolveProp(c['disabled'], view.dataModel, undefined) !== true && offersMove(c, view.dataModel, POKER_MOVES))
+        : []
+      return [view, { moves, over: moves.length > 0 ? pokerHandOver(view) : undefined, deals: shown.filter(isDealPress), forwards: shown.filter(dealsNextHand) }] as const
+    }),
+  )
+  const nextHand = (view: SurfaceView): boolean => {
+    const p = poker.get(view)!
+    return (view.priorComponents === undefined && p.deals.length > 0) || (p.moves.length > 0 && p.over === undefined)
+  }
   const findings: SemanticFinding[] = []
   for (const view of surfaces) {
-    const moves = liveMoves(view)
-    if (moves.length > 0 && pokerSettled(view)) {
-      if (surfaces.some((other) => other !== view && !pokerSettled(other) && liveMoves(other).length > 0)) continue
+    const { moves, over, forwards } = poker.get(view)!
+    if (over !== undefined) {
+      if (surfaces.some((other) => other !== view && nextHand(other))) continue
+      const stale = listed(moves.map((c) => c.id))
       findings.push({
         code: 'DEAL_AGAIN_MISSING',
         path: `${view.surfaceId}:${moves[0]!.id}`,
         message:
-          `${view.surfaceId}'s hand is over (the data model reads ${['/phase', '/street'].map((p) => readPointer(view.dataModel, p)).find((v) => typeof v === 'string' && SETTLED_STATE.test(v))}), ` +
-          `and the surface still offers ${listed(moves.map((c) => c.id))} with no Deal again Button, so the player has no way to the next hand. ` +
+          `${view.surfaceId}'s hand is over (${over}), and the surface still offers ${stale} as live moves, ` +
+          (forwards.length > 0
+            ? `while ${listed(forwards.map((c) => c.id))} deals with no "context":{"newRound":true}, so the next turn cannot read the press as a new hand. `
+            : 'with no Deal again Button, so the player has no way to the next hand. ') +
           `${round !== undefined && round > 0 ? 'Components sent only in an answer the checks rejected never reached the player. ' : ''}` +
-          `Send updateComponents for ${view.surfaceId} in this answer: replace those moves with one Deal again Button whose action carries "context":{"newRound":true}, ` +
+          `Send updateComponents for ${view.surfaceId} in this answer: drop ${stale} and ` +
+          (forwards.length > 0 ? `give ${forwards[0]!.id}'s action "context":{"newRound":true}, ` : 'offer one Deal again Button whose action carries "context":{"newRound":true}, ') +
           `beside the settled updateDataModel.`,
       })
       continue
@@ -806,7 +823,8 @@ function dealAgainMissing(surfaces: readonly SurfaceView[], round: number | unde
 }
 
 /** T-0172: one bet, one set of bet controls (the CardTable's own strip); T-0233: a playing table offers the moves.
- *  T-0350: a table this turn settles offers Deal again. T-0357: a hold'em opening deals instead of asking the stake. */
+ *  T-0350: a table this turn settles offers Deal again (T-0380: so does a poker hand that is over). T-0357: a hold'em
+ *  opening deals instead of asking the stake. */
 export const croupierBetControls: SemanticCheck = {
   id: 'croupier-bet-controls',
   requires: ['CardTable'],
@@ -1331,7 +1349,8 @@ const STUD_GAMES = /\b(stud|razz)\b/i
 const PLAYER_POST_PATH = /(player|hero|you).*(blind|ante|post)|(blind|ante|post).*(player|hero|you)/i
 const PLAYER_POST_TEXT = /\byou(?:'ve| have)? posted\b|\byour (?:big |small )?(?:blind|ante)\b|\byou(?:'re| are) (?:the )?(?:big|small) blind\b/i
 const NOT_OPPONENT_LIST = /player|hero|you|board|community|flop|turn|river/i
-const SETTLED_STATE = /\b(settled|showdown)\b/i
+/** T-0380: the data-model words that end a hand; a bare "fold" is the move, "folded" or "folds" the ending. */
+const HAND_OVER = /(?<![\w-])(settled|showdown|hand over|folded|folds)(?![\w-])/i
 
 /** A chip count: a finite number, or a numeric string ("990", "$60", "1,060"). */
 function chipNumber(v: unknown): number | undefined {
@@ -1362,12 +1381,24 @@ function isPokerTable(view: SurfaceView): boolean {
   return pot !== '/pot' || chipNumber(readPointer(view.dataModel, pot)) !== undefined
 }
 
-/** The turn settles the hand: a ResultCard or a text naming a result, a `/phase` or `/status` reading settled or
- *  showdown. A settle may hold a final call or an all-in run-out, which a turn-local prior cannot price. */
-function settlesHand(view: SurfaceView): boolean {
-  const comps = [...view.components.values()]
-  if (comps.some((c) => c.component === 'ResultCard' || ['text', 'label', 'title', 'status', 'result'].some((k) => RESULT_WORDS.test(stringProp(view, c, k))))) return true
-  return ['/phase', '/status'].some((p) => { const v = readPointer(view.dataModel, p); return typeof v === 'string' && SETTLED_STATE.test(v) })
+/** The turn settles the hand (`pokerHandOver`). A settle may hold a final call or an all-in run-out, which a
+ *  turn-local prior cannot price. */
+const settlesHand = (view: SurfaceView): boolean => pokerHandOver(view) !== undefined
+
+/** T-0380: a poker hand is over when the data model's `/phase`, `/street` or `/status` reads settled, the showdown
+ *  ("Pre-showdown" is a street before) or a fold ending ("Hand over", "Folded"; a bare "or fold" offers the move), or
+ *  the surface holds a ResultCard or a text naming a result. Returns what says so, for the repair text. */
+function pokerHandOver(view: SurfaceView): string | undefined {
+  for (const p of ['/phase', '/street', '/status']) {
+    const v = readPointer(view.dataModel, p)
+    if (typeof v === 'string' && HAND_OVER.test(v)) return `${p} reads "${v}"`
+  }
+  for (const c of view.components.values()) {
+    if (c.component === 'ResultCard') return `${c.id} is a ResultCard`
+    const k = ['text', 'label', 'title', 'status', 'result'].find((key) => RESULT_WORDS.test(stringProp(view, c, key)))
+    if (k !== undefined) return `${c.id} reads "${stringProp(view, c, k)}"`
+  }
+  return undefined
 }
 
 /** The player posted into a new hand's pot: a data-model pointer or surface words naming the player's blind or ante,
