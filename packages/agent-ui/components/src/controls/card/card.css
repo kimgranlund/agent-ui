@@ -95,7 +95,7 @@
      --ui-card-child-radius a PARENT card published (one-level nesting, ADR-0018), else the shared
      --md-sys-shape-corner-base (a root card — the channel is unset → the fallback). */
   --ui-card-border: var(--md-sys-color-neutral-outline-variant);
-  --ui-card-radius: var(--md-sys-card-radius, var(--ui-card-child-radius, var(--md-sys-shape-corner-base))); /* derived: 3n; concentric by construction, so the ADR-0018 chain is only the fallback (cl.6) */
+  --ui-card-radius: var(--md-sys-card-radius, var(--ui-card-child-radius, var(--md-sys-shape-corner-base))); /* derived: amount x 3m; concentric by construction, so the ADR-0018 chain is only the fallback (cl.6) */
 
   /* The card's INNER radius (the concentric-corner law) — the value handed down to a nested card. Under the
      box-model the inset is the CONTENT region's inline padding (a nested card lives inside ui-card-content),

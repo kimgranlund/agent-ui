@@ -57,7 +57,7 @@
   --ui-code-editor-padding-inline: calc(var(--md-sys-inset, calc(var(--ui-code-editor-font) * 0.75 + 1px)) - 1px);
   --ui-code-editor-rows: 4; /* the JS-set inline --ui-code-editor-rows overrides this per-instance (editor.ts) */
   --ui-code-editor-min-block-size: calc(var(--ui-code-editor-rows) * var(--ui-code-editor-line-box) + 2 * var(--ui-code-editor-padding-block));
-  --ui-code-editor-radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base)); /* textarea parity: the single-line control radius 2n (ADR-0245 Amendment 5) */
+  --ui-code-editor-radius: var(--md-sys-control-radius, var(--md-sys-shape-corner-base)); /* textarea parity: the single-line control radius, amount x h/2 (T-0374) */
   --ui-code-editor-min-inline-size: 20ch; /* the entry-control typing-width floor (ADR-0021), textarea parity */
 
   /* Visible inline-validation message tokens (ADR-0029 A1, the textarea precedent). */

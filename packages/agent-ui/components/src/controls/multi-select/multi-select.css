@@ -41,7 +41,7 @@
   --ui-multi-select-bg: var(--md-sys-color-neutral-surface);
   --ui-multi-select-ink: var(--md-sys-color-neutral-on-surface);
   --ui-multi-select-outline: var(--md-sys-color-neutral-outline-variant);
-  --ui-multi-select-radius: calc(var(--ui-multi-select-option-radius) + var(--ui-multi-select-padding)); /* concentric (ADR-0245 Amendment 5): the row's 2n plus the panel's own inset c; corner-base under the legacy opt-out */
+  --ui-multi-select-radius: calc(var(--ui-multi-select-option-radius) + var(--ui-multi-select-padding)); /* concentric (ADR-0245 Amendment 5): the row's control radius (amount x h/2) plus the panel's own inset c; corner-base under the legacy opt-out */
   /* panel padding = h/4 (the `ui-select` listbox-token mechanism copied, LLD-C5) — feeds the 12-row
      scroll-cap formula below too. */
   --ui-multi-select-padding: var(--md-sys-c, calc(var(--ui-multi-select-height) / 4));
@@ -83,7 +83,7 @@
   --ui-multi-select-option-inline: var(--md-sys-inset, calc(var(--ui-multi-select-height) / 4));
   --ui-multi-select-option-label-inset: var(--md-sys-label-inset, 0px);
   --ui-multi-select-option-font: var(--ui-multi-select-font);
-  --ui-multi-select-option-radius: var(--md-sys-control-radius, calc(var(--md-sys-shape-corner-base) - var(--ui-multi-select-padding))); /* a row is a single-line control: the pill 2n (ADR-0245 Amendment 5); the nested corner-base - inset under the legacy opt-out */
+  --ui-multi-select-option-radius: var(--md-sys-control-radius, calc(var(--md-sys-shape-corner-base) - var(--ui-multi-select-padding))); /* a row is a single-line control: the control radius, amount x h/2 (T-0374); the nested corner-base - inset under the legacy opt-out */
   --ui-multi-select-option-bg-hover: var(--md-sys-color-neutral-surface-high);
   --ui-multi-select-option-bg-selected: var(--md-sys-color-primary-container-low);
   --ui-multi-select-option-ink-selected: var(--md-sys-color-primary-high);
