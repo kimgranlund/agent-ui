@@ -30,3 +30,8 @@ Guess, not verified: either the model emits prose before the A2UI messages and t
 
 ## Constraints
 The failing test lands before or with the fix, never after. Prefer a fix in the host or producer ordering over teaching-only steering, because models do not reliably follow ordering instructions.
+
+## Acceptance criteria
+- (red) `npx vitest run packages/agent-ui/app/src/controls/conversation/conversation.test.ts -t T-0382` exits 0: a resumed action-click turn holds its streamed summary until finalize, after the surface update.
+- `npx vitest run packages/agent-ui/app/src/controls/conversation/conversation.test.ts` exits 0: fresh-bubble turns still stream text live (RTS-R5 AC3).
+- `npm run check` exits 0.
