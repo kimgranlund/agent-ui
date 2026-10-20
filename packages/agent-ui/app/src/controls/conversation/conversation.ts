@@ -321,7 +321,8 @@ export interface AgentTurnHandle {
   setNote(text: string): void
   /** RTS-R5 AC3: paints one streamed reply-text fragment (the `textDelta` meta arm) into the bubble,
    *  appended to the fragments before it. A later `setNote()` replaces the streamed text with the turn's
-   *  complete note; `finalize()` with no note keeps the streamed text (trimmed) instead of a tally. */
+   *  complete note; `finalize()` with no note keeps the streamed text (trimmed) instead of a tally.
+   *  T-0382: a resumed turn (`intoSurface`) paints nothing here; its text waits for `finalize()`. */
   textDelta(text: string): void
   /** ADR-0146 F1/F8 — routes one live-turn lifecycle event into the narration strip through a CLOSED,
    *  code-owned stage-label table (never model text, never a fabricated/speculative claim — the F2 honesty
@@ -1195,6 +1196,10 @@ export class UIConversationElement extends UIElement {
         // falls back to it only when no note ever arrived.
         if (ended || text === '') return
         streamedText += text
+        // T-0382: a resumed turn (the action-click game loop) holds its text for finalize(). Its body sits
+        // above the card it mutates, and the card's update only lands at the end (validate-then-stream),
+        // so painting live put the turn's summary ahead of the surface update it describes.
+        if (resumed !== undefined) return
         revealBubble()
         this.#renderBody(note, streamedText)
         followTail()

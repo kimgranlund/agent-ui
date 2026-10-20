@@ -2596,6 +2596,21 @@ describe('text-delta', () => {
     expect(agentBody(el).textContent).toBe('Just text.')
   })
 
+  it('T-0382: a resumed turn (intoSurface) holds its streamed text until the surface update has landed, then paints it at finalize', () => {
+    const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t1 = el.beginAgentTurn()
+    t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'game', catalogId: 'agent-ui' } }))
+    t1.setNote('Cards dealt.')
+    t1.finalize()
+    const t2 = el.beginAgentTurn({ intoSurface: 'game' })
+    t2.textDelta('You stood with 16. ')
+    t2.textDelta('Dealer plays out.')
+    expect(agentBody(el).textContent, 'the summary never paints ahead of the surface update').toBe('Cards dealt.')
+    t2.ingestLine(line({ version: 'v1.0', updateDataModel: { surfaceId: 'game', path: '/x', value: 1 } }))
+    t2.finalize()
+    expect(agentBody(el).textContent, 'the summary paints last, at finalize').toBe('You stood with 16. Dealer plays out.')
+  })
+
   it('a fragment after finalize paints nothing', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
     const handle = el.beginAgentTurn()

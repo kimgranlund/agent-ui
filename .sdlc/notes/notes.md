@@ -543,3 +543,7 @@
 - decide: `.sdlc/evals/README.md:31` attributes r12 to T-0343: `run-capped.ts:526` `roundTicket` takes the first ticket id the round names and finds plan.ts's "(T-0343)" attribution in the generated `live-commands.sh` header (round.json names none). The fog record says T-0376. Same for the t0362-smoke row.
 - note: `report.md:5` "$0.58" is the judge log total; the 36 judged files sum to $0.5485, the rest is the two unparsed judge replies that no file records.
 - note (T-0374 step 6): ui-suggestions.css:38 hard-codes the chip radius at h/2, so suggestion chips ignore data-radius. Kim 2026-10-19: note for later.
+
+## T-0382: Blackjack: A2UI update renders before the turn summary (2026-10-19)
+
+- note: conversation.browser.test.ts was not run (not a named criterion); it has no textDelta use.
