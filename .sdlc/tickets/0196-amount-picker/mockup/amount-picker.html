@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AmountPicker mockup (T-0196)</title>
+<!-- The library's foundation layer, in the foundation-styles.css order (linked directly: its bare
+     @agent-ui/shared specifiers do not resolve over file://). -->
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/tokens.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/dimensions.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/base.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations.gen.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css">
+<style>
+  /* Page chrome (not part of the control). */
+  html, body { margin: 0; }
+  body {
+    background: var(--md-sys-color-neutral-surface);
+    color: var(--md-sys-color-neutral-on-surface);
+    font-family: var(--md-sys-typeface-sans, system-ui, sans-serif);
+    padding: var(--md-sys-layout-margin);
+  }
+  .page-head h1 { font-size: var(--md-sys-type-heading); margin: 0 0 var(--md-sys-card-gutter); }
+  .page-head p { margin: 0 0 var(--md-sys-card-margin); color: var(--md-sys-color-neutral-on-surface-variant); font-size: var(--md-sys-type-body); max-inline-size: 70ch; }
+  .board { display: grid; gap: var(--md-sys-card-gutter); grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 400px)); }
+
+  /* The A2UI canvas: widget tier, scale md (20 / 24 / 28 px controls). A plain surface, no card chrome. */
+  .canvas {
+    background: var(--md-sys-color-neutral-surface-bright);
+    border-radius: var(--md-sys-widget-radius);
+    padding: var(--md-sys-widget-margin);
+    display: grid;
+    gap: var(--md-sys-widget-gutter);
+    align-content: start;
+  }
+  .state {
+    margin: 0;
+    font-size: var(--md-sys-type-group-kicker);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--md-sys-color-neutral-on-surface-variant);
+  }
+
+  /* ui-amount-picker: the proposed control (pattern tier, control-height rows). */
+  .ap {
+    --ui-amount-picker-gap: var(--md-sys-group-gutter);
+    --ui-amount-picker-readout-ink: var(--md-sys-color-neutral-on-surface);
+    --ui-amount-picker-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+    --ui-amount-picker-step-bg: var(--md-sys-color-neutral-container-low);
+    --ui-amount-picker-step-ink: var(--md-sys-color-neutral-on-surface);
+    --ui-amount-picker-preset-bg: var(--md-sys-color-primary-container-low);
+    --ui-amount-picker-preset-ink: var(--md-sys-color-primary-high);
+    --ui-amount-picker-preset-selected-bg: var(--md-sys-color-primary-fill);
+    --ui-amount-picker-preset-selected-ink: var(--md-sys-color-primary-on-primary);
+    --ui-amount-picker-commit-bg: var(--md-sys-color-primary-fill);
+    --ui-amount-picker-commit-ink: var(--md-sys-color-primary-on-primary);
+    display: grid;
+    gap: var(--ui-amount-picker-gap);
+    font-size: var(--md-sys-type-control);
+  }
+  .ap [data-part='label'] { color: var(--ui-amount-picker-label-ink); font-size: var(--md-sys-type-field-label); }
+  .ap button {
+    font: inherit;
+    border: 0;
+    margin: 0;
+    block-size: var(--md-sys-height);
+    border-radius: var(--md-sys-control-radius);
+    display: inline-grid;
+    grid-auto-flow: column;
+    place-items: center;
+    place-content: center;
+    gap: var(--md-sys-control-gutter);
+    line-height: 1;
+    cursor: pointer;
+  }
+  .ap svg { inline-size: var(--md-sys-glyph-box); block-size: var(--md-sys-glyph-box); fill: none; stroke: currentColor; stroke-width: var(--md-sys-glyph-stroke); stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Stepper row: decrease, readout, increase. */
+  .ap [data-part='stepper'] { display: grid; grid-template-columns: var(--md-sys-height) 1fr var(--md-sys-height); align-items: center; gap: var(--md-sys-control-gutter); }
+  .ap [data-part='decrease'], .ap [data-part='increase'] { inline-size: var(--md-sys-height); padding: 0; background: var(--ui-amount-picker-step-bg); color: var(--ui-amount-picker-step-ink); }
+  .ap [data-part='decrease'][disabled], .ap [data-part='increase'][disabled] {
+    /* At the bound: the fill drops away (a shape cue, not only a color cue) and the mark mutes. */
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--md-sys-color-neutral-outline-variant);
+    color: var(--md-sys-color-neutral-on-surface-disabled);
+    cursor: not-allowed;
+  }
+  .ap [data-part='readout'] {
+    block-size: var(--md-sys-height);
+    display: grid;
+    place-items: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: var(--md-sys-type-title);
+    color: var(--ui-amount-picker-readout-ink);
+    border-radius: var(--md-sys-control-radius);
+  }
+  .ap [data-part='readout']:focus-visible { outline: 2px solid var(--md-sys-color-focus-ring, var(--md-sys-color-primary)); outline-offset: 1px; }
+
+  /* Preset chips: control-height pills, the selected one filled and checked. */
+  .ap [data-part='presets'] { display: flex; flex-wrap: wrap; gap: var(--md-sys-control-gutter); }
+  .ap [data-part='preset'] {
+    padding-inline: var(--md-sys-label-inset);
+    min-inline-size: calc(var(--md-sys-height) * 1.5);
+    background: var(--ui-amount-picker-preset-bg);
+    color: var(--ui-amount-picker-preset-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .ap [data-part='preset'][aria-pressed='true'] { background: var(--ui-amount-picker-preset-selected-bg); color: var(--ui-amount-picker-preset-selected-ink); }
+  .ap [data-part='preset'][disabled] { background: transparent; box-shadow: inset 0 0 0 1px var(--md-sys-color-neutral-outline-variant); color: var(--md-sys-color-neutral-on-surface-disabled); cursor: not-allowed; }
+
+  /* Slider row: the composed ui-slider (drawn statically here). */
+  .ap [data-part='slider'] { position: relative; block-size: var(--md-sys-height); }
+  .ap [data-part='slider']::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: calc(50% - var(--md-sys-c) / 2);
+    block-size: var(--md-sys-c);
+    border-radius: var(--md-sys-c);
+    background: linear-gradient(to right, var(--md-sys-color-primary) calc(var(--pct) * 1%), var(--md-sys-color-neutral-track, var(--md-sys-color-neutral-outline-variant)) 0);
+  }
+  .ap [data-part='slider']::after {
+    content: '';
+    position: absolute;
+    inset-block-start: calc(50% - var(--md-sys-icon-box) / 2);
+    inset-inline-start: calc(var(--pct) * 1% - var(--pct) * var(--md-sys-icon-box) / 100);
+    inline-size: var(--md-sys-icon-box);
+    block-size: var(--md-sys-icon-box);
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--md-sys-color-neutral-surface-brightest);
+    border: 2px solid var(--md-sys-color-neutral-on-surface);
+  }
+
+  /* Commit: one solid control-height pill, fill by default. */
+  .ap [data-part='commit'] { inline-size: 100%; padding-inline: var(--md-sys-label-inset); background: var(--ui-amount-picker-commit-bg); color: var(--ui-amount-picker-commit-ink); font-weight: 600; }
+
+  .note { margin: 0; font-size: var(--md-sys-type-small-control); color: var(--md-sys-color-neutral-on-surface-variant); }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>ui-amount-picker, design mockup</h1>
+  <p>T-0196 step 1. Each tile is an A2UI canvas at <code>data-tier="widget" data-scale="md"</code> (24px control rows). The picker draws no card chrome. Static drawing: the build composes the real ui-slider and ui-glyph.</p>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="g-minus" viewBox="0 0 16 16"><path d="M3 8h10"/></symbol>
+  <symbol id="g-plus" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></symbol>
+  <symbol id="g-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5"/></symbol>
+</svg>
+
+<main class="board">
+
+  <!-- 1. Chips on, slider off, unit-less number. -->
+  <section class="canvas" data-tier="widget" data-scale="md" aria-label="Chips on, slider off">
+    <p class="state">Chips on, slider off (Shopkeeper quantity)</p>
+    <div class="ap" role="group" aria-label="Quantity">
+      <span data-part="label" aria-hidden="true">Quantity</span>
+      <div data-part="stepper">
+        <button data-part="decrease" tabindex="-1" aria-label="Decrease"><svg><use href="#g-minus"/></svg></button>
+        <div data-part="readout" role="spinbutton" tabindex="0" aria-valuenow="4" aria-valuemin="1" aria-valuemax="20" aria-valuetext="4">4</div>
+        <button data-part="increase" tabindex="-1" aria-label="Increase"><svg><use href="#g-plus"/></svg></button>
+      </div>
+      <div data-part="presets">
+        <button data-part="preset" aria-pressed="false">1</button>
+        <button data-part="preset" aria-pressed="false">2</button>
+        <button data-part="preset" aria-pressed="true"><svg><use href="#g-check"/></svg>4</button>
+        <button data-part="preset" aria-pressed="false">8</button>
+      </div>
+      <button data-part="commit">Add to cart</button>
+    </div>
+  </section>
+
+  <!-- 2. Chips off, slider on, currency. -->
+  <section class="canvas" data-tier="widget" data-scale="md" aria-label="Slider on, chips off, currency">
+    <p class="state">Slider on, chips off, currency (Negotiator offer)</p>
+    <div class="ap" role="group" aria-label="Your offer">
+      <span data-part="label" aria-hidden="true">Your offer</span>
+      <div data-part="stepper">
+        <button data-part="decrease" tabindex="-1" aria-label="Decrease"><svg><use href="#g-minus"/></svg></button>
+        <div data-part="readout" role="spinbutton" tabindex="0" aria-valuenow="420" aria-valuemin="200" aria-valuemax="600" aria-valuetext="$420.00">$420.00</div>
+        <button data-part="increase" tabindex="-1" aria-label="Increase"><svg><use href="#g-plus"/></svg></button>
+      </div>
+      <div data-part="slider" style="--pct: 55" aria-hidden="true"></div>
+      <button data-part="commit">Send offer</button>
+    </div>
+  </section>
+
+  <!-- 3. Chips off, slider off: the bare stepper, no commit (a sibling Button commits). -->
+  <section class="canvas" data-tier="widget" data-scale="md" aria-label="Chips off, slider off">
+    <p class="state">Chips off, slider off, no commit (Concierge guests)</p>
+    <div class="ap" role="group" aria-label="Guests">
+      <span data-part="label" aria-hidden="true">Guests</span>
+      <div data-part="stepper">
+        <button data-part="decrease" tabindex="-1" aria-label="Decrease"><svg><use href="#g-minus"/></svg></button>
+        <div data-part="readout" role="spinbutton" tabindex="0" aria-valuenow="2" aria-valuemin="1" aria-valuemax="8" aria-valuetext="2">2</div>
+        <button data-part="increase" tabindex="-1" aria-label="Increase"><svg><use href="#g-plus"/></svg></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Both on, unit value. -->
+  <section class="canvas" data-tier="widget" data-scale="md" aria-label="Chips on, slider on, unit">
+    <p class="state">Chips on, slider on, unit value</p>
+    <div class="ap" role="group" aria-label="Distance">
+      <span data-part="label" aria-hidden="true">Distance</span>
+      <div data-part="stepper">
+        <button data-part="decrease" tabindex="-1" aria-label="Decrease"><svg><use href="#g-minus"/></svg></button>
+        <div data-part="readout" role="spinbutton" tabindex="0" aria-valuenow="12" aria-valuemin="1" aria-valuemax="42" aria-valuetext="12 km">12 km</div>
+        <button data-part="increase" tabindex="-1" aria-label="Increase"><svg><use href="#g-plus"/></svg></button>
+      </div>
+      <div data-part="presets">
+        <button data-part="preset" aria-pressed="false">5 km</button>
+        <button data-part="preset" aria-pressed="false">10 km</button>
+        <button data-part="preset" aria-pressed="false">21 km</button>
+        <button data-part="preset" aria-pressed="false">42 km</button>
+      </div>
+      <div data-part="slider" style="--pct: 27" aria-hidden="true"></div>
+      <p class="note">12 sits between presets, so no chip reads selected.</p>
+      <button data-part="commit">Set distance</button>
+    </div>
+  </section>
+
+  <!-- 5. At min: decrease disabled. -->
+  <section class="canvas" data-tier="widget" data-scale="md" aria-label="At min">
+    <p class="state">At min, the minus side disabled</p>
+    <div class="ap" role="group" aria-label="Quantity">
+      <span data-part="label" aria-hidden="true">Quantity</span>
+      <div data-part="stepper">
+        <button data-part="decrease" tabindex="-1" aria-label="Decrease" disabled><svg><use href="#g-minus"/></svg></button>
+        <div data-part="readout" role="spinbutton" tabindex="0" aria-valuenow="1" aria-valuemin="1" aria-valuemax="20" aria-valuetext="1">1</div>
+        <button data-part="increase" tabindex="-1" aria-label="Increase"><svg><use href="#g-plus"/></svg></button>
+      </div>
+      <div data-part="presets">
+        <button data-part="preset" aria-pressed="true"><svg><use href="#g-check"/></svg>1</button>
+        <button data-part="preset" aria-pressed="false">2</button>
+        <button data-part="preset" aria-pressed="false">4</button>
+        <button data-part="preset" aria-pressed="false">8</button>
+      </div>
+      <button data-part="commit">Add to cart</button>
+    </div>
+  </section>
+
+  <!-- 6. At max: increase disabled, currency, chips on and slider on. -->
+  <section class="canvas" data-tier="widget" data-scale="md" aria-label="At max">
+    <p class="state">At max, the plus side disabled (currency, bankroll 250)</p>
+    <div class="ap" role="group" aria-label="Bet">
+      <span data-part="label" aria-hidden="true">Bet</span>
+      <div data-part="stepper">
+        <button data-part="decrease" tabindex="-1" aria-label="Decrease"><svg><use href="#g-minus"/></svg></button>
+        <div data-part="readout" role="spinbutton" tabindex="0" aria-valuenow="250" aria-valuemin="5" aria-valuemax="250" aria-valuetext="$250">$250</div>
+        <button data-part="increase" tabindex="-1" aria-label="Increase" disabled><svg><use href="#g-plus"/></svg></button>
+      </div>
+      <div data-part="presets">
+        <button data-part="preset" aria-pressed="false">$25</button>
+        <button data-part="preset" aria-pressed="false">$50</button>
+        <button data-part="preset" aria-pressed="false">$100</button>
+        <button data-part="preset" aria-pressed="true"><svg><use href="#g-check"/></svg>$250</button>
+      </div>
+      <div data-part="slider" style="--pct: 100" aria-hidden="true"></div>
+      <button data-part="commit">Place bet</button>
+    </div>
+  </section>
+
+</main>
+</body>
+</html>
