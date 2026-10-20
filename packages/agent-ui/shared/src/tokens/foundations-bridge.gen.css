@@ -82,6 +82,8 @@
   --md-sys-label-inset: initial;
   --md-sys-radius: initial;
   --md-sys-control-radius: initial;
+  --md-sys-control-gutter: initial;
+  --md-sys-label-compensation: initial;
   --md-sys-icon-box: initial;
   --md-sys-glyph-box: initial;
   --md-sys-glyph-slot: initial;

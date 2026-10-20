@@ -48,8 +48,15 @@ const fontPx = (btn: HTMLElement): number => px(getComputedStyle(btn).fontSize)
 const gapPx = (btn: HTMLElement): number => px(getComputedStyle(btn).columnGap) // the icon↔label rhythm
 const padStartPx = (btn: HTMLElement): number => px(getComputedStyle(btn).paddingInlineStart)
 const padEndPx = (btn: HTMLElement): number => px(getComputedStyle(btn).paddingInlineEnd)
-/** The label part's own inset (the control rule, ADR-0245 Amendment 4): n - c on each inline side. */
-const labelInsetPx = (btn: HTMLElement): number => px(getComputedStyle(btn.querySelector('[data-part="label"]') as HTMLElement).paddingInlineStart)
+/** The label wrapper's padding (T-0374 step 7): W, plus the compensation C on a side no adornment occupies, and on both sides between two adornments (Kim 2026-10-19). */
+const labelPart = (btn: HTMLElement): HTMLElement => btn.querySelector('[data-part="label"]') as HTMLElement
+const labelInsetPx = (btn: HTMLElement): number => px(getComputedStyle(labelPart(btn)).paddingInlineStart)
+const labelInsetEndPx = (btn: HTMLElement): number => px(getComputedStyle(labelPart(btn)).paddingInlineEnd)
+/** An adornment's artwork: its cell less the centring inset (border-box, so the computed width is the cell). */
+const artworkPx = (el: HTMLElement): number => {
+  const cs = getComputedStyle(el)
+  return px(cs.width) - px(cs.paddingInlineStart) - px(cs.paddingInlineEnd)
+}
 
 /** Alpha channel of a computed colour — 0 ⇒ the ink/border has VANISHED, > 0 ⇒ it is still painted. */
 const alphaOf = (color: string): number => {
@@ -107,15 +114,15 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     }
   })
 
-  it('ADR-0245: sampled size × register cells render resolve() integers (height, font, icon box)', () => {
-    const iconPx = (b: HTMLElement): number =>
-      px(getComputedStyle(b.querySelector('[data-role="icon"]') as HTMLElement).width) // explicit inline-size → exact px
-    const read = (size: 'sm' | 'md' | 'lg', tier: string | null, scale: string | null): { h: number; f: number; icon: number } => {
+  it('ADR-0245: sampled size × register cells render resolve() integers (height, font, icon box in its 3n cell)', () => {
+    const iconOf = (b: HTMLElement): HTMLElement => b.querySelector('[data-role="icon"]') as HTMLElement
+    const read = (size: 'sm' | 'md' | 'lg', tier: string | null, scale: string | null): { h: number; f: number; icon: number; cell: number } => {
       const { wrap, btn } = mount(ICON)
       btn.setAttribute('size', size)
       if (tier) wrap.setAttribute('data-tier', tier)
       if (scale) wrap.setAttribute('data-scale', scale)
-      return { h: frameHeight(btn), f: fontPx(btn), icon: iconPx(btn) }
+      // T-0374 step 7: the slot is the square 3n wrapper, the 2n icon artwork centred in it
+      return { h: frameHeight(btn), f: fontPx(btn), icon: artworkPx(iconOf(btn)), cell: px(getComputedStyle(iconOf(btn)).width) }
     }
     const cells = [
       ['lg', 'content', 'lg'],
@@ -127,36 +134,43 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     for (const [size, tier, scale] of cells) {
       const r = resolve(tier ?? 'product', scale ?? 'md', size)
       const got = read(size, tier, scale)
-      expect(got, `${size} @ ${tier ?? 'root'} / ${scale ?? 'md'}`).toEqual({ h: r.height, f: r.type.control, icon: r.iconBox })
+      expect(got, `${size} @ ${tier ?? 'root'} / ${scale ?? 'md'}`).toEqual({ h: r.height, f: r.type.control, icon: r.iconBox, cell: r.glyphSlot })
       expect(Number.isInteger(got.f) && Number.isInteger(got.icon), 'derived values are whole px (M7)').toBe(true)
     }
   })
 
-  it('a region data-scale moves the icon to label distance with n: the gutter c plus the label inset n - c (the icon+label variant)', () => {
+  it('a region data-scale moves the icon to label distance with n: the artwork inset n/2, the gutter c and the label wrapper W (the icon+label variant)', () => {
     const { wrap, btn } = mount(ICON) // md size
+    const icon = btn.querySelector('[data-role="icon"]') as HTMLElement
     const gutters: number[] = []
     const distances: number[] = []
     for (const scale of ['sm', 'md', 'lg'] as const) {
       wrap.setAttribute('data-scale', scale)
       gutters.push(gapPx(btn))
-      distances.push(gapPx(btn) + labelInsetPx(btn))
+      distances.push(px(getComputedStyle(icon).paddingInlineEnd) + gapPx(btn) + labelInsetPx(btn))
     }
-    // ADR-0245 Amendment 4: the column-gap is the control gutter c, and the label inset n - c makes icon to text n
+    // T-0374 step 7: the column-gap is the control gutter c; the icon artwork sits n/2 inside its 3n wrapper and
+    // the label wrapper pads W = n/4 on its occupied (leading) side, with no compensation there
     expect(gutters).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').c))
-    expect(distances).toEqual((['sm', 'md', 'lg'] as const).map((s) => resolve('product', s, 'md').inset))
+    expect(distances).toEqual((['sm', 'md', 'lg'] as const).map((s) => {
+      const r = resolve('product', s, 'md')
+      return r.surface.iconInset + r.c + r.controlGutter
+    }))
     expect(allDistinct(distances), `icon to label did not change across data-scale: ${distances.join()}`).toBe(true)
   })
 
-  it('a region data-scale moves the bare-label FRAME too: block-size 4n, the box margin n and the label inset n - c (one n, ADR-0245 Amendment 4)', () => {
+  it('a region data-scale moves the bare-label FRAME too: block-size 4n, the control margin m and the label wrapper W + C (one n, T-0374 step 7)', () => {
     const { wrap, btn } = mount(BARE) // md size
     for (const scale of ['sm', 'md', 'lg'] as const) {
       wrap.setAttribute('data-scale', scale)
       const r = resolve('product', scale, 'md')
-      expect(frameHeight(btn), `height @ ${scale}`).toBeCloseTo(r.height, 0)
-      expect(padStartPx(btn), `leading box margin @ ${scale}`).toBeCloseTo(r.inset, 0)
-      expect(padEndPx(btn), `trailing box margin @ ${scale}`).toBeCloseTo(r.inset, 0)
-      expect(labelInsetPx(btn), `label inset @ ${scale}`).toBeCloseTo(r.labelInset, 0)
-      expect(padStartPx(btn) + labelInsetPx(btn), `text edge 2n - c @ ${scale}`).toBeCloseTo(2 * r.n - r.c, 0)
+      expect(frameHeight(btn), `height @ ${scale}`).toBeCloseTo(r.height, 1)
+      expect(padStartPx(btn), `leading control margin @ ${scale}`).toBeCloseTo(r.controlMargin, 1)
+      expect(padEndPx(btn), `trailing control margin @ ${scale}`).toBeCloseTo(r.controlMargin, 1)
+      // a label alone: both sides exposed, W + C on each
+      expect(labelInsetPx(btn), `label start @ ${scale}`).toBeCloseTo(r.controlGutter + r.labelCompensation, 1)
+      expect(labelInsetEndPx(btn), `label end @ ${scale}`).toBeCloseTo(r.controlGutter + r.labelCompensation, 1)
+      expect(padStartPx(btn) + labelInsetPx(btn), `text edge m + W + C @ ${scale}`).toBeCloseTo(r.controlMargin + r.controlGutter + r.labelCompensation, 1)
     }
   })
 
@@ -183,6 +197,11 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     expect(start, `reversed inline-pads are not symmetric — padding tracked role not slot-presence: ${start} vs ${end}`).toBeCloseTo(end, 1)
     expect(start, 'leading inline-pad is not ½(h−icon)').toBeCloseTo((h - iconCell) / 2, 1)
     expect(end, 'trailing inline-pad is not ½(h−icon)').toBeCloseTo((h - iconCell) / 2, 1)
+    // a label between two adornments keeps W + C on both sides (T-0374 step 7, Kim's 2026-10-19 ruling)
+    const r = resolve('product', 'md', 'md')
+    expect(r.labelCompensation, 'anti-vacuous: C is not 0 at the root').toBeGreaterThan(0)
+    expect(labelInsetPx(btn), 'label start between two adornments').toBeCloseTo(r.controlGutter + r.labelCompensation, 1)
+    expect(labelInsetEndPx(btn), 'label end between two adornments').toBeCloseTo(r.controlGutter + r.labelCompensation, 1)
 
     // [2] anti-vacuous (BTN-CARET on the LEADING side): the leading caret's GLYPH content box = font (14), and
     // is STRICTLY smaller than its icon-sized cell (18) — NOT the named --ui-ind oversize bug on the lead edge.
@@ -290,22 +309,22 @@ describe('ui-button [icon-only]: a slotted adornment with NO label renders a gen
     expect(insetStart, 'icon-only insets are not symmetric').toBeCloseTo(insetEnd, 0)
   })
 
-  it('REGRESSION GUARD: the [leading | label]-with-real-text structure keeps the control rule: equal host pads n, a label edge of n + the label inset, still wider than tall', () => {
-    // Re-derived for ADR-0245 Amendment 4. The old law read "asymmetric host pads" (½(h−icon) against h/2); the
-    // host pads are equal at n now and the asymmetry lives on the text: the icon sits n from its edge, the label
-    // text n + labelMargin = 2n - c from its edge.
+  it('REGRESSION GUARD: the [leading | label]-with-real-text structure keeps the skill\'s anatomy: equal host pads m, C on the exposed label end only, still wider than tall', () => {
+    // Re-derived for T-0374 step 7 (the skill's button rule): the host pads the control margin m on both edges; the
+    // icon wrapper is the 3n cell; the label wrapper pads W on its occupied (leading) side and W + C on its exposed
+    // (trailing) side, so the text sits m + W + C from the end edge.
     const { btn } = mount(ICON) // real text label, no icon-only attribute
     const h = frameHeight(btn)
     const w = frameWidth(btn)
     const start = padStartPx(btn)
     const end = padEndPx(btn)
-    const n = h / 4
-    const c = Math.ceil(n / 4)
+    const r = resolve('product', 'md', 'md')
+    expect(h, 'the root register').toBe(r.height)
     expect(w, 'the real-label case must stay WIDER than the square frame (it carries a label)').toBeGreaterThan(h)
-    expect(start, 'the leading pad is the ½(h−icon) slot edge, n').toBeCloseTo(n, 1)
-    expect(end, 'the label edge is the box margin, n').toBeCloseTo(n, 1)
-    expect(labelInsetPx(btn), 'the label part carries the inset n - c').toBeCloseTo(n - c, 1)
-    expect(end + labelInsetPx(btn), 'the text edge is n + labelMargin = 2n - c').toBeCloseTo(2 * n - c, 1)
-    expect(end + labelInsetPx(btn), 'the text edge still differs from the icon edge').not.toBeCloseTo(start, 1)
+    expect(start, 'the leading pad is the control margin m').toBeCloseTo(r.controlMargin, 1)
+    expect(end, 'the label edge is the control margin m').toBeCloseTo(r.controlMargin, 1)
+    expect(labelInsetPx(btn), 'the occupied label side pads W alone').toBeCloseTo(r.controlGutter, 1)
+    expect(labelInsetEndPx(btn), 'the exposed label side pads W + C').toBeCloseTo(r.controlGutter + r.labelCompensation, 1)
+    expect(r.labelCompensation, 'anti-vacuous: C is not 0 at the root').toBeGreaterThan(0)
   })
 })

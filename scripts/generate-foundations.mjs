@@ -12,7 +12,7 @@
 //
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes (density as the vendored q, tight 2 to loose 6, T-0374), and one
-// derived block (`--md-sys-n`, the container unit `--md-sys-m`, the control margin and height, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4),
+// derived block (`--md-sys-n`, the container unit `--md-sys-m`, the control margin and height, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4), the button's wrapper gutter n/4 and label-edge compensation (T-0374 step 7),
 // the radii at the two `data-radius` amounts (T-0374 step 6: container A x margin, control A x h/2, balanced at the root), the type roles under the skill's names (T-0373: the section and group
 // kickers), the chip level and the four container levels) re-declared
 // wherever an input changes (beside it, for one release, the type labels the kickers were renamed from,
@@ -93,6 +93,10 @@ function derivedDeclarations(a = anchors()) {
     // A single-line control (and a textarea) takes A x h/2, n at regular under balanced, h/2 under pill; a panel
     // takes its row's radius plus its own inset, so rows nest concentrically at any amount.
     ['--md-sys-control-radius', `calc(var(--md-sys-height) / 2 * ${controlAmount(a)})`],
+    // The button's label edge (T-0374 step 7, the skill's resolveButtonPadding()): every wrapper pads W = n/4, and the
+    // label wrapper adds C = max(0, R - m - W) on each side no adornment occupies, so its text clears the corner.
+    ['--md-sys-control-gutter', `calc(${N} * 0.25px)`],
+    ['--md-sys-label-compensation', 'max(0px, var(--md-sys-control-radius) - var(--md-sys-control-margin) - var(--md-sys-control-gutter))'],
     ['--md-sys-icon-box', `calc(${N} * ${a.iconPerN}px)`],
     // The glyph (T-0374, resolveControlSurface): the n + 6 artwork centred in its square 3n slot. n + 6 is at least 10
     // on the whole ladder, so the retired 8px floor never binds; JS and TS readers use glyphBox() in foundations-rules.mjs.

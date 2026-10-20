@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve, type Resolved, type Step, type Tier } from '../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve as model, type Emitted } from '../../../../../scripts/lib/foundations-model.mjs' // the button anatomy (T-0374 step 7)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -8,7 +9,9 @@ import '@agent-ui/components/all'
 
 // ADR-0245 Amendment 4, the skill's control rule, measured per control in a real engine: box margin n, gutter c,
 // label inset n - c on the text slot, so the icon edge is n, icon to text is n and the text edge is 2n - c; min
-// width 4n; action labels align per the skill's table. Every control runs outside any region (the root register,
+// width 4n; action labels align per the skill's table. ui-button left the rule for the skill's control anatomy
+// (T-0374 step 7): margin m, the square 3n adornment wrapper, and the label wrapper's W plus the compensation C on
+// each exposed side, so its exposed text edge is m + W + C (8 at the root under balanced). Every control runs outside any region (the root register,
 // product at scale md: text edge 10 / 14 / 17 at sm / md / lg) and inside a data-tier region that differs from it
 // (product at scale sm), so the region leg still proves the register moves the rule.
 // Expected px come from scale.mjs resolve(), never a pinned literal. Edges are measured from the control's padding
@@ -67,6 +70,8 @@ function edges(box: Element, inner: DOMRect): { start: number; end: number } {
 const near = (got: number, want: number, label: string): void => expect(Math.abs(got - want), `${label}: got ${got}, want ${want}`).toBeLessThanOrEqual(TOLERANCE)
 
 const textEdge = (r: Resolved): number => r.control.margin + r.labelMargin // 2n - c
+/** ui-button's exposed text edge (T-0374 step 7): m + W + C. */
+const buttonEdge = (e: Emitted): number => e.controlMargin + e.controlGutter + e.labelCompensation
 
 for (const [name, tier, scale, attrs] of REGISTERS) {
   describe(`the control rule ${name}`, () => {
@@ -75,31 +80,34 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
       const edge = textEdge(r)
       const at = `size ${size} (n ${r.n}: margin ${r.control.margin}, label inset ${r.labelMargin}, text edge ${edge})`
 
-      it(`ui-button at ${at}: label-only, icon edges, and the min width 4n`, async () => {
+      const e = model(tier, scale, size)
+      const bEdge = buttonEdge(e)
+      it(`ui-button at size ${size} (n ${r.n}: margin ${e.controlMargin}, label W + C ${e.controlGutter + e.labelCompensation}, text edge ${bEdge}): label-only, the 3n adornment wrappers, and the min width 4n`, async () => {
         const wrap = await mount(attrs, size, `
           <ui-button inline size="${size}" data-case="label">Label</ui-button>
           <ui-button inline size="${size}" data-case="leading">${ICON('leading')}Label</ui-button>
           <ui-button inline size="${size}" data-case="trailing">Label${ICON('trailing')}</ui-button>`)
         const label = q(wrap, '[data-case="label"]')
-        expect(edge, 'gutter c + label inset = margin n, so the text edge is 2n - c').toBe(2 * r.n - r.c)
-        near(px(label, 'padding-inline-start'), r.control.margin, 'box margin')
-        near(px(q(label, '[data-part="label"]'), 'padding-inline-start'), r.labelMargin, 'label inset on the text slot')
+        expect(e.labelCompensation, 'C = max(0, R - m - W)').toBe(Math.max(0, e.controlRadius - e.controlMargin - e.controlGutter))
+        near(px(label, 'padding-inline-start'), e.controlMargin, 'control margin')
+        near(px(q(label, '[data-part="label"]'), 'padding-inline-start'), e.controlGutter + e.labelCompensation, 'W + C on the exposed label side')
         const bare = edges(label, textRect(label))
-        near(bare.start, edge, 'label-only text edge, start')
-        near(bare.end, edge, 'label-only text edge, end')
+        near(bare.start, bEdge, 'label-only text edge, start')
+        near(bare.end, bEdge, 'label-only text edge, end')
         near(px(label, 'min-inline-size'), r.minWidth, 'min width')
 
         const leading = q(wrap, '[data-case="leading"]')
         const icon = q(leading, '[slot="leading"]').getBoundingClientRect()
-        near(edges(leading, icon).start, r.control.margin, 'icon edge')
-        near(textRect(leading).left - icon.right, r.control.margin, 'icon to text')
-        near(edges(leading, textRect(leading)).end, edge, 'text edge beside a leading icon')
+        near(icon.width, e.glyphSlot, 'the square 3n wrapper')
+        near(edges(leading, icon).start, e.controlMargin, 'wrapper edge')
+        near(textRect(leading).left - icon.right, r.c + e.controlGutter, 'wrapper to text: the gutter c and W, no C')
+        near(edges(leading, textRect(leading)).end, bEdge, 'text edge beside a leading icon')
 
         const trailing = q(wrap, '[data-case="trailing"]')
         const tail = q(trailing, '[slot="trailing"]').getBoundingClientRect()
-        near(edges(trailing, tail).end, r.control.margin, 'trailing icon edge')
-        near(tail.left - textRect(trailing).right, r.control.margin, 'text to trailing icon')
-        near(edges(trailing, textRect(trailing)).start, edge, 'text edge beside a trailing icon')
+        near(edges(trailing, tail).end, e.controlMargin, 'trailing wrapper edge')
+        near(tail.left - textRect(trailing).right, r.c + e.controlGutter, 'text to trailing wrapper')
+        near(edges(trailing, textRect(trailing)).start, bEdge, 'text edge beside a trailing icon')
       })
 
       it(`ui-toggle at ${at}: label-only and beside its icon`, async () => {
@@ -234,8 +242,8 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
     }
 
     it('action labels align per the table: centered alone or between content, start with trailing only, end with leading only', async () => {
-      const r = resolve(tier, scale, 'md')
-      const edge = textEdge(r)
+      const e = model(tier, scale, 'md')
+      const edge = buttonEdge(e)
       const wrap = await mount(attrs, 'md', `
         <ui-button data-case="alone">Label</ui-button>
         <ui-button data-case="leading">${ICON('leading')}Label</ui-button>
@@ -248,15 +256,19 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
 
       const leading = q(wrap, '[data-case="leading"]')
       near(edges(leading, textRect(leading)).end, edge, 'only leading content: the label sits at the end edge')
-      near(edges(leading, q(leading, '[slot="leading"]').getBoundingClientRect()).start, r.control.margin, 'the leading icon stays pinned at the start')
+      near(edges(leading, q(leading, '[slot="leading"]').getBoundingClientRect()).start, e.controlMargin, 'the leading icon stays pinned at the start')
 
       const trailing = q(wrap, '[data-case="trailing"]')
       near(edges(trailing, textRect(trailing)).start, edge, 'only trailing content: the label sits at the start edge')
-      near(edges(trailing, q(trailing, '[slot="trailing"]').getBoundingClientRect()).end, r.control.margin, 'the trailing icon stays pinned at the end')
+      near(edges(trailing, q(trailing, '[slot="trailing"]').getBoundingClientRect()).end, e.controlMargin, 'the trailing icon stays pinned at the end')
 
       const both = q(wrap, '[data-case="both"]')
       const text = textRect(both)
       near(text.left - q(both, '[slot="leading"]').getBoundingClientRect().right, q(both, '[slot="trailing"]').getBoundingClientRect().left - text.right, 'between leading and trailing: centered')
+      // between two adornments the label keeps W + C on both sides (Kim's 2026-10-19 ruling)
+      const between = q(both, '[data-part="label"]')
+      near(px(between, 'padding-inline-start'), e.controlGutter + e.labelCompensation, 'between: label start W + C')
+      near(px(between, 'padding-inline-end'), e.controlGutter + e.labelCompensation, 'between: label end W + C')
     })
   })
 }

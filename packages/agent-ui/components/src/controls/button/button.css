@@ -42,14 +42,18 @@
   --ui-button-gap: var(--md-sys-c, var(--md-sys-gap-md)); /* the control gutter c (ADR-0245 Amendment 4); the label inset below makes icon to text n */
   --ui-button-icon: var(--md-sys-icon-box, var(--md-sys-icon-md)); /* content-icon = the shared §1-SET icon table (ADR-0035 4a hoist, dimensions.css), per-[scale]-tier; was pow(scale,0.58) */
   --ui-button-glyph: var(--md-sys-glyph-box, var(--ui-button-font)); /* inline-affordance (caret): the glyph box n + 6 (T-0374), the font under the legacy opt-out (ADR-0245 cl.4) */
-  --ui-button-caret-cell: max(var(--ui-button-icon), var(--ui-button-glyph)); /* the caret's icon cell, never smaller than its glyph (T-0374) */
+  --ui-button-cell: var(--md-sys-glyph-slot, var(--ui-button-icon)); /* the square 3n wrapper every adornment fills, its artwork centred (T-0374 step 7); the icon cell under the legacy opt-out */
 
-  /* The control rule (ADR-0245 Amendment 4): the box margin is n on every edge and the label carries the inset
-     n - c, so the text edge is 2n - c and icon to text is c + (n - c) = n. Declared once here: both derive from
-     the height and n, so [size] repoints them for free. Under the legacy opt-out the margin is h/2 beside a
-     label and the inset is 0, today's geometry. */
-  --ui-button-edge: var(--md-sys-inset, calc(var(--ui-button-height) / 2));
-  --ui-button-label-inset: var(--md-sys-label-inset, 0px);
+  /* The skill's control anatomy (T-0374 step 7, geometry-contract.md "Button content and inline padding"): the box
+     pads the control margin m on both edges; every wrapper pads W = n/4; the label wrapper adds the compensation
+     C = max(0, R - m - W) on each side no adornment occupies (both sides between two adornments, Kim 2026-10-19), so its text clears the control radius R (C is 2 at
+     product md regular under balanced, 10 under pill). Declared once here: all derive from n, the density and the
+     preset, so [size] repoints them for free. Under the legacy opt-out the margin is h/2 beside a label and
+     (h - icon)/2 beside an adornment, and the label pads 0, today's geometry. */
+  --ui-button-edge: var(--md-sys-control-margin, calc(var(--ui-button-height) / 2));
+  --ui-button-slot-edge: var(--md-sys-control-margin, calc((var(--ui-button-height) - var(--ui-button-icon)) / 2));
+  --ui-button-label-gutter: var(--md-sys-control-gutter, 0px);
+  --ui-button-label-compensation: var(--md-sys-label-compensation, 0px);
 }
 
 /* variant → colour roles (the channel pattern, tokens.md). Per-state bg steps the matching ladder:
@@ -115,7 +119,7 @@
 
     block-size: var(--ui-button-height); /* the vertical lever — geometry.md */
     padding-block: 0; /* NEVER block-padding */
-    padding-inline: var(--ui-button-edge); /* the box margin n; the label carries the inset (text edge 2n - c) */
+    padding-inline: var(--ui-button-edge); /* the control margin m; the label wrapper carries W + C */
     min-inline-size: var(--ui-button-height); /* min width 4n: a short label never goes narrower than the square */
 
     font-size: var(--ui-button-font);
@@ -163,8 +167,9 @@
      here is the BASE (bare + double-adorned structures, rows 5/6/7) — the single-adornment structures
      override to `end`/`start` below (ADR-0171, GH #442, amended GH #450). */
   :scope > [data-part='label'] {
-    box-sizing: border-box; /* the inset counts inside the max-inline-size clamp below */
-    padding-inline: var(--ui-button-label-inset); /* the label inset n - c: the text slot carries it, icons carry none */
+    box-sizing: border-box; /* the padding counts inside the max-inline-size clamp below */
+    /* a label alone or between two adornments: W + C on each side (text edge m + W + C) */
+    padding-inline: calc(var(--ui-button-label-gutter) + var(--ui-button-label-compensation));
     overflow: hidden;
     text-overflow: ellipsis;
     min-inline-size: 0;
@@ -187,13 +192,24 @@
      adornments, so child order is the structure. fit-content sizing + the max-inline-size clamp
      (GH #293) hold under `start`/`end` exactly as under `center`. At CONTENT (hug) width the `1fr`
      track resolves to the label's own width, so start/end/center are pixel-indistinguishable and
-     the adornment to text separation is exactly gap + label inset = n; the spread only shows once
-     the button's inline-size exceeds its content (ADR-0171 Amendment §A1). */
+     the adornment to text separation is the artwork inset + gap + W; the spread only shows once
+     the button's inline-size exceeds its content (ADR-0171 Amendment §A1). The same presence decides
+     the compensation (T-0374 step 7): a label with adornment content on one side only drops C on that
+     side, read from the actual siblings; a label alone or between two adornments keeps W + C on both
+     sides (Kim's 2026-10-19 ruling, so the base rule covers both). The padding rules wrap
+     their presence test in :where(), so they keep the base rule's specificity and a consumer's own label
+     padding (the composer's compact picker collapses it to 0) still wins as it did before. */
   :scope > [data-part='label']:first-child:not(:only-child) {
     justify-self: start; /* only trailing content: label at the start edge, adornment at the end */
   }
   :scope > [data-part='label']:last-child:not(:only-child) {
     justify-self: end; /* only leading content: icon at the start edge, label at the end edge (GH #450) */
+  }
+  :scope > [data-part='label']:where(:first-child:not(:only-child)) {
+    padding-inline-end: var(--ui-button-label-gutter); /* the start side is exposed and keeps W + C */
+  }
+  :scope > [data-part='label']:where(:last-child:not(:only-child)) {
+    padding-inline-start: var(--ui-button-label-gutter); /* the end side is exposed and keeps W + C */
   }
 
   /* Anatomy (ADR-0006, extended by ADR-0012): host-as-grid with three POSITION regions — an OPTIONAL leading
@@ -202,65 +218,64 @@
      [label] · [leading | label] · [label | trailing] · [leading | label | trailing] · [icon-only, no label]
      (the last is an explicit author opt-in, `[icon-only]` — CSS cannot detect an empty/text-node label on its
      own; see the `:scope[icon-only]` rule below, geometry.md "icon-only (no label) → square"). Each adornment
-     gets a square, icon-sized CELL with edge-pad ½(h−icon) = n; a label edge is the box margin n plus the label's
-     own inset n - c (text edge 2n - c); the column-gap is the control gutter c (ADR-0245 Amendment 4).
+     gets the square 3n wrapper with its artwork centred, after the control margin m; a label edge is m plus the
+     label wrapper's W + C (T-0374 step 7); the column-gap is the control gutter c (ADR-0245 Amendment 4).
      POSITION (the slot) PLACES; ROLE (`data-role` on the node — icon · caret now, tag · badge later) SIZES the
      glyph (ADR-0012 / geometry-sizing-spec §1.4, §4.6 — frame ∝ height vs rhythm ∝ font). Adornments are
      decorative (aria-hidden); popup/disclosure meaning belongs on the host via ARIA (ElementInternals). */
 
-  /* The CELL — both adornment slots get the SAME square, icon-sized cell (border-box, so a role's inset stays
-     WITHIN the icon-sized cell). The cell stays icon-sized for BOTH roles → the grid column is icon-wide and
-     the centering law (slot edge-pad ½(h−icon)) holds whichever role sits in it. */
+  /* The CELL, both adornment slots get the SAME square 3n wrapper (T-0374 step 7, the skill's icon and glyph
+     wrappers; border-box, so a role's inset stays WITHIN it). The grid column is 3n wide whichever role sits in
+     it, and its artwork is centred: the wrapper's W = n/4 is a budget the centring inset always covers (n/2 for
+     the icon, n - 3 for the glyph), so it gets no padding of its own and no compensation. An adornment with no
+     data-role is sized as an icon. */
   :scope > [slot='leading'],
   :scope > [slot='trailing'] {
-    inline-size: var(--ui-button-icon);
-    block-size: var(--ui-button-icon); /* the square slot, icon-sized — the CELL */
-    box-sizing: border-box; /* padding insets the glyph WITHIN the icon-sized cell (the caret centering) */
+    inline-size: var(--ui-button-cell);
+    block-size: var(--ui-button-cell); /* the square 3n wrapper, the CELL */
+    box-sizing: border-box; /* padding insets the artwork WITHIN the cell */
+    padding: calc((var(--ui-button-cell) - var(--ui-button-icon)) / 2); /* the 2n artwork centred, the icon default */
   }
 
-  /* ROLE = glyph size (the "position places, role sizes" split). The CELL above stays icon-sized for both
-     roles; only the GLYPH inside differs by role:
-       • icon  — a content icon (FRAME family) FILLS the icon-sized cell (= --ui-button-icon).
-       • caret — an inline affordance (RHYTHM family) is sized to the FONT (--ui-button-glyph = font) and
-         CENTERED in the icon-sized cell by a ½(icon−font) inset, so its glyph lands at the EMERGENT ½(h−font)
-         edge — never --ui-ind (an inline affordance at icon size is the named oversize "button caret" bug,
-         geometry.md §"Affordance vs content-icon"; locked by the BTN-CARET probe). */
+  /* ROLE = artwork size (the "position places, role sizes" split). The CELL above is the same for both roles;
+     only the ARTWORK inside differs by role, each centred by a ½(cell − artwork) inset:
+       • icon: a content icon (FRAME family), the 2n icon box (--ui-button-icon), inset n/2.
+       • caret: an inline affordance (RHYTHM family), the n + 6 glyph box (--ui-button-glyph), inset (3n − (n + 6))/2
+         and never the icon size (an inline affordance at icon size is the named oversize "button caret" bug,
+         geometry.md §"Affordance vs content-icon"; locked by the BTN-CARET probe). 3n always holds n + 6. */
   :scope > [data-role='icon'] {
-    padding: 0; /* fills its icon-sized cell */
+    padding: calc((var(--ui-button-cell) - var(--ui-button-icon)) / 2); /* the 2n artwork centred in the cell */
   }
   :scope > [data-role='caret'] {
-    /* the icon cell, never smaller than the n + 6 glyph box (T-0374: it outgrows the 2n icon at n 4 and 5) */
-    inline-size: var(--ui-button-caret-cell);
-    block-size: var(--ui-button-caret-cell);
-    padding: calc((var(--ui-button-caret-cell) - var(--ui-button-glyph)) / 2); /* inset the glyph, centered in the cell */
+    padding: calc((var(--ui-button-cell) - var(--ui-button-glyph)) / 2); /* the n + 6 artwork centred in the cell */
   }
 
-  /* [leading | label] (no trailing): auto 1fr. Leading slot edge ½(h−icon), which is n at icon 2n; the label
-     edge is the box margin (n derived, h/2 under the legacy opt-out).
+  /* [leading | label] (no trailing): auto 1fr. Both edges pad the control margin m (the slot edge is
+     ½(h−icon) and the label edge h/2 under the legacy opt-out).
      :not([icon-only]): the icon-only structure below is the mutually-exclusive fifth anatomy. */
   :scope:has(> [slot='leading']):not(:has(> [slot='trailing'])):not([icon-only]) {
     grid-template-columns: auto 1fr;
     column-gap: var(--ui-button-gap);
-    padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
+    padding-inline-start: var(--ui-button-slot-edge);
     padding-inline-end: var(--ui-button-edge);
   }
 
-  /* [label | trailing] (no leading): 1fr auto. The label edge is the box margin, the trailing slot edge ½(h−icon).
+  /* [label | trailing] (no leading): 1fr auto. The label edge and the trailing slot edge both pad m.
      :not([icon-only]): same exclusion. */
   :scope:has(> [slot='trailing']):not(:has(> [slot='leading'])):not([icon-only]) {
     grid-template-columns: 1fr auto;
     column-gap: var(--ui-button-gap);
     padding-inline-start: var(--ui-button-edge);
-    padding-inline-end: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
+    padding-inline-end: var(--ui-button-slot-edge);
   }
 
-  /* [leading | label | trailing]: auto 1fr auto — both adornment edges ½(h−icon), one gap rhythm on each
+  /* [leading | label | trailing]: auto 1fr auto, both adornment edges pad m, one gap rhythm on each
      side. :not([icon-only]) — same exclusion. */
   :scope:has(> [slot='leading']):has(> [slot='trailing']):not([icon-only]) {
     grid-template-columns: auto 1fr auto;
     column-gap: var(--ui-button-gap);
-    padding-inline-start: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
-    padding-inline-end: calc((var(--ui-button-height) - var(--ui-button-icon)) / 2);
+    padding-inline-start: var(--ui-button-slot-edge);
+    padding-inline-end: var(--ui-button-slot-edge);
   }
 
   /* [icon-only] (no label): the geometry law's FIFTH structure (geometry.md "icon-only (no label) →

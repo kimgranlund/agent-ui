@@ -503,10 +503,10 @@ keeps the taxonomy off the ARIA channel; adornments are decorative, so mark them
 stays the accessible name. Position drives layout; a role only adds tuning when it needs it (e.g. a
 `caret`'s rotation).
 
-Sizing is **role-driven**, not slot-driven. A `data-role="icon"` fills the icon-sized cell
-(`--ui-button-icon`, the icon ramp). A `data-role="caret"` is an **inline affordance sized to the label
-font** — `--ui-button-glyph` (`= --ui-button-font`), *not* the icon ramp — so it stays at text scale,
-**centers** within the icon-sized cell, and lands at the emergent `½(h − font)` trailing edge instead of
+Sizing is **role-driven**, not slot-driven. Both slots are the same square `3n` wrapper (T-0374 step 7). A
+`data-role="icon"` centres the `2n` icon artwork (`--ui-button-icon`) in it. A `data-role="caret"` is an
+**inline affordance sized to the glyph box** `n + 6` (`--ui-button-glyph`), *not* the icon ramp, so it stays at
+text scale, **centers** within the wrapper, and lands at the emergent `½(h − glyph)` trailing edge instead of
 rendering oversized. This two-axis anatomy (positional slots × a `data-role` role axis) **extends** the
 host-as-grid of ADR-0006 and is the family adornment standard (ADR-0012).
 

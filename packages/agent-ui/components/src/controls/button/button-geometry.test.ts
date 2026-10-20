@@ -4,6 +4,7 @@ import { describe, it, expect } from 'vitest'
 // formula checks on the DECLARED calc()s; the rendered-px CHANGE (sm→md→lg, [scale]/[density]) is s13's
 // cross-engine browser smoke, NOT here.
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the skill's anatomy (T-0374 step 7)
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
@@ -11,9 +12,9 @@ declare const process: { cwd(): string }
 // a probe is not enforced"). This suite pins the geometry LAW that button-css.test.ts (s7) does NOT:
 //   • 0 < glyph ≤ box — the content-icon ramp fits inside the height box, at every scale (a CROSS-FILE
 //     static relation between button.css's `--ui-button-icon` and dimensions.css's `--md-sys-height-{size}`).
-//   • the glyph IS the slot — `[slot=leading]` is a SQUARE cell sized to `--ui-button-icon` (the slot model).
-//   • the control rule's edges: the leading slot edge is ½(h−icon) = n and the label edge is the box margin n,
-//     with the label part's own inset n - c making the text edge 2n - c (ADR-0245 Amendment 4).
+//   • the slot is a SQUARE cell, the skill's 3n wrapper `--ui-button-cell` (T-0374 step 7).
+//   • the anatomy's edges: both box edges pad the control margin m, and the label wrapper pads W plus the
+//     compensation C on an exposed side, so the text edge is m + W + C (T-0374 step 7).
 // NOT duplicated here (already pinned by button-css.test.ts s7 — referenced, not re-asserted): the two
 // sectioned blocks, `padding-block: 0`, the slotless `padding-inline: h/2`, `column-gap: --ui-button-gap`,
 // the `:has()` host-as-grid, every `--ui-button-*` declared in `:where()`, and the @scope token-hygiene
@@ -72,43 +73,46 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     expect(stylesBlock).toMatch(/line-height:\s*var\(--md-sys-control-line-height\)/)
   })
 
-  it('the glyph IS the slot: [slot=leading] AND [slot=trailing] are SQUARE cells sized to --ui-button-icon on BOTH axes', () => {
-    // the slot model (geometry.md): the slotted glyph IS the square cell — inline-size == block-size ==
-    // the glyph size, so it centers in a square of its own size (no phantom box around it). The leading icon
-    // and the trailing adornment (caret/arrow, ADR-0006 extended) share the one square-cell rule.
+  it('the slot is the square 3n wrapper: [slot=leading] AND [slot=trailing] are SQUARE cells sized to --ui-button-cell on BOTH axes', () => {
+    // the slot model (T-0374 step 7, the skill's icon and glyph wrappers): inline-size == block-size == 3n, the
+    // artwork centred in it. The leading icon and the trailing adornment (caret/arrow, ADR-0006 extended) share
+    // the one square-cell rule.
     const slotRule = stylesBlock.slice(stylesBlock.indexOf(":scope > [slot='leading']"))
     const block = slotRule.slice(0, slotRule.indexOf('}') + 1)
     expect(block).toMatch(/\[slot='leading'\]/) // the leading icon cell
     expect(block).toMatch(/\[slot='trailing'\]/) // the trailing adornment cell — same square model
-    expect(block).toMatch(/inline-size:\s*var\(--ui-button-icon\)/)
-    expect(block).toMatch(/block-size:\s*var\(--ui-button-icon\)/)
+    expect(block).toMatch(/inline-size:\s*var\(--ui-button-cell\)/)
+    expect(block).toMatch(/block-size:\s*var\(--ui-button-cell\)/)
   })
 
-  it('the control rule per edge: leading slot edge = ½(h−icon) = n, label edge = the box margin n, and the asymmetry lives on the label inset', () => {
-    // ADR-0245 Amendment 4 (re-derived from the old "asymmetric by design" law, not deleted): the host pads are
-    // EQUAL at n, the slot edge as ½(h−icon) and the label edge as the box margin token (n derived, h/2 under the
-    // legacy opt-out, where the old asymmetry survives). What still differs per edge is the TEXT: the label part
-    // adds its own inset n - c, so the text sits n + labelMargin = 2n - c from its edge and the icon n from its.
+  it('the anatomy per edge: both box edges pad the control margin m, and the label wrapper pads W + C on an exposed side (T-0374 step 7)', () => {
+    // The skill's button rule (geometry-contract.md "Button content and inline padding"): the box margin is m on
+    // both edges whichever structure, the slot is the 3n wrapper, and the label wrapper adds the compensation
+    // C = max(0, R - m - W) where no adornment occupies its side, and on both sides between two adornments. Under the legacy opt-out the slot edge is
+    // ½(h−icon) and the label edge h/2, today's geometry.
     const hasBlock = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):not"))
-    expect(hasBlock).toMatch(/padding-inline-start:\s*calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/)
+    expect(hasBlock).toMatch(/padding-inline-start:\s*var\(--ui-button-slot-edge\)/)
     expect(hasBlock).toMatch(/padding-inline-end:\s*var\(--ui-button-edge\)/)
-    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-edge:\s*var\(--md-sys-inset,\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)\)/)
-    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-label-inset:\s*var\(--md-sys-label-inset,\s*0px\)/)
+    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-edge:\s*var\(--md-sys-control-margin,\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)\)/)
+    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-slot-edge:\s*var\(--md-sys-control-margin,/)
+    expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-label-compensation:\s*var\(--md-sys-label-compensation,\s*0px\)/)
     for (const size of ['sm', 'md', 'lg'] as const) {
-      const r = resolve('product', 'sm', size)
-      expect((r.h - r.icon) / 2, `${size}: the slot edge equals the box margin`).toBe(r.control.margin)
-      expect(r.control.margin + r.labelMargin, `${size}: the label's text edge is 2n - c`).toBe(2 * r.n - r.c)
-      expect(r.control.gutter + r.labelMargin, `${size}: icon to text is n`).toBe(r.n)
+      const r = model('product', 'md', size)
+      expect(r.glyphSlot + 2 * r.controlMargin, `${size}: the 3n slot plus the margin on each side is the height`).toBe(r.height)
+      expect(r.labelCompensation, `${size}: C = max(0, R - m - W)`).toBe(Math.max(0, r.controlRadius - r.controlMargin - r.controlGutter))
+      expect(r.controlMargin + r.controlGutter + r.labelCompensation, `${size}: the exposed text edge clears the radius`).toBeGreaterThanOrEqual(r.controlRadius)
     }
+    const root = model('product', 'md', 'md')
+    expect([root.controlMargin, root.controlGutter, root.controlRadius, root.labelCompensation], 'product md/md balanced').toEqual([4, 2, 8, 2])
   })
 
   it('the trailing adornment anatomy: [label|caret] is 1fr auto, [icon|label|caret] is auto 1fr auto (ADR-0006 extended)', () => {
     // host-as-grid extended (ADR-0006): a trailing [slot=trailing] caret/arrow gives the symmetric structures.
-    // [label | caret] (no icon): 1fr auto, trailing slot edge ½(h−icon), leading label edge stays h/2.
+    // [label | caret] (no icon): 1fr auto, both edges the control margin m.
     const trailingOnly = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='trailing']):not"))
     expect(trailingOnly).toMatch(/grid-template-columns:\s*1fr\s+auto/)
-    expect(trailingOnly).toMatch(/padding-inline-end:\s*calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/)
-    // [icon | label | caret]: auto 1fr auto — both adornment edges ½(h−icon).
+    expect(trailingOnly).toMatch(/padding-inline-end:\s*var\(--ui-button-slot-edge\)/)
+    // [icon | label | caret]: auto 1fr auto, both adornment edges m.
     const both = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):has(> [slot='trailing'])"))
     expect(both).toMatch(/grid-template-columns:\s*auto\s+1fr\s+auto/)
   })

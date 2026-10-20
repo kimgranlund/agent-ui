@@ -138,7 +138,10 @@ describe('GH #626 — the bar column and the canvas column land on the SAME x', 
       if (width === 1400) expect(column.left - frame.left, 'above the cap the column is centred, not inset-only').toBeGreaterThan(inset + 1)
       else expect(Math.abs(column.left - frame.left - inset), 'below the cap the column sits one layout margin in').toBeLessThanOrEqual(0.5)
       expect(Math.abs(toggle.getBoundingClientRect().left + n - column.left), 'toggle margin edge vs footer column start').toBeLessThanOrEqual(0.5)
-      expect(Math.abs(glyph.getBoundingClientRect().left - column.left), 'the toggle glyph starts ON the footer text edge').toBeLessThanOrEqual(0.5)
+      // the glyph's artwork: a ui-button adornment is the square 3n wrapper, its 2n icon centred by padding
+      // (T-0374 step 7), so the artwork starts m + n/2 = n inside the toggle at regular density
+      const artworkLeft = glyph.getBoundingClientRect().left + parseFloat(getComputedStyle(glyph).paddingInlineStart)
+      expect(Math.abs(artworkLeft - column.left), 'the toggle glyph starts ON the footer text edge').toBeLessThanOrEqual(0.5)
       expect(Math.abs(last.getBoundingClientRect().right - n - column.right), 'last action margin edge vs footer column end').toBeLessThanOrEqual(0.5)
       // the row itself carries no inline padding any more: the bar owns the column
       expect(getComputedStyle(q('.app-context-header')).paddingInlineStart, 'header row carries no inline padding').toBe('0px')

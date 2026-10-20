@@ -52,10 +52,10 @@
     },
     {
       "id": "text-edge",
-      "source": "ADR-0245 Amendment 4: the text edge is 2n - c (margin n plus label inset n - c)",
+      "source": "ADR-0245 Amendment 4: the text edge is 2n - c (margin n plus label inset n - c); a button's is the skill's m + W + C (T-0374 step 7)",
       "selector": "ui-button:not([icon-only]) > [data-part='label'], ui-text-field:not([multiline]) > [data-part='editor'], ui-toggle",
       "measure": "host padding-inline-start + the text slot's padding-inline-start",
-      "expect": "2 * resolve(register).n - resolve(register).c"
+      "expect": "a button: controlMargin + controlGutter + labelCompensation; otherwise 2 * resolve(register).n - resolve(register).c"
     },
     {
       "id": "card-radius",
@@ -238,8 +238,8 @@
       "id": "icon-box",
       "source": "ADR-0245 Amendment 6 and 7 item 3 (Kim's ruling 2026-10-14, icon versus glyph): an icon inside a control or a data-tier region is the 2n icon box; in prose it follows the text (1em). It replaces T-0138's 0.875 x font-size proposal",
       "selector": "ui-icon (a glyph is checked by glyph-box)",
-      "measure": "the icon's box, both axes; inside means a [data-tier] ancestor or a ui-* control host (not a layout container named in `layout`)",
-      "expect": "inside: resolve(register).icon (2n); in prose: its own font-size (1em)",
+      "measure": "the icon's content box (its artwork: a ui-button adornment centres it in the 3n wrapper by padding, T-0374 step 7), both axes; inside means a [data-tier] ancestor or a ui-* control host (not a layout container named in `layout`)",
+      "expect": "inside: resolve(register).icon (2n), or the glyph box n + 6 in a ui-button caret role; in prose: its own font-size (1em)",
       "layout": ["ui-super-shell", "ui-card", "ui-card-content", "ui-card-header", "ui-card-footer", "ui-column", "ui-row", "ui-grid", "ui-list", "ui-text", "ui-theme-provider", "ui-split", "ui-swiper", "ui-swiper-item", "ui-disclosure", "ui-drawer", "ui-modal", "ui-popover", "ui-tooltip"]
     },
     {
