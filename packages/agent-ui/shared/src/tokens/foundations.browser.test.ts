@@ -36,6 +36,8 @@ const EXPECTED: ReadonlyArray<readonly [string, (r: Emitted) => number]> = [
   // the pill (Amendment 5): a single-line control is h/2 = 2n; the chip pill is h/2 of the 2n + 2c chip, n + c; the
   // checkbox box keeps the skill's ceil(n/2)
   ['control-radius', (r) => r.controlRadius],
+  ['control-gutter', (r) => r.controlGutter], // T-0374 step 7: the wrapper padding W = n/4
+  ['label-compensation', (r) => r.labelCompensation], // T-0374 step 7: max(0, R - m - W) on an exposed label edge
   ['checkbox-radius', (r) => r.checkboxRadius],
   ['icon-box', (r) => r.iconBox],
   ['glyph-box', (r) => r.glyphBox], // T-0374: n + 6
@@ -179,6 +181,29 @@ describe('foundations.gen.css: the 36 cells compute what resolve() gives (ADR-02
     }
     expect(presets).toBe(5)
     expect([root.controlRadius, root.card.radius], 'the root is balanced: n and 1.5m').toEqual([8, 12])
+  })
+
+  it('label compensation: the exposed label edge clears the control radius, 2 under balanced and 10 under pill, and equals the model on every cell', () => {
+    // T-0374 step 7, the skill's resolveButtonPadding(): C = max(0, R - m - W), R the control radius of the preset,
+    // m the control margin and W = n/4. At product md/md regular: m 4, W 2, R 8 (balanced) or 16 (pill).
+    const pill = { ...anchors(), radiusPreset: 'pill' as const }
+    let cells = 0
+    for (const tier of TIERS) for (const scale of STEPS) for (const size of STEPS) {
+      const at = `${tier} / ${scale} / ${size}`
+      const r = resolve(tier, scale, size)
+      const p = resolve(tier, scale, size, 'regular', pill)
+      const got = labelled(readTokens(`<div data-tier="${tier}" data-scale="${scale}"><div data-size="${size}" data-probe></div></div>`))
+      const gotPill = labelled(readTokens(`<div data-tier="${tier}" data-scale="${scale}" data-radius="pill"><div data-size="${size}" data-probe></div></div>`))
+      expect([got['control-gutter'], got['label-compensation']], at).toEqual([r.controlGutter, r.labelCompensation])
+      expect(gotPill['label-compensation'], `${at} pill`).toBe(p.labelCompensation)
+      expect(r.labelCompensation, at).toBe(Math.max(0, r.controlRadius - r.controlMargin - r.n / 4))
+      cells++
+    }
+    expect(cells).toBe(36)
+    const root = labelled(readTokens('<div data-tier="product" data-scale="md"><div data-size="md" data-probe></div></div>'))
+    const rootPill = labelled(readTokens('<div data-tier="product" data-scale="md" data-radius="pill"><div data-size="md" data-probe></div></div>'))
+    expect([root['control-margin'], root['control-gutter'], root['control-radius'], root['label-compensation']], 'balanced').toEqual([4, 2, 8, 2])
+    expect([rootPill['control-radius'], rootPill['label-compensation']], 'pill').toEqual([16, 10])
   })
 
   it('the product sm/sm tight floor: m is 4, not nq/4 = 2.5, so a widget still out-margins a group', () => {

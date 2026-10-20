@@ -54,6 +54,9 @@ export interface Emitted {
   readonly labelInset: number
   readonly radius: number
   readonly controlRadius: number
+  /** T-0374 step 7: the wrapper padding W = n/4 and the label-edge compensation max(0, R - m - W). */
+  readonly controlGutter: number
+  readonly labelCompensation: number
   readonly iconBox: number
   readonly glyphBox: number
   readonly glyphSlot: number

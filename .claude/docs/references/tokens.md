@@ -81,7 +81,9 @@ families):
   (`--md-sys-{height,inset,label-inset,radius,control-radius,checkbox-radius,icon-box,glyph-box,type-*}`, the type roles including
   `--md-sys-type-section-kicker`, `--md-sys-type-group-kicker`, `--md-sys-type-field-label` (n + 5) and the
   small control role `--md-sys-type-small-control` (n + 4, T-0374; emitted, no control reads it yet), the control
-  margin `--md-sys-control-margin` ((q - 2)n/4 from the density input `--md-sys-density-q`, T-0374), the levels
+  margin `--md-sys-control-margin` ((q - 2)n/4 from the density input `--md-sys-density-q`, T-0374), the button's
+  wrapper gutter `--md-sys-control-gutter` (n/4) and label compensation `--md-sys-label-compensation`
+  (max(0, R - m - W), the radius a label wrapper adds on a side no adornment occupies; T-0374 step 7), the levels
   `--md-sys-{chip,group,widget,card,layout}-{margin,gutter,radius}`, or the bridge aliases of the old names)
   directly. The radii scale by two amount inputs (T-0374 step 6, `geometry.md` "Radius presets"):
   `--md-sys-radius-amount` (the container family) and `--md-sys-control-radius-amount` (the control family),

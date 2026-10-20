@@ -10,7 +10,7 @@
 // `check()`. anchors() reads the vendored CFG on every call, so a change to it reaches the next render.
 
 import { CFG as LEGACY_CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import { CFG, DENSITIES, SPACING_ROLES, resolveControlSurface, resolveGeometry } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
+import { CFG, DENSITIES, SPACING_ROLES, resolveButtonPadding, resolveControlSurface, resolveGeometry } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
 import { radiusPercentagePresets } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/curvature.mjs'
 import { ROOT_REGISTER, STEP } from './foundations-rules.mjs'
 
@@ -127,7 +127,8 @@ function typeAt(n, size, a) {
  * resolveControlSurface(): the glyph is the skill's n + 6 artwork in the square 3n glyph slot (T-0374), emitted as
  * `glyphBox` and `glyphSlot`. Density (T-0374 step 4, the vendored DENSITIES; absent means regular) moves the control
  * margin (q - 2)n/4, emitted as `controlMargin`, so the height 3n + 2 margin runs from 3n at tight to 5n at loose,
- * and m. Values may be fractional px; checkEmitted() holds them finite and monotonic in n.
+ * and m. The button's label edge (T-0374 step 7, resolveButtonPadding()) is `controlGutter` W = n/4 plus
+ * `labelCompensation` C = max(0, R - m - W) at the control radius R of the preset. Values may be fractional px; checkEmitted() holds them finite and monotonic in n.
  */
 export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, size = 'md', density = 'regular', a = anchors()) {
   const [n0, ta, k, g] = CFG.tiers[tier]
@@ -142,9 +143,16 @@ export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, 
   const iconBox = n * a.iconPerN
   const glyphBox = n + 6
   const A = radiusAmounts(a.radiusPreset, a)
+  const controlRadius = A.control * height / 2
+  // T-0374 step 7: the wrapper padding W = n/4 and the label-edge compensation C = max(0, R - m - W) of the skill's
+  // button rule, which the label wrapper adds on each side no adornment occupies. The skill's function throws on a
+  // negative input; the model never throws, so a malformed anchor set yields NaN and checkEmitted() refuses it.
+  const controlGutter = resolveControlSurface(n, density).slotPadding
+  const padding = { margin: controlMargin, wrapperInset: controlGutter, radius: controlRadius }
+  const labelCompensation = Object.values(padding).every((v) => Number.isFinite(v) && v >= 0) ? resolveButtonPadding(padding).compensation : Number.NaN
   const levels = Object.fromEntries(roomyLevels(a).map(([token, margin, gutter]) => [token, { margin: m * margin, gutter: m * gutter, radius: A.container * m * margin }]))
   return {
-    n, m, c, height, controlMargin, inset: n, labelInset: n - c, radius: A.container * n, controlRadius: A.control * height / 2, iconBox,
+    n, m, c, height, controlMargin, inset: n, labelInset: n - c, radius: A.container * n, controlRadius, controlGutter, labelCompensation, iconBox,
     glyphBox, glyphSlot: slot, glyphStroke: Math.max(1.5, c / 2), checkboxRadius: Math.ceil(n / 2),
     surface: { slot, margin: controlMargin, height, icon: iconBox, iconInset: (slot - iconBox) / 2, glyph: glyphBox, glyphInset: (slot - glyphBox) / 2 },
     type: typeAt(n, size, a),

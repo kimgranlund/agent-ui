@@ -45,10 +45,12 @@ const CURRENT_CURVATURE_SHA = 'cc1639f495299070ac02f86825589e970aff9286933fe6a3b
  *  Step 4: density is the skill's q (tight 2 to loose 6) and moves the new `--md-sys-control-margin`, the height and
  *  m (both sheets: the bridge resets `--md-sys-density-q` and the control margin in the legacy opt-out). Step 6: the
  *  radii take the curvature presets, balanced at the root, and `[data-radius]` sets the two amounts (both sheets: the
- *  bridge resets `--md-sys-radius-amount` and `--md-sys-control-radius-amount` in the legacy opt-out). */
+ *  bridge resets `--md-sys-radius-amount` and `--md-sys-control-radius-amount` in the legacy opt-out). Step 7: the
+ *  button's wrapper gutter `--md-sys-control-gutter` n/4 and label-edge compensation `--md-sys-label-compensation`
+ *  max(0, R - m - W) (both sheets: the bridge resets both in the legacy opt-out). */
 const PARITY_SHA = {
-  foundations: '85baff8eaa96aea6c4f2ba45c1d062fc67f05facf30359358606cc4452c92105',
-  bridge: '69d828fcdb21b55f18fed9606da400da6f6d5e3d2da3c52f6c50dae680b7da2f',
+  foundations: '75bd82fb72a5ac6219a4a51ebb203ee8f9be094e475068b3ce94a41d7ba647a4',
+  bridge: '2c73774b538a0439643ee0a7f4f5641e7220543d08558790f3972b2e9d3db88c',
 }
 const textSha = (text: string): string => createHash('sha256').update(text).digest('hex')
 
@@ -213,9 +215,12 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
 
   it('T-0373 surface: the anatomy is not gated, so no surface token is emitted until T-0374 gates it', () => {
     // resolve().surface has fractional values at odd n (the insets). A derived token named for any of them reds here
-    // first. T-0374 step 4 gates the control margin (a browser EXPECTED row at every density), so it leaves this list.
+    // first. T-0374 step 4 gates the control margin (a browser EXPECTED row at every density), so it leaves this list;
+    // step 7 gates the wrapper gutter and the label compensation the same way (fractional at odd n and off regular).
     const surfaceToken = /^--md-sys-(?:slot|icon-inset|glyph-inset|surface)/
     expect([...DERIVED].filter((name) => surfaceToken.test(name))).toEqual([])
+    const gated = ['--md-sys-control-margin', '--md-sys-control-gutter', '--md-sys-label-compensation']
+    expect(gated.filter((name) => DERIVED.has(name)), 'gated by a browser EXPECTED row').toEqual(gated)
     expect(Object.keys(resolveEmitted().surface).sort()).toEqual(['glyph', 'glyphInset', 'height', 'icon', 'iconInset', 'margin', 'slot'])
   })
 
@@ -235,6 +240,8 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
           .toEqual([v.n, v.surface.margin, v.surface.height, v.surface.margin, v.surface.height])
         expect(e.m, at).toBe(Math.max(v.d, Math.floor((v.n + Math.ceil(v.n / 4)) / 2) + 1))
         expect([e.widget, e.card, e.layout].map((l) => [l.margin / e.m, l.gutter / e.m]), at).toEqual([[2, 1], [3, 2], [4, 3]])
+        // T-0374 step 7: the skill's button rule, W = n/4 and C = max(0, R - m - W).
+        expect([e.controlGutter, e.labelCompensation], at).toEqual([e.n / 4, Math.max(0, e.controlRadius - e.controlMargin - e.n / 4)])
         // T-0374 step 3: the content and brand rows are the skill's (11/3/2/1, 15/4/2/1), not the frozen resolver's
         // (10/2/2/1, 14/2/2/1), so n and every field derived from it leave the legacy comparison on those tiers.
         if (tier === 'content' || tier === 'brand') continue
@@ -348,6 +355,8 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     expect(legacy).toContain('  --md-sys-tier-n0: initial;')
     expect(legacy).toContain('  --md-sys-density-q: initial;')
     expect(legacy).toContain('  --md-sys-control-margin: initial;')
+    expect(legacy).toContain('  --md-sys-control-gutter: initial;')
+    expect(legacy).toContain('  --md-sys-label-compensation: initial;')
   })
 
   it('T-0169: the retired [scale] and [density] axes have no selector in either sheet', () => {
@@ -364,6 +373,7 @@ describe('foundations: generated-file drift and the cut (ADR-0245 clause 10a)', 
     expect([...DERIVED].sort()).toEqual(declared.sort())
     expect(declared, 'T-0374: the 3n glyph slot is derived').toContain('--md-sys-glyph-slot')
     expect(declared, 'T-0374 step 2: the small control role is derived').toContain('--md-sys-type-small-control')
+    expect(declared, 'T-0374 step 7: the button label edge is derived').toEqual(expect.arrayContaining(['--md-sys-control-gutter', '--md-sys-label-compensation']))
   })
 
   it('declares every ADR-0245 clause 1 output name (Amendment 3: m; T-0373: the section and group kickers; Amendment 4: the label inset and the chip level; Amendment 5: the control pill and the checkbox radius)', () => {

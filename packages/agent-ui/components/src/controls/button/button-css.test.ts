@@ -55,15 +55,21 @@ describe('button.css — structure + token hygiene (s7)', () => {
     expect(refs.some((v) => sharedFleet.has(v as string))).toBe(true) // anti-vacuous: the fleet tokens ARE consumed
   })
 
-  it('geometry per the LAW: block-size off the ramp, padding-block 0, and the control rule (box margin n, label inset n - c on the label part)', () => {
+  it('geometry per the LAW: block-size off the ramp, padding-block 0, and the skill\'s anatomy (margin m, the label wrapper W + C)', () => {
     expect(stylesBlock).toMatch(/block-size:\s*var\(--ui-button-height\)/)
     expect(stylesBlock).toMatch(/padding-block:\s*0/)
-    // ADR-0245 Amendment 4: the host pads the box margin (n derived, h/2 under the legacy opt-out) and the label
-    // part carries the label inset (n - c derived, 0 under the opt-out), so the text edge is 2n - c.
+    // T-0374 step 7: the host pads the control margin m (h/2 under the legacy opt-out) and the label wrapper pads
+    // W = n/4 plus the compensation C on each exposed side (0 under the opt-out), so the text edge is m + W + C.
     expect(stylesBlock).toMatch(/padding-inline:\s*var\(--ui-button-edge\)/)
-    expect(tokenBlock).toMatch(/--ui-button-edge:\s*var\(--md-sys-inset,\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)\)/)
-    expect(tokenBlock).toMatch(/--ui-button-label-inset:\s*var\(--md-sys-label-inset,\s*0px\)/)
-    expect(stylesBlock).toMatch(/:scope > \[data-part='label'\]\s*\{[^}]*padding-inline:\s*var\(--ui-button-label-inset\)/)
+    expect(tokenBlock).toMatch(/--ui-button-edge:\s*var\(--md-sys-control-margin,\s*calc\(var\(--ui-button-height\)\s*\/\s*2\)\)/)
+    expect(tokenBlock).toMatch(/--ui-button-label-gutter:\s*var\(--md-sys-control-gutter,\s*0px\)/)
+    expect(tokenBlock).toMatch(/--ui-button-label-compensation:\s*var\(--md-sys-label-compensation,\s*0px\)/)
+    expect(stylesBlock).toMatch(/:scope > \[data-part='label'\]\s*\{[^}]*padding-inline:\s*calc\(var\(--ui-button-label-gutter\) \+ var\(--ui-button-label-compensation\)\)/)
+    // C only on an exposed side: trailing-only content drops it at the end, leading-only at the start, both at neither
+    // (wrapped in :where() so the padding rules keep the base specificity and a consumer's label padding still wins)
+    expect(stylesBlock).toMatch(/\[data-part='label'\]:where\(:first-child:not\(:only-child\)\)\s*\{[^}]*padding-inline-end:\s*var\(--ui-button-label-gutter\)/)
+    expect(stylesBlock).toMatch(/\[data-part='label'\]:where\(:last-child:not\(:only-child\)\)\s*\{[^}]*padding-inline-start:\s*var\(--ui-button-label-gutter\)/)
+    expect(stylesBlock).toMatch(/\[data-part='label'\]:where\(:not\(:first-child\):not\(:last-child\)\)\s*\{[^}]*padding-inline:\s*var\(--ui-button-label-gutter\)/)
     expect(tokenBlock).toMatch(/--ui-button-gap:\s*var\(--md-sys-c,\s*var\(--md-sys-gap-md\)\)/) // the control gutter c
   })
 
@@ -71,7 +77,8 @@ describe('button.css — structure + token hygiene (s7)', () => {
     expect(stylesBlock).toMatch(/:scope:has\(>\s*\[slot='leading'\]\)/) // optional leading adornment slot
     expect(stylesBlock).toMatch(/grid-template-columns:\s*auto 1fr/) // leading + label
     expect(stylesBlock).toMatch(/column-gap:\s*var\(--ui-button-gap\)/) // the gap rides --md-sys-density
-    expect(stylesBlock).toMatch(/calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/) // slot ½(h−icon)
+    expect(stylesBlock).toMatch(/padding-inline-start:\s*var\(--ui-button-slot-edge\)/) // the slot edge m
+    expect(tokenBlock).toMatch(/--ui-button-slot-edge:\s*var\(--md-sys-control-margin,\s*calc\(\(var\(--ui-button-height\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)\)/) // ½(h−icon) under the opt-out
   })
 
   it('a forced-colors block keeps the ink/border from vanishing', () => {
@@ -173,39 +180,39 @@ describe('button.css — the shared focus ring (ADR-0009)', () => {
 })
 
 // ── Role-driven glyph sizing — caret = font (ADR-0012 / geometry-sizing-spec §4.1, §4.6) ──────────────
-// PLACEMENT stays position-driven (the :has() grid, edge-pad ½(h−icon)); GLYPH SIZE becomes role-driven.
-// The CELL stays icon-sized for both roles; the caret glyph is the FONT, centered within the icon cell so it
-// lands at the emergent ½(h−font) edge — NOT --ui-ind (an inline affordance at icon size is the oversize bug).
+// PLACEMENT stays position-driven (the :has() grid, edge-pad m); GLYPH SIZE is role-driven. The CELL is the
+// skill's square 3n wrapper for both roles (T-0374 step 7); the icon artwork is 2n and the caret the n + 6 glyph
+// box, each centred in it — NOT --ui-ind (an inline affordance at icon size is the oversize bug).
 describe('button.css — role-driven glyph sizing, caret = font (ADR-0012)', () => {
   it('--ui-button-glyph is declared = the font (the inline-affordance ramp; --ui-glyph-ratio 1)', () => {
     expect(tokenBlock).toMatch(/--ui-button-glyph:\s*var\(--md-sys-glyph-box, var\(--ui-button-font\)\)/)
   })
 
-  it('the CELL stays icon-sized for BOTH slots (border-box, so a role inset stays within the icon cell)', () => {
+  it('the CELL is the square 3n wrapper for BOTH slots (border-box, so a role inset stays within it)', () => {
     const start = stylesBlock.indexOf(":scope > [slot='leading']")
     const block = stylesBlock.slice(start, stylesBlock.indexOf('}', start) + 1)
     expect(block).toMatch(/\[slot='leading'\]/)
     expect(block).toMatch(/\[slot='trailing'\]/)
-    expect(block).toMatch(/inline-size:\s*var\(--ui-button-icon\)/)
-    expect(block).toMatch(/block-size:\s*var\(--ui-button-icon\)/)
+    expect(block).toMatch(/inline-size:\s*var\(--ui-button-cell\)/)
+    expect(block).toMatch(/block-size:\s*var\(--ui-button-cell\)/)
     expect(block).toMatch(/box-sizing:\s*border-box/)
+    expect(tokenBlock).toMatch(/--ui-button-cell:\s*var\(--md-sys-glyph-slot,\s*var\(--ui-button-icon\)\)/) // the icon cell under the opt-out
   })
 
-  it('[data-role=caret] sizes the GLYPH to font (--ui-button-glyph), inset/centered in the icon cell — not --ui-ind', () => {
+  it('[data-role=caret] sizes the GLYPH to the glyph box (--ui-button-glyph), centred in the 3n cell — not --ui-ind', () => {
     const m = stylesBlock.match(/:scope > \[data-role='caret'\]\s*\{([^}]*)\}/)
     expect(m, "[data-role='caret'] rule missing").not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
-    // inset = ½(cell − glyph) → the glyph centers in the caret cell, the icon cell never smaller than the n + 6
-    // glyph box (T-0374), so the mark is never clipped at n 4 and 5.
-    // The glyph reduces from icon to --ui-button-glyph (= font) — NOT left at --ui-ind (the oversize-caret bug).
-    expect(tokenBlock).toMatch(/--ui-button-caret-cell:\s*max\(var\(--ui-button-icon\), var\(--ui-button-glyph\)\)/)
-    expect(rule).toMatch(/inline-size:\s*var\(--ui-button-caret-cell\)/)
-    expect(rule).toMatch(/padding:\s*calc\(\(var\(--ui-button-caret-cell\)\s*-\s*var\(--ui-button-glyph\)\)\s*\/\s*2\)/)
+    // inset = ½(cell − glyph) → the n + 6 glyph centres in the 3n cell, which always holds it (T-0374 step 7), so
+    // the step-1 max() cell guard is gone. The glyph is --ui-button-glyph — NOT --ui-ind (the oversize-caret bug).
+    expect(tokenBlock).not.toContain('--ui-button-caret-cell')
+    expect(rule).not.toMatch(/inline-size/)
+    expect(rule).toMatch(/padding:\s*calc\(\(var\(--ui-button-cell\)\s*-\s*var\(--ui-button-glyph\)\)\s*\/\s*2\)/)
     expect(rule).toContain('--ui-button-glyph') // sized to the font ramp, not the icon ramp
   })
 
-  it('[data-role=icon] FILLS the icon cell (the content-icon FRAME role)', () => {
-    expect(stylesBlock).toMatch(/:scope > \[data-role='icon'\]\s*\{[^}]*padding:\s*0/)
+  it('[data-role=icon] centres the 2n artwork in the cell (the content-icon FRAME role)', () => {
+    expect(stylesBlock).toMatch(/:scope > \[data-role='icon'\]\s*\{[^}]*padding:\s*calc\(\(var\(--ui-button-cell\)\s*-\s*var\(--ui-button-icon\)\)\s*\/\s*2\)/)
   })
 })
 

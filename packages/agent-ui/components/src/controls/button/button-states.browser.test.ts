@@ -250,12 +250,14 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
     const font = fontPx(btn) //              md font = 13 (control type)
     const glyph = glyphBox(rootResolve('md')) // the caret glyph n + 6 = 14 at the root (T-0374)
     const box = frameHeight(btn) //          md frame (border-box height) = 28
-    const iconCell = caret.getBoundingClientRect().width // the cell border-box, icon-sized = --ui-button-icon = 18
-    const caretContent = contentInline(caret) // glyph content box = cell − centering pad = font
-    const iconContent = contentInline(icon) //   content icon fills its cell (pad 0) = icon
+    const iconCell = caret.getBoundingClientRect().width // the cell border-box, the square 3n wrapper = 24 (T-0374 step 7)
+    const caretContent = contentInline(caret) // glyph content box = cell − centering pad = n + 6
+    const iconContent = contentInline(icon) //   content icon = cell − centring pad n/2 = 2n
 
-    // the cell is icon-sized for BOTH roles (placement); the icon glyph fills it; the caret glyph is font-sized.
-    expect(iconContent, 'content icon did not fill its icon-sized cell').toBeCloseTo(iconCell, 0)
+    // the cell is the 3n wrapper for BOTH roles (placement); the icon artwork is 2n, the caret the n + 6 glyph box.
+    expect(icon.getBoundingClientRect().width, 'both roles share the one cell').toBeCloseTo(iconCell, 0)
+    expect(iconCell, 'the cell is the square 3n wrapper').toBeCloseTo(3 * rootResolve('md').n, 0)
+    expect(iconContent, 'content icon is not the 2n artwork centred in its cell').toBeCloseTo(rootResolve('md').icon, 0)
     expect(caretContent, 'caret content box is not glyph-sized (the named --ui-ind oversize bug)').toBeCloseTo(glyph, 0)
     // the ordering law: 0 < caret(=font) < icon ≤ box.
     expect(caretContent, 'caret content box is not positive').toBeGreaterThan(0)
@@ -265,15 +267,15 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
     expect(font, 'font exceeds the icon cell').toBeLessThanOrEqual(iconCell)
     expect(iconCell, 'the icon cell exceeds the box height').toBeLessThanOrEqual(box + 0.5)
 
-    // centering: the caret glyph is inset ½(icon−font) within its icon-sized cell (symmetric), so it lands the
-    // EMERGENT ½(h−font) from the host's trailing edge = host pad-end ½(h−icon) + the cell's own ½(icon−font).
+    // centering: the caret glyph is inset ½(cell−glyph) within its 3n cell (symmetric), so it lands the
+    // EMERGENT ½(h−glyph) from the host's trailing edge = host pad-end m + the cell's own ½(cell−glyph).
     const cellCs = getComputedStyle(caret)
     const cellPadStart = px(cellCs.paddingInlineStart)
     const cellPadEnd = px(cellCs.paddingInlineEnd)
     expect(cellPadStart, 'caret is not centered in its cell (asymmetric inset)').toBeCloseTo(cellPadEnd, 1)
-    expect(cellPadEnd, 'caret cell inset is not ½(icon−glyph)').toBeCloseTo((iconCell - glyph) / 2, 1)
+    expect(cellPadEnd, 'caret cell inset is not ½(cell−glyph)').toBeCloseTo((iconCell - glyph) / 2, 1)
 
-    const hostPadEnd = px(getComputedStyle(btn).paddingInlineEnd) // [label│trailing] trailing slot edge = ½(h−icon)
+    const hostPadEnd = px(getComputedStyle(btn).paddingInlineEnd) // the trailing slot edge, the control margin m
     expect(hostPadEnd + cellPadEnd, 'caret does not land ½(h−glyph) from the host edge').toBeCloseTo((box - glyph) / 2, 1)
   })
 })

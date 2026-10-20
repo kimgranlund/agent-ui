@@ -37,6 +37,8 @@
   --md-sys-label-inset: calc(var(--md-sys-inset) - var(--md-sys-c));
   --md-sys-radius: calc(var(--md-sys-n) * 1px * var(--md-sys-radius-amount, 0.5));
   --md-sys-control-radius: calc(var(--md-sys-height) / 2 * var(--md-sys-control-radius-amount, 0.5));
+  --md-sys-control-gutter: calc(var(--md-sys-n) * 0.25px);
+  --md-sys-label-compensation: max(0px, var(--md-sys-control-radius) - var(--md-sys-control-margin) - var(--md-sys-control-gutter));
   --md-sys-icon-box: calc(var(--md-sys-n) * 2px);
   --md-sys-glyph-box: calc(var(--md-sys-n) * 1px + 6px);
   --md-sys-glyph-slot: calc(var(--md-sys-n) * 3px);

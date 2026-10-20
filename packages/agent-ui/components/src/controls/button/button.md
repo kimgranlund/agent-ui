@@ -64,7 +64,7 @@ slots:                 # slots name a POSITION; a slotted adornment's CONTENT ro
 
 parts:                 # light-DOM, host-as-grid — ONE control-created wrapper (ADR-0133), everything else is author content
   - name: label
-    description: The control-created `<span data-part="label">` the label region's light-DOM children (the default/unnamed children — anything without a `slot`) are adopted into, MOVED never cloned. Built on connect and self-healed by a `childList` MutationObserver (ui-text's ADR-0078 cl.4 stamp/heal shape, adapted): a stray label child that lands on the host later (parser streaming, or an external `textContent` write — e.g. the A2UI `buttonFactory`'s bound `label`) is re-adopted, and a full clobber that destroys the wrapper rebuilds it fresh. Never created for an empty label (an `icon-only` button keeps its square anatomy untouched — see Slots & roles). Carries `overflow: hidden; text-overflow: ellipsis` (button.css) so a label that overflows the frame's available inline space truncates with a visible ellipsis instead of clipping/overlapping silently; `white-space: nowrap` (already unconditional on the host) inherits into it for free. No geometry change when the label fits (no padding/margin/border of its own; blockified as a grid item, inherits font/line-height/color from the host).
+    description: The control-created `<span data-part="label">` the label region's light-DOM children (the default/unnamed children — anything without a `slot`) are adopted into, MOVED never cloned. Built on connect and self-healed by a `childList` MutationObserver (ui-text's ADR-0078 cl.4 stamp/heal shape, adapted): a stray label child that lands on the host later (parser streaming, or an external `textContent` write — e.g. the A2UI `buttonFactory`'s bound `label`) is re-adopted, and a full clobber that destroys the wrapper rebuilds it fresh. Never created for an empty label (an `icon-only` button keeps its square anatomy untouched — see Slots & roles). Carries `overflow: hidden; text-overflow: ellipsis` (button.css) so a label that overflows the frame's available inline space truncates with a visible ellipsis instead of clipping/overlapping silently; `white-space: nowrap` (already unconditional on the host) inherits into it for free. When the label fits it adds only its wrapper padding, W plus the compensation C on each side no adornment occupies (T-0374 step 7); no margin or border of its own; blockified as a grid item, inherits font/line-height/color from the host.
 customStates:          # :state(ready) — the motion gate (ADR-0008): armed one frame past first paint via internals.states (never a host attr) so the upgrade SNAPS and only subsequent state changes animate
   - ready
 
@@ -90,8 +90,8 @@ geometry:
   posture: fill (block-level host, stretches to the parent's inline space; ADR-0223 cl.1) · `[inline]` = inline-grid + hug   # Fill by Default — slice 2 (action/selection); the squareness floor (min-inline-size = height) survives both states, R3(a)
   blockSize: var(--ui-button-height)   # the vertical lever, 4n off --md-sys-height (ADR-0245); padding-block is 0
   paddingBlock: 0
-  inlinePad: n = --md-sys-inset on every edge (the box margin; h/2 beside a label under the legacy opt-out) · the label part adds the label inset n - c, so the text edge is 2n - c (ADR-0245 Amendment 4) · ½(h−icon) = n (leading icon / trailing adornment slot edge) · ½(h−icon) BOTH edges via justify-content, no literal padding (icon-only, no label)   # the control rule, geometry.md
-  gap: var(--ui-button-gap)            # icon↔label column-gap: the control gutter c; with the label inset n - c, icon to text is n
+  inlinePad: m = --md-sys-control-margin on both edges (h/2 beside a label, ½(h−icon) beside an adornment under the legacy opt-out) · each adornment fills the square 3n wrapper (--md-sys-glyph-slot), its artwork centred (icon 2n, glyph n + 6) · the label part pads W = n/4 (--md-sys-control-gutter) plus C = max(0, R - m - W) (--md-sys-label-compensation) on each side no adornment occupies, so an exposed text edge is m + W + C · ½(h−3n) = m BOTH edges via justify-content, no literal padding (icon-only, no label)   # the skill's control anatomy, T-0374 step 7, geometry.md
+  gap: var(--ui-button-gap)            # icon↔label column-gap: the control gutter c; icon artwork to text is n/2 + c + W
 
 forcedColors: A `@media (forced-colors: active)` block keeps the ink + border visible (ButtonText) so the label/outline never vanishes.
 ---
@@ -158,10 +158,10 @@ keeps the taxonomy off the ARIA channel; adornments are decorative, so mark them
 stays the accessible name. Position drives layout; a role only adds tuning when it needs it (e.g. a
 `caret`'s rotation).
 
-Sizing is **role-driven**, not slot-driven. A `data-role="icon"` fills the icon-sized cell
-(`--ui-button-icon`, the icon ramp). A `data-role="caret"` is an **inline affordance sized to the label
-font** — `--ui-button-glyph` (`= --ui-button-font`), *not* the icon ramp — so it stays at text scale,
-**centers** within the icon-sized cell, and lands at the emergent `½(h − font)` trailing edge instead of
+Sizing is **role-driven**, not slot-driven. Both slots are the same square `3n` wrapper (T-0374 step 7). A
+`data-role="icon"` centres the `2n` icon artwork (`--ui-button-icon`) in it. A `data-role="caret"` is an
+**inline affordance sized to the glyph box** `n + 6` (`--ui-button-glyph`), *not* the icon ramp, so it stays at
+text scale, **centers** within the wrapper, and lands at the emergent `½(h − glyph)` trailing edge instead of
 rendering oversized. This two-axis anatomy (positional slots × a `data-role` role axis) **extends** the
 host-as-grid of ADR-0006 and is the family adornment standard (ADR-0012).
 

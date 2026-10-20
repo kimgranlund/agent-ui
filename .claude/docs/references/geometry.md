@@ -46,6 +46,8 @@ never falling as n grows at each density (T-0374; it took over the model's check
 | icon box (pictorial art) | `2n` | `--md-sys-icon-box` |
 | glyph box (functional mark) | `n + 6` (T-0374; at least 10, so the Amendment 7 floor retired) | `--md-sys-glyph-box` |
 | glyph slot (the glyph's square wrapper) | `3n` | `--md-sys-glyph-slot` |
+| control gutter (a wrapper's padding W) | `n/4` | `--md-sys-control-gutter` |
+| label compensation (a button label's exposed side) | `C = max(0, R - m - W)`, R the control radius | `--md-sys-label-compensation` |
 | glyph stroke | `max(1.5px, c/2)` | `--md-sys-glyph-stroke` |
 | control text | `n + 6` px | `--md-sys-type-control` |
 | container unit | `m = max(nq/4, floor((n + c) / 2) + 1)` (n at regular density) | `--md-sys-m` |
@@ -89,9 +91,17 @@ Radius follows the skill's curvature presets (`geometry-contract.md`, "Radius fa
   the balanced default, the pill `2n` under `data-radius='pill'`; a textarea takes the same). `ui-otp-field`'s
   cells hold one centered character, take no inset and the surface radius `A · n`, a round square at any preset. A field label sits above with gap `ceil(n/2)`.
 - **Button and toggle**: the control radius `A · h/2` like every single-line control (`n` under the balanced
-  default; the pill h/2 only under `data-radius='pill'`), and the control rule; an icon-only button is a `4n` square. A button label aligns per the skill's table
-  (centered alone or between adornments, start with only trailing content, end with only leading content);
-  a toggle label stays centered (`toggle.md`).
+  default; the pill h/2 only under `data-radius='pill'`). A toggle keeps the control rule and a centered label
+  (`toggle.md`). **A button takes the skill's control anatomy** (T-0374 step 7, `geometry-contract.md` "Button
+  content and inline padding"): the box pads the control margin `m` (`--md-sys-control-margin`) on both edges;
+  each adornment fills the square `3n` wrapper (`--md-sys-glyph-slot`) with its artwork centred (icon `2n`, glyph
+  `n + 6`); the label wrapper pads `W = n/4` (`--md-sys-control-gutter`) and adds the compensation
+  `C = max(0, R - m - W)` (`--md-sys-label-compensation`) on each side no adornment occupies, read from the
+  actual siblings: both sides when alone, the start only with only trailing content, the end only with only
+  leading content, neither between two adornments. Adornment wrappers get no compensation. At product md
+  regular: `m` 4, `W` 2, `R` 8 and `C` 2 under balanced (text edge 8), `R` 16 and `C` 10 under pill (text edge 16).
+  An icon-only button is an `h` square. A button label aligns per the skill's table (centered alone or between
+  adornments, start with only trailing content, end with only leading content).
 - **Tabs, segments, menu and listbox rows**: the control rule; tabs touch with the tight gutter `c`. Menu and
   listbox rows take the control radius, and their panel (menu, select listbox, combo-box panel, multi-select) is
   the row radius plus its own inset `c`, so the rows nest concentrically at any amount (Amendment 5).

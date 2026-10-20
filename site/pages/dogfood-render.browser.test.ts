@@ -356,7 +356,9 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[] | Promise<str
       measured['text-edge']++
       const r = registerOf(host)
       const edge = px(getComputedStyle(host).paddingInlineStart) + (host === el ? 0 : px(getComputedStyle(el).paddingInlineStart))
-      const want = 2 * r.n - r.c
+      // a button takes the skill's label edge (T-0374 step 7): margin m, wrapper W and the compensation C on its
+      // exposed start side; a field and a toggle keep the control rule's 2n - c
+      const want = host.localName === 'ui-button' ? r.controlMargin + r.controlGutter + r.labelCompensation : 2 * r.n - r.c
       if (Math.abs(edge - want) > TOL) out.push(`${tagOf(host)} text edge=${edge} want ${want}`)
     }
     return out
@@ -730,9 +732,16 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[] | Promise<str
       measured['icon-box']++
       const host = hostOf(el)
       const inside = el.parentElement?.closest('[data-tier]') != null || (host !== null && !LAYOUT.has(host.localName))
-      const want = inside ? registerOf(el).iconBox : px(getComputedStyle(el).fontSize)
-      if (Math.abs(box.width - want) > TOL || Math.abs(box.height - want) > TOL) {
-        out.push(`${tagOf(el)} ${fmt(box.width)}x${fmt(box.height)} ${inside ? `inside <${host?.localName ?? 'data-tier'}>` : 'in prose'} want ${fmt(want)}`)
+      // a ui-icon in a button's caret role is a glyph: the n + 6 glyph box, centred in the same 3n wrapper
+      const caret = el.matches("ui-button > [data-role='caret']")
+      const want = inside ? (caret ? glyphBox(registerOf(el)) : registerOf(el).iconBox) : px(getComputedStyle(el).fontSize)
+      // the artwork is the content box: a ui-button adornment is the square 3n wrapper with the 2n icon centred by
+      // its padding (T-0374 step 7); everywhere else an icon carries no padding and the two are the same box
+      const cs = getComputedStyle(el)
+      const w = box.width - px(cs.paddingInlineStart) - px(cs.paddingInlineEnd)
+      const h = box.height - px(cs.paddingBlockStart) - px(cs.paddingBlockEnd)
+      if (Math.abs(w - want) > TOL || Math.abs(h - want) > TOL) {
+        out.push(`${tagOf(el)} ${fmt(w)}x${fmt(h)} ${inside ? `inside <${host?.localName ?? 'data-tier'}>` : 'in prose'} want ${fmt(want)}`)
       }
     }
     return out

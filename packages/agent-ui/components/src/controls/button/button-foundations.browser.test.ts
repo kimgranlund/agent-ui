@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6)
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6) and the label edge (step 7)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -41,14 +41,18 @@ describe('ui-button foundations (ADR-0245 lane a01)', () => {
   for (const size of ['sm', 'md', 'lg'] as const) {
     it(`inside product / sm at size ${size} reads the derived geometry`, () => {
       const r = resolve('product', 'sm', size)
+      const e = model('product', 'sm', size)
       const el = mount(true, size)
       expect(read(el, 'block-size'), 'height').toBeCloseTo(r.h, 1)
-      // the control rule (ADR-0245 Amendment 4): the host pads the box margin n and the label part carries the
-      // label inset n - c, so the text edge is 2n - c
-      expect(read(el, 'padding-inline-start'), 'box margin').toBeCloseTo(r.control.margin, 1)
-      expect(read(el.querySelector('[data-part="label"]') as HTMLElement, 'padding-inline-start'), 'label inset').toBeCloseTo(r.labelMargin, 1)
-      expect(r.control.margin + r.labelMargin, 'text edge').toBe(2 * r.n - r.c)
-      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(model('product', 'sm', size).controlRadius, 1) // A x h/2 (T-0374 step 6)
+      // the skill's anatomy (T-0374 step 7): the host pads the control margin m and the label wrapper, alone so both
+      // sides exposed, pads W + C, so the text edge is m + W + C
+      expect(read(el, 'padding-inline-start'), 'control margin').toBeCloseTo(e.controlMargin, 1)
+      const label = el.querySelector('[data-part="label"]') as HTMLElement
+      for (const side of ['padding-inline-start', 'padding-inline-end']) {
+        expect(read(label, side), `label ${side}`).toBeCloseTo(e.controlGutter + e.labelCompensation, 1)
+      }
+      expect(e.labelCompensation, 'C').toBe(Math.max(0, e.controlRadius - e.controlMargin - e.controlGutter))
+      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(e.controlRadius, 1) // A x h/2 (T-0374 step 6)
     })
   }
 })

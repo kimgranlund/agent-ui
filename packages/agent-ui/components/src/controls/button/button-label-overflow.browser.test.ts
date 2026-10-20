@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the skill's anatomy (T-0374 step 7)
 
 // TKT-0042 / ADR-0133 — the cross-engine proof for the label-wrapper ellipsis mechanism. Runs in BOTH
 // Chromium and WebKit (vitest.browser.config.ts). Two legs, both explicitly called for by the ticket's
@@ -38,15 +39,16 @@ const label = (btn: HTMLElement): HTMLElement => btn.querySelector('[data-part="
 const tick = (): Promise<void> => new Promise((resolve) => queueMicrotask(resolve))
 
 describe('ui-button label-wrapper geometry regression (ADR-0133) — the label FITS', () => {
-  it('a fitting label renders the frame the control rule specifies: h = 4n, box margin n, the label inset n - c on the wrapper, no clipping engaged', () => {
+  it('a fitting label renders the frame the skill\'s anatomy specifies: h = 4n, control margin m, W + C on the wrapper, no clipping engaged', () => {
     const { btn } = mount('<ui-button>Save</ui-button>') // md default, wide (unconstrained) container
     const r = rootResolve('md')
+    const e = model('product', 'md', 'md')
     expect(frameHeight(btn), 'md frame height (geometry.md §1 row)').toBeCloseTo(r.h, 0)
-    expect(padStartPx(btn), 'leading box margin n').toBeCloseTo(r.control.margin, 0)
-    expect(padEndPx(btn), 'trailing box margin n').toBeCloseTo(r.control.margin, 0)
+    expect(padStartPx(btn), 'leading control margin m').toBeCloseTo(e.controlMargin, 1)
+    expect(padEndPx(btn), 'trailing control margin m').toBeCloseTo(e.controlMargin, 1)
 
     const el = label(btn)
-    expect(Number.parseFloat(getComputedStyle(el).paddingInlineStart), 'the wrapper carries the label inset n - c (ADR-0245 Amendment 4)').toBeCloseTo(r.labelMargin, 0)
+    expect(Number.parseFloat(getComputedStyle(el).paddingInlineStart), 'the wrapper carries W + C on an exposed side (T-0374 step 7)').toBeCloseTo(e.controlGutter + e.labelCompensation, 1)
     expect(el, 'the label wrapper must exist').not.toBeNull()
     expect(el.tagName).toBe('SPAN')
     // anti-vacuous: the wrapper is NOT currently clipping anything — scrollWidth <= clientWidth (+1 rounding
@@ -60,11 +62,13 @@ describe('ui-button label-wrapper geometry regression (ADR-0133) — the label F
     )
     const h = frameHeight(btn)
     expect(h).toBeCloseTo(rootResolve('md').h, 0)
-    // leading slot edge = ½(h−icon) = n; the label edge is the box margin n, and the wrapper adds its own inset
-    // n - c (ADR-0245 Amendment 4).
-    expect(padStartPx(btn)).toBeCloseTo((h - rootResolve('md').icon) / 2, 0)
-    expect(padEndPx(btn)).toBeCloseTo(rootResolve('md').control.margin, 0)
-    expect(Number.parseFloat(getComputedStyle(label(btn)).paddingInlineEnd)).toBeCloseTo(rootResolve('md').labelMargin, 0)
+    // both edges pad the control margin m; the wrapper pads W on its occupied start side and W + C on its exposed
+    // end side (T-0374 step 7).
+    const e = model('product', 'md', 'md')
+    expect(padStartPx(btn)).toBeCloseTo(e.controlMargin, 1)
+    expect(padEndPx(btn)).toBeCloseTo(e.controlMargin, 1)
+    expect(Number.parseFloat(getComputedStyle(label(btn)).paddingInlineStart)).toBeCloseTo(e.controlGutter, 1)
+    expect(Number.parseFloat(getComputedStyle(label(btn)).paddingInlineEnd)).toBeCloseTo(e.controlGutter + e.labelCompensation, 1)
     expect(label(btn).textContent).toBe('Download')
     // the leading adornment stays a DIRECT host child, not swept into the label wrapper.
     expect(btn.children[0]?.getAttribute('slot')).toBe('leading')
