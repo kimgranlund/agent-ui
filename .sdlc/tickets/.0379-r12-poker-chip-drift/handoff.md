@@ -2,7 +2,7 @@
 id: T-0379
 title: "A Croupier check reads the reply's pot and bankroll against the table and across hands (round 12 cluster K)"
 type: feature        # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,3 +29,19 @@ Recorded rounds are never rewritten.
 - The croupier folder and the croupier replays stay green: `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier scripts/e2e-admin/probe/replays` exits 0.
 - The croupier sweep (every recorded croupier round, base against built) loses no hit: `node --experimental-strip-types --no-warnings .sdlc/runtime/tasks/0379-r12-poker-chip-drift/sweep.ts . .sdlc/runtime/tasks/0379-r12-poker-chip-drift/base-checks.ts packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts` exits 0 (it exits 1 on any LOST hit it does not list, with its reason, in `EXPLAINED`: one, the r1 :116 misfire on a stale data-model pot).
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-20 · lane: full L3 · verdict: pass · verifier: verifier-L3 (fable) · base: 4d5a18d43fe1
+- Changed: see commits
+- Commits: none
+- Check: 1 The r12 `omaha-haiku-3` sequence test fires at :254 and :257, its conserving twin and the quiet c...: pass
+- Check: 2 The croupier folder and the croupier replays stay green (`npx vitest run packages/agent-ui/a2ui/s...: pass
+- Check: 3 The croupier sweep loses no hit (`node --experimental-strip-types --no-warnings .sdlc/runtime/tas...: pass
+- Check: 4 `npm run check` exits 0: pass
+- Follow-up: note: .sdlc/runtime/tasks/0379-r12-poker-chip-drift/solo-report.md:21 the... -> notes.md
+- Follow-up: note: the review's ten misfires the lead's list, and its probe script at... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:1373... -> notes.md
+- Follow-up: decide: .sdlc/tickets/0379-r12-poker-chip-drift/handoff.md:30 the sweep... -> notes.md
+- Follow-up: note: packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts:1425... -> notes.md
+- Follow-up: note: .sdlc/runtime/tasks/0379-r12-poker-chip-drift/solo-report.md:14... -> notes.md
