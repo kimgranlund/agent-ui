@@ -540,7 +540,7 @@ describe('variant-picker — the GH #1377 SegmentedControl-vs-Select module', ()
   })
 })
 
-describe('quantity — the GH #1377 number-TextField module', () => {
+describe('quantity: the AmountPicker module (GH #1377, T-0196)', () => {
   it('fires on a set-the-quantity intent', () => {
     const result = selectMiniSkills('how many units do I want to buy — let me set the quantity', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
     expect(result.map((m) => m.id)).toContain('quantity')
@@ -551,10 +551,13 @@ describe('quantity — the GH #1377 number-TextField module', () => {
     expect(result.map((m) => m.id)).not.toContain('quantity')
   })
 
-  it('teaches the Field-wrapped TextField type:number recipe and the no-stepper-exists disclosure', () => {
+  it('teaches ONE AmountPicker for a bounded amount, slider only on large ranges, and TextField type:number for a free-typed number', () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'quantity')!
-    expect(skill.body).toMatch(/until\/unless a dedicated Stepper control is minted/)
-    expect(skill.body).toMatch(/`type:'number'`, `min` \(string\), `step` \(number\)/)
+    expect(skill.body).toMatch(/A bounded quantity or amount is ONE AmountPicker/)
+    expect(skill.body).toMatch(/`slider` only for a range over about 20 steps[^.]*never for a small count/)
+    expect(skill.body).toMatch(/set `actionName`[^;]*add no sibling commit Button/)
+    expect(skill.body).toMatch(/free-typed number with no bounds stays a Field-wrapped TextField `type:'number'`/)
+    expect(skill.body).not.toMatch(/fleet gap|Stepper control/)
   })
 })
 
