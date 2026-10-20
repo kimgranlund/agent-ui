@@ -589,7 +589,7 @@ describe('the Croupier table entries scope the CardTable to blackjack (T-0323)',
   })
 
   it('the bump migrates saved Croupier stores', () => {
-    expect(croupier.seedVersion).toBe(17)
+    expect(croupier.seedVersion).toBe(18)
   })
 })
 

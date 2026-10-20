@@ -39,7 +39,9 @@
  *  ADR-0243 (T-0069/T-0070/T-0071, `ui-board-grid`/`ui-product-card`/`ui-game-hud`) re-seeded this SAME
  *  "shipped ahead of its catalog row" shape three times over, the ADR-0224 service-card S1 precedent: each
  *  control shipped first. T-0072 (R1) lands the `ProductCard`, `BoardGrid` and `GameHud` rows + factories
- *  and DRAINS all three seeds (the residue guard fails if one is left in place). */
+ *  and DRAINS all three seeds (the residue guard fails if one is left in place).
+ *  T-0193 (`ui-option-deck`) re-seeded the same shape at step 2; step 3 lands the `OptionDeck` row + factory
+ *  and DRAINS that seed too. */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor

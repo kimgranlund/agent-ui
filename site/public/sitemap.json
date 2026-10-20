@@ -379,6 +379,15 @@
       "group": "Overlays & pickers"
     },
     {
+      "name": "Option Deck",
+      "tag": "ui-option-deck",
+      "url": "./option-deck-demo.html",
+      "description": "A deck of option cards for picking one of a few things to start; the whole card is the choice.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Overlays & pickers"
+    },
+    {
       "name": "Otp Field",
       "tag": "ui-otp-field",
       "url": "./otp-field-demo.html",

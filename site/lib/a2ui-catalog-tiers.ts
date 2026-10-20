@@ -171,6 +171,9 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   // ResultCard (ADR-0244, T-0089): `tier: pattern`, a multi-part construct (outcome header, summary, stats and the
   // producer's action children), not a WIDGET leaf.
   ResultCard: 'COMPOUND',
+  // OptionDeck (T-0193): `tier: pattern`, a multi-part construct (heading, a card grid, each card a tone band,
+  // body and meta chips, plus the Surprise me card), not a WIDGET leaf.
+  OptionDeck: 'COMPOUND',
   Split: 'COMPOUND',
   SplitPane: 'COMPOUND',
   Swiper: 'COMPOUND',

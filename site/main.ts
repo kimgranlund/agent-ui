@@ -1221,6 +1221,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // T-0193: the option deck, pick one of a few things to start, tier=pattern {doc, demo}.
+  {
+    label: 'ui-option-deck',
+    cards: [
+      {
+        href: './option-deck-demo.html',
+        title: 'Demo',
+        blurb: 'A game picker with a Surprise me card, a plan chooser and an onboarding path, each card the whole choice, with the select and action events logged and the one-column row at 400px.',
+      },
+      {
+        href: './option-deck-doc.html',
+        title: 'API reference',
+        blurb: 'The option deck: tone header band, corner index, icon disc, title, description, up to three meta chips and the Your pick pill, generated from option-deck.md.',
+      },
+    ],
+  },
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
     label: 'ui-description-list',

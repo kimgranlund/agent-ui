@@ -5,18 +5,13 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
-| T-0193 | [0193-option-deck](0193-option-deck/handoff.md) | OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card | feature | L3 | P2 | T-0172 | 🔵 ready |
 | T-0195 | [0195-confirm-receipt](0195-confirm-receipt/handoff.md) | Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state | feature | L3 | P2 | none | 🔵 ready |
 | T-0197 | [0197-bookingform-kinds](0197-bookingform-kinds/handoff.md) | BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' | feature | L2 | P2 | T-0196 | 🔵 ready |
 | T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | 🔵 ready |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
-| T-0377 | [0377-r12-contrastpair-card-in-card](0377-r12-contrastpair-card-in-card/handoff.md) | A Stylist ContrastPair inside a root Card renders a card in a card (round 12 cluster L) | bug | L2 | P2 | none | 🔵 ready |
-| T-0378 | [0378-r12-lone-button-routing](0378-r12-lone-button-routing/handoff.md) | The lone-Button rule never reaches poker Deal again turns (round 12 cluster O) | bug | L2 | P3 | none | 🔵 ready |
-| T-0379 | [0379-r12-poker-chip-drift](0379-r12-poker-chip-drift/handoff.md) | A Croupier check reads the reply's pot and bankroll against the table and across hands (round 12 cluster K) | feature | L3 | P2 | none | 🔵 ready |
-| T-0380 | [0380-r12-poker-showdown-no-deal-again](0380-r12-poker-showdown-no-deal-again/handoff.md) | A poker hand settled through the data model only offers no Deal again (round 12 cluster M) | bug | L2 | P2 | none | 🔵 ready |
-| T-0381 | [0381-r12-playing-card-sm-type-floor](0381-r12-playing-card-sm-type-floor/handoff.md) | PlayingCard size sm renders its index under the type floor (round 12 cluster N) | bug | L1 | P3 | none | 🔵 ready |
 | T-0383 | [0383-conversation-browser-reds](0383-conversation-browser-reds/handoff.md) | conversation.browser.test.ts: 4 resumed-bubble and composed-path reds | bug | L2 | P2 | none | 🔵 ready |
 | T-0384 | [0384-packages-agent-ui-a2ui-src](0384-packages-agent-ui-a2ui-src/handoff.md) | packages/agent-ui/a2ui/src/agent/prompts/grammar.md:37 still says... | idea | L2 | P2 | none | ⏳ proposed |
+| T-0386 | [0386-grammar-stale-affordance-deck](0386-grammar-stale-affordance-deck/handoff.md) | grammar.md stale-affordance rule names Buttons, not an OptionDeck greet | chore | L2 | P2 | none | 🔵 ready |
 
-Closed: 366 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 372 done, 4 dropped (git log or .NNNN-* folders)

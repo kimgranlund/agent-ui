@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OptionDeck mockup: editorial</title>
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/tokens.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/dimensions.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations.gen.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/base.css">
+<style>
+  /* Direction: EDITORIAL. Type does the work: an index numeral, a kicker of meta, a hairline rule,
+     and a thin tone rule on the leading edge. No fills except the selected wash. */
+  body { padding: var(--md-sys-layout-margin); }
+  .surface { max-inline-size: 44rem; margin-inline: auto; display: grid; gap: var(--md-sys-widget-margin); font-size: var(--md-sys-type-body); }
+  .say { margin: 0; color: var(--md-sys-color-neutral-on-surface-variant); }
+
+  [data-tone='neutral'] { --tone: var(--md-sys-color-neutral-container); --tone-ink: var(--md-sys-color-neutral-on-surface-variant); }
+  [data-tone='primary'] { --tone: var(--md-sys-color-primary-container); --tone-ink: var(--md-sys-color-primary-on-surface-variant); }
+  [data-tone='secondary'] { --tone: var(--md-sys-color-secondary-container); --tone-ink: var(--md-sys-color-secondary-on-surface-variant); }
+  [data-tone='accent'] { --tone: var(--md-sys-color-accent-container); --tone-ink: var(--md-sys-color-accent-on-surface-variant); }
+  [data-tone='info'] { --tone: var(--md-sys-color-info-container); --tone-ink: var(--md-sys-color-info-on-surface-variant); }
+  [data-tone='success'] { --tone: var(--md-sys-color-success-container); --tone-ink: var(--md-sys-color-success-on-surface-variant); }
+
+  .deck { container: deck / inline-size; display: grid; gap: var(--md-sys-c); }
+  .kicker { margin: 0; font-size: var(--md-sys-type-group-kicker); font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--md-sys-color-neutral-on-surface-variant); }
+  .deck-heading { margin: 0; font-size: var(--md-sys-type-display); font-weight: 400; letter-spacing: -0.02em; line-height: 1.1;
+    font-family: ui-serif, Georgia, 'Times New Roman', serif; }
+  .deck-sub { margin: 0 0 var(--md-sys-widget-gutter); color: var(--md-sys-color-neutral-on-surface-variant); }
+  .grid { display: grid; column-gap: var(--md-sys-widget-margin); row-gap: 0;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--md-sys-n) * 40px)), 1fr));
+    border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant); }
+
+  [data-part='option'] {
+    position: relative; display: grid; grid-template-columns: auto 1fr; column-gap: var(--md-sys-widget-gutter); row-gap: var(--md-sys-c);
+    padding: var(--md-sys-widget-margin) var(--md-sys-widget-margin) var(--md-sys-widget-margin) calc(var(--md-sys-widget-margin) + var(--md-sys-c));
+    border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant); cursor: pointer; border-radius: var(--md-sys-group-radius);
+    transition: background-color 120ms;
+  }
+  [data-part='option']::before { content: ''; position: absolute; inset-block: var(--md-sys-widget-margin); inset-inline-start: 0;
+    inline-size: var(--md-sys-c); border-radius: var(--md-sys-c); background: var(--tone-ink); opacity: 0.55; }
+  [data-part='option']:hover { background: var(--md-sys-color-neutral-container-low); }
+  [data-part='option']:focus-visible { outline: 2px solid var(--md-sys-color-focus-ring); outline-offset: -2px; }
+  [data-part='option'][aria-selected='true'] { background: var(--tone); }
+  [data-part='option'][aria-selected='true']::before { opacity: 1; }
+
+  .num { grid-row: span 3; font-family: ui-serif, Georgia, 'Times New Roman', serif; font-size: var(--md-sys-type-heading); line-height: 1;
+    color: var(--tone-ink); font-variant-numeric: lining-nums tabular-nums; }
+  .meta { font-size: var(--md-sys-type-group-kicker); font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--tone-ink); }
+  .meta span + span::before { content: '/'; margin-inline: 0.6em; opacity: 0.5; }
+  .title { font-family: ui-serif, Georgia, 'Times New Roman', serif; font-size: var(--md-sys-type-subhead); line-height: 1.2; }
+  .desc { color: var(--md-sys-color-neutral-on-surface-variant); }
+  .sel { display: none; font-size: var(--md-sys-type-group-kicker); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--tone-ink); }
+  [aria-selected='true'] .sel { display: block; order: 1; grid-column: 2; }
+  [data-random] .title { font-style: italic; }
+  [data-random]::before { background: repeating-linear-gradient(to bottom, var(--md-sys-color-neutral-outline) 0 var(--md-sys-c), transparent var(--md-sys-c) calc(var(--md-sys-c) * 2)); opacity: 1; }
+
+  @container deck (inline-size < 25rem) {
+    .deck-heading { font-size: var(--md-sys-type-heading); }
+    .num { font-size: var(--md-sys-type-subhead); }
+  }
+</style>
+</head>
+<body>
+<main class="surface" data-tier="widget" data-scale="md">
+  <p class="say">Evening. I deal blackjack and a few poker games. Pull up a chair and pick a table.</p>
+  <div class="deck" role="listbox" aria-labelledby="h">
+    <p class="kicker">Tonight's tables</p>
+    <h2 class="deck-heading" id="h">Pick a game</h2>
+    <p class="deck-sub">Every table starts you with 1,000 chips.</p>
+    <div class="grid">
+      <div data-part="option" role="option" aria-selected="true" tabindex="0" data-tone="primary">
+        <span class="num">01</span>
+        <div class="meta"><span>1 to 6 players</span><span>5 min</span><span>Easy</span></div><span class="sel">Selected</span>
+        <div class="title">Blackjack</div>
+        <div class="desc">Beat the dealer to 21 without going bust.</div>
+      </div>
+      <div data-part="option" role="option" aria-selected="false" tabindex="-1" data-tone="accent">
+        <span class="num">02</span>
+        <div class="meta"><span>2 to 9 players</span><span>15 min</span><span>Medium</span></div><span class="sel">Selected</span>
+        <div class="title">Texas Hold'em</div>
+        <div class="desc">Two hole cards, five on the board, best hand wins.</div>
+      </div>
+      <div data-part="option" role="option" aria-selected="false" tabindex="-1" data-tone="info">
+        <span class="num">03</span>
+        <div class="meta"><span>2 to 6 players</span><span>10 min</span><span>Easy</span></div><span class="sel">Selected</span>
+        <div class="title">Five-card draw</div>
+        <div class="desc">Swap up to three cards once, then show down.</div>
+      </div>
+      <div data-part="option" role="option" aria-selected="false" tabindex="-1" data-tone="neutral" data-random>
+        <span class="num">?</span>
+        <div class="meta"><span>Any table</span></div><span class="sel">Selected</span>
+        <div class="title">Surprise me</div>
+        <div class="desc">Leave it to the house; I pick the table.</div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

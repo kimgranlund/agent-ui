@@ -258,4 +258,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     'T-0196 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
     '`AmountPicker` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
     'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
+  // T-0193 (2026-10-20): `frontier-option-deck-picker`, the same pending-state shape (NO VERDICT SOUGHT YET, not a
+  // refusal). Added to `catalog-frontier.ts` with the `OptionDeck` default-catalog row to close its coverage gap;
+  // judged admission is a follow-up, the T-0072 precedent. Run the judged pipeline (`import-seeds.ts` with a real
+  // VerdictsFile) and DELETE this entry when it lands.
+  ['frontier-option-deck-picker',
+    'T-0193 - NO VERDICT SOUGHT YET, not a refusal. Closes the catalog-coverage gap for the new `OptionDeck` ' +
+    'type; judged admission is a follow-up, the T-0072 precedent (ADR-0068\'s never-self-judged discipline - ' +
+    'this authoring session assigns no rubric score to its own seed).'],
 ])

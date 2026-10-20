@@ -53,6 +53,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-menu': { tag: 'ui-menu', load: () => import('./menu/menu.ts'), css: './menu/menu.css', uses: [] },
   'ui-modal': { tag: 'ui-modal', load: () => import('./modal/modal.ts'), css: './modal/modal.css', uses: [] },
   'ui-multi-select': { tag: 'ui-multi-select', load: () => import('./multi-select/multi-select.ts'), css: './multi-select/multi-select.css', uses: [] },
+  'ui-option-deck': { tag: 'ui-option-deck', load: () => import('./option-deck/option-deck.ts'), css: './option-deck/option-deck.css', uses: ['ui-icon'] },
   'ui-otp-field': { tag: 'ui-otp-field', load: () => import('./otp-field/otp-field.ts'), css: './otp-field/otp-field.css', uses: [] },
   'ui-pagination': { tag: 'ui-pagination', load: () => import('./pagination/pagination.ts'), css: './pagination/pagination.css', uses: ['ui-button'] },
   'ui-pie-chart': { tag: 'ui-pie-chart', load: () => import('./pie-chart/pie-chart.ts'), css: './pie-chart/pie-chart.css', uses: [] },

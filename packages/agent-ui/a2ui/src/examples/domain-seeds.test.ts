@@ -18,6 +18,7 @@ import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests
 import { HIDDEN_STATE_CHECKS } from '../catalog/hidden-state-checks.ts'
 import { compositeMomentChecks } from '../catalog/composite-moments.ts'
 import { framedChoiceCheck } from '../catalog/framed-choice-check.ts'
+import { optionDeckCountCheck } from '../catalog/option-deck-check.ts'
 import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 
@@ -42,11 +43,11 @@ const BASES = new Map<string, Catalog>([
 ])
 const CATALOGS: ReadonlyMap<string, Catalog> = new Map([...BASES, ...composePersonaCatalogDocs(BASES, SHIPPED_PERSONA_CATALOG_MANIFESTS)])
 
-/** The checks a live turn on `catalogId` runs: the persona's own, then the hidden-state and composite-moment rows and the framed-choice check. */
+/** The checks a live turn on `catalogId` runs: the persona's own, then the hidden-state and composite-moment rows, the framed-choice check and the option-deck count check. */
 function liveChecks(catalogId: string, catalog: Catalog) {
   const persona = catalogId.split('--')[1]
   const own = SHIPPED_PERSONA_CATALOG_MANIFESTS.find((m) => m.personaId === persona)?.semanticChecks ?? []
-  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck], catalog)
+  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck], catalog)
 }
 
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m

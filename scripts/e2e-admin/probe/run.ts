@@ -195,7 +195,7 @@ async function renderLint(page: Page): Promise<{ findings: Array<{ rule: string;
           // T-0172 (Kim's ruling): a framed box whose only content is one button, the per-choice card of a picker.
           const buttons = card.querySelectorAll('ui-button')
           if (buttons.length === 1 && (card.textContent ?? '').trim() === (buttons[0]!.textContent ?? '').trim())
-            out.push({ rule: 'lone-button-frame', detail: `${name(card)} frames only the "${(buttons[0]!.textContent ?? '').trim()}" button` })
+            out.push({ rule: 'lone-button-frame', detail: `${name(card)} frames only the "${(buttons[0]!.textContent ?? '').trim()}" button; use an OptionDeck (ui-option-deck) when the pick starts something` })
         }
         const edge = host.getBoundingClientRect().right
         for (const el of host.querySelectorAll('*')) {

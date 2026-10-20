@@ -395,7 +395,7 @@
     {
       "id": "lone-button-frame",
       "source": "T-0172 (Kim's ruling, 2026-10-14): a choice is a plain Button in a row, never a framed box per Button",
-      "use": "one Row of plain Buttons (A2UI: a Row whose children are the Buttons), or a ChoicePicker or SegmentedControl",
+      "use": "OptionDeck (ui-option-deck) when the pick starts something (the card is the choice), else one Row of plain Buttons (A2UI: a Row whose children are the Buttons), or a ChoicePicker or SegmentedControl",
       "not": "a Card whose only content is one Button, whose subtree holds one Button and nothing text-bearing, through any CardHeader, CardContent, CardFooter, Row, Column, List, Grid or Divider (a bordered box around each choice)",
       "detect": "a payload Card whose subtree is one Button plus only structural wrappers (the shared walk in a2ui's lone-button-frame.ts)"
     },

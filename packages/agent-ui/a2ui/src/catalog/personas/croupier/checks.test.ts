@@ -21,6 +21,7 @@ import {
   personaCroupierCardTableSeed,
   personaCroupierCardTableSettledSeed,
   personaBasicCroupierCardTableSettledSeed,
+  personaCroupierGamePickerSeed,
 } from '../../../examples/persona-exemplars.ts'
 
 const catalog = composeCatalog(defaultCatalog, croupierFragment, 'croupier')
@@ -856,6 +857,18 @@ describe('croupier bet controls: a hold\'em opening that asks for the stake (T-0
     expect(run(stakeAsk("Pick a game: Texas hold'em, Omaha or seven-card stud"))).toEqual([])
     expect(run(stakeAsk("Seven-card stud: ante up. No blinds, unlike hold'em."))).toEqual([])
     expect(run(stakeAsk("Omaha: like hold'em, but four hole cards"))).toEqual([])
+  })
+
+  // T-0193: the greet's game picker is one OptionDeck listing hold'em beside Omaha, stud and blackjack. Every
+  // croupier check passes it, on a greet and on a turn that asks to play hold'em.
+  it('an OptionDeck game picker listing several games raises no finding from any croupier check', () => {
+    const picker = personaCroupierGamePickerSeed.messages as A2uiOutput
+    const titles = picker.flatMap((m) => ('updateComponents' in m ? m.updateComponents.components : [])).flatMap((c) => (c['options'] as { title: string }[] | undefined) ?? []).map((o) => o.title)
+    expect(titles, 'anti-vacuous: the picker lists hold\'em beside Omaha, stud and blackjack').toEqual(expect.arrayContaining(['Blackjack', 'Texas Hold\u2019em', 'Omaha', 'Seven-card stud']))
+    for (const intent of [undefined, 'hello', 'What games can we play?', "Let's play Texas hold'em."]) {
+      const input = { surfaces: semanticSurfaceViews({ turns: [] }, picker), ...(intent === undefined ? {} : { intent }) }
+      expect(croupierSemanticChecks.flatMap((c) => c.check(input)), String(intent)).toEqual([])
+    }
   })
 
   it('a turn whose other surface carries the dealt hand leaves a separate controls surface alone', () => {

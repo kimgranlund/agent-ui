@@ -72,7 +72,7 @@ const L1_TAXONOMY = {
   ],
   'Overlays & pickers': [
     'ui-popover', 'ui-tooltip', 'ui-menu', 'ui-select', 'ui-multi-select', 'ui-form-popover',
-    'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame',
+    'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame', 'ui-option-deck',
   ],
   'Form composition': ['ui-field', 'ui-form-provider', 'ui-theme-provider'],
   'Data & reporting': [

@@ -598,6 +598,14 @@ export const NAV: readonly NavGroup[] = [
       { href: './result-card-doc.html', label: 'API' },
     ],
   },
+  // T-0193: the option deck, pick one of a few things to start, tier=pattern {doc, demo}.
+  {
+    label: 'ui-option-deck',
+    links: [
+      { href: './option-deck-demo.html', label: 'Demo' },
+      { href: './option-deck-doc.html', label: 'API' },
+    ],
+  },
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
     label: 'ui-description-list',
@@ -1013,7 +1021,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
     label: 'Overlays & pickers',
     tags: [
       'ui-popover', 'ui-tooltip', 'ui-menu', 'ui-select', 'ui-multi-select', 'ui-form-popover',
-      'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame',
+      'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame', 'ui-option-deck',
     ],
   },
   { label: 'Form composition', tags: ['ui-field', 'ui-form-provider', 'ui-theme-provider'] },

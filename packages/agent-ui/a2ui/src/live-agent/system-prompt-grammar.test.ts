@@ -962,7 +962,7 @@ describe('buildSystemPrompt reserved greet-1 id class (GH #1201, req-a2ui-patter
   it('names the reserved id class riding the ask field without being an ask', () => {
     expect(prompt).toMatch(/One reserved id class rides this same "ask" field without being an ask/)
     expect(prompt).toMatch(/\{"ask":\{"surfaceId":"greet-1"\}\}/)
-    expect(prompt).toMatch(/starter-intent Buttons only, no commit button, no data model/)
+    expect(prompt).toMatch(/starter intents as one OptionDeck only, no commit button, no data model/)
   })
 
   it('exempts greet-1 from the ask-<n> counter AND the answered-ask freeze, reasoned as never-an-answered-ask (composes with B1 without widening it)', () => {
@@ -972,7 +972,7 @@ describe('buildSystemPrompt reserved greet-1 id class (GH #1201, req-a2ui-patter
     expect(prompt).toMatch(/This freeze begins at FLOW END, not at every mid-flow commit/)
   })
 
-  it('retires the greet buttons per the stale-affordance rule when a real task starts', () => {
+  it('retires the greet cards per the stale-affordance rule when a real task starts', () => {
     expect(prompt).toMatch(/retired per the\s*\nstale-affordance rule when a real task starts/)
   })
 

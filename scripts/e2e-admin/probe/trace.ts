@@ -20,6 +20,7 @@ import { croupierSemanticChecks } from '../../../packages/agent-ui/a2ui/src/cata
 import { HIDDEN_STATE_CHECKS } from '../../../packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts'
 import { compositeMomentChecks } from '../../../packages/agent-ui/a2ui/src/catalog/composite-moments.ts'
 import { framedChoiceCheck } from '../../../packages/agent-ui/a2ui/src/catalog/framed-choice-check.ts'
+import { optionDeckCountCheck } from '../../../packages/agent-ui/a2ui/src/catalog/option-deck-check.ts'
 import { gateChecksOnCatalog, type SemanticCheck } from '../../../packages/agent-ui/a2ui/src/catalog/semantic-check.ts'
 import { runProducerTurn } from '../../../packages/agent-ui/a2ui/tools/testkit/producer-leg.ts'
 import { nodeCatalogResolver } from '../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
@@ -131,10 +132,10 @@ function scriptedRound(round: ProbeRound): string | ScriptedToolRound {
 export const PERSONA_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { concierge: conciergeSemanticChecks, croupier: croupierSemanticChecks }
 
 /** The semantic checks a live turn on this catalog ran: its persona's (`<base>--<persona>`), (T-0230) the
- *  hidden game state checks every catalog runs, then (T-0208) the composite-moment checks and (T-0258) the framed-choice check, gated on the types the catalog declares, as `semanticChecksDeps` does. */
+ *  hidden game state checks every catalog runs, then (T-0208) the composite-moment checks and (T-0258) the framed-choice check and (T-0193) the option-deck count check, gated on the types the catalog declares, as `semanticChecksDeps` does. */
 export function replaySemanticChecks(catalog: Catalog): readonly SemanticCheck[] {
   const persona = splitCatalogId(catalog.catalogId).tail ?? ''
-  return gateChecksOnCatalog([...(PERSONA_SEMANTIC_CHECKS[persona] ?? []), ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck], catalog)
+  return gateChecksOnCatalog([...(PERSONA_SEMANTIC_CHECKS[persona] ?? []), ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck], catalog)
 }
 
 export interface ReplayContext {
