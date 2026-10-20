@@ -1622,4 +1622,42 @@ export const resultCardWinSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed]
+const AMOUNT_PICKER_BET_ID = 'frontier-amount-picker-bet'
+/** Frontier 32 (T-0196): `AmountPicker`, a blackjack bet. One node holds the bounded number (5 to 250 in steps of 5,
+ *  the bankroll as max), four preset chips, the slider, a USD readout and the one Place bet commit. The value is
+ *  bound to the data model, so the commit's action context and the model hold the same number. It replaces the
+ *  Card plus Slider plus Button the bet idiom spent, whose slider and button drifted apart. Corpus admission is a
+ *  SEPARATE judged wave (disposition-allowlist.ts). */
+export const amountPickerBetSeed: ExampleSeed = {
+  name: 'frontier-amount-picker-bet',
+  description: 'A blackjack bet: one AmountPicker bounded by the bankroll, with 25, 50, 100 and 250 chips, a slider, a dollar readout and a Place bet commit, its value bound to the data model.',
+  promptText: 'Deal me in. I have 250 chips; let me pick my bet for this hand.',
+  surfaceId: AMOUNT_PICKER_BET_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: AMOUNT_PICKER_BET_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: AMOUNT_PICKER_BET_ID,
+        value: { bet: { amount: 50, bankroll: 250 } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: AMOUNT_PICKER_BET_ID,
+        components: [
+          {
+            id: 'root', component: 'AmountPicker', label: 'Your bet',
+            value: { path: '/bet/amount' }, min: 5, max: 250, step: 5, presets: [25, 50, 100, 250],
+            slider: true, currency: 'USD', actionName: 'place_bet', actionLabel: 'Place bet',
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed]

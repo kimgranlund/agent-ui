@@ -350,6 +350,9 @@ export function renderSelectionClause(entry: SelectionEntry | undefined, catalog
  *  and `GameHud` rows and the reciprocal edges the sidecar gate forces; budget 9 300 (measured rounded up to
  *  the next 100, plus 300 headroom, still under the ceiling: the annotated `## Available components` section
  *  is about 10 000 chars without clauses). A deliberate re-measure for new catalog types, not a get-green raise.
+ *  RE-MEASURED 2026-10-20 (T-0196): 9 503 chars over 85 types after the `AmountPicker` row, its Slider and TextField
+ *  reciprocal edges and the dropped TextField/ColorPicker pair (Kim 2026-10-20); budget 9 900 by the same formula,
+ *  still under the ceiling.
  *  This budgets one clause family; the whole composed prompt has its own budget in `prompt-budget.ts`
  *  (ADR-0234). */
-export const SELECTION_GUIDANCE_CHAR_BUDGET = 9_300
+export const SELECTION_GUIDANCE_CHAR_BUDGET = 9_900

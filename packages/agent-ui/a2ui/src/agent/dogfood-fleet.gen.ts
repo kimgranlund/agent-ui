@@ -2,6 +2,7 @@
 // Discovery: one row per tagged *.md descriptor in each directory under packages/agent-ui/components/src/controls/, derived by deriveDogfoodFleet, sorted by tag.
 import type { DogfoodControl } from './dogfood-descriptor.ts'
 export const DOGFOOD_FLEET: readonly DogfoodControl[] = [
+  {"tag":"ui-amount-picker","summary":"Ui-amount-picker picks one bounded number with minus and plus, optional preset chips and an optional slider…","attrs":"value: number, min: number, max: number, step: number, presets: json, slider: boolean, currency: string, unit: string, label: string, actionName: string, actionLabel: string, size: enum(sm|md|lg), inline: boolean, name: string, disabled: boolean, required: boolean","siblings":[]},
   {"tag":"ui-attachment","summary":"Display-class, FilePart-aligned compact file card (ADR-0112, feed family v1) — a category glyph plus…","attrs":"filename: string, mimeType: string, sizeBytes: number, href: string, inline: boolean","siblings":[]},
   {"tag":"ui-audio","summary":"URL-sourced audio player primitive (GH #1209, the A2UI standard basic-catalog\u0027s AudioPlayer type): the native…","attrs":"src: string, label: string, preload: enum(none|metadata|auto)","siblings":[]},
   {"tag":"ui-avatar","summary":"Indicator-class compact identity mark (ADR-0112, feed family v1) — a circle-masked widget box that walks…","attrs":"src: string, identity: string, label: string, size: enum(sm|md|lg)","siblings":[]},

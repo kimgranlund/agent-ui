@@ -5,6 +5,7 @@
 // exports nothing. Package code never imports it (gate: src/controls/all-purity.test.ts); an app imports
 // the controls it uses, one `./controls/{name}` subpath each.
 
+import './controls/amount-picker/amount-picker.ts'
 import './controls/attachment/attachment.ts'
 import './controls/audio/audio.ts'
 import './controls/avatar/avatar.ts'

@@ -46,7 +46,7 @@ const L1_TREES = ['packages/agent-ui/components/src/controls', 'packages/agent-u
 // byte-identical to site/pages/_page.ts's own `NAV_TAXONOMY` export (that file is the one source of truth
 // this data was authored against; a Node script cannot import Vite-transformed TS, so the object is
 // duplicated here rather than shared — the same constraint L1 generation as a whole already lives under).
-// 12 groups over 88 tags, each narrower than the flat "Components" section: no single component group grows
+// 12 groups over 89 tags, each narrower than the flat "Components" section: no single component group grows
 // past 10 tags, so the rail's Components band always shows real sub-headers instead of one long list.
 const L1_TAXONOMY = {
   'Actions & selection controls': [
@@ -55,7 +55,7 @@ const L1_TAXONOMY = {
   ],
   'Text & value entry': [
     'ui-text-field', 'ui-textarea', 'ui-otp-field', 'ui-slider', 'ui-slider-multi', 'ui-rating',
-    'ui-color-picker', 'ui-calendar',
+    'ui-amount-picker', 'ui-color-picker', 'ui-calendar',
   ],
   'Charts & data visuals': [
     'ui-sparkline', 'ui-bar-chart', 'ui-line-chart', 'ui-pie-chart', 'ui-column-chart', 'ui-gauge',

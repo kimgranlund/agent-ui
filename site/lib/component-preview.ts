@@ -374,6 +374,8 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   GameHud: { title: 'Dungeon level 3', status: 'Your turn', statusIntent: 'success' },
   // ResultCard (ADR-0244, T-0089): the string and enum knobs here; `stats` and the Play again child ride SAMPLE_TREES.
   ResultCard: { outcome: 'win', title: 'Blackjack, hand 12', summary: 'You beat the dealer 20 to 18. Your stack is up for the night.' },
+  // AmountPicker (T-0196): the currency bet with the slider; `presets` rides SAMPLE_TREES (an array has no knob).
+  AmountPicker: { label: 'Bet', min: '5', max: '250', step: '5', value: '50', currency: 'USD', slider: 'true', actionName: 'place_bet', actionLabel: 'Place bet' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -928,6 +930,11 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
   }),
   // ResultCard (ADR-0244): the blackjack win (catalog-frontier.ts's frontier-result-card-win), with its Play again
   // Button child whose action context carries newGame true.
+  // AmountPicker (T-0196): the bet's preset chips (catalog-frontier.ts's frontier-amount-picker-bet); a leaf, no children.
+  AmountPicker: () => ({
+    rootRef: { presets: [25, 50, 100, 250] },
+    extras: [],
+  }),
   ResultCard: () => ({
     rootRef: {
       stats: [
@@ -1403,6 +1410,9 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // ui-result-card (ADR-0244): only `summary` is seeded as a knob; outcome, title and stats are set as properties
   // in COMPONENT_SAMPLE_INIT (`title` would write the global attribute, not `result-title`).
   'ui-result-card': { summary: 'You beat the dealer 20 to 18.' },
+  // ui-amount-picker (T-0196): a cart quantity; `presets` is seeded in COMPONENT_SAMPLE_ATTRS (a JSON attribute has
+  // no knob) and `actionName` in COMPONENT_SAMPLE_INIT (the knob path never reaches `action-name`).
+  'ui-amount-picker': { label: 'Quantity', min: '1', max: '20', value: '4' },
   'ui-badge': { label: '3 failing', intent: 'danger' },
   'ui-disclosure': { summary: 'Full log' },
   // ui-form-popover (GH #294 F4): `label` is a real string knob defaulting to '' — the same demonstrability
@@ -1488,6 +1498,7 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
 // dimension series so the gallery's whole-shape law (a non-collapsed strip/list) has something to measure.
 const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
   'ui-slider': { 'aria-label': 'Volume' },
+  'ui-amount-picker': { presets: '[1,2,4,8]' }, // T-0196: the same JSON-string `kind: 'skip'` gap; the quantity chips
   'ui-sparkline': { values: '[3,5,4,8,7]' },
   'ui-bar-chart': { data: '[{"label":"EMEA","value":42},{"label":"APAC","value":31}]' },
   // ADR-0205 — ui-line-chart's `values` is the same JSON-string `kind: 'skip'` codec gap as ui-sparkline's
@@ -1558,6 +1569,10 @@ const COMPONENT_SAMPLE_ATTRS: Record<string, Record<string, string>> = {
 const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
   'ui-swiper-pagination': (el) => (el as UISwiperPaginationElement).renderInto(3, 0, () => {}),
   'ui-swiper-paddles': (el) => (el as UISwiperPaddlesElement).fill(() => {}, () => {}, 'horizontal'),
+  // ui-amount-picker (T-0196): the commit button, set as properties (the ui-board-grid actionName note below).
+  'ui-amount-picker': (el) => {
+    Object.assign(el, { actionName: 'add_to_cart', actionLabel: 'Add to cart' })
+  },
   // ADR-0243: ui-board-grid's `cells` is a JSON data prop, so the specimen writes a mid-game board directly:
   // hits, misses and one sunk ship, each with its text mark and intent (never color alone). `actionName` is a
   // property write: the knob path sets the camelCase name as an attribute, which never reaches `action-name`.
@@ -1663,6 +1678,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-disclosure', // #ensureParts(): the details/summary/chevron chrome — host children are ADOPTED into a nested body PART, never left as direct host children (unlike a STRUCTURAL container), so a host-level SLOT_TEXT write would destroy the whole part tree
   'ui-stat', // connected() builds four spans once (replaceChildren) from label/value/delta/caption PROPS — no light-DOM content model at all (slots: [] — stat.md)
   'ui-game-hud', // every part is control-built from props and patched in place; no light-DOM content model (slots: [], the ui-playing-card precedent)
+  'ui-amount-picker', // every part is control-built from props and patched in place; no light-DOM content model (slots: [] in amount-picker.md, T-0196)
   'ui-result-card', // the parts are control-built from props and patched in place; its only children are the producer's buttons (slots: [] in result-card.md), so a host-level SLOT_TEXT write would destroy the part tree
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)
   'ui-source-list', // connected() builds row/index/title/snippet spans (replaceChildren) from the sources PROP — no light-DOM content model at all (slots: [] — source-list.md, ADR-0214)

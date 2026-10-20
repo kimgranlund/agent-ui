@@ -1539,6 +1539,18 @@ export const resultCardFactory: WidgetFactory = {
   },
 }
 
+/**
+ * `AmountPicker` to `ui-amount-picker` (T-0196). Every property is a 1:1 accessor (verified against
+ * `amount-picker.md`; `actionName` and `actionLabel` keep their prop names while the control observes the kebab
+ * attributes). `presets` is a number array the control hardens itself (non-finite and out-of-bounds entries
+ * dropped, sorted, deduped), so a bound value that never passed the static validator cannot break the render.
+ * The value mark is the Slider shape: the number two-way through `change`. `actionName` carries
+ * `actionEvent: "action"` on the row (the BoardGrid shape, T-0081), so the renderer forwards the control's own
+ * `action` event with `{value}` in context, after the `change` that wrote the bound model. `inline` and `size`
+ * are not wire-exposed.
+ */
+export const amountPickerFactory: WidgetFactory = accessorFactory('ui-amount-picker', { prop: 'value', event: 'change' })
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1627,4 +1639,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   BoardGrid: boardGridFactory,
   GameHud: gameHudFactory,
   ResultCard: resultCardFactory,
+  AmountPicker: amountPickerFactory,
 }

@@ -23,7 +23,7 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 37 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * The 38 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
  * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
  * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
  * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
@@ -115,6 +115,10 @@ export const FEED_SURFACE_TYPES = [
   // its children reuse the already-IN `Text` type verbatim (a linked crumb is just `Text` + `href`). A
   // receipt-like ask can legitimately cite "where this lives" the same way a receipt cites its rows.
   'Breadcrumb',
+  // T-0196 - `AmountPicker` is IN on the `Slider` parity argument written above for `Rating`: a bounded
+  // VALUE-MARKED scalar input, one row, no overlay/pagination/dashboard shape. Its optional commit button is
+  // one commit affordance (the `Suggestions` argument), and its chips and slider pick the same one number.
+  'AmountPicker',
 ] as const
 
 /** The closed union of every IN type — the runtime-checkable companion to the `as const` array above. */

@@ -1,0 +1,184 @@
+/* amount-picker.css: ui-amount-picker, one bounded number with minus and plus, chips, a slider and one commit
+ * (T-0196 Design, the mockup Kim approved 2026-10-20).
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-amount-picker)` (specificity 0,0,0) declares the --ui-amount-picker-* chain from the
+ *       color roles and the derived foundations (ADR-0245). No px geometry: every length is a foundation read.
+ *   [2] STYLES BLOCK: `@scope (ui-amount-picker)` consumes only --ui-amount-picker-* plus the shared focus-ring
+ *       tokens (the button.css exception, so every control draws the identical ring). The host is a grid of
+ *       control-height rows: label, stepper, chips, slider, commit. No card chrome.
+ *
+ * Non-color signifiers (ADR-0057): the selected chip carries a check glyph and aria-pressed; a bound-side step
+ * button drops its fill for an outline, so neither state rests on color alone.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-amount-picker) declares --ui-amount-picker-* ════════════════ */
+
+/* uses: synced from amount-picker.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+@import '../slider/slider.css';
+
+:where(ui-amount-picker) {
+  --ui-amount-picker-gap: var(--md-sys-group-gutter);
+  --ui-amount-picker-control-gap: var(--md-sys-control-gutter);
+  --ui-amount-picker-height: var(--md-sys-height);
+  --ui-amount-picker-radius: var(--md-sys-control-radius);
+  --ui-amount-picker-label-edge: calc(var(--md-sys-inset) + var(--md-sys-label-inset)); /* 2n - c, ADR-0245 Amendment 4 */
+  --ui-amount-picker-font: var(--md-sys-type-control);
+  --ui-amount-picker-readout-font: var(--md-sys-type-title);
+  --ui-amount-picker-label-font: var(--md-sys-type-field-label);
+
+  --ui-amount-picker-readout-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-amount-picker-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-amount-picker-step-bg: var(--md-sys-color-neutral-container-low);
+  --ui-amount-picker-step-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-amount-picker-preset-bg: var(--md-sys-color-primary-container-low);
+  --ui-amount-picker-preset-ink: var(--md-sys-color-primary-high);
+  --ui-amount-picker-preset-selected-bg: var(--md-sys-color-primary-fill);
+  --ui-amount-picker-preset-selected-ink: var(--md-sys-color-primary-on-primary);
+  --ui-amount-picker-commit-bg: var(--md-sys-color-primary-fill);
+  --ui-amount-picker-commit-ink: var(--md-sys-color-primary-on-primary);
+  --ui-amount-picker-disabled-ink: var(--md-sys-color-neutral-on-surface-disabled);
+  --ui-amount-picker-disabled-outline: var(--md-sys-color-neutral-outline-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-amount-picker) ════════════════ */
+
+@scope (ui-amount-picker) {
+  /* Fill by default (ADR-0223): a block-level grid; `[inline]` is the one hug opt-out. */
+  :scope {
+    display: grid;
+    gap: var(--ui-amount-picker-gap);
+    align-content: start;
+    min-inline-size: 0;
+    box-sizing: border-box;
+    font-size: var(--ui-amount-picker-font);
+    line-height: var(--md-sys-control-line-height);
+  }
+
+  :scope[inline] {
+    display: inline-grid;
+  }
+
+  [data-part='label'] {
+    color: var(--ui-amount-picker-label-ink);
+    font-size: var(--ui-amount-picker-label-font);
+  }
+
+  /* The stepper row: decrease, readout, increase. The step cells are square 4n. */
+  [data-part='stepper'] {
+    display: grid;
+    grid-template-columns: var(--ui-amount-picker-height) minmax(0, 1fr) var(--ui-amount-picker-height);
+    align-items: center;
+    gap: var(--ui-amount-picker-control-gap);
+  }
+
+  /* Every control-created button shares one control-height box. */
+  :is([data-part='decrease'], [data-part='increase'], [data-part='preset'], [data-part='commit']) {
+    font: inherit;
+    border: 0;
+    margin: 0;
+    box-sizing: border-box;
+    block-size: var(--ui-amount-picker-height);
+    border-radius: var(--ui-amount-picker-radius);
+    display: inline-grid;
+    grid-auto-flow: column;
+    place-items: center;
+    place-content: center;
+    gap: var(--ui-amount-picker-control-gap);
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  :is([data-part='decrease'], [data-part='increase']) {
+    inline-size: var(--ui-amount-picker-height);
+    padding: 0;
+    background: var(--ui-amount-picker-step-bg);
+    color: var(--ui-amount-picker-step-ink);
+  }
+
+  /* At a bound (or host disabled): the fill drops away for an outline, a shape cue as well as a color cue. */
+  :is([data-part='decrease'], [data-part='increase'], [data-part='preset'], [data-part='commit']):disabled {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--ui-amount-picker-disabled-outline);
+    color: var(--ui-amount-picker-disabled-ink);
+    cursor: not-allowed;
+  }
+
+  [data-part='readout'] {
+    block-size: var(--ui-amount-picker-height);
+    min-inline-size: calc(var(--ui-amount-picker-readout-chars, 1) * 1ch);
+    display: grid;
+    place-items: center;
+    font-size: var(--ui-amount-picker-readout-font);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    color: var(--ui-amount-picker-readout-ink);
+    border-radius: var(--ui-amount-picker-radius);
+    outline: none;
+  }
+
+  [data-part='readout'][aria-disabled='true'] {
+    color: var(--ui-amount-picker-disabled-ink);
+  }
+
+  /* Preset chips: control-height pills; the selected one is filled and checked. */
+  [data-part='presets'] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-amount-picker-control-gap);
+  }
+
+  [data-part='preset'] {
+    padding-inline: var(--ui-amount-picker-label-edge);
+    min-inline-size: calc(var(--ui-amount-picker-height) * 1.5);
+    background: var(--ui-amount-picker-preset-bg);
+    color: var(--ui-amount-picker-preset-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  [data-part='preset'][aria-pressed='true'] {
+    background: var(--ui-amount-picker-preset-selected-bg);
+    color: var(--ui-amount-picker-preset-selected-ink);
+  }
+
+  /* Commit: one solid control-height pill, filling the row. */
+  [data-part='commit'] {
+    inline-size: 100%;
+    padding-inline: var(--ui-amount-picker-label-edge);
+    background: var(--ui-amount-picker-commit-bg);
+    color: var(--ui-amount-picker-commit-ink);
+    font-weight: 600;
+  }
+
+  /* The shared fleet focus ring, keyboard only and layout-neutral. */
+  :is([data-part='readout'], [data-part='preset'], [data-part='commit']):focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  :scope[disabled] {
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    :is([data-part='decrease'], [data-part='increase'], [data-part='preset'], [data-part='commit']) {
+      border: 1px solid CanvasText;
+    }
+
+    [data-part='preset'][aria-pressed='true'] {
+      forced-color-adjust: none;
+      background: Highlight;
+      color: HighlightText;
+    }
+
+    :is([data-part='decrease'], [data-part='increase'], [data-part='preset'], [data-part='commit']):disabled,
+    [data-part='readout'][aria-disabled='true'] {
+      color: GrayText;
+      border-color: GrayText;
+    }
+  }
+}

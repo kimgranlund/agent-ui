@@ -60,12 +60,12 @@
           "why": "picking a date on a grid"
         },
         {
-          "type": "ColorPicker",
-          "why": "a color as the main control"
-        },
-        {
           "type": "ComboBox",
           "why": "typing to filter options"
+        },
+        {
+          "type": "AmountPicker",
+          "why": "a bounded count or amount picked with plus and minus"
         }
       ]
     },
@@ -509,6 +509,10 @@
         {
           "type": "Progress",
           "why": "read-only completion"
+        },
+        {
+          "type": "AmountPicker",
+          "why": "a bounded amount with steps, presets or a commit"
         }
       ]
     },
@@ -1079,10 +1083,6 @@
       ],
       "notFor": [
         {
-          "type": "TextField",
-          "why": "a compact color field in a form"
-        },
-        {
           "type": "Swatch",
           "why": "showing a fixed color"
         }
@@ -1208,6 +1208,22 @@
         {
           "type": "Toast",
           "why": "a passing round result"
+        }
+      ]
+    },
+    "AmountPicker": {
+      "intents": [
+        "pick a quantity or amount with plus and minus",
+        "a bounded number with presets and one commit"
+      ],
+      "notFor": [
+        {
+          "type": "Slider",
+          "why": "a free drag with no presets or commit"
+        },
+        {
+          "type": "TextField",
+          "why": "a typed number or free-form amount"
         }
       ]
     }

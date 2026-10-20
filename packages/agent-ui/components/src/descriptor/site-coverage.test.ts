@@ -294,10 +294,11 @@ describe('site coverage — every shipped component has its required per-tier pa
     // in KNOWN_UNDOCUMENTED.
     // ui-game-hud (ADR-0243, T-0071): the game score and status strip, tier=pattern, {doc, demo} at birth.
     // ui-result-card (ADR-0244, T-0089): the settled outcome card, tier=pattern, {doc, demo} at birth.
+    // ui-amount-picker (T-0196): the bounded number picker, tier=pattern, {doc, demo} at birth.
     // ui-board-grid (ADR-0243, T-0069 C1): a board of cells to target or mark, its {doc, demo} pages ship with the control.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
-        'board-grid', 'breadcrumb', 'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'game-hud', 'menu', 'modal',
+        'amount-picker', 'board-grid', 'breadcrumb', 'calendar', 'color-picker', 'combo-box', 'command-modal', 'disclosure', 'drill', 'file-drop', 'form-popover', 'game-hud', 'menu', 'modal',
         'multi-select', 'pagination', 'popover', 'product-card', 'result-card', 'segmented-control', 'select', 'service-card', 'status-stream', 'suggestions', 'swiper',
         'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],

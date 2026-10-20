@@ -1091,6 +1091,25 @@
         }
       },
       "children": "ChildList"
+    },
+    "AmountPicker": {
+      "properties": {
+        "value": { "type": { "type": "number" }, "bindable": true, "mapsTo": "value" },
+        "min": { "type": { "type": "number" }, "mapsTo": "min" },
+        "max": { "type": { "type": "number" }, "mapsTo": "max" },
+        "step": { "type": { "type": "number" }, "mapsTo": "step" },
+        "presets": { "type": { "type": "array", "items": { "type": "number" } }, "mapsTo": "presets" },
+        "slider": { "type": { "type": "boolean" }, "mapsTo": "slider" },
+        "currency": { "type": { "type": "string" }, "mapsTo": "currency" },
+        "unit": { "type": { "type": "string" }, "mapsTo": "unit" },
+        "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" },
+        "actionName": { "type": { "type": "string" }, "mapsTo": "actionName", "actionEvent": "action" },
+        "actionLabel": { "type": { "type": "string" }, "mapsTo": "actionLabel" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "name": { "type": { "type": "string" }, "mapsTo": "name" },
+        "required": { "type": { "type": "boolean" }, "mapsTo": "required" }
+      },
+      "value": { "prop": "value", "event": "change" }
     }
   },
 

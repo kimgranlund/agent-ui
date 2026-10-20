@@ -37,6 +37,7 @@ const CLASSIFIED_CORE: readonly string[] = [
   'Button', 'TextField', 'Textarea', 'Field', 'FormProvider', 'Checkbox', 'Switch', 'Toggle', 'Select', 'Option',
   'RadioGroup', 'Radio', 'ChoiceGroup', 'ChoiceCard', 'SegmentedControl', 'Segment', 'Slider', 'SliderMulti', 'Rating',
   'Calendar', 'ComboBox', 'MultiSelect', 'FileDrop', 'ColorPicker',
+  'AmountPicker', // T-0196: a bounded number picker; no prop names a field, a form control like Slider
   // data viz
   'Sparkline', 'BarChart', 'LineChart', 'PieChart', 'ColumnChart', 'Gauge', 'Table', 'Stat', 'Progress',
 ]

@@ -362,6 +362,14 @@ export const NAV: readonly NavGroup[] = [
       { href: './slider-multi-doc.html', label: 'API' },
     ],
   },
+  // T-0196: one bounded number with minus and plus, chips, a slider and one commit, tier=pattern {doc, demo}.
+  {
+    label: 'ui-amount-picker',
+    links: [
+      { href: './amount-picker-demo.html', label: 'Demo' },
+      { href: './amount-picker-doc.html', label: 'API' },
+    ],
+  },
   {
     // ADR-0216 / GH #1395 — the star-value Range control, a THIRD UIRangeElement leaf alongside
     // slider/slider-multi (same Wave-2 tag-labelled convention).
@@ -949,7 +957,7 @@ export const NAV: readonly NavGroup[] = [
 ]
 
 // ── the NAV taxonomy — GH #1600, Kim's ruling (2026-08-23): "add the taxonomy to NAV itself, then derive" ────
-// A semantic cluster narrower than `section`, so neither "Components (86)" nor "Guides (44)" reads as one flat
+// A semantic cluster narrower than `section`, so neither "Components (87)" nor "Guides (44)" reads as one flat
 // list. `tags` covers a Components (L1) `ui-*` custom-element tag; `guideLabels` covers a Guides (L2)
 // site-manifest.json row by its exact `label`. This is the ONE place the grouping is authored — the sitemap
 // generator (`scripts/generate-sitemap.mjs`'s `L1_TAXONOMY`) mirrors the `tags` half byte-identical (a Node
@@ -976,7 +984,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
     label: 'Text & value entry',
     tags: [
       'ui-text-field', 'ui-textarea', 'ui-otp-field', 'ui-slider', 'ui-slider-multi', 'ui-rating',
-      'ui-color-picker', 'ui-calendar',
+      'ui-amount-picker', 'ui-color-picker', 'ui-calendar',
     ],
   },
   {
@@ -1066,7 +1074,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
 // One rail entry per sitemap.json entry, grouped by the sitemap's own `group` axis where the entry carries
 // one (NAV_TAXONOMY above), falling back to `section` otherwise. The derivation INVERTED (TKT-0029): the rail
 // reads the build-time index, not the hand array. `section`/`group` are exactly the sitemap's own fields —
-// Components (88 L1, name|tag rows, 12 groups) / Guides (44 L2, 8 groups) / A2UI/A2A/GenUI/Records ungrouped
+// Components (89 L1, name|tag rows, 12 groups) / Guides (44 L2, 8 groups) / A2UI/A2A/GenUI/Records ungrouped
 // (already narrow) — no curated re-grouping happens in this file beyond what the sitemap already carries.
 interface SitemapEntry {
   readonly name: string
