@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:8ace502b0ae1 -->
+<!-- sdlc-lite:managed:start v1 sha256:06c56d9aa026 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -10,7 +10,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 ## Stages
 
 - proposed: 0
-- ready: 12
+- ready: 13
   - T-0193 OptionDeck: a general-purpose 'pick one to start' catalog pattern where each option is a selectable card (0193-option-deck)
   - T-0195 Confirm and receipt pattern: promote BookingConfirmation to the default catalog with total, actions and a settled state (0195-confirm-receipt)
   - T-0196 Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit (0196-amount-picker)
@@ -23,6 +23,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0379 A Croupier check reads the reply's pot and bankroll against the table and across hands (round 12 cluster K) (0379-r12-poker-chip-drift)
   - T-0380 A poker hand settled through the data model only offers no Deal again (round 12 cluster M) (0380-r12-poker-showdown-no-deal-again)
   - T-0381 PlayingCard size sm renders its index under the type floor (round 12 cluster N) (0381-r12-playing-card-sm-type-floor)
+  - T-0383 conversation.browser.test.ts: 4 resumed-bubble and composed-path reds (0383-conversation-browser-reds)
 - claimed: 0
 - paused: 0
 - blocked: 1
