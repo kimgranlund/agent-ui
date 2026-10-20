@@ -46,6 +46,7 @@ Kim approves each mockup before its step builds. The three rulings are recorded 
 - Kim 2026-10-19: approved step 3 side-by-side.png for merge (gate b).
 - Kim 2026-10-19: approved step 4 side-by-side.png for merge (gate b); button radius at spacious and loose left to step 6.
 - Kim 2026-10-19: approved step 6 side-by-side.png for merge (gate b); ui-suggestions chips stay h/2 for now (note for later).
+- Kim 2026-10-19: approved step 7 side-by-side.png for merge (gate b). Ruling: a label between two adornments pads W + C on both sides (the step text), not W only as the resolver gives; the fix rides step 7 before merge.
 
 ## Debate: step 5 wording
 Debate rule (Kim 2026-10-16): the Opus architect authors or defends the model-read wording, the fable plan-reviewer challenges it, unresolved points go to Kim. Scope is only the density clause of `packages/agent-ui/a2ui/src/agent/prompts/genui-dogfood-teaching.md:31-36` (the "Size and density are attributes, not styles." bullet); step 4 has merged, so the five densities and height = 3n + 2 x (q - 2)n/4 are live on main.
