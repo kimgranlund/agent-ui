@@ -2,7 +2,7 @@
 id: T-0196
 title: "Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -125,3 +125,42 @@ Each fork has a firm recommendation. Kim's answer goes on the `Answer:` line.
 - 2026-10-20 plan defect at split: step 3: (guard) criterion is red now (exit 1): npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts
 - Kim 2026-10-20: step 2's block (TextField already at NOT_FOR_MAX 4) is settled by dropping the TextField <-> ColorPicker notFor pair in both directions, with its eval case. AmountPicker <-> TextField takes that slot. The builder resumes; this is not a replan.
 - Kim 2026-10-20: approved the step 2 render (gate b); currency keeps its fraction digits ($250.00).
+
+## Outcome
+
+2026-10-20 · lane: full L3 · verdict: skipped (design intake and mockup only (no code), Kim approved the mockup and the step 2 render (gate b)) · verifier: verifier-L3 (fable) · base: 93c14adb1861
+- Changed: ui-amount-picker and its AmountPicker catalog row, taught in quantity.md and adopted by the Negotiator, Shopkeeper and Concierge presets
+- Commits: none
+- Check: step-2#1 (red) `npx vitest run --project packages packages/agent-ui/components/src/controls/amount-picker`: pass
+- Check: step-2#2 (red) `npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/comp...: pass
+- Check: step-2#3 (red) `npx vitest run --config vitest.browser.config.ts --project visual packages/agent-ui/compon...: pass
+- Check: step-2#4 (red) `python3 -c "...catalog.json AmountPicker value mark, actionName actionEvent, factories key...: pass
+- Check: step-2#5 (red) `python3 -c "...selection.json AmountPicker intents, notFor Slider and TextField, back-links"`: pass
+- Check: step-2#6 (red) `for f in widget-light.png widget-dark.png widget-400.png; do test -s ".sdlc/tickets/0196-a...: pass
+- Check: step-2#7 (guard) `node scripts/generate-controls.mjs --check && node scripts/foundations-census.mjs --gate...: pass
+- Check: step-2#8 (guard) `npx vitest run --project packages packages/agent-ui/components/src/controls/*.test.ts .....: pass
+- Check: step-2#9 (guard) `npx vitest run --project packages packages/agent-ui/a2ui/src/catalog ... packages/agent-...: pass
+- Check: step-2#10 (guard) `npx vitest run --project tools --project site packages/agent-ui/a2ui/tools/registry/gene...: pass
+- Check: step-2#11 (guard) `npx vitest run --config vitest.browser.config.ts --project visual site/pages/_page.visua...: pass
+- Check: step-3#1 (red) `grep -qF "AmountPicker" packages/agent-ui/a2ui/src/agent/prompts/mini-skills/quantity.md`: pass
+- Check: step-3#2 (red) `! grep -qF "fleet gap" packages/agent-ui/a2ui/src/agent/prompts/mini-skills/quantity.md`: pass
+- Check: step-3#3 (red) `grep -qF "AmountPicker" site/agent-content/skills/deal-sheet/SKILL.md && ! grep -qF "Slide...: pass
+- Check: step-3#4 (red) `grep -qF "AmountPicker" site/agent-content/skills/cart-summary/SKILL.md`: pass
+- Check: step-3#5 (red) `grep -qE "\(2\) guests[^(]*AmountPicker" site/agent-content/workflows/booking-flow/WORKFLO...: pass
+- Check: step-3#6 (red) `for p in negotiator shopkeeper concierge; do grep -qE '"[0-9]+: T-0196' "site/agent-conten...: pass
+- Check: step-3#7 (guard) `node scripts/generate-controls.mjs --check && node scripts/foundations-census.mjs --gate...: pass
+- Check: step-3#8 (guard) components vitest (controls `*.test.ts`, `_base`, slider, slider-multi, rating, color-pic...: pass
+- Check: step-3#9 (guard) a2ui vitest (catalog, examples, agent, live-agent, corpus, registry): pass
+- Check: step-3#10 (guard) tools plus site vitest (registry generate, import-seeds, catalog-tiers, component-preview...: pass
+- Check: step-3#11 (guard) `npm run check`: pass
+- Check: step-3#12 (guard) `npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-rende...: pass
+- Deviation: step 1 verifier skipped: design intake and mockup only (no code), Kim approved the mockup and the step 2 render (gate b)
+- Follow-up: note: .sdlc/tickets/0196-amount-picker/mockup/widget-{light,dark,400}.png... -> notes.md
+- Follow-up: note: packages/agent-ui/components/src/controls/amount-picker/amount-pick... -> notes.md
+- Follow-up: note: packages/agent-ui/components/src/controls/amount-picker/screenshots... -> notes.md
+- Follow-up: note: the two visual runs #3, #11 end with vitest's "Tests closed... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/agent/prompts/grammar.md:37 still says... -> T-0384
+- Follow-up: decide: packages/agent-ui/a2ui/src/examples/commerce-hospitality.ts:140-142... -> notes.md
+- Follow-up: note: site/agent-content/personas/negotiator/agent.md:20-23 runs its... -> notes.md
+- Follow-up: note: site/agent-content/skills/cart-summary/SKILL.md:12 nests... -> notes.md
+- Follow-up: note: the builder report gives crud-entry-list as 799 chars; measured 791... -> notes.md

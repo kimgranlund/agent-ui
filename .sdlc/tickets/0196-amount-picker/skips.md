@@ -1,3 +1,0 @@
-- Lane: full because size L3 feature (catalog pattern, model-read teaching likely)
-- Plan review deferred: later steps wait on Kim's mockup approval from step 1 (conductor 2026-10-20).
-- step 2 builder block resolved by Kim ruling (drop TextField-ColorPicker notFor), resumed by SendMessage, no replan (conductor 2026-10-20)
