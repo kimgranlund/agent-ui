@@ -38,3 +38,4 @@ The failing test lands before or with the fix, never after. Prefer a fix in the 
 
 ## Plan review
 - Kim 2026-10-19: paint order is enough; the summary stays above the card on a reopened bubble (GH #1221 layout kept).
+- Conductor 2026-10-19: the inherited red at site/pages/agent-admin-app.ts:1721 was this worktree's whole-dir node_modules symlink (a second copy of the components types). main is green, and with lane-local @agent-ui links `npm run check` exits 0 here. Reverify.
