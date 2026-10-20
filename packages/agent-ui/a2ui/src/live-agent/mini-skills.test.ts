@@ -69,6 +69,18 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
     expect(ids).toEqual(expect.arrayContaining(['crud-entry-list', 'table-toolbar-pagination', 'nested-record-editor']))
   })
 
+  // T-0193: the OptionDeck starter-choice module, taking the registry to twenty-two.
+  it('seeds the T-0193 twenty-second module — option-deck', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'option-deck')!
+    expect(skill.catalogId).toBe('agent-ui')
+    expect(skill.body).toMatch(/emit ONE OptionDeck/)
+    expect(skill.body).toMatch(/2–8 entries/)
+    expect(skill.body).toMatch(/Always set actionName/)
+    expect(skill.body).toMatch(/never "random" \(reserved\)/)
+    expect(skill.body).toMatch(/Not for a single confirm \(a Button\) or more than 8 options \(a Select\)/)
+    for (const move of ['deal', 'check', 'call', 'bet', 'fold']) expect(skill.triggers.split(' '), move).not.toContain(move)
+  })
+
   it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
     for (const skill of MINI_SKILLS) {
       expect(skill.body).not.toMatch(/"version"\s*:\s*"v1\.0"/)
@@ -94,11 +106,11 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
         'comparison-table',
       ]),
     )
-    expect(MINI_SKILLS).toHaveLength(21)
+    expect(MINI_SKILLS).toHaveLength(22)
   })
 
   it('SPEC-R6 AC1: every shipped module carries catalogId: \'agent-ui\' except the a2ui-basic dialect module', () => {
-    expect(MINI_SKILLS).toHaveLength(21)
+    expect(MINI_SKILLS).toHaveLength(22)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe(skill.id === 'basic-dialect' ? 'a2ui-basic' : 'agent-ui')
   })
 })
@@ -370,12 +382,14 @@ describe('greeting-card — the GH #1201 persona-conditional greet-bookend modul
     expect(skill.body).toMatch(/first turn only, when your persona opens the session with a greeting/)
   })
 
-  it('teaches the greet-card anatomy (side-by-side plain option Buttons carrying concrete intents in action.context)', () => {
+  it('teaches the greet-card anatomy (one OptionDeck whose options carry concrete starter intents)', () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
-    // T-0172 (Kim's ruling, 2026-10-14): a pick is a Row of plain Buttons, never a Card around each Button.
-    expect(skill.body).toMatch(/Row \(gap "sm"\) of 2–4 plain Buttons side by side, never stacked and never a Card around each Button/)
+    // T-0172 (Kim's ruling, 2026-10-14): never a Card around a Button. T-0193 (Kim, 2026-10-14): the card itself is
+    // the choice, so the starters are one OptionDeck forwarding `start`, not a Row of Buttons.
+    expect(skill.body).toMatch(/one OptionDeck \(heading a short prompt\) of 2–4 starter cards with actionName "start"/)
+    expect(skill.body).toMatch(/each option's value naming a concrete starter intent/)
+    expect(skill.body).toMatch(/never a Row of Buttons and never a Card around a Button/)
     expect(skill.body).not.toMatch(/CardFooter/)
-    expect(skill.body).toMatch(/action\.context naming a concrete starter intent/)
   })
 
   it('teaches the reserved exempt id class — greet-1 rides the ask field but is NOT an ask (ruling 2)', () => {
@@ -385,9 +399,9 @@ describe('greeting-card — the GH #1201 persona-conditional greet-bookend modul
     expect(skill.body).toMatch(/no ask-<n> id consumed, no answered-ask freeze/)
   })
 
-  it('teaches the stale-affordance retirement (a task start retires the greet buttons same turn)', () => {
+  it('teaches the stale-affordance retirement (a task start retires the greet cards same turn)', () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'greeting-card')!
-    expect(skill.body).toMatch(/retire the greet buttons per the stale-affordance rule that same turn/)
+    expect(skill.body).toMatch(/retire the greet cards per the stale-affordance rule that same turn/)
   })
 
   // The composition proof for an opted-in persona: a greeting persona's first turn selects the module

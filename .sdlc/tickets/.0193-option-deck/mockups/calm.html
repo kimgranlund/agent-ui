@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OptionDeck mockup: calm</title>
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/tokens.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/dimensions.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations.gen.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/base.css">
+<style>
+  /* Direction: CALM. Quiet outlined cards; the tone lives only in the round icon well. */
+  body { padding: var(--md-sys-layout-margin); }
+  .surface { max-inline-size: 44rem; margin-inline: auto; display: grid; gap: var(--md-sys-widget-margin); font-size: var(--md-sys-type-body); }
+  .say { margin: 0; color: var(--md-sys-color-neutral-on-surface-variant); }
+
+  [data-tone='neutral'] { --tone: var(--md-sys-color-neutral-container); --tone-ink: var(--md-sys-color-neutral-on-surface-variant); }
+  [data-tone='primary'] { --tone: var(--md-sys-color-primary-container); --tone-ink: var(--md-sys-color-primary-on-surface-variant); }
+  [data-tone='secondary'] { --tone: var(--md-sys-color-secondary-container); --tone-ink: var(--md-sys-color-secondary-on-surface-variant); }
+  [data-tone='accent'] { --tone: var(--md-sys-color-accent-container); --tone-ink: var(--md-sys-color-accent-on-surface-variant); }
+  [data-tone='info'] { --tone: var(--md-sys-color-info-container); --tone-ink: var(--md-sys-color-info-on-surface-variant); }
+  [data-tone='success'] { --tone: var(--md-sys-color-success-container); --tone-ink: var(--md-sys-color-success-on-surface-variant); }
+
+  .deck { container: deck / inline-size; display: grid; gap: var(--md-sys-widget-gutter); }
+  .deck-heading { margin: 0; font-size: var(--md-sys-type-subhead); font-weight: 600; }
+  .deck-sub { margin: 0; color: var(--md-sys-color-neutral-on-surface-variant); }
+  .grid { display: grid; gap: var(--md-sys-widget-gutter); margin-block-start: var(--md-sys-c);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, calc(var(--md-sys-n) * 40px)), 1fr)); }
+
+  [data-part='option'] {
+    position: relative; display: grid; align-content: start; gap: var(--md-sys-inset);
+    padding: var(--md-sys-widget-margin); border-radius: var(--md-sys-widget-radius);
+    border: 1px solid var(--md-sys-color-neutral-outline-variant);
+    background: var(--md-sys-color-neutral-surface); cursor: pointer;
+    transition: background-color 120ms, border-color 120ms;
+  }
+  [data-part='option']:hover { background: var(--md-sys-color-neutral-container-low); }
+  [data-part='option']:focus-visible { outline: 2px solid var(--md-sys-color-focus-ring); outline-offset: 2px; }
+  [data-part='option'][aria-selected='true'] { border-color: var(--md-sys-color-primary); box-shadow: inset 0 0 0 1px var(--md-sys-color-primary); }
+  .well { inline-size: calc(var(--md-sys-n) * 6px); block-size: calc(var(--md-sys-n) * 6px); border-radius: 50%;
+    display: grid; place-items: center; background: var(--tone); color: var(--tone-ink); }
+  .well svg { inline-size: var(--md-sys-glyph-slot); block-size: var(--md-sys-glyph-slot); }
+  .title { font-size: var(--md-sys-type-title); font-weight: 600; }
+  .desc { color: var(--md-sys-color-neutral-on-surface-variant); margin-block-start: calc(var(--md-sys-c) * -1); }
+  .meta { display: flex; flex-wrap: wrap; gap: var(--md-sys-chip-gutter); }
+  .meta span { font-size: var(--md-sys-type-small-control); padding: var(--md-sys-chip-margin) var(--md-sys-inset);
+    border-radius: var(--md-sys-chip-radius); background: var(--md-sys-color-neutral-container-low); color: var(--md-sys-color-neutral-on-surface-variant); }
+  .check { position: absolute; inset-block-start: var(--md-sys-widget-margin); inset-inline-end: var(--md-sys-widget-margin);
+    inline-size: var(--md-sys-icon-box); block-size: var(--md-sys-icon-box); color: var(--md-sys-color-primary); display: none; }
+  [aria-selected='true'] .check { display: block; }
+  [data-part='option'][data-random] { border-style: dashed; background: transparent; }
+
+  /* One column (the 400px chat column): the card turns into a row, well left. */
+  @container deck (inline-size < 25rem) {
+    [data-part='option'] { grid-template-columns: auto 1fr; column-gap: var(--md-sys-widget-gutter); align-items: center; }
+    [data-part='option'] > .body { display: grid; gap: var(--md-sys-c); }
+    .well { inline-size: calc(var(--md-sys-n) * 5px); block-size: calc(var(--md-sys-n) * 5px); }
+    .desc { margin: 0; }
+  }
+  .body { display: grid; gap: var(--md-sys-inset); }
+</style>
+</head>
+<body>
+<main class="surface" data-tier="widget" data-scale="md">
+  <p class="say">Evening. I deal blackjack and a few poker games. Pull up a chair and pick a table.</p>
+  <div class="deck" role="listbox" aria-labelledby="h">
+    <h2 class="deck-heading" id="h">Pick a game</h2>
+    <p class="deck-sub">Every table starts you with 1,000 chips.</p>
+    <div class="grid">
+      <div data-part="option" role="option" aria-selected="true" tabindex="0" data-tone="primary">
+        <div class="well"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c3 4 8 6.5 8 11a4 4 0 0 1-6.5 3.1L14.5 21h-5l1-4.9A4 4 0 0 1 4 13c0-4.5 5-7 8-11z"/></svg></div>
+        <div class="body"><div class="title">Blackjack</div><div class="desc">Beat the dealer to 21 without going bust.</div>
+          <div class="meta"><span>1 to 6 players</span><span>5 min</span><span>Easy</span></div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <div data-part="option" role="option" aria-selected="false" tabindex="-1" data-tone="accent">
+        <div class="well"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z"/></svg></div>
+        <div class="body"><div class="title">Texas Hold'em</div><div class="desc">Two hole cards, five on the board, best hand wins.</div>
+          <div class="meta"><span>2 to 9 players</span><span>15 min</span><span>Medium</span></div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <div data-part="option" role="option" aria-selected="false" tabindex="-1" data-tone="info">
+        <div class="well"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l7 10-7 10-7-10z"/></svg></div>
+        <div class="body"><div class="title">Five-card draw</div><div class="desc">Swap up to three cards once, then show down.</div>
+          <div class="meta"><span>2 to 6 players</span><span>10 min</span><span>Easy</span></div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <div data-part="option" role="option" aria-selected="false" tabindex="-1" data-tone="neutral" data-random>
+        <div class="well"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h3.5c4 0 6.5 10 11 10H21M18 14l3 3-3 3M3 17h3.5c1.6 0 2.8-1.4 3.8-3M21 7h-3.5c-1.6 0-2.8 1.4-3.8 3M18 4l3 3-3 3"/></svg></div>
+        <div class="body"><div class="title">Surprise me</div><div class="desc">I pick the table for you.</div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

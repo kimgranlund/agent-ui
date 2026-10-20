@@ -98,6 +98,8 @@
     "./controls/modal.css": "./src/controls/modal/modal.css",
     "./controls/multi-select": "./src/controls/multi-select/multi-select.ts",
     "./controls/multi-select.css": "./src/controls/multi-select/multi-select.css",
+    "./controls/option-deck": "./src/controls/option-deck/option-deck.ts",
+    "./controls/option-deck.css": "./src/controls/option-deck/option-deck.css",
     "./controls/otp-field": "./src/controls/otp-field/otp-field.ts",
     "./controls/otp-field.css": "./src/controls/otp-field/otp-field.css",
     "./controls/pagination": "./src/controls/pagination/pagination.ts",

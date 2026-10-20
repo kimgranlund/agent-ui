@@ -31,6 +31,7 @@ import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../../src/catalog/domains/mani
 import { HIDDEN_STATE_CHECKS } from '../../src/catalog/hidden-state-checks.ts'
 import { compositeMomentChecks } from '../../src/catalog/composite-moments.ts'
 import { framedChoiceCheck } from '../../src/catalog/framed-choice-check.ts'
+import { optionDeckCountCheck } from '../../src/catalog/option-deck-check.ts'
 import { ProduceHalt } from '../../src/agent/produce.ts'
 import { AgentTimeoutError } from '../../src/agent/deadlines.ts'
 import { ANTHROPIC_WORKSPACE_ENV } from '../../src/agent/providers/anthropic.ts'
@@ -190,7 +191,8 @@ export function semanticChecksDeps(catalog: Catalog): { semanticChecks?: readonl
   // T-0202 (D4): the persona's checks and every domain's the id holds, each kept only when this catalog declares
   // the types it reads (`gateChecksOnCatalog`). T-0230: the hidden game state checks run on every catalog (silent
   // unless a surface carries the word-game or Battleship signature). T-0208: then the composite-moment checks. T-0258: then
-  // the framed-choice check (a Card per choice), on every catalog with Card and Button.
+  // the framed-choice check (a Card per choice), on every catalog with Card and Button. T-0193: then the option-deck
+  // count check, on every catalog with OptionDeck.
   const semanticChecks = gateChecksOnCatalog(
     [
       ...semanticChecksForCatalog(catalog.catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS),
@@ -198,6 +200,7 @@ export function semanticChecksDeps(catalog: Catalog): { semanticChecks?: readonl
       ...HIDDEN_STATE_CHECKS,
       ...compositeMomentChecks,
       framedChoiceCheck,
+      optionDeckCountCheck,
     ],
     catalog,
   )

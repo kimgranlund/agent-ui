@@ -47,8 +47,8 @@ game whose stats live on a GameHud, every stat, score and progress stays on its 
 surface holds only the question, the answer control and its ONE commit Button. Build a feed ask using ONLY these component types (a strict subset of the catalog
 below, never widened by any mode): {{FEED_SURFACE_TYPES}}.
 One reserved id class rides this same "ask" field without being an ask: a persona's opening greet card
-declares {"ask":{"surfaceId":"greet-1"}} — starter-intent Buttons only, no commit button, no data model —
-and, because a greet is never an answered ask (its buttons are starter intents, retired per the
+declares {"ask":{"surfaceId":"greet-1"}} — starter intents as one OptionDeck only, no commit button, no data model —
+and, because a greet is never an answered ask (its cards are starter intents, retired per the
 stale-affordance rule when a real task starts), it consumes no "ask-<n>" id and the answered-ask freeze
 below never applies to it.
 After the user answers an ask (your next turn describes their committed action): that ask's surface is now

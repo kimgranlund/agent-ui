@@ -1551,6 +1551,21 @@ export const resultCardFactory: WidgetFactory = {
  */
 export const amountPickerFactory: WidgetFactory = accessorFactory('ui-amount-picker', { prop: 'value', event: 'change' })
 
+/**
+ * `OptionDeck` to `ui-option-deck` (T-0193). Every property is a 1:1 reflecting accessor (verified against
+ * `option-deck.md`); `options`, `value` and `disabled` are bindable. The control hardens `options` itself
+ * (malformed entries dropped, `meta` cut to three, the reserved key `random` refused), so a bound value that
+ * never passed the static validator cannot break the render (the GameHud precedent).
+ *
+ * `actionName` rides the generic own-event forwarding, on the `boardGridFactory` model: the row marks it
+ * `actionEvent: 'action'`, so the renderer applies it and also listens for the control's DOM `action` event,
+ * sending `{action, context: {value}}` to the agent as one A2UI action per pressed card. The row-level `value`
+ * mark two-way binds the pick on `select`, which the control fires before `action`, so a bound path already
+ * holds the pick when the action leaves. There is no row `action` prop (the ResultCard comment: the renderer
+ * wires a row action to any host click) and no children. `inline` is not wire-exposed.
+ */
+export const optionDeckFactory: WidgetFactory = accessorFactory('ui-option-deck', [{ prop: 'value', event: 'select' }])
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1640,4 +1655,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   GameHud: gameHudFactory,
   ResultCard: resultCardFactory,
   AmountPicker: amountPickerFactory,
+  OptionDeck: optionDeckFactory,
 }

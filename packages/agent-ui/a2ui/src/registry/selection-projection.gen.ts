@@ -36,7 +36,7 @@ export const SELECTION_PROJECTION: SelectionProjection = {
       "FormPopover": {"intents":["a compact form behind a button"],"notFor":[{"type":"FormProvider","why":"a form inline on the page"},{"type":"Popover","why":"content with no submit"}]},
       "RadioGroup": {"intents":["pick one of a few visible options"],"notFor":[{"type":"Checkbox","why":"one independent yes/no"},{"type":"Select","why":"a long list"},{"type":"SegmentedControl","why":"a compact mode switch"},{"type":"ChoiceGroup","why":"options as rich cards"}]},
       "Radio": {"intents":["one option in a RadioGroup"],"notFor":[]},
-      "ChoiceGroup": {"intents":["pick one or more rich option cards"],"notFor":[{"type":"RadioGroup","why":"plain text options"},{"type":"MultiSelect","why":"many picks in a compact field"},{"type":"Suggestions","why":"prompts that send a reply"}]},
+      "ChoiceGroup": {"intents":["pick one or more rich option cards"],"notFor":[{"type":"RadioGroup","why":"plain text options"},{"type":"MultiSelect","why":"many picks in a compact field"},{"type":"Suggestions","why":"prompts that send a reply"},{"type":"OptionDeck","why":"one pick that starts something"}]},
       "ChoiceCard": {"intents":["one card option in a ChoiceGroup"],"notFor":[]},
       "SegmentedControl": {"intents":["switch a mode or view","a short one-of set as joined buttons"],"notFor":[{"type":"Tabs","why":"panels of content"},{"type":"RadioGroup","why":"a form list of options"}]},
       "Segment": {"intents":["one option in a SegmentedControl"],"notFor":[]},
@@ -91,6 +91,7 @@ export const SELECTION_PROJECTION: SelectionProjection = {
       "GameHud": {"intents":["a game score and status strip"],"notFor":[{"type":"Stat","why":"one metric outside a game"},{"type":"Toolbar","why":"actions, not readouts"},{"type":"ResultCard","why":"the settled outcome once play ends"}]},
       "ResultCard": {"intents":["a settled game, deal or booking outcome and its next action"],"notFor":[{"type":"GameHud","why":"the live score while play goes on"},{"type":"Toast","why":"a passing round result"}]},
       "AmountPicker": {"intents":["pick a quantity or amount with plus and minus","a bounded number with presets and one commit"],"notFor":[{"type":"Slider","why":"a free drag with no presets or commit"},{"type":"TextField","why":"a typed number or free-form amount"}]},
+      "OptionDeck": {"intents":["pick one of a few things to start","a game, experience, plan or onboarding path to begin"],"notFor":[{"type":"ChoiceGroup","why":"a value picked inside a form"}]},
     },
     "a2ui-basic": {
       "Text": {"intents":["headings, body text or captions","a label beside a control"],"notFor":[{"type":"Button","why":"a click that runs an action"},{"type":"TextField","why":"typed input from the user"}]},

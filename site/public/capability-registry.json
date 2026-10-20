@@ -925,6 +925,30 @@
       ]
     },
     {
+      "id": "control:ui-option-deck",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/option-deck/option-deck.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-option-deck",
+      "tier": "pattern",
+      "description": "A deck of option cards for picking one of a few things to start; the whole card is the choice.",
+      "uses": [
+        "ui-icon"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
       "id": "control:ui-otp-field",
       "kind": "control",
       "source": {
@@ -2668,6 +2692,22 @@
       "scope": "agent-ui"
     },
     {
+      "id": "mini-skill:option-deck",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/option-deck.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "option-deck",
+      "scope": "agent-ui"
+    },
+    {
       "id": "mini-skill:product-presentation",
       "kind": "mini-skill",
       "source": {
@@ -3738,6 +3778,10 @@
         {
           "type": "Suggestions",
           "why": "prompts that send a reply"
+        },
+        {
+          "type": "OptionDeck",
+          "why": "one pick that starts something"
         }
       ]
     },
@@ -4608,6 +4652,35 @@
         "one choice inside a Select or ComboBox"
       ],
       "notFor": []
+    },
+    {
+      "id": "type:agent-ui/OptionDeck",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "OptionDeck"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "OptionDeck",
+      "scope": "agent-ui",
+      "tag": "ui-option-deck",
+      "intents": [
+        "pick one of a few things to start",
+        "a game, experience, plan or onboarding path to begin"
+      ],
+      "notFor": [
+        {
+          "type": "ChoiceGroup",
+          "why": "a value picked inside a form"
+        }
+      ]
     },
     {
       "id": "type:agent-ui/Pagination",

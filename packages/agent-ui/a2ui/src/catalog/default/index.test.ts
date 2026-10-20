@@ -2197,11 +2197,11 @@ describe('default catalog - BoardGrid via the shared validator (ADR-0243, T-0072
     expect(pd?.actionEvent).toBe('action')
     expect(pd?.bindable).toBeFalsy()
     expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, actionName: 'fire' }).valid).toBe(true)
-    // the mark is opt-in: only BoardGrid and AmountPicker (T-0196, the same shape) forward a control event (ProductCard's own event stays unread)
+    // the mark is opt-in: only BoardGrid, AmountPicker (T-0196) and OptionDeck (T-0193), the same shape, forward a control event (ProductCard's own event stays unread)
     const marked = Object.entries(defaultCatalog.components).flatMap(([type, def]) =>
       Object.entries(def.properties).filter(([, p]) => p.actionEvent !== undefined).map(([prop]) => `${type}.${prop}`),
     )
-    expect(marked).toEqual(['BoardGrid.actionName', 'AmountPicker.actionName'])
+    expect(marked).toEqual(['BoardGrid.actionName', 'AmountPicker.actionName', 'OptionDeck.actionName'])
   })
 
   it('NEGATIVE CONTROL: a non-string actionName fails the shared validator', () => {
@@ -2273,5 +2273,61 @@ describe('default catalog - AmountPicker via the shared validator (T-0196)', () 
     expect(def.properties.actionName?.bindable).toBeFalsy()
     expect(def.children).toBeUndefined()
     expect(defaultFactories.AmountPicker.tag).toBe('ui-amount-picker')
+  })
+})
+
+describe('default catalog - OptionDeck via the shared validator (T-0193)', () => {
+  it('a representative starter deck validates 0 failures, with literals and a bound options array', () => {
+    expect(
+      validateOne({
+        component: 'OptionDeck',
+        heading: 'Pick a game',
+        subheading: 'Each one is a few minutes',
+        options: [
+          { value: 'play blackjack', title: 'Blackjack', description: 'Beat the dealer to 21', icon: 'cards', tone: 'primary', meta: ['2 min'], index: 'A' },
+          { value: 'play wordle', title: 'Word guess', image: '/art/words.png', imageAlt: 'Letter tiles', index: 2 },
+        ],
+        value: { path: '/pick' },
+        allowRandom: true,
+        randomLabel: 'Surprise me',
+        disabled: false,
+        actionName: 'start',
+      }),
+    ).toEqual({ valid: true, failures: [] })
+    expect(validateOne({ component: 'OptionDeck', options: { path: '/deck/options' }, disabled: { path: '/deck/off' } }).valid).toBe(true)
+  })
+
+  it('options, value and disabled are bindable; the rest are not; value two-way binds on select; no children', () => {
+    const props = defaultCatalog.components.OptionDeck.properties
+    for (const p of ['options', 'value', 'disabled']) {
+      expect(props[p]?.bindable, p).toBe(true)
+      expect(props[p]?.mapsTo, p).toBe(p)
+    }
+    for (const p of ['allowRandom', 'randomLabel', 'heading', 'subheading', 'actionName']) {
+      expect(props[p]?.bindable, p).toBeFalsy()
+      expect(props[p]?.mapsTo, p).toBe(p)
+    }
+    expect(defaultCatalog.components.OptionDeck.value).toEqual([{ prop: 'value', event: 'select' }])
+    expect(defaultCatalog.components.OptionDeck.children).toBeUndefined()
+    expect(defaultFactories.OptionDeck.tag).toBe('ui-option-deck')
+    expect(defaultFactories.OptionDeck.value).toEqual([{ prop: 'value', event: 'select' }])
+  })
+
+  // A row `action` (mapsTo: 'action') would fire on any host click with a static context (ADR-0244 Alternatives),
+  // so the deck forwards its own `action` event through actionName, byte-for-byte the BoardGrid prop.
+  it('actionName is the forwarded-action channel and there is no row action prop', () => {
+    expect(defaultCatalog.components.OptionDeck.properties.actionName).toEqual(
+      defaultCatalog.components.BoardGrid.properties.actionName,
+    )
+    expect(Object.values(defaultCatalog.components.OptionDeck.properties).some((d) => d.mapsTo === 'action')).toBe(false)
+  })
+
+  // Option item shape (value and title required, tone in set, the reserved `random` key) is hardened by the
+  // control (`cleanOptions`), not the static validator, which does not descend into array items.
+  it('NEGATIVE CONTROL: a non-array options, a non-string actionName, a string allowRandom and an unexposed knob all fail', () => {
+    expect(validateOne({ component: 'OptionDeck', options: 'chess' }).valid).toBe(false)
+    expect(validateOne({ component: 'OptionDeck', options: [], actionName: 5 }).valid).toBe(false)
+    expect(validateOne({ component: 'OptionDeck', options: [], allowRandom: 'yes' }).valid).toBe(false)
+    expect(validateOne({ component: 'OptionDeck', options: [], inline: true }).valid).toBe(false)
   })
 })

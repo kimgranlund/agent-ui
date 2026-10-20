@@ -1660,4 +1660,44 @@ export const amountPickerBetSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed]
+const OPTION_DECK_PICKER_ID = 'frontier-option-deck-picker'
+/** Frontier 33 (T-0193): `OptionDeck`, a game picker where the card itself is the choice. One node holds three
+ *  static options (each value a concrete starter intent, a tone, an icon, a corner index and meta chips) plus the
+ *  Surprise me card (`allowRandom`, which sends `random`). `actionName: "start"` forwards one A2UI action per pressed
+ *  card carrying `context.value`, and the bound `value` path holds the pick before the action leaves. It replaces the
+ *  Row of Buttons, each wrapped in its own bordered Card, the ruled lone-button-frame defect. Corpus admission is a
+ *  SEPARATE judged wave (disposition-allowlist.ts, the T-0072 precedent). */
+export const optionDeckPickerSeed: ExampleSeed = {
+  name: 'frontier-option-deck-picker',
+  description: 'A game picker: one OptionDeck with a heading, three option cards (value a concrete starter intent, tone, icon, corner index, meta chips) and a Surprise me card, actionName "start" forwarding the pick, the value bound to the data model.',
+  promptText: 'What card games can we play tonight?',
+  surfaceId: OPTION_DECK_PICKER_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: OPTION_DECK_PICKER_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: OPTION_DECK_PICKER_ID, value: { pick: '' } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: OPTION_DECK_PICKER_ID,
+        components: [
+          {
+            id: 'root', component: 'OptionDeck',
+            heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.',
+            options: [
+              { value: 'play blackjack', title: 'Blackjack', description: 'Beat the dealer to 21 without going bust.', icon: 'star', tone: 'primary', index: 'A', meta: ['1 to 6 players', '5 min', 'Easy'] },
+              { value: "play texas hold'em", title: "Texas Hold'em", description: 'Two hole cards, five on the board, best hand wins.', icon: 'heart', tone: 'accent', index: 'K', meta: ['2 to 9 players', '15 min', 'Medium'] },
+              { value: 'play five-card draw', title: 'Five-card draw', description: 'Swap up to three cards once, then show down.', icon: 'sparkle', tone: 'info', index: '5', meta: ['2 to 6 players', '10 min', 'Easy'] },
+            ],
+            allowRandom: true,
+            value: { path: '/pick' },
+            actionName: 'start',
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed]

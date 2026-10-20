@@ -1110,6 +1110,41 @@
         "required": { "type": { "type": "boolean" }, "mapsTo": "required" }
       },
       "value": { "prop": "value", "event": "change" }
+    },
+
+    "OptionDeck": {
+      "properties": {
+        "options": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": { "type": "string" },
+                "title": { "type": "string" },
+                "description": { "type": "string" },
+                "icon": { "type": "string" },
+                "image": { "type": "string" },
+                "imageAlt": { "type": "string" },
+                "index": { "type": ["string", "number"] },
+                "meta": { "type": "array", "items": { "type": "string" } },
+                "tone": { "type": "string", "enum": ["neutral", "primary", "secondary", "accent", "info", "success"] }
+              },
+              "required": ["value", "title"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "options"
+        },
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "allowRandom": { "type": { "type": "boolean" }, "mapsTo": "allowRandom" },
+        "randomLabel": { "type": { "type": "string" }, "mapsTo": "randomLabel" },
+        "heading": { "type": { "type": "string" }, "mapsTo": "heading" },
+        "subheading": { "type": { "type": "string" }, "mapsTo": "subheading" },
+        "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
+        "actionName": { "type": { "type": "string" }, "mapsTo": "actionName", "actionEvent": "action" }
+      },
+      "value": [{ "prop": "value", "event": "select" }]
     }
   },
 

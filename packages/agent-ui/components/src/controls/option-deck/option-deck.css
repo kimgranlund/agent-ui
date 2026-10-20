@@ -1,0 +1,336 @@
+/* option-deck.css: ui-option-deck, a deck of option cards (T-0193, the approved playful direction in
+ * .sdlc/tickets/.0193-option-deck/mockups/playful.html).
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-option-deck)` (specificity 0,0,0) declares the --ui-option-deck-* chain from the
+ *       color roles and the derived foundations (ADR-0245): every length reads n, c, inset or a level token, so
+ *       the deck follows the register it sits in (widget / md on an A2UI canvas). The per-tone repoints, keyed on
+ *       each card's control-written `[data-tone]`, live here too, so the styles block reads only its own chain.
+ *   [2] STYLES BLOCK: `@scope (ui-option-deck)` consumes only --ui-option-deck-*. The host is a block-level stack:
+ *       heading, subheading, then the auto-fit card grid. Each card is a tone header band (a token cross-hatch, a
+ *       corner index, an icon disc) over a text body (title, description, meta chips); the picked card adds the
+ *       Your pick pill. Under a 30rem container (the 400px column, one track at every register) a card turns into a
+ *       horizontal row, band leading.
+ *
+ * The tone is a hue signifier only: the title is each card's identity, and the pick is also the pill and the
+ * thicker edge, never color alone.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-option-deck) declares --ui-option-deck-* ════════════════ */
+
+/* uses: synced from option-deck.md by scripts/codemod-uses.mjs */
+@import '../icon/icon.css';
+
+:where(ui-option-deck) {
+  /* Deck: heading, subheading, grid */
+  --ui-option-deck-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-option-deck-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-option-deck-type-body: var(--md-sys-type-body);
+  --ui-option-deck-heading-size: var(--md-sys-type-heading);
+  --ui-option-deck-stack-gap: var(--md-sys-widget-gutter);
+  --ui-option-deck-grid-offset: var(--md-sys-c);
+  --ui-option-deck-gap: var(--md-sys-widget-margin);
+  --ui-option-deck-card-min: calc(var(--md-sys-inset) * 40); /* 40n, the auto-fit track floor */
+
+  /* Card */
+  --ui-option-deck-surface: var(--md-sys-color-neutral-surface);
+  --ui-option-deck-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-option-deck-radius: var(--md-sys-card-radius);
+  --ui-option-deck-pad: var(--md-sys-widget-margin);
+  --ui-option-deck-body-gap: var(--md-sys-inset);
+  --ui-option-deck-selected-ring: var(--md-sys-c);
+  --ui-option-deck-lift: calc(var(--md-sys-c) * -1);
+  --ui-option-deck-shadow-blur: var(--md-sys-widget-margin);
+  --ui-option-deck-shadow: var(--md-sys-color-neutral-container-high);
+  --ui-option-deck-focus-width: var(--md-sys-state-focus-ring-width);
+  --ui-option-deck-focus-offset: var(--md-sys-state-focus-ring-offset);
+  --ui-option-deck-focus-ring: var(--md-sys-color-focus-ring);
+  --ui-option-deck-motion: var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+
+  /* Header band: a cross-hatch of the tone over the tone, a corner index, a round disc */
+  --ui-option-deck-hero-size: calc(var(--md-sys-inset) * 16);
+  --ui-option-deck-hatch: var(--md-sys-c);
+  --ui-option-deck-index-size: var(--md-sys-type-title);
+  --ui-option-deck-index-inset: var(--md-sys-inset);
+  --ui-option-deck-disc-size: calc(var(--md-sys-inset) * 10);
+  --ui-option-deck-disc-ring: var(--md-sys-c);
+  --ui-option-deck-icon-size: calc(var(--md-sys-inset) * 5);
+
+  /* Text */
+  --ui-option-deck-title-size: var(--md-sys-type-subhead);
+
+  /* Meta chips and the Your pick pill: full pills at the small control type */
+  --ui-option-deck-chip-size: var(--md-sys-type-small-control);
+  --ui-option-deck-chip-pad-block: var(--md-sys-chip-margin);
+  --ui-option-deck-chip-pad-inline: var(--md-sys-inset);
+  --ui-option-deck-chip-gap: var(--md-sys-chip-gutter);
+  --ui-option-deck-pill-radius: calc(var(--md-sys-inset) * 100);
+
+  /* Surprise me card */
+  --ui-option-deck-random-outline: var(--md-sys-color-neutral-outline);
+  --ui-option-deck-random-edge: var(--md-sys-c);
+  --ui-option-deck-random-disc: var(--md-sys-color-neutral-container);
+
+  /* Horizontal row at one column */
+  --ui-option-deck-row-hero-size: calc(var(--md-sys-inset) * 14);
+  --ui-option-deck-row-disc-size: calc(var(--md-sys-inset) * 8);
+  --ui-option-deck-row-icon-size: calc(var(--md-sys-inset) * 4);
+  --ui-option-deck-row-title-size: var(--md-sys-type-title);
+  --ui-option-deck-row-body-gap: var(--md-sys-c);
+
+  /* Per-card tone: the band and chip tint, and the ink on them. Neutral by default. */
+  --ui-option-deck-tone: var(--md-sys-color-neutral-container);
+  --ui-option-deck-tone-ink: var(--md-sys-color-neutral-on-surface-variant);
+}
+
+/* Tone repoints, keyed on the card's control-written [data-tone] (the six container roles of the fork sheet). */
+:where(ui-option-deck [data-part='option'][data-tone='primary']) {
+  --ui-option-deck-tone: var(--md-sys-color-primary-container);
+  --ui-option-deck-tone-ink: var(--md-sys-color-primary-on-surface-variant);
+}
+:where(ui-option-deck [data-part='option'][data-tone='secondary']) {
+  --ui-option-deck-tone: var(--md-sys-color-secondary-container);
+  --ui-option-deck-tone-ink: var(--md-sys-color-secondary-on-surface-variant);
+}
+:where(ui-option-deck [data-part='option'][data-tone='accent']) {
+  --ui-option-deck-tone: var(--md-sys-color-accent-container);
+  --ui-option-deck-tone-ink: var(--md-sys-color-accent-on-surface-variant);
+}
+:where(ui-option-deck [data-part='option'][data-tone='info']) {
+  --ui-option-deck-tone: var(--md-sys-color-info-container);
+  --ui-option-deck-tone-ink: var(--md-sys-color-info-on-surface-variant);
+}
+:where(ui-option-deck [data-part='option'][data-tone='success']) {
+  --ui-option-deck-tone: var(--md-sys-color-success-container);
+  --ui-option-deck-tone-ink: var(--md-sys-color-success-on-surface-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-option-deck) consumes only --ui-option-deck-* ════════════════ */
+
+@scope (ui-option-deck) {
+  /* Fill by default (ADR-0223): block-level, no width opinion of its own. The host is the inline-size
+     container the one-column row reads. */
+  :scope {
+    display: grid;
+    gap: var(--ui-option-deck-stack-gap);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    container: option-deck / inline-size;
+    color: var(--ui-option-deck-ink);
+    font-size: var(--ui-option-deck-type-body);
+  }
+
+  :scope > [data-part='heading'] {
+    margin: 0;
+    font-size: var(--ui-option-deck-heading-size);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    overflow-wrap: anywhere;
+  }
+  :scope > [data-part='subheading'] {
+    margin: 0;
+    color: var(--ui-option-deck-muted-ink);
+    overflow-wrap: anywhere;
+  }
+
+  :scope > [data-part='grid'] {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-option-deck-card-min)), 1fr));
+    gap: var(--ui-option-deck-gap);
+    margin-block-start: var(--ui-option-deck-grid-offset);
+  }
+
+  /* The card: the whole card is the target. */
+  :scope [data-part='option'] {
+    position: relative;
+    display: grid;
+    grid-template-rows: auto 1fr;
+    min-inline-size: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    border: 1px solid var(--ui-option-deck-outline);
+    border-radius: var(--ui-option-deck-radius);
+    background: var(--ui-option-deck-surface);
+    cursor: pointer;
+    transition: transform var(--ui-option-deck-motion), box-shadow var(--ui-option-deck-motion), border-color var(--ui-option-deck-motion);
+  }
+  :scope [data-part='option']:hover:not([aria-disabled='true']) {
+    transform: translateY(var(--ui-option-deck-lift)) rotate(-0.5deg);
+    box-shadow: 0 var(--ui-option-deck-selected-ring) var(--ui-option-deck-shadow-blur) var(--ui-option-deck-shadow);
+  }
+  :scope [data-part='option']:active:not([aria-disabled='true']) {
+    transform: none;
+    box-shadow: none;
+  }
+  :scope [data-part='option']:focus-visible {
+    outline: var(--ui-option-deck-focus-width) solid var(--ui-option-deck-focus-ring);
+    outline-offset: var(--ui-option-deck-focus-offset);
+  }
+  :scope [data-part='option'][aria-selected='true'] {
+    border-color: var(--ui-option-deck-tone-ink);
+    box-shadow: 0 0 0 var(--ui-option-deck-selected-ring) var(--ui-option-deck-tone-ink);
+  }
+  :scope [data-part='option'][aria-disabled='true'] {
+    cursor: default;
+    opacity: 0.6;
+  }
+
+  /* Header band */
+  :scope [data-part='hero'] {
+    position: relative;
+    display: grid;
+    place-items: center;
+    block-size: var(--ui-option-deck-hero-size);
+    color: var(--ui-option-deck-tone-ink);
+    background:
+      repeating-linear-gradient(45deg, transparent 0 calc(var(--ui-option-deck-hatch) * 2), var(--ui-option-deck-tone) calc(var(--ui-option-deck-hatch) * 2) calc(var(--ui-option-deck-hatch) * 4)),
+      repeating-linear-gradient(-45deg, transparent 0 calc(var(--ui-option-deck-hatch) * 2), var(--ui-option-deck-tone) calc(var(--ui-option-deck-hatch) * 2) calc(var(--ui-option-deck-hatch) * 4)),
+      var(--ui-option-deck-tone);
+  }
+  :scope [data-part='index'] {
+    position: absolute;
+    font-size: var(--ui-option-deck-index-size);
+    font-weight: 700;
+    line-height: 1;
+  }
+  :scope [data-part='index'][data-corner='start'] {
+    inset-block-start: var(--ui-option-deck-index-inset);
+    inset-inline-start: var(--ui-option-deck-index-inset);
+  }
+  :scope [data-part='index'][data-corner='end'] {
+    inset-block-end: var(--ui-option-deck-index-inset);
+    inset-inline-end: var(--ui-option-deck-index-inset);
+    transform: rotate(180deg);
+  }
+  :scope [data-part='disc'] {
+    display: grid;
+    place-items: center;
+    inline-size: var(--ui-option-deck-disc-size);
+    block-size: var(--ui-option-deck-disc-size);
+    border-radius: 50%;
+    background: var(--ui-option-deck-surface);
+    box-shadow: 0 0 0 var(--ui-option-deck-disc-ring) var(--ui-option-deck-tone);
+  }
+  :scope [data-part='icon'],
+  :scope [data-part='shuffle'] {
+    inline-size: var(--ui-option-deck-icon-size);
+    block-size: var(--ui-option-deck-icon-size);
+  }
+  :scope [data-part='image'] {
+    position: absolute;
+    inset: 0;
+    inline-size: 100%;
+    block-size: 100%;
+    object-fit: cover;
+  }
+
+  /* Body */
+  :scope [data-part='body'] {
+    display: grid;
+    align-content: start;
+    gap: var(--ui-option-deck-body-gap);
+    min-inline-size: 0;
+    padding: var(--ui-option-deck-pad);
+  }
+  :scope [data-part='title'] {
+    font-size: var(--ui-option-deck-title-size);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+  :scope [data-part='description'] {
+    color: var(--ui-option-deck-muted-ink);
+    overflow-wrap: anywhere;
+  }
+  :scope [data-part='meta'] {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-option-deck-chip-gap);
+  }
+  :scope [data-part='chip'],
+  :scope [data-part='pick'] {
+    padding-block: var(--ui-option-deck-chip-pad-block);
+    padding-inline: var(--ui-option-deck-chip-pad-inline);
+    border-radius: var(--ui-option-deck-pill-radius);
+    font-size: var(--ui-option-deck-chip-size);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  :scope [data-part='chip'] {
+    background: var(--ui-option-deck-tone);
+    color: var(--ui-option-deck-tone-ink);
+  }
+  :scope [data-part='pick'] {
+    position: absolute;
+    inset-block-start: var(--ui-option-deck-index-inset);
+    inset-inline-end: var(--ui-option-deck-index-inset);
+    font-weight: 700;
+    background: var(--ui-option-deck-tone-ink);
+    color: var(--ui-option-deck-surface);
+  }
+
+  /* Surprise me: a dashed card with no band fill and a quiet disc. */
+  :scope [data-part='option'][data-random] {
+    border: var(--ui-option-deck-random-edge) dashed var(--ui-option-deck-random-outline);
+    background: transparent;
+  }
+  :scope [data-part='option'][data-random] [data-part='hero'] {
+    background: transparent;
+  }
+  :scope [data-part='option'][data-random] [data-part='disc'] {
+    background: var(--ui-option-deck-random-disc);
+    box-shadow: none;
+  }
+
+  /* One column: the card turns into a horizontal row, band leading, so a four-card picker stays short. */
+  @container option-deck (inline-size < 30rem) {
+    :scope [data-part='option'] {
+      grid-template-columns: var(--ui-option-deck-row-hero-size) minmax(0, 1fr);
+      grid-template-rows: auto;
+    }
+    :scope [data-part='hero'] {
+      block-size: auto;
+      min-block-size: 100%;
+    }
+    :scope [data-part='disc'] {
+      inline-size: var(--ui-option-deck-row-disc-size);
+      block-size: var(--ui-option-deck-row-disc-size);
+    }
+    :scope [data-part='icon'],
+    :scope [data-part='shuffle'] {
+      inline-size: var(--ui-option-deck-row-icon-size);
+      block-size: var(--ui-option-deck-row-icon-size);
+    }
+    :scope [data-part='index'] {
+      display: none;
+    }
+    :scope [data-part='title'] {
+      font-size: var(--ui-option-deck-row-title-size);
+    }
+    :scope [data-part='body'] {
+      gap: var(--ui-option-deck-row-body-gap);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope [data-part='option'] {
+      transition: none;
+    }
+    :scope [data-part='option']:hover:not([aria-disabled='true']) {
+      transform: none;
+    }
+  }
+
+  /* Forced colors: the band pattern and chip tint flatten to Canvas, so every card keeps a system border, the
+     pick gains a Highlight outline and the pill a CanvasText border. */
+  @media (forced-colors: active) {
+    :scope [data-part='option'] {
+      border-color: CanvasText;
+    }
+    :scope [data-part='option'][aria-selected='true'] {
+      outline: var(--ui-option-deck-selected-ring) solid Highlight;
+    }
+    :scope [data-part='chip'],
+    :scope [data-part='pick'] {
+      border: 1px solid CanvasText;
+    }
+  }
+}

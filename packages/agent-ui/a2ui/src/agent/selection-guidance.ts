@@ -353,6 +353,8 @@ export function renderSelectionClause(entry: SelectionEntry | undefined, catalog
  *  RE-MEASURED 2026-10-20 (T-0196): 9 503 chars over 85 types after the `AmountPicker` row, its Slider and TextField
  *  reciprocal edges and the dropped TextField/ColorPicker pair (Kim 2026-10-20); budget 9 900 by the same formula,
  *  still under the ceiling.
+ *  RE-MEASURED 2026-10-20 (T-0193, merged over T-0196): 9 697 chars over 86 types after the `OptionDeck` row and its
+ *  reciprocal `ChoiceGroup` edge; budget 10 000 by the same formula, still under the ceiling.
  *  This budgets one clause family; the whole composed prompt has its own budget in `prompt-budget.ts`
  *  (ADR-0234). */
-export const SELECTION_GUIDANCE_CHAR_BUDGET = 9_900
+export const SELECTION_GUIDANCE_CHAR_BUDGET = 10_000

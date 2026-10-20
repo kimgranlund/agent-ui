@@ -462,6 +462,10 @@
         {
           "type": "Suggestions",
           "why": "prompts that send a reply"
+        },
+        {
+          "type": "OptionDeck",
+          "why": "one pick that starts something"
         }
       ]
     },
@@ -1224,6 +1228,18 @@
         {
           "type": "TextField",
           "why": "a typed number or free-form amount"
+        }
+      ]
+    },
+    "OptionDeck": {
+      "intents": [
+        "pick one of a few things to start",
+        "a game, experience, plan or onboarding path to begin"
+      ],
+      "notFor": [
+        {
+          "type": "ChoiceGroup",
+          "why": "a value picked inside a form"
         }
       ]
     }

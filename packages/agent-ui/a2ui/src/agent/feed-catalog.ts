@@ -119,6 +119,12 @@ export const FEED_SURFACE_TYPES = [
   // VALUE-MARKED scalar input, one row, no overlay/pagination/dashboard shape. Its optional commit button is
   // one commit affordance (the `Suggestions` argument), and its chips and slider pick the same one number.
   'AmountPicker',
+  // T-0193 — `OptionDeck` is IN: the `ChoiceGroup` "a rich-option pick IS the canonical ask" parity argument,
+  // without the form leg (it commits by its own press, no commit Button). No overlay, no pagination, no
+  // dashboard shape; one press on a card is its own commit, forwarded as one action. The greet's starter
+  // choices ride the ask field as `greet-1` (greeting-card.md), so an OUT disposition would fail every
+  // OptionDeck greet with `FEED_SCOPE`. No children, so no composite-closure entry.
+  'OptionDeck',
 ] as const
 
 /** The closed union of every IN type — the runtime-checkable companion to the `as const` array above. */

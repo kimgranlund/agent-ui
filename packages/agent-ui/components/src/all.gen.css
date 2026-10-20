@@ -47,6 +47,7 @@
 @import './controls/menu/menu.css';
 @import './controls/modal/modal.css';
 @import './controls/multi-select/multi-select.css';
+@import './controls/option-deck/option-deck.css';
 @import './controls/otp-field/otp-field.css';
 @import './controls/pagination/pagination.css';
 @import './controls/pie-chart/pie-chart.css';

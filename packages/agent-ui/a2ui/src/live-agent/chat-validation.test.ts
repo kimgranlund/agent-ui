@@ -20,6 +20,7 @@ import { HIDDEN_STATE_CHECKS } from '../../src/catalog/hidden-state-checks.ts'
 import { gateChecksOnCatalog } from '../../src/catalog/semantic-check.ts'
 import { compositeMomentChecks } from '../../src/catalog/composite-moments.ts'
 import { framedChoiceCheck } from '../../src/catalog/framed-choice-check.ts'
+import { optionDeckCountCheck } from '../../src/catalog/option-deck-check.ts'
 import { loadCatalog } from '../../src/catalog/catalog.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import catalogRaw from '../../src/catalog/default/catalog.json'
@@ -142,20 +143,21 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
   const BOOKING = ['composite-moment-booking-form', 'composite-moment-booking-confirmation']
   const CROUPIER = croupierSemanticChecks.map((c) => c.id)
   const FRAMED = [framedChoiceCheck.id]
+  const DECK = [optionDeckCountCheck.id]
 
   it('a derived croupier catalog yields its checks, then the hidden-state and composite checks the catalog holds', () => {
-    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('agent-ui--croupier')!), ...GAMES, ...FRAMED])
+    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('agent-ui--croupier')!), ...GAMES, ...FRAMED, ...DECK])
     expect(ids(semanticChecksDeps(catalogs.get('a2ui-basic--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('a2ui-basic--croupier')!), ...FRAMED])
-    expect(ids(semanticChecksDeps(catalog))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES, ...FRAMED])
-    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--concierge')!))).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths', 'concierge-edit-applied', ...HIDDEN_STATE_CHECKS.map((c) => c.id), ...BOOKING, ...GAMES, ...FRAMED])
+    expect(ids(semanticChecksDeps(catalog))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES, ...FRAMED, ...DECK])
+    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--concierge')!))).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths', 'concierge-edit-applied', ...HIDDEN_STATE_CHECKS.map((c) => c.id), ...BOOKING, ...GAMES, ...FRAMED, ...DECK])
     expect(ids(semanticChecksDeps(basicCatalog))).toEqual([...hidden(basicCatalog), ...FRAMED])
-    expect(semanticChecksDeps(catalog).semanticChecks!.slice(HIDDEN_STATE_CHECKS.length, -1).every((c) => compositeMomentChecks.includes(c))).toBe(true)
-    expect(semanticChecksDeps(catalog).semanticChecks!.at(-1)).toBe(framedChoiceCheck)
+    expect(semanticChecksDeps(catalog).semanticChecks!.slice(HIDDEN_STATE_CHECKS.length, -2).every((c) => compositeMomentChecks.includes(c))).toBe(true)
+    expect(semanticChecksDeps(catalog).semanticChecks!.at(-1)).toBe(optionDeckCountCheck)
   })
 
   it('follows selectCatalog, never the raw id: an unknown id falls back to the default catalog and its checks', () => {
     expect(ids(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier', catalog))).slice(0, CROUPIER.length)).toEqual(CROUPIER)
-    expect(ids(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier-typo', catalog)))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES, ...FRAMED])
+    expect(ids(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier-typo', catalog)))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES, ...FRAMED, ...DECK])
   })
 
   it('both HTTP hosts spread it from the SELECTED catalog into produce() deps (source-text, the buildCatalogMap idiom)', () => {

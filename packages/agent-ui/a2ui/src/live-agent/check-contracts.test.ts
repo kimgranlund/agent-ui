@@ -75,6 +75,11 @@ const surface = (sid: string, catalogId: string, components: Record<string, unkn
 const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
 
 const UI = 'agent-ui'
+/** T-0193: `n` concrete starter options for an OptionDeck fixture. */
+const deckOptions = (n: number): { value: string; title: string }[] =>
+  ['plan a trip', 'write a story', 'learn a recipe', 'start a quiz', 'draft an email', 'pick a book', 'set a goal', 'compare phones', 'name a pet']
+    .slice(0, n)
+    .map((value) => ({ value, title: value[0]!.toUpperCase() + value.slice(1) }))
 const CONCIERGE = 'agent-ui--concierge'
 const CROUPIER = 'agent-ui--croupier'
 const STYLIST = 'agent-ui--stylist'
@@ -430,6 +435,22 @@ const CONTRACTS: Record<string, Contract> = {
       ]),
     },
   },
+  // T-0193: a starter deck sized to its job (2 to 8 options).
+  'option-deck-count': {
+    code: 'OPTION_DECK_COUNT',
+    pass: {
+      catalog: UI,
+      output: surface('greet-1', UI, [
+        { id: 'root', component: 'OptionDeck', heading: 'Where shall we start?', actionName: 'start', options: deckOptions(3) },
+      ]),
+    },
+    fail: {
+      catalog: UI,
+      output: surface('greet-1', UI, [
+        { id: 'root', component: 'OptionDeck', heading: 'Where shall we start?', actionName: 'start', options: deckOptions(9) },
+      ]),
+    },
+  },
   'word-secret': {
     code: 'WORD_SECRET_MISSING',
     pass: { catalog: UI, output: wordBoard(WORD_OPEN) },
@@ -694,6 +715,11 @@ const PROBES: Record<string, readonly Fixture[]> = {
     },
   ],
   'fleet-shot-applied': [{ catalog: UI, intent: "Let's play Battleship.", output: [] }],
+  // T-0193: the one-option and reserved-key arms of the option-deck repair text.
+  'option-deck-count': [
+    { catalog: UI, output: surface('greet-1', UI, [{ id: 'root', component: 'OptionDeck', actionName: 'start', options: deckOptions(1) }]) },
+    { catalog: UI, output: surface('greet-1', UI, [{ id: 'root', component: 'OptionDeck', actionName: 'start', options: [...deckOptions(2), { value: 'random', title: 'Anything' }] }]) },
+  ],
   // T-0324: a deal that settles a two-card 20 (round 8 :9).
   'croupier-action-applied': [
     {

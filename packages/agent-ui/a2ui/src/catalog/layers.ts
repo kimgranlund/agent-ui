@@ -35,6 +35,9 @@ export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.free
   SourceList: agentic,
   Suggestions: agentic,
   ResultCard: agentic,
+  // T-0193: a pick of one of a few things to start (the greet's starter cards, Surprise me hands the pick to the
+  // agent); no prop names a field, so it is the Suggestions class, not core.
+  OptionDeck: agentic,
   // §5.3 domain types still homed in the default catalog (W2 moves each to its domain)
   BoardGrid: domain('games', 'default'),
   GameHud: domain('games', 'default'),

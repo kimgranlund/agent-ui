@@ -632,6 +632,45 @@ export const personaBasicCroupierCardTableSettledSeed: PersonaExampleSeed = {
   ],
 }
 
+const GREET_SID = 'greet-1'
+
+/** The Croupier's game picker: one card per enabled game-rules resource, each valued by that resource's id. */
+export const CROUPIER_GAME_PICKER_DECK = {
+  id: 'root',
+  component: 'OptionDeck',
+  heading: 'Pick your table',
+  subheading: 'Every table starts you with 1,000 chips.',
+  options: [
+    { value: 'blackjack', title: 'Blackjack', description: 'Beat the dealer to 21 without going bust.', icon: 'star', tone: 'primary', index: 'A' },
+    { value: 'spanish-21', title: 'Spanish 21', description: 'Blackjack with no tens and bonus 21s.', tone: 'primary', index: '21' },
+    { value: 'pontoon', title: 'Pontoon', description: 'British blackjack: twist, stick or buy.', tone: 'primary', index: 'P' },
+    { value: 'texas-holdem', title: 'Texas Hold\u2019em', description: 'Two hole cards, five on the board.', icon: 'heart', tone: 'accent', index: 'K' },
+    { value: 'omaha', title: 'Omaha', description: 'Four hole cards: use exactly two.', tone: 'accent', index: 'Q' },
+    { value: 'five-card-draw', title: 'Five-card draw', description: 'Discard, draw once, then show down.', tone: 'info', index: '5' },
+    { value: 'seven-card-stud', title: 'Seven-card stud', description: 'Up cards and down cards, no board.', tone: 'info', index: '7' },
+  ],
+  allowRandom: true,
+  actionName: 'pick_game',
+}
+
+/** The croupier persona over agent-ui: the opening greet's game picker (T-0193), one OptionDeck whose cards are the
+ *  choices, never a Row of Buttons or a Card around each one. */
+export const personaCroupierGamePickerSeed: PersonaExampleSeed = {
+  name: 'persona-croupier-game-picker',
+  description:
+    'The croupier persona over the agent-ui base: the opening greet as one OptionDeck with actionName pick_game, one ' +
+    'card per enabled game-rules resource (blackjack, spanish-21, pontoon, texas-holdem, omaha, five-card-draw, ' +
+    'seven-card-stud) valued by its resource id, and allowRandom for the random pick, which sends random.',
+  promptText: 'Hello',
+  surfaceId: GREET_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--croupier',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: GREET_SID, catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: GREET_SID, components: [CROUPIER_GAME_PICKER_DECK] } },
+  ],
+}
+
 /** Every persona seed, in shelf order. */
 const QUIZ_SID = 'quiz-round'
 
@@ -792,6 +831,7 @@ export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaCroupierCardTableSettledSeed,
   personaBasicCroupierCardTableBettingSeed,
   personaBasicCroupierCardTableSettledSeed,
+  personaCroupierGamePickerSeed,
   personaQuizmasterQuestionSeed,
   personaBasicQuizmasterQuestionSeed,
   personaStylistContrastSeed,
