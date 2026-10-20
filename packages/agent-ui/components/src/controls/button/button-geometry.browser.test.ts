@@ -48,7 +48,7 @@ const fontPx = (btn: HTMLElement): number => px(getComputedStyle(btn).fontSize)
 const gapPx = (btn: HTMLElement): number => px(getComputedStyle(btn).columnGap) // the icon↔label rhythm
 const padStartPx = (btn: HTMLElement): number => px(getComputedStyle(btn).paddingInlineStart)
 const padEndPx = (btn: HTMLElement): number => px(getComputedStyle(btn).paddingInlineEnd)
-/** The label wrapper's padding (T-0374 step 7): W, plus the compensation C on a side no adornment occupies. */
+/** The label wrapper's padding (T-0374 step 7): W, plus the compensation C on a side no adornment occupies, and on both sides between two adornments (Kim 2026-10-19). */
 const labelPart = (btn: HTMLElement): HTMLElement => btn.querySelector('[data-part="label"]') as HTMLElement
 const labelInsetPx = (btn: HTMLElement): number => px(getComputedStyle(labelPart(btn)).paddingInlineStart)
 const labelInsetEndPx = (btn: HTMLElement): number => px(getComputedStyle(labelPart(btn)).paddingInlineEnd)

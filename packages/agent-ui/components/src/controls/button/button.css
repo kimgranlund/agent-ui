@@ -46,7 +46,7 @@
 
   /* The skill's control anatomy (T-0374 step 7, geometry-contract.md "Button content and inline padding"): the box
      pads the control margin m on both edges; every wrapper pads W = n/4; the label wrapper adds the compensation
-     C = max(0, R - m - W) on each side no adornment occupies, so its text clears the control radius R (C is 2 at
+     C = max(0, R - m - W) on each side no adornment occupies (both sides between two adornments, Kim 2026-10-19), so its text clears the control radius R (C is 2 at
      product md regular under balanced, 10 under pill). Declared once here: all derive from n, the density and the
      preset, so [size] repoints them for free. Under the legacy opt-out the margin is h/2 beside a label and
      (h - icon)/2 beside an adornment, and the label pads 0, today's geometry. */
@@ -239,9 +239,9 @@
 
   /* ROLE = artwork size (the "position places, role sizes" split). The CELL above is the same for both roles;
      only the ARTWORK inside differs by role, each centred by a ½(cell − artwork) inset:
-       • icon , a content icon (FRAME family), the 2n icon box (--ui-button-icon), inset n/2.
-       • caret, an inline affordance (RHYTHM family), the n + 6 glyph box (--ui-button-glyph), inset (3n − (n + 6))/2
-        , never the icon size (an inline affordance at icon size is the named oversize "button caret" bug,
+       • icon: a content icon (FRAME family), the 2n icon box (--ui-button-icon), inset n/2.
+       • caret: an inline affordance (RHYTHM family), the n + 6 glyph box (--ui-button-glyph), inset (3n − (n + 6))/2
+         and never the icon size (an inline affordance at icon size is the named oversize "button caret" bug,
          geometry.md §"Affordance vs content-icon"; locked by the BTN-CARET probe). 3n always holds n + 6. */
   :scope > [data-role='icon'] {
     padding: calc((var(--ui-button-cell) - var(--ui-button-icon)) / 2); /* the 2n artwork centred in the cell */

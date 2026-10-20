@@ -88,7 +88,7 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
   it('the anatomy per edge: both box edges pad the control margin m, and the label wrapper pads W + C on an exposed side (T-0374 step 7)', () => {
     // The skill's button rule (geometry-contract.md "Button content and inline padding"): the box margin is m on
     // both edges whichever structure, the slot is the 3n wrapper, and the label wrapper adds the compensation
-    // C = max(0, R - m - W) only where no adornment occupies its side. Under the legacy opt-out the slot edge is
+    // C = max(0, R - m - W) where no adornment occupies its side, and on both sides between two adornments. Under the legacy opt-out the slot edge is
     // ½(h−icon) and the label edge h/2, today's geometry.
     const hasBlock = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):not"))
     expect(hasBlock).toMatch(/padding-inline-start:\s*var\(--ui-button-slot-edge\)/)
