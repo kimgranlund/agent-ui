@@ -18,6 +18,8 @@
     "./all": "./src/all.gen.ts",
     "./all.css": "./src/all.gen.css",
     "./base-styles.css": "./src/base-styles.css",
+    "./controls/amount-picker": "./src/controls/amount-picker/amount-picker.ts",
+    "./controls/amount-picker.css": "./src/controls/amount-picker/amount-picker.css",
     "./controls/attachment": "./src/controls/attachment/attachment.ts",
     "./controls/attachment.css": "./src/controls/attachment/attachment.css",
     "./controls/audio": "./src/controls/audio/audio.ts",

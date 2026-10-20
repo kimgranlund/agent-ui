@@ -13,6 +13,7 @@ export type { ControlRecord }
 
 /** Every fleet control, keyed by tag (ADR-0233). */
 export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
+  'ui-amount-picker': { tag: 'ui-amount-picker', load: () => import('./amount-picker/amount-picker.ts'), css: './amount-picker/amount-picker.css', uses: ['ui-glyph', 'ui-slider'] },
   'ui-attachment': { tag: 'ui-attachment', load: () => import('./attachment/attachment.ts'), css: './attachment/attachment.css', uses: ['ui-icon'] },
   'ui-audio': { tag: 'ui-audio', load: () => import('./audio/audio.ts'), css: './audio/audio.css', uses: [] },
   'ui-avatar': { tag: 'ui-avatar', load: () => import('./avatar/avatar.ts'), css: './avatar/avatar.css', uses: ['ui-icon'] },

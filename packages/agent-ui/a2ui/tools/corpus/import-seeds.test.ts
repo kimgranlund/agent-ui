@@ -819,6 +819,8 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'frontier-game-hud-quest': { passed: false, qualityScore: 2 },
     // ADR-0244/T-0089 - the ResultCard coverage-gap seed, refused here for the same zero-admission reason.
     'frontier-result-card-win': { passed: false, qualityScore: 2 },
+    // T-0196 - the AmountPicker coverage-gap seed, refused here for the same zero-admission reason.
+    'frontier-amount-picker-bet': { passed: false, qualityScore: 2 },
     // T-0245/T-0240 - the four domain seeds (domain-seeds.ts), refused here for the same zero-admission reason.
     'domain-lexicographer-word-board': { passed: false, qualityScore: 2 },
     'domain-admiral-battleship-board': { passed: false, qualityScore: 2 },

@@ -6,4 +6,5 @@
 //   import { UIIndicatorElement } from '../_base/index.ts'  // (from controls/{name}/)
 export { UIIndicatorElement } from './indicator-element.ts'
 export { UIRangeElement } from './range-element.ts'
+export { decimalPlaces, normalizeRangeValue } from './range-normalize.ts'
 export { UIListboxElement } from './listbox-element.ts'

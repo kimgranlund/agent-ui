@@ -84,6 +84,7 @@ export const CLASS_OF = {
 
 /** Sized controls whose host clause 3 gives no rule, and the gate that pins their derived geometry instead. */
 export const EXEMPT = {
+  'ui-amount-picker': 'a pattern of control rows (T-0196); its 4n rows, square 4n step buttons and n + 6 glyph box are pinned by amount-picker.browser.test.ts',
   'ui-calendar': 'a panel; its 4n day cells are pinned by calendar-foundations.browser.test.ts',
   'ui-form-popover': 'an overlay container at the widget level; the closed host has no box (containers-foundations)',
   'ui-playing-card': 'a preset widget sized by its own card ratio (ADR-0245 lane 4b)',

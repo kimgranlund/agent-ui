@@ -1,6 +1,15 @@
 {
   "entries": [
     {
+      "name": "Amount Picker",
+      "tag": "ui-amount-picker",
+      "url": "./amount-picker-demo.html",
+      "description": "Picks one bounded number with minus and plus, optional preset chips and an optional slider, shows it as a number, a currency amount or a unit amount, and commits it once.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Text & value entry"
+    },
+    {
       "name": "Attachment",
       "tag": "ui-attachment",
       "url": "./attachment-demo.html",

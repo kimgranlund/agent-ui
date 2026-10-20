@@ -29,8 +29,12 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  (`agent-ui--croupier`, DERIVED headroom 11 903), worst base preset 126 792 (travel, BASE headroom 14 308).
  *  RE-MEASURED 2026-10-18 (T-0363, Kim's grammar ruling): the worst case is 141 949 chars (`agent-ui`, mode default),
  *  +955 from grammar.md's game HUD surface clauses (the ask mechanics, the answered-ask note and the game-end settle).
- *  Budget 142 300 by the same formula. */
-export const PROMPT_CHAR_BUDGET_BASE = 142_300
+ *  Budget 142 300 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0196): the worst case is 143 204 chars (`agent-ui`, mode default; 141 949 before),
+ *  +1 255 from the `AmountPicker` default row, its selection clause and the reciprocal Slider and TextField edges on
+ *  the catalog inventory line, plus the ui-amount-picker dogfood row (TextField's ColorPicker edge pair dropped, Kim
+ *  2026-10-20). Budget 143 600 by the same formula. */
+export const PROMPT_CHAR_BUDGET_BASE = 143_600
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -50,8 +54,10 @@ export const PROMPT_CHAR_BUDGET_BASE = 142_300
  *  140 801 before), +852 from the `ResultCard` default row, the same rows BASE pays. Budget 142 000 by the same
  *  formula; BASE is re-measured above in the same change.
  *  RE-MEASURED 2026-10-18 (T-0363): the worst case is 142 936 chars (`agent-ui--croupier`, mode default), the same
- *  grammar.md clauses BASE pays. Budget 143 300 by the same formula. */
-export const PROMPT_CHAR_BUDGET_DERIVED = 143_300
+ *  grammar.md clauses BASE pays. Budget 143 300 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0196): the worst case is 144 188 chars (`agent-ui--croupier`, mode default; 142 936
+ *  before), +1 252 from the `AmountPicker` default row, the same rows BASE pays. Budget 144 500 by the same formula. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 144_500
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

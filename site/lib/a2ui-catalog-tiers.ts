@@ -62,11 +62,14 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   Row: 'PRIMITIVE',
   Text: 'PRIMITIVE',
 
-  // INPUT (18): form-associated / value-committing controls. Radio carries no independent A2UI `value`
+  // INPUT (19): form-associated / value-committing controls. Radio carries no independent A2UI `value`
   // mark of its own (its group does) but rides with its owning family here — a reader browsing "Input"
   // for "Radio" expects to find it beside RadioGroup, not filed under Widget. It stays browsable (unlike
   // Segment, NESTED_ONLY since GH #1332) because radio.css owns its own indicator chrome — a lone Radio
   // is standalone-legible.
+  // AmountPicker (T-0196): a form-associated bounded number with a `change` value mark, the Slider precedent; its
+  // chips, slider and commit are parts of one value input, not a COMPOUND of children.
+  AmountPicker: 'INPUT',
   Checkbox: 'INPUT',
   // ChoiceGroup/ChoiceCard (ADR-0220, GH #1368): a form-associated, value-committing selection container
   // over rich option cards — the RadioGroup/Radio precedent exactly (ChoiceCard rides with its owning

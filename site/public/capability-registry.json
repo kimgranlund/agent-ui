@@ -31,6 +31,31 @@
       "name": "agent-ui"
     },
     {
+      "id": "control:ui-amount-picker",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/amount-picker/amount-picker.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-amount-picker",
+      "tier": "pattern",
+      "description": "Picks one bounded number with minus and plus, optional preset chips and an optional slider, shows it as a number, a currency amount or a unit amount, and commits it once.",
+      "uses": [
+        "ui-glyph",
+        "ui-slider"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
       "id": "control:ui-attachment",
       "kind": "control",
       "source": {
@@ -3201,6 +3226,39 @@
       ]
     },
     {
+      "id": "type:agent-ui/AmountPicker",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "AmountPicker"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "AmountPicker",
+      "scope": "agent-ui",
+      "tag": "ui-amount-picker",
+      "intents": [
+        "pick a quantity or amount with plus and minus",
+        "a bounded number with presets and one commit"
+      ],
+      "notFor": [
+        {
+          "type": "Slider",
+          "why": "a free drag with no presets or commit"
+        },
+        {
+          "type": "TextField",
+          "why": "a typed number or free-form amount"
+        }
+      ]
+    },
+    {
       "id": "type:agent-ui/Attachment",
       "kind": "type",
       "source": {
@@ -3734,10 +3792,6 @@
         "let the user choose a color"
       ],
       "notFor": [
-        {
-          "type": "TextField",
-          "why": "a compact color field in a form"
-        },
         {
           "type": "Swatch",
           "why": "showing a fixed color"
@@ -5083,6 +5137,10 @@
         {
           "type": "Progress",
           "why": "read-only completion"
+        },
+        {
+          "type": "AmountPicker",
+          "why": "a bounded amount with steps, presets or a commit"
         }
       ]
     },
@@ -5628,12 +5686,12 @@
           "why": "picking a date on a grid"
         },
         {
-          "type": "ColorPicker",
-          "why": "a color as the main control"
-        },
-        {
           "type": "ComboBox",
           "why": "typing to filter options"
+        },
+        {
+          "type": "AmountPicker",
+          "why": "a bounded count or amount picked with plus and minus"
         }
       ]
     },

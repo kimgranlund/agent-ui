@@ -2197,11 +2197,11 @@ describe('default catalog - BoardGrid via the shared validator (ADR-0243, T-0072
     expect(pd?.actionEvent).toBe('action')
     expect(pd?.bindable).toBeFalsy()
     expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, actionName: 'fire' }).valid).toBe(true)
-    // the mark is opt-in: no other default-catalog prop forwards a control event (ProductCard's own event stays unread)
+    // the mark is opt-in: only BoardGrid and AmountPicker (T-0196, the same shape) forward a control event (ProductCard's own event stays unread)
     const marked = Object.entries(defaultCatalog.components).flatMap(([type, def]) =>
       Object.entries(def.properties).filter(([, p]) => p.actionEvent !== undefined).map(([prop]) => `${type}.${prop}`),
     )
-    expect(marked).toEqual(['BoardGrid.actionName'])
+    expect(marked).toEqual(['BoardGrid.actionName', 'AmountPicker.actionName'])
   })
 
   it('NEGATIVE CONTROL: a non-string actionName fails the shared validator', () => {
@@ -2251,5 +2251,27 @@ describe('default catalog - GameHud via the shared validator (ADR-0243, T-0072)'
     expect(validateOne({ component: 'GameHud', statusIntent: 'loud' }).valid).toBe(false)
     expect(validateOne({ component: 'GameHud', stats: 'many' }).valid).toBe(false)
     expect(validateOne({ component: 'GameHud', progress: 5 }).valid).toBe(false)
+  })
+})
+
+describe('default catalog - AmountPicker via the shared validator (T-0196)', () => {
+  it('a representative bet validates 0 failures, with a bound value and a presets array', () => {
+    expect(
+      validateOne({
+        component: 'AmountPicker', label: 'Your bet', value: { path: '/bet/amount' }, min: 5, max: 250, step: 5,
+        presets: [25, 50, 100, 250], slider: true, currency: 'USD', actionName: 'place_bet', actionLabel: 'Place bet',
+      }),
+    ).toEqual({ valid: true, failures: [] })
+    expect(validateOne({ component: 'AmountPicker', presets: 'many' }).valid).toBe(false)
+  })
+
+  it('the value is the two-way change mark (the Slider shape); actionName forwards the action event; no children', () => {
+    const def = defaultCatalog.components.AmountPicker
+    expect(def.value).toEqual({ prop: 'value', event: 'change' })
+    expect(def.properties.value?.bindable).toBe(true)
+    expect(def.properties.actionName?.actionEvent).toBe('action')
+    expect(def.properties.actionName?.bindable).toBeFalsy()
+    expect(def.children).toBeUndefined()
+    expect(defaultFactories.AmountPicker.tag).toBe('ui-amount-picker')
   })
 })

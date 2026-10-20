@@ -343,20 +343,18 @@ never Select a 2-3-member always-visible choice (it hides options behind a close
 ```
 Real: `examples/catalog-coverage.ts:135-141` (`booking-reservation`), `examples/commerce-hospitality.ts:125-132` (`product-options-quantity`).
 
-## Quantity — number TextField (no stepper minted) (GH #1377)
-A numeric quantity input. Until/unless a dedicated Stepper control is minted (a fleet gap — this idiom's
-job is to recipe the CURRENT catalog, not to fill that gap), the shape is a Field-wrapped `TextField`:
-`type:"number"`, `min` (string), `step` (number, `mapsTo:"step"`), `value` bound to the quantity path.
-`Field`'s `label` names it — never a bare unlabeled TextField (the Field card's own ADR-0051 rule, above).
-Pair with a `FormProvider` only when the quantity BLOCKS a submit (e.g. must be ≥1 to add-to-cart); a
-display-only or always-valid quantity needs no provider. **Boundary**: do not reach for a Select/
-SegmentedControl of numbers as a stand-in stepper — `TextField type:"number"` is the catalog's only
-numeric-entry primitive today; that absence is a named, deferred fleet gap, not silently worked around.
+## Quantity: one AmountPicker (GH #1377, T-0196)
+A bounded quantity or amount is ONE `AmountPicker`: `min`, `max` and `step` (numbers), `value` bound to the
+quantity path (it stays a number), and `label` naming it. `currency` or `unit` formats the readout only.
+Add `presets` (a few common amounts) when there are obvious picks. Set `slider` only for a range over about
+20 steps (a bet, a budget), never for a small count. To commit with the amount, set `actionName` (and
+`actionLabel`); its own button sends `{value}` in the action context, so add no sibling commit Button.
+**Boundary**: a free-typed number with no bounds stays a Field-wrapped `TextField` `type:"number"`. Never
+a Slider plus Button, a SegmentedControl of numbers or a Row of number chips as a stand-in picker.
 ```json
-{ "id": "f_qty", "component": "Field", "label": "Quantity", "child": "qty_field" }
-{ "id": "qty_field", "component": "TextField", "name": "qty", "type": "number", "min": "1", "step": 1, "value": { "path": "/product/qty" } }
+{ "id": "qty", "component": "AmountPicker", "label": "Quantity", "min": 1, "max": 10, "step": 1, "presets": [1, 2, 4], "value": { "path": "/product/qty" }, "actionName": "add_to_cart", "actionLabel": "Add to cart" }
 ```
-Real: `examples/commerce-hospitality.ts:133-137` (`product-options-quantity`).
+Real: `examples/catalog-frontier.ts` (`frontier-amount-picker-bet`) and the `mini-skills/quantity.md` module.
 
 ## Media-grid — Grid of Image tiles, a photo gallery (GH #1377)
 A photo/image gallery — every tile is genuinely an image meant to be viewed, not a file. `Grid` (`gap`,

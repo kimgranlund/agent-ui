@@ -747,6 +747,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // T-0196: one bounded number with minus and plus, chips, a slider and one commit, tier=pattern {doc, demo}.
+  {
+    label: 'ui-amount-picker',
+    cards: [
+      {
+        href: './amount-picker-demo.html',
+        title: 'Demo',
+        blurb: 'A cart quantity with preset chips, a currency offer with the slider, a bare guest count and a bet at its bound, with a live event log of input, change and action.',
+      },
+      {
+        href: './amount-picker-doc.html',
+        title: 'API reference',
+        blurb: 'The bounded number picker: minus and plus around a formatted spinbutton readout, optional chips and slider, and one commit action, generated from amount-picker.md.',
+      },
+    ],
+  },
   {
     // ADR-0216 / GH #1395 — the star-value Range control, a THIRD UIRangeElement leaf.
     label: 'ui-rating',

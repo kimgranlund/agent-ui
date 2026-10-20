@@ -93,7 +93,10 @@ import type { SelectionEntry } from './selection-guidance.ts'
 // MEASURED 2026-10-12: 29 767 chars after the ui-result-card descriptor row, the `ResultCard` selection clause and
 // its reciprocal edges on `GameHud` and `Toast` (T-0089, ADR-0244; 29 304 before, +463); budget 30 100 (measured
 // rounded up to the next 100, plus 300), per the SPEC-R13(b) v0.15 amendment in genui-surface.spec.md.
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 30_100
+// RE-MEASURED 2026-10-20 (T-0196): 30 473 chars after the ui-amount-picker descriptor row, the `AmountPicker`
+// selection clause and its reciprocal edges on `Slider` and `TextField` (TextField's ColorPicker edge pair dropped,
+// Kim 2026-10-20); budget 30 800 (measured rounded up to the next 100, plus 300).
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 30_800
 
 /** The character budget for the selection clauses the dogfood inventory carries: the sum of the clause
  *  lengths `dogfoodInventory()` appends to its rows. Held by a `prompt-drift.test.ts` leg, never by runtime
@@ -101,8 +104,10 @@ export const DOGFOOD_INVENTORY_CHAR_BUDGET = 30_100
  *  MEASURED 2026-10-05: 8 479 chars over 72 rows (144 notFor edges); budget 8 800 (Kim 2026-10-05; ADR-0232 cl.5 formula)
  *  RE-MEASURED 2026-10-12 (T-0072, ADR-0243): 9 189 chars after the `ProductCard`, `BoardGrid` and `GameHud`
  *  clauses and their reciprocal edges; budget 9 500 (measured rounded up to the next 100, plus 300), per the
- *  SPEC-R13(b) v0.14 amendment in genui-surface.spec.md. A deliberate re-measure for new catalog types. */
-export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 9_500
+ *  SPEC-R13(b) v0.14 amendment in genui-surface.spec.md. A deliberate re-measure for new catalog types.
+ *  RE-MEASURED 2026-10-20 (T-0196): 9 757 chars after the `AmountPicker` clause and its Slider and TextField
+ *  reciprocal edges; budget 10 100 (measured rounded up to the next 100, plus 300). */
+export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 10_100
 
 /** Every tag the inventory TEACHES, tag-sorted — each descriptor's own `tag:` scalar PLUS the family
  *  siblings that ride its row (GH #346). The "inventory-taught tags" half of SPEC-R13 AC2's set-equality

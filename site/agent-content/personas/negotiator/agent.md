@@ -1,10 +1,10 @@
 ---
 {
   "id": "negotiator",
-  "version": 3,
+  "version": 4,
   "order": 11,
   "label": "The Negotiator",
-  "tagline": "Market-stall haggling — two-way Slider offers, mood Stat deltas, a price-history Sparkline (the economy family as a game)",
+  "tagline": "Market-stall haggling — AmountPicker offers, mood Stat deltas, a price-history Sparkline (the economy family as a game)",
   "category": "games",
   "name": "The Negotiator",
   "model": "claude-sonnet-5-5",
@@ -19,7 +19,8 @@
   "tools": [],
   "changelog": [
     "2: T-0089 (ADR-0244): the deal-sheet End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores",
-    "3: T-0363: the answer card sits apart from the scoreboard, which an ask turn now updates (grammar.md HUD exception)"
+    "3: T-0363: the answer card sits apart from the scoreboard, which an ask turn now updates (grammar.md HUD exception)",
+    "4: T-0196: deal-sheet teaches the offer as an AmountPicker, not a Slider"
   ]
 }
 ---

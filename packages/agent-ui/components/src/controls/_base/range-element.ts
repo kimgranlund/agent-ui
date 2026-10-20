@@ -11,6 +11,7 @@
 
 import { UIFormElement, prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
 import type { FormValue } from '../../dom/index.ts'
+import { normalizeRangeValue } from './range-normalize.ts'
 
 const rangeProps = {
   ...UIFormElement.formProps,
@@ -44,13 +45,6 @@ const rangeProps = {
 } satisfies PropsSchema
 
 export interface UIRangeElement extends ReactiveProps<typeof rangeProps> {}
-/** Decimal places in a number's shortest decimal form (0.1 is 1, 0.25 is 2, 5 is 0, 1e-7 is 7), capped at 20 for toFixed. */
-function decimalPlaces(n: number): number {
-  const m = /^-?\d*(?:\.(\d+))?(?:e([+-]\d+))?$/i.exec(String(n))
-  if (!m) return 0
-  return Math.min(20, Math.max(0, (m[1]?.length ?? 0) - Number(m[2] ?? 0)))
-}
-
 export class UIRangeElement extends UIFormElement {
   static props = rangeProps
 
@@ -66,22 +60,8 @@ export class UIRangeElement extends UIFormElement {
    *   max itself is always reachable exactly (the platform `<input type=range>` End rule).
    */
   #normalize(raw: number): number {
-    const min = this.min ?? 0
-    const max = this.max ?? 100
-    const step = this.step ?? 1
-    if (min > max) return min
-    const clamped = Math.max(min, Math.min(max, raw))
-    if (step <= 0) return clamped
-    // max is always reachable exactly — End → max, and clamping to max lands here too.
-    if (clamped === max) return max
-    const steps = Math.round((clamped - min) / step)
-    // `min + steps * step` accumulates binary float error (6 * 0.1 = 0.6000000000000001), so the result
-    // is rounded to the decimal places min and step carry: the value reads as the author wrote the step.
-    const places = Math.max(decimalPlaces(min), decimalPlaces(step))
-    const at = (n: number): number => Number((min + n * step).toFixed(places))
-    const snapped = at(steps)
-    // snap-down if snapped overshoots max
-    return snapped > max ? at(steps - 1) : snapped
+    // The clamp and snap law lives in range-normalize.ts (T-0196), shared with ui-amount-picker.
+    return normalizeRangeValue(raw, this.min ?? 0, this.max ?? 100, this.step ?? 1)
   }
 
   /** LLD-C5: percentage position of value along [min, max] for the `--value-pct` geometry seam. */

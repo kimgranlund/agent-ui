@@ -58,6 +58,8 @@ import boardGridMd from '../../packages/agent-ui/components/src/controls/board-g
 import segmentMd from '../../packages/agent-ui/components/src/controls/segment/segment.md?raw'
 import segmentedControlMd from '../../packages/agent-ui/components/src/controls/segmented-control/segmented-control.md?raw'
 import sliderMd from '../../packages/agent-ui/components/src/controls/slider/slider.md?raw'
+// T-0196 - ui-amount-picker, the bounded number picker (tier=pattern => {doc, demo}).
+import amountPickerMd from '../../packages/agent-ui/components/src/controls/amount-picker/amount-picker.md?raw'
 import sliderMultiMd from '../../packages/agent-ui/components/src/controls/slider-multi/slider-multi.md?raw'
 // ADR-0216 / GH #1395 — ui-rating, the star-value Range control (a third UIRangeElement leaf).
 import ratingMd from '../../packages/agent-ui/components/src/controls/rating/rating.md?raw'
@@ -225,6 +227,8 @@ export const loadBoardGridDoc = (): ComponentDoc => parseDoc(boardGridMd)
 export const loadSegmentDoc = (): ComponentDoc => parseDoc(segmentMd)
 export const loadSegmentedControlDoc = (): ComponentDoc => parseDoc(segmentedControlMd)
 export const loadSliderDoc = (): ComponentDoc => parseDoc(sliderMd)
+// T-0196 - ui-amount-picker, the bounded number picker (tier=pattern => {doc, demo}).
+export const loadAmountPickerDoc = (): ComponentDoc => parseDoc(amountPickerMd)
 export const loadSliderMultiDoc = (): ComponentDoc => parseDoc(sliderMultiMd)
 // ADR-0216 / GH #1395 — ui-rating, the star-value Range control.
 export const loadRatingDoc = (): ComponentDoc => parseDoc(ratingMd)
