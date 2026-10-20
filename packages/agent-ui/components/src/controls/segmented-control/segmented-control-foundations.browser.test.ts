@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the control radius at the balanced preset (T-0374 step 6)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -44,11 +45,13 @@ describe('ui-segmented-control foundations (ADR-0245 lane a01)', () => {
       const el = mount(true, size)
       expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.c, 1)
       expect(read(el, 'column-gap'), 'gap').toBeCloseTo(r.c, 1)
-      // ADR-0245 Amendment 6: a pill track (h/2 of the 4n segment plus c padding on each side) with a concentric 2n thumb
+      // ADR-0245 Amendment 6: a track of the segment's control radius plus its c padding, concentric with the thumb at
+      // the control radius (A x h/2, balanced by default, T-0374 step 6)
+      const { controlRadius } = model('product', 'sm', size)
       const trackHeight = el.getBoundingClientRect().height
       expect(trackHeight, 'track height').toBeCloseTo(r.h + 2 * r.c, 1)
-      expect(read(el, 'border-top-left-radius', '::after'), 'track radius').toBeCloseTo(trackHeight / 2, 1)
-      expect(read(el, 'border-top-left-radius', '::before'), 'thumb radius').toBeCloseTo(2 * r.n, 1)
+      expect(read(el, 'border-top-left-radius', '::after'), 'track radius').toBeCloseTo(controlRadius + r.c, 1)
+      expect(read(el, 'border-top-left-radius', '::before'), 'thumb radius').toBeCloseTo(controlRadius, 1)
     })
   }
 })

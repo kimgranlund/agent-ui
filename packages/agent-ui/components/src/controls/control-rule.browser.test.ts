@@ -219,7 +219,7 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         combo.open = false
       })
 
-      it(`the chip level at ${at}: ui-badge 2n + 2c tall with text edge 2c and the chip pill n + c; ui-checkbox keeps ceil(n/2)`, async () => {
+      it(`the chip level at ${at}: ui-badge 2n + 2c tall with text edge 2c and the chip radius A x (n + c); ui-checkbox keeps ceil(n/2)`, async () => {
         const wrap = await mount(attrs, size, `
           <ui-badge label="beta"></ui-badge>
           <ui-badge label="ok" intent="success"></ui-badge>
@@ -227,7 +227,7 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         const badge = q(wrap, 'ui-badge')
         near(badge.getBoundingClientRect().height, r.parts.badge, 'badge height')
         expect(r.parts.badge, 'badge height is the icon size plus a c ring').toBe(2 * r.n + 2 * r.c)
-        near(px(badge, 'border-start-start-radius'), r.n + r.c, 'badge radius') // the chip pill (Amendment 5)
+        near(px(badge, 'border-start-start-radius'), model(tier, scale, size).chip.radius, 'badge radius') // the chip radius A x h/2 (Amendment 5, T-0374 step 6)
         const bare = edges(badge, textRect(badge))
         near(bare.start, r.chip.margin + r.c, 'badge text edge 2c, start')
         near(bare.end, r.chip.margin + r.c, 'badge text edge 2c, end')

@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the chip radius at the balanced preset (T-0374 step 6)
 import { server, cdp } from 'vitest/browser'
 
 // badge.browser.test.ts — cross-engine (Chromium + WebKit) browser-truth probes for ui-badge
@@ -70,11 +71,11 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
     expect(rect.height).toBeGreaterThan(0)
   })
 
-  it('border-radius resolves to the chip pill n + c, h/2 of the 2n + 2c box (ADR-0245 Amendment 5)', () => {
+  it('border-radius resolves to the chip radius A x (n + c), A x h/2 of the 2n + 2c box (ADR-0245 Amendment 5, T-0374 step 6)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
-    // getComputedStyle serializes border-radius as a length (px); n + c at the root register md is 10px.
-    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(root.n + root.c, 1)
+    // getComputedStyle serializes border-radius as a length (px); A x (n + c) at the root register md is 5px under balanced.
+    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(model().chip.radius, 1)
   })
 
   it('padding-block is ZERO (block-size is the vertical lever, never block-padding — geometry.md)', () => {

@@ -52,7 +52,7 @@
        mark-box     max(2n, n + 6), the marker column (the header marker, every step marker and the rail centre on it);
                     it grows past 2n only at n 4 and 5, to hold the n + 6 dot
        label-start  2n + n, from a row's inline edge to its label column; every nested block starts here
-       trail-box    n + 2n, the header caret's slot, reserved at the end of every entry row so the
+       trail-box    n + 3n, the header caret's square glyph slot (T-0374), reserved at the end of every entry row so the
                     durations and the header's "Done in" end on one trailing edge
        expand-height  h = 4n, an expand's summary row (a control row on the library ramp)
        nest-gap     c, the beat between a row's text and its expand */
@@ -61,7 +61,7 @@
   --ui-status-stream-row-gap: calc(2 * var(--ui-status-stream-gap));
   --ui-status-stream-mark-box: var(--ui-status-stream-header-marker-box);
   --ui-status-stream-label-start: calc(var(--ui-status-stream-mark-box) + var(--ui-status-stream-gap));
-  --ui-status-stream-trail-box: calc(var(--ui-status-stream-gap) + var(--ui-status-stream-mark-box));
+  --ui-status-stream-trail-box: calc(var(--ui-status-stream-gap) + var(--md-sys-glyph-slot, 1em));
   --ui-status-stream-expand-height: var(--md-sys-height, var(--md-sys-height-md));
   --ui-status-stream-nest-gap: var(--md-sys-space-xs);
   /* GH #722 (candidate 6, the other half) — entries carried ZERO inline inset while the header's own
