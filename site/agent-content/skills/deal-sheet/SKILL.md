@@ -1,7 +1,7 @@
 ---
 {
   "name": "deal-sheet",
-  "description": "haggling, offers. Each offer is its own ask: an AmountPicker offer, Offer / Accept / Walk away and ONE Send Button; GameHud, item Card and Sparkline sit on a deal sheet beside it, never on the ask",
+  "description": "haggling, offers. Each offer is its own ask: an AmountPicker offer, Offer / Accept / Walk away and ONE Send Button; GameHud, item Card and Sparkline sit beside it, never on the ask",
   "id": "deal-sheet",
   "version": 1,
   "kind": "skill",
