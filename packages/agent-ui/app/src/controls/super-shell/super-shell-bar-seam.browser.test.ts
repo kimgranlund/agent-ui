@@ -12,18 +12,19 @@
 // is the wrong home for a suite that measures computed paint and races nothing.
 //
 // TWO standing rules for this file, both from ADR-0166 cl.8:
-//   1. NEVER read the `borderRadius` SHORTHAND. `0px 0px 24px 24px` (the card radius at the root register) is a string that satisfies
+//   1. NEVER read the `borderRadius` SHORTHAND. `0px 0px 12px 12px` (the card radius at the root register) is a string that satisfies
 //      `not.toBe('0px')` VACUOUSLY, which would let the header-only and footer-only rows of cl.5's
 //      matrix pass while testing nothing. Every corner assertion reads the four logical LONGHANDS.
 //   2. A negative control on a BOTH-BARS fixture is unsatisfiable by construction — both pairs zero, so
 //      all four longhands compute `0` and nothing survives for a mutation to take away. The corner NCs
-//      run on a HEADER-ONLY fixture, whose block-END pair stays round (the card radius 3n).
+//      run on a HEADER-ONLY fixture, whose block-END pair stays round (the card radius).
 import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
 import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every px this file pins is derived from the
 // root register (product at scale md) through scale.mjs, never written as a literal.
@@ -31,7 +32,7 @@ const ROOT = rootResolve('md')
 const BAR = ROOT.h + 2 * ROOT.widget.margin // bars and rails: a control row plus the widget margin above and below, 8n
 const GAP = ROOT.page.gutter // the inter-card gap: the layout gutter 3n
 const SEAM = ROOT.control.margin // the strip seams: the control inset n
-const ROUND = `${ROOT.card.radius}px` // a carded part's round corner: the card radius 3n
+const ROUND = `${model().card.radius}px` // a carded part's round corner: the card radius A x 3m (T-0374 step 6)
 const PANE = 42 * ROOT.n // the default pane: 42n, the nav label column's room (Kim 2026-10-14)
 
 const mounted: HTMLElement[] = []

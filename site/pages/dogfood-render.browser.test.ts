@@ -15,7 +15,7 @@ import { parseCss, over, flatten, contrast, inkContrast, flatLayers, CANVAS_LIGH
 import type { Rgba } from '../lib/dogfood-contrast.ts'
 import { CFG, DENSITIES as DENSITY_Q } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
 import type { Step, Tier } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
-import { resolve, type Density, type Emitted } from '../../scripts/lib/foundations-model.mjs'
+import { radiusAmounts, resolve, type Density, type Emitted } from '../../scripts/lib/foundations-model.mjs'
 import { ROOT_REGISTER, STEP, glyphBox, hasOwner } from '../../scripts/lib/foundations-rules.mjs'
 import RULES from '../../scripts/dogfood-rules.json'
 import ALLOW from '../../scripts/dogfood-render-allowlist.json'
@@ -294,7 +294,9 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[] | Promise<str
       measured['pill-radius']++
       // the segmented control's track outline is its ::after overlay (bug #1380); the host paints no corner
       const r = radiusOf(el, box, el.localName === 'ui-segmented-control' ? '::after' : undefined)
-      if (r < box.height / 2 - TOL) out.push(`${tagOf(el)} radius=${r} height=${Math.round(box.height)}`)
+      // T-0374 step 6: the control amount of h/2 (balanced 0.5 at the root, 1 under data-radius='pill')
+      const want = (radiusAmounts().control * box.height) / 2
+      if (r < want - TOL) out.push(`${tagOf(el)} radius=${r} height=${Math.round(box.height)} want >= ${want}`)
     }
     return out
   },
@@ -378,7 +380,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[] | Promise<str
       if (!box) continue
       measured['panel-radius']++
       const reg = registerOf(el)
-      const want = 2 * reg.n + reg.c
+      const want = reg.controlRadius + reg.c // the row's control radius plus the inset c (T-0374 step 6)
       const r = radiusOf(el, box)
       if (Math.abs(r - want) > TOL) out.push(`${tagOf(el)} radius=${r} want ${want}`)
     }
@@ -453,7 +455,7 @@ const CHECKS: Record<string, (root: Element, ctx: Ctx) => string[] | Promise<str
       const box = visible(el)
       if (!box) continue
       measured['entry-cell-radius']++
-      const want = registerOf(el).n
+      const want = registerOf(el).radius // the surface radius A x n (T-0374 step 6)
       const r = radiusOf(el, box)
       if (Math.abs(r - want) > TOL) out.push(`${tagOf(el)} radius=${r} want ${want}`)
     }

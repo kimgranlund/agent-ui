@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6)
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container-box.css'
 import './menu.css'
@@ -7,8 +8,8 @@ import './menu.ts'
 import type { UIMenuElement } from './menu.ts'
 
 // ui-menu geometry (ADR-0245 clauses 3 and 6, delta rows "menu item row", "listbox padding", "listbox panel
-// radius"): inside an opt-in region an item row is 4n tall, sits c from the panel edge, takes the pill 2n, and the
-// panel radius is the row's 2n plus that c, so the two nest (Amendment 5); outside one every value is today's (a 22px row at the default font, a 6px inset, the
+// radius"): inside an opt-in region an item row is 4n tall, sits c from the panel edge, takes the control radius A x h/2
+// (n under the balanced default, T-0374 step 6), and the panel radius is the row's plus that c, so the two nest (Amendment 5); outside one every value is today's (a 22px row at the default font, a 6px inset, the
 // 12px corner), so the dark launch leaves default pages where they were.
 
 const mounted: HTMLElement[] = []
@@ -46,13 +47,14 @@ const margin = (el: HTMLElement): number => Number.parseFloat(getComputedStyle(e
 
 describe('ui-menu geometry inside an opt-in region', () => {
   for (const scale of ['sm', 'md'] as const) {
-    it(`product / ${scale}: row 4n, inset c, item radius 2n, panel radius 2n + c`, async () => {
+    it(`product / ${scale}: row 4n, inset c, item radius the control radius, panel radius that plus c`, async () => {
       const { item, panel } = await open(`<div data-tier="product" data-scale="${scale}">${MENU}</div>`)
       const r = resolve('product', scale, 'md')
       expect(item.getBoundingClientRect().height).toBe(r.h)
       expect(margin(item)).toBe(r.c)
-      expect(radius(item)).toBe(r.h / 2)
-      expect(radius(panel)).toBe(r.h / 2 + r.c)
+      const { controlRadius } = model('product', scale, 'md') // A x h/2 (T-0374 step 6)
+      expect(radius(item)).toBe(controlRadius)
+      expect(radius(panel)).toBe(controlRadius + r.c)
     })
   }
 })

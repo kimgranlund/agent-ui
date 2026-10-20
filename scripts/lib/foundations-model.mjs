@@ -11,6 +11,7 @@
 
 import { CFG as LEGACY_CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 import { CFG, DENSITIES, SPACING_ROLES, resolveControlSurface, resolveGeometry } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
+import { radiusPercentagePresets } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/curvature.mjs'
 import { ROOT_REGISTER, STEP } from './foundations-rules.mjs'
 
 /**
@@ -19,9 +20,9 @@ import { ROOT_REGISTER, STEP } from './foundations-rules.mjs'
  * takes the skill's name with the former group label's value. The field label (10 + 1) and the small control role
  * (9 + 1) read the current resolver (T-0374 step 2), and so do the four tier rows (T-0374 step 3: content 11/3/2/1
  * and brand 15/4/2/1; checkAnchors() holds them to the ladder and to growth along size and scale) and the density
- * axis (T-0374 step 4: the vendored DENSITIES, tight 2 to loose 6, moving the control margin and m). Every token the
- * current resolver has no field for (inset, label inset, radii, chip, checkbox and group levels) keeps its own
- * formula below.
+ * axis (T-0374 step 4: the vendored DENSITIES, tight 2 to loose 6, moving the control margin and m). The radii take
+ * the vendored curvature presets (T-0374 step 6, radiusAmounts()). Every token the current resolver has no field for
+ * (inset, label inset, chip, checkbox and group levels) keeps its own formula below.
  */
 export const LEGACY_PATH = {
   linear: { groupKicker: LEGACY_CFG.linear.groupLabel },
@@ -40,7 +41,8 @@ const ROOMY = [['widget', 'group', 'control'], ['card', 'container', 'group'], [
  * coefficients of n. The control surface (resolveControlSurface): the 3n slot every icon, label and glyph wrapper
  * fills, its margin and the 2n icon artwork; the height is slot + 2 margin. The margin reference is the section
  * container's 4d, read as 4m: m is the current resolver's d = nq/4 (containerUnit(), floored). The spacing roles are
- * the skill's percentages of it (SPACING_ROLES).
+ * the skill's percentages of it (SPACING_ROLES). The radius presets are the vendored curvature percentages, and the
+ * root takes balanced (Kim's 2026-10-19 ruling, T-0374 step 6; pill is opt-in).
  */
 export function anchors() {
   const g = resolveGeometry(ROOT_REGISTER.tier, ROOT_REGISTER.scale, 'md', 'regular')
@@ -60,7 +62,25 @@ export function anchors() {
       body: [...CFG.linear.body], control: [...CFG.linear.control], fieldLabel: [...CFG.linear.fieldLabel],
       smallControl: [...CFG.linear.smallControl], ...LEGACY_PATH.linear,
     },
+    radiusPresets: { ...radiusPercentagePresets },
+    radiusPreset: 'balanced',
   }
+}
+
+/** The radius preset names `data-radius` takes: the vendored percentage presets plus pill. */
+export const RADIUS_PRESETS = ['sharp', 'crisp', 'balanced', 'round', 'pill']
+
+/**
+ * The two radius amounts of a preset, as fractions (the skill's percentage A over 100, F = 0): `container` scales
+ * the margins (the surface n, the group, widget, card and layout levels), `control` scales h/2 (a single-line
+ * control) and the chip's h/2. Pill is the skill's h/2, exempt from A, on the control family only: the control amount
+ * is 1 and the containers keep the root preset's amount (a container pill is a measured min(w, h)/2, which no token
+ * can emit).
+ */
+export function radiusAmounts(preset = anchors().radiusPreset, a = anchors()) {
+  if (preset === 'pill') return { container: radiusAmounts(a.radiusPreset === 'pill' ? 'balanced' : a.radiusPreset, a).container, control: 1 }
+  const pct = a.radiusPresets[preset]
+  return { container: pct / 100, control: pct / 100 }
 }
 
 /** The control height per n at regular density, the slot plus a margin above and below (the skill's H = 3n + 2m).
@@ -102,7 +122,8 @@ function typeAt(n, size, a) {
 /**
  * The tokens foundations.gen.css declares on one element, in px (the bare numbers n and m excepted), at a tier,
  * scale, size and density. It mirrors the derived block term for term; foundations.test.ts holds it to the repo's
- * scale.mjs resolve() on every cell, the glyph box and slot aside. `surface` is the control anatomy of
+ * scale.mjs resolve() on every cell, the glyph box and slot aside. The radii are the preset's amounts (radiusAmounts(),
+ * `a.radiusPreset`, balanced by default): the container family A x its margin, the control family A x h/2. `surface` is the control anatomy of
  * resolveControlSurface(): the glyph is the skill's n + 6 artwork in the square 3n glyph slot (T-0374), emitted as
  * `glyphBox` and `glyphSlot`. Density (T-0374 step 4, the vendored DENSITIES; absent means regular) moves the control
  * margin (q - 2)n/4, emitted as `controlMargin`, so the height 3n + 2 margin runs from 3n at tight to 5n at loose,
@@ -120,14 +141,15 @@ export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, 
   const height = slot + 2 * controlMargin
   const iconBox = n * a.iconPerN
   const glyphBox = n + 6
-  const levels = Object.fromEntries(roomyLevels(a).map(([token, margin, gutter]) => [token, { margin: m * margin, gutter: m * gutter, radius: m * margin }]))
+  const A = radiusAmounts(a.radiusPreset, a)
+  const levels = Object.fromEntries(roomyLevels(a).map(([token, margin, gutter]) => [token, { margin: m * margin, gutter: m * gutter, radius: A.container * m * margin }]))
   return {
-    n, m, c, height, controlMargin, inset: n, labelInset: n - c, radius: n, controlRadius: height / 2, iconBox,
+    n, m, c, height, controlMargin, inset: n, labelInset: n - c, radius: A.container * n, controlRadius: A.control * height / 2, iconBox,
     glyphBox, glyphSlot: slot, glyphStroke: Math.max(1.5, c / 2), checkboxRadius: Math.ceil(n / 2),
     surface: { slot, margin: controlMargin, height, icon: iconBox, iconInset: (slot - iconBox) / 2, glyph: glyphBox, glyphInset: (slot - glyphBox) / 2 },
     type: typeAt(n, size, a),
-    chip: { margin: c, gutter: c, radius: n + c },
-    group: { margin: n + c, gutter: c, radius: n + c },
+    chip: { margin: c, gutter: c, radius: A.control * (n + c) },
+    group: { margin: n + c, gutter: c, radius: A.container * (n + c) },
     ...levels,
   }
 }
@@ -136,12 +158,13 @@ export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, 
  * The guard on the anchors (the refuse-to-emit rule beside the repo's check()): every anchor finite, the heading
  * ratio and the linear roles never falling as n grows, the type order and the floor held on the whole ladder, the
  * title bump rising with size, the icon inside its slot, the margin reference and role percentages in range, the
- * roomy levels nesting, and the widget margin outside the group margin at every density (widgetOverGroup()).
+ * roomy levels nesting, the widget margin outside the group margin at every density (widgetOverGroup()), and the
+ * radius presets in range with every radius at most half its box (radiusFailures()).
  * Returns the failures; never throws (a malformed anchor set is an A1 failure).
  */
 export function checkAnchors(a = anchors()) {
   try {
-    return [...anchorFailures(a), ...widgetOverGroup(a)]
+    return [...anchorFailures(a), ...widgetOverGroup(a), ...radiusFailures(a)]
   } catch (err) {
     return [`A1 the anchors are malformed: ${err instanceof Error ? err.message : String(err)}`]
   }
@@ -204,6 +227,29 @@ export function widgetOverGroup(a = anchors(), unit = containerUnit) {
     const widget = unit(n, density) * widgetMargin
     const group = n + Math.ceil(n / 4)
     if (!(widget > group)) bad.push(`A6 n ${n} ${density}: the widget margin ${widget} does not exceed the group margin ${group}`)
+  }
+  return bad
+}
+
+/**
+ * The radius guard (T-0374 step 6): every preset amount within 0 to 100, and at every preset on every cell every
+ * radius at most half its box, the skill's physical cap (no tolerance, no clamping): a control at most h/2, a chip
+ * at most n + c (h/2 of the 2n + 2c chip), the checkbox at most n (its 2n box), and the surface and each level at most
+ * its margin (the narrowest box a margin pads on both sides is twice it). Returns the failures.
+ */
+export function radiusFailures(a = anchors()) {
+  const bad = []
+  for (const [preset, pct] of Object.entries(a.radiusPresets)) {
+    if (!(Number.isFinite(pct) && pct >= 0 && pct <= 100)) bad.push(`A7 radius preset ${preset} ${pct}% is outside 0 to 100`)
+  }
+  if (bad.length) return bad
+  for (const preset of RADIUS_PRESETS) for (const [t, s, z, d] of CELLS()) {
+    const r = resolve(t, s, z, d, { ...a, radiusPreset: preset })
+    const caps = [
+      ['control', r.controlRadius, r.height / 2], ['chip', r.chip.radius, r.n + r.c], ['checkbox', r.checkboxRadius, r.n],
+      ['surface', r.radius, r.inset], ...['group', 'widget', 'card', 'layout'].map((l) => [l, r[l].radius, r[l].margin]),
+    ]
+    for (const [name, radius, cap] of caps) if (!(radius <= cap)) bad.push(`A7 ${preset} ${t}/${s}/${z} ${d}: ${name} radius ${radius} exceeds half its box ${cap}`)
   }
   return bad
 }

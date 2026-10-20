@@ -40,8 +40,9 @@ never falling as n grows at each density (T-0374; it took over the model's check
 | control height | `3n + 2 · margin`: 3n tight, 4n regular, 5n loose | `--md-sys-height` |
 | inset (a boxed child's own margin) | `n` | `--md-sys-inset` |
 | gap between a mark and its label | `n` | |
-| radius of a surface (attachment, disclosure, swatch tile) | `n`, `corner-shape: squircle` | `--md-sys-radius` |
-| radius of every single-line control (the pill, h/2) | `2n`, circular corners | `--md-sys-control-radius` |
+| radius amounts (inputs: `:root` 0.5, `data-radius` sets them) | container `A`, control `A` | `--md-sys-radius-amount`, `--md-sys-control-radius-amount` |
+| radius of a surface (attachment, disclosure, swatch tile) | `A · n` (`n/2` balanced), `corner-shape: squircle` | `--md-sys-radius` |
+| radius of every single-line control | `A · h/2` (`n` at regular balanced; `h/2` under pill) | `--md-sys-control-radius` |
 | icon box (pictorial art) | `2n` | `--md-sys-icon-box` |
 | glyph box (functional mark) | `n + 6` (T-0374; at least 10, so the Amendment 7 floor retired) | `--md-sys-glyph-box` |
 | glyph slot (the glyph's square wrapper) | `3n` | `--md-sys-glyph-slot` |
@@ -58,6 +59,22 @@ lever**, and borders sit inside the box (padding = rule minus border width). **S
 `--md-sys-control-line-height` stays a fleet constant; display text (`ui-text`) keeps its per-role line
 height.
 
+## Radius presets
+
+Radius follows the skill's curvature presets (`geometry-contract.md`, "Radius families and modes"; T-0374, Kim's
+2026-10-19 ruling): each family has an amount A, and the retained floor F is 0.
+
+- **Container family** (`--md-sys-radius-amount`): a surface or a level takes A × its margin: the surface `A · n`,
+  the group `A · (n + c)`, the widget, card and layout `A · 2m`, `A · 3m` and `A · 4m`.
+- **Control family** (`--md-sys-control-radius-amount`): a single-line control (and a textarea) takes
+  `A · h/2`, and a chip `A · (n + c)`, its h/2. The checkbox box keeps `ceil(n/2)` at every preset.
+- **Presets**: `data-radius` on any element sets both amounts for its subtree: `sharp` 0, `crisp` 0.25,
+  **`balanced` 0.5, the default** (`:root`), `round` 1. `pill` sets only the control amount to 1, so single-line
+  controls and chips are h/2 and containers keep the inherited amount (a container pill is a measured
+  `min(w, h)/2`, which no token emits). At the root md balanced, a control is 8 (n) and a card 12.
+- A radius never exceeds half its box (the skill's physical cap); `checkAnchors()` in
+  `scripts/lib/foundations-model.mjs` refuses a sheet that would.
+
 ## Inline padding and radius, by control class
 
 - **The control rule** (ADR-0245 Amendment 4), one geometry for every control: box margin `n`
@@ -68,26 +85,26 @@ height.
   minimum, and the rule's own `4n - 2c` plus text keeps them at `4n`). Where the label is anonymous host content (toggle, segment, tab, menu and listbox rows) the host
   edge beside it carries margin plus inset. Icons, carets and other boxed items take no inset.
 - **Entry and trigger controls** (text-field, textarea, select, combo-box): the control rule, the editor or the
-  trigger label being the text slot; a leading icon or caret slot is `2n`; the pill radius `2n` with circular
-  corners (Amendment 5; a textarea takes the same `2n`). `ui-otp-field`'s cells hold one centered character,
-  take no inset and the same `2n`, so a square cell is a circle. A field label sits above with gap `ceil(n/2)`.
-- **Button and toggle**: the **pill**, radius `2n` (equal to h/2, now a formula of n, not a special case), and
-  the control rule; an icon-only button is a `4n` square. A button label aligns per the skill's table
+  trigger label being the text slot; a leading icon or caret slot is `2n`; the control radius `A · h/2` (`n` under
+  the balanced default, the pill `2n` under `data-radius='pill'`; a textarea takes the same). `ui-otp-field`'s
+  cells hold one centered character, take no inset and the surface radius `A · n`, a round square at any preset. A field label sits above with gap `ceil(n/2)`.
+- **Button and toggle**: the control radius `A · h/2` like every single-line control (`n` under the balanced
+  default; the pill h/2 only under `data-radius='pill'`), and the control rule; an icon-only button is a `4n` square. A button label aligns per the skill's table
   (centered alone or between adornments, start with only trailing content, end with only leading content);
   a toggle label stays centered (`toggle.md`).
 - **Tabs, segments, menu and listbox rows**: the control rule; tabs touch with the tight gutter `c`. Menu and
-  listbox rows are pills (`2n`), and their panel (menu, select listbox, combo-box panel, multi-select) is the
-  row radius plus its own inset, `2n + c`, so the rows nest concentrically (Amendment 5).
+  listbox rows take the control radius, and their panel (menu, select listbox, combo-box panel, multi-select) is
+  the row radius plus its own inset `c`, so the rows nest concentrically at any amount (Amendment 5).
 - **Indicators**: checkbox box `2n` (radius `ceil(n/2)`, check glyph the glyph box `n + 6`, inset `c`), radio `2n` circle (dot
   the icon box - 2c - 2, which never shrinks as n grows), switch track `2n` tall with padding `c` and
   thumb the icon box - 2c, slider rail `2c` and thumb the icon box - 2c, progress track `2c` (radius `c`).
 - **Chips** (badge; the level `--md-sys-chip-{margin,gutter,radius}`): height `2n + 2c`, margin `c`, gutter
-  `c`, label margin `c` (text edge `2c`), the chip pill radius `n + c` (h/2, Amendment 5). The checkbox box
+  `c`, label margin `c` (text edge `2c`), the chip radius `A · (n + c)` (A × its h/2; the pill under `pill`). The checkbox box
   keeps `ceil(n/2)` on its own token, `--md-sys-checkbox-radius`.
 - **Avatar** is a `4n` circle, stood beside controls at control height; an avatar inline inside a tag or a
   control row is the skill's `2n`.
-- **Derived marks and tiles** (Amendment 3): gauge ring stroke `4c`; swatch a `4n` square with radius `n`
-  (the icon tile); column-chart top-segment radius `n + c` (the group radius); the A2UI artboard pads with
+- **Derived marks and tiles** (Amendment 3): gauge ring stroke `4c`; swatch a `4n` square with the surface radius
+  `A · n` (the icon tile); column-chart top-segment radius the group radius `A · (n + c)`; the A2UI artboard pads with
   the card margin `3m` and gaps with the card gutter `2m`.
 - **Listbox** (menu, select and combo-box panels): options are `4n` controls stacked edge to edge, padding `c`.
 - **Segmented-control**: padding `c`, gap `c`, segments `4n` with padding `2n`.
@@ -113,20 +130,21 @@ The full per-control table is ADR-0245 clause 3 and Appendix B; the geometry pro
 
 Four levels, each at the container's own n and m (root md: n 8, c 2, m 8 at regular density):
 
-| level | margin | gutter | radius | members |
+| level | margin | gutter | radius (A × margin; balanced halves it) | members |
 |---|---|---|---|---|
-| group | `n + c` | `c` | `n + c` | listbox panels, segmented-control, table rows, tooltip |
-| widget | `2m` | `m` | `2m` | popover, toast, form-popover panel |
-| card | `3m` | `2m` | `3m` | card, modal, drawer, command-modal, the A2UI artboard |
-| layout | `4m` | `3m` | `4m` | super-shell frame and bars, the docs page frame |
+| group | `n + c` | `c` | `A · (n + c)` | listbox panels, segmented-control, table rows, tooltip |
+| widget | `2m` | `m` | `A · 2m` | popover, toast, form-popover panel |
+| card | `3m` | `2m` | `A · 3m` | card, modal, drawer, command-modal, the A2UI artboard |
+| layout | `4m` | `3m` | `A · 4m` | super-shell frame and bars, the docs page frame |
 
 `data-density` moves m to nq/4, floored so a widget always out-margins a group: at the root md, m is 6 / 6 / 8 /
-10 / 12 from tight to loose, so the card is 18 / 12 / 18 at tight and compact and 36 / 24 / 36 at loose.
+10 / 12 from tight to loose, so the card margin and gutter are 18 / 12 at tight and compact and 36 / 24 at loose (its balanced radius 9 and 18).
 
 A container pads with its **margin**; a boxed child at an edge sits at `margin - its own inset` through a
 negative margin of `--md-sys-inset` that resolves on the child, so its label lines up with the card's text.
-A container's radius equals its margin and a control's radius equals its inset, so nested corners are
-**concentric by construction** (the pill excepted); ADR-0018's `max(0, r - pad)` chain and ADR-0046
+A container's radius is A × its margin and a control's radius A × its h/2, one amount per family, so a child
+inset by its parent's margin difference nests **concentrically by construction** at any preset, and a panel
+of rows adds its own inset to the row radius; ADR-0018's `max(0, r - pad)` chain and ADR-0046
 Amendment 2's fixed paddings retired. ADR-0046's `[data-box]` opt-in, flow-root BFC, sticky regions and
 scroll-fade mask stand, and the `--ui-box-*` names stay as the per-control consumer tier, repointed to the
 level tokens. Padding now moves with n.
@@ -189,6 +207,10 @@ is report-shape until the W7 cleanup, then enforcing.
 
 The ADR folder is frozen (T-0164), so a stale ADR clause is not amended; the current rule is stated here and
 wins over the ADR text.
+
+- **Button and toggle radius (ADR-0245 step 0 and Amendments 3 and 5).** Button and toggle no longer keep the
+  pill: they take the control radius `A · h/2` like every single-line control, balanced (A 0.5) by default, and
+  the pill is the opt-in `data-radius='pill'` (Kim's 2026-10-19 ruling, T-0374 step 6). See "Radius presets".
 
 - **BoardGrid frame (ADR-0046 Amendment 7).** The board paints no frame and has no inset: its first cell
   sits on the text edge around it (T-0146). The cell-to-cell gap is the 4px data-grid gap

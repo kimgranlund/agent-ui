@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve, type Emitted } from '../../../../../scripts/lib/foundations-model.mjs'
+import { RADIUS_PRESETS, anchors, resolve, type Emitted } from '../../../../../scripts/lib/foundations-model.mjs'
 import './tokens.css' // the colour roles: a control's border colour token, so its 1px border computes
 import './foundations.gen.css'
 import './foundations-bridge.gen.css'
@@ -159,6 +159,26 @@ describe('foundations.gen.css: the 36 cells compute what resolve() gives (ADR-02
       cells++
     }
     expect(cells).toBe(36)
+  })
+
+  it('data-radius presets: each value sets the control, chip, surface and card radii the model gives; pill moves only the control family', () => {
+    // T-0374 step 6 (Kim's 2026-10-19 ruling): balanced is the root, data-radius picks the others. Under pill the
+    // control and chip radii are h/2 and the containers keep the root's balanced amount.
+    const names = ['control-radius', 'chip-radius', 'radius', 'card-radius'] as const
+    const root = resolve('product', 'md', 'md')
+    let presets = 0
+    for (const preset of RADIUS_PRESETS) {
+      const got = labelled(readTokens(`<div data-tier="product" data-scale="md" data-radius="${preset}"><div data-size="md" data-probe></div></div>`))
+      const r = resolve('product', 'md', 'md', 'regular', { ...anchors(), radiusPreset: preset })
+      const want = [r.controlRadius, r.chip.radius, r.radius, r.card.radius]
+      expect(names.map((name) => got[name]), preset).toEqual(want)
+      if (preset === 'pill') {
+        expect(want, 'pill: control h/2 and chip n + c, containers balanced').toEqual([r.height / 2, r.n + r.c, root.radius, root.card.radius])
+      }
+      presets++
+    }
+    expect(presets).toBe(5)
+    expect([root.controlRadius, root.card.radius], 'the root is balanced: n and 1.5m').toEqual([8, 12])
   })
 
   it('the product sm/sm tight floor: m is 4, not nq/4 = 2.5, so a widget still out-margins a group', () => {

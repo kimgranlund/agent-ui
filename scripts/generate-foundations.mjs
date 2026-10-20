@@ -13,7 +13,7 @@
 // The sheet is the skill's tokens.css form under ADR-0140 names: the tier inputs on `[data-tier="…"]`,
 // scale, size and density on their attributes (density as the vendored q, tight 2 to loose 6, T-0374), and one
 // derived block (`--md-sys-n`, the container unit `--md-sys-m`, the control margin and height, the box values as multiples of n or c, the label inset n - c of the control rule (Amendment 4),
-// the control pill 2n (Amendment 5), the type roles under the skill's names (T-0373: the section and group
+// the radii at the two `data-radius` amounts (T-0374 step 6: container A x margin, control A x h/2, balanced at the root), the type roles under the skill's names (T-0373: the section and group
 // kickers), the chip level and the four container levels) re-declared
 // wherever an input changes (beside it, for one release, the type labels the kickers were renamed from,
 // `--md-sys-type-{section,group}-label`, so a foundations-only importer keeps them; W7 removes them), so each element computes its own n and m. ROOT_DEFAULT is the cut (clause 10a): true, so `:root` takes ROOT_INPUTS (product at
@@ -37,7 +37,7 @@ import { join } from 'node:path'
 import { check } from '../packages/agent-ui/shared/src/tokens/scale.mjs'
 import { RENAMED, ROOT_REGISTER, STEP } from './lib/foundations-rules.mjs'
 import { CFG, DENSITIES } from '../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
-import { anchors, checkAnchors, checkEmitted, heightPerN, marginPerNAt, roomyLevels } from './lib/foundations-model.mjs'
+import { RADIUS_PRESETS, anchors, checkAnchors, checkEmitted, heightPerN, marginPerNAt, radiusAmounts, roomyLevels } from './lib/foundations-model.mjs'
 
 export const OUT_REL = 'packages/agent-ui/shared/src/tokens/foundations.gen.css'
 export const BRIDGE_REL = 'packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css'
@@ -56,6 +56,15 @@ const M = 'var(--md-sys-m)'
 
 const Q = `var(--md-sys-density-q, ${DENSITIES.regular})`
 
+// The two radius amounts (T-0374 step 6): inputs like q, declared on :root and on [data-radius], read with the root
+// preset's amount as the fallback so a region-only render still resolves.
+const containerAmount = (a) => `var(--md-sys-radius-amount, ${radiusAmounts(a.radiusPreset, a).container})`
+const controlAmount = (a) => `var(--md-sys-control-radius-amount, ${radiusAmounts(a.radiusPreset, a).control})`
+const radiusInputs = (preset, a) => {
+  const A = radiusAmounts(preset, a)
+  return preset === 'pill' ? `--md-sys-control-radius-amount: ${A.control};` : `--md-sys-radius-amount: ${A.container}; --md-sys-control-radius-amount: ${A.control};`
+}
+
 /** The derived block: every quantity the resolvers return, as a formula of this element's n (and the density q for
  *  the control margin and height, and m for the widget, card and layout levels; the group level reads n only). */
 function derivedDeclarations(a = anchors()) {
@@ -64,7 +73,7 @@ function derivedDeclarations(a = anchors()) {
   const levels = roomyLevels(a).flatMap(([level, margin, gutter]) => [
     [`--md-sys-${level}-margin`, `calc(${M} * ${margin}px)`],
     [`--md-sys-${level}-gutter`, `calc(${M} * ${gutter}px)`],
-    [`--md-sys-${level}-radius`, `calc(${M} * ${margin}px)`],
+    [`--md-sys-${level}-radius`, `calc(${M} * ${margin}px * ${containerAmount(a)})`],
   ])
   return [
     ['--md-sys-n', 'calc(var(--md-sys-tier-n0) + var(--md-sys-tier-a) * var(--md-sys-scale-s, 0) + var(--md-sys-tier-k) * var(--md-sys-size-z, 0) + var(--md-sys-tier-g) * var(--md-sys-scale-s, 0) * var(--md-sys-size-z, 0))'],
@@ -78,10 +87,12 @@ function derivedDeclarations(a = anchors()) {
     ['--md-sys-inset', `calc(${N} * 1px)`],
     // The control rule (Amendment 4): the text slot carries the label inset n - c, so gutter c + inset = margin n.
     ['--md-sys-label-inset', `calc(var(--md-sys-inset) - ${C})`],
-    ['--md-sys-radius', `calc(${N} * 1px)`],
-    // The pill (Amendment 5): every single-line control takes h/2 = 2n; a textarea takes it too, and a panel
-    // takes its row's 2n plus its own inset, so rows nest concentrically.
-    ['--md-sys-control-radius', 'calc(var(--md-sys-height) / 2)'],
+    // The radii (T-0374 step 6, the skill's percentage presets): the container family is A x its margin (the surface n
+    // here), the control family A x h/2. Balanced (A 50%) is the root; data-radius picks sharp, crisp, round or pill.
+    ['--md-sys-radius', `calc(${N} * 1px * ${containerAmount(a)})`],
+    // A single-line control (and a textarea) takes A x h/2, n at regular under balanced, h/2 under pill; a panel
+    // takes its row's radius plus its own inset, so rows nest concentrically at any amount.
+    ['--md-sys-control-radius', `calc(var(--md-sys-height) / 2 * ${controlAmount(a)})`],
     ['--md-sys-icon-box', `calc(${N} * ${a.iconPerN}px)`],
     // The glyph (T-0374, resolveControlSurface): the n + 6 artwork centred in its square 3n slot. n + 6 is at least 10
     // on the whole ladder, so the retired 8px floor never binds; JS and TS readers use glyphBox() in foundations-rules.mjs.
@@ -100,15 +111,15 @@ function derivedDeclarations(a = anchors()) {
     ['--md-sys-type-small-control', lin(a, a.linear.smallControl)],
     ['--md-sys-type-group-kicker', lin(a, a.linear.groupKicker)],
     ['--md-sys-type-floor', `${a.floor}px`],
-    // The chip level (tag, badge, kbd): margin c, gutter c, and the chip pill n + c, h/2 of the 2n + 2c chip
-    // (Amendment 5). The checkbox box stays a rounded square at ceil(n/2), the skill's checkboxRadius.
+    // The chip level (tag, badge, kbd): margin c, gutter c, and the control amount of the chip's h/2 n + c (the
+    // 2n + 2c chip). The checkbox box stays a rounded square at ceil(n/2), the skill's checkboxRadius, at any preset.
     ['--md-sys-chip-margin', C],
     ['--md-sys-chip-gutter', C],
-    ['--md-sys-chip-radius', `calc(var(--md-sys-inset) + ${C})`],
+    ['--md-sys-chip-radius', `calc((var(--md-sys-inset) + ${C}) * ${controlAmount(a)})`],
     ['--md-sys-checkbox-radius', `calc(round(up, ${N} / 2, 1) * 1px)`],
     ['--md-sys-group-margin', `calc(var(--md-sys-inset) + ${C})`],
     ['--md-sys-group-gutter', C],
-    ['--md-sys-group-radius', `calc(var(--md-sys-radius) + ${C})`],
+    ['--md-sys-group-radius', `calc(var(--md-sys-group-margin) * ${containerAmount(a)})`],
     ...levels,
   ]
 }
@@ -119,8 +130,8 @@ const tierInputs = ([n0, ta, k, g], a) =>
 /** Where the derived block is declared: everywhere an input changes (the cut), or inside opt-in regions only. */
 export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
   rootDefault
-    ? ':root, [data-tier], [data-scale], [data-size], [size], [data-density]'
-    : '[data-tier], [data-tier] :is([data-scale], [data-size], [size], [data-density])'
+    ? ':root, [data-tier], [data-scale], [data-size], [size], [data-density], [data-radius]'
+    : '[data-tier], [data-tier] :is([data-scale], [data-size], [size], [data-density], [data-radius])'
 
 /** The M7 forms (whole px in the model) that T-0373 retired: a level margin or gutter, and type off the 0.5px grid.
  *  Fractional px ship (Kim's 2026-10-19 ruling, T-0374), so checkEmitted() holds neither: it holds every emitted value
@@ -146,10 +157,11 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = 
     '/* n = n0 + a*s + k*z + g*s*z per element (s = data-scale, z = data-size or a control\'s size, each -1 / 0 / +1). */',
     '/* q = data-density (tight 2, compact 3, regular 4, spacious 5, loose 6): control margin (q - 2)n/4, height 3n + 2 margin. */',
     '/* m = max(nq/4, floor((n + c) / 2) + 1): the widget, card and layout levels read m. */',
+    '/* data-radius (sharp 0, crisp 0.25, balanced 0.5, round 1; pill sets the control amount 1 only): container radius A x margin, control radius A x h/2. */',
     `/* ${rootDefault ? `Root default (the cut): :root is ${ROOT_INPUTS.tier} at scale ${ROOT_INPUTS.scale} and every element derives from one n.` : 'Dark launch: tokens exist only inside an opt-in [data-tier] region; nothing is declared on :root.'} */`,
   ]
   if (rootDefault) {
-    out.push(`:root { ${tierInputs(CFG.tiers[ROOT_INPUTS.tier], a)} --md-sys-scale-s: ${STEP[ROOT_INPUTS.scale]}; }`)
+    out.push(`:root { ${tierInputs(CFG.tiers[ROOT_INPUTS.tier], a)} ${radiusInputs(a.radiusPreset, a)} --md-sys-scale-s: ${STEP[ROOT_INPUTS.scale]}; }`)
   }
   for (const [tier, constants] of Object.entries(CFG.tiers)) out.push(`[data-tier='${tier}'] { ${tierInputs(constants, a)} }`)
   for (const [step, s] of Object.entries(STEP)) out.push(`${scoped(`[data-scale='${step}']`)} { --md-sys-scale-s: ${s}; }`)
@@ -157,6 +169,7 @@ export function renderFoundationsCss({ rootDefault = ROOT_DEFAULT, anchors: a = 
     out.push(`${scoped(`:is([data-size='${step}'], [size='${step}'])`)} { --md-sys-size-z: ${z}; --md-sys-title-bump: ${a.titleBump[step]}; }`)
   }
   for (const [density, q] of Object.entries(DENSITIES)) out.push(`${scoped(`[data-density='${density}']`)} { --md-sys-density-q: ${q}; }`)
+  for (const preset of RADIUS_PRESETS) out.push(`${scoped(`[data-radius='${preset}']`)} { ${radiusInputs(preset, a)} }`)
   out.push('/* The type labels the skill\'s kickers replaced (T-0373), kept for one release so old readers resolve; W7 removes them. */')
   out.push(`${recomputeList(rootDefault)} { ${Object.entries(RENAMED).map(([old, name]) => `${old}: var(${name});`).join(' ')} }`)
   out.push(`${recomputeList(rootDefault)} {`)
@@ -267,7 +280,7 @@ function bridgeDeclarations(a) {
 /** Every name the legacy opt-out sets to `initial`: the inputs, the derived block, the bridge's own n and the
  *  renamed type labels, so a consumer's `var(--md-sys-type-group-label, <fallback>)` takes its fallback there. */
 function legacyInitialNames(a) {
-  const inputs = ['tier-n0', 'tier-a', 'tier-k', 'tier-g', 'tier-ratio', 'scale-s', 'size-z', 'title-bump', 'density-q'].map((n) => `--md-sys-${n}`)
+  const inputs = ['tier-n0', 'tier-a', 'tier-k', 'tier-g', 'tier-ratio', 'scale-s', 'size-z', 'title-bump', 'density-q', 'radius-amount', 'control-radius-amount'].map((n) => `--md-sys-${n}`)
   const bridge = Object.keys(STEP).flatMap((step) => [`--md-sys-bridge-n-${step}`, `--md-sys-bridge-body-${step}`])
   return [...inputs, ...derivedDeclarations(a).map(([name]) => name), ...bridge, ...Object.keys(RENAMED)]
 }

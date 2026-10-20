@@ -1,9 +1,12 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 
 // The root register's derived geometry (ADR-0245): product / md / md is n 8, so the card gutter is 2n and the radius 3n.
 const DERIVED = rootResolve('md')
+/** The card radius at the root register: A x the card margin, balanced by default (T-0374 step 6). */
+const CARD_RADIUS = model().card.radius
 
 // G9 s7 — the CROSS-ENGINE card smoke (decomp g9-containers s7 browser gate). Runs in BOTH Chromium and WebKit
 // (vitest.browser.config.ts). Where card-geometry.test.ts / card-css.test.ts pin the DECLARED formulas, this
@@ -140,7 +143,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // either way — see the dedicated default-root floor test below for the case where the floor actually binds.
     // ADR-0245 cl.6: a container's radius equals its own margin (3n), so the ADR-0018 chain is only the
     // legacy fallback; the parent's reseed to 32px does not reach the nested card.
-    expect(nestedR, 'nested radius is not the derived 3n').toBe(rootResolve('md').card.radius)
+    expect(nestedR, 'nested radius is not the derived 3n').toBe(CARD_RADIUS)
     expect(nestedR, 'nested radius did not stay below the reseeded parent').toBeLessThan(rootR)
     expect(nestedR, 'nested radius collapsed to 0 (no demonstrable decrement)').toBeGreaterThan(0)
   })
@@ -156,10 +159,10 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     const root = mount('<ui-card><ui-card-content><ui-card>nested</ui-card></ui-card-content></ui-card>')
     const nested = root.querySelector('ui-card-content > ui-card') as HTMLElement
 
-    expect(radiusPx(root), 'root did not fall to the default corner-base').toBeCloseTo(DERIVED.card.radius, 0)
+    expect(radiusPx(root), 'root did not fall to the default corner-base').toBeCloseTo(CARD_RADIUS, 0)
     // 4px == --md-sys-space-xs at the default density (1) — see this file's px()/mount() helpers; a fresh
     // mount carries no [density] repoint, so the token resolves to its literal 4px base.
-    expect(radiusPx(nested), 'default-root nested card is not the derived 3n (regressed to a knife-edge 0?)').toBe(rootResolve('md').card.radius)
+    expect(radiusPx(nested), 'default-root nested card is not the derived 3n (regressed to a knife-edge 0?)').toBe(CARD_RADIUS)
   })
 
   it('regions are PRESENCE-DRIVEN in BLOCK FLOW — a present region adds a box, an absent one leaves nothing', () => {
@@ -384,7 +387,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // card even though its radius chain doesn't reach the nested card cleanly.
     expect(px(getComputedStyle(root).paddingLeft), 'the bare outer card lost its own fallback padding').toBeCloseTo(DERIVED.card.gutter, 0)
     // derived (ADR-0245): the nested card reads --md-sys-card-radius (3n), the same in both engines.
-    expect(radiusPx(nested), `${server.browser}: direct nesting radius (derived 3n)`).toBe(rootResolve('md').card.radius)
+    expect(radiusPx(nested), `${server.browser}: direct nesting radius (derived 3n)`).toBe(CARD_RADIUS)
 
     // the documented workaround (an explicit border-radius reseed) still recovers the radius under the
     // fallback — the manual case remains manually fixable, it is simply not automatic.

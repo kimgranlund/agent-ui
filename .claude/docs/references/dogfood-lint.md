@@ -33,7 +33,7 @@ ratio or a comparison with the same control enabled, and `glyph-gap` reads the g
 | Render rule | Expected |
 |---|---|
 | `register` | the element's cascade n (its `--md-sys-height` / 4) equals the register's n |
-| `pill-radius` | a single-line control or chip has radius at least h/2, the segmented control's track outline (its `::after`) included (T-0144), the suggestion and file-drop chips too (T-0168); a square entry cell is exempt (see `entry-cell-radius`); `ui-multi-select` has no trigger (its descriptor), so its panel is `panel-radius`'s |
+| `pill-radius` | a single-line control or chip has radius at least the control amount x h/2 (h/4 under the balanced default, h/2 under `data-radius='pill'`, T-0374 step 6), the segmented control's track outline (its `::after`) included (T-0144), the suggestion and file-drop chips too (T-0168); a square entry cell is exempt (see `entry-cell-radius`); `ui-multi-select` has no trigger (its descriptor), so its panel is `panel-radius`'s |
 | `icon-square` | a `ui-button` with an icon and no text is as wide as it is tall |
 | `type-floor` | no visible text under `CFG.floor` (9px); a glyph is not text (Amendment 6), so glyphs are exempt and checked by `glyph-box` |
 | `column` | at 400px nothing ends past the content column unless an overflow-x frame inside it holds it |
@@ -41,12 +41,12 @@ ratio or a comparison with the same control enabled, and `glyph-gap` reads the g
 | `control-height` | a single-line control is `resolve().h` (4n) tall |
 | `text-edge` | host padding plus the text slot's padding is 2n - c |
 | `card-radius` | a `ui-card` takes `resolve().card.radius` |
-| `panel-radius` | a visible listbox panel is concentric: 2n + c |
+| `panel-radius` | a visible listbox panel is concentric: the row's control radius plus c |
 | `badge-hug` | a `ui-badge` is no wider than its max-content width (T-0140) |
 | `option-indicator` | every `ui-multi-select` option paints its indicator, selected or not (T-0140) |
 | `inline-text` | a `ui-text` link or span inside running text is `display: inline` (T-0140) |
 | `adornment-gap` | adjacent trailing adornments of a `ui-text-field` sit at least c apart (T-0140) |
-| `entry-cell-radius` | a square entry cell (`ui-otp-field` cell) is a round square at radius n, not a pill (Amendment 6) |
+| `entry-cell-radius` | a square entry cell (`ui-otp-field` cell) is a round square at the surface radius `resolve().radius` (A x n), not a pill (Amendment 6) |
 | `glyph-box` | a glyph (`ui-glyph`'s mark, the board-grid intent mark, the HUD and result-card stat marks) is exactly its glyph box n + 6, centred in its square 3n slot (Amendment 6; T-0374 retired the T-0143 8px floor, which n + 6 never reaches) |
 | `dash-scale` | no svg shape is non-scaling-stroke with a dasharray other than none (the browser reads such a pattern in screen px; T-0141) |
 | `link-ink` | an `a[href]` inside a `ui-*` host is never the browser's default link colour (T-0141) |

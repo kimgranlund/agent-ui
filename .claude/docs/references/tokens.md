@@ -83,7 +83,10 @@ families):
   small control role `--md-sys-type-small-control` (n + 4, T-0374; emitted, no control reads it yet), the control
   margin `--md-sys-control-margin` ((q - 2)n/4 from the density input `--md-sys-density-q`, T-0374), the levels
   `--md-sys-{chip,group,widget,card,layout}-{margin,gutter,radius}`, or the bridge aliases of the old names)
-  directly. It mints a role-named `--ui-{cmp}-*` token in the `:where()` block
+  directly. The radii scale by two amount inputs (T-0374 step 6, `geometry.md` "Radius presets"):
+  `--md-sys-radius-amount` (the container family) and `--md-sys-control-radius-amount` (the control family),
+  0.5 on `:root` (balanced) and set by `data-radius` (`sharp`, `crisp`, `balanced`, `round`, `pill`); no control
+  reads an amount, only the derived radii. It mints a role-named `--ui-{cmp}-*` token in the `:where()` block
   (`--ui-toast-radius: var(--md-sys-widget-radius)`) and consumes that, same as color roles. The
   sanctioned direct-read list stays exactly the fleet constants: focus-ring
   (`--md-sys-state-focus-ring-*`, `--md-sys-color-focus-ring`), motion (`--md-sys-motion-*`), and

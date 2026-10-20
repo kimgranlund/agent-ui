@@ -7,6 +7,7 @@ import type { UICodeEditorElement } from './editor.ts'
 // coincidentally-matching literal.
 import { LINK_TARGET, LINK_REL } from '@agent-ui/components/controls/text'
 import { resolve } from '../../../shared/src/tokens/scale.mjs'
+import { resolve as model } from '../../../../../scripts/lib/foundations-model.mjs'
 import { rootResolve } from '../../../../../scripts/lib/foundations-rules.mjs'
 
 /** Minimal CDP surface (the button-states.browser.test.ts precedent) — `cdp()`'s public type is empty; the
@@ -1185,14 +1186,14 @@ describe('ui-code-editor — GH #867: the entry-content box scrolls with an unob
 describe('ui-code-editor — derived foundations geometry (ADR-0245 cl.3, dark launch, both engines)', () => {
   const px = (v: string): number => parseFloat(v)
 
-  it('inside a data-tier region: padding n - 1 (the border is inside the box), radius 2n (textarea parity, Amendment 5), the toggle a 4n square', async () => {
+  it('inside a data-tier region: padding n - 1 (the border is inside the box), the control radius A x h/2 (textarea parity, Amendment 5, T-0374 step 6), the toggle a 4n square', async () => {
     const { wrap, field } = mount(`<div data-tier="product" data-scale="sm"><ui-code-editor language="markdown" ${SIZED}></ui-code-editor></div>`)
     const r = resolve('product', 'sm', 'md')
     await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
     const cs = getComputedStyle(field)
     expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.control.margin - 1)
     expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBe(r.control.margin - 1)
-    expect(px(cs.borderTopLeftRadius), `${server.browser}: radius`).toBe(r.h / 2)
+    expect(px(cs.borderTopLeftRadius), `${server.browser}: radius`).toBe(model('product', 'sm', 'md').controlRadius)
     const box = (wrap.querySelector('[data-part="mode-toggle"]') as HTMLElement).getBoundingClientRect()
     expect(box.height, `${server.browser}: toggle block size`).toBe(r.h)
   })
