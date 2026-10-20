@@ -265,6 +265,10 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
       const both = q(wrap, '[data-case="both"]')
       const text = textRect(both)
       near(text.left - q(both, '[slot="leading"]').getBoundingClientRect().right, q(both, '[slot="trailing"]').getBoundingClientRect().left - text.right, 'between leading and trailing: centered')
+      // between two adornments the label keeps W + C on both sides (Kim's 2026-10-19 ruling)
+      const between = q(both, '[data-part="label"]')
+      near(px(between, 'padding-inline-start'), e.controlGutter + e.labelCompensation, 'between: label start W + C')
+      near(px(between, 'padding-inline-end'), e.controlGutter + e.labelCompensation, 'between: label end W + C')
     })
   })
 }

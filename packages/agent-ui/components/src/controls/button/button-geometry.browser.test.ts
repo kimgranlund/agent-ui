@@ -197,6 +197,11 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
     expect(start, `reversed inline-pads are not symmetric — padding tracked role not slot-presence: ${start} vs ${end}`).toBeCloseTo(end, 1)
     expect(start, 'leading inline-pad is not ½(h−icon)').toBeCloseTo((h - iconCell) / 2, 1)
     expect(end, 'trailing inline-pad is not ½(h−icon)').toBeCloseTo((h - iconCell) / 2, 1)
+    // a label between two adornments keeps W + C on both sides (T-0374 step 7, Kim's 2026-10-19 ruling)
+    const r = resolve('product', 'md', 'md')
+    expect(r.labelCompensation, 'anti-vacuous: C is not 0 at the root').toBeGreaterThan(0)
+    expect(labelInsetPx(btn), 'label start between two adornments').toBeCloseTo(r.controlGutter + r.labelCompensation, 1)
+    expect(labelInsetEndPx(btn), 'label end between two adornments').toBeCloseTo(r.controlGutter + r.labelCompensation, 1)
 
     // [2] anti-vacuous (BTN-CARET on the LEADING side): the leading caret's GLYPH content box = font (14), and
     // is STRICTLY smaller than its icon-sized cell (18) — NOT the named --ui-ind oversize bug on the lead edge.

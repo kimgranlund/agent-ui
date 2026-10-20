@@ -96,9 +96,9 @@ Radius follows the skill's curvature presets (`geometry-contract.md`, "Radius fa
   content and inline padding"): the box pads the control margin `m` (`--md-sys-control-margin`) on both edges;
   each adornment fills the square `3n` wrapper (`--md-sys-glyph-slot`) with its artwork centred (icon `2n`, glyph
   `n + 6`); the label wrapper pads `W = n/4` (`--md-sys-control-gutter`) and adds the compensation
-  `C = max(0, R - m - W)` (`--md-sys-label-compensation`) on each side no adornment occupies, read from the
-  actual siblings: both sides when alone, the start only with only trailing content, the end only with only
-  leading content, neither between two adornments. Adornment wrappers get no compensation. At product md
+  `C = max(0, R - m - W)` (`--md-sys-label-compensation`), read from the actual siblings: both sides when alone
+  or between two adornments (Kim's 2026-10-19 ruling), the start only with only trailing content, the end only
+  with only leading content. Adornment wrappers get no compensation. At product md
   regular: `m` 4, `W` 2, `R` 8 and `C` 2 under balanced (text edge 8), `R` 16 and `C` 10 under pill (text edge 16).
   An icon-only button is an `h` square. A button label aligns per the skill's table (centered alone or between
   adornments, start with only trailing content, end with only leading content).

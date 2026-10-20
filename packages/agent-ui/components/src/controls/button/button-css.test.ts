@@ -65,11 +65,12 @@ describe('button.css — structure + token hygiene (s7)', () => {
     expect(tokenBlock).toMatch(/--ui-button-label-gutter:\s*var\(--md-sys-control-gutter,\s*0px\)/)
     expect(tokenBlock).toMatch(/--ui-button-label-compensation:\s*var\(--md-sys-label-compensation,\s*0px\)/)
     expect(stylesBlock).toMatch(/:scope > \[data-part='label'\]\s*\{[^}]*padding-inline:\s*calc\(var\(--ui-button-label-gutter\) \+ var\(--ui-button-label-compensation\)\)/)
-    // C only on an exposed side: trailing-only content drops it at the end, leading-only at the start, both at neither
+    // trailing-only content drops C at the end, leading-only at the start; a label alone or between two adornments
+    // keeps W + C on both sides through the base rule (Kim's 2026-10-19 ruling), so no rule pads the between case
     // (wrapped in :where() so the padding rules keep the base specificity and a consumer's label padding still wins)
     expect(stylesBlock).toMatch(/\[data-part='label'\]:where\(:first-child:not\(:only-child\)\)\s*\{[^}]*padding-inline-end:\s*var\(--ui-button-label-gutter\)/)
     expect(stylesBlock).toMatch(/\[data-part='label'\]:where\(:last-child:not\(:only-child\)\)\s*\{[^}]*padding-inline-start:\s*var\(--ui-button-label-gutter\)/)
-    expect(stylesBlock).toMatch(/\[data-part='label'\]:where\(:not\(:first-child\):not\(:last-child\)\)\s*\{[^}]*padding-inline:\s*var\(--ui-button-label-gutter\)/)
+    expect(stylesBlock).not.toMatch(/\[data-part='label'\][^{]*:not\(:first-child\):not\(:last-child\)/)
     expect(tokenBlock).toMatch(/--ui-button-gap:\s*var\(--md-sys-c,\s*var\(--md-sys-gap-md\)\)/) // the control gutter c
   })
 

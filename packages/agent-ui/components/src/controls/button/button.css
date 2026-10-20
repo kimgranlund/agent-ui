@@ -168,7 +168,7 @@
      override to `end`/`start` below (ADR-0171, GH #442, amended GH #450). */
   :scope > [data-part='label'] {
     box-sizing: border-box; /* the padding counts inside the max-inline-size clamp below */
-    /* a label alone has both sides exposed: W + C on each (text edge m + W + C) */
+    /* a label alone or between two adornments: W + C on each side (text edge m + W + C) */
     padding-inline: calc(var(--ui-button-label-gutter) + var(--ui-button-label-compensation));
     overflow: hidden;
     text-overflow: ellipsis;
@@ -194,8 +194,9 @@
      track resolves to the label's own width, so start/end/center are pixel-indistinguishable and
      the adornment to text separation is the artwork inset + gap + W; the spread only shows once
      the button's inline-size exceeds its content (ADR-0171 Amendment §A1). The same presence decides
-     the compensation (T-0374 step 7): C goes only on a label side no adornment occupies, read from the
-     actual siblings, so a label between two adornments pads W alone on both sides. The padding rules wrap
+     the compensation (T-0374 step 7): a label with adornment content on one side only drops C on that
+     side, read from the actual siblings; a label alone or between two adornments keeps W + C on both
+     sides (Kim's 2026-10-19 ruling, so the base rule covers both). The padding rules wrap
      their presence test in :where(), so they keep the base rule's specificity and a consumer's own label
      padding (the composer's compact picker collapses it to 0) still wins as it did before. */
   :scope > [data-part='label']:first-child:not(:only-child) {
@@ -209,9 +210,6 @@
   }
   :scope > [data-part='label']:where(:last-child:not(:only-child)) {
     padding-inline-start: var(--ui-button-label-gutter); /* the end side is exposed and keeps W + C */
-  }
-  :scope > [data-part='label']:where(:not(:first-child):not(:last-child)) {
-    padding-inline: var(--ui-button-label-gutter); /* between two adornments: no side exposed */
   }
 
   /* Anatomy (ADR-0006, extended by ADR-0012): host-as-grid with three POSITION regions — an OPTIONAL leading
