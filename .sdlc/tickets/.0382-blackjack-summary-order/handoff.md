@@ -2,7 +2,7 @@
 id: T-0382
 title: "Blackjack: A2UI update renders before the turn summary"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -39,3 +39,13 @@ The failing test lands before or with the fix, never after. Prefer a fix in the 
 ## Plan review
 - Kim 2026-10-19: paint order is enough; the summary stays above the card on a reopened bubble (GH #1221 layout kept).
 - Conductor 2026-10-19: the inherited red at site/pages/agent-admin-app.ts:1721 was this worktree's whole-dir node_modules symlink (a second copy of the components types). main is green, and with lane-local @agent-ui links `npm run check` exits 0 here. Reverify.
+
+## Outcome
+
+2026-10-19 · lane: solo L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 64c8bd6afd41
+- Changed: the turn summary paints after the A2UI surface update on a reopened bubble
+- Commits: 58f78a8 T-0382: note the worktree install fix; 1145338 T-0382: record Kim's ruling on summary position; 6556461 T-0382: Blackjack: A2UI update renders before the turn summary
+- Check: 1 (red) T-0382 test exits 0: pass
+- Check: 2 full conversation.test.ts exits 0: pass
+- Check: 3 `npm run check` exits 0: pass
+- Follow-up: note: conversation.browser.test.ts was not run not a named criterion; it... -> notes.md

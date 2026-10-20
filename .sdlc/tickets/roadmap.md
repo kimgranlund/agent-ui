@@ -18,6 +18,5 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0379 | [0379-r12-poker-chip-drift](0379-r12-poker-chip-drift/handoff.md) | A Croupier check reads the reply's pot and bankroll against the table and across hands (round 12 cluster K) | feature | L3 | P2 | none | 🔵 ready |
 | T-0380 | [0380-r12-poker-showdown-no-deal-again](0380-r12-poker-showdown-no-deal-again/handoff.md) | A poker hand settled through the data model only offers no Deal again (round 12 cluster M) | bug | L2 | P2 | none | 🔵 ready |
 | T-0381 | [0381-r12-playing-card-sm-type-floor](0381-r12-playing-card-sm-type-floor/handoff.md) | PlayingCard size sm renders its index under the type floor (round 12 cluster N) | bug | L1 | P3 | none | 🔵 ready |
-| T-0382 | [0382-blackjack-summary-order](0382-blackjack-summary-order/handoff.md) | Blackjack: A2UI update renders before the turn summary | bug | L2 | P2 | none | 🔵 ready |
 
-Closed: 363 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 364 done, 4 dropped (git log or .NNNN-* folders)
