@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { CFG, check, resolve, type Resolved } from './scale.mjs'
 import { BRIDGE_REL, EMITTED_M7, LEGACY, OUT_REL, ROOT_DEFAULT, renderBridgeCss, renderFoundationsCss } from '../../../../../scripts/generate-foundations.mjs'
 import { DERIVED, RENAMED, ROOT_REGISTER, STEP, glyphBox, findingsIn } from '../../../../../scripts/lib/foundations-rules.mjs'
-import { anchors, checkAnchors, checkEmitted, resolve as resolveEmitted, widgetOverGroup, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
+import { anchors, checkAnchors, checkEmitted, radiusAmounts, resolve as resolveEmitted, widgetOverGroup, type Anchors } from '../../../../../scripts/lib/foundations-model.mjs'
 import { CFG as VENDORED_CFG, DENSITIES, resolveGeometry } from './vendor/mathematical-design-system/scale.mjs'
 
 // ADR-0245 clause 1, 10a and 10c: the config gate, the generated-file drift gate, the cut and the bridge.
@@ -43,10 +43,12 @@ const CURRENT_CURVATURE_SHA = 'cc1639f495299070ac02f86825589e970aff9286933fe6a3b
  *  10 + 1 per step (the bridge's label rows alias it) and the new `--md-sys-type-small-control` is 9 + 1. Step 3: the
  *  content and brand tier rows are the skill's 11/3/2/1 and 15/4/2/1 (the sheet only: the bridge reads no tier row).
  *  Step 4: density is the skill's q (tight 2 to loose 6) and moves the new `--md-sys-control-margin`, the height and
- *  m (both sheets: the bridge resets `--md-sys-density-q` and the control margin in the legacy opt-out). */
+ *  m (both sheets: the bridge resets `--md-sys-density-q` and the control margin in the legacy opt-out). Step 6: the
+ *  radii take the curvature presets, balanced at the root, and `[data-radius]` sets the two amounts (both sheets: the
+ *  bridge resets `--md-sys-radius-amount` and `--md-sys-control-radius-amount` in the legacy opt-out). */
 const PARITY_SHA = {
-  foundations: '0ac49c41ff74e045eebb593b366088d0df72718cdc65cd30fb7ef193e5cf9b4a',
-  bridge: '65a1ff2c2168b55f69668a0bfc56641eab7d4059f0bb75e6e32bb3d2afe45491',
+  foundations: '85baff8eaa96aea6c4f2ba45c1d062fc67f05facf30359358606cc4452c92105',
+  bridge: '69d828fcdb21b55f18fed9606da400da6f6d5e3d2da3c52f6c50dae680b7da2f',
 }
 const textSha = (text: string): string => createHash('sha256').update(text).digest('hex')
 
@@ -93,6 +95,7 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
       kicker: (a) => { a.kicker -= 0.0625 },
       'linear.body': (a) => { a.linear.body = [a.linear.body[0] + 1, a.linear.body[1]] },
       'linear.control': (a) => { a.linear.control = [a.linear.control[0] + 1, a.linear.control[1]] },
+      'radiusPresets.balanced': (a) => { a.radiusPresets.balanced -= 10 }, // T-0374 step 6: the vendored curvature preset
     }
     let rendered = 0
     for (const [name, nudge] of Object.entries(nudges)) {
@@ -218,6 +221,8 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
 
   it('resolve() mirrors the sheet: every emitted token equals the repo\'s resolve() on all 36 cells at every density', () => {
     const steps = ['sm', 'md', 'lg'] as const
+    const A = radiusAmounts()
+    expect(A, 'the root preset is balanced (T-0374 step 6)').toEqual({ container: 0.5, control: 0.5 })
     let cells = 0
     for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const s of steps) for (const z of steps) {
       for (const d of Object.keys(DENSITIES) as Array<keyof typeof DENSITIES>) {
@@ -236,12 +241,15 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
         // The frozen resolver has the three legacy densities; its default is the skill's regular, and density moves
         // nothing else, so every other field equals it at default.
         const r = resolve(tier, s, z, 'default')
+        // T-0374 step 6: the radii are the balanced preset's, half the frozen resolver's (its radius is the margin and
+        // its control the pill h/2): the container family A x margin, the control family A x h/2.
         if (d === 'regular') {
-          expect([e.m, e.height, e.controlRadius], at).toEqual([r.m, r.h, r.h / 2])
-          expect([e.widget, e.card, e.layout], at).toEqual([r.widget, r.card, r.page])
+          expect([e.m, e.height, e.controlRadius], at).toEqual([r.m, r.h, A.control * r.h / 2])
+          const level = (l: { margin: number; gutter: number; radius: number }) => ({ ...l, radius: A.container * l.radius })
+          expect([e.widget, e.card, e.layout], at).toEqual([level(r.widget), level(r.card), level(r.page)])
         }
         expect([e.n, e.c, e.inset, e.labelInset, e.radius, e.iconBox, e.checkboxRadius], at)
-          .toEqual([r.n, r.c, r.n, r.labelMargin, r.n, r.icon, r.parts.checkboxRadius])
+          .toEqual([r.n, r.c, r.n, r.labelMargin, A.container * r.n, r.icon, r.parts.checkboxRadius])
         // T-0374: the glyph is the skill's n + 6 in its 3n slot, the model's own beside the frozen resolver.
         expect([e.glyphBox, e.glyphSlot], at).toEqual([r.n + 6, 3 * r.n])
         // The skill's role names (T-0373): the kickers carry the former section and group labels' values. T-0374
@@ -253,10 +261,10 @@ describe('foundations: the vendored config and its contract (ADR-0245 clause 1)'
         expect(e.surface, at).toEqual({
           slot: 3 * r.n, margin: v.surface.margin, height: v.surface.height, icon: r.icon, iconInset: r.n / 2, glyph: r.n + 6, glyphInset: (3 * r.n - (r.n + 6)) / 2,
         })
-        expect(e.group, at).toEqual(r.group)
-        // The chip pill n + c (Amendment 5) and the control pill h/2 are the sheet's own, beside the resolver.
-        expect(e.chip, at).toEqual({ margin: r.chip.margin, gutter: r.chip.gutter, radius: r.n + r.c })
-        expect(e.controlRadius, at).toBe(e.height / 2)
+        expect(e.group, at).toEqual({ ...r.group, radius: A.container * r.group.radius })
+        // The chip's h/2 n + c (Amendment 5) and the control's h/2, each at the control amount, are the sheet's own.
+        expect(e.chip, at).toEqual({ margin: r.chip.margin, gutter: r.chip.gutter, radius: A.control * (r.n + r.c) })
+        expect(e.controlRadius, at).toBe(A.control * e.height / 2)
       }
     }
     expect(cells).toBe(180)

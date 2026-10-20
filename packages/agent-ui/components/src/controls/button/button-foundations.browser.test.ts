@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -47,7 +48,7 @@ describe('ui-button foundations (ADR-0245 lane a01)', () => {
       expect(read(el, 'padding-inline-start'), 'box margin').toBeCloseTo(r.control.margin, 1)
       expect(read(el.querySelector('[data-part="label"]') as HTMLElement, 'padding-inline-start'), 'label inset').toBeCloseTo(r.labelMargin, 1)
       expect(r.control.margin + r.labelMargin, 'text edge').toBe(2 * r.n - r.c)
-      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.h / 2, 1)
+      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(model('product', 'sm', size).controlRadius, 1) // A x h/2 (T-0374 step 6)
     })
   }
 })

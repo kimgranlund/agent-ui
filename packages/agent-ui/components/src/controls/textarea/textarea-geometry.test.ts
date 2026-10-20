@@ -125,7 +125,7 @@ describe('textarea.css — the MULTI-LINE geometry law (ADR-0134 — the inversi
     expect((inlineLeg as RegExpMatchArray)[1]).toMatch(/min-inline-size:\s*var\(--ui-textarea-min-inline-size\)/)
   })
 
-  it('radius is the single-line control radius 2n (ADR-0245 Amendment 5), corner-base under the legacy opt-out', () => {
+  it('radius is the single-line control radius A x h/2 (ADR-0245 Amendment 5, T-0374 step 6), corner-base under the legacy opt-out', () => {
     expect(tokenBlock).toMatch(/--ui-textarea-radius:\s*var\(--md-sys-control-radius, var\(--md-sys-shape-corner-base\)\)/)
     expect(stylesBlock).toMatch(/border-radius:\s*var\(--ui-textarea-radius\)/)
   })

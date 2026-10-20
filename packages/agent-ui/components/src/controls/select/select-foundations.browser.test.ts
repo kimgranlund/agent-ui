@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -43,7 +44,7 @@ describe('ui-select foundations (ADR-0245 lane a01)', () => {
       const el = mount(true, size)
       expect(read(el, 'block-size'), 'height').toBeCloseTo(r.h, 1)
       expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.n, 1)
-      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(r.h / 2, 1) // the pill 2n (ADR-0245 Amendment 5)
+      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(model('product', 'sm', size).controlRadius, 1) // the control radius A x h/2 (T-0374 step 6; the pill under data-radius='pill')
     })
   }
 })

@@ -1084,7 +1084,7 @@ describe('otp-field.css — geometry trip-wire (otp-geometry-tokens)', () => {
     expect(otpFieldCss).toMatch(/--ui-otp-field-cell-inline-size:\s*var\(--ui-otp-field-height\)/)
   })
 
-  it('radius is the round square n with the squircle (ADR-0245 Amendment 6), the fixed entry corner under the legacy opt-out', () => {
+  it('radius is the round square at the surface radius A x n with the squircle (ADR-0245 Amendment 6, T-0374 step 6), the fixed entry corner under the legacy opt-out', () => {
     expect(otpFieldCss).toMatch(/--ui-otp-field-radius:\s*var\(--md-sys-radius, var\(--md-sys-shape-corner-base\)\)/)
     expect(otpFieldCss).toMatch(/--ui-otp-field-corner-shape:\s*var\(--md-sys-corner-shape, round\)/)
     expect(otpFieldCss).not.toMatch(/--ui-otp-field-radius:\s*var\(--md-sys-control-radius/) // a square entry cell is never the h/2 pill

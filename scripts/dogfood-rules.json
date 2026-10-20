@@ -9,10 +9,10 @@
     },
     {
       "id": "pill-radius",
-      "source": "ADR-0245 Amendment 5 items 1 and 2 (Amendment 3 for button and toggle); a square entry cell (otp-field) is not a pill: see entry-cell-radius (Amendment 6); the segmented control joined in T-0144 (T-0138: single-line controls in one row share h/2)",
+      "source": "ADR-0245 Amendment 5 items 1 and 2 (Amendment 3 for button and toggle); a square entry cell (otp-field) is not a pill: see entry-cell-radius (Amendment 6); the segmented control joined in T-0144 (T-0138: single-line controls in one row share h/2); T-0374 step 6: the control amount of h/2, balanced (0.5) by default and the pill under data-radius='pill'",
       "selector": "ui-button, ui-toggle, ui-text-field:not([multiline]), ui-select > [data-part='trigger'], ui-combo-box > [data-part='editor'], ui-badge, ui-segmented-control, ui-suggestions [data-part='chip'], ui-file-drop [data-part='chip']",
       "measure": "border-start-start-radius against the box height",
-      "expect": "radius >= box height / 2 (a pill)"
+      "expect": "radius >= the control radius amount x box height / 2 (h/4 under the balanced default)"
     },
     {
       "id": "icon-square",
@@ -66,10 +66,10 @@
     },
     {
       "id": "panel-radius",
-      "source": "ADR-0245 Amendment 5 item 3: a listbox panel is concentric, the row pill 2n plus the inset c",
+      "source": "ADR-0245 Amendment 5 item 3: a listbox panel is concentric, the row's control radius plus the inset c (T-0374 step 6)",
       "selector": "ui-select [data-part='listbox'], ui-multi-select, ui-combo-box [data-part='listbox']",
       "measure": "border-start-start-radius (only when the panel has a box)",
-      "expect": "2 * resolve(register).n + resolve(register).c"
+      "expect": "resolve(register).controlRadius + resolve(register).c"
     },
     {
       "id": "badge-hug",
@@ -101,10 +101,10 @@
     },
     {
       "id": "entry-cell-radius",
-      "source": "ADR-0245 Amendment 6: a square entry cell is a round square at radius n, never the pill h/2 (a circle)",
+      "source": "ADR-0245 Amendment 6: a square entry cell is a round square at the surface radius (A x n, T-0374 step 6), never the pill h/2 (a circle)",
       "selector": "ui-otp-field [data-part='cell']",
       "measure": "border-start-start-radius",
-      "expect": "resolve(register).n"
+      "expect": "resolve(register).radius"
     },
     {
       "id": "glyph-box",

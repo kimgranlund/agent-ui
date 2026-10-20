@@ -18,7 +18,13 @@ export interface Anchors {
   titleBump: Record<Step, number>
   kicker: number
   linear: Record<'body' | 'control' | 'fieldLabel' | 'smallControl' | 'groupKicker', [number, number]>
+  /** The vendored curvature percentages (0 to 100) and the preset resolve() reads (T-0374 step 6). */
+  radiusPresets: Record<'sharp' | 'crisp' | 'balanced' | 'round', number>
+  radiusPreset: RadiusPreset
 }
+
+/** The `data-radius` values: the four percentage presets plus pill (the control family at h/2). */
+export type RadiusPreset = 'sharp' | 'crisp' | 'balanced' | 'round' | 'pill'
 
 export interface EmittedLevel {
   readonly margin: number
@@ -66,6 +72,9 @@ export const LEGACY_PATH: {
   linear: Record<'groupKicker', [number, number]>
 }
 export function anchors(): Anchors
+export const RADIUS_PRESETS: RadiusPreset[]
+export function radiusAmounts(preset?: RadiusPreset, a?: Anchors): { container: number; control: number }
+export function radiusFailures(a?: Anchors): string[]
 export function heightPerN(a?: Anchors): number
 export function marginPerNAt(density?: Density, a?: Anchors): number
 export function containerUnit(n: number, density?: Density): number

@@ -11,10 +11,11 @@ import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs'
 
-// T-0121: a carded part's round corner is the card radius 3n at the root register, derived, never a literal.
-const ROUND = `${rootResolve('md').card.radius}px`
+// T-0121: a carded part's round corner is the card radius at the root register (A x 3m, balanced by default, T-0374
+// step 6), derived, never a literal.
+const ROUND = `${model().card.radius}px`
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })
@@ -115,7 +116,7 @@ function mountFullChrome(): UISuperShellElement {
 
 /** ADR-0166 cl.8 — the same chrome as `mountFullChrome()` MINUS the footer. The one fixture on which a
  *  corner negative control can bite: with only a header authored, the block-START pair squares and the
- *  block-END pair stays round (the card radius 3n), so a dropped or mis-spelled block-end consumption has something left to
+ *  block-END pair stays round (the card radius), so a dropped or mis-spelled block-end consumption has something left to
  *  take away. On a both-bars fixture every longhand is already `0` and the control is unsatisfiable. */
 function mountHeaderOnly(): UISuperShellElement {
   const el = document.createElement('ui-super-shell') as UISuperShellElement
@@ -156,7 +157,7 @@ describe('ui-super-shell cross-engine smoke — bar radius (GH #253)', () => {
   // stated PER SIDE, because that is what the narrowed ruling actually guarantees. Two traps, both from
   // cl.8:
   //   · the `borderRadius` SHORTHAND is barred here and in super-shell-bar-seam.browser.test.ts —
-  //     `0px 0px 24px 24px` (the card radius at the root register) satisfies `not.toBe('0px')` VACUOUSLY;
+  //     `0px 0px 12px 12px` (the card radius at the root register) satisfies `not.toBe('0px')` VACUOUSLY;
   //   · the negative control CANNOT live on `mountFullChrome()` — both bars authored means all four
   //     longhands compute `0`, so nothing survives for a mutation to remove and the control is
   //     unsatisfiable by construction. It runs on the HEADER-ONLY fixture below, whose block-END pair

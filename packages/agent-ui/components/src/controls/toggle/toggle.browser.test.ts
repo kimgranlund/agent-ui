@@ -152,13 +152,20 @@ describe('ui-toggle cross-engine geometry (s13-shaped)', () => {
     expect(wBare).toBeGreaterThan(20)
   })
 
-  it('pill radius = h/2 at every size (the geometry.md pill law)', () => {
-    for (const size of ['sm', 'md', 'lg'] as const) {
-      const { el } = mount(BARE)
-      el.setAttribute('size', size)
-      const h = frameHeight(el)
-      const radius = px(getComputedStyle(el).borderTopLeftRadius)
-      expect(radius, `[size=${size}] radius is not h/2`).toBeCloseTo(h / 2, 0)
+  it('radius = the control amount x h/2 at every size: h/4 under the balanced default, h/2 under data-radius="pill" (T-0374 step 6)', () => {
+    for (const [preset, amount] of [[null, 0.5], ['pill', 1]] as const) {
+      if (preset) document.documentElement.setAttribute('data-radius', preset)
+      try {
+        for (const size of ['sm', 'md', 'lg'] as const) {
+          const { el } = mount(BARE)
+          el.setAttribute('size', size)
+          const h = frameHeight(el)
+          const radius = px(getComputedStyle(el).borderTopLeftRadius)
+          expect(radius, `${preset ?? 'balanced'} [size=${size}] radius is not ${amount} x h/2`).toBeCloseTo((amount * h) / 2, 0)
+        }
+      } finally {
+        document.documentElement.removeAttribute('data-radius')
+      }
     }
   })
 })
