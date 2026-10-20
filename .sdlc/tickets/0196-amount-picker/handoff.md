@@ -124,3 +124,4 @@ Each fork has a firm recommendation. Kim's answer goes on the `Answer:` line.
 - 2026-10-20 plan defect at split: step 3: (guard) criterion is red now (exit 1): npm run check
 - 2026-10-20 plan defect at split: step 3: (guard) criterion is red now (exit 1): npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts
 - Kim 2026-10-20: step 2's block (TextField already at NOT_FOR_MAX 4) is settled by dropping the TextField <-> ColorPicker notFor pair in both directions, with its eval case. AmountPicker <-> TextField takes that slot. The builder resumes; this is not a replan.
+- Kim 2026-10-20: approved the step 2 render (gate b); currency keeps its fraction digits ($250.00).
