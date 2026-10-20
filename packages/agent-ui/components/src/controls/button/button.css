@@ -226,7 +226,7 @@
      glyph (ADR-0012 / geometry-sizing-spec §1.4, §4.6 — frame ∝ height vs rhythm ∝ font). Adornments are
      decorative (aria-hidden); popup/disclosure meaning belongs on the host via ARIA (ElementInternals). */
 
-  /* The CELL — both adornment slots get the SAME square 3n wrapper (T-0374 step 7, the skill's icon and glyph
+  /* The CELL, both adornment slots get the SAME square 3n wrapper (T-0374 step 7, the skill's icon and glyph
      wrappers; border-box, so a role's inset stays WITHIN it). The grid column is 3n wide whichever role sits in
      it, and its artwork is centred: the wrapper's W = n/4 is a budget the centring inset always covers (n/2 for
      the icon, n - 3 for the glyph), so it gets no padding of its own and no compensation. An adornment with no
@@ -234,16 +234,16 @@
   :scope > [slot='leading'],
   :scope > [slot='trailing'] {
     inline-size: var(--ui-button-cell);
-    block-size: var(--ui-button-cell); /* the square 3n wrapper — the CELL */
+    block-size: var(--ui-button-cell); /* the square 3n wrapper, the CELL */
     box-sizing: border-box; /* padding insets the artwork WITHIN the cell */
     padding: calc((var(--ui-button-cell) - var(--ui-button-icon)) / 2); /* the 2n artwork centred, the icon default */
   }
 
   /* ROLE = artwork size (the "position places, role sizes" split). The CELL above is the same for both roles;
      only the ARTWORK inside differs by role, each centred by a ½(cell − artwork) inset:
-       • icon  — a content icon (FRAME family), the 2n icon box (--ui-button-icon), inset n/2.
-       • caret — an inline affordance (RHYTHM family), the n + 6 glyph box (--ui-button-glyph), inset (3n − (n + 6))/2
-         — never the icon size (an inline affordance at icon size is the named oversize "button caret" bug,
+       • icon , a content icon (FRAME family), the 2n icon box (--ui-button-icon), inset n/2.
+       • caret, an inline affordance (RHYTHM family), the n + 6 glyph box (--ui-button-glyph), inset (3n − (n + 6))/2
+        , never the icon size (an inline affordance at icon size is the named oversize "button caret" bug,
          geometry.md §"Affordance vs content-icon"; locked by the BTN-CARET probe). 3n always holds n + 6. */
   :scope > [data-role='icon'] {
     padding: calc((var(--ui-button-cell) - var(--ui-button-icon)) / 2); /* the 2n artwork centred in the cell */
@@ -271,7 +271,7 @@
     padding-inline-end: var(--ui-button-slot-edge);
   }
 
-  /* [leading | label | trailing]: auto 1fr auto — both adornment edges pad m, one gap rhythm on each
+  /* [leading | label | trailing]: auto 1fr auto, both adornment edges pad m, one gap rhythm on each
      side. :not([icon-only]) — same exclusion. */
   :scope:has(> [slot='leading']):has(> [slot='trailing']):not([icon-only]) {
     grid-template-columns: auto 1fr auto;

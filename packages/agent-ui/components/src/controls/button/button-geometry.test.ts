@@ -112,7 +112,7 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     const trailingOnly = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='trailing']):not"))
     expect(trailingOnly).toMatch(/grid-template-columns:\s*1fr\s+auto/)
     expect(trailingOnly).toMatch(/padding-inline-end:\s*var\(--ui-button-slot-edge\)/)
-    // [icon | label | caret]: auto 1fr auto — both adornment edges m.
+    // [icon | label | caret]: auto 1fr auto, both adornment edges m.
     const both = stylesBlock.slice(stylesBlock.indexOf(":scope:has(> [slot='leading']):has(> [slot='trailing'])"))
     expect(both).toMatch(/grid-template-columns:\s*auto\s+1fr\s+auto/)
   })

@@ -182,7 +182,7 @@ describe('button.css — the shared focus ring (ADR-0009)', () => {
 // ── Role-driven glyph sizing — caret = font (ADR-0012 / geometry-sizing-spec §4.1, §4.6) ──────────────
 // PLACEMENT stays position-driven (the :has() grid, edge-pad m); GLYPH SIZE is role-driven. The CELL is the
 // skill's square 3n wrapper for both roles (T-0374 step 7); the icon artwork is 2n and the caret the n + 6 glyph
-// box, each centred in it — NOT --ui-ind (an inline affordance at icon size is the oversize bug).
+// box, each centred in it, NOT --ui-ind (an inline affordance at icon size is the oversize bug).
 describe('button.css — role-driven glyph sizing, caret = font (ADR-0012)', () => {
   it('--ui-button-glyph is declared = the font (the inline-affordance ramp; --ui-glyph-ratio 1)', () => {
     expect(tokenBlock).toMatch(/--ui-button-glyph:\s*var\(--md-sys-glyph-box, var\(--ui-button-font\)\)/)
@@ -199,12 +199,12 @@ describe('button.css — role-driven glyph sizing, caret = font (ADR-0012)', () 
     expect(tokenBlock).toMatch(/--ui-button-cell:\s*var\(--md-sys-glyph-slot,\s*var\(--ui-button-icon\)\)/) // the icon cell under the opt-out
   })
 
-  it('[data-role=caret] sizes the GLYPH to the glyph box (--ui-button-glyph), centred in the 3n cell — not --ui-ind', () => {
+  it('[data-role=caret] sizes the GLYPH to the glyph box (--ui-button-glyph), centred in the 3n cell, not --ui-ind', () => {
     const m = stylesBlock.match(/:scope > \[data-role='caret'\]\s*\{([^}]*)\}/)
     expect(m, "[data-role='caret'] rule missing").not.toBeNull()
     const rule = (m as RegExpMatchArray)[1]
     // inset = ½(cell − glyph) → the n + 6 glyph centres in the 3n cell, which always holds it (T-0374 step 7), so
-    // the step-1 max() cell guard is gone. The glyph is --ui-button-glyph — NOT --ui-ind (the oversize-caret bug).
+    // the step-1 max() cell guard is gone. The glyph is --ui-button-glyph, NOT --ui-ind (the oversize-caret bug).
     expect(tokenBlock).not.toContain('--ui-button-caret-cell')
     expect(rule).not.toMatch(/inline-size/)
     expect(rule).toMatch(/padding:\s*calc\(\(var\(--ui-button-cell\)\s*-\s*var\(--ui-button-glyph\)\)\s*\/\s*2\)/)
