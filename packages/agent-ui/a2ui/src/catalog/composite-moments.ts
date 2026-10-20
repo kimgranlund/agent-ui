@@ -195,7 +195,7 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     repair:
       'with its fields list (date, time, choice and party size), its value bound to the details the guest already gave so they ' +
       'arrive pre-filled, and one submit action, and drop the hand-built inputs or read-back.',
-    lacks: ['BookingConfirmation'],
+    lacks: ['BookingConfirmation', 'ConfirmReceipt'],
     standsAsideForSettled: true,
     inputs: { types: BOOKING_INPUTS, min: 2 },
     // T-0266: a fully specified ask read back as a DescriptionList with a confirm Button is still this moment.
@@ -294,7 +294,7 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       'per item, templated in a Grid over the list in the data model (title, price, the duration or unit as priceNote, and one ' +
       'action with the item id in its context), and drop the hand-built priced rows.',
     // Not `requires: ['Table']`: required types' props never count as words, and the Table's label carries them.
-    lacks: ['BookingForm', 'BookingConfirmation', 'CardTable'],
+    lacks: ['BookingForm', 'BookingConfirmation', 'ConfirmReceipt', 'CardTable'],
     tableColumn: { cue: /\b(price|prices|cost|rate|fee)\b/i },
     // T-0322: a services ask answered with priced DescriptionList rows (round 8 :90) or a priced List is this moment too.
     pricedRows: { types: ['DescriptionList', 'List'], cue: /[€$£¥]\s?\d|\d\s?(?:€|eur|usd|gbp)\b/i },

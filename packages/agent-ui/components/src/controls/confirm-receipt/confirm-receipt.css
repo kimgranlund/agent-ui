@@ -1,0 +1,277 @@
+/* confirm-receipt.css: ui-confirm-receipt, the read-back, confirm and receipt record (T-0195, Direction A).
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-confirm-receipt)` (specificity 0,0,0) declares the --ui-confirm-receipt-* chain
+ *       from the color roles and the derived foundations (ADR-0245). The action buttons' geometry is left UNSET
+ *       here on purpose: the styles block reads each with the foundation token as the var() fallback, so it
+ *       resolves ON the button at its own `data-size="lg"` step, never the host's (the product-card.css T-0352
+ *       idiom), while a host or ancestor override of --ui-confirm-receipt-action-* still reaches the buttons.
+ *   [2] STYLES BLOCK: `@scope (ui-confirm-receipt)` consumes --ui-confirm-receipt-*. The host is a column: the
+ *       record card (header, items, rows, total, ref), then the actions row under it and outside it.
+ *
+ * The settle is never color alone: the mark always carries its check glyph and the word Confirmed. Every border is
+ * the same on all four sides; no edge accent.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-confirm-receipt) declares --ui-confirm-receipt-* ════════════════ */
+
+/* uses: synced from confirm-receipt.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
+:where(ui-confirm-receipt) {
+  /* Host column: the record above the actions row (the approved mockup's widget gutter). */
+  --ui-confirm-receipt-gap: var(--md-sys-widget-gutter);
+
+  /* Record card */
+  --ui-confirm-receipt-surface: var(--md-sys-color-neutral-surface-lowest);
+  --ui-confirm-receipt-outline: var(--md-sys-color-neutral-outline-variant);
+  --ui-confirm-receipt-radius: var(--md-sys-card-radius);
+  --ui-confirm-receipt-pad: calc(var(--md-sys-inset) * 2);
+  --ui-confirm-receipt-record-gap: var(--md-sys-inset);
+  --ui-confirm-receipt-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-confirm-receipt-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
+
+  /* Header: title at the start, the mark at the end */
+  --ui-confirm-receipt-header-gap: var(--md-sys-inset);
+  --ui-confirm-receipt-title-size: var(--md-sys-type-subhead);
+  --ui-confirm-receipt-title-weight: 600;
+
+  /* Lines: rows, items and the total */
+  --ui-confirm-receipt-line-gap: var(--md-sys-inset);
+  --ui-confirm-receipt-line-pad: calc(var(--md-sys-c) * 1.5);
+  --ui-confirm-receipt-hairline: var(--md-sys-color-neutral-outline-variant);
+  --ui-confirm-receipt-rule: var(--md-sys-color-neutral-outline);
+  --ui-confirm-receipt-value-weight: 500;
+  --ui-confirm-receipt-sub-pad: var(--md-sys-c);
+  --ui-confirm-receipt-sub-size: var(--md-sys-type-control);
+  --ui-confirm-receipt-total-rule: var(--md-sys-color-neutral-on-surface);
+  --ui-confirm-receipt-total-rule-width: var(--md-sys-c);
+  --ui-confirm-receipt-total-size: var(--md-sys-type-title);
+  --ui-confirm-receipt-ref-size: var(--md-sys-type-field-label);
+
+  /* The Confirmed mark: check glyph plus word on the success tint (the ResultCard outcome-pill look) */
+  --ui-confirm-receipt-mark-surface: var(--md-sys-color-success-container);
+  --ui-confirm-receipt-mark-ink: var(--md-sys-color-success-high);
+  --ui-confirm-receipt-mark-gap: var(--md-sys-c);
+  --ui-confirm-receipt-mark-pad-block: var(--md-sys-c);
+  --ui-confirm-receipt-mark-pad-inline: calc(var(--md-sys-c) * 3);
+  --ui-confirm-receipt-mark-radius: var(--md-sys-height); /* taller than the mark, so a full pill */
+  --ui-confirm-receipt-mark-size: var(--md-sys-type-field-label);
+  /* The glyph size is left UNSET too: the styles block reads --md-sys-glyph-box as its fallback ON the glyph, so
+     the caret in Back takes the button's own lg glyph box and the check takes the record's (ADR-0245 Amendment 6). */
+
+  /* Actions row and its buttons */
+  --ui-confirm-receipt-actions-gap: var(--md-sys-inset);
+  --ui-confirm-receipt-action-weight: 600;
+  --ui-confirm-receipt-confirm-bg: var(--md-sys-color-primary-fill); /* T-0340: the fill ladder under on-primary ink */
+  --ui-confirm-receipt-confirm-bg-hover: var(--md-sys-color-primary-fill-hover);
+  --ui-confirm-receipt-confirm-bg-active: var(--md-sys-color-primary-fill-active);
+  --ui-confirm-receipt-confirm-ink: var(--md-sys-color-primary-on-primary);
+  --ui-confirm-receipt-back-bg-hover: var(--md-sys-color-neutral-container-low);
+  --ui-confirm-receipt-back-bg-active: var(--md-sys-color-neutral-container);
+  --ui-confirm-receipt-back-border: var(--md-sys-color-neutral-outline-variant);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-confirm-receipt) consumes --ui-confirm-receipt-* ════════════════ */
+
+@scope (ui-confirm-receipt) {
+  /* Fill by default (ADR-0223): block-level, no width opinion of its own. */
+  :scope {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-confirm-receipt-gap);
+    box-sizing: border-box;
+    color: var(--ui-confirm-receipt-ink);
+  }
+  :scope[inline] {
+    display: inline-flex; /* ADR-0223: the one sizing opt-out, hugs its content */
+  }
+
+  :scope [data-part='record'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-confirm-receipt-record-gap);
+    min-inline-size: 0;
+    padding: var(--ui-confirm-receipt-pad);
+    border: 1px solid var(--ui-confirm-receipt-outline);
+    border-radius: var(--ui-confirm-receipt-radius);
+    background: var(--ui-confirm-receipt-surface);
+  }
+
+  :scope [data-part='header'] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-confirm-receipt-header-gap);
+  }
+  :scope [data-part='title'] {
+    min-inline-size: 0;
+    font-size: var(--ui-confirm-receipt-title-size);
+    font-weight: var(--ui-confirm-receipt-title-weight);
+    overflow-wrap: anywhere;
+  }
+  :scope [data-part='mark'] {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--ui-confirm-receipt-mark-gap);
+    margin-inline-start: auto;
+    padding-block: var(--ui-confirm-receipt-mark-pad-block);
+    padding-inline: var(--ui-confirm-receipt-mark-pad-inline);
+    border-radius: var(--ui-confirm-receipt-mark-radius);
+    background: var(--ui-confirm-receipt-mark-surface);
+    color: var(--ui-confirm-receipt-mark-ink);
+    font-size: var(--ui-confirm-receipt-mark-size);
+    font-weight: 600;
+  }
+  /* A glyph is its own glyph box here: the svg fills it (outranks glyph.css's slot inset). */
+  :scope [data-part='glyph'] {
+    padding: 0;
+    inline-size: var(--ui-confirm-receipt-glyph-size, var(--md-sys-glyph-box));
+    block-size: var(--ui-confirm-receipt-glyph-size, var(--md-sys-glyph-box));
+  }
+
+  :scope [data-part='rows'],
+  :scope [data-part='items'] {
+    display: flex;
+    flex-direction: column;
+  }
+  :scope :is([data-part='row'], [data-part='item'], [data-part='total']) {
+    display: flex;
+    align-items: baseline;
+    gap: var(--ui-confirm-receipt-line-gap);
+    padding-block: var(--ui-confirm-receipt-line-pad);
+  }
+  :scope [data-part='row'] + [data-part='row'],
+  :scope [data-part='item'] + [data-part='item'] {
+    border-block-start: 1px solid var(--ui-confirm-receipt-hairline);
+  }
+  :scope [data-part='items'] {
+    border-block-start: 1px solid var(--ui-confirm-receipt-rule);
+  }
+  /* After line items the rows are the order's subtotal-style lines: quieter, no hairlines between them. */
+  :scope [data-part='items'] + [data-part='rows'] {
+    border-block-start: 1px solid var(--ui-confirm-receipt-hairline);
+  }
+  :scope [data-part='items'] + [data-part='rows'] [data-part='row'] {
+    padding-block: var(--ui-confirm-receipt-sub-pad);
+    font-size: var(--ui-confirm-receipt-sub-size);
+    border-block-start: 0;
+  }
+  :scope [data-part='label'] {
+    min-inline-size: 0;
+    color: var(--ui-confirm-receipt-muted-ink);
+    overflow-wrap: anywhere;
+  }
+  :scope [data-part='value'] {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    margin-inline-start: auto;
+    text-align: end;
+    font-weight: var(--ui-confirm-receipt-value-weight);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  :scope [data-part='item'] [data-part='label'] {
+    color: inherit;
+  }
+  :scope [data-part='quantity'] {
+    flex: none;
+    min-inline-size: 3ch;
+    color: var(--ui-confirm-receipt-muted-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  :scope [data-part='total'] {
+    border-block-start: var(--ui-confirm-receipt-total-rule-width) solid var(--ui-confirm-receipt-total-rule);
+    font-size: var(--ui-confirm-receipt-total-size);
+  }
+  :scope [data-part='total'] [data-part='label'] {
+    color: inherit;
+    font-weight: 600;
+  }
+  :scope [data-part='total'] [data-part='value'] {
+    font-weight: 700;
+  }
+  :scope [data-part='ref'] {
+    margin: 0;
+    color: var(--ui-confirm-receipt-muted-ink);
+    font-size: var(--ui-confirm-receipt-ref-size);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The actions row: the control's own native buttons, under the record and never inside it. */
+  :scope [data-part='actions'] {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: var(--ui-confirm-receipt-actions-gap);
+  }
+  :scope :is([data-part='back'], [data-part='confirm']) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--md-sys-c);
+    box-sizing: border-box;
+    block-size: var(--ui-confirm-receipt-action-height, var(--md-sys-height));
+    padding-inline: calc(var(--md-sys-inset) * 2);
+    font: inherit;
+    font-size: var(--ui-confirm-receipt-action-font, var(--md-sys-type-control));
+    font-weight: var(--ui-confirm-receipt-action-weight);
+    line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard, a sanctioned direct read */
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-radius: var(--ui-confirm-receipt-action-radius, var(--md-sys-control-radius));
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  :scope [data-part='back'] {
+    margin-inline-end: auto;
+    padding-inline-start: var(--md-sys-inset);
+    background: transparent;
+    color: var(--ui-confirm-receipt-ink);
+    border-color: var(--ui-confirm-receipt-back-border);
+  }
+  :scope [data-part='back']:hover {
+    background: var(--ui-confirm-receipt-back-bg-hover);
+  }
+  :scope [data-part='back']:active {
+    background: var(--ui-confirm-receipt-back-bg-active);
+  }
+  :scope [data-part='confirm'] {
+    min-inline-size: 40%;
+    background: var(--ui-confirm-receipt-confirm-bg);
+    color: var(--ui-confirm-receipt-confirm-ink);
+  }
+  :scope [data-part='confirm']:hover {
+    background: var(--ui-confirm-receipt-confirm-bg-hover);
+  }
+  :scope [data-part='confirm']:active {
+    background: var(--ui-confirm-receipt-confirm-bg-active);
+  }
+  :scope :is([data-part='back'], [data-part='confirm']):focus-visible {
+    /* The shared fleet ring (ADR-0009), the sanctioned direct read every control shares. */
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+
+  /* Motion: colour paint only, enumerated, and only when the user has not asked for reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    :scope :is([data-part='back'], [data-part='confirm']) {
+      transition: background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+    }
+  }
+
+  /* Forced colors: the mark's tint would flatten to Canvas, so it gains a system border; the buttons keep one. */
+  @media (forced-colors: active) {
+    :scope [data-part='record'] {
+      border-color: CanvasText;
+    }
+    :scope [data-part='mark'] {
+      border: 1px solid CanvasText;
+    }
+    :scope :is([data-part='back'], [data-part='confirm']) {
+      border: 1px solid ButtonText;
+    }
+  }
+}

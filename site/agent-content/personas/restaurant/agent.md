@@ -1,7 +1,7 @@
 ---
 {
   "id": "restaurant",
-  "version": 4,
+  "version": 5,
   "order": 4,
   "label": "The Maître d’",
   "tagline": "Table booking + menus + wine lists — the reservation conversation as forms and menu cards (GH #46)",
@@ -21,6 +21,7 @@
   ],
   "tools": [],
   "changelog": [
+    "5: T-0195: table-reservation reads the reservation back with one ConfirmReceipt; migrates pre-v5 stores.",
     "4: T-0307: table-reservation says the confirmation, not the card, restates the table details; migrates pre-v4 stores.",
     "3: T-0159: hotel-booking-form uses a date TextField for a single date; migrates pre-v3 stores.",
     "2: GH #148: added a Resources entry (was empty); migrates pre-#148 stores"

@@ -33,6 +33,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-column-chart': { tag: 'ui-column-chart', load: () => import('./column-chart/column-chart.ts'), css: './column-chart/column-chart.css', uses: [] },
   'ui-combo-box': { tag: 'ui-combo-box', load: () => import('./combo-box/combo-box.ts'), css: './combo-box/combo-box.css', uses: ['ui-glyph'] },
   'ui-command-modal': { tag: 'ui-command-modal', load: () => import('./command-modal/command-modal.ts'), css: './command-modal/command-modal.css', uses: ['ui-modal'] },
+  'ui-confirm-receipt': { tag: 'ui-confirm-receipt', load: () => import('./confirm-receipt/confirm-receipt.ts'), css: './confirm-receipt/confirm-receipt.css', uses: ['ui-glyph'] },
   'ui-description-list': { tag: 'ui-description-list', load: () => import('./description-list/description-list.ts'), css: './description-list/description-list.css', uses: [] },
   'ui-disclosure': { tag: 'ui-disclosure', load: () => import('./disclosure/disclosure.ts'), css: './disclosure/disclosure.css', uses: ['ui-glyph'] },
   'ui-drawer': { tag: 'ui-drawer', load: () => import('./drawer/drawer.ts'), css: './drawer/drawer.css', uses: [] },

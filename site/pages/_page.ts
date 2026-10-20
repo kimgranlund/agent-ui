@@ -598,6 +598,14 @@ export const NAV: readonly NavGroup[] = [
       { href: './result-card-doc.html', label: 'API' },
     ],
   },
+  // T-0195: the read-back, confirm and receipt record, tier=pattern {doc, demo}.
+  {
+    label: 'ui-confirm-receipt',
+    links: [
+      { href: './confirm-receipt-demo.html', label: 'Demo' },
+      { href: './confirm-receipt-doc.html', label: 'API' },
+    ],
+  },
   // T-0193: the option deck, pick one of a few things to start, tier=pattern {doc, demo}.
   {
     label: 'ui-option-deck',
@@ -1024,12 +1032,12 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
       'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame', 'ui-option-deck',
     ],
   },
-  { label: 'Form composition', tags: ['ui-field', 'ui-form-provider', 'ui-theme-provider'] },
+  { label: 'Form composition', tags: ['ui-field', 'ui-form-provider', 'ui-theme-provider', 'ui-confirm-receipt'] },
   {
     label: 'Data & reporting',
     tags: [
-      'ui-table', 'ui-stat', 'ui-game-hud', 'ui-result-card', 'ui-description-list', 'ui-source-list',
-      'ui-badge', 'ui-pagination', 'ui-suggestions', 'ui-breadcrumb',
+      'ui-table', 'ui-stat', 'ui-game-hud', 'ui-result-card', 'ui-description-list',
+      'ui-source-list', 'ui-badge', 'ui-pagination', 'ui-suggestions', 'ui-breadcrumb',
     ],
   },
   { label: 'Content & code', tags: ['ui-code', 'ui-code-editor', 'ui-markdown', 'ui-disclosure'] },

@@ -846,6 +846,43 @@ describe('admit: the multi-turn facet (ADR-0231 cl.2)', () => {
     expect(rejected.paths).toEqual(['clientInput[0].action.name'])
   })
 
+  // T-0195: a ConfirmReceipt Confirm or Back press is grounded by the action object its `actionEvent` prop carries.
+  it('grounds a ConfirmReceipt press on the confirmAction or backAction object name, and rejects a name neither carries', async () => {
+    const receiptPrior: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'login', catalogId: 'agent-ui' } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'login',
+          components: [
+            {
+              id: 'root',
+              component: 'ConfirmReceipt',
+              title: 'Your order',
+              rows: [{ label: 'Subtotal', path: 'subtotal' }],
+              data: { subtotal: '$48.00' },
+              status: 'pending',
+              confirmAction: { action: 'place_order', context: { orderId: 'A-1' } },
+              backAction: { action: 'edit_order' },
+            },
+          ],
+        },
+      },
+    ]
+    const press = (name: string): CorpusRecord =>
+      multiTurnRecord({
+        priorOutput: receiptPrior,
+        clientInput: [{ ...LOGIN_ACTION, action: { ...LOGIN_ACTION.action, name, sourceComponentId: 'root', context: {} } }],
+      })
+    expect((await admit(press('place_order'), mkFacetDeps())).ok).toBe(true)
+    expect((await admit(press('edit_order'), mkFacetDeps())).ok).toBe(true)
+    const rejected = await admit(press('cancel_order'), mkFacetDeps())
+    expect(rejected.ok).toBe(false)
+    if (rejected.ok) return
+    expect(rejected.code).toBe('E_IDGRAPH')
+    expect(rejected.paths).toEqual(['clientInput[0].action.name'])
+  })
+
   it('a prior turn that fails tier-1 rejects with its own code, the path prefixed `priorOutput`', async () => {
     const prior = LOGIN_PRIOR.map((msg) =>
       'updateComponents' in msg

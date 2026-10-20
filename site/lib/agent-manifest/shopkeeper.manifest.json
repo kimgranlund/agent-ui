@@ -1,8 +1,8 @@
 {
   "id": "shopkeeper",
   "preset": "shopkeeper",
-  "seedVersion": 2,
-  "seedDigest": "sha256:2f9ad865a97e33ff9ae776f0a8b4ab9a45a0a1e28113d665faa7754864df2fd9",
+  "seedVersion": 3,
+  "seedDigest": "sha256:eb24d4047abf0a3292659e0c2fa17d8917dfce5731bd0333fc3f76849afb2fa7",
   "fragment": null,
   "selection": null,
   "noFragment": {

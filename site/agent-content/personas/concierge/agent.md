@@ -1,7 +1,7 @@
 ---
 {
   "id": "concierge",
-  "version": 18,
+  "version": 19,
   "order": 3,
   "label": "The Hotel Concierge",
   "tagline": "The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)",
@@ -31,6 +31,7 @@
     "currency@1"
   ],
   "changelog": [
+    "19: T-0195: booking-flow settles with one ConfirmReceipt and table-reservation reads back with one; migrates pre-v19 stores.",
     "18: T-0196: booking-flow scene 2 asks guests with ONE AmountPicker that commits itself",
     "17: T-0307: table-reservation says the confirmation, not the card, restates the table details; migrates pre-v17 stores.",
     "16: T-0308: booking-flow's BookingConfirmation title carries no reference number; migrates pre-v16 stores.",

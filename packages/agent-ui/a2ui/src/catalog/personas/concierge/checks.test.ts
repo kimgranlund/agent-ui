@@ -40,6 +40,23 @@ describe('concierge-surface-required (T-0265)', () => {
     expect(said('Thanks, that is all.')).toEqual([])
     expect(conciergeSurfaceRequired.check({ surfaces: [], action: { name: 'book', surfaceId: 'spa', context: {}, dataModel: undefined } })).toEqual([])
   })
+
+  // T-0195: the booking settle is ONE ConfirmReceipt, so a confirm ask answered by one passes.
+  it('a confirm ask answered by a ConfirmReceipt passes', () => {
+    const receipt: A2uiOutput = [
+      { version: 'v1.0', createSurface: { surfaceId: 'spa-receipt', catalogId: 'agent-ui--concierge' } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'spa-receipt', value: { booking: { treatment: 'Swedish massage', status: 'pending' } } } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'spa-receipt',
+          components: [{ id: 'root', component: 'ConfirmReceipt', title: 'Your spa booking', data: { path: '/booking' }, rows: [{ label: 'Treatment', path: 'treatment' }], status: { path: '/booking/status' } }],
+        },
+      },
+    ] as A2uiOutput
+    expect(said('Those details are right, please confirm the booking.')).not.toEqual([])
+    expect(said('Those details are right, please confirm the booking.', receipt)).toEqual([])
+  })
 })
 
 // T-0278: round 4 (2026-10-15-r4-fixes :114-:115, Haiku 5.5). The pre-filled spa BookingForm, as recorded, with the

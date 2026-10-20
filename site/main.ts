@@ -1221,6 +1221,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // T-0195: the read-back, confirm and receipt record, tier=pattern {doc, demo}.
+  {
+    label: 'ui-confirm-receipt',
+    cards: [
+      {
+        href: './confirm-receipt-demo.html',
+        title: 'Demo',
+        blurb: 'A booking and an order read back for the user to confirm, each settling into its receipt with a Confirmed mark and a reference line once confirmed.',
+      },
+      {
+        href: './confirm-receipt-doc.html',
+        title: 'API reference',
+        blurb: 'The read-back record: rows, line items and a total read from the bound data by path, Back and Confirm outside the card, and the settled receipt, generated from confirm-receipt.md.',
+      },
+    ],
+  },
   // T-0193: the option deck, pick one of a few things to start, tier=pattern {doc, demo}.
   {
     label: 'ui-option-deck',

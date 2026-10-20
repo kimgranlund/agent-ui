@@ -118,7 +118,8 @@ export interface PropDef {
    * (it is still applied to the control, unlike a `mapsTo:'action'` prop, which the host strips and answers
    * with a `click` listener); the host listens for the named event on the element and emits
    * `{ name: detail.action, context: detail.context }`, so a control that reports WHERE it was activated
-   * (`BoardGrid`'s `{row, col}`) reaches the agent. Declared only by `BoardGrid.actionName` (`'action'`);
+   * (`BoardGrid`'s `{row, col}`) reaches the agent. Declared by `BoardGrid.actionName` and by
+   * `ConfirmReceipt.confirmAction` and `.backAction` (T-0195, object-valued: the control emits the object as its detail), all `'action'`;
    * absent ⇒ no own-event forwarding, byte-identical for every other prop (`ProductCard`'s own `action`
    * event stays unread).
    */

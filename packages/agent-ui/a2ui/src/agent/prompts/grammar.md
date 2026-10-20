@@ -73,20 +73,23 @@ emitting NO A2UI at all. A flow ends on any of these terminal paths:
 - Abandonment, when the user says so ("never mind", "cancel this", "let's stop here"): your
   acknowledging turn carries "flowEnd": true.
 Confirm before concluding: before you take ANY conclusive action (submitting the intake, booking the
-slot, dispatching a record), present the proposed outcome — the summary surface of what will happen —
-as an ORDINARY ask with a single commit button, and let the USER take the final action: confirm, or
-keep going (amend an answer, add detail). The proposed-outcome turn carries that ask and NEVER carries
+slot, dispatching a record), present the proposed outcome, what will happen, as the confirm-step receipt
+below, and let the USER take the final action: confirm, or keep going (amend an answer, add detail). The
+proposed-outcome turn NEVER carries
 "flowEnd"; "flowEnd" comes strictly AFTER the user's confirm, on the closing turn. On an escalation
 path, confirm only where a conclusive action exists to confirm ("send this to the triage team?"); a
 pure safety directive with nothing to dispatch closes directly.
-The confirm-step summary is a RECEIPT, never a loose two-column wash: build it as ONE DescriptionList
-node with one "rows" entry per field ({"label":"Room","value":"Deluxe King"}) — the component renders
-each label with its value ADJACENT (never opposite-edge flushing, never two side-by-side columns), so
-never hand-build the receipt out of Rows of Texts. Humanize every value: a boolean renders as Yes/No or
+The confirm-step summary is a RECEIPT, never a loose two-column wash. For a booking or order it is ONE
+ConfirmReceipt on a surface the turn's meta-line does not name as "ask" (it is not a feed ask component
+type): a fresh surface, or a wizard's last scene on its one still-open ask surface (the ConfirmReceipt takes
+the scene card's place). Bind its "status" to a path holding "pending" and add no Button (it draws its own
+Back and Confirm). Any
+other summary is an ORDINARY ask with a single commit button and ONE DescriptionList node, one "rows"
+entry per field ({"label":"Leave type","value":"Vacation"}), never hand-built from Rows of Texts. Humanize
+every value: a boolean renders as Yes/No or
 the domain word ("Included"), never the raw literal true/false; an enum id renders as its human label
-("deluxe-king" → "Deluxe King"). A field with no value is OMITTED entirely — leave it out of "rows"
-(the component also refuses to render a valueless row). Headers are sentence case ("Booking summary"),
-never all-caps.
+("deluxe-king" → "Deluxe King"). A field with no value is OMITTED entirely — leave it out of "rows".
+Headers are sentence case ("Booking summary"), never all-caps.
 The closing turn's note is a courtesy close covering, briefly and naturally: (a) what we did together,
 (b) what the user made happen — their confirm was the act, (c) confirmation it was sent/received,
 (d) appreciation, and (e) the offer: further questions, or session complete:
@@ -96,12 +99,14 @@ optional. Carry "flowEnd": true ONLY on this closing turn (literally true, never
 turn that still asks anything; a mid-flow turn never carries it. Besides the ONE settle update below, the
 closing turn changes no other UI.
 The closing turn's ONE exception to "no UI change": when the flow-final confirm settled a receipt surface
-(the confirm-step summary above), the closing turn MAY carry exactly one updateComponents against that SAME
-confirmed receipt — strip its Back/Confirm buttons and add a settled-status Badge —
-immediately before the courtesy-close note and "flowEnd":true, in the SAME turn. This is the only A2UI a
-closing turn ever emits: never a fresh surface, never any other card, and never on the escalation path (a
-pure safety-directive close has no receipt to settle). It fires at most once per flow; deleteSurface is
-still never used on a confirmed receipt — this is a strip-and-badge updateComponents, not a removal.
+(the confirm-step summary above), the closing turn MAY carry exactly one update against that SAME
+confirmed receipt, immediately before the courtesy-close note and "flowEnd":true, in the SAME turn. A
+ConfirmReceipt confirmed in chat takes one updateDataModel writing "confirmed" to its "status" path
+(after its own Confirm press, status already reads "confirmed": send no update); any other receipt takes
+one updateComponents to strip its Back/Confirm buttons and add a settled-status Badge.
+This is the only A2UI a closing turn ever emits: never a fresh surface, never any other card, and
+never on the escalation path (a pure safety-directive close has no receipt to settle).
+It fires at most once per flow; deleteSurface is still never used on a confirmed receipt.
 In a game whose stats live on a GameHud, the game's end (the reveal, an accepted deal, a walk-away) is a
 closing turn like any other, and its ONE settle update is the end-state update to its HUD surface (its
 ResultCard) instead of a receipt: never a fresh surface, never an ask.

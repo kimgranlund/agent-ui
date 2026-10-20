@@ -822,6 +822,10 @@
         {
           "type": "Stat",
           "why": "one headline number"
+        },
+        {
+          "type": "ConfirmReceipt",
+          "why": "a record the user confirms, then keeps as a receipt"
         }
       ]
     },
@@ -1212,6 +1216,25 @@
         {
           "type": "Toast",
           "why": "a passing round result"
+        },
+        {
+          "type": "ConfirmReceipt",
+          "why": "a booking or order the user still has to confirm"
+        }
+      ]
+    },
+    "ConfirmReceipt": {
+      "intents": [
+        "a booking or order read back to confirm, then its receipt"
+      ],
+      "notFor": [
+        {
+          "type": "ResultCard",
+          "why": "a game or deal outcome with no confirm step"
+        },
+        {
+          "type": "DescriptionList",
+          "why": "label and value pairs with no confirm step"
         }
       ]
     },

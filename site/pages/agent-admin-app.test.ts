@@ -1013,7 +1013,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is kept flagged and the new seed applies around it; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(18) // T-0196: booking-flow scene 2 asks guests with ONE AmountPicker
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(19) // T-0195: the four presets read back and settle with one ConfirmReceipt (T-0196 took 18)
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1042,14 +1042,14 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(workflows.some((w) => w.id === 'booking-flow'), 'the room-booking arc playbook seeds').toBe(true)
     expect(workflows.some((w) => w.id === 'table-reservation'), 'table-reservation still seeds').toBe(true)
     // T-0266 (Kim's ruling): the playbook and the House facts confirm with a pre-filled BookingForm and settle
-    // with a BookingConfirmation; neither teaches a read-back or a settled Badge any more.
+    // with a ConfirmReceipt (T-0195; was a BookingConfirmation); neither teaches a read-back or a settled Badge any more.
     const flow = workflows.find((w) => w.id === 'booking-flow')!
     expect(flow.description).toMatch(/pre-filled BookingForm/)
     expect(flow.content).toMatch(/every detail[\s\S]*BookingForm, pre-filled/)
-    expect(flow.content).toMatch(/ONE BookingConfirmation/)
+    expect(flow.content).toMatch(/ONE ConfirmReceipt/)
     expect(flow.content).not.toMatch(/settled-status Badge|reading back/)
-    // T-0308 (Kim's ruling): the settled BookingConfirmation's title carries no reference number, as the confirm check asks.
-    expect(flow.content).toMatch(/ONE BookingConfirmation \(a title such as "Booked"/)
+    // T-0308 (Kim's ruling): the settled receipt's title carries no reference number, as the confirm check asks.
+    expect(flow.content).toMatch(/ONE ConfirmReceipt \(a title such as "Booked"/)
     expect(flow.content).not.toMatch(/#[A-Z]{2}\d+/)
     expect(concierge.houseFacts).toMatch(/booking form pre-filled/)
     expect(concierge.houseFacts).not.toMatch(/read them back/)
@@ -1067,7 +1067,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(facility?.description).toMatch(/ONE Card holding a DescriptionList, never a ServiceCard/)
     expect(facility?.content).toMatch(/ONE Card holding a DescriptionList/)
     expect(facility?.content).not.toMatch(/ONE ServiceCard per facility/)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('18')
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('19')
 
     // Same-version edits SURVIVE a rebuild: T-0161 keeps them as an overlay over the seed, so a reload
     // (a cold store cache) reads them back.

@@ -161,7 +161,7 @@ export const conciergeListingSurfaceRequired: SemanticCheck = surfaceRequired(
 
 /** T-0322 C2 (round 8 :166, Haiku 5.5): "Make it 16:00 instead, same day." declared spa-booking its target and sent it
  *  no update, so the form kept 15:00. ACTION_NOT_APPLIED: a say turn whose meta-line targets an open BookingForm sends
- *  that surface no update and opens no fresh BookingForm or BookingConfirmation. A booking or confirm ask is left to
+ *  that surface no update and opens no fresh BookingForm, BookingConfirmation or ConfirmReceipt. A booking or confirm ask is left to
  *  the surface-required check (one finding per turn), a confirm the form cannot honor is held open (T-0278), and a
  *  question may stay prose. */
 export const conciergeEditApplied: SemanticCheck = {
@@ -174,7 +174,7 @@ export const conciergeEditApplied: SemanticCheck = {
     const form = [...bookingForms(open.filter((v) => v.surfaceId === target))][0]
     if (form === undefined) return []
     const answers = (v: SurfaceView): boolean =>
-      v.surfaceId === target || (v.priorDataModel === undefined && [...v.components.values()].some((c) => c.component === 'BookingForm' || c.component === 'BookingConfirmation'))
+      v.surfaceId === target || (v.priorDataModel === undefined && [...v.components.values()].some((c) => c.component === 'BookingForm' || c.component === 'BookingConfirmation' || c.component === 'ConfirmReceipt'))
     if (surfaces.some(answers)) return []
     return [
       {

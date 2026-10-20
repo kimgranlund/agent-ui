@@ -36,8 +36,19 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  2026-10-20). Budget 143 600 by the same formula.
  *  RE-MEASURED 2026-10-20 (T-0193, merged over T-0196): the worst case is 144 067 chars (`agent-ui`, mode default),
  *  +863 from the OptionDeck default row and its selection clause (with the reciprocal ChoiceGroup edge), OptionDeck on
- *  the feed list, grammar.md's greet sentence and the ui-option-deck dogfood row. Budget 144 400 by the same formula. */
-export const PROMPT_CHAR_BUDGET_BASE = 144_400
+ *  the feed list, grammar.md's greet sentence and the ui-option-deck dogfood row. Budget 144 400 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0195): the worst case is 142 336 chars (`agent-ui`, mode default), from the
+ *  ui-confirm-receipt dogfood row. Budget 142 700 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0195 step 3): the worst case is 143 229 chars (`agent-ui`, mode default), +893 from the
+ *  `ConfirmReceipt` default row, its selection clause with the reciprocal `ResultCard` and `DescriptionList` edges, and
+ *  the confirm-receipt mini-skill. Budget 143 600 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0195 step 4): the worst case is 143 561 chars (`agent-ui`, mode default), +332 from
+ *  grammar.md's confirm-step receipt and two-arm settle clauses (Kim's ruling) and the confirm-receipt mini-skill fix.
+ *  Budget 143 900 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): the worst case is 145 602 chars (`agent-ui`, mode
+ *  default), the T-0195 rows and grammar.md clauses on top of the AmountPicker and OptionDeck rows. Budget 146 000 by
+ *  the same formula. */
+export const PROMPT_CHAR_BUDGET_BASE = 146_000
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -61,8 +72,17 @@ export const PROMPT_CHAR_BUDGET_BASE = 144_400
  *  RE-MEASURED 2026-10-20 (T-0196): the worst case is 144 188 chars (`agent-ui--croupier`, mode default; 142 936
  *  before), +1 252 from the `AmountPicker` default row, the same rows BASE pays. Budget 144 500 by the same formula.
  *  RE-MEASURED 2026-10-20 (T-0193, merged over T-0196): the worst case is 145 051 chars (`agent-ui--croupier`, mode
- *  default), +863 from the OptionDeck rows BASE pays. Budget 145 400 by the same formula. */
-export const PROMPT_CHAR_BUDGET_DERIVED = 145_400
+ *  default), +863 from the OptionDeck rows BASE pays. Budget 145 400 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0195): the worst case is 143 320 chars (`agent-ui--croupier`, mode default), the same
+ *  ui-confirm-receipt dogfood row BASE pays. Budget 143 700 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0195 step 3): the worst case is 144 213 chars (`agent-ui--croupier`, mode default), the
+ *  same `ConfirmReceipt` row, clause and mini-skill BASE pays. Budget 144 600 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0195 step 4): the worst case is 144 545 chars (`agent-ui--croupier`, mode default), the
+ *  same grammar.md clauses and mini-skill fix BASE pays. Budget 144 900 by the same formula.
+ *  RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): the worst case is 146 586 chars
+ *  (`agent-ui--croupier`, mode default), the same merged rows and clauses BASE pays. Budget 146 900 by the same
+ *  formula. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 146_900
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

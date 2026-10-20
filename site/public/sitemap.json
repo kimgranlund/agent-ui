@@ -190,6 +190,15 @@
       "group": "Overlays & pickers"
     },
     {
+      "name": "Confirm Receipt",
+      "tag": "ui-confirm-receipt",
+      "url": "./confirm-receipt-demo.html",
+      "description": "A read-back record of a booking or an order with Back and Confirm actions, which settles into a receipt with a Confirmed mark once the user confirms.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Form composition"
+    },
+    {
       "name": "Description List",
       "tag": "ui-description-list",
       "url": "./description-list-demo.html",

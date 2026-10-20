@@ -58,6 +58,8 @@
     "./controls/combo-box.css": "./src/controls/combo-box/combo-box.css",
     "./controls/command-modal": "./src/controls/command-modal/command-modal.ts",
     "./controls/command-modal.css": "./src/controls/command-modal/command-modal.css",
+    "./controls/confirm-receipt": "./src/controls/confirm-receipt/confirm-receipt.ts",
+    "./controls/confirm-receipt.css": "./src/controls/confirm-receipt/confirm-receipt.css",
     "./controls/description-list": "./src/controls/description-list/description-list.ts",
     "./controls/description-list.css": "./src/controls/description-list/description-list.css",
     "./controls/disclosure": "./src/controls/disclosure/disclosure.ts",

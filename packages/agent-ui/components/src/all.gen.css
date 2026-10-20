@@ -27,6 +27,7 @@
 @import './controls/column/column.css';
 @import './controls/combo-box/combo-box.css';
 @import './controls/command-modal/command-modal.css';
+@import './controls/confirm-receipt/confirm-receipt.css';
 @import './controls/description-list/description-list.css';
 @import './controls/disclosure/disclosure.css';
 @import './controls/drawer/drawer.css';

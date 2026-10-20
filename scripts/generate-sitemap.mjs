@@ -46,7 +46,7 @@ const L1_TREES = ['packages/agent-ui/components/src/controls', 'packages/agent-u
 // byte-identical to site/pages/_page.ts's own `NAV_TAXONOMY` export (that file is the one source of truth
 // this data was authored against; a Node script cannot import Vite-transformed TS, so the object is
 // duplicated here rather than shared — the same constraint L1 generation as a whole already lives under).
-// 12 groups over 89 tags, each narrower than the flat "Components" section: no single component group grows
+// 12 groups over 92 tags, each narrower than the flat "Components" section: no single component group grows
 // past 10 tags, so the rail's Components band always shows real sub-headers instead of one long list.
 const L1_TAXONOMY = {
   'Actions & selection controls': [
@@ -74,10 +74,10 @@ const L1_TAXONOMY = {
     'ui-popover', 'ui-tooltip', 'ui-menu', 'ui-select', 'ui-multi-select', 'ui-form-popover',
     'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame', 'ui-option-deck',
   ],
-  'Form composition': ['ui-field', 'ui-form-provider', 'ui-theme-provider'],
+  'Form composition': ['ui-field', 'ui-form-provider', 'ui-theme-provider', 'ui-confirm-receipt'],
   'Data & reporting': [
-    'ui-table', 'ui-stat', 'ui-game-hud', 'ui-result-card', 'ui-description-list', 'ui-source-list',
-    'ui-badge', 'ui-pagination', 'ui-suggestions', 'ui-breadcrumb',
+    'ui-table', 'ui-stat', 'ui-game-hud', 'ui-result-card', 'ui-description-list',
+    'ui-source-list', 'ui-badge', 'ui-pagination', 'ui-suggestions', 'ui-breadcrumb',
   ],
   'Content & code': ['ui-code', 'ui-code-editor', 'ui-markdown', 'ui-disclosure'],
   'Feed & status': [
