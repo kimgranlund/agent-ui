@@ -2,7 +2,7 @@
 id: T-0381
 title: "PlayingCard size sm renders its index under the type floor (round 12 cluster N)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L1             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -29,3 +29,15 @@ Round 12 archive `.sdlc/evals/rounds/2026-10-19-r12-targeted/` (report.md "Why i
 
 ## Constraints
 No one-off heights (ADR-0245 ramp). Kim approves a visible change by screenshot.
+
+## Outcome
+
+2026-10-20 · lane: full L1 · verdict: pass · verifier: verifier-L1 (opus) · base: 4d5a18d43fe1
+- Changed: see commits
+- Commits: none
+- Check: 1 `npx vitest run packages/agent-ui/a2ui/src/catalog/personas/croupier/index.test.ts` exit 0 (red o...: pass
+- Check: 2 `npx vitest run packages/agent-ui/a2ui` exit 0: pass
+- Check: 3 `git diff 4d5a18d43 --exit-code -- packages/agent-ui/components scripts` exit 0: pass
+- Check: 4 `npm run check` exit 0: pass
+- Follow-up: note: the croupier catalog is the only catalog.json that declares... -> notes.md
+- Follow-up: note: generate-agent-assets.mjs --check and generate-agent-content.mjs... -> notes.md

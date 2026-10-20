@@ -2,7 +2,7 @@
 id: T-0378
 title: "The lone-Button rule never reaches poker Deal again turns (round 12 cluster O)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -30,3 +30,15 @@ verifier: L3
 - `npx vitest run --project site site/pages/agent-admin-presets.test.ts site/pages/agent-admin-seed-digests.test.ts site/pages/agent-admin-prompt-budget.test.ts site/lib/agent-manifest/ site/agent-content/registry-freshness.test.ts` exits 0 (seedVersion 17, croupier row and PRESETS_DIGEST, manifest seedDigest, registries fresh).
 - `npx vitest run packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.test.ts` exits 0 with no baseline recapture; no mini-skill, grammar.md, checks.ts or `.sdlc/evals/rounds/` file changes.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-20 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 4d5a18d43fe1
+- Changed: see commits
+- Commits: none
+- Check: 1 `npx vitest run --project site site/pages/agent-admin-presets.test.ts -t T-0378` exits 0: pass
+- Check: 2 `npx vitest run --project site site/pages/agent-admin-presets.test.ts site/pages/agent-admin-seed...: pass
+- Check: 3 `npx vitest run packages/agent-ui/a2ui/src/live-agent/prompt-equivalence.test.ts` exits 0 with no...: pass
+- Check: 4 `npm run check` exits 0: pass
+- Follow-up: decide: site/agent-content/personas/croupier/agent.md:60 note: the persona... -> notes.md
+- Follow-up: note: live reach of the v17 line stays a round 13 measurement; the... -> notes.md

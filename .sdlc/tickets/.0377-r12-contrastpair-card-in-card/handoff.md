@@ -2,7 +2,7 @@
 id: T-0377
 title: "A Stylist ContrastPair inside a root Card renders a card in a card (round 12 cluster L)"
 type: bug             # feature | bug | chore | spike | idea
-status: ready     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -32,3 +32,18 @@ verifier: L3
 - A ContrastPair stamped by a template under a Card is sent back too (covered by the `-t T-0377` span above).
 - The authored replay of r12 :3 (one authored repair round, the archive untouched) is sent back with `CONTRAST_PAIR_WRAPPED` and ships a root Column with no Card part: `npx vitest run scripts/e2e-admin/probe/replays/stylist-haiku-palette-card-wrap.test.mjs` exits 0, and its browser leg with the render lint passes: `npm run chat:probe -- --replay scripts/e2e-admin/probe/replays/stylist-haiku-palette-card-wrap.json` exits 0.
 - `npm run check` exits 0.
+
+## Outcome
+
+2026-10-20 · lane: full L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 4d5a18d43fe1
+- Changed: see commits
+- Commits: none
+- Check: 1 The recorded r12 :3 components yield exactly `CONTRAST_PAIR_WRAPPED`, the same palette rooted at ...: pass
+- Check: 2 The new check carries a pass and a fail contract and cross-runs clean; `npx vitest run packages/a...: pass
+- Check: 3 The ContrastPair factory still renders a `ui-card`; `npx vitest run packages/agent-ui/a2ui/src/ca...: pass
+- Check: 4 A ContrastPair stamped by a template under a Card is sent back too: pass
+- Check: 5 The authored replay of r12 :3 is sent back with `CONTRAST_PAIR_WRAPPED` and ships a root Column w...: pass
+- Check: 6 `npm run check` exits 0: pass
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/personas/stylist/selection.json:... -> notes.md
+- Follow-up: decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:332... -> notes.md
+- Follow-up: note: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:606... -> notes.md
