@@ -35,3 +35,6 @@ The failing test lands before or with the fix, never after. Prefer a fix in the 
 - (red) `npx vitest run packages/agent-ui/app/src/controls/conversation/conversation.test.ts -t T-0382` exits 0: a resumed action-click turn holds its streamed summary until finalize, after the surface update.
 - `npx vitest run packages/agent-ui/app/src/controls/conversation/conversation.test.ts` exits 0: fresh-bubble turns still stream text live (RTS-R5 AC3).
 - `npm run check` exits 0.
+
+## Plan review
+- Kim 2026-10-19: paint order is enough; the summary stays above the card on a reopened bubble (GH #1221 layout kept).
