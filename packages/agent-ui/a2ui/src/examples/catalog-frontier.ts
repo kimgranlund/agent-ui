@@ -1700,4 +1700,58 @@ export const optionDeckPickerSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed]
+const CONFIRM_RECEIPT_ORDER_ID = 'frontier-confirm-receipt-order'
+/** Frontier 34 (T-0195): `ConfirmReceipt`, a Shopkeeper order read back before it is placed. One node holds the
+ *  line items, the subtotal and delivery rows, the total and the Back and Confirm actions; every shown value is
+ *  read from the bound `/order` record and `status` binds `/order/status`, so a Confirm press writes `confirmed`
+ *  there and a re-render settles into the receipt instead of asking again. It replaces the hand-built Card,
+ *  DescriptionList and Button row the order presets spent. Corpus admission is a SEPARATE judged wave
+ *  (disposition-allowlist.ts). */
+export const confirmReceiptOrderSeed: ExampleSeed = {
+  name: 'frontier-confirm-receipt-order',
+  description: 'A Shopkeeper order read back to confirm: one ConfirmReceipt with two line items, subtotal and delivery rows and a total, all bound to the data model, with Back and Confirm actions and a pending status that settles into the receipt.',
+  promptText: 'I will take two linen tea towels and the oak board. Show me the order before I pay.',
+  surfaceId: CONFIRM_RECEIPT_ORDER_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: CONFIRM_RECEIPT_ORDER_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: CONFIRM_RECEIPT_ORDER_ID,
+        value: {
+          order: {
+            title: 'Your order',
+            status: 'pending',
+            items: [
+              { label: 'Linen tea towel', quantity: 2, amount: '$24.00' },
+              { label: 'Oak serving board', quantity: 1, amount: '$58.00' },
+            ],
+            record: { subtotal: '$82.00', delivery: '$6.50', total: '$88.50', ref: 'Order SK-4417' },
+          },
+        },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: CONFIRM_RECEIPT_ORDER_ID,
+        components: [
+          {
+            id: 'root', component: 'ConfirmReceipt',
+            title: { path: '/order/title' }, items: { path: '/order/items' }, data: { path: '/order/record' },
+            rows: [{ label: 'Subtotal', path: 'subtotal' }, { label: 'Delivery', path: 'delivery' }],
+            totalLabel: 'Total', totalPath: 'total',
+            refPath: 'ref',
+            status: { path: '/order/status' },
+            confirmAction: { action: 'place_order', context: { order: 'SK-4417' } },
+            backAction: { action: 'edit_order' },
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed]

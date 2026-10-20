@@ -106,11 +106,11 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
         'comparison-table',
       ]),
     )
-    expect(MINI_SKILLS).toHaveLength(22)
+    expect(MINI_SKILLS).toHaveLength(23) // + option-deck (T-0193), + confirm-receipt (T-0195)
   })
 
   it('SPEC-R6 AC1: every shipped module carries catalogId: \'agent-ui\' except the a2ui-basic dialect module', () => {
-    expect(MINI_SKILLS).toHaveLength(22)
+    expect(MINI_SKILLS).toHaveLength(23) // + option-deck (T-0193), + confirm-receipt (T-0195)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe(skill.id === 'basic-dialect' ? 'a2ui-basic' : 'agent-ui')
   })
 })
@@ -804,7 +804,7 @@ describe('selectMiniSkills: ranking stability over the full registry (T-0209)', 
   })
 })
 
-// T-0375: a CardFooter with one action Button holds it directly (grammar.md:188), and only 2+ share a Row.
+// T-0375: a CardFooter with one action Button holds it directly (grammar.md:193), and only 2+ share a Row.
 // card-game-sheet loaded on the r11 stud turns that rebuilt a separate actions Card, game-table-chrome on deal again.
 describe('T-0375: a lone action Button carries no Row', () => {
   const body = (id: string): string => MINI_SKILLS.find((m) => m.id === id)!.body

@@ -1,7 +1,7 @@
 ---
 {
   "id": "shopkeeper",
-  "version": 2,
+  "version": 3,
   "order": 8,
   "label": "The Shopkeeper",
   "tagline": "Storefront browsing + a cart summary: product tiles with price, badge and a buy action (T-0075)",
@@ -18,6 +18,7 @@
   ],
   "tools": [],
   "changelog": [
+    "3: T-0195: cart-summary is ONE ConfirmReceipt; migrates pre-v3 stores.",
     "2: T-0196: cart-summary teaches each line quantity as an AmountPicker"
   ]
 }

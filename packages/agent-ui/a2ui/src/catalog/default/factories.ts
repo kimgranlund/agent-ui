@@ -1566,6 +1566,39 @@ export const amountPickerFactory: WidgetFactory = accessorFactory('ui-amount-pic
  */
 export const optionDeckFactory: WidgetFactory = accessorFactory('ui-option-deck', [{ prop: 'value', event: 'select' }])
 
+/** The wire `totalLabel` and `totalPath` each element has received so far, composed into the control's `total`. */
+const confirmReceiptTotals = new WeakMap<HTMLElement, { label?: unknown; path?: unknown }>()
+
+/**
+ * `ConfirmReceipt` to `ui-confirm-receipt` (T-0195). Every property but the total pair is a 1:1 reflecting accessor
+ * (verified against `confirm-receipt.md`; `title` keeps its prop name while the control observes `receipt-title`,
+ * so the HTML `title` tooltip never fires). Each row, total and ref value is `data[path]`, so a value is never a
+ * producer literal. Two-way bound on `status` via the control's own `change` (the Suggestions shape): a Confirm
+ * press commits `status = 'confirmed'` before it emits, so the bound path records the settle and a re-render
+ * cannot ask again. `confirmAction` and `backAction` are applied to the control (it draws Back only when
+ * `backAction` is set) and marked `actionEvent: 'action'`, so the renderer forwards the control's own `action`
+ * event by its `detail.action`. Neither is `mapsTo: 'action'`: that prop is stripped and answered by a host click,
+ * so a click on a row would send the confirm.
+ *
+ * The total rides two string props, `totalLabel` and `totalPath`, composed here into the control's
+ * `total: {label, path}` (Kim 2026-10-20). A literal `{label, path}` object on the wire is the renderer's `{path}`
+ * binding shape (`isBinding` in widget.ts), so it would resolve as a data-model read and never reach the control.
+ * No `totalPath` (or an empty one) means no total row. `inline` is not wire-exposed.
+ */
+export const confirmReceiptFactory: WidgetFactory = {
+  tag: 'ui-confirm-receipt',
+  create: () => document.createElement('ui-confirm-receipt'),
+  applyProp: (el, prop, value) => {
+    setProp(el, prop, value) // the pair also lands as inert own-properties (the control declares neither), the Suggestions `action` posture
+    if (prop !== 'totalLabel' && prop !== 'totalPath') return
+    const pair = { ...confirmReceiptTotals.get(el), [prop === 'totalLabel' ? 'label' : 'path']: value }
+    confirmReceiptTotals.set(el, pair)
+    const path = typeof pair.path === 'string' ? pair.path : ''
+    setProp(el, 'total', path === '' ? null : { label: typeof pair.label === 'string' ? pair.label : '', path })
+  },
+  value: { prop: 'status', event: 'change' },
+}
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1656,4 +1689,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   ResultCard: resultCardFactory,
   AmountPicker: amountPickerFactory,
   OptionDeck: optionDeckFactory,
+  ConfirmReceipt: confirmReceiptFactory,
 }

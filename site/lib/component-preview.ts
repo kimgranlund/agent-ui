@@ -378,6 +378,8 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   AmountPicker: { label: 'Bet', min: '5', max: '250', step: '5', value: '50', currency: 'USD', slider: 'true', actionName: 'place_bet', actionLabel: 'Place bet' },
   // OptionDeck (T-0193): the string knobs here; the `options` array and `allowRandom` ride SAMPLE_TREES rootRef.
   OptionDeck: { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.', actionName: 'start' },
+  // ConfirmReceipt (T-0195): the string and enum knobs here; rows, items, totalLabel/totalPath, data and the two actions have no preview sample (the preview gate does not require one).
+  ConfirmReceipt: { title: 'Your order', status: 'pending', refPath: 'ref' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -1431,6 +1433,10 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // ui-option-deck (T-0193): `heading` and `subheading` are the string knobs; `options` is set as a property in
   // COMPONENT_SAMPLE_INIT (a JSON array, not a knob value).
   'ui-option-deck': { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.' },
+  // ui-confirm-receipt (T-0195): only the `status` enum is seeded as a knob; title, rows, items, total, data and
+  // the actions are set as properties in COMPONENT_SAMPLE_INIT (`title` would write the global attribute, not
+  // `receipt-title`, and the JSON props are data, not knobs).
+  'ui-confirm-receipt': { status: 'pending' },
   'ui-badge': { label: '3 failing', intent: 'danger' },
   'ui-disclosure': { summary: 'Full log' },
   // ui-form-popover (GH #294 F4): `label` is a real string knob defaulting to '' — the same demonstrability
@@ -1634,6 +1640,25 @@ const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
       el.append(again)
     }
   },
+  // ui-confirm-receipt (T-0195): a representative order read back, written as properties (see COMPONENT_INITIAL):
+  // line items, subtotal-style rows and a total, every value read from `data` by path.
+  'ui-confirm-receipt': (el) =>
+    Object.assign(el, {
+      title: 'Your order',
+      items: [
+        { label: 'Linen tea towel', quantity: 2, amount: '$24.00' },
+        { label: 'Stoneware mug, sand', quantity: 1, amount: '$18.00' },
+      ],
+      rows: [
+        { label: 'Subtotal', path: 'subtotal' },
+        { label: 'Shipping', path: 'shipping' },
+      ],
+      total: { label: 'Total', path: 'total' },
+      data: { subtotal: '$42.00', shipping: '$6.00', total: '$48.00', ref: 'Order #10482' },
+      refPath: 'ref',
+      confirmAction: { action: 'place_order' },
+      backAction: { action: 'edit_cart' },
+    }),
   // ui-option-deck (T-0193): the representative game picker of the approved mockup, with Surprise me.
   'ui-option-deck': (el) =>
     Object.assign(el, {
@@ -1709,6 +1734,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-amount-picker', // every part is control-built from props and patched in place; no light-DOM content model (slots: [] in amount-picker.md, T-0196)
   'ui-option-deck', // every part is control-built from the options prop and patched in place; no light-DOM content model (slots: [] in option-deck.md)
   'ui-result-card', // the parts are control-built from props and patched in place; its only children are the producer's buttons (slots: [] in result-card.md), so a host-level SLOT_TEXT write would destroy the part tree
+  'ui-confirm-receipt', // T-0195: the record and actions parts are control-built from props (slots: [] in confirm-receipt.md), so a host-level SLOT_TEXT write would destroy the part tree
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)
   'ui-source-list', // connected() builds row/index/title/snippet spans (replaceChildren) from the sources PROP — no light-DOM content model at all (slots: [] — source-list.md, ADR-0214)
   'ui-table', // connected() builds the scroll/table/thead/tbody skeleton — fully columns/rows-prop-driven, no light-DOM content model at all (slots: [] — table.md)

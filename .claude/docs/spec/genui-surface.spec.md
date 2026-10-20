@@ -1,6 +1,11 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.15 · 2026-10-12 · Layer: SPEC (execution contract)
+> Status: proposed · v0.16 · 2026-10-20 · Layer: SPEC (execution contract)
+> **v0.16 amendment (T-0195, 2026-10-20):** SPEC-R13(b)'s inventory budget is revised ≤ 30 100 → ≤ 30 800 chars
+> (measured 30 469; an interim 30 500 for the `ui-confirm-receipt` row alone, measured 30 121) and its clause
+> budget ≤ 9 500 → ≤ 10 200 chars (measured 9 847), by the same measured-plus-headroom formula, after the
+> `ui-confirm-receipt` descriptor row, the `ConfirmReceipt` selection clause and its reciprocal `ResultCard` and
+> `DescriptionList` edges joined the dogfood rows. No requirement or AC changes. Full text: §13.
 > **v0.15 amendment (T-0089, ADR-0244, 2026-10-12):** SPEC-R13(b)'s inventory budget is revised
 > ≤ 29 600 → ≤ 30 100 chars (measured 29 767), by the same measured-plus-headroom formula, after the
 > `ui-result-card` descriptor row, the `ResultCard` selection clause and its reciprocal `GameHud` and `Toast`
@@ -791,13 +796,14 @@ byte-identical to its v0.10 form.
 - **Source.** `selectionGuidanceForId('agent-ui')` reads the guidance and `renderSelectionClauseWith`
   formats it, the same formatter the catalog inventory uses (`src/agent/selection-guidance.ts`). Base
   guidance only: persona sidecars stay out, and family siblings get no clause of their own.
-- **Budgets.** The whole inventory is held at ≤ 30 100 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
-  from ≤ 29 600 by the v0.15 amendment, measured 29 767 on 2026-10-12 after the `ui-result-card` row and the
-  `ResultCard` clause, T-0089; ≤ 29 600 was revised from ≤ 28 700 by v0.14, measured 29 227 after the
+- **Budgets.** The whole inventory is held at ≤ 30 800 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
+  from ≤ 30 100 by the v0.16 amendment, measured 30 469 on 2026-10-20 after the `ui-confirm-receipt` row and the
+  `ConfirmReceipt` clause, T-0195; ≤ 30 100 was revised from ≤ 29 600 by v0.15, measured 29 767 on 2026-10-12 after
+  the `ui-result-card` row and the `ResultCard` clause, T-0089; ≤ 29 600 was revised from ≤ 28 700 by v0.14, measured 29 227 after the
   `ProductCard`, `BoardGrid` and `GameHud` clauses, T-0072; ≤ 28 700 was revised from ≤ 28 200 by v0.13, measured 28 359 after the
   `ui-product-card` row, T-0070; ≤ 28 200 itself was revised from ≤ 19 600, measured 27 820 on 2026-10-05).
-  The summed clause length is held at ≤ 9 500 chars (`DOGFOOD_GUIDANCE_CHAR_BUDGET`, revised from ≤ 8 800 by
-  v0.14, measured 9 189 on 2026-10-12; 8 479 over 72 rows, 144 edges on 2026-10-05). Both are enforced by
+  The summed clause length is held at ≤ 10 200 chars (`DOGFOOD_GUIDANCE_CHAR_BUDGET`, revised from ≤ 9 500 by
+  v0.16, measured 9 847 on 2026-10-20; ≤ 9 500 was revised from ≤ 8 800 by v0.14, measured 9 189 on 2026-10-12; 8 479 over 72 rows, 144 edges on 2026-10-05). Both are enforced by
   `prompt-drift.test.ts`, never by runtime truncation; an over-budget sidecar is re-authored tersely. The
   named fallback if a later wave blows the clause budget is the use-only clause.
 
@@ -809,7 +815,7 @@ set-equality requirement, is UNCHANGED.
   type-to-tag map over `dogfoodInventoryTags()` (never read back from the renderer), followed only by an
   optional family clause;
   (ii) the clause-less rows are exactly the rows whose mapped type has no sidecar entry;
-  (iii) the summed clause length is ≤ `DOGFOOD_GUIDANCE_CHAR_BUDGET` (9 500);
+  (iii) the summed clause length is ≤ `DOGFOOD_GUIDANCE_CHAR_BUDGET` (10 200);
   (iv) negative control: a `notFor` edge planted to a type no taught tag names (`Option`, whose factory is
   `div[role=option]`) throws `UNRESOLVED`, never renders or drops silently;
   and *given* the parity gate (`dogfood-inventory-parity.test.ts`), (v) `catalogTypeForTag` maps every

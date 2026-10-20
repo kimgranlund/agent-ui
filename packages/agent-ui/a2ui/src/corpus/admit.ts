@@ -347,7 +347,8 @@ export function priorSurfaceSeeds(prior: A2uiOutput): Map<string, SurfaceSeed> {
  * `sourceComponentId` must name a component live on the action's surface after the prior turn, and that
  * component must declare an action prop (catalog `mapsTo: 'action'`, the renderer's own trigger rule)
  * whose name, read by the renderer's `readActionSpec`, equals `action.name`, or a prop with the catalog's
- * `actionEvent` mark (T-0081) whose string value is `action.name`. An action no prior component
+ * `actionEvent` mark (T-0081) whose value, a name or an action object read the same way (T-0195), is
+ * `action.name`. An action no prior component
  * can emit is a fabricated turn.
  */
 function checkActionGrounding(record: CorpusRecord, catalog: Catalog): AdmitRejection | null {
@@ -367,8 +368,9 @@ function checkActionGrounding(record: CorpusRecord, catalog: Catalog): AdmitReje
   const emits = Object.entries(props).some(
     ([prop, def]) =>
       (def.mapsTo === 'action' && source[prop] !== undefined && readActionSpec(source[prop]).name === action.name) ||
-      // T-0081: a prop that forwards the control's own event (`PropDef.actionEvent`) carries the action name itself.
-      (def.actionEvent !== undefined && source[prop] === action.name),
+      // T-0081: a prop that forwards the control's own event (`PropDef.actionEvent`) carries the action name itself,
+      // or (T-0195, `ConfirmReceipt.confirmAction`/`.backAction`) an action object the control emits as its detail.
+      (def.actionEvent !== undefined && source[prop] !== undefined && readActionSpec(source[prop]).name === action.name),
   )
   if (emits) return null
   return {

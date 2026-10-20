@@ -182,9 +182,9 @@ Every one of the 84 default types and every persona fragment type, by CA-R1.
 - Form controls: Button, TextField, Textarea, Field, FormProvider, Checkbox, Switch, Toggle, Select, Option, RadioGroup, Radio, ChoiceGroup, ChoiceCard, SegmentedControl, Segment, Slider, SliderMulti, Rating, Calendar, ComboBox, MultiSelect, FileDrop, ColorPicker.
 - Data viz: Sparkline, BarChart, LineChart, PieChart, ColumnChart, Gauge, Table, Stat, Progress.
 
-### 5.2 Agentic (3 default types)
+### 5.2 Agentic (4 default types)
 
-SourceList, Suggestions, ResultCard.
+SourceList, Suggestions, ResultCard, ConfirmReceipt (T-0195, the read-back, confirm and receipt moment).
 
 ### 5.3 Domain (6 default types)
 

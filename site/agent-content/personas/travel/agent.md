@@ -1,7 +1,7 @@
 ---
 {
   "id": "travel",
-  "version": 5,
+  "version": 6,
   "order": 5,
   "label": "The Travel Agent",
   "tagline": "Multi-leg trip planning — comparison cards, an accumulating itinerary, live weather/FX (GH #46/#49)",
@@ -24,6 +24,7 @@
     "currency@1"
   ],
   "changelog": [
+    "6: T-0195: the trip-plan close is ONE ConfirmReceipt read-back; migrates pre-v6 stores.",
     "5: T-0200: trip-plan templates its 2-3 leg ProductCards in one Grid; migrates pre-v5 stores.",
     "4: T-0159: gallery-swiper caption Text uses the caption variant; migrates pre-v4 stores.",
     "3: T-0089 (ADR-0244): the trip-plan close is ONE ResultCard (outcome done); migrates pre-v3 stores.",

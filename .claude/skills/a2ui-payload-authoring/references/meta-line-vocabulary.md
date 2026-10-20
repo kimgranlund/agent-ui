@@ -82,9 +82,12 @@ must compose correctly:
   been committed yet. This reconciled a head-on collision between the shipped surface-reuse law and
   the shipped answered-ask law; neither is optional, the scoping is the resolution.
 - **The closing turn's ONE exception to "emits no A2UI" (B2).** The courtesy-close turn (prose
-  `note` + `flowEnd: true`, no new ask) MAY carry exactly one settling `updateComponents` against
-  the already-confirmed receipt's surface — strip its Back/Confirm buttons, add a settled-status
-  Badge — in the SAME turn as the close. At most once per flow; never a fresh surface, never any
+  `note` + `flowEnd: true`, no new ask) MAY carry exactly one settling update against the
+  already-confirmed receipt's surface, in the SAME turn as the close: a `ConfirmReceipt` confirmed
+  in chat takes one `updateDataModel` writing `"confirmed"` to its bound `status` path (its own
+  Confirm press already wrote it, so nothing is sent); any other receipt takes one
+  `updateComponents` that strips its Back/Confirm buttons and adds a settled-status Badge. At most
+  once per flow; never a fresh surface, never any
   other card; never on the escalation path (a pure safety-directive close has no receipt to
   settle); never a `deleteSurface` (the confirmed receipt stays a durable history anchor).
   Everything else about the closing turn stands: no new ask, and the done/start-over chrome

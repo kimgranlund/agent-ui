@@ -350,11 +350,17 @@ export function renderSelectionClause(entry: SelectionEntry | undefined, catalog
  *  and `GameHud` rows and the reciprocal edges the sidecar gate forces; budget 9 300 (measured rounded up to
  *  the next 100, plus 300 headroom, still under the ceiling: the annotated `## Available components` section
  *  is about 10 000 chars without clauses). A deliberate re-measure for new catalog types, not a get-green raise.
+ *  RE-MEASURED 2026-10-20 (T-0195): 9 584 chars after the `ConfirmReceipt` entry and its reciprocal `ResultCard` and
+ *  `DescriptionList` edges (and the T-0089 `ResultCard` clause before it); budget 9 900, under the ceiling (the
+ *  `## Available components` section is 10 485 chars without clauses).
  *  RE-MEASURED 2026-10-20 (T-0196): 9 503 chars over 85 types after the `AmountPicker` row, its Slider and TextField
  *  reciprocal edges and the dropped TextField/ColorPicker pair (Kim 2026-10-20); budget 9 900 by the same formula,
  *  still under the ceiling.
  *  RE-MEASURED 2026-10-20 (T-0193, merged over T-0196): 9 697 chars over 86 types after the `OptionDeck` row and its
  *  reciprocal `ChoiceGroup` edge; budget 10 000 by the same formula, still under the ceiling.
+ *  RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): 10 029 chars over 87 types with the
+ *  `ConfirmReceipt`, `AmountPicker` and `OptionDeck` rows and their reciprocal edges; budget 10 400 by the same
+ *  formula, still under the ceiling (10 485 chars without clauses before the two T-0196 and T-0193 rows).
  *  This budgets one clause family; the whole composed prompt has its own budget in `prompt-budget.ts`
  *  (ADR-0234). */
-export const SELECTION_GUIDANCE_CHAR_BUDGET = 10_000
+export const SELECTION_GUIDANCE_CHAR_BUDGET = 10_400

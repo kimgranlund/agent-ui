@@ -108,6 +108,8 @@ import gameHudMd from '../../packages/agent-ui/components/src/controls/game-hud/
 import resultCardMd from '../../packages/agent-ui/components/src/controls/result-card/result-card.md?raw'
 // T-0193 - ui-option-deck, the pick-one-to-start deck of option cards (tier=pattern => {doc, demo}).
 import optionDeckMd from '../../packages/agent-ui/components/src/controls/option-deck/option-deck.md?raw'
+// T-0195 - ui-confirm-receipt, the read-back, confirm and receipt record (tier=pattern => {doc, demo}).
+import confirmReceiptMd from '../../packages/agent-ui/components/src/controls/confirm-receipt/confirm-receipt.md?raw'
 // ADR-0201 — ui-description-list, the key–value receipt primitive (tier=display ⇒ {doc}).
 import descriptionListMd from '../../packages/agent-ui/components/src/controls/description-list/description-list.md?raw'
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
@@ -279,6 +281,8 @@ export const loadGameHudDoc = (): ComponentDoc => parseDoc(gameHudMd)
 export const loadResultCardDoc = (): ComponentDoc => parseDoc(resultCardMd)
 // T-0193 - ui-option-deck, the pick-one-to-start deck of option cards (tier=pattern => {doc, demo}).
 export const loadOptionDeckDoc = (): ComponentDoc => parseDoc(optionDeckMd)
+// T-0195 - ui-confirm-receipt, the read-back, confirm and receipt record (tier=pattern => {doc, demo}).
+export const loadConfirmReceiptDoc = (): ComponentDoc => parseDoc(confirmReceiptMd)
 export const loadDescriptionListDoc = (): ComponentDoc => parseDoc(descriptionListMd)
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
 export const loadSourceListDoc = (): ComponentDoc => parseDoc(sourceListMd)

@@ -487,6 +487,30 @@
       "catalogs": []
     },
     {
+      "id": "control:ui-confirm-receipt",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/confirm-receipt/confirm-receipt.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-confirm-receipt",
+      "tier": "pattern",
+      "description": "A read-back record of a booking or an order with Back and Confirm actions, which settles into a receipt with a Confirmed mark once the user confirms.",
+      "uses": [
+        "ui-glyph"
+      ],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
       "id": "control:ui-description-list",
       "kind": "control",
       "source": {
@@ -2516,6 +2540,22 @@
       "scope": "agent-ui"
     },
     {
+      "id": "mini-skill:confirm-receipt",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/confirm-receipt.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "confirm-receipt",
+      "scope": "agent-ui"
+    },
+    {
       "id": "mini-skill:crud-entry-list",
       "kind": "mini-skill",
       "source": {
@@ -3945,6 +3985,39 @@
       ]
     },
     {
+      "id": "type:agent-ui/ConfirmReceipt",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "ConfirmReceipt"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "a canvas-scale settle surface, not an ask affordance (T-0195) - a booking or order read back to confirm, whose commit is the control's own Confirm action, not a value an ask collects (the ResultCard reasoning); the feed ask's single commit affordance would compete with it."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "ConfirmReceipt",
+      "scope": "agent-ui",
+      "tag": "ui-confirm-receipt",
+      "intents": [
+        "a booking or order read back to confirm, then its receipt"
+      ],
+      "notFor": [
+        {
+          "type": "ResultCard",
+          "why": "a game or deal outcome with no confirm step"
+        },
+        {
+          "type": "DescriptionList",
+          "why": "label and value pairs with no confirm step"
+        }
+      ]
+    },
+    {
       "id": "type:agent-ui/DescriptionList",
       "kind": "type",
       "source": {
@@ -3974,6 +4047,10 @@
         {
           "type": "Stat",
           "why": "one headline number"
+        },
+        {
+          "type": "ConfirmReceipt",
+          "why": "a record the user confirms, then keeps as a receipt"
         }
       ]
     },
@@ -5005,6 +5082,10 @@
         {
           "type": "Toast",
           "why": "a passing round result"
+        },
+        {
+          "type": "ConfirmReceipt",
+          "why": "a booking or order the user still has to confirm"
         }
       ]
     },

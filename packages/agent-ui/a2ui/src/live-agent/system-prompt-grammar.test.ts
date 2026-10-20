@@ -119,9 +119,12 @@ describe('buildSystemPrompt backable multi-step wizard mechanics (ADR-0198 amend
     expect(prompt).toMatch(/scene transitions on the one still-open ask, not answered asks/)
   })
 
-  it('B2 — the closing turn may carry exactly ONE settle updateComponents (strip buttons + settled badge)', () => {
+  it('B2 — the closing turn may carry exactly ONE settle update (a ConfirmReceipt status write, or strip buttons + settled badge)', () => {
     expect(prompt).toMatch(/The closing turn's ONE exception to "no UI change"/)
-    expect(prompt).toMatch(/MAY carry exactly one updateComponents against that SAME\s+confirmed receipt/)
+    expect(prompt).toMatch(/MAY carry exactly one update against that SAME\s+confirmed receipt/)
+    expect(prompt).not.toMatch(/exactly one updateComponents against/)
+    expect(prompt).toMatch(/ConfirmReceipt\s+confirmed in chat takes one updateDataModel writing "confirmed" to its "status" path/)
+    expect(prompt).toMatch(/ConfirmReceipt on a surface the turn's meta-line does not name as "ask"/)
     expect(prompt).toMatch(/strip its Back\/Confirm buttons and add a settled-status Badge/)
     expect(prompt).toMatch(/never on the escalation path/)
     expect(prompt).toMatch(/It fires at most once per flow; deleteSurface is\s+still never used on a confirmed receipt/)

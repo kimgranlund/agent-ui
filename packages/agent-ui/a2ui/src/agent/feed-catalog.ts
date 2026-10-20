@@ -138,7 +138,7 @@ export interface FeedExclusion {
 }
 
 /**
- * The 47 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair,
+ * The 48 catalog types a feed ask MAY NEVER host (ADR-0097 §3's ratified 11 + the chart-family pair,
  * the ADR-0097 Amendment / ADR-0107 Amendment 2 — + the chart family's third member, `LineChart`
  * [ADR-0205 cl.8] — + the report/content/feed catalog wave's five:
  * `Stat`/`Table` [ADR-0111], `Disclosure` [ADR-0113], `Progress`/`Attachment` [ADR-0112] — + the
@@ -168,7 +168,8 @@ export interface FeedExclusion {
  * members, the same display-only/no-value-mark reasoning as Sparkline/BarChart/LineChart/PieChart]
  * + the ADR-0243 preset-widgets wave's three: `ProductCard`/`BoardGrid`/`GameHud` [T-0072, canvas-scale
  * content and game surfaces, never an ask affordance; see each entry's reason]
- * + ADR-0244's `ResultCard` [T-0089, a game or booking end surface, never an ask affordance].
+ * + ADR-0244's `ResultCard` [T-0089, a game or booking end surface, never an ask affordance]
+ * + T-0195's `ConfirmReceipt` [a canvas-scale settle surface whose commit is a control-owned action].
  * Composite-closure note: a composite's children are excluded ALONGSIDE their parent for the SAME
  * reason (Tab/TabPanel with Tabs; MenuItem with Menu) — `feed-catalog.test.ts` asserts this closure
  * holds, both here and for the IN composites (RadioGroup/Radio, SegmentedControl/Segment, Card/its
@@ -367,6 +368,11 @@ export const FEED_EXCLUDED: readonly FeedExclusion[] = [
     type: 'ResultCard',
     reason:
       'a settled outcome, not an ask affordance (ADR-0244, T-0089) - a game end or booking summary is canvas-scale display content (the GameHud reasoning); no value mark, and its only actions are the producer\'s own child Buttons, so the card itself commits nothing an ask could collect.',
+  },
+  {
+    type: 'ConfirmReceipt',
+    reason:
+      'a canvas-scale settle surface, not an ask affordance (T-0195) - a booking or order read back to confirm, whose commit is the control\'s own Confirm action, not a value an ask collects (the ResultCard reasoning); the feed ask\'s single commit affordance would compete with it.',
   },
 ] as const
 

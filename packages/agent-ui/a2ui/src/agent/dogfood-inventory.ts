@@ -93,13 +93,21 @@ import type { SelectionEntry } from './selection-guidance.ts'
 // MEASURED 2026-10-12: 29 767 chars after the ui-result-card descriptor row, the `ResultCard` selection clause and
 // its reciprocal edges on `GameHud` and `Toast` (T-0089, ADR-0244; 29 304 before, +463); budget 30 100 (measured
 // rounded up to the next 100, plus 300), per the SPEC-R13(b) v0.15 amendment in genui-surface.spec.md.
+// RE-MEASURED 2026-10-20: 30 121 chars after the ui-confirm-receipt descriptor row (T-0195); budget 30 500 (measured
+// rounded up to the next 100, plus 300).
+// RE-MEASURED 2026-10-20: 30 469 chars after the `ConfirmReceipt` selection clause and its reciprocal edges on
+// `ResultCard` and `DescriptionList` (T-0195 step 3); budget 30 800 (measured rounded up to the next 100, plus 300),
+// per the SPEC-R13(b) v0.16 amendment in genui-surface.spec.md.
 // RE-MEASURED 2026-10-20 (T-0196): 30 473 chars after the ui-amount-picker descriptor row, the `AmountPicker`
 // selection clause and its reciprocal edges on `Slider` and `TextField` (TextField's ColorPicker edge pair dropped,
 // Kim 2026-10-20); budget 30 800 (measured rounded up to the next 100, plus 300).
 // RE-MEASURED 2026-10-20 (T-0193, merged over T-0196): 30 950 chars with both the ui-amount-picker and the
 // ui-option-deck rows, the `OptionDeck` selection clause and its reciprocal edge on `ChoiceGroup`; budget 31 300
 // (measured rounded up to the next 100, plus 300).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 31_300
+// RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): 31 608 chars with the ui-confirm-receipt,
+// ui-amount-picker and ui-option-deck rows and all three selection clauses; budget 32 000 (measured rounded up to the
+// next 100, plus 300).
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 32_000
 
 /** The character budget for the selection clauses the dogfood inventory carries: the sum of the clause
  *  lengths `dogfoodInventory()` appends to its rows. Held by a `prompt-drift.test.ts` leg, never by runtime
@@ -108,11 +116,15 @@ export const DOGFOOD_INVENTORY_CHAR_BUDGET = 31_300
  *  RE-MEASURED 2026-10-12 (T-0072, ADR-0243): 9 189 chars after the `ProductCard`, `BoardGrid` and `GameHud`
  *  clauses and their reciprocal edges; budget 9 500 (measured rounded up to the next 100, plus 300), per the
  *  SPEC-R13(b) v0.14 amendment in genui-surface.spec.md. A deliberate re-measure for new catalog types.
+ *  RE-MEASURED 2026-10-20 (T-0195): 9 847 chars after the `ConfirmReceipt` clause and its reciprocal edges (and the
+ *  T-0089 `ResultCard` clause before it); budget 10 200 by the same formula, per the SPEC-R13(b) v0.16 amendment.
  *  RE-MEASURED 2026-10-20 (T-0196): 9 757 chars after the `AmountPicker` clause and its Slider and TextField
  *  reciprocal edges; budget 10 100 (measured rounded up to the next 100, plus 300).
  *  RE-MEASURED 2026-10-20 (T-0193, merged over T-0196): 9 959 chars with the `OptionDeck` clause and its reciprocal
- *  `ChoiceGroup` edge added; budget 10 300 (measured rounded up to the next 100, plus 300). */
-export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 10_300
+ *  `ChoiceGroup` edge added; budget 10 300 (measured rounded up to the next 100, plus 300).
+ *  RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): 10 307 chars with the `ConfirmReceipt`,
+ *  `AmountPicker` and `OptionDeck` clauses and their reciprocal edges; budget 10 700 by the same formula. */
+export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 10_700
 
 /** Every tag the inventory TEACHES, tag-sorted — each descriptor's own `tag:` scalar PLUS the family
  *  siblings that ride its row (GH #346). The "inventory-taught tags" half of SPEC-R13 AC2's set-equality

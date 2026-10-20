@@ -1145,6 +1145,73 @@
         "actionName": { "type": { "type": "string" }, "mapsTo": "actionName", "actionEvent": "action" }
       },
       "value": [{ "prop": "value", "event": "select" }]
+    },
+    "ConfirmReceipt": {
+      "properties": {
+        "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
+        "rows": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "path": { "type": "string" },
+                "options": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": { "value": { "type": "string" }, "label": { "type": "string" } },
+                    "required": ["value", "label"]
+                  }
+                }
+              },
+              "required": ["label", "path"]
+            }
+          },
+          "mapsTo": "rows"
+        },
+        "data": { "type": { "type": "object" }, "bindable": true, "mapsTo": "data" },
+        "items": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "quantity": { "type": ["string", "number"] },
+                "amount": { "type": "string" }
+              },
+              "required": ["label", "amount"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "items"
+        },
+        "totalLabel": { "type": { "type": "string" }, "bindable": true, "mapsTo": "totalLabel" },
+        "totalPath": { "type": { "type": "string" }, "mapsTo": "totalPath" },
+        "status": { "type": { "type": "string", "enum": ["pending", "confirmed"] }, "bindable": true, "mapsTo": "status" },
+        "refPath": { "type": { "type": "string" }, "mapsTo": "refPath" },
+        "confirmAction": {
+          "type": {
+            "type": "object",
+            "properties": { "action": { "type": "string" }, "context": { "type": "object" } },
+            "required": ["action"]
+          },
+          "mapsTo": "confirmAction",
+          "actionEvent": "action"
+        },
+        "backAction": {
+          "type": {
+            "type": "object",
+            "properties": { "action": { "type": "string" }, "context": { "type": "object" } },
+            "required": ["action"]
+          },
+          "mapsTo": "backAction",
+          "actionEvent": "action"
+        }
+      },
+      "value": { "prop": "status", "event": "change" }
     }
   },
 

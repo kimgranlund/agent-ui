@@ -44,12 +44,20 @@ import {
   drillPanelFactory,
   badgeFactory,
   toggleFactory,
+  confirmReceiptFactory,
   defaultFactories,
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
 import { Registry, RegistryError, RegistryErrorCode } from '../registry.ts'
 import { validateCatalogConformance } from '../conformance.ts'
-import type { A2uiComponent } from '../../protocol.ts'
+import type { A2uiComponent, A2uiServerMessage } from '../../protocol.ts'
+import { whenFlushed } from '@agent-ui/components'
+import { createRenderer } from '../../renderer/renderer.ts'
+import type { A2uiClientMessage } from '../../renderer/renderer.ts'
+import type { A2uiActionMessage } from '../../renderer/action.ts'
+
+// T-0041 (ADR-0241): warm the default catalog body once, so the ConfirmReceipt renderer probes below register it at once.
+await createRenderer().preload('agent-ui')
 
 // factories.ts imports the @agent-ui/components controls barrel, so the SHIPPED tags self-define on load
 // (ui-button G5, ui-text-field G6; the G9 container tags self-define once their folders + the s12 barrel
@@ -1221,5 +1229,106 @@ describe('default catalog factories — Toggle (GH #1352, ADR-0179 GH #686 Amend
     expect(el.textContent).toBe('')
     toggleFactory.applyProp(el, 'label', undefined)
     expect(el.textContent).toBe('')
+  })
+})
+
+// T-0195: ConfirmReceipt end to end through the renderer: the bound `status` is the value mark, and the two press
+// props forward the control's own `action` event by its `detail.action`.
+describe('default catalog factories — ConfirmReceipt (T-0195)', () => {
+  const isAction = (m: A2uiClientMessage): m is A2uiActionMessage => 'action' in m
+  const line = (message: A2uiServerMessage): string => JSON.stringify(message)
+  const mountReceipt = (status: string): { mount: HTMLElement; sent: A2uiClientMessage[]; cleanup: () => void } => {
+    const sent: A2uiClientMessage[] = []
+    const r = createRenderer({ newId: () => 'act-1', now: () => '2026-10-20T00:00:00.000Z' })
+    r.onClientMessage((m) => void sent.push(m))
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'cr', catalogId: 'agent-ui' } }))
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'cr', value: { order: { status, subtotal: '$27.00', total: '$27.00' } } } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'cr',
+          components: [
+            { id: 'root', component: 'Column', children: ['receipt', 'echo'] },
+            {
+              id: 'receipt',
+              component: 'ConfirmReceipt',
+              title: 'Your order',
+              rows: [{ label: 'Subtotal', path: 'subtotal' }],
+              totalLabel: 'Total',
+              totalPath: 'total',
+              data: { path: '/order' },
+              status: { path: '/order/status' },
+              confirmAction: { action: 'place_order', context: { order: 'SK-1' } },
+              backAction: { action: 'edit_order' },
+            },
+            { id: 'echo', component: 'Text', text: { path: '/order/status' } },
+          ],
+        },
+      }),
+    )
+    return { mount, sent, cleanup: () => { r.dispose(); mount.remove() } }
+  }
+  const pressOf = (mount: HTMLElement, name: string): HTMLElement => mount.querySelector(`ui-confirm-receipt [data-part="${name}"]`) as HTMLElement
+  const echoOf = (mount: HTMLElement): string => (mount.querySelector('ui-text') as HTMLElement).textContent ?? ''
+
+  it('ConfirmReceipt → ui-confirm-receipt: two-way bound on status via change (the Suggestions shape)', () => {
+    expect(confirmReceiptFactory.tag).toBe('ui-confirm-receipt')
+    expect(confirmReceiptFactory.value).toEqual({ prop: 'status', event: 'change' })
+    expect(defaultFactories.ConfirmReceipt).toBe(confirmReceiptFactory)
+  })
+
+  it('totalLabel and totalPath compose into the control total, its value read from data', async () => {
+    const { mount, cleanup } = mountReceipt('pending')
+    await whenFlushed()
+    const total = mount.querySelector('ui-confirm-receipt [data-part="total"]') as HTMLElement
+    expect(total.querySelector('[data-part="label"]')?.textContent).toBe('Total')
+    expect(total.querySelector('[data-part="value"]')?.textContent).toBe('$27.00')
+    const el = confirmReceiptFactory.create()
+    confirmReceiptFactory.applyProp(el, 'totalPath', 'total')
+    expect((el as unknown as { total: unknown }).total).toEqual({ label: '', path: 'total' })
+    confirmReceiptFactory.applyProp(el, 'totalLabel', 'Due')
+    expect((el as unknown as { total: unknown }).total).toEqual({ label: 'Due', path: 'total' })
+    confirmReceiptFactory.applyProp(el, 'totalPath', undefined)
+    expect((el as unknown as { total: unknown }).total).toBeNull()
+    cleanup()
+  })
+
+  it('a Confirm press writes confirmed to the bound status path and forwards the confirmAction name', async () => {
+    const { mount, sent, cleanup } = mountReceipt('pending')
+    await whenFlushed()
+    expect(echoOf(mount)).toBe('pending')
+    pressOf(mount, 'confirm').click()
+    await whenFlushed()
+    expect(echoOf(mount)).toBe('confirmed')
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    expect(actions[0]!.action).toMatchObject({ surfaceId: 'cr', name: 'place_order', sourceComponentId: 'receipt', context: { order: 'SK-1' } })
+    cleanup()
+  })
+
+  it('a Back press forwards the backAction name and leaves the bound status unchanged', async () => {
+    const { mount, sent, cleanup } = mountReceipt('pending')
+    await whenFlushed()
+    pressOf(mount, 'back').click()
+    await whenFlushed()
+    expect(echoOf(mount)).toBe('pending')
+    expect(sent.filter(isAction).map((a) => a.action.name)).toEqual(['edit_order'])
+    cleanup()
+  })
+
+  it('a render on confirmed data shows no actions row, so it cannot ask again', async () => {
+    const { mount, sent, cleanup } = mountReceipt('confirmed')
+    await whenFlushed()
+    const receipt = mount.querySelector('ui-confirm-receipt') as HTMLElement
+    expect(receipt).not.toBeNull()
+    expect(receipt.querySelector('[data-part="actions"]')).toBeNull()
+    expect(receipt.querySelector('button')).toBeNull()
+    expect(receipt.querySelector('[data-part="mark"]')).not.toBeNull()
+    expect(sent.filter(isAction)).toHaveLength(0)
+    cleanup()
   })
 })

@@ -15,12 +15,12 @@ import { canonicalDigest } from '../lib/agent-manifest/agent-manifest.ts'
 const PERSONA_DIGESTS: Record<string, string> = {
   croupier: 'sha256:af63636ced529226d3394519bb7d36883ef77dbcc3f897ac618b02a040ddb9b5',
   quant: 'sha256:2f361b72b293456b7b83ddde5da2594d2e0d6c6719cac70ae9024329e9cd16ea',
-  concierge: 'sha256:048051cdbc9d982cce88f239bacd54a6db2683147c2a46f836101b1e54ebefdf',
-  restaurant: 'sha256:092d927d4284358bda7fbe00ab1bd1e8d6b6c95a24d0c4c858164c9c4e41364d',
-  travel: 'sha256:6d254b9f63074f9fbfe265ab5b13d95bb90576ee4ccdcc0c67aedc16a1fd3746',
+  concierge: 'sha256:6cec1459930007fa11611d4185203f3f4daf8f54721e4add66ff55ffb04b3371',
+  restaurant: 'sha256:2b43054e201bb07bf767721601ad36be7d285b7f4aa5ac95b34825296ad5ca3b',
+  travel: 'sha256:2c4a69b6339917678d79c5e1390dbdde2ccba9c7b7084aeb2882e80a1f2ed02a',
   curator: 'sha256:81881cbdf3a5c96c88bf0ef47a874a020d8dc99d97520b3cd2f1763896fbcf49',
   stylist: 'sha256:5be5c45f741dd489178106991cf29bd19acc06721e592b446c7f3d95954a4226',
-  shopkeeper: 'sha256:2f9ad865a97e33ff9ae776f0a8b4ab9a45a0a1e28113d665faa7754864df2fd9',
+  shopkeeper: 'sha256:eb24d4047abf0a3292659e0c2fa17d8917dfce5731bd0333fc3f76849afb2fa7',
   quizmaster: 'sha256:03f652e96ca7b556fe3eedea06e544c011a4f47ab911c01aa91b7f6572ec84f8',
   mentalist: 'sha256:0175a300c2e3a6a1f0d50f9067ca8d6e0a696e9ae9c27edbbdb4dc6224c654f5',
   negotiator: 'sha256:7d64711cac5c40fa2468bb38cd1b3f88d7e86b5021d367cc62926a40c524cb38',
@@ -30,9 +30,9 @@ const PERSONA_DIGESTS: Record<string, string> = {
   'dungeon-master': 'sha256:28338295337eb41790cef55fb3cec257ff2bf3d3bca165cc4fac072280add2c8',
 }
 const BUILDER_DIGEST = 'sha256:3127b77df486f0a96fec2cd99ec93fbeacade3aac9545b5e66f689925eac94c6'
-const PRESETS_DIGEST = 'sha256:a9f337440857e60d4c430048fb6606398e471c587d5cae4eb839adddc5cc60d0'
+const PRESETS_DIGEST = 'sha256:4656bb56b60ceff2dfa10451beaced981ecc2559739f76bd51dc434b02a70f08'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
-const LIBRARIES_DIGEST = 'sha256:5d5307941ebc5e309c5fd2ce1443c66490ad356eab3393541d104d736925b20b'
+const LIBRARIES_DIGEST = 'sha256:bfc846062b2e484b24a5cdc1fe5eca8c13decf359ad568f4b8d18324875b6bb0'
 
 describe('agent-admin seeds: byte-identical across the T-0160 move to content files', () => {
   it('every roster preset assembles to its pinned digest', () => {

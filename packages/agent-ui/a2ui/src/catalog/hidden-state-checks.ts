@@ -496,7 +496,7 @@ function isFleetGame(id: string, surfaces: readonly SurfaceView[], open: readonl
 }
 
 /** T-0366: the surfaces another check owns a move on (a board, a card table, a booking), so one move gets one finding. */
-const OWNED_ELSEWHERE = new Set(['BoardGrid', 'CardTable', 'PlayingCard', 'BookingForm', 'BookingConfirmation'])
+const OWNED_ELSEWHERE = new Set(['BoardGrid', 'CardTable', 'PlayingCard', 'BookingForm', 'BookingConfirmation', 'ConfirmReceipt'])
 /** T-0366: a question about the game or its rules, which may stay prose ("What are the rules?", "Explain the rules."). */
 const RULES_ASK = /\b(?:rules?|how (?:do|does|can) (?:i|you|we|this|it|the game) (?:play|work|win)|how to (?:play|win)|what (?:is|are) (?:the )?(?:goal|point|aim))\b|^\s*(?:explain|remind me|tell me (?:about|more))\b/i
 /** T-0366: a question that still plays a move: an offer, a price or a counter put as a question ("How about 20 gold?"). */
