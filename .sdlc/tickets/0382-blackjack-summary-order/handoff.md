@@ -1,0 +1,32 @@
+---
+id: T-0382
+title: "Blackjack: A2UI update renders before the turn summary"
+type: bug             # feature | bug | chore | spike | idea
+status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
+priority: P2         # P1 | P2 | P3
+depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
+created: 2026-10-19
+router: .sdlc/tickets/AGENTS.md  # how to claim and close this ticket
+budget_usd: 30
+---
+
+## Goal
+After a player action in blackjack (hit, stand, double), the A2UI surface update renders first and the text summary of the turn appears last. A test that failed before the fix passes after it.
+
+## Repro
+1. Start a blackjack game with the croupier persona in a chat surface (reported by Kim 2026-10-19; the exact surface was not named, so check the agent-admin Test Chat and the site chat).
+2. Click hit, stand or double.
+
+## Expected
+The surface updates (cards, totals, HUD) render, then the summary text appears below or after them.
+
+## Actual
+The summary text appears before the A2UI output renders for that turn.
+
+## Context
+Reported by Kim 2026-10-19 from a live session. Croupier persona: `packages/agent-ui/a2ui/src/catalog/personas/croupier/`; recorded turns in its `__fixtures__/`.
+Guess, not verified: either the model emits prose before the A2UI messages and the chat shows streamed text as it arrives while the surface waits for its messages, or the chat host paints text and surface in the order they arrive. Find which (producer order, prompt teaching, or host rendering) before fixing. A fix in a model-read prompt follows the debate rule, and grammar.md is byte-pinned (Kim's ruling only).
+
+## Constraints
+The failing test lands before or with the fix, never after. Prefer a fix in the host or producer ordering over teaching-only steering, because models do not reliably follow ordering instructions.
