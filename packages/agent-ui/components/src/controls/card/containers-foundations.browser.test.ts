@@ -5,7 +5,7 @@ import { describe, it, expect, afterEach } from 'vitest'
 // back from a real engine twice, inside the opt-in root register (data-tier="product" data-scale="sm", the
 // library root: n 5 / 6 / 7 at sm / md / lg) and on a plain page. Inside, the numbers are the ADR's second
 // derivation written out by hand (card level margin 3n, gutter 2n, radius 3n; widget 2n, n, 2n; group n + c;
-// control height 4n, inset n), never read from scale.mjs; outside, they are today's values (the dark launch
+// control height 4n, inset n; every radius times the balanced amount 0.5, T-0374 step 6), never read from scale.mjs; outside, they are today's values (the dark launch
 // leaves every default page byte-identical). Runs in Chromium and WebKit.
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/shared/foundations.css'
@@ -53,21 +53,21 @@ const one = (root: ParentNode, sel: string): HTMLElement => {
   return el as HTMLElement
 }
 
-describe('card family: card level (margin 3n, gutter 2n, radius 3n) inside; today outside', () => {
+describe('card family: card level (margin 3n, gutter 2n, radius 1.5n balanced) inside; today outside', () => {
   const card = `<ui-card><ui-card-header>Title</ui-card-header><ui-card-content>Body</ui-card-content></ui-card>`
 
-  it('inside the root register (md n 6): radius 18, region margin 6, region padding 12 on both axes (T-0121: the card margin 3n all round), region radius 12', () => {
+  it('inside the root register (md n 6): radius 9, region margin 6, region padding 12 on both axes (T-0121: the card margin 3n all round), region radius 6', () => {
     const w = mount(card, true)
-    expect(px(cs(one(w, 'ui-card')).borderTopLeftRadius)).toBe(18)
+    expect(px(cs(one(w, 'ui-card')).borderTopLeftRadius)).toBe(9)
     const header = one(w, 'ui-card-header')
     expect(px(cs(header).marginLeft)).toBe(6)
     expect(px(cs(header).paddingLeft)).toBe(12)
     expect(px(cs(header).paddingTop)).toBe(12) // margin n + pad 2n = 3n to the ink on the block axis too
-    expect(px(cs(header).borderTopLeftRadius)).toBe(12)
+    expect(px(cs(header).borderTopLeftRadius)).toBe(6)
   })
 
-  it('a data-size region moves the whole chain: sm n 5 reads radius 15, lg n 7 reads radius 21', () => {
-    for (const [size, radius, margin] of [['sm', 15, 5], ['lg', 21, 7]] as const) {
+  it('a data-size region moves the whole chain: sm n 5 reads radius 7.5, lg n 7 reads radius 10.5', () => {
+    for (const [size, radius, margin] of [['sm', 7.5, 5], ['lg', 10.5, 7]] as const) {
       const w = mount(`<div data-size="${size}">${card}</div>`, true)
       expect(px(cs(one(w, 'ui-card')).borderTopLeftRadius), size).toBe(radius)
       expect(px(cs(one(w, 'ui-card-header')).marginLeft), size).toBe(margin)
@@ -86,9 +86,9 @@ describe('card family: card level (margin 3n, gutter 2n, radius 3n) inside; toda
 })
 
 describe('modal and drawer: card level', () => {
-  it('modal dialog radius is 18 inside, 12 outside', () => {
+  it('modal dialog radius is 9 inside, 12 outside', () => {
     const inside = mount(`<ui-modal><p>x</p></ui-modal>`, true)
-    expect(px(cs(one(inside, '[data-part="dialog"]')).borderTopLeftRadius)).toBe(18)
+    expect(px(cs(one(inside, '[data-part="dialog"]')).borderTopLeftRadius)).toBe(9)
     const outside = mount(`<ui-modal><p>x</p></ui-modal>`, false)
     expect(px(cs(one(outside, '[data-part="dialog"]')).borderTopLeftRadius)).toBe(12)
   })
@@ -103,36 +103,36 @@ describe('modal and drawer: card level', () => {
     expect(px(cs(outside).paddingLeft)).toBe(12)
   })
 
-  it('drawer dialog exposed-corner radius is 18 inside, 12 outside', () => {
+  it('drawer dialog exposed-corner radius is 9 inside, 12 outside', () => {
     const inside = mount(`<ui-drawer><p>x</p></ui-drawer>`, true)
-    expect(px(cs(one(inside, '[data-part="dialog"]')).borderTopLeftRadius)).toBe(18)
+    expect(px(cs(one(inside, '[data-part="dialog"]')).borderTopLeftRadius)).toBe(9)
     const outside = mount(`<ui-drawer><p>x</p></ui-drawer>`, false)
     expect(px(cs(one(outside, '[data-part="dialog"]')).borderTopLeftRadius)).toBe(12)
   })
 })
 
 describe('popover, tooltip, toast: widget and group levels', () => {
-  it('popover panel: widget level, radius and padding 12 inside; 12 and 12 outside', () => {
+  it('popover panel: widget level, radius 6 and padding 12 inside; 12 and 12 outside', () => {
     const inside = one(mount(`<ui-popover><p>x</p></ui-popover>`, true), '[data-part="panel"]')
-    expect(px(cs(inside).borderTopLeftRadius)).toBe(12)
+    expect(px(cs(inside).borderTopLeftRadius)).toBe(6)
     expect(px(cs(inside).paddingLeft)).toBe(12)
     const outside = one(mount(`<ui-popover><p>x</p></ui-popover>`, false), '[data-part="panel"]')
     expect(px(cs(outside).borderTopLeftRadius)).toBe(12)
     expect(px(cs(outside).paddingLeft)).toBe(12)
   })
 
-  it('tooltip panel: group level (n + c = 8) inside; 12 and 8 outside', () => {
+  it('tooltip panel: group level (margin n + c = 8, radius 4) inside; 12 and 8 outside', () => {
     const inside = one(mount(`<ui-tooltip><button>Anchor</button>Tip</ui-tooltip>`, true), '[data-part="panel"]')
-    expect(px(cs(inside).borderTopLeftRadius)).toBe(8)
+    expect(px(cs(inside).borderTopLeftRadius)).toBe(4)
     expect(px(cs(inside).paddingLeft)).toBe(8)
     const outside = one(mount(`<ui-tooltip><button>Anchor</button>Tip</ui-tooltip>`, false), '[data-part="panel"]')
     expect(px(cs(outside).borderTopLeftRadius)).toBe(12)
     expect(px(cs(outside).paddingLeft)).toBe(8)
   })
 
-  it('toast: widget level, radius 12, padding 12 inline and 6 block inside; 12, 12 and 8 outside', () => {
+  it('toast: widget level, radius 6, padding 12 inline and 6 block inside; 12, 12 and 8 outside', () => {
     const inside = one(mount(`<ui-toast>Saved</ui-toast>`, true), 'ui-toast')
-    expect(px(cs(inside).borderTopLeftRadius)).toBe(12)
+    expect(px(cs(inside).borderTopLeftRadius)).toBe(6)
     expect(px(cs(inside).paddingLeft)).toBe(12)
     expect(px(cs(inside).paddingTop)).toBe(6)
     const outside = one(mount(`<ui-toast>Saved</ui-toast>`, false), 'ui-toast')
@@ -142,7 +142,7 @@ describe('popover, tooltip, toast: widget and group levels', () => {
   })
 })
 
-describe('form-popover and disclosure: 4n control height, n inset, radius n, max(2n, n + 6) slot, n + 6 glyph', () => {
+describe('form-popover and disclosure: 4n control height, n inset, radius n/2 balanced, max(2n, n + 6) slot, n + 6 glyph', () => {
   // T-0374: the glyph box is n + 6; the icon cell is never smaller than it, so it outgrows 2n at n 5 (11, not 10)
   const STEPS = [
     ['sm', 20, 5, 11, 11],
@@ -151,11 +151,11 @@ describe('form-popover and disclosure: 4n control height, n inset, radius n, max
   ] as const
 
   for (const [size, height, n, slot, glyph] of STEPS) {
-    it(`form-popover size=${size} inside: height ${height}, radius ${n}, label edge ${n}, caret slot ${slot}, glyph ${glyph}`, () => {
+    it(`form-popover size=${size} inside: height ${height}, radius ${n / 2}, label edge ${n}, caret slot ${slot}, glyph ${glyph}`, () => {
       const w = mount(`<ui-form-popover size="${size}" label="Pick"><p>x</p></ui-form-popover>`, true)
       const trigger = one(w, '[data-part="trigger"]')
       expect(px(cs(trigger).height)).toBe(height)
-      expect(px(cs(trigger).borderTopLeftRadius)).toBe(n)
+      expect(px(cs(trigger).borderTopLeftRadius)).toBe(n / 2)
       expect(px(cs(trigger).paddingLeft)).toBe(n)
       const caret = one(w, '[data-part="caret"]')
       expect(px(cs(caret).width)).toBe(slot)
@@ -172,9 +172,9 @@ describe('form-popover and disclosure: 4n control height, n inset, radius n, max
     })
   }
 
-  it('form-popover panel is widget level inside (radius 12), today outside (12); trigger today outside (28, radius 12, edge 14)', () => {
+  it('form-popover panel is widget level inside (radius 6), today outside (12); trigger today outside (28, radius 12, edge 14)', () => {
     const inside = mount(`<ui-form-popover label="Pick"><p>x</p></ui-form-popover>`, true)
-    expect(px(cs(one(inside, '[data-part="panel"]')).borderTopLeftRadius)).toBe(12)
+    expect(px(cs(one(inside, '[data-part="panel"]')).borderTopLeftRadius)).toBe(6)
     const outside = mount(`<ui-form-popover label="Pick"><p>x</p></ui-form-popover>`, false)
     expect(px(cs(one(outside, '[data-part="panel"]')).borderTopLeftRadius)).toBe(12)
     const trigger = one(outside, '[data-part="trigger"]')

@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:8ace502b0ae1 -->
+<!-- sdlc-lite:managed:start v1 sha256:a13bf9bae5cc -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -17,17 +17,17 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-  - T-0374 Visible geometry changes from the skill model: glyph, field label, tiers, density heights, curvature presets (0374-foundations-geometry-visible)
   - T-0377 A Stylist ContrastPair inside a root Card renders a card in a card (round 12 cluster L) (0377-r12-contrastpair-card-in-card)
   - T-0378 The lone-Button rule never reaches poker Deal again turns (round 12 cluster O) (0378-r12-lone-button-routing)
   - T-0379 A Croupier check reads the reply's pot and bankroll against the table and across hands (round 12 cluster K) (0379-r12-poker-chip-drift)
   - T-0380 A poker hand settled through the data model only offers no Deal again (round 12 cluster M) (0380-r12-poker-showdown-no-deal-again)
   - T-0381 PlayingCard size sm renders its index under the type floor (round 12 cluster N) (0381-r12-playing-card-sm-type-floor)
+  - T-0383 conversation.browser.test.ts: 4 resumed-bubble and composed-path reds (0383-conversation-browser-reds)
 - claimed: 0
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 364
+- done: 365
 - dropped: 4
 
 ## Procedures

@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radius at the balanced preset (T-0374 step 6)
 
 /** The derived root register (product / md / md, ADR-0245 Amendment 8). */
 const ROOT = rootResolve('md')
@@ -253,7 +254,7 @@ describe('ui-result-card: ADR-0245 derived foundations, dark launch', () => {
     expect(lengthOf(out, '--ui-result-card-outcome-gap')).toBe(5)
     expect(lengthOf(inside, '--ui-result-card-outcome-gap')).toBe(REGION.n)
     expect(lengthOf(out, '--ui-result-card-stat-radius')).toBe(lengthOf(out, '--md-sys-shape-corner-base') - 2)
-    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(REGION.n)
+    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(model('product', 'sm', 'md').radius) // A x n, balanced by default (T-0374 step 6)
     for (const el of [out, inside]) expect(lengthOf(el, '--ui-result-card-stat-gap')).toBe(2)
   })
 })

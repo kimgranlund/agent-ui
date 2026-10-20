@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radius at the balanced preset (T-0374 step 6)
 
 // game-hud.browser.test.ts: the real-engine painted proof for ui-game-hud (ADR-0243, GameHud fork sheet).
 // jsdom is blind to layout, so this covers the whole-shape fill and hug, the stat wrap with no overflow,
@@ -179,8 +179,8 @@ describe('ui-game-hud: intent glyphs', () => {
 })
 
 // ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
-// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 6,
-// height 24, c 2, icon box 12, radius 6. Lengths are read through layout (`inline-size: var(<token>)`).
+// data-tier region and today's value outside it. Values are the model's resolve('product', 'sm', 'md'): n 6,
+// height 24, c 2, icon box 12, radius 3 (A x n, balanced, T-0374 step 6). Lengths are read through layout (`inline-size: var(<token>)`).
 const lengthOf = (host: HTMLElement, token: string): number => {
   const probe = document.createElement('span')
   probe.style.cssText = `position:absolute;block-size:1px;inline-size:var(${token});`
@@ -203,6 +203,6 @@ describe('ui-game-hud: ADR-0245 derived foundations, dark launch', () => {
     const { out, inside } = foundationsPair('ui-game-hud', 'title="Table 4"')
     for (const el of [out, inside]) expect(lengthOf(el, '--ui-game-hud-stat-gap')).toBe(2)
     expect(lengthOf(out, '--ui-game-hud-stat-radius')).toBe(lengthOf(out, '--md-sys-shape-corner-base') - 2)
-    expect(lengthOf(inside, '--ui-game-hud-stat-radius')).toBe(resolve('product', 'sm', 'md').n)
+    expect(lengthOf(inside, '--ui-game-hud-stat-radius')).toBe(model('product', 'sm', 'md').radius) // A x n, balanced by default (T-0374 step 6)
   })
 })
