@@ -14,5 +14,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0385 | [0385-site-agent-content-workflows-booking](0385-site-agent-content-workflows-booking/handoff.md) | site/agent-content/workflows/booking-flow/WORKFLOW.md:12 settles... | idea | L2 | P2 | none | ⏳ proposed |
 | T-0386 | [0386-grammar-stale-affordance-deck](0386-grammar-stale-affordance-deck/handoff.md) | grammar.md stale-affordance rule names Buttons, not an OptionDeck greet | chore | L2 | P2 | none | 🔵 ready |
 | T-0388 | [0388-option-deck-nested-collapse](0388-option-deck-nested-collapse/handoff.md) | An OptionDeck nested under a centring parent still collapses to 0px | bug | L2 | P2 | none | 🔵 ready |
+| T-0389 | [0389-contrast-pair-glyph-red](0389-contrast-pair-glyph-red/handoff.md) | Stylist ContrastPair browser test: the verdict pill glyph is clipped (red at base) | bug | L1 | P2 | none | 🔵 ready |
 
 Closed: 374 done, 4 dropped (git log or .NNNN-* folders)
