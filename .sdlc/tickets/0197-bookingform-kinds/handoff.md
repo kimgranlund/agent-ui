@@ -105,3 +105,4 @@ Each fork has a firm recommendation. Kim's answer goes on the `Answer:` line.
 - Kim 2026-10-20 (new scope): move the form's commit Button outside the bordered BookingForm card, under it like ConfirmReceipt's action bar (no buttons inside card containers, Kim 2026-10-14). This changes the existing composite's layout and re-baselines its goldens.
 - Kim 2026-10-20 (new scope): fix the radio and checkbox option text that renders larger than the field text at widget md, in this ticket.
 - Conductor: the planner L3 replans steps 2 and 3 to cover these rulings. Step 1 is done.
+- Kim 2026-10-20: plan-reviewer-L1-2 said replan with mechanical findings only. Kim approved applying them directly (split steps 2 to 4 with --override-review, the step 4 criterion swap, notes into the step handoffs) instead of a third planner run.
