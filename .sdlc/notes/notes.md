@@ -659,9 +659,6 @@
 
 - note: `.sdlc/tickets/0392-composer-effort-menu/handoff.md` Title/Intent still say "Phosphor check" while criterion 1 and the conductor note settle on the `ui-glyph` check; the Outcome should carry the settled wording.
 
-## T-0386: grammar.md stale-affordance rule names Buttons, not an OptionDeck greet (2026-10-21)
+## T-0383: conversation.browser.test.ts: 4 resumed-bubble and composed-path reds (2026-10-21)
 
-- note: `.sdlc/tickets/0386-grammar-stale-affordance-deck/handoff.md` carries no `## Acceptance criteria` section; the seven criteria above are the Conductor clause at the end of `## Debate` plus the `## Constraints` line.
-- fix-now: `.sdlc/notes/notes.md:621` the T-0386 "decide:" line is now settled as "disable, not strip" by this build; close it on land.
-- fix-now: `.sdlc/tickets/.0384-packages-agent-ui-a2ui-src/handoff.md:16` and `:24` Goal and Constraints are still the template placeholder text; one line each before close.
-- note: the throwaway worktree and my probe script are removed; the dispatcher's `.owner.json` markers remain under `/Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0386-verifier-L3` and `/var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0386-verifier-L3` because `rm -rf` on those directories was denied.
+- note: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/T-0383-wave-w0383/packages/agent-ui/app/src/controls/conversation/conversation.browser.test.ts has no test for "finalized card-only turn leaves the bubble hidden" (the T-0194 tally-on-strip half); optional follow-up if the conductor wants it pinned.

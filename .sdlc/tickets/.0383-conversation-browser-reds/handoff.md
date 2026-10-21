@@ -2,7 +2,7 @@
 id: T-0383
 title: "conversation.browser.test.ts: 4 resumed-bubble and composed-path reds"
 type: bug             # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -36,3 +36,15 @@ The failing tests are the red; fix the cause.
 - The two tests are fixed at the cause: both relied on the pre-T-0194 message tally revealing a card-only bubble; they now give the turn the reply line T-0194 makes every surface turn carry, with no assertion removed or weakened.
 - The stale GH #313 / TKT-0079 reveal comment in `conversation.ts` matches GH #1221 and T-0194.
 - `npm run check` exits 0.
+- Conductor: judge the solo's call that the card-only setup is out of date under GH #1221 and T-0194 (a prose-free bubble stays hidden), not a regression; if that rule has no test of its own, say whether the tests should pin it.
+
+## Outcome
+
+2026-10-21 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 4b95ae06d541
+- Changed: conversation browser tests give the resumed turn a reply line (T-0194 law); reveal comment updated
+- Commits: c134ec8 T-0383: conversation browser tests give the resumed turn a reply line (T-0194 law)
+- Check: 1 browser test exits 0 in chromium and webkit: pass
+- Check: 2 fixed at the cause, nothing removed or weakened: pass
+- Check: 3 stale GH #313 / TKT-0079 reveal comment matches GH #1221 and T-0194: pass
+- Check: 4 `env -u NODE_OPTIONS npm run check` exits 0: pass
+- Follow-up: note: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/T-0383-wave-w... -> notes.md
