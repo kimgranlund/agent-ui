@@ -659,7 +659,9 @@
 
 - note: `.sdlc/tickets/0392-composer-effort-menu/handoff.md` Title/Intent still say "Phosphor check" while criterion 1 and the conductor note settle on the `ui-glyph` check; the Outcome should carry the settled wording.
 
-## T-0388: An OptionDeck nested under a centring parent still collapses to 0px (2026-10-21)
+## T-0386: grammar.md stale-affordance rule names Buttons, not an OptionDeck greet (2026-10-21)
 
-- note: packages/agent-ui/components/src/controls/option-deck/option-deck.css:113-121 uses the `-webkit-fill-available` / `-moz-available` / `stretch` cascade, the same idiom the ui-column `[stretch]` fill uses; `sizing-gates.test.ts` is inside `npm run check`'s sibling jsdom suite (not run here, conductor item #6).
-- decide: ui-option-deck declares no `inline` hug opt-out (`git grep inline option-deck.md` matches only an SVG glyph line, :90), so ADR-0223's "the one opt-out is the reflected `inline` boolean" is not available on the deck. The fill is now unconditional; add the opt-out here or file a follow-up, the criteria do not require it.
+- note: `.sdlc/tickets/0386-grammar-stale-affordance-deck/handoff.md` carries no `## Acceptance criteria` section; the seven criteria above are the Conductor clause at the end of `## Debate` plus the `## Constraints` line.
+- fix-now: `.sdlc/notes/notes.md:621` the T-0386 "decide:" line is now settled as "disable, not strip" by this build; close it on land.
+- fix-now: `.sdlc/tickets/.0384-packages-agent-ui-a2ui-src/handoff.md:16` and `:24` Goal and Constraints are still the template placeholder text; one line each before close.
+- note: the throwaway worktree and my probe script are removed; the dispatcher's `.owner.json` markers remain under `/Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0386-verifier-L3` and `/var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0386-verifier-L3` because `rm -rf` on those directories was denied.
