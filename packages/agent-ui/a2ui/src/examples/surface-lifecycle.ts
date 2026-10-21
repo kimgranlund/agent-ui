@@ -14,7 +14,8 @@
 //   to its next scene through `updateComponents` (the a2ui-payload-authoring trap, GH #1164: at most one
 //   surface reads live). `root` is delivered once and never resent; the stable `scene` container one
 //   level down is what swaps. One-way: the progress scene is retired, not navigable back to (the
-//   backable-wizard seed owns the round-trip case).
+//   backable-wizard seed owns the round-trip case; T-0198 retired grammar.md's backable-multi-step clause for one
+//   StepFlow, and fork 13 keeps that seed).
 //
 // Every stream ends with live content on its one surface, so none is a net no-op.
 

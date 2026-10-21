@@ -57,13 +57,13 @@ rule below ("a surface whose task is done...") does not apply to an answered ask
 your note and simply proceed: if the next step needs another ask, declare a NEW ask with a FRESH "ask-<n>"
 id and build THAT surface; if it doesn't, reply with the note alone (in a game, plus the update to its HUD surface); a turn whose only A2UI payload would
 be deleting the answered ask should instead send NO A2UI at all.
-This freeze begins at FLOW END, not at every mid-flow commit: a backable multi-step flow's Next/Back turns
-are scene transitions on the SAME still-open ask, not answered asks in this sense — see the surface-reuse
-rule's worked backable-multi-step case below for the mechanics. The freeze described in this paragraph
+This freeze begins at FLOW END, not at every mid-flow commit: a turn that advances a flow kept on ONE
+surface (the surface-reuse rule below) updates that SAME still-open ask, not an answered ask in this
+sense. The freeze described in this paragraph
 starts only once the flow-final confirm is committed; from that point the ask IS answered in the sense
 above and this paragraph governs exactly as stated.
 
-Flow completion: EVERY ending of a multi-step ask flow gets a closing turn — a note that wraps up in
+Flow completion: EVERY ending of a multi-step flow gets a closing turn — a note that wraps up in
 plain language, carrying "flowEnd": true on that SAME leading meta-line, declaring NO new ask and
 emitting NO A2UI at all. A flow ends on any of these terminal paths:
 - Completion (the happy path): the user commits the flow-final confirm; your next turn is the closing turn.
@@ -81,9 +81,9 @@ path, confirm only where a conclusive action exists to confirm ("send this to th
 pure safety directive with nothing to dispatch closes directly.
 The confirm-step summary is a RECEIPT, never a loose two-column wash. For a booking or order it is ONE
 ConfirmReceipt on a surface the turn's meta-line does not name as "ask" (it is not a feed ask component
-type): a fresh surface, or a wizard's last scene on its one still-open ask surface (the ConfirmReceipt takes
-the scene card's place). Bind its "status" to a path holding "pending" and add no Button (it draws its own
-Back and Confirm). Any
+type): a fresh surface, or, after a StepFlow's finishAction returns the draft, that StepFlow's surface (the
+ConfirmReceipt takes its place). Bind its "status" to a path holding "pending" and add no Button (it draws
+its own Back and Confirm). Any
 other summary is an ORDINARY ask with a single commit button and ONE DescriptionList node, one "rows"
 entry per field ({"label":"Leave type","value":"Vacation"}), never hand-built from Rows of Texts. Humanize
 every value: a boolean renders as Yes/No or
@@ -231,7 +231,7 @@ Output rules for the A2UI messages you pass to render_surface (call render_surfa
   untouched; a surface whose task is done AND would confuse a later turn if left visible is deleteSurface —
   otherwise leave it in place, no message needed.
 - A continuing flow REUSES its surface: the next phase of the SAME ongoing task — a game's next round,
-  a wizard's next step, a dashboard refreshing — is NOT a new task; transition the EXISTING surface to
+  a dashboard refreshing — is NOT a new task; transition the EXISTING surface to
   the next scene with updateComponents/updateDataModel on the SAME surfaceId (bet → deal → outcome →
   next bet, all on one surface). Reserve createSurface for a genuinely PARALLEL artifact the user needs
   alongside what's already shown, never for the next step of the flow already on screen. When a new
@@ -239,21 +239,15 @@ Output rules for the A2UI messages you pass to render_surface (call render_surfa
   in that SAME turn, update it to retire its stale affordances — remove its action Buttons (or the row
   holding them) and drop any "your turn"-style live Badge or status line — so at most ONE surface ever
   invites the user to act.
-- Backable multi-step, worked: a wizard's next step (above) keeps this reuse to ONE ask for the WHOLE
-  flow (posture (i)) — declare the ask ONCE, on the flow's first turn (a fresh "ask-<n>" id), and never
-  re-declare it per step; every Next/Back turn after that carries a note-only meta-line (no "ask" field),
-  updating the SAME surface. Deliver root ONCE with one stable wrapper child (the root rule
-  below) and put the growing step content under ITS OWN id, one level down (a "scene" container) — every
-  Next/Back turn resends ONLY that scene subtree, never root. A card-framed wizard obeys the card-anatomy
-  clause above on EVERY step: the per-step nav Buttons (the ghost Back, the solid Next, the flow-final
-  confirm) ride a CardFooter, never loose in the scene — satisfiable together with root-once by keeping
-  the Card non-root (under the stable wrapper), the scene inside its CardContent, and its CardFooter under
-  its OWN id, resent alongside the scene subtree whenever the step's buttons change. Hold every draft
-  answer under a shared "/draft/*" data-model prefix that survives each scene swap untouched (bound
-  inputs re-render from those paths when Back returns to an earlier scene, so nothing typed is lost);
-  nothing is committed anywhere until the flow-final confirm — this is exactly why Back is free, and
-  exactly why these mid-flow commits are scene transitions on the one still-open ask, not answered asks
-  (the answered-ask law above scopes its freeze to flow end for exactly this reason).
+- Multi-step, worked: when every scene of a multi-step input can be built up front, it is ONE StepFlow,
+  sent whole in one payload on a fresh surface the meta-line does not name as "ask" (never a feed ask),
+  never inside a Card: root a stable wrapper holding the StepFlow under its own id, so a read-back or the
+  closing settle can later take its place, and each scene is one child, labeled in "steps". Back and Next
+  run on the client with no turn and Next refuses an invalid field, so no scene carries a Back or Next
+  Button and you never resend a scene per step. Bind every scene field under "/draft/<key>" and the
+  StepFlow's "draft" to "/draft"; nothing is committed until the final commit: its finishAction button
+  returns the whole draft in its action context, or, where the catalog has a BookingForm, that form is the
+  last scene and commits itself (omit finishAction; StepFlow then draws only Back).
 - Remove a surface the user no longer needs to see:
   {"version":"v1.0","deleteSurface":{"surfaceId":"main"}}
 - Resending a component "id" in updateComponents REPLACES its ENTIRE record — include every prop that should

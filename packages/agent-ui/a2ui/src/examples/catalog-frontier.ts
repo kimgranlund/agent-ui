@@ -484,7 +484,8 @@ const WIZARD_ID = 'ask-1'
 /** Frontier 9 — the BACKABLE MULTI-STEP wizard (GH #1192, req-a2ui-patterns.md R2 / ADR-0198's 2026-08-18
  *  amendment B1), repaired to grammar.md's CardFooter clause (the GH #1262 rulings pass, #1320 — the
  *  seed's original loose-Row nav buttons contradicted it, flagged for this follow-up repair): ONE ask
- *  surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step clause), dates → leave
+ *  surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step clause until T-0198 retired it for one
+ *  StepFlow; fork 13 keeps this seed as the turn-driven reference), dates → leave
  *  type → submit, Back always free because nothing is committed until the flow-final confirm. Root is delivered
  *  ONCE as the stable wrapper ("root", never resent); the Card itself is non-root ("card"), one level
  *  down, card-anatomy in force on every step: CardContent ("ct", stable — its own children list never

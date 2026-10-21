@@ -240,8 +240,10 @@ DISTINCT from the `backable-wizard` seed (`catalog-frontier.ts`, GH #1192): THAT
 FLOW-PROTOCOL exemplar — one ask surface across turns, a stable root, the scene-resend +
 draft-persistence (`/draft/*`) mechanics of going Back. THIS pattern is the single-turn
 PRESENTATION composition — what one step LOOKS like (meter + body + nav) — and never exercises the
-multi-turn scene-swap protocol. A producer building a real flow combines THIS anatomy with THAT
-protocol; a producer asked only to "show where I am in the flow" emits this snapshot alone.
+multi-turn scene-swap protocol. Since T-0198 a producer building a real flow sends ONE StepFlow (the grammar's worked
+multi-step case: client-side Back and Next, `/draft/<key>` fields, no ask) and combines neither; the
+`backable-wizard` seed stays as the turn-driven reference (fork 13). A producer asked only to "show where
+I am in the flow" emits this snapshot alone.
 **Consequence of confusing them:** re-emitting the whole tree from `id:"root"` per step (presentation
 thinking applied to a live flow) resends every node each step, and a step that changes root's component
 type trips runtime SPEC-R3 AC2 (a root of another type is dropped; a same-type root resend is an upsert

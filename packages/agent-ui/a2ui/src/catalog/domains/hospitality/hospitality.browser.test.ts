@@ -488,3 +488,61 @@ describe('BookingForm action under the card (T-0197)', () => {
     })
   }
 })
+
+// T-0198: the real pair. A StepFlow whose last scene is a BookingForm with no finishAction draws Back on the
+// BookingForm Button's row; the T-0197 invariants hold unchanged inside it.
+async function mountStepFlow(width: number) {
+  const mount = document.createElement('div')
+  mount.style.inlineSize = `${width}px`
+  document.body.append(mount)
+  const r = createRenderer()
+  r.mount(mount)
+  await r.preload('agent-ui--hospitality')
+  const id = `flow-${width}`
+  r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui--hospitality' } })
+  r.ingestMessage({ version: 'v1.0', updateDataModel: { surfaceId: id, path: '/draft', value: { guestName: 'Ada Lovelace' } } })
+  r.ingestMessage({
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: id,
+      components: [
+        { id: 'root', component: 'StepFlow', steps: ['Name', 'Confirm'], step: 2, draft: { path: '/draft' }, children: ['nameScene', 'form'] },
+        { id: 'nameScene', component: 'Column', children: ['nameField'] },
+        { id: 'nameField', component: 'TextField', label: 'Guest name', value: { path: '/draft/guestName' } },
+        { id: 'form', component: 'BookingForm', title: 'Your stay', fields: KINDS, value: { path: '/draft' }, child: 'submitBtn' },
+        { id: 'submitBtn', component: 'Button', variant: 'solid', label: 'Confirm', action: { action: 'confirmBooking', submit: true } },
+      ],
+    },
+  })
+  r.finalize(id)
+  await whenFlushed()
+  const flow = mount.querySelector('ui-step-flow') as HTMLElement
+  const form = flow.querySelector('ui-form-provider') as HTMLElement
+  const button = form.querySelector(':scope > ui-button') as HTMLElement
+  const done = (): void => {
+    r.dispose()
+    mount.remove()
+  }
+  return { flow, form, button, done }
+}
+
+describe('StepFlow last scene with a BookingForm (T-0198)', () => {
+  for (const width of [480, 336]) {
+    it(`Back shares the BookingForm Button's row, the T-0197 layout unchanged (${width}px)`, async () => {
+      const { flow, form, button, done } = await mountStepFlow(width)
+      const card = form.querySelector('[data-part="card"]')!
+      expect(button.parentElement, 'a direct child of the submit-gate root').toBe(form)
+      expect(box(button).top - box(card).bottom, 'the widget gutter between card and Button').toBeCloseTo(CANVAS.widget.gutter, 0)
+      expect(box(button).right, 'end-aligned with the card').toBeCloseTo(box(card).right, 0)
+      expect(box(button).height, 'the md button, 24px on the canvas register').toBeCloseTo(CANVAS.h, 0)
+      const back = flow.querySelector('[data-part="back"]')!
+      expect(back, 'Back is drawn on the last scene').not.toBeNull()
+      expect(Math.abs(box(back).bottom - box(button).bottom), 'Back shares the Button bottom').toBeLessThanOrEqual(1)
+      expect(Math.abs(box(back).height - box(button).height), 'Back is the Button height').toBeLessThanOrEqual(1)
+      expect(box(back).left, 'Back starts at the scene start edge').toBeCloseTo(box(form).left, 0)
+      expect(box(back).right, 'Back ends before the Button starts').toBeLessThan(box(button).left)
+      expect(flow.querySelector('[data-part="next"], [data-part="finish"]'), 'no Next or finish on the self-commit scene').toBeNull()
+      done()
+    })
+  }
+})

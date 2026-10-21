@@ -72,15 +72,14 @@ ADR-0198).
 The `flowEnd` record carries two ratified amendments (2026-08-17 and 2026-08-18) a stream author
 must compose correctly:
 
-- **The answered-ask freeze begins at the flow-final confirm — not before (B1).** The freeze
+- **The answered-ask freeze begins at the flow-final confirm, not before (B1).** The freeze
   ("never update/delete/rebuild a surface once its ask is answered; declare a NEW ask with a fresh
-  `ask-<n>` id") applies ONLY from the moment the flow-final confirm is committed. Every mid-flow
-  Next/Back turn in a backable wizard is a **scene transition on ONE still-open ask**: the producer's
-  `updateComponents` swaps the scene container's children (a stable child id under the stable-root
-  wrapper), the ask keeps its ONE `ask-<n>` id for the whole wizard, and draft state lives under a
-  `/draft/*` data-model prefix that survives every scene swap — Back is free because nothing has
-  been committed yet. This reconciled a head-on collision between the shipped surface-reuse law and
-  the shipped answered-ask law; neither is optional, the scoping is the resolution.
+  `ask-<n>` id") applies ONLY from the moment the flow-final confirm is committed. A turn that advances
+  a flow kept on ONE surface (a game's next guess on the same ask) updates that same still-open ask.
+  Since T-0198 the grammar's worked multi-step case is ONE StepFlow on a fresh non-ask surface: Back
+  and Next run on the client with no turn, every field binds under `/draft/<key>`, and the finish
+  (a `finishAction`, or a BookingForm last scene) is the one commit. The turn-driven scene-swap
+  wizard on one ask is no longer taught; the `backable-wizard` seed stays as history (fork 13).
 - **The closing turn's ONE exception to "emits no A2UI" (B2).** The courtesy-close turn (prose
   `note` + `flowEnd: true`, no new ask) MAY carry exactly one settling update against the
   already-confirmed receipt's surface, in the SAME turn as the close: a `ConfirmReceipt` confirmed
