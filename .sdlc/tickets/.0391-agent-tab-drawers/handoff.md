@@ -2,7 +2,7 @@
 id: T-0391
 title: "Agent tab: open fields, drawers for model roster and server tools, danger zone"
 type: feature        # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -60,3 +60,47 @@ Each fork has a firm recommendation. Kim's answer goes on the `Answer:` line.
 - 2026-10-21 plan defect at split: step 3: (guard) criterion is red now (exit 1): npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/controls/agent-admin/provenance.browser.test.ts packages/agent-ui/app/src/controls/agent-admin/agent-admin.browser.test.ts packages/agent-ui/app/src/controls/agent-admin/follow-the-change.browser.test.ts
 - 2026-10-21 plan defect at split: step 3: (guard) criteria changed the work tree: packages/agent-ui/app/src/controls/agent-admin/agent-admin.browser.test.ts
 - 2026-10-21 plan defect at split: step 3: (guard) criteria changed the work tree: packages/agent-ui/app/src/controls/agent-admin/provenance.browser.test.ts
+
+## Outcome
+
+2026-10-21 · lane: full L3 · verdict: skipped (static mockup whose gate is Kim's approval (approved as drawn 2026-10-21)) · verifier: verifier-L3 (fable) · base: cfe2b5291043
+- Changed: Agent tab: open fields, Advanced and Danger zone folds with a shared confirm modal, Manage models and per-tool drawers with domain list editors, drawer trigger change cue
+- Commits: none
+- Check: step-4#1 (red) `for f in built-agent-tab.png built-models-drawer.png built-tool-drawer.png built-danger-co...: pass
+- Check: step-4#2 (guard) `npm run check`: pass
+- Check: step-4#3 (guard) `npx vitest run --project packages packages/agent-ui/app/src/controls/agent-admin package...: pass
+- Check: step-4#4 (guard) `npx vitest run --project site site/pages/agent-admin-app.test.ts site/pages/agent-admin-...: pass
+- Check: step-4#5 (guard) `npx vitest run --config vitest.browser.config.ts --project packages .../provenance.brows...: pass
+- Check: step-4#6 (guard) `npx vitest run --config vitest.browser.config.ts --project site site/pages/agent-admin-a...: pass
+- Check: step-4#7 (guard) `! { git diff --name-only "$SDLC_BASE_SHA" -- . ":(exclude).sdlc"; git ls-files --others ...: pass
+- Check: step-4#1 (red) `npx vitest list ... -t "T-0391 layout" | grep -q "T-0391 layout"`: pass
+- Check: step-4#2 `npx vitest run --project packages .../agent-admin.test.ts .../field-location.test.ts -t "T-0391 ...: pass
+- Check: step-4#3 (red) `grep -qF "settingsItem('advanced', 'Advanced'" .../agent-admin.ts`: pass
+- Check: step-4#4 (red) `grep -qF "settingsItem('danger', 'Danger zone'" .../agent-admin.ts`: pass
+- Check: step-4#5 (red) `grep -qF "ui-modal" .../agent-admin.ts`: pass
+- Check: step-4#6 (red) `grep -qF "onAgentMetaRequest(" site/pages/agent-admin-app.ts`: pass
+- Check: step-4#7 (guard) packages jsdom suite: pass
+- Check: step-4#8 (guard) site jsdom files: pass
+- Check: step-4#9 (guard) packages browser files: pass
+- Check: step-4#10 (guard) `npx vitest run --config vitest.browser.config.ts --project site site/pages/agent-admin-a...: pass
+- Check: step-4#11 (guard) scope grep: pass
+- Check: step-4#1 (red) `npx vitest list ... -t "T-0391 drawer" | grep -q "T-0391 drawer"`: pass
+- Check: step-4#2 `npx vitest run --project packages .../field-location.test.ts .../follow-the-change.test.ts .../a...: pass
+- Check: step-4#3 (red) `grep -qF "washes the Manage models trigger and opens no drawer" .../follow-the-change.test...: pass
+- Check: step-4#4 (red) `grep -qF "T-0391 drawer: a consumed modelsIncluded patch washes the trigger and opens no d...: pass
+- Check: step-4#5 `npx vitest run --config vitest.browser.config.ts --project packages .../follow-the-change.browse...: pass
+- Check: step-4#6 (red) `grep -qF "[data-part='drawer-trigger'][data-attention]" .../agent-admin.css`: pass
+- Check: step-4#7 (red) `! grep -qF "Comma-separated" .../content-fields.ts`: pass
+- Check: step-4#8 (red) `grep -q "T-0391" .claude/docs/spec/follow-the-change.spec.md`: pass
+- Check: step-4#9 (guard) packages jsdom suite: pass
+- Check: step-4#10 (guard) packages browser files: pass
+- Check: step-4#11 (guard) `... --project site site/pages/agent-admin-app.browser.test.ts`: pass
+- Check: step-4#12 (guard) scope grep: pass
+- Deviation: step 1 verifier skipped: static mockup whose gate is Kim's approval (approved as drawn 2026-10-21)
+- Deviation: step 2 verifier skipped: covered by the one ticket verifier at step 4, which reran step 2's criteria over cfe2b5291..HEAD
+- Deviation: step 3 verifier skipped: covered by the one ticket verifier at step 4, which reran step 3's criteria over cfe2b5291..HEAD
+- Follow-up: note: packages/agent-ui/app/src/controls/agent-admin/provenance.browser.t... -> notes.md
+- Follow-up: note: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:3901... -> notes.md
+- Follow-up: note: .sdlc/tickets/0391-agent-tab-drawers/screens/built-agent-tab.png is... -> notes.md
+- Follow-up: note: em dashes in added lines of the ticket diff, for example... -> notes.md
+- Follow-up: note: the two vitest list | grep -q red controls were not replayed in a... -> notes.md
