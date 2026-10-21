@@ -41,6 +41,14 @@
           "why": "a one-line status message"
         }
       ]
+    },
+    "Itinerary": {
+      "intents": [
+        "a trip or day plan as days of timed stops",
+        "an itinerary with a status on each stop",
+        "stops by day with weather or exchange rates"
+      ],
+      "notFor": []
     }
   }
 }

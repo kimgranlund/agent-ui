@@ -150,7 +150,7 @@ describe('selectionGuidanceFor: keyed on catalogId only', () => {
     const croupier = selectionGuidanceFor(cat('agent-ui--croupier'))
     expect(Object.keys(croupier)).toEqual([...defaultKeys, 'PlayingCard', 'CardTable'])
     const concierge = selectionGuidanceFor(cat('a2ui-basic--hospitality'))
-    expect(Object.keys(concierge)).toEqual([...basicKeys, 'BookingForm', 'BookingConfirmation'])
+    expect(Object.keys(concierge)).toEqual([...basicKeys, 'BookingForm', 'BookingConfirmation', 'Itinerary'])
   })
 
   it('an unknown persona half returns the base only', () => {

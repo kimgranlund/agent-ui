@@ -182,7 +182,7 @@ import {
   basicNotificationSettingsSeed,
   basicAppointmentBookingSeed,
 } from '../../src/examples/basic-exemplars.ts'
-import { domainLexicographerWordSeed, domainLexicographerGameOverSeed, domainAdmiralBattleshipSeed, domainCroupierRoundSeed, domainConciergeBookingSeed } from '../../src/examples/domain-seeds.ts'
+import { domainLexicographerWordSeed, domainLexicographerGameOverSeed, domainAdmiralBattleshipSeed, domainCroupierRoundSeed, domainConciergeBookingSeed, domainItineraryTripSeed } from '../../src/examples/domain-seeds.ts'
 import { multiTurnSeeds } from '../../src/examples/multi-turn-seeds.ts'
 import { repairSeeds } from '../../src/examples/repair-seeds.ts'
 import { allSeeds, allBasicSeeds, allMultiTurnSeeds, allRepairSeeds, allPersonaCorpusSeeds } from '../../src/examples/index.ts'
@@ -414,8 +414,8 @@ const BASIC_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'a2ui-basic'>> = [
  * each seed renders against a persona shard catalog (`<base>--<persona>`). */
 const PERSONA_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<PersonaShardCatalogId>> = [
   {
-    module: 'domain-seeds.ts', // T-0245/T-0240: the CardTable round and the BookingForm request
-    seeds: [domainCroupierRoundSeed, domainConciergeBookingSeed],
+    module: 'domain-seeds.ts', // T-0245/T-0240: the CardTable round and the BookingForm request; T-0199 the Itinerary, admission pending the judged wave (disposition-allowlist.ts)
+    seeds: [domainCroupierRoundSeed, domainConciergeBookingSeed, domainItineraryTripSeed],
   },
 ]
 

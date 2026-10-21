@@ -51,6 +51,7 @@ export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.free
   // T-0197: the hospitality domain, the first fragment merged into its domain
   BookingForm: domain('hospitality', 'domains/hospitality'),
   BookingConfirmation: domain('hospitality', 'domains/hospitality'),
+  Itinerary: domain('hospitality', 'domains/hospitality'), // T-0199
   // §5.4 persona fragment types (W1 merges each fragment into its domain)
   PlayingCard: domain('games', 'personas/croupier'),
   CardTable: domain('games', 'personas/croupier'),

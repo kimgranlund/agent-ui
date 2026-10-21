@@ -660,9 +660,168 @@ export const bookingConfirmationFactory: WidgetFactory = {
   },
 }
 
+// ── Itinerary (T-0199) ─────────────────────────────────────────────────────────────────────────────
+//
+// A trip or day plan as days of timed stops. The factory owns all its DOM (no producer child slot): a title, then per
+// day a `day` part holding a `day-header` (the day label, plus the optional short `aside` such as weather or FX at its
+// end edge as a quiet pill) over one `ui-timeline` of `ui-timeline-item` stops (time to `timestamp`, label, detail to
+// `description`, status). Days stack top to bottom, a hairline between them (Kim 2026-10-21, direction A). Display
+// only: no value, no event, no Button; a follow-up ask stays a Button outside it. A new bound `days` value rebuilds
+// every day in place (the trip-plan accumulate law). Status marks are TimelineItem's own shapes, never hue alone.
+
+interface ItineraryStop {
+  time: string
+  label: string
+  detail?: string
+  status?: string
+}
+
+interface ItineraryDay {
+  label: string
+  aside?: string
+  stops: ItineraryStop[]
+}
+
+const STOP_STATUSES: ReadonlySet<string> = new Set(['', 'pending', 'active', 'done', 'error', 'warning'])
+
+function isItineraryStop(v: unknown): v is ItineraryStop {
+  return typeof v === 'object' && v !== null && typeof (v as { time?: unknown }).time === 'string' && typeof (v as { label?: unknown }).label === 'string'
+}
+
+function readDays(value: unknown): ItineraryDay[] {
+  if (!Array.isArray(value)) return []
+  const days: ItineraryDay[] = []
+  for (const raw of value) {
+    if (typeof raw !== 'object' || raw === null) continue
+    const day = raw as { label?: unknown; aside?: unknown; stops?: unknown }
+    if (typeof day.label !== 'string') continue
+    const stops = Array.isArray(day.stops) ? day.stops.filter(isItineraryStop) : []
+    days.push({ label: day.label, aside: typeof day.aside === 'string' ? day.aside : '', stops })
+  }
+  return days
+}
+
+type TextProps = { as: string; variant: string; size: string; emphasis: boolean }
+
+function itineraryText(part: string, as: string, variant: string, size: string, text: string, emphasis = false): HTMLElement {
+  const el = document.createElement('ui-text')
+  const t = el as unknown as TextProps
+  t.as = as
+  t.variant = variant
+  t.size = size
+  t.emphasis = emphasis
+  el.setAttribute('data-part', part)
+  el.textContent = text
+  return el
+}
+
+/** One day: its header (label, then the aside at the end edge when set) over one timeline of its stops. */
+function buildDay(day: ItineraryDay, index: number): HTMLElement {
+  const dayEl = document.createElement('div')
+  dayEl.setAttribute('data-part', 'day')
+  const d = dayEl.style
+  d.display = 'flex'
+  d.flexDirection = 'column'
+  d.gap = 'var(--md-sys-control-gutter)'
+  if (index > 0) {
+    d.paddingBlockStart = 'var(--md-sys-group-gutter)'
+    d.borderBlockStart = '1px solid var(--md-sys-color-neutral-outline-variant)'
+  }
+  const header = document.createElement('div')
+  header.setAttribute('data-part', 'day-header')
+  const h = header.style
+  h.display = 'flex'
+  h.flexWrap = 'wrap'
+  h.alignItems = 'baseline'
+  h.justifyContent = 'space-between'
+  h.gap = 'var(--md-sys-control-gutter)'
+  header.appendChild(itineraryText('day-label', 'h5', 'title', 'md', day.label, true))
+  if (day.aside) {
+    const aside = itineraryText('aside', 'none', 'body', 'sm', day.aside)
+    const a = aside.style
+    a.color = 'var(--md-sys-color-neutral-on-surface-variant)'
+    a.backgroundColor = 'var(--md-sys-color-neutral-container-low)'
+    a.borderRadius = 'var(--md-sys-control-radius)'
+    a.paddingInline = 'var(--md-sys-control-gutter)'
+    a.fontVariantNumeric = 'tabular-nums'
+    a.whiteSpace = 'nowrap'
+    header.appendChild(aside)
+  }
+  const timeline = document.createElement('ui-timeline') as unknown as HTMLElement & { label: string }
+  timeline.label = day.label // the list's accessible name, through its own internals
+  for (const stop of day.stops) {
+    const item = document.createElement('ui-timeline-item') as unknown as HTMLElement & {
+      timestamp: string
+      label: string
+      description: string
+      status: string
+    }
+    item.timestamp = stop.time
+    item.label = stop.label
+    item.description = stop.detail ?? ''
+    item.status = stop.status !== undefined && STOP_STATUSES.has(stop.status) ? stop.status : ''
+    timeline.appendChild(item)
+  }
+  dayEl.append(header, timeline)
+  return dayEl
+}
+
+interface ItineraryParts {
+  titleEl: HTMLElement
+  daysEl: HTMLElement
+}
+
+const itineraryParts = new WeakMap<HTMLElement, ItineraryParts>()
+
+/** `Itinerary` → a column of a title over one `day` part per `days` entry (T-0199). */
+export const itineraryFactory: WidgetFactory = {
+  tag: 'div',
+  uses: ['ui-text', 'ui-timeline', 'ui-timeline-item'], // ADR-0233: the title, day texts and timelines it mints
+  create: () => {
+    const el = document.createElement('div')
+    el.setAttribute('data-part', 'itinerary')
+    el.setAttribute('role', 'group') // a plain div, named by the title (a custom element would use its internals)
+    const s = el.style
+    s.display = 'flex'
+    s.flexDirection = 'column'
+    s.gap = 'var(--md-sys-group-gutter)'
+    s.minInlineSize = '0'
+    const titleEl = itineraryText('title', 'h4', 'title', 'lg', '', true)
+    titleEl.style.display = 'none' // drawn only once a title is set
+    const daysEl = document.createElement('div')
+    daysEl.setAttribute('data-part', 'days')
+    daysEl.style.display = 'flex'
+    daysEl.style.flexDirection = 'column'
+    daysEl.style.gap = 'var(--md-sys-group-gutter)'
+    el.append(titleEl, daysEl)
+    itineraryParts.set(el, { titleEl, daysEl })
+    return el
+  },
+  applyProp: (el, prop, value) => {
+    const parts = itineraryParts.get(el)
+    if (parts === undefined) return
+    switch (prop) {
+      case 'title': {
+        const title = value == null ? '' : String(value)
+        parts.titleEl.textContent = title
+        parts.titleEl.style.display = title === '' ? 'none' : ''
+        if (title === '') el.removeAttribute('aria-label')
+        else el.setAttribute('aria-label', title)
+        break
+      }
+      case 'days':
+        parts.daysEl.replaceChildren(...readDays(value).map(buildDay))
+        break
+      default:
+        break
+    }
+  },
+}
+
 /** Every component the fragment's `catalog.json` declares MUST appear here (the FACTORY_MISSING
  *  precondition, mirroring `fixture-demo/factories.ts`). */
 export const hospitalityFactories: Record<string, WidgetFactory> = {
   BookingForm: bookingFormFactory,
   BookingConfirmation: bookingConfirmationFactory,
+  Itinerary: itineraryFactory,
 }

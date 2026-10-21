@@ -128,6 +128,6 @@ export const SELECTION_PROJECTION: SelectionProjection = {
     },
   },
   domain: {
-    "hospitality": {"types":{"BookingForm":{"intents":["collect booking details","a stay from arrival to departure","a seating or time and party size"],"notFor":[{"type":"BookingConfirmation","why":"showing a confirmed booking"},{"type":"TextField","why":"one loose input outside a booking"},{"type":"Column","why":"an ad hoc stack of unrelated inputs"}]},"BookingConfirmation":{"intents":["confirm a completed booking","summary rows of a finished booking"],"notFor":[{"type":"BookingForm","why":"collecting booking details"},{"type":"Card","why":"a generic bounded surface"},{"type":"Text","why":"a one-line status message"}]}},"append":{}},
+    "hospitality": {"types":{"BookingForm":{"intents":["collect booking details","a stay from arrival to departure","a seating or time and party size"],"notFor":[{"type":"BookingConfirmation","why":"showing a confirmed booking"},{"type":"TextField","why":"one loose input outside a booking"},{"type":"Column","why":"an ad hoc stack of unrelated inputs"}]},"BookingConfirmation":{"intents":["confirm a completed booking","summary rows of a finished booking"],"notFor":[{"type":"BookingForm","why":"collecting booking details"},{"type":"Card","why":"a generic bounded surface"},{"type":"Text","why":"a one-line status message"}]},"Itinerary":{"intents":["a trip or day plan as days of timed stops","an itinerary with a status on each stop","stops by day with weather or exchange rates"],"notFor":[]}},"append":{}},
   },
 }

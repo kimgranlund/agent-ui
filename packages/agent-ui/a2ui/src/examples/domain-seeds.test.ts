@@ -60,8 +60,8 @@ function liveChecks(catalogId: string, catalog: Catalog) {
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m
 
 describe('the T-0245 domain seeds', () => {
-  it('are five, each shelved exactly once (T-0240: the base seeds on allSeeds, the persona two on allPersonaCorpusSeeds)', () => {
-    expect(domainSeeds).toHaveLength(5)
+  it('are six, each shelved exactly once (T-0240: the base seeds on allSeeds, the persona three on allPersonaCorpusSeeds; T-0199 the Itinerary)', () => {
+    expect(domainSeeds).toHaveLength(6)
     const names = [...allSeeds, ...allBasicSeeds, ...allPersonaSeeds, ...allPersonaCorpusSeeds, ...allMultiTurnSeeds, ...allRepairSeeds].map((s) => s.name)
     expect(names.filter((n, i) => names.indexOf(n) !== i)).toEqual([])
     for (const seed of domainSeeds) expect(names.filter((n) => n === seed.name), seed.name).toHaveLength(1)

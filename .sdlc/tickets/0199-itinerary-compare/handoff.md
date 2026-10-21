@@ -115,3 +115,4 @@ Option compare (answered here, built in its own ticket):
 
 ## Plan review
 - Kim 2026-10-21: step 1 mockups approved. Itinerary Direction A (days stacked); Option compare Direction A (option columns, for its own ticket). All 16 forks accepted as recommended, so steps 2 and 3 stand as planned.
+- Kim 2026-10-21 (after step 2 blocked): fork 6 changes to no notFor edges for Itinerary (hospitality also targets a2ui-basic, which has neither Timeline nor Tabs); the Timeline boundary goes into step 3's itinerary-timeline skill prose. Stop times stay at the row's end edge (TimelineItem's own layout, fork 5).

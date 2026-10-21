@@ -832,6 +832,8 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'domain-admiral-battleship-board': { passed: false, qualityScore: 2 },
     'domain-croupier-card-table-round': { passed: false, qualityScore: 2 },
     'domain-concierge-booking-request': { passed: false, qualityScore: 2 },
+    // T-0199 - the hospitality Itinerary seed (domain-seeds.ts), refused here for the same zero-admission reason.
+    'domain-hospitality-itinerary-trip': { passed: false, qualityScore: 2 },
   }
 
   it('clause 1 — a judged run that reaches saveStore archives its verdicts file BYTE-IDENTICALLY at <date>--<slug>.json, and a second identical run is a no-op', () => {

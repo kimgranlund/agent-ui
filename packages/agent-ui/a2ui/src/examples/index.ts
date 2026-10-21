@@ -234,7 +234,7 @@ export const allPersonaSeeds: readonly PersonaExampleSeed[] = [...personaExempla
 // candidates: each is admitted against its composed `<base>--<persona>` catalog (`tools/catalog-files.ts`) into
 // `corpus/exemplar/v1_0/<base>--<persona>.jsonl`, so a persona composite (CardTable, BookingForm) can be retrieved
 // on that persona's turns. Registered in `tools/corpus/import-seeds.ts`'s `PERSONA_SEEDS_BY_MODULE`.
-export { domainLexicographerWordSeed, domainLexicographerGameOverSeed, domainAdmiralBattleshipSeed, domainCroupierRoundSeed, domainConciergeBookingSeed } from './domain-seeds.ts'
+export { domainLexicographerWordSeed, domainLexicographerGameOverSeed, domainAdmiralBattleshipSeed, domainCroupierRoundSeed, domainConciergeBookingSeed, domainItineraryTripSeed } from './domain-seeds.ts'
 
 import type { PersonaShardCatalogId } from './types.ts'
 import { domainPersonaSeeds } from './domain-seeds.ts'
