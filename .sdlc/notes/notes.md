@@ -655,9 +655,10 @@
 - note: site/agent-content/workflows/booking-flow/WORKFLOW.md:4 keeps the pre-existing "Hotel domain" em dash in the rewritten description; the new body text has none (digest-bearing). (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
 - note: packages/agent-ui/a2ui/src/agent/prompts/grammar.md:66 and :234 keep pre-existing em dashes on modified lines; no added grammar text holds one. (Appended by the conductor, same reason.)
 
-## T-0199: Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (2026-10-21)
+## T-0392: Composer effort menu: one selection idiom, aligned rows, glyph check, separator, contained focus ring (2026-10-21)
 
-- decide: `site/pages/dogfood-render.browser.test.ts:1104` `PERSONA_TYPES` does not list `Itinerary`, so the two new Itinerary persona seeds (`persona-concierge-itinerary`, `persona-basic-concierge-itinerary`) sit outside the T-0144 render lint in the site browser shard.
-- decide: `.claude/docs/spec/a2ui-catalog-architecture.spec.md:79` the "Persona fragment types today" census row lists six types; the hospitality domain now also carries Itinerary.
-- note: `packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts:66` the travel pin is Known poor (the Itinerary seed is shelved, not in the shard); the judged admission wave for the five pending seeds re-pins it. (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
-- note: `packages/agent-ui/a2ui/src/catalog/domains/hospitality/itinerary.visual.browser.test.ts:12` the step-2 builder reports that `--project visual --update` with a file filter still rewrote `result-card-outcomes-chromium-darwin.png`; a candidate for skill `component-testing` Traps. (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
+- note: `.sdlc/tickets/0392-composer-effort-menu/handoff.md` Title/Intent still say "Phosphor check" while criterion 1 and the conductor note settle on the `ui-glyph` check; the Outcome should carry the settled wording.
+
+## T-0389: Stylist ContrastPair browser test: the verdict pill glyph is clipped (red at base) (2026-10-21)
+
+- note: there is no recorded pre-edit red run in the artifacts dir. Red at base rests on the ticket's Actual line (17da4bcbe) and the T-0351 history.
