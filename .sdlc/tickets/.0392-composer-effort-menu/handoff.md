@@ -2,7 +2,7 @@
 id: T-0392
 title: "Composer effort menu: one selection idiom, aligned rows, glyph check, separator, contained focus ring"
 type: bug             # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -43,3 +43,19 @@ verifier: L3
 - `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/components/src/controls/menu packages/agent-ui/app/src/controls/conversation/conversation-composer.browser.test.ts` exits 0.
 - `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project visual packages/agent-ui/app/src/controls/conversation/conversation-composer.visual.browser.test.ts` exits 0: the T-0392 case asserts one label edge across all six rows, the check shown on Medium and Show reasoning only, the separator between X-High and Thinking off, the last row's ring inside the panel's inner bottom edge, and matches the baseline `conversation-composer-effort-menu-open-chromium-darwin.png`.
 - Conductor 2026-10-21: the check mark is the library `ui-glyph` `check`, not the Phosphor pack check this ticket first named. The Phosphor wording came from a relayed report; ADR-0245 cl.5 and geometry.md "Icon and glyph" make a functional check the glyph, so the solo's deviation is accepted. The 4 `conversation.browser.test.ts` reds are inherited at base (T-0383), not this change.
+- Conductor 2026-10-21 reverify: the solo fixed verifier-L3's two findings in a resumed pass (commit above): control-rule.browser.test.ts reads the [data-part=check] child; menu.css has one glyph import; and regenerated llms-full.txt, both capability-registry.json copies, the theme-provider fixture and dogfood-assets.ts. Rerun every criterion, the control-rule browser test, css-uses.test.ts, and the whole jsdom suite once (`gate_lock.py run -- env -u NODE_OPTIONS npx vitest run`). The 4 conversation.browser.test.ts reds are inherited at base (T-0383).
+
+## Outcome
+
+2026-10-21 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: af100381a8aa
+- Changed: Composer effort menu: menuitemradio rows with the library glyph check, aligned labels, a separator before the toggles, inset focus rings (shared ui-menu)
+- Commits: dab7842 T-0392: control-rule reads the glyph check; one glyph import; regenerated derived files; 6bbd115 T-0392: effort menu uses menuitemradio rows with the glyph check, a separator and inset focus rings
+- Check: 1 Check mark is the library `ui-glyph` `check`; no `clip-path` checkmark; `menu.ts` prepends `[data...: pass
+- Check: 2 Effort picker rows are `menuitemradio` with `aria-checked`, no `data-selected`, a `role="separato...: pass
+- Check: 3 Menu rows draw an inset focus ring so the last row's ring stays inside the panel: pass
+- Check: 4 `env -u NODE_OPTIONS npm run check` exits 0: pass
+- Check: 5 `env -u NODE_OPTIONS npx vitest run packages/agent-ui/components/src/controls/menu packages/agent...: pass
+- Check: 6 Browser `--project packages` run over the menu folder and conversation-composer.browser.test.ts e...: pass
+- Check: 7 Browser `--project visual` conversation-composer.visual.browser.test.ts exits 0 with the T-0392 c...: pass
+- Check: 8 Conductor 2026-10-21 notes (glyph not Phosphor; rerun every criterion, control-rule browser test,...: pass
+- Follow-up: note: .sdlc/tickets/0392-composer-effort-menu/handoff.md Title/Intent... -> notes.md
