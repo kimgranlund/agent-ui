@@ -63,7 +63,9 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
   // Known poor (T-0197): the hospitality domain's own records rank first by the T-0238 rule (a ServiceCard gateway, the
   // booking request) on a menu turn, since no menu exemplar is in the domain; pinned so a domain shard change re-pins.
   ['restaurant', 'agent-ui--hospitality', 'What is on the menu tonight', ['frontier-service-gateway', 'domain-concierge-booking-request', 'travel-itinerary']],
-  ['travel', 'agent-ui', 'Plan a three day trip itinerary to Lisbon', ['frontier-trip-card', 'structured-container-trip-summary', 'comparison-pricing-table']],
+  // Known poor (T-0199): travel composes the hospitality domain, whose own records rank first by the T-0238 rule; the
+  // Itinerary seed is not admitted to the shard yet, so the booking request leads a trip turn.
+  ['travel', 'agent-ui--hospitality', 'Plan a three day trip itinerary to Lisbon', ['domain-concierge-booking-request', 'frontier-service-gateway', 'frontier-trip-card']],
   // Known poor (T-0318): rank 3 is frontier-product-card-rooms, off the collection domain.
   ['curator', 'agent-ui', 'Show me the highlights of the collection', ['customer-review-card', 'slideshow-gallery']],
   ['shopkeeper', 'agent-ui', 'Show me the product options', ['frontier-choice-group-rooms', 'frontier-column-chart-revenue', 'frontier-product-card-rooms']],

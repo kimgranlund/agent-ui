@@ -65,6 +65,40 @@
         },
         "data": { "type": { "type": "object" }, "bindable": true, "mapsTo": "data" }
       }
+    },
+    "Itinerary": {
+      "properties": {
+        "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
+        "days": {
+          "type": {
+            "type": "array",
+            "description": "One item per day in order: its label, an optional short aside (weather, FX) at the end of the day header, and its timed stops.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "label": { "type": "string" },
+                "aside": { "type": "string" },
+                "stops": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "time": { "type": "string" },
+                      "label": { "type": "string" },
+                      "detail": { "type": "string" },
+                      "status": { "type": "string", "enum": ["", "pending", "active", "done", "error", "warning"] }
+                    },
+                    "required": ["time", "label"]
+                  }
+                }
+              },
+              "required": ["label", "stops"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "days"
+        }
+      }
     }
   },
   "functions": {}

@@ -17,8 +17,8 @@ describe('hospitality domain (SPEC-R1, GH #497, T-0197)', () => {
     expect(hospitalityDomain.domainId).toBe(HOSPITALITY_DOMAIN_ID)
   })
 
-  it('AC2 — the fragment loads through the SAME structural gate a whole catalog runs — exactly the two promoted types', () => {
-    expect(Object.keys(hospitalityFragment.components).sort()).toEqual(['BookingConfirmation', 'BookingForm'])
+  it('AC2 — the fragment loads through the SAME structural gate a whole catalog runs — the two promoted types and the Itinerary (T-0199)', () => {
+    expect(Object.keys(hospitalityFragment.components).sort()).toEqual(['BookingConfirmation', 'BookingForm', 'Itinerary'])
     expect(hospitalityFragment.components.BookingForm?.properties.fields?.mapsTo).toBe('fields')
     expect(hospitalityFragment.components.BookingForm?.children).toBe('child')
     expect(hospitalityFragment.components.BookingForm?.value).toEqual({ prop: 'value', event: 'change', readProp: 'a2uiFormValue' })

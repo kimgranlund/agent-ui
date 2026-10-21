@@ -546,3 +546,108 @@ describe('StepFlow last scene with a BookingForm (T-0198)', () => {
     })
   }
 })
+
+describe('Itinerary (T-0199)', () => {
+  const TRIP = [
+    {
+      label: 'Fri 14 Nov, arrival',
+      stops: [
+        { time: '10:40', label: 'Land at LIS', detail: 'TP 1351, terminal 1', status: 'done' },
+        { time: '12:30', label: 'Check in, Alfama Patio', detail: 'Rua das Escolas Gerais 3', status: 'done' },
+      ],
+    },
+    {
+      label: 'Sat 15 Nov, Belem',
+      aside: '18°C, sun',
+      stops: [
+        { time: '10:00', label: 'Jeronimos Monastery', detail: 'Tickets on your phone', status: 'active' },
+        { time: '12:30', label: 'Pasteis de Belem and a long riverside walk to the MAAT', status: 'pending' },
+      ],
+    },
+    {
+      label: 'Sun 16 Nov, Sintra',
+      aside: '1 EUR = 1.08 USD',
+      stops: [{ time: '09:15', label: 'Train from Rossio', detail: 'Platform 3, every 20 minutes', status: 'pending' }],
+    },
+  ]
+
+  async function mountTrip(width: number): Promise<{ mount: HTMLElement; r: ReturnType<typeof createRenderer> }> {
+    const mount = document.createElement('div')
+    mount.style.inlineSize = `${width}px`
+    document.body.append(mount)
+    const r = createRenderer()
+    r.mount(mount)
+    await r.preload('agent-ui--hospitality')
+    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: `trip-${width}`, catalogId: 'agent-ui--hospitality' } })
+    r.ingestMessage({ version: 'v1.0', updateDataModel: { surfaceId: `trip-${width}`, path: '/trip/days', value: TRIP } })
+    r.ingestMessage({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: `trip-${width}`,
+        components: [{ id: 'root', component: 'Itinerary', title: 'Lisbon, 3 days', days: { path: '/trip/days' } }],
+      },
+    })
+    r.finalize(`trip-${width}`)
+    await whenFlushed()
+    return { mount, r }
+  }
+
+  it('the payload renders through the real renderer on agent-ui--hospitality: a header per day over a timeline of its stops', async () => {
+    const { mount, r } = await mountTrip(480)
+    const root = mount.querySelector<HTMLElement>('[data-part="itinerary"]')!
+    expect(root).not.toBeNull()
+    expect(root.getAttribute('aria-label')).toBe('Lisbon, 3 days')
+    const days = [...root.querySelectorAll<HTMLElement>('[data-part="day"]')]
+    expect(days.map((d) => d.querySelector('[data-part="day-label"]')?.textContent)).toEqual(TRIP.map((d) => d.label))
+    expect(days.map((d) => d.querySelectorAll('ui-timeline-item').length)).toEqual([2, 2, 1])
+    expect(days.map((d) => d.querySelector('[data-part="aside"]')?.textContent ?? null)).toEqual([null, '18°C, sun', '1 EUR = 1.08 USD'])
+    const first = root.querySelector('ui-timeline-item')!
+    expect(first.getAttribute('status')).toBe('done')
+    expect(first.textContent).toContain('10:40')
+    expect(first.textContent).toContain('Land at LIS')
+    expect(first.textContent).toContain('TP 1351, terminal 1')
+    for (const d of days) expect(box(d).height, 'every day is drawn').toBeGreaterThan(0)
+    expect(root.querySelector('ui-button'), 'display only: no Button inside').toBeNull()
+    r.dispose()
+    mount.remove()
+  })
+
+  it('a bound days update redraws in place, with no second updateComponents', async () => {
+    const { mount, r } = await mountTrip(480)
+    const root = mount.querySelector('[data-part="itinerary"]')!
+    r.ingestMessage({
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: 'trip-480',
+        path: '/trip/days',
+        value: [...TRIP, { label: 'Mon 17 Nov, home', stops: [{ time: '08:05', label: 'Fly LIS to LHR', status: 'pending' }] }],
+      },
+    })
+    await whenFlushed()
+    expect(mount.querySelector('[data-part="itinerary"]'), 'the same element, redrawn in place').toBe(root)
+    const labels = [...root.querySelectorAll('[data-part="day-label"]')].map((l) => l.textContent)
+    expect(labels).toEqual([...TRIP.map((d) => d.label), 'Mon 17 Nov, home'])
+    expect(root.querySelectorAll('ui-timeline-item')).toHaveLength(6)
+    r.dispose()
+    mount.remove()
+  })
+
+  it('at the 400px column no stop text overflows its column', async () => {
+    const { mount, r } = await mountTrip(400)
+    const root = mount.querySelector<HTMLElement>('[data-part="itinerary"]')!
+    const edge = box(root)
+    expect(edge.width).toBeGreaterThan(0)
+    expect(edge.width).toBeLessThanOrEqual(400)
+    const texts = [...root.querySelectorAll<HTMLElement>('ui-timeline-item [data-role], [data-part="day-header"] > *')]
+    expect(texts.length, 'the probe finds the stop cells and header texts').toBeGreaterThan(10)
+    for (const t of texts) {
+      const b = box(t)
+      if (b.width === 0) continue
+      expect(b.right, `${t.textContent} overflows the column`).toBeLessThanOrEqual(edge.right + 0.5)
+      expect(b.left).toBeGreaterThanOrEqual(edge.left - 0.5)
+      expect(t.scrollWidth, `${t.textContent} clips inside its cell`).toBeLessThanOrEqual(t.clientWidth + 1)
+    }
+    r.dispose()
+    mount.remove()
+  })
+})

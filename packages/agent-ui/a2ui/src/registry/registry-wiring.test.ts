@@ -121,7 +121,7 @@ describe('tag parity: the pure rule equals the factory tag', () => {
   it('the persona tag join is not vacuous: PlayingCard is tagged, the composition types are not', () => {
     const tagged = Object.values(REGISTRY.personas).flat().filter((r) => r.kind === 'type' && r.tag !== undefined).map((r) => r.name)
     expect(tagged).toEqual(['PlayingCard'])
-    expect(Object.keys(hospitalityFactories).sort()).toEqual(['BookingConfirmation', 'BookingForm'])
+    expect(Object.keys(hospitalityFactories).sort()).toEqual(['BookingConfirmation', 'BookingForm', 'Itinerary'])
   })
 
   it('the QuestionCard key: the quizmaster table holds exactly QuestionCard, an untagged ui-card composite', () => {

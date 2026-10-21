@@ -12,6 +12,7 @@
 //
 // T-0274 adds a fifth, the Lexicographer game-over turn (a give-up reveals the word on a ResultCard over the settled
 // board), because the only ResultCard exemplar on the shard was a blackjack win and a give-up turn retrieved none.
+// T-0199 adds a sixth, a hospitality Itinerary: a three-day trip with a weather and an exchange-rate aside.
 //
 // T-0240 shelves them as corpus candidates: the base seeds on `allSeeds`, the two persona seeds on
 // `allPersonaCorpusSeeds`, admitted against the composed `<base>--<persona>` catalog into that persona's shard.
@@ -145,6 +146,67 @@ export const domainConciergeBookingSeed: ExampleSeed<'agent-ui--hospitality'> = 
             action: { action: 'confirm_booking', submit: true, context: { booking: { path: '/booking' } } },
           },
         ],
+      },
+    },
+  ],
+}
+
+const TRIP_SID = 'trip-itinerary'
+
+/** The Concierge's day plan (T-0199): a three-day trip as one Itinerary, its days bound to /trip/days. */
+export const domainItineraryTripSeed: ExampleSeed<'agent-ui--hospitality'> = {
+  name: 'domain-hospitality-itinerary-trip',
+  description:
+    'The hospitality domain over the agent-ui base: one Itinerary titled "Lisbon, 3 days" as the surface root, its ' +
+    'days bound to /trip/days. Day 1 (arrival) is done; day 2 (Belem) is under way, one stop active and the rest ' +
+    'pending, with a weather aside; day 3 (Sintra) is pending, with an exchange-rate aside. Each stop carries its ' +
+    'time, a label, an optional detail line and its status. One bound path, so the plan updates in place as legs ' +
+    'are chosen; the Itinerary is read only, with no Button inside it.',
+  promptText: 'Lay out my three days in Lisbon: what is done, what is on today and what is next, with the weather and the exchange rate.',
+  surfaceId: TRIP_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--hospitality',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: TRIP_SID, catalogId: 'agent-ui--hospitality', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: TRIP_SID,
+        path: '/trip/days',
+        value: [
+          {
+            label: 'Fri 14 Nov, arrival',
+            stops: [
+              { time: '10:40', label: 'Land at LIS', detail: 'TP 1351, terminal 1', status: 'done' },
+              { time: '12:30', label: 'Check in, Alfama Patio', detail: 'Rua das Escolas Gerais 3', status: 'done' },
+              { time: '19:30', label: 'Dinner, Taberna da Rua', status: 'done' },
+            ],
+          },
+          {
+            label: 'Sat 15 Nov, Belem',
+            aside: '18°C, sun',
+            stops: [
+              { time: '10:00', label: 'Jeronimos Monastery', detail: 'Tickets on your phone', status: 'active' },
+              { time: '12:30', label: 'Pasteis de Belem', status: 'pending' },
+              { time: '15:00', label: 'MAAT riverside walk', status: 'pending' },
+            ],
+          },
+          {
+            label: 'Sun 16 Nov, Sintra',
+            aside: '1 EUR = 1.08 USD',
+            stops: [
+              { time: '09:15', label: 'Train from Rossio', detail: 'Platform 3, every 20 minutes', status: 'pending' },
+              { time: '11:00', label: 'Pena Palace', detail: 'Timed entry', status: 'pending' },
+            ],
+          },
+        ],
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: TRIP_SID,
+        components: [{ id: 'root', component: 'Itinerary', title: 'Lisbon, 3 days', days: { path: '/trip/days' } }],
       },
     },
   ],
@@ -421,13 +483,14 @@ export const domainAdmiralBattleshipSeed: ExampleSeed = {
 /** The three domain seeds over the base catalog, the `allSeeds` family. */
 export const domainBaseSeeds: readonly ExampleSeed[] = [domainLexicographerWordSeed, domainLexicographerGameOverSeed, domainAdmiralBattleshipSeed]
 
-/** The two domain seeds over a persona catalog, the `allPersonaCorpusSeeds` family. */
-export const domainPersonaSeeds: readonly ExampleSeed<PersonaShardCatalogId>[] = [domainCroupierRoundSeed, domainConciergeBookingSeed]
+/** The three domain seeds over a persona catalog, the `allPersonaCorpusSeeds` family. */
+export const domainPersonaSeeds: readonly ExampleSeed<PersonaShardCatalogId>[] = [domainCroupierRoundSeed, domainConciergeBookingSeed, domainItineraryTripSeed]
 
-/** The five domain seeds, in review order. */
+/** The six domain seeds, in review order. */
 export const domainSeeds: readonly ExampleSeed<SeedCatalogId>[] = [
   domainCroupierRoundSeed,
   domainConciergeBookingSeed,
+  domainItineraryTripSeed,
   domainLexicographerWordSeed,
   domainLexicographerGameOverSeed,
   domainAdmiralBattleshipSeed,

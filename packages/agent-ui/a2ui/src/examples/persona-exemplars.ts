@@ -210,6 +210,69 @@ export const personaBasicConciergeBookingConfirmedSeed: PersonaExampleSeed = {
   ],
 }
 
+const TRIP_SID = 'concierge-trip'
+
+/** A two-day plan: day 1 done, day 2 under way with a weather aside (T-0199). */
+const TRIP_DAYS = [
+  {
+    label: 'Fri 14 Nov, arrival',
+    stops: [
+      { time: '10:40', label: 'Land at LIS', detail: 'TP 1351, terminal 1', status: 'done' },
+      { time: '12:30', label: 'Check in, Alfama Patio', status: 'done' },
+    ],
+  },
+  {
+    label: 'Sat 15 Nov, Belem',
+    aside: '18°C, sun',
+    stops: [
+      { time: '10:00', label: 'Jeronimos Monastery', detail: 'Tickets on your phone', status: 'active' },
+      { time: '12:30', label: 'Pasteis de Belem', status: 'pending' },
+    ],
+  },
+]
+
+const TRIP_PROMPT = 'Show me my Lisbon plan so far.'
+
+/** The concierge persona over agent-ui: a day plan as one Itinerary, its days bound to /trip/days (T-0199). */
+export const personaConciergeItinerarySeed: PersonaExampleSeed = {
+  name: 'persona-concierge-itinerary',
+  description:
+    'The concierge persona over the agent-ui base: the surface root is ONE Itinerary titled "Lisbon plan" whose ' +
+    'days read from /trip/days, day 1 done and day 2 under way with a weather aside.',
+  promptText: TRIP_PROMPT,
+  surfaceId: TRIP_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui--hospitality',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: TRIP_SID, catalogId: 'agent-ui--hospitality' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: TRIP_SID, path: '/trip/days', value: TRIP_DAYS } },
+    {
+      version: 'v1.0',
+      updateComponents: { surfaceId: TRIP_SID, components: [{ id: 'root', component: 'Itinerary', title: 'Lisbon plan', days: { path: '/trip/days' } }] },
+    },
+  ],
+}
+
+/** The concierge persona over a2ui-basic: the same Itinerary (T-0199). */
+export const personaBasicConciergeItinerarySeed: PersonaExampleSeed = {
+  name: 'persona-basic-concierge-itinerary',
+  description:
+    'The concierge persona over the a2ui-basic base: the same Itinerary titled "Lisbon plan" as the surface root, ' +
+    'its days read from /trip/days.',
+  promptText: TRIP_PROMPT,
+  surfaceId: TRIP_SID,
+  protocolVersion: 'v1.0',
+  catalogId: 'a2ui-basic--hospitality',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: TRIP_SID, catalogId: 'a2ui-basic--hospitality' } },
+    { version: 'v1.0', updateDataModel: { surfaceId: TRIP_SID, path: '/trip/days', value: TRIP_DAYS } },
+    {
+      version: 'v1.0',
+      updateComponents: { surfaceId: TRIP_SID, components: [{ id: 'root', component: 'Itinerary', title: 'Lisbon plan', days: { path: '/trip/days' } }] },
+    },
+  ],
+}
+
 const STAY_SID = 'concierge-stay'
 
 /** The stay form's fields: a text name, a number guest count, and a date range as two dateSingle fields. */
@@ -823,6 +886,8 @@ export const personaExemplarSeeds: readonly PersonaExampleSeed[] = [
   personaConciergeBookingConfirmedSeed,
   personaBasicConciergeBookingConfirmedSeed,
   personaConciergeStaySeed,
+  personaConciergeItinerarySeed,
+  personaBasicConciergeItinerarySeed,
   personaCroupierHandSeed,
   personaBasicCroupierHandSeed,
   personaCroupierCardTableSeed,

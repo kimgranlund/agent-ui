@@ -10,7 +10,7 @@
 
 import { describe, it, expect } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
-import { bookingFormFactory, bookingConfirmationFactory, hospitalityFactories } from './factories.ts'
+import { bookingFormFactory, bookingConfirmationFactory, hospitalityFactories, itineraryFactory } from './factories.ts'
 import { hospitalityFragment } from './index.ts'
 
 describe('concierge factories — table parity (mirrors fixture-demo/factories.test.ts)', () => {
@@ -487,5 +487,106 @@ describe('bookingConfirmationFactory — create()/applyProp (jsdom-safe: ui-card
     bookingConfirmationFactory.applyProp(el, 'rows', [{ label: 'Notes', path: 'notes' }])
     bookingConfirmationFactory.applyProp(el, 'data', {})
     expect(el.querySelector('[data-a2ui-confirmation-row] [data-part="value"]')?.textContent).toBe('—')
+  })
+})
+
+describe('Itinerary (T-0199)', () => {
+  const days = [
+    {
+      label: 'Fri 14 Nov, arrival',
+      stops: [
+        { time: '10:40', label: 'Land at LIS', detail: 'TP 1351, terminal 1', status: 'done' },
+        { time: '19:30', label: 'Dinner, Taberna da Rua', status: 'done' },
+      ],
+    },
+    {
+      label: 'Sat 15 Nov, Belem',
+      aside: '18°C, sun',
+      stops: [
+        { time: '10:00', label: 'Jeronimos Monastery', detail: 'Tickets on your phone', status: 'active' },
+        { time: '12:30', label: 'Pasteis de Belem', status: 'pending' },
+        { time: '15:00', label: 'MAAT riverside walk' },
+      ],
+    },
+  ]
+
+  type Item = HTMLElement & { timestamp: string; label: string; description: string; status: string }
+
+  it('mints a plain div holding a title and a days part, and names the controls it mints in `uses`', () => {
+    const el = itineraryFactory.create()
+    expect(el.localName).toBe('div')
+    expect([...el.children].map((c) => c.getAttribute('data-part'))).toEqual(['title', 'days'])
+    expect([...(itineraryFactory.uses ?? [])]).toEqual(['ui-text', 'ui-timeline', 'ui-timeline-item'])
+    expect(itineraryFactory.value).toBeUndefined() // display only: no value, no event
+  })
+
+  it('"title" names the group and draws the title; an empty title hides it', () => {
+    const el = itineraryFactory.create()
+    itineraryFactory.applyProp(el, 'title', 'Lisbon, 3 days')
+    expect(el.querySelector('[data-part="title"]')?.textContent).toBe('Lisbon, 3 days')
+    expect(el.getAttribute('aria-label')).toBe('Lisbon, 3 days')
+    itineraryFactory.applyProp(el, 'title', '')
+    expect((el.querySelector('[data-part="title"]') as HTMLElement).style.display).toBe('none')
+    expect(el.hasAttribute('aria-label')).toBe(false)
+  })
+
+  it('draws one header per day over one timeline, named by the day label', () => {
+    const el = itineraryFactory.create()
+    itineraryFactory.applyProp(el, 'days', days)
+    const dayEls = [...el.querySelectorAll('[data-part="day"]')]
+    expect(dayEls).toHaveLength(2)
+    expect(dayEls.map((d) => d.querySelector('[data-part="day-label"]')?.textContent)).toEqual(['Fri 14 Nov, arrival', 'Sat 15 Nov, Belem'])
+    for (const [i, d] of dayEls.entries()) {
+      expect([...d.children].map((c) => c.getAttribute('data-part') ?? c.localName)).toEqual(['day-header', 'ui-timeline'])
+      expect((d.querySelector('ui-timeline') as unknown as { label: string }).label).toBe(days[i]!.label)
+    }
+    // a hairline between days, never above the first
+    expect((dayEls[0] as HTMLElement).style.borderBlockStart).toBe('')
+    expect((dayEls[1] as HTMLElement).style.borderBlockStart).toContain('var(--md-sys-color-neutral-outline-variant)')
+  })
+
+  it('draws one item per stop with its timestamp, label, description and status', () => {
+    const el = itineraryFactory.create()
+    itineraryFactory.applyProp(el, 'days', days)
+    const items = [...el.querySelectorAll('ui-timeline-item')] as Item[]
+    expect(items.map((i) => [i.timestamp, i.label, i.description, i.status])).toEqual([
+      ['10:40', 'Land at LIS', 'TP 1351, terminal 1', 'done'],
+      ['19:30', 'Dinner, Taberna da Rua', '', 'done'],
+      ['10:00', 'Jeronimos Monastery', 'Tickets on your phone', 'active'],
+      ['12:30', 'Pasteis de Belem', '', 'pending'],
+      ['15:00', 'MAAT riverside walk', '', ''],
+    ])
+    const second = el.querySelectorAll('[data-part="day"]')[1]!
+    expect(second.querySelectorAll('ui-timeline-item')).toHaveLength(3)
+  })
+
+  it('an unknown status draws no status; a stop missing its time or label is dropped', () => {
+    const el = itineraryFactory.create()
+    itineraryFactory.applyProp(el, 'days', [{ label: 'Day', stops: [{ time: '9:00', label: 'A', status: 'late' }, { label: 'no time' }, { time: '10:00' }] }])
+    const items = [...el.querySelectorAll('ui-timeline-item')] as Item[]
+    expect(items.map((i) => [i.label, i.status])).toEqual([['A', '']])
+  })
+
+  it('draws the aside only when the day sets one', () => {
+    const el = itineraryFactory.create()
+    itineraryFactory.applyProp(el, 'days', days)
+    const asides = [...el.querySelectorAll('[data-part="day"]')].map((d) => d.querySelector('[data-part="aside"]')?.textContent ?? null)
+    expect(asides).toEqual([null, '18°C, sun'])
+    const header = el.querySelectorAll('[data-part="day-header"]')[1]!
+    expect([...header.children].map((c) => c.getAttribute('data-part'))).toEqual(['day-label', 'aside']) // at the header's end
+  })
+
+  it('a new "days" value rebuilds every day in place', () => {
+    const el = itineraryFactory.create()
+    itineraryFactory.applyProp(el, 'days', days)
+    const daysPart = el.querySelector('[data-part="days"]')
+    itineraryFactory.applyProp(el, 'days', [{ label: 'Sun 16 Nov', aside: '1 EUR = 1.08 USD', stops: [{ time: '11:00', label: 'Sintra day trip', status: 'pending' }] }])
+    expect(el.querySelector('[data-part="days"]')).toBe(daysPart)
+    expect(el.querySelectorAll('[data-part="day"]')).toHaveLength(1)
+    expect(el.querySelector('[data-part="day-label"]')?.textContent).toBe('Sun 16 Nov')
+    expect(el.querySelector('[data-part="aside"]')?.textContent).toBe('1 EUR = 1.08 USD')
+    expect(([...el.querySelectorAll('ui-timeline-item')] as Item[]).map((i) => i.label)).toEqual(['Sintra day trip'])
+    itineraryFactory.applyProp(el, 'days', null)
+    expect(el.querySelectorAll('[data-part="day"]')).toHaveLength(0)
   })
 })
