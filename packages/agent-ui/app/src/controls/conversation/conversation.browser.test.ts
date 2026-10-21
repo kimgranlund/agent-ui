@@ -473,6 +473,10 @@ describe('ui-conversation cross-engine smoke — the COMPOSED path renders with 
         },
       }),
     )
+    // T-0194: a surface turn always carries a reply line, and since then a card-only turn's tally rides the
+    // activity strip, never the bubble (GH #1221 keeps a prose-free bubble hidden). The reply line is what
+    // gives the bubble its own content, so the chain below measures a bubble a real turn actually paints.
+    handle.setNote('Here is your button')
     handle.finalize()
 
     const turn = el.querySelector('[data-part="turn"][data-role="agent"]') as HTMLElement
@@ -974,6 +978,7 @@ describe('ui-conversation cross-engine — the empty-bubble hiding law (GH #313/
     const el = mountConversation()
     const t1 = el.beginAgentTurn()
     t1.ingestLine(line({ version: 'v1.0', createSurface: { surfaceId: 'resume-1', catalogId: 'agent-ui' } }))
+    t1.setNote('Your board is ready') // T-0194: the reply line is the bubble's content; the card alone never reveals it (GH #1221)
     t1.finalize()
 
     const bubble = el.querySelector('[data-part="bubble"][data-role="agent"]') as HTMLElement

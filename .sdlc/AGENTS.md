@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:a191d19c735b -->
+<!-- sdlc-lite:managed:start v1 sha256:7499275c38de -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,19 +9,20 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 2
+- proposed: 3
+  - T-0384 packages/agent-ui/a2ui/src/agent/prompts/grammar.md:37 still says... (0384-packages-agent-ui-a2ui-src)
   - T-0385 site/agent-content/workflows/booking-flow/WORKFLOW.md:12 settles... (0385-site-agent-content-workflows-booking)
   - T-0390 site/agent-content/workflows/table-reservation/WORKFLOW.md:12... (0390-site-agent-content-workflows-table)
 - ready: 4
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
-  - T-0383 conversation.browser.test.ts: 4 resumed-bubble and composed-path reds (0383-conversation-browser-reds)
+  - T-0386 grammar.md stale-affordance rule names Buttons, not an OptionDeck greet (0386-grammar-stale-affordance-deck)
   - T-0388 An OptionDeck nested under a centring parent still collapses to 0px (0388-option-deck-nested-collapse)
   - T-0389 Stylist ContrastPair browser test: the verdict pill glyph is clipped (red at base) (0389-contrast-pair-glyph-red)
 - claimed: 0
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 380
+- done: 379
 - dropped: 4
 
 ## Procedures
