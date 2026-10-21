@@ -548,6 +548,11 @@ describe('buildSystemPrompt feed-ask mechanics — mode-invariant (ADR-0097 §4)
     expect(prompt).toMatch(/AT MOST ONE ask per turn/)
     expect(prompt).toMatch(/NEVER\s+also create any other surface in that same turn/)
     expect(prompt).toMatch(/at most\s+the one retire-update the surface-reuse rule below requires/)
+    // T-0384: an answer control that commits by its own press needs no commit Button.
+    expect(prompt).toMatch(/or none when its answer control\s+commits by its own press/)
+    // T-0386: a greet deck is retired by disabling it, and the ask-turn allowance no longer restates the rule.
+    expect(prompt).toMatch(/resend its OptionDeck with "disabled":true/)
+    expect(prompt).not.toMatch(/stale action Buttons and live badges/)
   })
 
   // T-0363 (Kim 2026-10-18): an ask turn may also create or update a game's ONE HUD surface, the surface holding its
