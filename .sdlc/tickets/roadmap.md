@@ -5,7 +5,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
-| T-0197 | [0197-bookingform-kinds](0197-bookingform-kinds/handoff.md) | BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' | feature | L2 | P2 | T-0196 | 🔵 ready |
+| T-0197 | [0197-bookingform-kinds](0197-bookingform-kinds/handoff.md) | BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' | feature | L3 | P2 | T-0196 | 🔵 ready |
 | T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | 🔵 ready |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |

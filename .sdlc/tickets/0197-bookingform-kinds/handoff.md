@@ -3,11 +3,12 @@ id: T-0197
 title: "BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d'"
 type: feature         # feature | bug | chore | spike | idea
 status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
-size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
+size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0196]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
 created: 2026-10-14
 router: .sdlc/AGENTS.md  # how to claim and close this ticket
+budget_usd: 60
 ---
 
 ## Goal
