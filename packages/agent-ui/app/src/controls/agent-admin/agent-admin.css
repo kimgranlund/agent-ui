@@ -75,6 +75,11 @@
   --ui-agent-admin-danger-bg-hover: var(--md-sys-color-danger-container);
   --ui-agent-admin-danger-bg-active: var(--md-sys-color-danger-container-high);
   --ui-agent-admin-danger-ink: var(--md-sys-color-danger-high);
+  /* T-0391: the solid destructive (the Danger zone confirm): the danger fill and its on-danger ink. */
+  --ui-agent-admin-danger-fill: var(--md-sys-color-danger);
+  --ui-agent-admin-danger-fill-hover: var(--md-sys-color-danger-hover);
+  --ui-agent-admin-danger-fill-active: var(--md-sys-color-danger-active);
+  --ui-agent-admin-danger-on-fill: var(--md-sys-color-danger-on-danger);
   --ui-agent-admin-danger-item-ink: var(--md-sys-color-danger-on-surface-variant);
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
   --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tabs' mono JSON preview plane (the frame's containerLow tint) */
@@ -1021,7 +1026,7 @@
     color: var(--ui-agent-admin-ink);
   }
   [data-part='danger-confirm-body'] {
-    margin: 0;
+    margin-block-end: 0; /* the content region's sibling gap sets the space above */
     color: var(--ui-agent-admin-label-ink);
   }
   [data-part='danger-confirm-actions'] {
@@ -1092,6 +1097,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--ui-agent-admin-list-gap);
+  }
+  /* Add domain hugs at the start edge (`inline`), so the stretching column does not spread its icon and label. */
+  [data-part='domain-add'] {
+    align-self: flex-start;
   }
   [data-part='domain-rows']:empty {
     display: none;
@@ -1195,12 +1204,13 @@
     --ui-button-bg-active: var(--ui-agent-admin-danger-bg-active);
     --ui-button-ink: var(--ui-agent-admin-danger-ink);
   }
-  /* T-0391: the Danger zone confirm's destructive button takes the same danger repoint. */
+  /* T-0391: the Danger zone confirm's destructive button is `variant="solid"` repointed one family over
+     (primary fill to danger fill, on-primary to on-danger ink): the solid destructive the mockup shows. */
   [data-part='danger-confirm-button'] {
-    --ui-button-bg: var(--ui-agent-admin-danger-bg);
-    --ui-button-bg-hover: var(--ui-agent-admin-danger-bg-hover);
-    --ui-button-bg-active: var(--ui-agent-admin-danger-bg-active);
-    --ui-button-ink: var(--ui-agent-admin-danger-ink);
+    --ui-button-bg: var(--ui-agent-admin-danger-fill);
+    --ui-button-bg-hover: var(--ui-agent-admin-danger-fill-hover);
+    --ui-button-bg-active: var(--ui-agent-admin-danger-fill-active);
+    --ui-button-ink: var(--ui-agent-admin-danger-on-fill);
   }
 
   /* GH #845 (LLD §6) — the overflow menu's own Delete item. VERIFIED against menu.css at build time (the

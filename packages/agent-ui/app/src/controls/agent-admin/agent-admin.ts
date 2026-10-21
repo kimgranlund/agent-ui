@@ -3898,7 +3898,7 @@ export class UIAgentAdminElement extends UIElement {
     unit.setAttribute('data-part', 'server-tool-settings')
     unit.addEventListener('select', (event) => event.stopPropagation())
     unit.addEventListener('change', (event) => event.stopPropagation())
-    const lists = [keys.allowedDomains, keys.blockedDomains].map((key) => this.#buildDomainList(key))
+    const lists = [keys.allowedDomains, keys.blockedDomains].map((key) => this.#buildDomainList(key, drawerFieldLabel(key, keys.enabled)))
     const drawer = this.#buildDrawer(`tool-${tool}`, label, unit, ...lists.map((list) => list.element))
     row.append(toggle, rowLabel, spacer, drawerTrigger(drawer, 'Configure', 'gear', 'ghost'), drawer)
     this.#serverTools.set(tool, { row, toggle, unit, lists })
@@ -3909,8 +3909,7 @@ export class UIAgentAdminElement extends UIElement {
    *  `ui-text-field` and Remove) plus Add domain. The store keeps the comma string `domainsOf` reads
    *  (agent-admin-schema.ts): the editor splits it on commas on read and writes `list.join(', ')`. Add
    *  appends a blank row locally and writes nothing until it holds a domain. */
-  #buildDomainList(key: string): DomainList {
-    const label = fieldLabel(key)
+  #buildDomainList(key: string, label: string): DomainList {
     const element = document.createElement('div')
     element.setAttribute('data-part', 'domain-list')
     element.setAttribute('data-field', key)
@@ -3925,6 +3924,7 @@ export class UIAgentAdminElement extends UIElement {
     const add = document.createElement('ui-button') as UIButtonElement
     add.setAttribute('variant', 'ghost')
     add.setAttribute('data-part', 'domain-add')
+    add.setAttribute('inline', '') // hug: a fill-width button spreads its icon and label to opposite edges (ADR-0171)
     const addIcon = document.createElement('ui-icon')
     addIcon.setAttribute('slot', 'leading')
     addIcon.setAttribute('symbol', 'plus')
@@ -3992,7 +3992,9 @@ export class UIAgentAdminElement extends UIElement {
       parts.toggle.checked = store?.get(enabled) === true
       const section = modelSettingsSection(model, Object.values(detail).filter((k): k is string => k !== undefined))
       const schema: SettingsSchema | undefined =
-        section !== undefined && section.fields.length > 0 ? { version: 1, sections: [{ ...section, id: `tool-${tool}`, label: fieldLabel(enabled) }] } : undefined
+        section !== undefined && section.fields.length > 0
+          ? { version: 1, sections: [{ ...section, id: `tool-${tool}`, label: fieldLabel(enabled), fields: section.fields.map((f) => ({ ...f, label: drawerFieldLabel(f.key, enabled) })) }] }
+          : undefined
       if (JSON.stringify(schema) !== JSON.stringify(parts.unit.schema)) parts.unit.schema = schema
       if (parts.unit.store !== store) parts.unit.store = store
       parts.unit.hidden = schema === undefined
@@ -4014,7 +4016,12 @@ export class UIAgentAdminElement extends UIElement {
     heading.setAttribute('data-part', 'danger-confirm-heading')
     const body = document.createElement('p')
     body.setAttribute('data-part', 'danger-confirm-body')
-    const actions = document.createElement('div')
+    // The dialog's `[data-box]` regions carry the library inset (container-box.css): a content region for
+    // the heading and sentence, a footer for the actions.
+    const content = document.createElement('div')
+    content.setAttribute('data-region', 'content')
+    content.append(heading, body)
+    const actions = document.createElement('footer')
     actions.setAttribute('data-part', 'danger-confirm-actions')
     const cancel = document.createElement('ui-button') as UIButtonElement
     cancel.setAttribute('variant', 'soft')
@@ -4022,7 +4029,7 @@ export class UIAgentAdminElement extends UIElement {
     cancel.textContent = 'Cancel'
     cancel.addEventListener('click', () => this.#closeDangerConfirm())
     const confirm = document.createElement('ui-button') as UIButtonElement
-    confirm.setAttribute('variant', 'soft')
+    confirm.setAttribute('variant', 'solid')
     confirm.setAttribute('data-part', 'danger-confirm-button')
     confirm.addEventListener('click', () => {
       const action = this.#dangerAction
@@ -4030,7 +4037,7 @@ export class UIAgentAdminElement extends UIElement {
       action?.()
     })
     actions.append(cancel, confirm)
-    modal.append(heading, body, actions)
+    modal.append(content, actions)
     // A user dismissal (Escape, a backdrop click) drops the pending action exactly like Cancel.
     modal.addEventListener('close', (event) => {
       event.stopPropagation()
@@ -5713,6 +5720,16 @@ interface DomainList {
   sync: () => void
 }
 
+/** T-0391: a field's label inside its server tool's drawer, whose heading already names the tool: the schema
+ *  label without the tool's name ("Web search max uses" reads "Max uses"). Outside the drawer the full label stays. */
+function drawerFieldLabel(key: string, toolKey: string): string {
+  const label = fieldLabel(key)
+  const prefix = `${fieldLabel(toolKey)} `
+  if (!label.startsWith(prefix)) return label
+  const rest = label.slice(prefix.length)
+  return rest.charAt(0).toUpperCase() + rest.slice(1)
+}
+
 /** T-0391: a domain list's entries trimmed, blanks dropped (the `domainsOf` read, agent-admin-schema.ts). */
 function domainsIn(list: readonly string[]): string[] {
   return list.map((domain) => domain.trim()).filter((domain) => domain !== '')
@@ -5726,6 +5743,7 @@ function drawerTrigger(drawer: UIDrawerElement, label: string, symbol: string, v
   trigger.setAttribute('variant', variant)
   trigger.setAttribute('data-part', 'drawer-trigger')
   trigger.setAttribute('data-opens', drawer.getAttribute('data-drawer') ?? '')
+  trigger.setAttribute('inline', '') // hug: a fill-width button spreads its icon and label to opposite edges (ADR-0171)
   const icon = document.createElement('ui-icon')
   icon.setAttribute('slot', 'leading')
   icon.setAttribute('symbol', symbol)

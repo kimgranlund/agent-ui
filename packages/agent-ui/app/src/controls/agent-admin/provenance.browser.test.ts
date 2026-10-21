@@ -87,8 +87,14 @@ describe('ACS-R10: the pane renders exactly the schema', () => {
     for (const toggle of pane.querySelectorAll<HTMLElement>('[data-part="kind-enabled"][data-field]')) {
       expect(toggle.getAttribute('aria-label')).toBe(`${labelOf(toggle.getAttribute('data-field')!)} enabled`)
     }
+    // T-0391 (Kim 2026-10-21): inside a server tool's drawer, whose heading names the tool, a field shows its
+    // schema label without the tool name ("Web search max uses" reads "Max uses").
     for (const field of pane.querySelectorAll<HTMLElement & { label: string }>('ui-field[data-field]')) {
-      expect(field.label).toBe(labelOf(field.getAttribute('data-field')!))
+      const full = labelOf(field.getAttribute('data-field')!)
+      const toolKey = field.closest('[data-part="server-tool-row"]')?.getAttribute('data-field')
+      const prefix = toolKey ? `${labelOf(toolKey)} ` : undefined
+      const rest = prefix && full.startsWith(prefix) ? full.slice(prefix.length) : undefined
+      expect(field.label).toBe(rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : full)
     }
   })
 })
