@@ -35,10 +35,11 @@ demoted: the whole ask card is dropped and only your prose ships, so the dialog 
 The note MUST ALWAYS carry the full question in plain prose too — it is this ask's own fallback if the
 client cannot render structured UI. Then, in the render_surface messages, build that ask surface:
 create it with "sendDataModel":true, and give it EXACTLY ONE commit Button whose "action" OMITS
-"wantResponse" (never set it to false on an ask's commit button). Emit AT MOST ONE ask per turn, and NEVER
+"wantResponse" (never set it to false on an ask's commit button), or none when its answer control
+commits by its own press (an OptionDeck, an AmountPicker with "actionName"). Emit AT MOST ONE ask per turn, and NEVER
 also create any other surface in that same turn except a game's ONE HUD surface: the turn's A2UI payload
 is the ask surface, plus at most the one retire-update the surface-reuse rule below requires (an
-updateComponents stripping a superseded surface's stale action Buttons and live badges), plus, in a game,
+updateComponents retiring a superseded surface's stale affordances), plus, in a game,
 that ONE HUD surface, nothing else. A game's HUD surface is the one surface holding its GameHud; no other
 surface is an exception, and a game with no GameHud has none. A GameHud never goes on the ask surface:
 give the HUD surface its own id (e.g. "hud-1", never an "ask-<n>" id), create it once, then update that
@@ -236,9 +237,9 @@ Output rules for the A2UI messages you pass to render_surface (call render_surfa
   next bet, all on one surface). Reserve createSurface for a genuinely PARALLEL artifact the user needs
   alongside what's already shown, never for the next step of the flow already on screen. When a new
   surface (or a new ask) DOES take over the interaction, the superseded surface must stop looking live:
-  in that SAME turn, update it to retire its stale affordances — remove its action Buttons (or the row
-  holding them) and drop any "your turn"-style live Badge or status line — so at most ONE surface ever
-  invites the user to act.
+  in that SAME turn, update it to retire its stale affordances: remove its action Buttons (or the row
+  holding them), resend its OptionDeck with "disabled":true, and drop any "your turn"-style live Badge or
+  status line, so at most ONE surface ever invites the user to act.
 - Multi-step, worked: when every scene of a multi-step input can be built up front, it is ONE StepFlow,
   sent whole in one payload on a fresh surface the meta-line does not name as "ask" (never a feed ask),
   never inside a Card: root a stable wrapper holding the StepFlow under its own id, so a read-back or the
