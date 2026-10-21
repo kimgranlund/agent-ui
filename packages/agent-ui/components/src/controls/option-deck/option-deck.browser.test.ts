@@ -116,3 +116,28 @@ describe('ui-option-deck: the 400px column', () => {
     expect(getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/).length).toBeGreaterThan(1)
   })
 })
+
+// T-0388: the deck is its own inline-size container, so it has no intrinsic width. Under a parent that sizes its
+// child to content (a centring column, a flex row, a centring grid cell) it used to resolve to 0px. The host now
+// fills the available inline size itself, so every parent gets the fill, not only a stretched surface root.
+describe('ui-option-deck: fills a shrink-to-fit parent', () => {
+  const PARENTS: Record<string, string> = {
+    'a centring column': 'display:flex; flex-direction:column; align-items:center;',
+    'a flex row': 'display:flex; flex-direction:row;',
+    'a centring grid cell': 'display:grid; justify-items:center;',
+  }
+  for (const [name, css] of Object.entries(PARENTS)) {
+    it(`a deck nested in ${name} fills the column`, async () => {
+      const { deck } = await mount('40rem')
+      const parent = document.createElement('div')
+      parent.style.cssText = css
+      deck.parentElement!.append(parent)
+      parent.append(deck)
+      await deck.updateComplete
+      const width = deck.getBoundingClientRect().width
+      expect(width).toBeCloseTo(parent.getBoundingClientRect().width, 0)
+      expect(width).toBeGreaterThan(0)
+      expect(cards(deck)[0]!.getBoundingClientRect().width).toBeGreaterThan(0)
+    })
+  }
+})

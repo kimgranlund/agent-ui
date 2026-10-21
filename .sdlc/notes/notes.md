@@ -659,6 +659,7 @@
 
 - note: `.sdlc/tickets/0392-composer-effort-menu/handoff.md` Title/Intent still say "Phosphor check" while criterion 1 and the conductor note settle on the `ui-glyph` check; the Outcome should carry the settled wording.
 
-## T-0389: Stylist ContrastPair browser test: the verdict pill glyph is clipped (red at base) (2026-10-21)
+## T-0388: An OptionDeck nested under a centring parent still collapses to 0px (2026-10-21)
 
-- note: there is no recorded pre-edit red run in the artifacts dir. Red at base rests on the ticket's Actual line (17da4bcbe) and the T-0351 history.
+- note: packages/agent-ui/components/src/controls/option-deck/option-deck.css:113-121 uses the `-webkit-fill-available` / `-moz-available` / `stretch` cascade, the same idiom the ui-column `[stretch]` fill uses; `sizing-gates.test.ts` is inside `npm run check`'s sibling jsdom suite (not run here, conductor item #6).
+- decide: ui-option-deck declares no `inline` hug opt-out (`git grep inline option-deck.md` matches only an SVG glyph line, :90), so ADR-0223's "the one opt-out is the reflected `inline` boolean" is not available on the deck. The fill is now unconditional; add the opt-out here or file a follow-up, the criteria do not require it.
