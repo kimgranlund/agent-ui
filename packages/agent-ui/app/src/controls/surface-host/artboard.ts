@@ -8,11 +8,13 @@
 // artboards do not have).
 import { UIContainerElement } from '@agent-ui/components'
 
-/** The ADR-0243 widget roots that fill the canvas like a container root (ADR-0046 Amendment 7, the canvas
- *  gutter rule): each is a full-width surface by role, but extends `UIElement`, not `UIContainerElement`, so
- *  the container branch below never reached it and a GameHud root hugged its content beside filling siblings.
- *  Named by tag, not by a broader discriminator, so no other intrinsic root changes width. */
-const WIDGET_ROOTS: ReadonlySet<string> = new Set(['ui-product-card', 'ui-board-grid', 'ui-game-hud'])
+/** The widget roots that fill the canvas like a container root (ADR-0046 Amendment 7, the canvas gutter rule):
+ *  each is a full-width surface by role, but extends `UIElement`, not `UIContainerElement`, so the container
+ *  branch below never reached it and a GameHud root hugged its content beside filling siblings. The ADR-0243
+ *  three, plus ui-option-deck (T-0387): it is its own inline-size query container, so it has no intrinsic width
+ *  and an unstretched deck root collapsed to 0px under the surface's `align-items: center`. Named by tag, not
+ *  by a broader discriminator, so no other intrinsic root changes width. */
+const WIDGET_ROOTS: ReadonlySet<string> = new Set(['ui-product-card', 'ui-board-grid', 'ui-game-hud', 'ui-option-deck'])
 
 /** applyRootStretch — the rendered surface's ROOT should fill the artboard's available width (up to its
  *  definite cap, min(32rem, …) in artboard.css — the checkered artboard's own deliberate aesthetic, GH
