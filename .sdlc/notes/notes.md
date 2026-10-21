@@ -659,3 +659,5 @@
 
 - decide: `site/pages/dogfood-render.browser.test.ts:1104` `PERSONA_TYPES` does not list `Itinerary`, so the two new Itinerary persona seeds (`persona-concierge-itinerary`, `persona-basic-concierge-itinerary`) sit outside the T-0144 render lint in the site browser shard.
 - decide: `.claude/docs/spec/a2ui-catalog-architecture.spec.md:79` the "Persona fragment types today" census row lists six types; the hospitality domain now also carries Itinerary.
+- note: `packages/agent-ui/a2ui/src/corpus/retrieve-presets.test.ts:66` the travel pin is Known poor (the Itinerary seed is shelved, not in the shard); the judged admission wave for the five pending seeds re-pins it. (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
+- note: `packages/agent-ui/a2ui/src/catalog/domains/hospitality/itinerary.visual.browser.test.ts:12` the step-2 builder reports that `--project visual --update` with a file filter still rewrote `result-card-outcomes-chromium-darwin.png`; a candidate for skill `component-testing` Traps. (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
