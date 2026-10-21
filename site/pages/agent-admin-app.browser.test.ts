@@ -587,6 +587,10 @@ describe("agent-admin-app — the Settings model-grid fold's Reset Agent button 
     expect(resetBtn.hidden, 'onResetRequest IS registered on this page').toBe(false)
     resetBtn.click()
     await raf()
+    // T-0391: the Danger zone button opens the shared confirm; only its confirm button resets.
+    expect(admin().store, 'the click alone resets nothing').toBe(before)
+    ;(admin().querySelector('[data-part="danger-confirm-button"]') as HTMLElement).click()
+    await raf()
 
     const after = admin().store
     expect(after, 'applyPersona reassigns admin.store to a FRESH instance — never a mutation of the dirtied one').not.toBe(before)

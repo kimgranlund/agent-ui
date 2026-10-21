@@ -74,6 +74,7 @@ import '@agent-ui/components/controls/text-field'
 // only the TYPE (a mount function is not a custom element and owns no registration), so a consumer that
 // mounts a `entryDrawer` section registers `ui-drawer` itself — this element is that consumer.
 import '@agent-ui/components/controls/drawer'
+import '@agent-ui/components/controls/modal'
 // S7-c (LLD §16.1/§16.3) — the unified header bar's own controls: `ui-toggle` (S7-a, ADR-0179 GH #686
 // Amendment) for the wide pane pills, `ui-segmented-control`/`ui-segment` for the narrow single-select
 // rendering of the SAME visibility choice, `ui-select` for the agent roster, and `ui-menu` for the narrow
@@ -93,11 +94,6 @@ import type { UIIconElement } from '@agent-ui/components/controls/icon'
 // `ui-text[variant='kicker']` idiom (the nav-rail `context-label` precedent, GH #624), reused rather than
 // re-minted — the eyebrow-header dimensions/casing already live there, this file only repoints the ink.
 import '@agent-ui/components/controls/text'
-// The Model grid's row controls (2026-07-19 rev.2) — ui-switch is already registered above; ui-radio
-// registers here for the default-position column (rev.3: a radio SYSTEM — the semantically honest
-// pick-exactly-one control; selection coordination stays this element's render, not a ui-radio-group,
-// whose roving/one-group contract doesn't fit rows interleaved with switches across provider groups).
-import '@agent-ui/components/controls/radio'
 import '@agent-ui/components/controls/disclosure' // vision rev.5 — the Context tabs' accordion primitive
 // GH #686's Amendment (admin-three-pane-ia.lld.md §16) retires the top-level pane nav that used to be a
 // SECOND `ui-tabs` instance below — the Settings place's own internal sub-nav (OQ2, §5) is the
@@ -171,6 +167,7 @@ import {
   sanitizePrefers,
   defaultAgentConfigSchema,
   agentConfigSchema,
+  ADVANCED_MODEL_SETTING_KEYS,
   resolveAgentEffort,
   resolveModelSettings,
   MODEL_SETTING_KEYS,
@@ -270,7 +267,7 @@ import {
 import { mountEntryList, showAddError, type EntryListSection, type EntryRowMark } from '../entry-list/entry-list.ts'
 // T-0162: the per-place provenance an overlay store (or a whole-record store) answers (ACS-R8).
 import { writeFrom, type OverlayPath, type Provenance, type ProvenanceReader } from './agent-overlay.ts'
-import { PERSONA_FIELD_BY_KEY } from './content-fields.ts'
+import { PERSONA_FIELD_BY_KEY, PRESET_CATEGORIES } from './content-fields.ts'
 import { lintPromptSections } from './prompt-lint.ts'
 // GH #1197 (ADR-0203 cl.1/cl.2 / req-agent-teams.md R5) — the Team pane (list/create/edit/delete,
 // validation-closed) plus the compose-side wiring: `#teams` is this element's own cache of the pane's
@@ -548,6 +545,10 @@ export interface AgentRosterEntry {
    * delete anything: deletion itself is the page's, reached through `onDeleteAgentRequest`.
    */
   deletable?: boolean
+  /** T-0391: OPTIONAL roster metadata the Agent fold shows under Name and edits through
+   *  `onAgentMetaRequest` (editable only while `deletable === true`). */
+  tagline?: string
+  category?: string
 }
 
 /**
@@ -751,6 +752,19 @@ export class UIAgentAdminElement extends UIElement {
   // "This agent" label has no standalone value without the one action it names), through the same
   // `#applyActionAvailability` funnel, on the two-axis rule (§5).
   #deleteAgentRow: HTMLElement | null = null
+  /** T-0391: the Agent fold's roster metadata fields (Tagline, Category) and their write seam. */
+  #taglineField: (HTMLElement & { value: string; disabled: boolean }) | null = null
+  #categorySelect: UISelectElement | null = null
+  #agentMetaRequest: ((id: string, patch: { tagline?: string; category?: string }) => void) | undefined
+  /** T-0391: the Danger zone's ONE shared confirm modal: its body sentence and confirm button are
+   *  rewritten per open, and `#dangerAction` is the action only the confirm button runs. */
+  #dangerConfirm: (HTMLElement & { open: boolean }) | null = null
+  #dangerConfirmHeading: HTMLElement | null = null
+  #dangerConfirmBody: HTMLElement | null = null
+  #dangerConfirmButton: UIButtonElement | null = null
+  #dangerAction: (() => void) | undefined
+  /** T-0391: the Model fold's Default model select (data-field `model`), rebuilt with the model grid. */
+  #defaultModelSelect: UISelectElement | null = null
   /**
    * GH #670 — the Co-pilot card's Model/Effort pick made BEFORE the flow is armed, held here until there is
    * somewhere real to put it. It exists because the pickers are props-down/callbacks-up: armed, a pick
@@ -815,6 +829,8 @@ export class UIAgentAdminElement extends UIElement {
   /** T-0306 (Kim's ruling 2026-10-16, "just show the options by default"): the schema's `model` section
    *  renders in its own `ui-settings` inside the Model fold, so no section hides behind a section select. */
   #modelSettingsEl: UISettingsElement | null = null
+  /** T-0391: the closed Advanced fold's unit, the `model` section's showReasoning, maxTokens and cacheTtl. */
+  #advancedSettingsEl: UISettingsElement | null = null
   // Every entry-list instantiation (prompt sections + all four capability kinds), keyed by `kind` — the
   // ONE registry `#rewireAllSections`/`#compose` both iterate uniformly.
   #capabilitySections: Map<string, EntryListSection> = new Map()
@@ -849,10 +865,10 @@ export class UIAgentAdminElement extends UIElement {
   // RTS-R7: the response type hint's picker (`PREFERS_KEY`): reflected stored truth, applied in
   // `#applyMasterStates` like every row switch above.
   #prefersPicker: UISegmentedControlElement | null = null
-  // GH #525/#541 — the bankroll Settings FOLD (its own group since #541): built once; `hidden` reflects
-  // the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in `#applyMasterStates` like every other
-  // row's state — never a DOM add/remove per persona switch.
-  #bankrollItem: (HTMLElement & { hidden: boolean }) | null = null
+  // GH #525/#541 — the bankroll row (T-0391: a Danger zone row, the Bankroll fold retired): built once;
+  // `hidden` reflects the persona's OWN opt-in (`BANKROLL_CAPABLE_KEY`), applied in `#applyMasterStates`
+  // like every other row's state — never a DOM add/remove per persona switch.
+  #bankrollRow: HTMLElement | null = null
   #contextSystemHost: HTMLElement | null = null // Agent System — rebuilt wholesale per store change
   #contextTurnsHost: HTMLElement | null = null // Dialog Turns — rebuilt per logged turn
   /** The Context tabs' shared store subscription (both System and Dialog read off the same store) — its
@@ -1084,13 +1100,18 @@ export class UIAgentAdminElement extends UIElement {
         if (this.#storeSeen && this.#lastStore !== store) this.#resetConversationState()
         this.#storeSeen = true
         this.#lastStore = store
-        if (this.#settingsEl && this.#modelSettingsEl) {
+        if (this.#settingsEl && this.#modelSettingsEl && this.#advancedSettingsEl) {
           const [agentSchema, modelSchema] = splitModelSection(schema)
+          // T-0391: the `model` section splits once more, its set-once rows into the closed Advanced fold.
+          const [mainSchema, advancedSchema] = splitAdvancedFields(modelSchema)
           this.#settingsEl.schema = agentSchema
           this.#settingsEl.store = store
-          this.#modelSettingsEl.schema = modelSchema
+          this.#modelSettingsEl.schema = mainSchema
           this.#modelSettingsEl.store = store
-          this.#modelSettingsEl.hidden = modelSchema === undefined
+          this.#modelSettingsEl.hidden = mainSchema === undefined
+          this.#advancedSettingsEl.schema = advancedSchema
+          this.#advancedSettingsEl.store = store
+          this.#advancedSettingsEl.hidden = advancedSchema === undefined
         }
         this.#rewireAllSections(store)
         this.#rewireProvenance(store)
@@ -1309,6 +1330,10 @@ export class UIAgentAdminElement extends UIElement {
     const modelSettingsEl = new UISettingsElement()
     modelSettingsEl.addEventListener('select', (event) => event.stopPropagation())
     modelSettingsEl.addEventListener('change', (event) => event.stopPropagation())
+    // T-0391: the Advanced fold's unit (same guards): the Model section's set-once rows.
+    const advancedSettingsEl = new UISettingsElement()
+    advancedSettingsEl.addEventListener('select', (event) => event.stopPropagation())
+    advancedSettingsEl.addEventListener('change', (event) => event.stopPropagation())
     // GH #574 — the three ranked content units the old single `settingsContent` div split into. Each is
     // its OWN reparent-able node (the TKT-0085 wrapper discipline, tripled again like GH #161's Context
     // split): `data-role` names the unit for CSS/tests (the `settings-content` precedent), `data-segment`
@@ -1327,8 +1352,18 @@ export class UIAgentAdminElement extends UIElement {
     // Content renders/rerenders from the store.
     const modelGrid = document.createElement('div')
     modelGrid.setAttribute('data-part', 'model-grid')
-    modelGrid.setAttribute('data-field', `model ${MODELS_INCLUDED_KEY}`)
+    modelGrid.setAttribute('data-field', MODELS_INCLUDED_KEY)
     this.#modelGrid = modelGrid
+    // T-0391: the Default model select (the grid's old Default radio column), its options the included
+    // roster grouped by provider, rebuilt by `#renderModelGrid` beside the grid.
+    const defaultModelSelect = document.createElement('ui-select') as UISelectElement
+    defaultModelSelect.setAttribute('data-part', 'default-model-select')
+    defaultModelSelect.addEventListener('select', (event) => {
+      event.stopPropagation()
+      this.#setDefaultModel(defaultModelSelect.value)
+    })
+    this.#defaultModelSelect = defaultModelSelect
+    const defaultModelField = metaField('model', defaultModelSelect)
     const promptSections = this.#makeSection(ENTRY_KINDS.promptSection, 'Add section')
 
     // ── Surface Options (vision rev.6 — the frame's node 34:1312): the agent's output-modality card.
@@ -1572,19 +1607,20 @@ export class UIAgentAdminElement extends UIElement {
     bankrollReset.setAttribute('variant', 'soft')
     bankrollReset.setAttribute('data-part', 'bankroll-reset')
     bankrollReset.textContent = 'Reset'
-    bankrollReset.addEventListener('click', () => {
-      // `null` (not `undefined`) — a real JSON-round-trippable "cleared" value (memory-store.ts persists
-      // via `JSON.stringify`); `sanitizeBankroll(null)` reads it back as `undefined` ("no stored
-      // bankroll") exactly like a store that never held the key at all.
-      this.store?.set(BANKROLL_KEY, null)
-      if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
-    })
-    bankrollRow.append(bankrollLabel, bankrollSpacer, bankrollReset)
-    const bankrollItem = settingsItem('bankroll', 'Bankroll', bankrollRow)
-    // GH #866 — a switch-less heading row: the icon is the row's only trailing content, so the summary
-    // label's own flex-grow already puts it at the inline end (no spacer element needed here).
-    bankrollItem.append(buildAdminHelpForSummary('bankroll'))
-    this.#bankrollItem = bankrollItem as HTMLElement & { hidden: boolean }
+    bankrollReset.addEventListener('click', () =>
+      // T-0391: through the Danger zone's shared confirm; only its confirm button clears the bankroll.
+      this.#openDangerConfirm('Reset the bankroll?', "This clears the agent's stored bankroll; its games start again from the starting amount.", 'Reset bankroll', () => {
+        // `null` (not `undefined`) — a real JSON-round-trippable "cleared" value (memory-store.ts persists
+        // via `JSON.stringify`); `sanitizeBankroll(null)` reads it back as `undefined` ("no stored
+        // bankroll") exactly like a store that never held the key at all.
+        this.store?.set(BANKROLL_KEY, null)
+        if (this.store !== undefined && this.store.subscribe === undefined) this.#renderContextSystem()
+      }),
+    )
+    // T-0391: the Bankroll fold retired into the Danger zone; its help icon rides the row's trailing
+    // content, before the Reset button (the plain row variant, never `slot="summary"`).
+    bankrollRow.append(bankrollLabel, bankrollSpacer, buildAdminHelp('bankroll'), bankrollReset)
+    this.#bankrollRow = bankrollRow
 
     // T-0162: each row names the persona kind schema row it edits (the pane coverage test reads these).
     const fieldRows: ReadonlyArray<[HTMLElement, string]> = [
@@ -1606,7 +1642,30 @@ export class UIAgentAdminElement extends UIElement {
     // DECLARATIVELY: marked `slot="summary"` at creation, appended as ordinary fold children here —
     // ui-disclosure's own slot partition adopts them into the summary part at connect (ADR-0158), no
     // connect-order placement dance required.
-    const agentItem = settingsItem('agent', 'Agent', settingsEl)
+    // T-0391: Tagline and Category under Name: roster record fields, written through `onAgentMetaRequest`
+    // (never the store), editable only while the active entry is `deletable` (`#applyAgentMeta`).
+    const taglineField = document.createElement('ui-text-field') as HTMLElement & { value: string; disabled: boolean }
+    taglineField.addEventListener('change', (event) => {
+      event.stopPropagation()
+      this.#requestAgentMeta({ tagline: taglineField.value })
+    })
+    taglineField.addEventListener('input', (event) => event.stopPropagation())
+    this.#taglineField = taglineField
+    const categorySelect = document.createElement('ui-select') as UISelectElement
+    categorySelect.setAttribute('placeholder', 'No category')
+    for (const category of PRESET_CATEGORIES) {
+      const option = document.createElement('div')
+      option.setAttribute('role', 'option')
+      option.setAttribute('value', category)
+      option.textContent = category.charAt(0).toUpperCase() + category.slice(1)
+      categorySelect.append(option)
+    }
+    categorySelect.addEventListener('select', (event) => {
+      event.stopPropagation()
+      this.#requestAgentMeta({ category: categorySelect.value })
+    })
+    this.#categorySelect = categorySelect
+    const agentItem = settingsItem('agent', 'Agent', settingsEl, metaField('tagline', taglineField), metaField('category', categorySelect))
     // GH #866 (Kim's ruling 1, 2026-08-14, from the group-header screenshot) — on a heading row that ALSO
     // carries a master switch the order is `[?] [switch]`: the help icon immediately before the switch,
     // the switch keeping the outermost position. That is DOM order here — both are `slot="summary"`
@@ -1634,7 +1693,9 @@ export class UIAgentAdminElement extends UIElement {
     resetAgentBtn.setAttribute('variant', 'soft')
     resetAgentBtn.setAttribute('data-part', 'reset-agent-button')
     resetAgentBtn.textContent = 'Reset Agent'
-    resetAgentBtn.addEventListener('click', () => this.#resetRequest?.())
+    resetAgentBtn.addEventListener('click', () =>
+      this.#openDangerConfirm('Reset Agent?', "This restores the agent's settings to its preset and cannot be undone.", 'Reset Agent', () => this.#resetRequest?.()),
+    )
     this.#resetAgentRow = resetAgentRow
     resetAgentRow.append(resetAgentLabel, resetAgentSpacer, resetAgentBtn)
 
@@ -1661,7 +1722,9 @@ export class UIAgentAdminElement extends UIElement {
     deleteAgentBtn.textContent = 'Delete Agent'
     // The id is read at CLICK time, never captured at build time (LLD-C5's read-at-invoke law): the active
     // entry changes with every roster push, and this row outlives all of them.
-    deleteAgentBtn.addEventListener('click', () => this.#requestDeleteActiveAgent())
+    deleteAgentBtn.addEventListener('click', () =>
+      this.#openDangerConfirm('Delete this agent?', 'This removes the agent from the roster and cannot be undone.', 'Delete Agent', () => this.#requestDeleteActiveAgent()),
+    )
     this.#deleteAgentRow = deleteAgentRow
     deleteAgentRow.append(deleteAgentLabel, deleteAgentSpacer, deleteAgentBtn)
 
@@ -1669,21 +1732,20 @@ export class UIAgentAdminElement extends UIElement {
     // only because `settingsItem(...)`'s content rest-parameter and a `slot="summary"` child are two
     // different things: the icon must be appended AFTER, like every other slotted control on this file.
     // GH #845's `deleteAgentRow` rides the SAME call as ordinary fold CONTENT — the two are orthogonal.
-    const modelItem = settingsItem('model', 'Model', modelGrid, modelSettingsEl, resetAgentRow, deleteAgentRow)
+    const modelItem = settingsItem('model', 'Model', defaultModelField, modelSettingsEl, modelGrid)
     modelItem.append(buildAdminHelpForSummary('model'))
+    // T-0391: the set-once Model rows, closed at rest (`settingsItem` opens every fold; these two do not).
+    const advancedItem = settingsItem('advanced', 'Advanced', advancedSettingsEl)
+    advancedItem.removeAttribute('open')
+    // T-0391: the destructive actions, last on the tab and closed at rest; each button confirms first.
+    const dangerItem = settingsItem('danger', 'Danger zone', resetAgentRow, deleteAgentRow, bankrollRow)
+    dangerItem.removeAttribute('open')
+    const dangerConfirm = this.#buildDangerConfirm()
 
     // GH #574 — Agent tab: who it is (Agent · Model · Bankroll — persona state lives with the persona).
-    agentContent.append(
-      agentItem,
-      // GH #845 (LLD-C7) — `delete-agent-row` joins as a FURTHER sibling in the same variadic
-      // `settingsItem(...)` call above, after Reset: both are model-fold content-end rows, neither is grid
-      // content. GH #866 hoisted that call to `modelItem` so its heading row can carry a help icon.
-      modelItem,
-      // GH #541 — Bankroll sits adjacent to Surface Options (the modality choices it reads alongside),
-      // as its own group rather than a row inside them; GH #574 moved the WHOLE Surface Options fold to
-      // its own tab, so Bankroll now closes out the Agent tab instead.
-      bankrollItem,
-    )
+    // T-0391: Agent · Model · Advanced · Danger zone (Reset, Delete and the bankroll row), then the one
+    // shared confirm modal the Danger zone buttons open.
+    agentContent.append(agentItem, modelItem, advancedItem, dangerItem, dangerConfirm)
     // GH #574 — Capabilities tab: what it can do (Instructions leads, then the four generic capability
     // kinds below — Skills/Workflows/Resources/Tools). Pattern sources rides the Surface tab instead
     // (see the CAPABILITY_KINDS loop below) — it configures HOW the GenUI modality renders, not a
@@ -1944,6 +2006,7 @@ export class UIAgentAdminElement extends UIElement {
     this.#conversation = conversation
     this.#settingsEl = settingsEl
     this.#modelSettingsEl = modelSettingsEl
+    this.#advancedSettingsEl = advancedSettingsEl
     // Paint the entry visibility state (LLD §16.2's OQ-D rec: all three shown, Chat primary) and the first
     // settings sub-section.
     this.#applySettingsSection(settingsNav.selected)
@@ -1954,6 +2017,7 @@ export class UIAgentAdminElement extends UIElement {
     // whichever order the page called in.
     this.#applyAgentRoster()
     this.#applyActionAvailability()
+    this.#applyAgentMeta()
   }
 
   /**
@@ -3177,7 +3241,7 @@ export class UIAgentAdminElement extends UIElement {
       this.#provenanceObserver = new MutationObserver((records) => {
         if (records.some(regeneratedRows)) this.#scheduleProvenance()
       })
-      for (const unit of [this.#settingsEl, this.#modelSettingsEl]) if (unit) this.#provenanceObserver.observe(unit, { childList: true, subtree: true })
+      for (const unit of [this.#settingsEl, this.#modelSettingsEl, this.#advancedSettingsEl]) if (unit) this.#provenanceObserver.observe(unit, { childList: true, subtree: true })
     }
     this.#scheduleProvenance()
   }
@@ -3624,11 +3688,10 @@ export class UIAgentAdminElement extends UIElement {
    *  `#rewireAllSections` (called first, same effect tick) — that method's own unconditional clear-then-
    *  rebuild at the top of every call is what keeps this subscription from leaking across re-runs. */
   /** (Re)build the Model GRID from the store's CURRENT contents (Kim, 2026-07-19 rev.2): rows grouped
-   *  by provider, each `[ label | include ui-switch | default ui-checkbox ]`. Wholesale rebuild per
-   *  change (the entry-list render precedent — listeners are per-render, no re-arm bookkeeping).
-   *  Semantics: the DEFAULT checkbox is radio-like (checking a row moves the default there; unchecking
-   *  the current default is a no-op — a roster always has a default); the default row's include switch
-   *  is locked ON (the default is always offered). */
+   *  by provider, each `[ label | include ui-switch ]`. Wholesale rebuild per change (the entry-list
+   *  render precedent — listeners are per-render, no re-arm bookkeeping). The default row's include
+   *  switch is locked ON (the default is always offered). T-0391: the Default column became the Model
+   *  fold's Default model select, whose options (the included roster) are rebuilt here too. */
   #renderModelGrid(): void {
     const host = this.#modelGrid
     const store = this.store
@@ -3637,12 +3700,13 @@ export class UIAgentAdminElement extends UIElement {
     const included = store?.get(MODELS_INCLUDED_KEY)
     const current = this.#modelFor(store, roster) // the DRAFT's store ⇒ `DEFAULT_MODEL_ID` (GH #880 leaves this read unchanged)
     host.replaceChildren()
+    this.#renderDefaultModelSelect(roster, included, current)
     // T-0142: one header row names the two control columns (a bare switch and radio read as one control),
     // and each provider heading is the screen's own kicker eyebrow (the region-kicker recipe), not a mono line.
     const head = document.createElement('div')
     head.setAttribute('data-part', 'model-grid-head')
     head.setAttribute('aria-hidden', 'true') // every switch and radio carries its own aria-label
-    for (const text of ['Model', 'On', 'Default']) {
+    for (const text of ['Model', 'On']) {
       const cell = document.createElement('span')
       cell.textContent = text
       head.append(cell)
@@ -3681,33 +3745,103 @@ export class UIAgentAdminElement extends UIElement {
           if (store !== undefined && store.subscribe === undefined) this.#renderModelGrid() // the #updateEntries no-subscribe fallback
         })
 
-        const isDefault = document.createElement('ui-radio') as HTMLElement & { checked: boolean }
-        isDefault.setAttribute('data-part', 'model-default')
-        isDefault.setAttribute('name', 'model-default') // one logical radio SYSTEM across the provider groups
-        isDefault.setAttribute('aria-label', `Default: ${model.label}`)
-        isDefault.checked = model.id === current
-        isDefault.addEventListener('change', () => {
-          if (isDefault.checked) {
-            // Moving the default also re-includes the row (the always-offered law) — one write each,
-            // the store's own notifications re-render the grid (radio semantics fall out of the render).
-            const record = { ...((store?.get(MODELS_INCLUDED_KEY) as Record<string, boolean> | undefined) ?? {}) }
-            if (record[model.id] === false) {
-              record[model.id] = true
-              store?.set(MODELS_INCLUDED_KEY, record)
-            }
-            store?.set('model', model.id)
-            if (store !== undefined && store.subscribe === undefined) this.#renderModelGrid()
-          } else {
-            // A grouped radio can't untoggle, but a STANDALONE Indicator-class radio can (pressActivation
-            // toggles) — the restore guard keeps "a roster always has a default" true regardless.
-            this.#renderModelGrid()
-          }
-        })
-
-        row.append(label, include, isDefault)
+        row.append(label, include)
         host.append(row)
       }
     }
+  }
+
+  /** T-0391: the Default model select's options: the included roster (plus the committed default, always
+   *  offered) grouped by provider, the `selectFactory` group shape. Rebuilt wholesale with the grid. */
+  #renderDefaultModelSelect(roster: readonly SupportedModel[], included: unknown, current: string): void {
+    const select = this.#defaultModelSelect
+    if (!select) return
+    for (const node of [...select.querySelectorAll('[role="group"], [role="option"]')]) node.remove()
+    const offered = roster.filter((m) => m.id === current || isModelIncluded(included, m))
+    for (const provider of [...new Set(offered.map((m) => m.provider))]) {
+      const group = document.createElement('div')
+      group.setAttribute('role', 'group')
+      group.setAttribute('label', provider)
+      for (const model of offered.filter((m) => m.provider === provider)) {
+        const option = document.createElement('div')
+        option.setAttribute('role', 'option')
+        option.setAttribute('value', model.id)
+        option.textContent = model.label
+        group.append(option)
+      }
+      select.append(group)
+    }
+    select.value = current
+  }
+
+  /** T-0391: a Default model pick: writes `model` and re-includes the row (the always-offered law). */
+  #setDefaultModel(id: string): void {
+    const store = this.store
+    if (id === '' || store === undefined) return
+    const record = { ...((store.get(MODELS_INCLUDED_KEY) as Record<string, boolean> | undefined) ?? {}) }
+    if (record[id] === false) {
+      record[id] = true
+      store.set(MODELS_INCLUDED_KEY, record)
+    }
+    store.set('model', id)
+    if (store.subscribe === undefined) this.#renderModelGrid()
+  }
+
+  /** T-0391: the Danger zone's shared confirm modal, built with its children BEFORE it connects
+   *  (`ui-modal` moves its children into the dialog part once, at connect); the heading, body sentence and
+   *  confirm label are stable children rewritten per open. */
+  #buildDangerConfirm(): HTMLElement {
+    const modal = document.createElement('ui-modal') as HTMLElement & { open: boolean }
+    modal.setAttribute('data-part', 'danger-confirm')
+    modal.setAttribute('aria-labelledby', 'agent-admin-danger-confirm-heading')
+    const heading = document.createElement('h2')
+    heading.id = 'agent-admin-danger-confirm-heading'
+    heading.setAttribute('data-part', 'danger-confirm-heading')
+    const body = document.createElement('p')
+    body.setAttribute('data-part', 'danger-confirm-body')
+    const actions = document.createElement('div')
+    actions.setAttribute('data-part', 'danger-confirm-actions')
+    const cancel = document.createElement('ui-button') as UIButtonElement
+    cancel.setAttribute('variant', 'soft')
+    cancel.setAttribute('data-part', 'danger-confirm-cancel')
+    cancel.textContent = 'Cancel'
+    cancel.addEventListener('click', () => this.#closeDangerConfirm())
+    const confirm = document.createElement('ui-button') as UIButtonElement
+    confirm.setAttribute('variant', 'soft')
+    confirm.setAttribute('data-part', 'danger-confirm-button')
+    confirm.addEventListener('click', () => {
+      const action = this.#dangerAction
+      this.#closeDangerConfirm()
+      action?.()
+    })
+    actions.append(cancel, confirm)
+    modal.append(heading, body, actions)
+    // A user dismissal (Escape, a backdrop click) drops the pending action exactly like Cancel.
+    modal.addEventListener('close', (event) => {
+      event.stopPropagation()
+      this.#dangerAction = undefined
+    })
+    modal.addEventListener('toggle', (event) => event.stopPropagation())
+    this.#dangerConfirm = modal
+    this.#dangerConfirmHeading = heading
+    this.#dangerConfirmBody = body
+    this.#dangerConfirmButton = confirm
+    return modal
+  }
+
+  /** T-0391: open the shared confirm for one Danger zone action; only its confirm button runs `action`. */
+  #openDangerConfirm(heading: string, body: string, confirmLabel: string, action: () => void): void {
+    if (!this.#dangerConfirm) return
+    if (this.#dangerConfirmHeading) this.#dangerConfirmHeading.textContent = heading
+    if (this.#dangerConfirmBody) this.#dangerConfirmBody.textContent = body
+    if (this.#dangerConfirmButton) this.#dangerConfirmButton.textContent = confirmLabel
+    this.#dangerAction = action
+    this.#dangerConfirm.open = true
+  }
+
+  #closeDangerConfirm(): void {
+    this.#dangerAction = undefined
+    if (this.#dangerConfirm) this.#dangerConfirm.open = false
   }
 
   #syncConversationConfig(store: SettingsStore | undefined): void {
@@ -4501,7 +4635,7 @@ export class UIAgentAdminElement extends UIElement {
     // GH #525 — the bankroll group is entirely HIDDEN for a persona that never opted in
     // (`BANKROLL_CAPABLE_KEY`) — there is no in-between "visible but nothing to do" state the way an OFF
     // modality still has, so this is `hidden`, never a `data-disabled` dim.
-    if (this.#bankrollItem) this.#bankrollItem.hidden = !isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))
+    if (this.#bankrollRow) this.#bankrollRow.hidden = !isBankrollCapable(store?.get(BANKROLL_CAPABLE_KEY))
     if (this.#prefersPicker) this.#prefersPicker.value = sanitizePrefers(store?.get(PREFERS_KEY)) // RTS-R7
     // GH #419 — the prompt-section lint is derived from the SAME two stored modality flags this method
     // just reflected, so it re-derives here: every path that can flip a Surface Option ends in a call to
@@ -4771,6 +4905,7 @@ export class UIAgentAdminElement extends UIElement {
   setAgentRoster(entries: readonly AgentRosterEntry[], activeId?: string): void {
     this.#pendingRoster = { entries, activeId }
     this.#applyAgentRoster()
+    this.#applyAgentMeta()
     // GH #845 (LLD-C6) — the Delete affordances' `deletable` axis (§5) is roster DATA, so it changes with
     // every push and every active switch, not only at seam registration: this funnel call is what makes a
     // bare `setAgentRoster` alone flip Delete's visibility. (`#compose`'s tail already calls both.)
@@ -5009,6 +5144,38 @@ export class UIAgentAdminElement extends UIElement {
   onDeleteAgentRequest(callback: (id: string) => void): void {
     this.#deleteAgentRequest = callback
     this.#applyActionAvailability()
+  }
+
+  /**
+   * T-0391: register the page's "edit this agent's roster metadata" path: the Agent fold's Tagline and
+   * Category write the ROSTER record, never the store. The `onDeleteAgentRequest` family shape: a callback,
+   * last registration wins, safe before or after connect; it receives the ACTIVE entry's id (read at invoke
+   * time) and the one changed field. The two fields are editable only while that entry is `deletable`.
+   */
+  onAgentMetaRequest(callback: (id: string, patch: { tagline?: string; category?: string }) => void): void {
+    this.#agentMetaRequest = callback
+    this.#applyAgentMeta()
+  }
+
+  #requestAgentMeta(patch: { tagline?: string; category?: string }): void {
+    const activeId = this.#pendingRoster?.activeId
+    if (activeId === undefined || activeId === '') return
+    this.#agentMetaRequest?.(activeId, patch)
+  }
+
+  /** T-0391: show the active entry's tagline and category, disabled unless the entry is `deletable`. */
+  #applyAgentMeta(): void {
+    const pending = this.#pendingRoster
+    const active = pending?.entries.find((e) => e.id === pending.activeId)
+    const editable = active?.deletable === true
+    if (this.#taglineField) {
+      this.#taglineField.value = active?.tagline ?? ''
+      this.#taglineField.disabled = !editable
+    }
+    if (this.#categorySelect) {
+      this.#categorySelect.value = active?.category ?? ''
+      this.#categorySelect.disabled = !editable
+    }
   }
 
   /** GH #889 — register the overflow's "Export debug bundle" affordance. The Import/Export seam shape
@@ -5315,6 +5482,29 @@ function settingsItem(key: string, summary: string, ...content: HTMLElement[]): 
   const item = foldItem('settings-item', key, summary, true)
   item.append(...content)
   return item
+}
+
+/** T-0391: one open control outside a `ui-settings` unit, wrapped in a `ui-field` labelled by its schema row
+ *  and tagged `data-field` with its key (the provenance strip and the pane coverage test read both). */
+function metaField(key: string, control: HTMLElement): HTMLElement {
+  const field = document.createElement('ui-field') as HTMLElement & { label: string }
+  field.label = fieldLabel(key)
+  field.setAttribute('data-field', key)
+  field.append(control)
+  return field
+}
+
+/** T-0391: split the `model` section's unit into the Model fold's rows and the Advanced fold's
+ *  (`ADVANCED_MODEL_SETTING_KEYS`); either side is `undefined` when it holds no field. */
+function splitAdvancedFields(schema: SettingsSchema | undefined): [SettingsSchema | undefined, SettingsSchema | undefined] {
+  const section = schema?.version === 1 ? schema.sections[0] : undefined
+  if (schema === undefined || section === undefined) return [schema, undefined]
+  const advanced = section.fields.filter((f) => ADVANCED_MODEL_SETTING_KEYS.includes(f.key))
+  const main = section.fields.filter((f) => !ADVANCED_MODEL_SETTING_KEYS.includes(f.key))
+  return [
+    main.length > 0 ? { ...schema, sections: [{ ...section, fields: main }] } : undefined,
+    advanced.length > 0 ? { ...schema, sections: [{ ...section, id: 'advanced', label: 'Advanced', fields: advanced }] } : undefined,
+  ]
 }
 
 /** SPEC-R7's line copy for ONE changed location — collapsed to `Updated <section>` when the two labels

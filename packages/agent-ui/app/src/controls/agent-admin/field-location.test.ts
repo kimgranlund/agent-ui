@@ -69,3 +69,16 @@ describe('field-location — anchor parity against the composed DOM (SPEC-R2 AC2
     }
   })
 })
+
+describe('T-0391 layout: the Agent tab item mappings', () => {
+  it('T-0391 layout: tagline and category map to Agent, the set-once model rows to Advanced, effort and thinking stay in Model, bankroll to Danger zone', () => {
+    const at = (key: string): string | undefined => {
+      const l = locationFor(key)
+      return l && `${l.section}/${l.item}/${l.itemLabel}`
+    }
+    for (const key of ['tagline', 'category']) expect(at(key), key).toBe('agent-content/agent/Agent')
+    for (const key of ['effort', 'thinking', 'model', 'modelsIncluded']) expect(at(key), key).toBe('agent-content/model/Model')
+    for (const key of ['showReasoning', 'maxTokens', 'cacheTtl']) expect(at(key), key).toBe('agent-content/advanced/Advanced')
+    for (const key of ['bankroll', 'bankrollCapable']) expect(at(key), key).toBe('agent-content/danger/Danger zone')
+  })
+})

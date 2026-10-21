@@ -611,11 +611,11 @@
   /* The Model GRID (2026-07-19 rev.2) — provider-grouped rows [ label | include switch | default
      checkbox ], carded like the entry sections (the same chrome recipe). Provider labels mirror the
      shared heading register at a quieter weight. */
-  /* T-0142: one grid, rows and the header on subgrid, so the "On" / "Default" header cells sit exactly over
-     the switch and radio columns. */
+  /* T-0142: one grid, rows and the header on subgrid, so the "On" header cell sits exactly over the switch
+     column (T-0391: the Default column became the Model fold's Default model select). */
   [data-part='model-grid'] {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto;
     column-gap: var(--ui-agent-admin-row-gap);
     /* GH #191 follow-up — this is a LIST of rows (grouped by provider), the same kind of container as
        [data-part='entry-list']/[data-part='surface-options'] below, both 0.5rem: it had been minted at
@@ -656,8 +656,7 @@
   [data-part='model-grid-head'] > :not(:first-child) {
     justify-self: center;
   }
-  [data-part='model-row'] > [data-part='model-include'],
-  [data-part='model-row'] > [data-part='model-default'] {
+  [data-part='model-row'] > [data-part='model-include'] {
     justify-self: center;
   }
   [data-part='model-row-label'] {
@@ -1001,8 +1000,30 @@
     background: var(--ui-agent-admin-surface);
   }
 
+  /* T-0391: the row hides whole for a persona that never opted in (the reset-agent-row [hidden] cure). */
+  [data-part='bankroll-row'][hidden] {
+    display: none;
+  }
+
   [data-part='bankroll-label'] {
     flex: 0 0 auto;
+  }
+
+  /* T-0391: the Danger zone's shared confirm: the heading and sentence in the body register, the actions
+     trailing on one row (Cancel, then the destructive confirm, which takes the delete-agent danger repoint). */
+  [data-part='danger-confirm-heading'] {
+    margin: 0;
+    font-size: var(--md-sys-typescale-title-medium-size);
+    color: var(--ui-agent-admin-ink);
+  }
+  [data-part='danger-confirm-body'] {
+    margin: 0;
+    color: var(--ui-agent-admin-label-ink);
+  }
+  [data-part='danger-confirm-actions'] {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ui-agent-admin-row-gap);
   }
 
   /* S7-d (LLD §16.4) — "Reset Agent" at the Model fold's content END: a SIBLING of model-grid (never a
@@ -1089,6 +1110,13 @@
      no primitive contract moves; a SECOND consumer wanting it promotes the mapping to a real variant under
      that wave's own ADR, not this one's. */
   [data-part='delete-agent-button'] {
+    --ui-button-bg: var(--ui-agent-admin-danger-bg);
+    --ui-button-bg-hover: var(--ui-agent-admin-danger-bg-hover);
+    --ui-button-bg-active: var(--ui-agent-admin-danger-bg-active);
+    --ui-button-ink: var(--ui-agent-admin-danger-ink);
+  }
+  /* T-0391: the Danger zone confirm's destructive button takes the same danger repoint. */
+  [data-part='danger-confirm-button'] {
     --ui-button-bg: var(--ui-agent-admin-danger-bg);
     --ui-button-bg-hover: var(--ui-agent-admin-danger-bg-hover);
     --ui-button-bg-active: var(--ui-agent-admin-danger-bg-active);

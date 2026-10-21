@@ -26,6 +26,7 @@ export const ADMIN_SELECTORS = {
   settingsNav: '[data-part="settings-nav"]',
   kindEnabled: '[data-part="kind-enabled"]',
   resetAgentButton: '[data-part="reset-agent-button"]',
+  dangerConfirmButton: '[data-part="danger-confirm-button"]',
   contextTurn: '[data-part="context-turn"]',
   composerEditor: 'ui-conversation-composer [data-part="editor"]',
   composerSend: 'ui-conversation-composer [data-part="send"]',
@@ -432,13 +433,14 @@ export class AdminPage {
     await pollUntil(() => this.entryLabels(kind), (labels) => !labels.includes(label), `the "${kind}" entry "${label}" to go`)
   }
 
-  /** Click the Model fold's Reset Agent button. The page resets without a confirm today; should a native
-   *  confirm ever open, it is accepted. */
+  /** Click the Danger zone's Reset Agent button, then the shared confirm modal's confirm button (T-0391);
+   *  should a native confirm ever open as well, it is accepted. */
   async resetAgent(): Promise<void> {
     const accept = (dialog: { accept(): Promise<void> }): void => void dialog.accept()
     this.page.once('dialog', accept)
     try {
       await this.#click(ADMIN_SELECTORS.resetAgentButton, 'the Reset Agent button')
+      await this.#click(ADMIN_SELECTORS.dangerConfirmButton, 'the Reset Agent confirm button')
     } finally {
       this.page.off('dialog', accept)
     }

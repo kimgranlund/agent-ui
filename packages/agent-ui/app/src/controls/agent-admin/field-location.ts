@@ -82,11 +82,15 @@ function loc(section: FieldLocation['section'], item: string, itemLabel: string)
  *  Ground truth for every `(section, item)` pair: the compose in `agent-admin.ts` (`data-role` sections ·
  *  `settingsItem(key, summary, …)` folds), pinned by field-location.test.ts's anchor-parity gate. */
 const LOCATIONS: ReadonlyMap<string, FieldLocation> = new Map<string, FieldLocation>([
-  // the Agent tab — the agent card, the model grid, the bankroll row
-  ...(['name', AGENT_ENABLED_KEY] as const).map((k) => [k, loc('agent-content', 'agent', 'Agent')] as const),
-  // T-0306: the Model section's settings render in the Model fold, below the grid.
-  ...(['model', MODELS_INCLUDED_KEY, ...Object.values(MODEL_SETTING_KEYS)] as const).map((k) => [k, loc('agent-content', 'model', 'Model')] as const),
-  ...([BANKROLL_CAPABLE_KEY, BANKROLL_KEY] as const).map((k) => [k, loc('agent-content', 'bankroll', 'Bankroll')] as const),
+  // the Agent tab — the agent card, the model fold, the Advanced fold, the Danger zone
+  // T-0391: tagline and category are roster record fields the Agent fold edits under Name.
+  ...(['name', AGENT_ENABLED_KEY, 'tagline', 'category'] as const).map((k) => [k, loc('agent-content', 'agent', 'Agent')] as const),
+  // T-0306: the Model section's settings render in the Model fold; T-0391 moves the set-once three into the
+  // closed Advanced fold.
+  ...(['model', MODELS_INCLUDED_KEY, MODEL_SETTING_KEYS.effort, MODEL_SETTING_KEYS.thinking] as const).map((k) => [k, loc('agent-content', 'model', 'Model')] as const),
+  ...([MODEL_SETTING_KEYS.showReasoning, MODEL_SETTING_KEYS.maxTokens, MODEL_SETTING_KEYS.cacheTtl] as const).map((k) => [k, loc('agent-content', 'advanced', 'Advanced')] as const),
+  // T-0391: the bankroll row sits in the closed Danger zone fold with Reset and Delete.
+  ...([BANKROLL_CAPABLE_KEY, BANKROLL_KEY] as const).map((k) => [k, loc('agent-content', 'danger', 'Danger zone')] as const),
 
   // the Capabilities tab — Instructions (the prompt-section kind), then the four generic kinds
   ...[entriesStoreKey(ENTRY_KINDS.promptSection), kindEnabledKey(ENTRY_KINDS.promptSection)].map(

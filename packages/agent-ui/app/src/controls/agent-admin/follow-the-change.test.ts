@@ -334,7 +334,7 @@ describe('SPEC-R8 AC1 — the per-fold truth-table (sampled key per fold)', () =
   const CASES: ReadonlyArray<{ label: string; patch: { values?: Record<string, unknown>; entries?: Record<string, unknown[]> }; section: string; item: string }> = [
     { label: 'agent', patch: { values: { name: 'X' } }, section: 'agent-content', item: 'agent' },
     { label: 'model', patch: { values: { model: SUPPORTED_MODELS[1]!.id } }, section: 'agent-content', item: 'model' },
-    { label: 'bankroll', patch: { values: { bankrollCapable: true } }, section: 'agent-content', item: 'bankroll' },
+    { label: 'bankroll', patch: { values: { bankrollCapable: true } }, section: 'agent-content', item: 'danger' },
     { label: 'prompt-section', patch: { entries: { [entriesStoreKey(ENTRY_KINDS.promptSection)]: [{ label: 'Rule', content: 'Be terse.' }] } }, section: 'capabilities-content', item: ENTRY_KINDS.promptSection },
     { label: 'skill', patch: { entries: { [entriesStoreKey(ENTRY_KINDS.skill)]: [{ label: 'S' }] } }, section: 'capabilities-content', item: ENTRY_KINDS.skill },
     { label: 'workflow', patch: { entries: { [entriesStoreKey(ENTRY_KINDS.workflow)]: [{ label: 'W' }] } }, section: 'capabilities-content', item: ENTRY_KINDS.workflow },

@@ -218,6 +218,24 @@ const renameAgentMutation = mutation(
   },
 )
 
+// T-0391: the Agent fold's Tagline and Category write the roster record (`onAgentMetaRequest`), through
+// the same `rosterSource.update` path the rename uses.
+const updateAgentMetaMutation = mutation(
+  async (input: { id: string; patch: { tagline?: string; category?: string } }, ctx) => {
+    const updated = await rosterSource.update(input.id, input.patch as Partial<Persona>, ctx)
+    commitRosterView()
+    return updated
+  },
+  {
+    store: rosterStore,
+    optimistic: ({ id, patch }, store) =>
+      optimisticView(store, (prev) => ({
+        ...prev,
+        personas: prev.personas.map((p) => (p.id === id ? ({ ...p, ...patch } as Persona) : p)),
+      })),
+  },
+)
+
 const deleteAgentMutation = mutation(
   async (persona: Persona, ctx) => {
     await rosterSource.remove(persona.id, ctx)
@@ -494,7 +512,14 @@ function pushRoster(view: AgentRosterView<Persona> = rosterResource.data.peek() 
   // never when it is a shipped `AGENT_PRESETS` preset. The component reads it only as a visibility gate for
   // its two Delete affordances (the overflow item + the config-surface row); ABSENT reads protected, so this
   // one line is the whole reason a preset shows neither.
-  const entries: AgentRosterEntry[] = view.personas.map((p) => ({ id: p.id, label: p.label, deletable: p.imported === true }))
+  // T-0391: tagline and category ride along for the Agent fold's open fields (editable only when deletable).
+  const entries: AgentRosterEntry[] = view.personas.map((p) => ({
+    id: p.id,
+    label: p.label,
+    deletable: p.imported === true,
+    tagline: p.tagline,
+    ...(p.category === undefined ? {} : { category: p.category }),
+  }))
   const activeId = (view.personas.find((p) => p.id === view.activeId) ?? view.personas[0])?.id ?? ''
   admin.setAgentRoster(entries, activeId)
 }
@@ -566,6 +591,7 @@ admin.onResetRequest(() => {
 // as well — three affordances, one deletion path, so the persistence sweep can never diverge between them.
 admin.onEditAgentsRequest(() => openRosterDrawer())
 admin.onDeleteAgentRequest((id) => deleteAgent(id))
+admin.onAgentMetaRequest((id, patch) => void updateAgentMetaMutation.run({ id, patch }))
 
 // ADR-0179 OQ4 (admin-three-pane-ia.lld.md §2) — the Co-pilot place's empty state hosts the flow's OTHER
 // front door, where the user already is. It reaches this page's mint path through the component's

@@ -1610,12 +1610,13 @@ describe('ui-agent-admin: the Agent settings card frames the section select and 
     await expect.poll(() => agentSettings.hasAttribute('data-compact'), { timeout: 5000 }).toBe(true)
     const selects = [...el.querySelectorAll('ui-settings [data-part="section-select"]')] as HTMLElement[]
     for (const select of selects) expect(getComputedStyle(select).display, 'no section select renders').toBe('none')
-    const effort = el.querySelector('[data-item="model"] ui-settings [name="maxTokens"]') as HTMLElement
+    // T-0391: maxTokens moved to the closed Advanced fold; effort stays open in the Model fold.
+    const effort = el.querySelector('[data-item="model"] ui-settings [name="effort"]') as HTMLElement
     expect(effort, 'the Model section renders inside the Model fold').not.toBeNull()
     expect(effort.getBoundingClientRect().height, 'and is visible without any navigation').toBeGreaterThan(0)
     const name = el.querySelector('[data-item="agent"] ui-settings [name="name"]') as HTMLElement
     expect(name.getBoundingClientRect().height, 'the Agent section still renders in the Agent fold').toBeGreaterThan(0)
-    expect(el.querySelector('[data-item="agent"] ui-settings [name="maxTokens"]'), 'the Model fields render once, not twice').toBeNull()
+    expect(el.querySelector('[data-item="agent"] ui-settings [name="effort"]'), 'the Model fields render once, not twice').toBeNull()
   })
 })
 
@@ -1724,32 +1725,25 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
 // disclosure.css declares no `display` of its own) held TWO top-level cards once S7-d's
 // `reset-agent-row` joined `model-grid` as its sibling, and the UA default `display:block` zeroed
 // the gap `--ui-agent-admin-section-gap` was supposed to give them. ────────────────────────────────
-describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so model-grid and reset-agent-row get a real gap (GH #706)', () => {
-  it('a real, non-zero measured gap separates the models-list card from the "Agent configuration" (Reset Agent) card', async () => {
+describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so its cards get a real gap (GH #706)', () => {
+  it('a real, non-zero measured gap separates the Default model field, the Model settings card and the models-list card (T-0391 order)', async () => {
     const { el } = mountAgentAdmin('Agent')
-    el.onResetRequest(() => {}) // the WHOLE ROW is [hidden] unregistered (agent-admin.ts #applyActionAvailability,
-    // GH #709) — register so the row paints at all, since this test measures a gap between two painted
-    // boxes; the unregistered-hidden case has its own dedicated test below (GH #709's own regression pin).
     await el.updateComplete
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
     const modelFold = el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement
     const body = modelFold.querySelector('[data-part="details"] > [data-part="body"]') as HTMLElement
+    const defaultModel = body.querySelector(':scope > ui-field[data-field="model"]') as HTMLElement
+    const modelSettings = body.querySelector(':scope > ui-settings') as HTMLElement
     const grid = body.querySelector('[data-part="model-grid"]') as HTMLElement
-    const resetRow = body.querySelector('[data-part="reset-agent-row"]') as HTMLElement
 
     expect(getComputedStyle(body).display, 'the body wins display:flex, not the UA default display:block').toBe('flex')
-    expect(grid.getBoundingClientRect().height, 'the models card is a real, painted box').toBeGreaterThan(0)
-    expect(resetRow.getBoundingClientRect().height, 'the Reset Agent card is a real, painted box (registered, so not [hidden])').toBeGreaterThan(0)
+    for (const box of [defaultModel, modelSettings, grid]) expect(box.getBoundingClientRect().height, 'a real, painted box').toBeGreaterThan(0)
 
     const expectedGapPx = Number.parseFloat(getComputedStyle(body).rowGap)
     expect(expectedGapPx, 'a real, non-zero declared section gap to measure against').toBeGreaterThan(0)
-    // T-0306: the Model section's settings card sits between them, one body gap on each side.
-    const modelSettings = body.querySelector(':scope > ui-settings') as HTMLElement
-    expect(modelSettings.getBoundingClientRect().height, 'the Model settings card is a real, painted box').toBeGreaterThan(0)
-    expect(modelSettings.getBoundingClientRect().top - grid.getBoundingClientRect().bottom, 'the models card and the Model settings card no longer butt together').toBeCloseTo(expectedGapPx, 0)
-    const measuredGapPx = resetRow.getBoundingClientRect().top - modelSettings.getBoundingClientRect().bottom
-    expect(measuredGapPx, 'the Model settings card and the Reset Agent card no longer butt together').toBeCloseTo(expectedGapPx, 0)
+    expect(modelSettings.getBoundingClientRect().top - defaultModel.getBoundingClientRect().bottom, 'the Default model field and the Model settings card do not butt together').toBeCloseTo(expectedGapPx, 0)
+    expect(grid.getBoundingClientRect().top - modelSettings.getBoundingClientRect().bottom, 'the Model settings card and the models card do not butt together').toBeCloseTo(expectedGapPx, 0)
   })
 
   // GH #709 — the SAME failure class this describe block's own GH #706 fix already named for settings-item
@@ -1788,17 +1782,24 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
         hidden: boolean
       })[]
 
-    // Agent is the default active tab — GH #488 folded Catalogs INTO Surface Options; GH #541 lifted
-    // Bankroll into its own group; GH #574 ranked the old flat ten folds into three tabs.
+    // Agent is the default active tab — GH #488 folded Catalogs INTO Surface Options; GH #574 ranked the
+    // old flat ten folds into three tabs; T-0391 retired the Bankroll fold into the closed Danger zone and
+    // added the closed Advanced fold.
     const agentItems = itemsOf('agent-content')
-    expect(agentItems.map((i) => i.getAttribute('data-item'))).toEqual(['agent', 'model', 'bankroll'])
-    // …and `hidden` on a fold really removes it from layout here (ui-disclosure's own `display:block`
-    // outranks the UA's `[hidden]` rule, so agent-admin.css restates it — this is the cross-engine proof).
-    const bankroll = agentItems.find((i) => i.getAttribute('data-item') === 'bankroll')!
+    expect(agentItems.map((i) => i.getAttribute('data-item'))).toEqual(['agent', 'model', 'advanced', 'danger'])
+    const closedAtRest = agentItems.filter((i) => ['advanced', 'danger'].includes(i.getAttribute('data-item')!))
+    for (const item of closedAtRest) expect(item.open, `${item.getAttribute('data-item')} is closed at rest`).toBe(false)
+    // …and `hidden` on the bankroll ROW really removes it from layout here (its own `display:flex` outranks
+    // the UA's `[hidden]` rule, so agent-admin.css restates it — this is the cross-engine proof). The Danger
+    // zone opens first, so a zero height is the row's own, not the closed fold's.
+    const danger = closedAtRest.find((i) => i.getAttribute('data-item') === 'danger')!
+    danger.open = true
+    await new Promise((r) => requestAnimationFrame(r))
+    const bankroll = danger.querySelector('[data-part="bankroll-row"]') as HTMLElement
     expect(bankroll.hidden, 'no persona opted into the bankroll capability here').toBe(true)
     expect(getComputedStyle(bankroll).display).toBe('none')
     expect(bankroll.getBoundingClientRect().height).toBe(0)
-    for (const item of agentItems.filter((i) => !i.hidden)) assertFoldChrome(item)
+    for (const item of agentItems.filter((i) => !['advanced', 'danger'].includes(i.getAttribute('data-item')!))) assertFoldChrome(item)
 
     await clickTab('Capabilities')
     const capabilitiesItems = itemsOf('capabilities-content')
@@ -1817,9 +1818,10 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     // Census: the union of the three tabs' top-level folds is EXACTLY the old flat ten-item set —
     // nothing lost, nothing duplicated (the acceptance's own wording, proven mechanically).
     const OLD_FLAT_SET = [
-      'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
+      'agent', 'model', 'surface', ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
       'team', // GH #1197 — the one deliberate addition since the flat-ten era (a fold, not a tab)
+      'advanced', 'danger', // T-0391: Bankroll retired into the Danger zone; Advanced joined
     ]
     const union = [...agentItems, ...capabilitiesItems, ...surfaceItems].map((i) => i.getAttribute('data-item'))
     expect([...union].sort()).toEqual([...OLD_FLAT_SET].sort())
@@ -3587,6 +3589,8 @@ describe('ui-agent-admin cross-engine — the picker\'s New Agent / Edit Agents 
 
     el.setAgentRoster([{ id: 'preset', label: 'Preset' }, { id: 'mine', label: 'Mine', deletable: true }], 'mine')
     activateTab(el, 'Agent')
+    // T-0391: the row lives in the Danger zone, closed at rest.
+    ;(el.querySelector('[data-part="settings-item"][data-item="danger"]') as HTMLElement & { open: boolean }).open = true
     await frames()
     const box = row.getBoundingClientRect()
     expect(box.height, `${server.browser}: a deletable agent's Delete row paints`).toBeGreaterThan(0)
