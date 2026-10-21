@@ -22,6 +22,9 @@
 // the confirm repair asks for a BookingConfirmation reading back the form's values and never for a reference (the
 // catalog's BookingConfirmation has no such field, and Haiku refused to invent one).
 //
+// T-0197: a `dateRange` field holds two dates, its start at `path` and its end at a string `endPath`; both checks read
+// the end path as a second path of the field (`fieldPaths`).
+//
 // T-0322: a say turn that targets the open BookingForm and sends it no update is ACTION_NOT_APPLIED
 // (`conciergeEditApplied`).
 //
@@ -77,14 +80,27 @@ function misPathedKey(booking: unknown, path: string): string | undefined {
   return segments.length > 1 && Object.hasOwn(booking, last) ? last : undefined
 }
 
+/** Each path a field writes with the label it shows: its `path`, and a `dateRange`'s string `endPath` (T-0197), labelled
+ *  as the factory labels the end date. */
+function fieldPaths(field: Record<string, unknown>): { path: string; label: string | undefined }[] {
+  if (typeof field['path'] !== 'string') return []
+  const paths = [{ path: field['path'], label: typeof field['label'] === 'string' ? field['label'] : undefined }]
+  if (field['kind'] === 'dateRange' && typeof field['endPath'] === 'string') {
+    paths.push({ path: field['endPath'], label: typeof field['endLabel'] === 'string' ? field['endLabel'] : 'End date' })
+  }
+  return paths
+}
+
 /** T-0278: the label (or path) of the first required BookingForm field an open surface leaves blank, or undefined. A
  *  mis-pathed field (T-0293) renders blank only because of its path; its value is there, so it holds nothing open. */
 export function blankRequiredField(open: readonly SurfaceView[]): string | undefined {
   for (const { fields, booking } of bookingForms(open)) {
     for (const field of fields) {
-      if (!isRecord(field) || field['required'] !== true || typeof field['path'] !== 'string') continue
-      const key = field['path'].replace(/^\//, '')
-      if (isBlank(readPointer(booking, `/${key}`)) && misPathedKey(booking, key) === undefined) return typeof field['label'] === 'string' ? field['label'] : key
+      if (!isRecord(field) || field['required'] !== true) continue
+      for (const { path, label } of fieldPaths(field)) {
+        const key = path.replace(/^\//, '')
+        if (isBlank(readPointer(booking, `/${key}`)) && misPathedKey(booking, key) === undefined) return label ?? key
+      }
     }
   }
   return undefined
@@ -97,11 +113,12 @@ export const conciergeBookingFieldPaths: SemanticCheck = {
   check({ surfaces }): SemanticFinding[] {
     const findings: SemanticFinding[] = []
     for (const { view, node, fields, booking } of bookingForms(surfaces)) {
-      const fixes = fields.flatMap((field) => {
-        if (!isRecord(field) || typeof field['path'] !== 'string') return []
-        const key = misPathedKey(booking, field['path'])
-        return key === undefined ? [] : [`"${field['path']}" to "${key}"`]
-      })
+      const fixes = fields.flatMap((field) =>
+        (isRecord(field) ? fieldPaths(field) : []).flatMap(({ path }) => {
+          const key = misPathedKey(booking, path)
+          return key === undefined ? [] : [`"${path}" to "${key}"`]
+        }),
+      )
       if (fixes.length === 0) continue
       const bound = isRecord(node['value']) && typeof node['value']['path'] === 'string' ? node['value']['path'] : 'its value'
       findings.push({

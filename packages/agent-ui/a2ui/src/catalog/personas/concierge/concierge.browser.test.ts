@@ -216,9 +216,9 @@ const wrapOf = (mount: HTMLElement, path: string): HTMLElement =>
   [...mount.querySelectorAll<HTMLElement>('[data-a2ui-booking-field]')].find((w) => w.getAttribute('data-a2ui-booking-field') === path)!
 
 describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a summary card (T-0085)', () => {
-  it('every field shows its visible label, no month grid renders inline, ink sits 19px in and Reserve is 24px', async () => {
+  it('every field shows its visible label, no month grid renders inline and ink sits 19px in from the card', async () => {
     const { mount, r } = await mountStay(480)
-    const form = mount.querySelector('ui-form-provider')!
+    const form = mount.querySelector('ui-form-provider [data-part="card"]')! // the card part, T-0197
     for (const [path, label] of [
       ['guestName', 'Guest name'],
       ['guests', 'Number of guests'],
@@ -232,9 +232,7 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
     for (const cal of mount.querySelectorAll('ui-calendar')) expect(box(cal).height, 'no inline month grid').toBe(0)
     // 1px frame + the 18px card margin (ADR-0245 Amendment 2, scale.mjs resolve('widget','md','md').card.margin), the same 19px a stock card's regions put their ink at.
     expect(box(wrapOf(mount, 'guestName')).left - box(form).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
-    const button = mount.querySelector('ui-form-provider > ui-button')!
-    expect(box(button).left - box(form).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
-    expect(box(button).height, 'the form steps down to the md button, 24px on the canvas register').toBeCloseTo(CANVAS.h, 0)
+    expect(box(form.querySelector('[data-part="title"]')).left - box(form).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
     const card = mount.querySelector('ui-card')!
     expect(box(card.querySelector('[data-part="title"]')).left - box(card).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
     // 12px between fields (the card gutter at the canvas register, resolve('widget','md','md').card.gutter).
@@ -364,4 +362,129 @@ describe('BookingForm date fields: arrival and departure are real date inputs wi
     r.dispose()
     mount.remove()
   })
+})
+
+// T-0197: the four new field kinds, rendered in the real engine on the canvas register (widget md).
+async function mountKinds(fields: unknown[], value: Record<string, unknown> = {}, width = 480) {
+  const mount = document.createElement('div')
+  mount.style.inlineSize = `${width}px`
+  document.body.append(mount)
+  const r = createRenderer()
+  r.mount(mount)
+  const sent: A2uiClientMessage[] = []
+  r.onClientMessage((m) => sent.push(m))
+  await r.preload('agent-ui--concierge')
+  const id = `kinds-${Math.random().toString(36).slice(2)}`
+  r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui--concierge' } })
+  r.ingestMessage({ version: 'v1.0', updateDataModel: { surfaceId: id, path: '/booking', value } })
+  r.ingestMessage({
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: id,
+      components: [
+        { id: 'root', component: 'BookingForm', title: 'Book a table at Vela', fields, value: { path: '/booking' }, child: 'submitBtn' },
+        { id: 'submitBtn', component: 'Button', variant: 'solid', label: 'Confirm', action: { action: 'confirmBooking', submit: true } },
+      ],
+    },
+  })
+  r.finalize(id)
+  await whenFlushed()
+  const form = mount.querySelector('ui-form-provider') as HTMLElement & { values(): Record<string, unknown> }
+  const button = mount.querySelector('ui-form-provider > ui-button') as HTMLElement
+  const done = (): void => {
+    r.dispose()
+    mount.remove()
+  }
+  return { mount, form, button, sent, done }
+}
+
+const SEATING = { kind: 'radio', path: 'seating', label: 'Seating', required: true, options: [{ value: 'early', label: '18:00' }, { value: 'late', label: '20:30' }] }
+const COVERS = { kind: 'stepper', path: 'covers', label: 'Covers', required: true, min: 1, max: 12, step: 1 }
+const KINDS = [
+  { kind: 'dateRange', path: 'checkIn', endPath: 'checkOut', label: 'Arrival', endLabel: 'Departure', required: true },
+  SEATING,
+  { kind: 'time', path: 'arrivalTime', label: 'Arrival time' },
+  COVERS,
+  { kind: 'checkbox', path: 'breakfast', label: 'Breakfast' },
+  { kind: 'text', path: 'notes', label: 'Notes' },
+]
+
+describe('BookingForm field kinds (T-0197)', () => {
+  it('each new kind renders at widget md with 24px control rows under its visible label', async () => {
+    const { mount, done } = await mountKinds(KINDS, { checkIn: '2026-11-14', checkOut: '2026-11-17', covers: 2 })
+    expect(mount.querySelector('[data-tier="widget"]'), 'the canvas register').not.toBeNull()
+    const rows: Array<[string, string]> = [
+      ['checkIn', 'ui-text-field'],
+      ['checkOut', 'ui-text-field'],
+      ['arrivalTime', 'ui-text-field'],
+      ['covers', '[data-part="stepper"]'],
+      ['notes', 'ui-text-field'],
+    ]
+    for (const [path, row] of rows) {
+      expect(box(wrapOf(mount, path).querySelector(row)).height, `${path}: one control row`).toBeCloseTo(CANVAS.h, 0)
+      const label = [...wrapOf(mount, path).children].find((c) => c.getAttribute('data-part') === 'label') as HTMLElement
+      expect(box(label).height, `${path}: the ui-field label is rendered`).toBeGreaterThan(0)
+    }
+    for (const path of ['seating', 'breakfast']) {
+      // A choice row is the radio part's own height at widget md (12px, scale.mjs parts.radio), not the 24px input row.
+      expect(box(wrapOf(mount, path).querySelector('ui-radio-group')).height, `${path}: one option row`).toBeCloseTo(CANVAS.parts.radio, 0)
+      for (const radio of wrapOf(mount, path).querySelectorAll('ui-radio')) expect(box(radio).height, `${path}: an option`).toBeCloseTo(CANVAS.parts.radio, 0)
+    }
+    const time = wrapOf(mount, 'arrivalTime').querySelector('ui-text-field')!
+    expect(time.getAttribute('type')).toBe('time')
+    const picker = wrapOf(mount, 'covers').querySelector('ui-amount-picker')!
+    const ownLabel = picker.querySelector('[data-part="label"]')
+    expect(ownLabel === null || box(ownLabel).height === 0, 'the picker label part hides under the ui-field').toBe(true)
+    expect(picker.querySelector('[data-part="commit"], [data-part="action"]'), 'no commit button of its own').toBeNull()
+    done()
+  })
+
+  it('the radio and checkbox option text is the text field size', async () => {
+    const { mount, done } = await mountKinds(KINDS)
+    const fieldSize = getComputedStyle(wrapOf(mount, 'notes').querySelector('ui-text-field')!).fontSize
+    const options = [...mount.querySelectorAll('ui-radio')]
+    expect(options).toHaveLength(4)
+    for (const option of options) expect(getComputedStyle(option).fontSize, option.textContent ?? '').toBe(fieldSize)
+    done()
+  })
+
+  it('the stepper submits through the producer Button and its value is in the aggregate', async () => {
+    const { mount, form, button, sent, done } = await mountKinds([COVERS], { covers: 2 })
+    ;(wrapOf(mount, 'covers').querySelector('[data-part="increase"]') as HTMLElement).click()
+    await whenFlushed()
+    button.click()
+    await whenFlushed()
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    expect(actions[0]!.action.name).toBe('confirmBooking')
+    expect(form.values()['covers']).toBe('3')
+    done()
+  })
+
+  it('the required gate refuses a blank radio, then permits once a seating is chosen', async () => {
+    const { mount, form, button, sent, done } = await mountKinds([SEATING])
+    button.click()
+    expect(sent.filter(isAction), 'blank required radio: no action').toHaveLength(0)
+    ;(wrapOf(mount, 'seating').querySelectorAll('ui-radio')[1] as HTMLElement).click()
+    button.click()
+    expect(sent.filter(isAction)).toHaveLength(1)
+    expect(form.values()['seating']).toBe('late')
+    done()
+  })
+})
+
+describe('BookingForm action under the card (T-0197)', () => {
+  for (const width of [480, 336]) {
+    it(`the producer Button sits under the card at the end edge, a widget gutter below it, 24px high (${width}px)`, async () => {
+      const { form, button, done } = await mountKinds(KINDS, {}, width)
+      const card = form.querySelector('[data-part="card"]')!
+      expect(button.parentElement, 'a direct child of the submit-gate root').toBe(form)
+      expect(box(button).top - box(card).bottom, 'the widget gutter between card and Button').toBeCloseTo(CANVAS.widget.gutter, 0)
+      expect(box(button).right, 'end-aligned with the card').toBeCloseTo(box(card).right, 0)
+      expect(box(button).top, 'outside the card box').toBeGreaterThanOrEqual(box(card).bottom)
+      expect(box(button).left, 'it hugs its label').toBeGreaterThan(box(card).left + box(card).width / 2)
+      expect(box(button).height, 'the md button, 24px on the canvas register').toBeCloseTo(CANVAS.h, 0)
+      done()
+    })
+  }
 })

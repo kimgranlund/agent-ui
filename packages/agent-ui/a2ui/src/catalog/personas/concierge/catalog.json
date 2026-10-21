@@ -6,13 +6,19 @@
         "fields": {
           "type": {
             "type": "array",
+            "description": "One item per field, its value written at path. dateSingle: one date. dateRange: a stay, start date at path and end date at endPath (endLabel names it). select: one of many options. radio: one of two to five options, shown side by side. checkbox: a Yes or No answer. text: free text. number: a number typed in. time: a time of day. stepper: a count such as a party size, from min to max by step.",
             "items": {
               "type": "object",
               "properties": {
-                "kind": { "type": "string", "enum": ["dateSingle", "select", "checkbox", "text", "number"] },
+                "kind": { "type": "string", "enum": ["dateSingle", "dateRange", "select", "radio", "checkbox", "text", "number", "time", "stepper"] },
                 "path": { "type": "string" },
+                "endPath": { "type": "string" },
                 "label": { "type": "string" },
+                "endLabel": { "type": "string" },
                 "required": { "type": "boolean" },
+                "min": { "type": "number" },
+                "max": { "type": "number" },
+                "step": { "type": "number" },
                 "options": {
                   "type": "array",
                   "items": {

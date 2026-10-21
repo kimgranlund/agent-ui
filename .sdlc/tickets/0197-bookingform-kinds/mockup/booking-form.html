@@ -9,10 +9,11 @@
      resolver, so open this page through Vite from the repo, for example
      `npx vite .sdlc/tickets/0197-bookingform-kinds/mockup --config /dev/null --strictPort false`
      with `server.fs.allow` reaching the repo root (the screenshot script does exactly that), never over file://.
-     The DOM mirrors what `bookingFormFactory` builds (factories.ts): the `ui-form-provider` root painted as the
-     card surface and a `[data-box]`, a `ui-text` h4 title, a `fields` column, one `ui-field` per labelled
-     control, a `date-row` flex run for linked dates, and the producer's one child Button at md. The new kinds
-     are proposed: `radio`, `time`, `stepper`, `dateRange`. -->
+     The DOM mirrors what `bookingFormFactory` builds (factories.ts): the `ui-form-provider` root as a column, a
+     `[data-part="card"]` div painted as the card surface and a `[data-box]` holding a `ui-text` h4 title and a
+     `fields` column (one `ui-field` per labelled control, a `date-row` flex run for linked dates), and the
+     producer's one child Button at md under the card, end-aligned (Kim 2026-10-20, like ConfirmReceipt's action
+     bar). The new kinds are proposed: `radio`, `time`, `stepper`, `dateRange`. -->
 <script type="module">
   import '@agent-ui/components/foundation-styles.css'
   import '@agent-ui/components/base-styles.css'
@@ -32,8 +33,11 @@
   .sheet-note { margin: 8px 0 0; font-size: 12px; color: var(--md-sys-color-neutral-on-surface-variant); }
   /* The A2UI canvas: widget tier, scale md (20 / 24 / 28 px controls). A plain surface, no card chrome. */
   .canvas { background: var(--md-sys-color-neutral-surface-bright, var(--md-sys-color-neutral-surface)); padding: 12px; border-radius: 12px; }
-  /* What bookingFormFactory.create() writes on el.style (paintCardSurface plus the box padding). */
-  .booking-form {
+  /* What bookingFormFactory.create() writes on el.style: the root column, the Button under the card at the end edge. */
+  .booking-form { display: flex; flex-direction: column; align-items: flex-end; gap: var(--md-sys-widget-gutter); }
+  /* And on the card part (paintCardSurface plus the box padding). */
+  .booking-form > [data-part='card'] {
+    align-self: stretch;
     box-sizing: border-box;
     background-color: var(--md-sys-color-neutral-surface);
     border: 1px solid var(--md-sys-color-neutral-outline-variant);
@@ -42,7 +46,7 @@
     padding-block: var(--ui-box-pad-block);
     padding-inline: var(--ui-box-pad-inline);
   }
-  .booking-form [data-part='fields'] { display: flex; flex-direction: column; gap: var(--ui-box-gap); margin-block: var(--ui-box-gap); }
+  .booking-form [data-part='fields'] { display: flex; flex-direction: column; gap: var(--ui-box-gap); margin-block-start: var(--ui-box-gap); }
   .booking-form [data-part='date-row'] { display: flex; flex-wrap: wrap; gap: var(--ui-box-gap); }
   .booking-form [data-part='date-row'] > ui-field { flex: 1 1 12rem; }
 </style>
@@ -54,7 +58,8 @@
   <section>
     <h2 class="sheet-head">Sheet 1. Maitre d' table booking</h2>
     <div class="canvas" data-tier="widget" data-scale="md">
-      <ui-form-provider class="booking-form" data-box>
+      <ui-form-provider class="booking-form">
+        <div data-part="card" data-box>
         <ui-text as="h4" variant="title" size="md" data-part="title">Book a table at Vela</ui-text>
         <div data-part="fields">
           <!-- kind dateSingle (unchanged, T-0135): a ui-field over ui-text-field type=date -->
@@ -77,7 +82,8 @@
             <ui-text-field type="text" name="notes" label="Dietary notes" placeholder="Allergies, occasions"></ui-text-field>
           </ui-field>
         </div>
-        <!-- The producer's one child Button (submit:true), stepped down to md by sizedActionButtons -->
+        </div>
+        <!-- The producer's one child Button (submit:true), stepped down to md by sizedActionButtons, under the card -->
         <ui-button size="md">Confirm</ui-button>
       </ui-form-provider>
     </div>
@@ -87,7 +93,8 @@
   <section>
     <h2 class="sheet-head">Sheet 2. Concierge stay</h2>
     <div class="canvas" data-tier="widget" data-scale="md">
-      <ui-form-provider class="booking-form" data-box>
+      <ui-form-provider class="booking-form">
+        <div data-part="card" data-box>
         <ui-text as="h4" variant="title" size="md" data-part="title">Your stay at the Grand Meridian</ui-text>
         <div data-part="fields">
           <!-- kind dateRange (new): one item {path: checkIn, endPath: checkOut, label: Arrival, endLabel: Departure},
@@ -116,6 +123,7 @@
             </ui-select>
           </ui-field>
         </div>
+        </div>
         <ui-button size="md">Book stay</ui-button>
       </ui-form-provider>
     </div>
@@ -127,7 +135,8 @@
   <section>
     <h2 class="sheet-head">Sheet 3. Fork 5 alternative: stepper under a ui-field</h2>
     <div class="canvas" data-tier="widget" data-scale="md">
-      <ui-form-provider class="booking-form" data-box>
+      <ui-form-provider class="booking-form">
+        <div data-part="card" data-box>
         <ui-text as="h4" variant="title" size="md" data-part="title">Book a table at Vela</ui-text>
         <div data-part="fields">
           <ui-field label="Seating" data-a2ui-booking-field="seating-alt">
@@ -139,6 +148,7 @@
           <ui-field label="Covers" data-a2ui-booking-field="covers-alt">
             <ui-amount-picker name="coversAlt" label="Covers" min="1" max="12" step="1" value="4"></ui-amount-picker>
           </ui-field>
+        </div>
         </div>
         <ui-button size="md">Confirm</ui-button>
       </ui-form-provider>

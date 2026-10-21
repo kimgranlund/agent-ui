@@ -42,29 +42,40 @@
 // bubbling to the composite ROOT was tried and rejected: `el`'s own click listener would fire on EVERY
 // descendant click, including picking a calendar day, silently emitting the submit action early).
 //
-// Field kinds (§2.1 sketch named "range Calendar" — narrowed at build): `dateSingle | select | checkbox |
-// text | number` (T-0079 added the last two). `text` and `number` mint a `ui-text-field`. A `dateSingle` is a
+// Field kinds (§2.1 sketch named "range Calendar" — narrowed at build): `dateSingle | dateRange | select | checkbox |
+// radio | text | number | time | stepper` (T-0079 added `text` and `number`, T-0197 `dateRange`, `radio`, `time` and
+// `stepper`). `text`, `number` and `time` mint a `ui-text-field` of that type. A `dateSingle` is a
 // DATE INPUT (T-0092, reshaped T-0106, a real input since T-0135): a `ui-field` label over a `ui-text-field
 // type=date`, the field's form control (named for the path). It shows the date in the reader's locale ("Choose
 // date" placeholder while empty), submits the ISO `YYYY-MM-DD` string (the wire contract is unchanged), and draws
 // its own round calendar trigger whose panel opens on the booked month (today's when empty). No nested card, no
 // month grid inline. `ui-calendar`'s `mode="range"` commits via a two-ENTRY `FormData` (start+end under one
 // `name`), which `ui-form-provider`'s native `values()` aggregation does not flatten into the single
-// scalar-per-path shape `BookingConfirmation.rows` needs, so a date RANGE is authored as two ordinary `dateSingle`
-// fields (e.g. `checkIn`/`checkOut`), drawn side by side where the width allows. Within a run the later field
-// takes the earlier field's date as its `min` (its calendar disables earlier days, a typed earlier date is
-// rangeUnderflow), and an earlier date that passes a later one clears it.
+// scalar-per-path shape `BookingConfirmation.rows` needs, so a date RANGE is two date inputs, each a scalar: either
+// two consecutive `dateSingle` fields (e.g. `checkIn`/`checkOut`), which share one run, or one `dateRange` item
+// (T-0197) whose `path` is the start and `endPath` the end (`endLabel`, default "End date"), which always draws its
+// own run; a `dateRange` with no `endPath` is a `dateSingle`. A run is drawn side by side where the width allows.
+// Within a run the later field takes the earlier field's date as its `min` (its calendar disables earlier days, a
+// typed earlier date is rangeUnderflow), and an earlier date that passes a later one clears it.
 // A `checkbox` kind is a Yes / No `ui-radio-group` (T-0092), its value the string `Yes` or `No`; `required`
-// means the guest must answer, not that the answer must be Yes.
+// means the guest must answer, not that the answer must be Yes. A `radio` kind (T-0197) is the same horizontal
+// group over the item's `options`, its value the chosen option's `value`. A `stepper` kind (T-0197) is a
+// `ui-amount-picker` with the item's `min`, `max` and `step` and no commit button of its own (the producer's one
+// Button still submits), its form value the number's string.
 //
-// Look (T-0085, the ADR-0046 box model): `BookingForm`'s root is the card surface itself (the `ui-card` frame
-// tokens on `el.style`) and a `[data-box]`, so every child, the producer's action Buttons included, takes the
-// shared 6px inset; the root carries the region padding (12 inline, 6 block), the ADR-0056 region-less card
-// reading, so ink sits 19px in like a stock card's regions. Every field but the self-labelled checkbox wears a
-// `ui-field` (the fleet's visible label), fields stack at the region gap, and the form uses the `sm` and `md`
-// steps only: its inputs and the producer's Buttons are `md` (ADR-0245 Amendment 2; T-0106) and each date input's
-// round trigger is the text field's own, one step below at `sm` height (T-0135) (the other composites' actions
-// stay `lg`, ADR-0243 Amendment 2, via `sizedActionButtons`). `BookingConfirmation` is a
+// Look (T-0085, the ADR-0046 box model; the action under the card, T-0197): `BookingForm`'s root stays the
+// `ui-form-provider` (the submit-gate ancestor) and is a plain column: the card part above, the producer's Button
+// under it at the end edge, the widget gutter between them (ConfirmReceipt's action bar; no button inside a card,
+// Kim 2026-10-14 and 2026-10-20). The Button stays a direct child of the root, where the renderer appends it, and
+// hugs its label as a flex item. The minted `[data-part="card"]` div holds the title and the fields and is the card
+// surface (the `ui-card` frame tokens on its `style`) and a `[data-box]`, so each child takes the shared 6px inset,
+// plus the region padding (12 inline, 6 block), the ADR-0056 region-less card reading, so ink sits 19px in like a
+// stock card's regions, and the last field sits as far from the bottom as the title from the top. Every field wears
+// a `ui-field` (the fleet's visible label; the stepper too, whose own label part hides under it), fields stack at
+// the region gap, and the form uses the `sm` and `md` steps only: its inputs and the producer's Buttons are `md`
+// (ADR-0245 Amendment 2; T-0106) and each date input's round trigger is the text field's own, one step below at
+// `sm` height (T-0135) (the other composites' actions stay `lg`, ADR-0243 Amendment 2, via `sizedActionButtons`).
+// `BookingConfirmation` is a
 // `ui-card` with real `ui-card-header`/`ui-card-content` regions and one label (muted, start) / value
 // (emphasis, end) row per entry, hairline dividers between rows.
 
@@ -113,6 +124,13 @@ interface BookingField {
   label: string
   required?: boolean
   options?: BookingFieldOption[]
+  /** `dateRange` only: the end date's path and label (T-0197). */
+  endPath?: string
+  endLabel?: string
+  /** `stepper` only: the picker's bounds and step (T-0197). */
+  min?: number
+  max?: number
+  step?: number
 }
 
 function isBookingField(v: unknown): v is BookingField {
@@ -164,7 +182,22 @@ function labelledField(field: BookingField, control: HTMLElement): HTMLElement {
   return wrap
 }
 
-/** Build one field: its live control, labelled by a `ui-field` (the checkbox labels itself, beside its box). */
+/** A horizontal `ui-radio-group` named for the field, one `ui-radio` per choice (the checkbox and radio kinds). */
+function radioGroup(field: BookingField, choices: readonly BookingFieldOption[]): HTMLElement {
+  const el = document.createElement('ui-radio-group') as unknown as FieldControlLike & { orientation: string }
+  el.name = field.path
+  el.required = Boolean(field.required)
+  el.orientation = 'horizontal'
+  for (const choice of choices) {
+    const radio = document.createElement('ui-radio') as unknown as HTMLElement & { value: string }
+    radio.value = choice.value
+    radio.textContent = choice.label
+    el.appendChild(radio)
+  }
+  return el
+}
+
+/** Build one field: its live control, labelled by a `ui-field`. */
 function buildFieldControl(field: BookingField): HTMLElement {
   switch (field.kind) {
     case 'select': {
@@ -182,31 +215,36 @@ function buildFieldControl(field: BookingField): HTMLElement {
       }
       return labelledField(field, el)
     }
-    case 'checkbox': {
+    case 'checkbox':
       // A Yes / No choice (the group's value is the checked radio's string), labelled by its `ui-field`.
-      const el = document.createElement('ui-radio-group') as unknown as FieldControlLike & { orientation: string }
+      return labelledField(field, radioGroup(field, [{ value: 'Yes', label: 'Yes' }, { value: 'No', label: 'No' }]))
+    case 'radio':
+      // A few fixed choices (a seating, a room view): the group's value is the chosen option's `value` (T-0197).
+      return labelledField(field, radioGroup(field, field.options ?? []))
+    case 'stepper': {
+      // A party size or a count (T-0197): no `actionName`, so the picker draws no commit button and the producer's
+      // one Button submits; its own label part hides under the `ui-field` (amount-picker.md).
+      const el = document.createElement('ui-amount-picker') as unknown as FieldControlLike & { label: string; min: number; max: number; step: number }
       el.name = field.path
       el.required = Boolean(field.required)
-      el.orientation = 'horizontal'
-      for (const answer of ['Yes', 'No']) {
-        const radio = document.createElement('ui-radio') as unknown as HTMLElement & { value: string }
-        radio.value = answer
-        radio.textContent = answer
-        el.appendChild(radio)
-      }
+      el.label = field.label
+      if (Number.isFinite(field.min)) el.min = field.min!
+      if (Number.isFinite(field.max)) el.max = field.max!
+      if (Number.isFinite(field.step)) el.step = field.step!
       return labelledField(field, el)
     }
     case 'text':
     case 'number':
+    case 'time':
     default: {
-      // `type=number` brings the stepper, the numeric codec and native range validity; the committed value is
-      // the field's canonical string form. `label` stays the bare-usage accessible name, yielding to the
-      // `ui-field` label once associated.
+      // `type=number` brings the stepper, the numeric codec and native range validity, `type=time` the time codec
+      // (ADR-0048); the committed value is the field's canonical string form. `label` stays the bare-usage
+      // accessible name, yielding to the `ui-field` label once associated.
       const el = document.createElement('ui-text-field') as unknown as FieldControlLike & { label: string; type: string }
       el.name = field.path
       el.required = Boolean(field.required)
       el.label = field.label
-      el.type = field.kind === 'number' ? 'number' : 'text'
+      el.type = field.kind === 'number' || field.kind === 'time' ? field.kind : 'text'
       return labelledField(field, el)
     }
   }
@@ -222,12 +260,19 @@ function findByAttr(container: HTMLElement, attr: string, value: string): HTMLEl
   return undefined
 }
 
+/** The control tag each non-date kind mints; every other kind is a `ui-text-field`. */
+const CONTROL_TAG: Readonly<Record<string, string>> = { checkbox: 'ui-radio-group', radio: 'ui-radio-group', select: 'ui-select', stepper: 'ui-amount-picker' }
+
 /** Set one control's CURRENT value from the bound aggregate — read direction (`applyProp('value', …)`). */
 function prefillFieldControl(wrap: HTMLElement, field: BookingField, raw: unknown): void {
-  const control = wrap.querySelector(field.kind === 'checkbox' ? 'ui-radio-group' : field.kind === 'select' ? 'ui-select' : 'ui-text-field')
+  const control = wrap.querySelector(CONTROL_TAG[field.kind] ?? 'ui-text-field')
   if (control === null) return
   if (field.kind === 'checkbox') (control as unknown as { value: string | null }).value = answerFor(raw)
-  else (control as unknown as { value: string }).value = raw == null ? '' : String(raw)
+  else if (field.kind === 'radio') (control as unknown as { value: string | null }).value = raw == null || raw === '' ? null : String(raw)
+  else if (field.kind === 'stepper') {
+    const n = Number(raw)
+    if (raw != null && raw !== '' && Number.isFinite(n)) (control as unknown as { value: number }).value = n // else the picker keeps its default
+  } else (control as unknown as { value: string }).value = raw == null ? '' : String(raw)
 }
 
 // ── date fields (T-0092, T-0106, T-0135) ────────────────────────────────────────────────────────────
@@ -317,19 +362,22 @@ function dateRow(): HTMLElement {
   return row
 }
 
+/** A `dateRange` with a string `endPath` (T-0197); one without is read as a `dateSingle`. */
+const isDateRange = (field: BookingField): field is BookingField & { endPath: string } => field.kind === 'dateRange' && typeof field.endPath === 'string'
+
+/** Each field as the form reads it: a `dateRange` with no `endPath` is a `dateSingle`. */
+function normalizeField(field: BookingField): BookingField {
+  return field.kind === 'dateRange' && !isDateRange(field) ? { ...field, kind: 'dateSingle' } : field
+}
+
 function rebuildFields(parts: BookingFormParts, form: FormProviderLike, fields: BookingField[]): void {
-  parts.fields = fields
+  parts.fields = fields.map(normalizeField)
   parts.dateFields = new Map()
   parts.dateRuns = []
   const nodes: HTMLElement[] = []
   let row: HTMLElement | null = null
   let run: DateField[] = []
-  for (const field of fields) {
-    if (field.kind !== 'dateSingle') {
-      row = null
-      nodes.push(buildFieldControl(field))
-      continue
-    }
+  const addDate = (field: BookingField): void => {
     if (row === null) {
       row = dateRow()
       nodes.push(row)
@@ -343,6 +391,23 @@ function rebuildFields(parts: BookingFormParts, form: FormProviderLike, fields: 
     thisRun.push(dateField)
     parts.dateFields.set(field.path, dateField)
     row.appendChild(dateField.el)
+  }
+  for (const field of parts.fields) {
+    if (isDateRange(field)) {
+      // Its own run, never joined to an adjacent dateSingle run: the start, then the end.
+      row = null
+      const required = Boolean(field.required)
+      addDate({ kind: 'dateSingle', path: field.path, label: field.label, required })
+      addDate({ kind: 'dateSingle', path: field.endPath, label: field.endLabel ?? 'End date', required })
+      row = null
+      continue
+    }
+    if (field.kind !== 'dateSingle') {
+      row = null
+      nodes.push(buildFieldControl(field))
+      continue
+    }
+    addDate(field)
   }
   parts.fieldsEl.replaceChildren(...nodes)
 }
@@ -373,16 +438,25 @@ function paintCardSurface(el: HTMLElement): void {
 export const bookingFormFactory: WidgetFactory = {
   tag: 'ui-form-provider',
   // ADR-0233: the field controls it mints (a date field is a ui-text-field type=date, which brings its own calendar)
-  uses: ['ui-field', 'ui-radio', 'ui-radio-group', 'ui-select', 'ui-text', 'ui-text-field'],
+  uses: ['ui-amount-picker', 'ui-field', 'ui-radio', 'ui-radio-group', 'ui-select', 'ui-text', 'ui-text-field'],
   create: () => {
     const el = document.createElement('ui-form-provider') as unknown as FormProviderLike
+    // The root is a column: the card above, the producer's Button under it at the end edge (T-0197, ConfirmReceipt's
+    // host column and action bar), the widget gutter between them.
+    el.style.display = 'flex'
+    el.style.flexDirection = 'column'
+    el.style.alignItems = 'flex-end'
+    el.style.gap = 'var(--md-sys-widget-gutter)'
     // The card surface and the ADR-0046 box: `[data-box]` insets every child 6px (margins collapsing in its
-    // flow-root BFC) and the root holds the region padding, so ink lands 19px in, the action row included.
-    el.setAttribute('data-box', '')
-    paintCardSurface(el)
-    el.style.display = 'flow-root'
-    el.style.paddingBlock = 'var(--ui-box-pad-block)'
-    el.style.paddingInline = 'var(--ui-box-pad-inline)'
+    // flow-root BFC) and the card holds the region padding, so ink lands 19px in.
+    const cardEl = document.createElement('div')
+    cardEl.setAttribute('data-part', 'card')
+    cardEl.setAttribute('data-box', '')
+    paintCardSurface(cardEl)
+    cardEl.style.display = 'flow-root'
+    cardEl.style.paddingBlock = 'var(--ui-box-pad-block)'
+    cardEl.style.paddingInline = 'var(--ui-box-pad-inline)'
+    cardEl.style.alignSelf = 'stretch'
     const titleEl = document.createElement('ui-text')
     ;(titleEl as unknown as { as: string; variant: string; size: string }).as = 'h4'
     ;(titleEl as unknown as { as: string; variant: string; size: string }).variant = 'title'
@@ -393,8 +467,9 @@ export const bookingFormFactory: WidgetFactory = {
     fieldsEl.style.display = 'flex'
     fieldsEl.style.flexDirection = 'column'
     fieldsEl.style.gap = 'var(--ui-box-gap)' // 8px between fields
-    fieldsEl.style.marginBlock = 'var(--ui-box-gap)' // collapses with its neighbours' 6px inset: 8px to the title and actions
-    el.append(titleEl, fieldsEl)
+    fieldsEl.style.marginBlockStart = 'var(--ui-box-gap)' // collapses with the title's 6px inset: 8px to the title
+    cardEl.append(titleEl, fieldsEl)
+    el.append(cardEl)
     sizedActionButtons(el, 'md') // the form's own Reserve steps down to md (T-0106)
     bookingFormParts.set(el, { titleEl, fieldsEl, fields: [], dateFields: new Map(), dateRuns: [] })
     // Expose the LIVE aggregate as a plain readable property — a getter proxying the form-provider's
@@ -428,6 +503,12 @@ export const bookingFormFactory: WidgetFactory = {
         const wraps = fieldWrapsByPath(parts.fieldsEl)
         for (const field of parts.fields) {
           const raw = obj[field.path]
+          if (isDateRange(field)) {
+            parts.dateFields.get(field.path)?.setValue(raw == null ? '' : String(raw))
+            const end = obj[field.endPath]
+            parts.dateFields.get(field.endPath)?.setValue(end == null ? '' : String(end))
+            continue
+          }
           if (field.kind === 'dateSingle') {
             parts.dateFields.get(field.path)?.setValue(raw == null ? '' : String(raw))
             continue

@@ -28,18 +28,30 @@ describe('bookingFormFactory — create() (detached, jsdom-safe)', () => {
     expect(el.querySelector('[data-part="fields"]')).not.toBeNull()
   })
 
-  it('the root is the card surface and an ADR-0046 [data-box] carrying the region padding (T-0085)', () => {
+  it('the card part is the card surface and an ADR-0046 [data-box] carrying the region padding; the root is none of them (T-0085, T-0197)', () => {
     const el = bookingFormFactory.create()
-    expect(el.hasAttribute('data-box')).toBe(true)
-    expect(el.style.paddingInline).toBe('var(--ui-box-pad-inline)')
-    expect(el.style.paddingBlock).toBe('var(--ui-box-pad-block)')
-    expect(el.style.border).toContain('var(--md-sys-color-neutral-outline-variant)')
-    expect(el.style.backgroundColor).toBe('var(--md-sys-color-neutral-surface)')
-    expect((el.querySelector('[data-part="fields"]') as HTMLElement).style.gap).toBe('var(--ui-box-gap)')
+    const card = el.querySelector<HTMLElement>('[data-part="card"]')!
+    expect(card.parentElement).toBe(el)
+    expect(card.localName).toBe('div') // a minted part, never a nested ui-card
+    expect(card.hasAttribute('data-box')).toBe(true)
+    expect(card.style.paddingInline).toBe('var(--ui-box-pad-inline)')
+    expect(card.style.paddingBlock).toBe('var(--ui-box-pad-block)')
+    expect(card.style.border).toContain('var(--md-sys-color-neutral-outline-variant)')
+    expect(card.style.backgroundColor).toBe('var(--md-sys-color-neutral-surface)')
+    expect(card.style.display).toBe('flow-root')
+    expect(card.style.alignSelf).toBe('stretch')
+    expect([...card.children].map((c) => c.getAttribute('data-part'))).toEqual(['title', 'fields'])
+    expect(el.hasAttribute('data-box')).toBe(false)
+    expect([el.style.border, el.style.backgroundColor, el.style.paddingBlock, el.style.paddingInline]).toEqual(['', '', '', ''])
+    expect([el.style.display, el.style.flexDirection, el.style.alignItems, el.style.gap]).toEqual(['flex', 'column', 'flex-end', 'var(--md-sys-widget-gutter)'])
+    const fields = el.querySelector('[data-part="fields"]') as HTMLElement
+    expect(fields.style.gap).toBe('var(--ui-box-gap)')
+    expect([fields.style.marginBlockStart, fields.style.marginBlockEnd]).toEqual(['var(--ui-box-gap)', ''])
   })
 
   it('names every control tag it mints in `uses` (ADR-0233, T-0135: a date is a ui-text-field, which brings its own calendar)', () => {
     expect([...(bookingFormFactory.uses ?? [])]).toEqual([
+      'ui-amount-picker',
       'ui-field',
       'ui-radio',
       'ui-radio-group',
@@ -284,6 +296,106 @@ describe('bookingFormFactory date fields (T-0135, detached, jsdom-safe)', () => 
     el.append(reserve) // the renderer appends the producer's child Button after create()
     await Promise.resolve() // the subtree observer stamps on a microtask
     expect(reserve.getAttribute('size')).toBe('md')
+  })
+})
+
+describe('BookingForm field kinds (T-0197)', () => {
+  type Control = HTMLElement & { name: string; required: boolean; label: string; value: unknown; type: string; min: unknown; max: number; step: number; actionName: string; orientation: string }
+  const fieldOf = (el: HTMLElement, path: string) => el.querySelector(`ui-field[data-a2ui-booking-field="${path}"]`) as (HTMLElement & { label: string }) | null
+  const controlOf = (el: HTMLElement, path: string) => fieldOf(el, path)!.firstElementChild as Control
+  const build = (fields: unknown[]) => {
+    const el = bookingFormFactory.create()
+    bookingFormFactory.applyProp(el, 'fields', fields)
+    return el
+  }
+  const seating = { kind: 'radio', path: 'seating', label: 'Seating', required: true, options: [{ value: 'early', label: '18:00' }, { value: 'late', label: '20:30' }] }
+  const stay = { kind: 'dateRange', path: 'checkIn', endPath: 'checkOut', label: 'Arrival', endLabel: 'Departure', required: true }
+
+  it('radio is a horizontal ui-radio-group of the item options under a ui-field', () => {
+    const el = build([seating])
+    expect(fieldOf(el, 'seating')!.label).toBe('Seating')
+    const group = controlOf(el, 'seating')
+    expect([group.localName, group.name, group.required, group.orientation]).toEqual(['ui-radio-group', 'seating', true, 'horizontal'])
+    const radios = [...group.querySelectorAll('ui-radio')] as unknown as Array<HTMLElement & { value: string }>
+    expect(radios.map((r) => [r.value, r.textContent])).toEqual([['early', '18:00'], ['late', '20:30']])
+  })
+
+  it('time is a ui-text-field type=time under a ui-field', () => {
+    const el = build([{ kind: 'time', path: 'arrivalTime', label: 'Arrival time' }])
+    expect(fieldOf(el, 'arrivalTime')!.label).toBe('Arrival time')
+    const input = controlOf(el, 'arrivalTime')
+    expect([input.localName, input.type, input.name, input.label, input.required]).toEqual(['ui-text-field', 'time', 'arrivalTime', 'Arrival time', false])
+  })
+
+  it('stepper is a ui-amount-picker under a ui-field, with min, max and step and no action-name', () => {
+    const el = build([{ kind: 'stepper', path: 'covers', label: 'Covers', required: true, min: 1, max: 12, step: 1 }])
+    expect(fieldOf(el, 'covers')!.label).toBe('Covers')
+    const picker = controlOf(el, 'covers')
+    expect([picker.localName, picker.name, picker.label, picker.required]).toEqual(['ui-amount-picker', 'covers', 'Covers', true])
+    expect([picker.min, picker.max, picker.step]).toEqual([1, 12, 1])
+    expect(picker.actionName).toBe('')
+    expect(picker.hasAttribute('action-name')).toBe(false)
+  })
+
+  it('stepper sets min, max and step only when they are finite numbers', () => {
+    const el = build([{ kind: 'stepper', path: 'guests', label: 'Guests', min: 'two', max: Number.NaN }])
+    const picker = controlOf(el, 'guests')
+    expect([picker.min, picker.max, picker.step]).toEqual([0, 100, 1]) // the picker's own defaults (amount-picker.md)
+  })
+
+  it('dateRange with endPath is its own date run of two date fields, start then end, both registered', () => {
+    const el = build([{ kind: 'dateSingle', path: 'visit', label: 'Visit' }, stay, { kind: 'dateSingle', path: 'later', label: 'Later' }])
+    const fields = el.querySelector('[data-part="fields"]')!
+    const rows = [...fields.children] as HTMLElement[]
+    expect(rows.map((r) => r.getAttribute('data-part'))).toEqual(['date-row', 'date-row', 'date-row']) // never joins an adjacent dateSingle run
+    expect([...rows[1]!.children].map((c) => c.getAttribute('data-a2ui-booking-field'))).toEqual(['checkIn', 'checkOut'])
+    expect([fieldOf(el, 'checkIn')!.label, fieldOf(el, 'checkOut')!.label]).toEqual(['Arrival', 'Departure'])
+    const [start, end] = [controlOf(el, 'checkIn'), controlOf(el, 'checkOut')]
+    expect([start.type, start.name, start.required, end.type, end.name, end.required]).toEqual(['date', 'checkIn', true, 'date', 'checkOut', true])
+  })
+
+  it('dateRange with no endLabel labels the end "End date"; with no endPath it is a dateSingle', () => {
+    const el = build([{ kind: 'dateRange', path: 'from', endPath: 'to', label: 'From' }])
+    expect(fieldOf(el, 'to')!.label).toBe('End date')
+    const single = build([{ kind: 'dateRange', path: 'day', label: 'Day' }, { kind: 'dateSingle', path: 'next', label: 'Next' }])
+    const rows = [...single.querySelector('[data-part="fields"]')!.children]
+    expect(rows.map((r) => r.getAttribute('data-part'))).toEqual(['date-row']) // read as dateSingle, it joins the next one's run
+    expect([...rows[0]!.children].map((c) => c.getAttribute('data-a2ui-booking-field'))).toEqual(['day', 'next'])
+  })
+
+  it('the dateRange end takes the start as its min, and a start moved past the end clears it', async () => {
+    const el = build([stay])
+    const [start, end] = [controlOf(el, 'checkIn'), controlOf(el, 'checkOut')]
+    bookingFormFactory.applyProp(el, 'value', { checkIn: '2026-11-14', checkOut: '2026-11-17' })
+    expect([start.value, end.value, end.min]).toEqual(['2026-11-14', '2026-11-17', '2026-11-14'])
+    start.value = '2026-11-20'
+    start.dispatchEvent(new Event('change', { bubbles: true }))
+    await Promise.resolve()
+    expect([end.value, end.min]).toEqual(['', '2026-11-20'])
+  })
+
+  it('"value" prefills each new kind: radio as a string or null, time as text, stepper only from a finite number', () => {
+    const el = build([seating, { kind: 'time', path: 'at', label: 'At' }, { kind: 'stepper', path: 'covers', label: 'Covers', min: 1, max: 12 }])
+    const [group, time, picker] = [controlOf(el, 'seating'), controlOf(el, 'at'), controlOf(el, 'covers')]
+    bookingFormFactory.applyProp(el, 'value', { seating: 'late', at: '19:30', covers: '4' })
+    expect([group.value, time.value, picker.value]).toEqual(['late', '19:30', 4])
+    bookingFormFactory.applyProp(el, 'value', { seating: '', covers: 'many' })
+    expect([group.value, picker.value]).toEqual([null, 4]) // a non-finite count leaves the picker as it was
+    bookingFormFactory.applyProp(el, 'value', { seating: null, covers: 6 })
+    expect([group.value, picker.value]).toEqual([null, 6])
+  })
+
+  it('the aggregate holds one scalar per path: one named control per path, two for a dateRange', () => {
+    // Detached, values() is vacuously {} (form-provider.ts); the real aggregate is proven in concierge.browser.test.ts.
+    // Here: one form control named per path, so values() holds one scalar per path, two for the dateRange.
+    const el = build([stay, seating, { kind: 'time', path: 'at', label: 'At' }, { kind: 'stepper', path: 'covers', label: 'Covers' }])
+    const named = [...el.querySelectorAll('ui-text-field, ui-radio-group, ui-amount-picker, ui-select')].map((c) => (c as Control).name)
+    expect(named).toEqual(['checkIn', 'checkOut', 'seating', 'at', 'covers'])
+    expect((el as unknown as { a2uiFormValue: unknown }).a2uiFormValue).toEqual({})
+  })
+
+  it('uses lists ui-amount-picker, the control the stepper mints', () => {
+    expect(bookingFormFactory.uses).toContain('ui-amount-picker')
   })
 })
 

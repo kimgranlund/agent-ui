@@ -251,3 +251,44 @@ describe('a say turn that targets an open BookingForm and sends it no update (T-
     expect(edit('Make it 16:00 and use the brand colours for the table decor').map((f) => f.code)).toEqual(['ACTION_NOT_APPLIED'])
   })
 })
+
+// T-0197: a dateRange field holds two dates, its start at `path` and its end at `endPath`; both checks read the end too.
+describe('a dateRange field reads its endPath as a second path (T-0197)', () => {
+  const stayForm = (booking: Record<string, unknown>, endPath = 'checkOut'): A2uiOutput =>
+    [
+      { version: 'v1.0', createSurface: { surfaceId: 'stay', catalogId: 'agent-ui--concierge', sendDataModel: true } },
+      { version: 'v1.0', updateDataModel: { surfaceId: 'stay', value: { booking } } },
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'stay',
+          components: [
+            {
+              id: 'root',
+              component: 'BookingForm',
+              title: 'Your stay',
+              value: { path: '/booking' },
+              fields: [{ kind: 'dateRange', path: 'checkIn', endPath, label: 'Arrival', endLabel: 'Departure', required: true }],
+            },
+          ],
+        },
+      },
+    ] as A2uiOutput
+  const openOf = (out: A2uiOutput) => openAfter(out.map((m) => JSON.stringify(m)).join('\n'))
+
+  it('a blank end date holds a confirm open, named by its endLabel (T-0197)', () => {
+    const open = openOf(stayForm({ checkIn: '2026-11-14', checkOut: '' }))
+    expect(blankRequiredField(open)).toBe('Departure')
+    expect(conciergeSurfaceRequired.holdsFlowOpen!({ surfaces: [], intent: CONFIRM_ASK, open })).toBe(true)
+    expect(blankRequiredField(openOf(stayForm({ checkIn: '2026-11-14', checkOut: '2026-11-17' })))).toBeUndefined()
+  })
+
+  it('a mis-pathed endPath is BOOKING_FIELD_PATH, a key-only one is not (T-0197)', () => {
+    const booking = { checkIn: '2026-11-14', checkOut: '2026-11-17' }
+    const check = (out: A2uiOutput) => conciergeBookingFieldPaths.check({ surfaces: semanticSurfaceViews({ turns: [] }, out) })
+    const findings = check(stayForm(booking, 'booking.checkOut'))
+    expect(findings.map((f) => f.code)).toEqual(['BOOKING_FIELD_PATH'])
+    expect(findings[0]!.message).toContain('Change "booking.checkOut" to "checkOut"')
+    expect(check(stayForm(booking))).toEqual([])
+  })
+})
