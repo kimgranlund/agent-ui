@@ -70,6 +70,7 @@ import { overlay, type OverlayHandle, type OverlayPlacement } from '../../traits
 import { rovingFocus } from '../../traits/roving-focus.ts'
 import { scrollFade } from '../../traits/scroll-fade.ts'
 import { activeElementIndex, centerInViewport, seedOpenFocus } from '../../traits/open-scroll.ts'
+import { createGlyph } from '../glyph/glyph.ts' // the selectable row's check mark is a library mark (ADR-0245 cl.5, T-0392)
 
 // ── Placement enum values (mirrors the OverlayPlacement union from overlay.ts) ─────────────────
 
@@ -190,6 +191,7 @@ export class UIMenuElement extends UIElement {
     this.effect(() => {
       const isOpen = this.open
       if (isOpen) {
+        this.#stampChecks(panel) // rows a consumer appended after connect get their check slot before they show
         const selected = checkedItem()
         seedOpenFocus(items(), selected)
         handle.open()
@@ -331,6 +333,7 @@ export class UIMenuElement extends UIElement {
     for (const child of panel.children) {
       if (child instanceof HTMLElement) {
         if (!child.hasAttribute('role')) child.setAttribute('role', 'menuitem')
+        if (child.getAttribute('role') === 'separator') continue // a group rule (T-0392), never a focus stop
         if (!child.hasAttribute('tabindex')) child.setAttribute('tabindex', '-1')
       }
     }
@@ -348,6 +351,7 @@ export class UIMenuElement extends UIElement {
       }
     }
 
+    this.#stampChecks(panel)
     this.appendChild(panel)
     this.#panel = panel
 
@@ -356,6 +360,24 @@ export class UIMenuElement extends UIElement {
     trigger.setAttribute('aria-haspopup', 'menu')
 
     return { panel, trigger, items: () => this.#itemsIn(panel) }
+  }
+
+  /**
+   * Give every menuitemradio/menuitemcheckbox row its check mark (T-0392): a decorative `<ui-glyph
+   * symbol="check" data-part="check">` prepended once, pinned in the row's reserved check slot by menu.css
+   * and shown only on `[aria-checked='true']`. Library geometry, not a hand-drawn clip-path (ADR-0245 cl.5).
+   * Runs at connect and again on every open, so rows a consumer appends later (the composer's pickers) are
+   * covered without an observer.
+   */
+  #stampChecks(panel: HTMLElement): void {
+    for (const item of this.#itemsIn(panel)) {
+      const role = item.getAttribute('role')
+      if (role !== 'menuitemradio' && role !== 'menuitemcheckbox') continue
+      if (item.querySelector(':scope > [data-part="check"]')) continue
+      const check = createGlyph('check')
+      check.dataset.part = 'check'
+      item.prepend(check)
+    }
   }
 
   /**

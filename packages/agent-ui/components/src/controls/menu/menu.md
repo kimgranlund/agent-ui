@@ -10,7 +10,8 @@ tag: ui-menu
 description: A keyboard-navigable overlay menu opened from a trigger, with roving focus and type-ahead selection.
 tier: pattern           # geometry size-class — panel uses Container/surface geometry; items use the legacy item-pad (NOT a control height)
 extends: UIElement      # NOT form-associated — the menu carries no form value; it emits an action (`select`)
-uses: []
+uses:
+  - ui-glyph
 # marginal: tracked at the wave-4 integration slice (s12 barrel pass); ≤ ~2 kB tier budget (plan §10)
 
 attributes:             # attributes-as-API — mirrors UIMenuElement.props (open, then placement, then label)
@@ -99,7 +100,7 @@ geometry:
   itemPadInline: var(--ui-menu-item-pad-inline)    # = 2n - c: a row is a control, margin n + label inset n - c (ADR-0245 Amendment 4); var(--md-sys-space-md) under the legacy opt-out
   itemBlockSize: var(--ui-menu-item-block-size)    # = font + 2×pad-block (line-height:1 makes it exact) — the real rendered row height, feeding panelMaxBlockSize
   itemRadius: var(--ui-menu-item-radius)           # a row is a single-line control: the pill 2n (--md-sys-control-radius, ADR-0245 Amendment 5); corner-base − --ui-box-inset under the legacy opt-out
-  checkSize: var(--ui-menu-check-size)             # GH #55 — the menuitemradio/menuitemcheckbox checkmark glyph slot, = var(--md-sys-icon-box) 2n (--md-sys-compact-sm bridge alias until W7; the checkbox.css indicator-box precedent, not a menu-specific magic number)
+  checkSize: var(--ui-menu-check-size)             # GH #55: the menuitemradio/menuitemcheckbox check slot, = max(var(--md-sys-icon-box) 2n, var(--md-sys-glyph-box) n + 6) (--md-sys-compact-sm bridge alias until W7); the ui-glyph `check` centres its n + 6 mark in it (T-0392)
   checkGap: var(--ui-menu-check-gap)               # = n, check box to text (gutter c + label inset n - c); the box itself is pinned at the row's margin n (--ui-menu-item-edge); var(--md-sys-space-xs) under the legacy opt-out
   note: ui-menu has NO `[size]` attribute and renders no trigger geometry (the trigger is fully author-owned) — the select/combo-box family's size-carrying derivation (panel inset + option pad off the trigger's own height/font) does not apply here; flagged as a structural divergence, not forced (2026-07-06 pass)
 
@@ -147,7 +148,9 @@ is the **trigger** (marked internally with `data-part="trigger"`); it stays in d
 Remaining children are moved into the control-created **panel** (`<div data-part="panel" role="menu"
 popover="auto">`) at connect time. The panel enters the Popover API **top layer** via `showPopover()`
 — above any `overflow`/`transform` ancestor, positioned by the JS controller. Item children
-auto-receive `role=menuitem` and `tabindex=-1` if they don't already carry a role.
+auto-receive `role=menuitem` and `tabindex=-1` if they don't already carry a role. A child marked
+`role="separator"` is a group rule (an outline-variant hairline, T-0392): it keeps its role, gets no
+tabindex, and is never an item.
 
 ## Open / close
 
@@ -182,8 +185,11 @@ to opt into. On commit, the control also writes `aria-checked`:
 Both roles always carry `aria-checked` (the role requires it); the control stamps a default
 `"false"` at connect for any item missing it (over the SAME descendant-deep item set `#itemsIn`
 collects, not just direct panel children), but leaves an author-pre-set `aria-checked="true"`
-(declaring the initial choice) untouched. A checkmark indicator (`--ui-menu-check-*` tokens) renders
-on `[aria-checked='true']` — plain `menuitem` rows are unaffected (still no `aria-checked`, which
+(declaring the initial choice) untouched. Every selectable row gets a decorative `<ui-glyph
+symbol="check" data-part="check">` (the library check mark, ADR-0245 cl.5; T-0392 replaced the old
+clip-path tick), prepended at connect and again on each open so rows appended later are covered. It
+sits in the reserved check slot (`--ui-menu-check-*` tokens) on every row, so labels align, and shows
+only on `[aria-checked='true']`; plain `menuitem` rows are unaffected (still no `aria-checked`, which
 stays invalid on that role).
 
 The control only writes `aria-checked` in response to a user commit (click/Enter/Space). A consumer
@@ -193,8 +199,9 @@ invariant itself for that write — the control does not observe or reconcile it
 _Historical (GH #710): the site's agent-admin canvas-header consumer used to satisfy this — its
 preset-apply loop was one-true-by-construction on every non-commit write path (persisted-load, Reset
 persona) — before that consumer retired in S7-d (GH #684/#701; `agent-admin-app.ts` no longer writes
-`aria-checked` there). As of this writing no live consumer exercises the selectable-item variant's
-non-commit write path; the pattern above is exercised only via the control's own commit machinery._
+`aria-checked` there). Since T-0392 the composer's Effort picker (`conversation-composer.ts`,
+`#markPickerSelection`) writes its `menuitemradio` rows' `aria-checked` from the `effort` prop, one true
+by construction._
 
 ## Keyboard navigation
 
