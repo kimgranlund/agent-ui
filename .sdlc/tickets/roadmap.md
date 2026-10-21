@@ -13,6 +13,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0384 | [0384-packages-agent-ui-a2ui-src](0384-packages-agent-ui-a2ui-src/handoff.md) | packages/agent-ui/a2ui/src/agent/prompts/grammar.md:37 still says... | idea | L2 | P2 | none | ⏳ proposed |
 | T-0385 | [0385-site-agent-content-workflows-booking](0385-site-agent-content-workflows-booking/handoff.md) | site/agent-content/workflows/booking-flow/WORKFLOW.md:12 settles... | idea | L2 | P2 | none | ⏳ proposed |
 | T-0386 | [0386-grammar-stale-affordance-deck](0386-grammar-stale-affordance-deck/handoff.md) | grammar.md stale-affordance rule names Buttons, not an OptionDeck greet | chore | L2 | P2 | none | 🔵 ready |
-| T-0387 | [0387-option-deck-greet-collapse](0387-option-deck-greet-collapse/handoff.md) | Croupier greet OptionDeck renders as a one-character-wide column with no cards | bug | L2 | P1 | none | 🔵 ready |
+| T-0388 | [0388-option-deck-nested-collapse](0388-option-deck-nested-collapse/handoff.md) | An OptionDeck nested under a centring parent still collapses to 0px | bug | L2 | P2 | none | 🔵 ready |
 
-Closed: 373 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 374 done, 4 dropped (git log or .NNNN-* folders)

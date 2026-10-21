@@ -620,3 +620,7 @@
 - note: The builder's scratch folder was already gone; my own scratch captures under the tmp prefix remain because the `rm` was denied by the permission system.
 - decide: `packages/agent-ui/a2ui/src/agent/prompts/grammar.md:234` the stale-affordance rule still says "remove its action Buttons (or the row holding them)", while `grammar.md:51` and `greeting-card.md` now retire "greet cards" per that rule; a model retiring a greet deck has to infer that the OptionDeck is the affordance to strip. Not a wrong shape; a few words there would close the gap.
 - note: `packages/agent-ui/a2ui/src/catalog/default/selection.json:1219-1222` the OptionDeck intents drop "template" from the handoff's sentence (the `INTENT_CHARS_MAX` 60 split); the mini-skill trigger list keeps it.
+
+## T-0387: Croupier greet OptionDeck renders as a one-character-wide column with no cards (2026-10-20)
+
+- note: surface-host.browser.test.ts (new T-0387 test) asserts the deck width, a one-line heading and four cards with width over 100px. Only the width assertion was seen to go red at base; the heading and card assertions were not independently shown to fail without the fix, though they sit behind the width check.

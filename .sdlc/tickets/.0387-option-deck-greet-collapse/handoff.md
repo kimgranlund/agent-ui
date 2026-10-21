@@ -2,7 +2,7 @@
 id: T-0387
 title: "Croupier greet OptionDeck renders as a one-character-wide column with no cards"
 type: bug             # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P1         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -35,3 +35,13 @@ Fix the cause in the control or the host, not in the persona prompt. Add a brows
 1. An OptionDeck root in the chat mount (`ui-surface-host[wrap][bare]`) spans the surface content box, its heading reads on one line and all four cards paint; the test was red (deck 0px, Chromium and WebKit) before the fix: `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/controls/surface-host/surface-host.browser.test.ts` exits 0.
 2. `applyRootStretch` stretches a `ui-option-deck` root and leaves an `[inline]` one alone: `env -u NODE_OPTIONS npx vitest run packages/agent-ui/app/src/controls/surface-host` exits 0.
 3. The standing gate and the whole dogfood render lint stay green: `env -u NODE_OPTIONS npm run check` exits 0 and `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts site/lib/canvas-surface.browser.test.ts` exits 0.
+
+## Outcome
+
+2026-10-20 · lane: solo L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 78c6151fad65
+- Changed: ui-option-deck joins the full-width widget roots in surface-host artboard.ts, so the greet deck fills the chat surface
+- Commits: 7c46a38 T-0387: stretch an OptionDeck root to fill the chat surface
+- Check: 1 OptionDeck root in the `[wrap][bare]` chat mount spans the surface, heading on one line, four car...: pass
+- Check: 2 `applyRootStretch` stretches a `ui-option-deck` root and leaves an `[inline]` one alone: pass
+- Check: 3 Standing gate and whole dogfood render lint stay green: pass
+- Follow-up: note: surface-host.browser.test.ts new T-0387 test asserts the deck... -> notes.md
