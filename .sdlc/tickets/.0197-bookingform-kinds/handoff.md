@@ -2,7 +2,7 @@
 id: T-0197
 title: "BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d'"
 type: feature         # feature | bug | chore | spike | idea
-status: ready        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0196]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -107,3 +107,51 @@ Each fork has a firm recommendation. Kim's answer goes on the `Answer:` line.
 - Conductor: the planner L3 replans steps 2 and 3 to cover these rulings. Step 1 is done.
 - Kim 2026-10-20: plan-reviewer-L1-2 said replan with mechanical findings only. Kim approved applying them directly (split steps 2 to 4 with --override-review, the step 4 criterion swap, notes into the step handoffs) instead of a third planner run.
 - Kim 2026-10-20: approved the step 3 render as built (gate b): the commit Button sits under the card, hugging the trailing edge.
+
+## Outcome
+
+2026-10-21 · lane: solo L3 · verdict: skipped (design intake and mockup only (no code), Kim approved the mockup and the step 3 render (gate b)) · verifier: verifier-L3 (fable) · base: b63ff5776c31
+- Changed: BookingForm gains dateRange, radio, time and stepper kinds with its commit Button under the card; it moves into the shared hospitality domain for the Concierge and the Maitre d'; radio and checkbox text at the field size
+- Commits: 232c0c9 T-0197: Kim approves the step 3 render; file the ContrastPair glyph red; f49be4e T-0197: plan review findings applied (Kim); a6f23d0 T-0197: resize to L3 (Kim)
+- Check: step-2#1 (red) md-sys-type-control in radio.css and checkbox.css: pass
+- Check: step-2#2 (red) labelFont lines in radio.md and checkbox.md: pass
+- Check: step-2#3 (red) T-0197 test names present in both browser tests: pass
+- Check: step-2#4 browser packages project on radio and checkbox: pass
+- Check: step-2#5 browser visual project on radio, checkbox, form-popover, table: pass
+- Check: step-2#6 (guard) jsdom `--project packages` on radio and checkbox: pass
+- Check: step-2#7 (guard) foundations-census --gate, generate-agent-assets --check, generate-controls --check, `--p...: pass
+- Check: step-3#1 (red) catalog python assertion (BookingForm `kind` enum gains `dateRange`, `radio`, `time`, `step...: pass
+- Check: step-3#2 (red) `factories.test.ts` holds `BookingForm field kinds (T-0197)`: pass
+- Check: step-3#3 (red) both browser describes in `*.browser.test.ts`: pass
+- Check: step-3#4 (red) `bookingFormFactory.uses` lists `ui-amount-picker` and `checks.ts` reads `endPath`: pass
+- Check: step-3#6 (red) the three chromium baselines exist: pass
+- Check: step-3#7 `... --project visual packages/agent-ui/a2ui/src/catalog` exits 0: pass
+- Check: step-3#8 (red) the three render PNGs are non-empty: pass
+- Check: step-3#9 (red) the handoff no longer says the Button sits inside the card: pass
+- Check: step-3#10 `... --project site site/pages/dogfood-render.browser.test.ts` exits 0: pass
+- Check: step-3#11 (guard) `env -u NODE_OPTIONS npx vitest run --project packages packages/agent-ui/a2ui/src/catalog...: pass
+- Check: step-3#12 (guard) dogfood-compose, foundations-census, generate-agent-assets `--check`, generate-agent-cont...: pass
+- Check: step-4#1 (red) `test -f .../domains/hospitality/catalog.json && grep -qF "hospitalityDomain" domains/index...: pass
+- Check: step-4#2 (red) `test ! -e packages/agent-ui/a2ui/src/catalog/personas/concierge`: pass
+- Check: step-4#3 (red) selection.json holds `party size` and `arrival to departure`: pass
+- Check: step-4#4 (red) concierge/restaurant `agent.md` frontmatter (`domains`, no `localPatterns`, versions 20 and...: pass
+- Check: step-4#5 (red) manifests `seedVersion` 20 and 6: pass
+- Check: step-4#6 (red) all four model-read files carry "never rebuild a booking form from primitives": pass
+- Check: step-4#7 (red) table-reservation names `BookingForm` and `stepper`, booking-flow names `dateRange`: pass
+- Check: step-4#9 (guard) `vitest run --project packages` over a2ui catalog, renderer, live-agent, agent, corpus, e...: pass
+- Check: step-4#10 (guard) `vitest run --project site` over agent-manifest, capability-registry, presets, admin-app,...: pass
+- Check: step-4#11 (guard) `vitest run --project tools` (registry, catalog-files, corpus) && `--project scripts scri...: pass
+- Check: step-4#12 (guard) dogfood-compose --gate && foundations-census --gate && generate-agent-assets --check && g...: pass
+- Deviation: step 1 verifier skipped: design intake and mockup only (no code), Kim approved the mockup and the step 3 render (gate b)
+- Deviation: step 3 verifier skipped: both verdicts are inherited red only on personas/stylist/contrast-pair.browser.test.ts (red at base, filed as T-0389)
+- Deviation: step 4 verifier skipped: both verdicts are inherited red only on personas/stylist/contrast-pair.browser.test.ts (red at base, filed as T-0389)
+- Follow-up: note: dogfood-render was not run here; the handoff assigns it to step 3. -> notes.md
+- Follow-up: decide: .sdlc/tickets/0197-bookingform-kinds/render/widget-{light,dark,400}... -> notes.md
+- Follow-up: note: concierge.browser.test.ts:429-431 pins the radio and checkbox rows... -> notes.md
+- Follow-up: note: factories.test.ts:389-396 proves the "one scalar per path, two for... -> notes.md
+- Follow-up: note: catalog.json:9 puts the fields description inside the type... -> notes.md
+- Follow-up: decide: scripts/e2e-admin/probe/scenarios/routing.ts:39: decide: the... -> notes.md
+- Follow-up: decide: site/agent-content/skills/hotel-booking-form/SKILL.md:12: decide... -> notes.md
+- Follow-up: decide: site/agent-content/workflows/table-reservation/WORKFLOW.md:12... -> T-0390
+- Follow-up: decide: site/agent-content/seed-history.ts:29: decide: no concierge row for... -> notes.md
+- Follow-up: decide: .claude/docs/spec/a2ui-catalog-architecture.spec.md:68: note: still... -> notes.md

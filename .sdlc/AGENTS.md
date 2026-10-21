@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:e1330a95a93f -->
+<!-- sdlc-lite:managed:start v1 sha256:44d81d2cdec1 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -9,11 +9,11 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 2
+- proposed: 3
   - T-0384 packages/agent-ui/a2ui/src/agent/prompts/grammar.md:37 still says... (0384-packages-agent-ui-a2ui-src)
   - T-0385 site/agent-content/workflows/booking-flow/WORKFLOW.md:12 settles... (0385-site-agent-content-workflows-booking)
-- ready: 7
-  - T-0197 BookingForm field kinds (dateRange, radio, time, stepper) and sharing it with the Maitre d' (0197-bookingform-kinds)
+  - T-0390 site/agent-content/workflows/table-reservation/WORKFLOW.md:12... (0390-site-agent-content-workflows-table)
+- ready: 6
   - T-0198 Step flow pattern: step n of m, Back and Next, shared /draft data (0198-step-flow)
   - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare)
   - T-0383 conversation.browser.test.ts: 4 resumed-bubble and composed-path reds (0383-conversation-browser-reds)
@@ -24,7 +24,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 374
+- done: 375
 - dropped: 4
 
 ## Procedures
