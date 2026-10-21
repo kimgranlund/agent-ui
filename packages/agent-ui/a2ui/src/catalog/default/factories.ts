@@ -1599,6 +1599,19 @@ export const confirmReceiptFactory: WidgetFactory = {
   value: { prop: 'status', event: 'change' },
 }
 
+/**
+ * `StepFlow` to `ui-step-flow` (T-0198). Every property is a 1:1 reflecting accessor (verified against
+ * `step-flow.md`; `finishAction` and `finishLabel` keep their prop names while the control observes the kebab
+ * attributes). The producer's children are the scenes, one per step (`ChildList`). Two-way bound on `step` via the
+ * control's own `change` (the Tabs shape), so Back and Next write the bound position with no agent turn. `draft` is
+ * bound to the `/draft` prefix every scene field writes under, and the control folds it into the finish action's
+ * context. `finishAction` is an `{action, context}` object marked `actionEvent: 'action'` (the ConfirmReceipt
+ * shape), so the renderer forwards the control's own `action` event by its `detail.action`; never `mapsTo: 'action'`,
+ * which a host click would answer from any scene. No `finishAction` leaves the commit to the last scene itself.
+ * `inline` is not wire-exposed.
+ */
+export const stepFlowFactory: WidgetFactory = accessorFactory('ui-step-flow', { prop: 'step', event: 'change' })
+
 /** The default catalog's factory table — keyed by A2UI component type (catalog LLD-C5, consumed by the
  *  host at `registry.register`; the renderer resolves a node's control via `factories[type]`). Every type
  *  declared in `catalog.json` MUST appear here — a gap is a `CATALOG_FACTORY_MISSING` at register (SPEC-R7 AC1). */
@@ -1690,4 +1703,5 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   AmountPicker: amountPickerFactory,
   OptionDeck: optionDeckFactory,
   ConfirmReceipt: confirmReceiptFactory,
+  StepFlow: stepFlowFactory,
 }

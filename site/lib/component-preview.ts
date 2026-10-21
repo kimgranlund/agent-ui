@@ -380,6 +380,8 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   OptionDeck: { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.', actionName: 'start' },
   // ConfirmReceipt (T-0195): the string and enum knobs here; rows, items, totalLabel/totalPath, data and the two actions have no preview sample (the preview gate does not require one).
   ConfirmReceipt: { title: 'Your order', status: 'pending', refPath: 'ref' },
+  // StepFlow (T-0198): the finish label here; `steps`, `finishAction` and the scenes ride SAMPLE_TREES rootRef.
+  StepFlow: { finishLabel: 'Book' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -965,6 +967,22 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
     },
     extras: [],
   }),
+  // StepFlow (T-0198): a three-scene booking walk, one scene per child, labels in `steps`; the finish press sends `finishAction`.
+  StepFlow: () => ({
+    rootRef: {
+      steps: ['Dates', 'Guests', 'Confirm'],
+      finishAction: { action: 'book' },
+      children: ['s_sf_dates', 's_sf_guests', 's_sf_confirm'],
+    },
+    extras: [
+      { id: 's_sf_dates', component: 'Column', children: ['s_sf_d1'] },
+      { id: 's_sf_d1', component: 'Text', variant: 'body', text: 'Check in Fri 14 Nov, check out Sun 16 Nov.' },
+      { id: 's_sf_guests', component: 'Column', children: ['s_sf_g1'] },
+      { id: 's_sf_g1', component: 'Text', variant: 'body', text: 'Two adults, no children.' },
+      { id: 's_sf_confirm', component: 'Column', children: ['s_sf_c1'] },
+      { id: 's_sf_c1', component: 'Text', variant: 'body', text: 'Harbour View Suite, 2 nights, $624.' },
+    ],
+  }),
   // Breadcrumb (GH #1515): a realistic 4-level path (the site doc/demo pages' own reference shape) — three
   // linked crumbs (Text.href, ADR-0114) + a plain current-page leaf (no href) — the real job, not the
   // generic "Sample content" fallback (the GH #971/#978 idiom).
@@ -1039,6 +1057,8 @@ const COMPONENT_SAMPLE_CHILDREN: Record<string, () => HTMLElement[]> = {
   'ui-row': () => ['Item one', 'Item two', 'Item three'].map(sampleItem),
   'ui-column': () => ['Item one', 'Item two', 'Item three'].map(sampleItem),
   'ui-list': () => ['First item', 'Second item', 'Third item'].map(sampleItem),
+  // ui-step-flow (T-0198): three scenes as direct children, the content model the control pages through.
+  'ui-step-flow': () => ['Pick your dates', 'How many guests', 'Any extras'].map(sampleItem),
   'ui-card': () => {
     const header = document.createElement('ui-card-header')
     header.textContent = 'Account'
@@ -1659,6 +1679,9 @@ const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
       confirmAction: { action: 'place_order' },
       backAction: { action: 'edit_cart' },
     }),
+  // ui-step-flow (T-0198): the scene labels and a finish action, written as properties (JSON data, not knobs).
+  'ui-step-flow': (el) =>
+    Object.assign(el, { steps: ['Dates', 'Guests', 'Extras'], finishAction: { action: 'review_stay' }, finishLabel: 'Review' }),
   // ui-option-deck (T-0193): the representative game picker of the approved mockup, with Surprise me.
   'ui-option-deck': (el) =>
     Object.assign(el, {
@@ -1718,6 +1741,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-modal', // #ensureDialog(): the control-owned <dialog> part
   'ui-drawer', // #ensureDialog(): the control-owned <dialog> part (ADR-0188, the modal precedent re-applied)
   'ui-drill', // #ensureParts(): the control-owned header/back/heading part (ADR-0195) — SLOT_TEXT would clobber it; the ui-drill-panel author children are its real sample content
+  'ui-step-flow', // T-0198: the control-owned header and actions parts frame the scenes, so SLOT_TEXT would clobber them; the scene children are its real sample content
   'ui-popover', // #ensureParts(): trigger (COMPONENT_SAMPLE_CHILDREN) + panel
   'ui-select', // #ensureParts(): a control-created trigger button + listbox
   'ui-slider', // ::before/::after track — no text KNOB (batch C); seeded an aria-label via COMPONENT_SAMPLE_ATTRS instead. (GH #1141's own value-readout PART legitimately carries text — see COMPONENT_SAMPLE_ATTRS comment above.)

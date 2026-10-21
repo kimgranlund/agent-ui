@@ -88,7 +88,7 @@ export { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed, corpusGrow
 // GH #1568 (svg-charts wave 4, closing design tracker GH #1561) — `columnChartRevenueSeed` ·
 // `gaugeSystemLoadSeed` · `lineChartAxesWeeklySalesSeed` close the ColumnChart/Gauge coverage gaps and
 // exercise LineChart's new `axes` opt-in state (distinct from Frontier 11's default-state seed).
-export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
+export { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, stepFlowBookingSeed, catalogFrontierSeeds } from './catalog-frontier.ts'
 export { structuredContainerSeed, structuredContainerSeeds } from './structured-container.ts'
 // GH #972 — the high-frequency-patterns family: the 2026-08-15 gap-map sweep's 5 missing high-frequency
 // chat-feed patterns (comparison table, receipt card, empty/error card, notification stack, media grid).
@@ -117,7 +117,8 @@ export {
 // GH #1206 — composition seeds pack B (req-a2ui-library R4, next-tier): the dispositioned composition
 // patterns — weather · menu · itinerary. The pack's fourth seed, wizard-step-progress (the
 // Ladder/Progress presentation), was DROPPED 2026-08-18 per its judged D1 refusals — the ADR-0165 drop
-// path; the wizard technique's exemplar is the backable-wizard flow-protocol seed (catalog-frontier.ts).
+// path; the wizard technique's exemplar is the backable-wizard flow-protocol seed (catalog-frontier.ts). T-0198 retired
+// grammar.md's backable-multi-step clause for one StepFlow (stepFlowBookingSeed); fork 13 keeps that seed.
 export {
   fiveDayWeatherSeed,
   restaurantMenuSeed,

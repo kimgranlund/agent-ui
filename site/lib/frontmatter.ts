@@ -110,6 +110,8 @@ import resultCardMd from '../../packages/agent-ui/components/src/controls/result
 import optionDeckMd from '../../packages/agent-ui/components/src/controls/option-deck/option-deck.md?raw'
 // T-0195 - ui-confirm-receipt, the read-back, confirm and receipt record (tier=pattern => {doc, demo}).
 import confirmReceiptMd from '../../packages/agent-ui/components/src/controls/confirm-receipt/confirm-receipt.md?raw'
+// T-0198 - ui-step-flow, the client-side wizard over a producer's scenes (tier=pattern => {doc, demo}).
+import stepFlowMd from '../../packages/agent-ui/components/src/controls/step-flow/step-flow.md?raw'
 // ADR-0201 — ui-description-list, the key–value receipt primitive (tier=display ⇒ {doc}).
 import descriptionListMd from '../../packages/agent-ui/components/src/controls/description-list/description-list.md?raw'
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
@@ -283,6 +285,8 @@ export const loadResultCardDoc = (): ComponentDoc => parseDoc(resultCardMd)
 export const loadOptionDeckDoc = (): ComponentDoc => parseDoc(optionDeckMd)
 // T-0195 - ui-confirm-receipt, the read-back, confirm and receipt record (tier=pattern => {doc, demo}).
 export const loadConfirmReceiptDoc = (): ComponentDoc => parseDoc(confirmReceiptMd)
+// T-0198 - ui-step-flow, the client-side wizard over a producer's scenes (tier=pattern => {doc, demo}).
+export const loadStepFlowDoc = (): ComponentDoc => parseDoc(stepFlowMd)
 export const loadDescriptionListDoc = (): ComponentDoc => parseDoc(descriptionListMd)
 // ADR-0214/GH #1394 — ui-source-list, the source-attribution aggregate leaf (tier=display ⇒ {doc}).
 export const loadSourceListDoc = (): ComponentDoc => parseDoc(sourceListMd)

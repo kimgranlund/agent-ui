@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StepFlow mockup (T-0198)</title>
+<!-- The library's foundation layer, in the foundation-styles.css order (linked directly: its bare
+     @agent-ui/shared specifiers do not resolve over file://). -->
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/tokens.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/dimensions.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/base.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations.gen.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css">
+<style>
+  /* Page chrome (not part of the control). */
+  html, body { margin: 0; }
+  body {
+    background: var(--md-sys-color-neutral-surface);
+    color: var(--md-sys-color-neutral-on-surface);
+    font-family: var(--md-sys-typeface-sans, system-ui, sans-serif);
+    padding: var(--md-sys-layout-margin);
+  }
+  .page-head h1 { font-size: var(--md-sys-type-heading); margin: 0 0 var(--md-sys-card-gutter); }
+  .page-head p, .direction > p { margin: 0 0 var(--md-sys-card-margin); color: var(--md-sys-color-neutral-on-surface-variant); font-size: var(--md-sys-type-body); max-inline-size: 70ch; }
+  .direction { margin-block-end: calc(var(--md-sys-card-margin) * 2); }
+  .direction > h2 { font-size: var(--md-sys-type-title); margin: 0 0 var(--md-sys-card-gutter); }
+  .modes { display: flex; flex-wrap: wrap; gap: var(--md-sys-card-gutter); align-items: start; }
+  /* The 400px column: the chat column a canvas surface renders in. */
+  .column {
+    inline-size: min(100%, 400px);
+    display: grid;
+    gap: var(--md-sys-card-gutter);
+    padding: var(--md-sys-card-gutter);
+    border-radius: var(--md-sys-card-radius);
+    background: var(--md-sys-color-neutral-surface);
+    color: var(--md-sys-color-neutral-on-surface);
+    box-sizing: border-box;
+  }
+  .column[data-mode='dark'] { color-scheme: dark; }
+  .column[data-mode='light'] { color-scheme: light; }
+  .mode { margin: 0; font-size: var(--md-sys-type-group-kicker); letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-sys-color-neutral-on-surface-variant); }
+
+  /* The A2UI canvas: widget tier, scale md (20 / 24 / 28 px controls). A plain surface, no card chrome. */
+  .canvas {
+    background: var(--md-sys-color-neutral-surface-bright);
+    border-radius: var(--md-sys-widget-radius);
+    padding: var(--md-sys-widget-margin);
+    display: grid;
+    gap: var(--md-sys-widget-gutter);
+    align-content: start;
+  }
+  .state { margin: 0; font-size: var(--md-sys-type-group-kicker); letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-sys-color-neutral-on-surface-variant); }
+
+  /* ui-step-flow: the proposed control (pattern tier). Host grid; header and actions are control parts placed
+     with CSS order, the producer's scenes stay direct children between them. */
+  .sf {
+    --ui-step-flow-gap: var(--md-sys-group-gutter);
+    --ui-step-flow-position-ink: var(--md-sys-color-neutral-on-surface-variant);
+    --ui-step-flow-label-ink: var(--md-sys-color-neutral-on-surface);
+    --ui-step-flow-track: var(--md-sys-color-neutral-outline-variant);
+    --ui-step-flow-fill: var(--md-sys-color-primary);
+    --ui-step-flow-mark-bg: var(--md-sys-color-neutral-container-low);
+    --ui-step-flow-mark-ink: var(--md-sys-color-neutral-on-surface-variant);
+    --ui-step-flow-back-bg: var(--md-sys-color-neutral-container-low);
+    --ui-step-flow-back-ink: var(--md-sys-color-neutral-on-surface);
+    --ui-step-flow-next-bg: var(--md-sys-color-primary-fill);
+    --ui-step-flow-next-ink: var(--md-sys-color-primary-on-primary);
+    display: grid;
+    gap: var(--ui-step-flow-gap);
+    font-size: var(--md-sys-type-control);
+  }
+  .sf > [data-part='header'] { order: -1; display: grid; gap: var(--md-sys-control-gutter); }
+  .sf > [data-part='actions'] { order: 1; }
+  .sf > [data-scene][hidden] { display: none; }
+  .sf svg { inline-size: var(--md-sys-glyph-box); block-size: var(--md-sys-glyph-box); fill: none; stroke: currentColor; stroke-width: var(--md-sys-glyph-stroke); stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Direction B: compact. "Step n of m" plus the current label over a segmented bar. */
+  .sf [data-part='position'] { color: var(--ui-step-flow-position-ink); font-size: var(--md-sys-type-field-label); font-variant-numeric: tabular-nums; }
+  .sf [data-part='label'] { color: var(--ui-step-flow-label-ink); font-weight: 600; font-size: var(--md-sys-type-title); outline: none; }
+  .sf [data-part='label']:focus-visible { outline: 2px solid var(--md-sys-color-focus-ring, var(--md-sys-color-primary)); outline-offset: 2px; border-radius: var(--md-sys-control-radius); }
+  .sf [data-part='bar'] { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: var(--md-sys-c); }
+  .sf [data-part='segment'] { block-size: calc(var(--md-sys-c) * 1.5); border-radius: var(--md-sys-c); background: var(--ui-step-flow-track); }
+  .sf [data-part='segment'][data-state='done'] { background: var(--ui-step-flow-fill); }
+  /* Current: filled and taller, a shape cue beside the color cue. */
+  .sf [data-part='segment'][data-state='current'] { background: var(--ui-step-flow-fill); block-size: calc(var(--md-sys-c) * 3); margin-block: calc(var(--md-sys-c) * -0.75); }
+
+  /* Direction A: a labeled rail, a numbered mark per step. */
+  .sf [data-part='rail'] { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; list-style: none; margin: 0; padding: 0; }
+  .sf [data-part='rail'] li { display: grid; justify-items: center; gap: var(--md-sys-c); position: relative; min-inline-size: 0; }
+  .sf [data-part='rail'] li + li::before {
+    content: ''; position: absolute; inset-block-start: calc(var(--md-sys-height-sm) / 2 - 1px); inset-inline-end: 50%; inline-size: 100%;
+    block-size: 2px; background: var(--ui-step-flow-track); z-index: 0;
+  }
+  .sf [data-part='rail'] li[data-state='done']::before, .sf [data-part='rail'] li[data-state='current']::before { background: var(--ui-step-flow-fill); }
+  .sf [data-part='mark'] {
+    position: relative; z-index: 1; inline-size: var(--md-sys-height-sm); block-size: var(--md-sys-height-sm); border-radius: 50%;
+    display: grid; place-items: center; font-size: var(--md-sys-type-field-label); font-variant-numeric: tabular-nums;
+    background: var(--ui-step-flow-mark-bg); color: var(--ui-step-flow-mark-ink); box-shadow: inset 0 0 0 1px var(--ui-step-flow-track);
+  }
+  .sf li[data-state='done'] [data-part='mark'] { background: var(--ui-step-flow-fill); color: var(--md-sys-color-primary-on-primary); box-shadow: none; }
+  .sf li[data-state='current'] [data-part='mark'] { background: var(--md-sys-color-neutral-surface-bright); color: var(--ui-step-flow-fill); box-shadow: inset 0 0 0 2px var(--ui-step-flow-fill); font-weight: 700; }
+  .sf [data-part='rail-label'] { font-size: var(--md-sys-type-field-label); color: var(--ui-step-flow-position-ink); max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sf li[data-state='current'] [data-part='rail-label'] { color: var(--ui-step-flow-label-ink); font-weight: 600; }
+
+  /* Actions: outside any card surface, lg (28px at widget / md). Back ghost-tonal at the start, Next solid at the end. */
+  .sf [data-part='actions'] { display: flex; gap: var(--md-sys-control-gutter); justify-content: space-between; }
+  .sf [data-part='actions'] button {
+    font: inherit; border: 0; margin: 0; block-size: var(--md-sys-height-lg); padding-inline: var(--md-sys-label-inset);
+    border-radius: var(--md-sys-control-radius); display: inline-grid; grid-auto-flow: column; place-items: center; gap: var(--md-sys-control-gutter);
+    line-height: 1; cursor: pointer; font-weight: 600;
+  }
+  .sf [data-part='back'] { background: var(--ui-step-flow-back-bg); color: var(--ui-step-flow-back-ink); }
+  .sf [data-part='next'], .sf [data-part='finish'] { background: var(--ui-step-flow-next-bg); color: var(--ui-step-flow-next-ink); margin-inline-start: auto; }
+
+  /* Static stand-ins for the producer's scene children (the build renders the real ui-* controls). */
+  .f { display: grid; gap: var(--md-sys-c); }
+  .f > span { font-size: var(--md-sys-type-field-label); color: var(--md-sys-color-neutral-on-surface-variant); }
+  .box {
+    block-size: var(--md-sys-height); border-radius: var(--md-sys-control-radius); padding-inline: var(--md-sys-label-inset);
+    display: flex; align-items: center; background: var(--md-sys-color-neutral-container-low); color: var(--md-sys-color-neutral-on-surface);
+    box-shadow: inset 0 0 0 1px var(--md-sys-color-neutral-outline-variant);
+  }
+  .box.empty { color: var(--md-sys-color-neutral-on-surface-variant); }
+  .box[aria-invalid='true'] { box-shadow: inset 0 0 0 2px var(--md-sys-color-danger); }
+  .err { display: flex; align-items: center; gap: var(--md-sys-c); font-size: var(--md-sys-type-field-label); color: var(--md-sys-color-danger-high); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: var(--md-sys-control-gutter); }
+  .stepper { display: grid; grid-template-columns: var(--md-sys-height) 1fr var(--md-sys-height); gap: var(--md-sys-control-gutter); }
+  .stepper > * { block-size: var(--md-sys-height); border-radius: var(--md-sys-control-radius); display: grid; place-items: center; }
+  .stepper > .sb { background: var(--md-sys-color-neutral-container-low); }
+  .stepper > .ro { font-weight: 600; font-size: var(--md-sys-type-title); font-variant-numeric: tabular-nums; }
+  .check { display: flex; align-items: center; gap: var(--md-sys-control-gutter); min-block-size: var(--md-sys-height); }
+  .check i { inline-size: var(--md-sys-icon-box); block-size: var(--md-sys-icon-box); border-radius: var(--md-sys-checkbox-radius); box-shadow: inset 0 0 0 1.5px var(--md-sys-color-neutral-outline); display: grid; place-items: center; }
+  .check i.on { background: var(--md-sys-color-primary-fill); color: var(--md-sys-color-primary-on-primary); box-shadow: none; }
+  .bf { display: grid; gap: var(--md-sys-control-gutter); }
+  .bf .submit { block-size: var(--md-sys-height-lg); border-radius: var(--md-sys-control-radius); background: var(--md-sys-color-primary-fill); color: var(--md-sys-color-primary-on-primary); display: grid; place-items: center; font-weight: 600; }
+  .note { margin: 0; font-size: var(--md-sys-type-small-control); color: var(--md-sys-color-neutral-on-surface-variant); }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>ui-step-flow, design mockup</h1>
+  <p>T-0198 step 1. Two directions for the step indicator. Each tile is an A2UI canvas at <code>data-tier="widget" data-scale="md"</code> (24px fields, 28px lg actions) inside the 400px chat column, drawn light and dark. Back and Next are the control's own parts, in an actions row outside any card. Static drawing: the build renders the real scene controls.</p>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="g-back" viewBox="0 0 16 16"><path d="M10 3L5 8l5 5"/></symbol>
+  <symbol id="g-next" viewBox="0 0 16 16"><path d="M6 3l5 5-5 5"/></symbol>
+  <symbol id="g-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5"/></symbol>
+  <symbol id="g-minus" viewBox="0 0 16 16"><path d="M3 8h10"/></symbol>
+  <symbol id="g-plus" viewBox="0 0 16 16"><path d="M3 8h10M8 3v10"/></symbol>
+  <symbol id="g-alert" viewBox="0 0 16 16"><path d="M8 2.5l6 11H2z M8 6.5v3 M8 11.5v.2"/></symbol>
+</svg>
+
+<!-- ====================================================================================== -->
+<section class="direction" data-direction="a">
+  <h2>Direction A: labeled rail</h2>
+  <p>A numbered mark per step with its label under it. At 400px a longer label already truncates ("Room and rate" reads "Room and r..."), and a sixth step or a longer label crowds every mark: the reason B is recommended.</p>
+  <div class="modes">
+    <div class="column" data-mode="light">
+      <p class="mode">Light, 400px column</p>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction A, scene 2">
+        <p class="state">Scene 2, guests</p>
+        <div class="sf" role="group" aria-label="Guests">
+          <div data-part="header">
+            <ol data-part="rail" aria-label="Step 2 of 5">
+              <li data-state="done"><span data-part="mark"><svg><use href="#g-check"/></svg></span><span data-part="rail-label">Dates</span></li>
+              <li data-state="current" aria-current="step"><span data-part="mark">2</span><span data-part="rail-label" tabindex="-1">Guests</span></li>
+              <li><span data-part="mark">3</span><span data-part="rail-label">Room and rate</span></li>
+              <li><span data-part="mark">4</span><span data-part="rail-label">Extras</span></li>
+              <li><span data-part="mark">5</span><span data-part="rail-label">Confirm</span></li>
+            </ol>
+          </div>
+          <div data-scene hidden></div>
+          <div data-scene class="f"><span>Guests</span><div class="stepper"><span class="sb"><svg><use href="#g-minus"/></svg></span><span class="ro">2</span><span class="sb"><svg><use href="#g-plus"/></svg></span></div></div>
+          <div data-part="actions">
+            <button data-part="back"><svg><use href="#g-back"/></svg>Back</button>
+            <button data-part="next">Next<svg><use href="#g-next"/></svg></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction A, scene 4">
+        <p class="state">Scene 4, extras</p>
+        <div class="sf" role="group" aria-label="Extras">
+          <div data-part="header">
+            <ol data-part="rail" aria-label="Step 4 of 5">
+              <li data-state="done"><span data-part="mark"><svg><use href="#g-check"/></svg></span><span data-part="rail-label">Dates</span></li>
+              <li data-state="done"><span data-part="mark"><svg><use href="#g-check"/></svg></span><span data-part="rail-label">Guests</span></li>
+              <li data-state="done"><span data-part="mark"><svg><use href="#g-check"/></svg></span><span data-part="rail-label">Room and rate</span></li>
+              <li data-state="current" aria-current="step"><span data-part="mark">4</span><span data-part="rail-label" tabindex="-1">Extras</span></li>
+              <li><span data-part="mark">5</span><span data-part="rail-label">Confirm</span></li>
+            </ol>
+          </div>
+          <div data-scene class="f">
+            <div class="check"><i class="on"><svg><use href="#g-check"/></svg></i>Breakfast</div>
+            <div class="check"><i></i>Spa credit</div>
+            <div class="check"><i class="on"><svg><use href="#g-check"/></svg></i>Late check-out</div>
+          </div>
+          <div data-part="actions">
+            <button data-part="back"><svg><use href="#g-back"/></svg>Back</button>
+            <button data-part="next">Next<svg><use href="#g-next"/></svg></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction A, Next refused">
+        <p class="state">Next refused, departure missing (scene 1)</p>
+        <div class="sf" role="group" aria-label="Stay dates">
+          <div data-part="header">
+            <ol data-part="rail" aria-label="Step 1 of 5">
+              <li data-state="current" aria-current="step"><span data-part="mark">1</span><span data-part="rail-label" tabindex="-1">Dates</span></li>
+              <li><span data-part="mark">2</span><span data-part="rail-label">Guests</span></li>
+              <li><span data-part="mark">3</span><span data-part="rail-label">Room and rate</span></li>
+              <li><span data-part="mark">4</span><span data-part="rail-label">Extras</span></li>
+              <li><span data-part="mark">5</span><span data-part="rail-label">Confirm</span></li>
+            </ol>
+          </div>
+          <div data-scene class="two">
+            <div class="f"><span>Arrival</span><div class="box">Fri 14 Nov</div></div>
+            <div class="f"><span>Departure</span><div class="box empty" aria-invalid="true">Pick a date</div><div class="err"><svg><use href="#g-alert"/></svg>Choose a departure date</div></div>
+          </div>
+          <div data-part="actions">
+            <button data-part="next">Next<svg><use href="#g-next"/></svg></button>
+          </div>
+          <p class="note">Step 1: no Back. Next stays enabled; the press reported the first invalid field and stayed.</p>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction A, last scene">
+        <p class="state">Last scene, BookingForm commits, Back only</p>
+        <div class="sf" role="group" aria-label="Confirm">
+          <div data-part="header">
+            <ol data-part="rail" aria-label="Step 5 of 5">
+              <li data-state="done"><span data-part="mark"><svg><use href="#g-check"/></svg></span><span data-part="rail-label">Dates</span></li>
+              <li data-state="done"><span data-part="mark"><svg><use href="#g-check"/></svg></span><span data-part="rail-label">Guests</span></li>
+              <li data-state="done"><span data-part="mark"><svg><use href="#g-check"/></svg></span><span data-part="rail-label">Room and rate</span></li>
+              <li data-state="done"><span data-part="mark"><svg><use href="#g-check"/></svg></span><span data-part="rail-label">Extras</span></li>
+              <li data-state="current" aria-current="step"><span data-part="mark">5</span><span data-part="rail-label" tabindex="-1">Confirm</span></li>
+            </ol>
+          </div>
+          <div data-scene class="bf">
+            <div class="f"><span>Stay</span><div class="box">Fri 14 Nov to Sun 16 Nov</div></div>
+            <div class="two">
+              <div class="f"><span>Guests</span><div class="box">2</div></div>
+              <div class="f"><span>Room</span><div class="box">Deluxe king, $240</div></div>
+            </div>
+            <div class="f"><span>Name</span><div class="box">Ada Lovelace</div></div>
+            <div class="submit">Book stay</div>
+          </div>
+          <div data-part="actions">
+            <button data-part="back"><svg><use href="#g-back"/></svg>Back</button>
+          </div>
+          <p class="note">No finishAction: the BookingForm's own submit commits; StepFlow draws Back only.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================================== -->
+<section class="direction" data-direction="b">
+  <h2>Direction B: compact (recommended)</h2>
+  <p>"Step n of m" plus the current label, over a segmented bar. One line at any step count; the current segment is taller as well as filled.</p>
+  <div class="modes">
+    <div class="column" data-mode="light">
+      <p class="mode">Light, 400px column</p>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction B, scene 2">
+        <p class="state">Scene 2, guests</p>
+        <div class="sf" role="group" aria-label="Guests">
+          <div data-part="header">
+            <span data-part="position">Step 2 of 5</span>
+            <span data-part="label" tabindex="-1">Guests</span>
+            <div data-part="bar" aria-hidden="true"><i data-part="segment" data-state="done"></i><i data-part="segment" data-state="current"></i><i data-part="segment"></i><i data-part="segment"></i><i data-part="segment"></i></div>
+          </div>
+          <div data-scene hidden></div>
+          <div data-scene class="f"><span>Guests</span><div class="stepper"><span class="sb"><svg><use href="#g-minus"/></svg></span><span class="ro">2</span><span class="sb"><svg><use href="#g-plus"/></svg></span></div></div>
+          <div data-part="actions">
+            <button data-part="back"><svg><use href="#g-back"/></svg>Back</button>
+            <button data-part="next">Next<svg><use href="#g-next"/></svg></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction B, scene 4">
+        <p class="state">Scene 4, extras</p>
+        <div class="sf" role="group" aria-label="Extras">
+          <div data-part="header">
+            <span data-part="position">Step 4 of 5</span>
+            <span data-part="label" tabindex="-1">Extras</span>
+            <div data-part="bar" aria-hidden="true"><i data-part="segment" data-state="done"></i><i data-part="segment" data-state="done"></i><i data-part="segment" data-state="done"></i><i data-part="segment" data-state="current"></i><i data-part="segment"></i></div>
+          </div>
+          <div data-scene class="f">
+            <div class="check"><i class="on"><svg><use href="#g-check"/></svg></i>Breakfast</div>
+            <div class="check"><i></i>Spa credit</div>
+            <div class="check"><i class="on"><svg><use href="#g-check"/></svg></i>Late check-out</div>
+          </div>
+          <div data-part="actions">
+            <button data-part="back"><svg><use href="#g-back"/></svg>Back</button>
+            <button data-part="next">Next<svg><use href="#g-next"/></svg></button>
+          </div>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction B, Next refused">
+        <p class="state">Next refused, departure missing (scene 1)</p>
+        <div class="sf" role="group" aria-label="Stay dates">
+          <div data-part="header">
+            <span data-part="position">Step 1 of 5</span>
+            <span data-part="label" tabindex="-1">Dates</span>
+            <div data-part="bar" aria-hidden="true"><i data-part="segment" data-state="current"></i><i data-part="segment"></i><i data-part="segment"></i><i data-part="segment"></i><i data-part="segment"></i></div>
+          </div>
+          <div data-scene class="two">
+            <div class="f"><span>Arrival</span><div class="box">Fri 14 Nov</div></div>
+            <div class="f"><span>Departure</span><div class="box empty" aria-invalid="true">Pick a date</div><div class="err"><svg><use href="#g-alert"/></svg>Choose a departure date</div></div>
+          </div>
+          <div data-part="actions">
+            <button data-part="next">Next<svg><use href="#g-next"/></svg></button>
+          </div>
+          <p class="note">Step 1: no Back. Next stays enabled; the press reported the first invalid field and stayed.</p>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction B, last scene">
+        <p class="state">Last scene, BookingForm commits, Back only</p>
+        <div class="sf" role="group" aria-label="Confirm">
+          <div data-part="header">
+            <span data-part="position">Step 5 of 5</span>
+            <span data-part="label" tabindex="-1">Confirm</span>
+            <div data-part="bar" aria-hidden="true"><i data-part="segment" data-state="done"></i><i data-part="segment" data-state="done"></i><i data-part="segment" data-state="done"></i><i data-part="segment" data-state="done"></i><i data-part="segment" data-state="current"></i></div>
+          </div>
+          <div data-scene class="bf">
+            <div class="f"><span>Stay</span><div class="box">Fri 14 Nov to Sun 16 Nov</div></div>
+            <div class="two">
+              <div class="f"><span>Guests</span><div class="box">2</div></div>
+              <div class="f"><span>Room</span><div class="box">Deluxe king, $240</div></div>
+            </div>
+            <div class="f"><span>Name</span><div class="box">Ada Lovelace</div></div>
+            <div class="submit">Book stay</div>
+          </div>
+          <div data-part="actions">
+            <button data-part="back"><svg><use href="#g-back"/></svg>Back</button>
+          </div>
+          <p class="note">No finishAction: the BookingForm's own submit commits; StepFlow draws Back only.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Draw each direction's dark column as a copy of its light one (color-scheme: dark resolves the light-dark() tokens).
+  for (const modes of document.querySelectorAll('.direction .modes')) {
+    const light = modes.querySelector('.column[data-mode="light"]')
+    const dark = light.cloneNode(true)
+    dark.dataset.mode = 'dark'
+    dark.querySelector('.mode').textContent = 'Dark, 400px column'
+    modes.append(dark)
+  }
+</script>
+</body>
+</html>

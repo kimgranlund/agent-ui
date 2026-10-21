@@ -81,6 +81,7 @@ export const CONTROLS: Readonly<Record<string, ControlRecord>> = {
   'ui-split-pane': { tag: 'ui-split-pane', load: () => import('./split/split-pane.ts'), css: './split/split-pane.css', uses: [] },
   'ui-stat': { tag: 'ui-stat', load: () => import('./stat/stat.ts'), css: './stat/stat.css', uses: [] },
   'ui-status-stream': { tag: 'ui-status-stream', load: () => import('./status-stream/status-stream.ts'), css: './status-stream/status-stream.css', uses: ['ui-button', 'ui-glyph', 'ui-timeline', 'ui-timeline-item'] },
+  'ui-step-flow': { tag: 'ui-step-flow', load: () => import('./step-flow/step-flow.ts'), css: './step-flow/step-flow.css', uses: ['ui-glyph'] },
   'ui-suggestions': { tag: 'ui-suggestions', load: () => import('./suggestions/suggestions.ts'), css: './suggestions/suggestions.css', uses: [] },
   'ui-swatch': { tag: 'ui-swatch', load: () => import('./swatch/swatch.ts'), css: './swatch/swatch.css', uses: [] },
   'ui-swiper': { tag: 'ui-swiper', load: () => import('./swiper/swiper.ts'), css: './swiper/swiper.css', uses: ['ui-swiper-item', 'ui-swiper-label', 'ui-swiper-paddles', 'ui-swiper-pagination'] },

@@ -631,6 +631,15 @@
       "group": "Feed & status"
     },
     {
+      "name": "Step Flow",
+      "tag": "ui-step-flow",
+      "url": "./step-flow-demo.html",
+      "description": "A client-side wizard that shows its scene children one at a time under a \"Step n of m\" bar, with Back and Next of its own, Next gated on the scene's validity, and a last scene that commits.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Form composition"
+    },
+    {
       "name": "Suggestions",
       "tag": "ui-suggestions",
       "url": "./suggestions-demo.html",

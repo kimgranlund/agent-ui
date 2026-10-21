@@ -52,7 +52,7 @@ describe('buildSystemPrompt GRAMMAR additions (ADR-0089)', () => {
 
   it('teaches the ADR-0198 amendment flow-completion protocol: terminal taxonomy, confirm-before-conclusion, courtesy close', () => {
     // A1 — every terminal path is named an ending (completion · escalation/early stop · abandonment).
-    expect(prompt).toMatch(/EVERY ending of a multi-step ask flow gets a closing turn/)
+    expect(prompt).toMatch(/EVERY ending of a multi-step flow gets a closing turn/)
     expect(prompt).toMatch(/Escalation \/ early stop/)
     expect(prompt).toMatch(/escalation prose turn IS the closing turn/)
     expect(prompt).toMatch(/Abandonment/)
@@ -96,27 +96,30 @@ describe('buildSystemPrompt GRAMMAR additions (ADR-0089)', () => {
   })
 })
 
-// ── GH #1192, req-a2ui-patterns.md R2 / ADR-0198's 2026-08-18 amendment (B1/B2): the backable-multi-step
-// carve-out on the answered-ask freeze, its worked mechanics in the surface-reuse rule, and the closing
-// turn's one settle-update carve-out. Mode-invariant — all three land in the byte-pinned GRAMMAR constant. ──
+// ── GH #1192, req-a2ui-patterns.md R2 / ADR-0198's 2026-08-18 amendment (B1/B2): the flow-end scope of the
+// answered-ask freeze, the worked multi-step case (one StepFlow since T-0198) in the surface-reuse rule, and the
+// closing turn's one settle-update carve-out. Mode-invariant: all three land in the byte-pinned GRAMMAR constant. ──
 
-describe('buildSystemPrompt backable multi-step wizard mechanics (ADR-0198 amendment B1/B2, req-a2ui-patterns.md R2)', () => {
+describe('buildSystemPrompt multi-step StepFlow mechanics (T-0198; ADR-0198 amendment B1/B2, req-a2ui-patterns.md R2)', () => {
   const prompt = buildSystemPrompt(defaultCatalog, [])
 
   it('B1 — the answered-ask freeze is scoped to FLOW END, not every mid-flow commit', () => {
     expect(prompt).toMatch(/This freeze begins at FLOW END, not at every mid-flow commit/)
-    expect(prompt).toMatch(/a backable multi-step flow's Next\/Back turns\s+are scene transitions on the SAME still-open ask, not answered asks/)
+    expect(prompt).toMatch(/updates that SAME still-open ask, not an answered ask in this\s+sense/)
     expect(prompt).toMatch(/starts only once the flow-final confirm is committed/)
   })
 
-  it('B1 — the surface-reuse rule teaches the worked backable-wizard shape: one ask, root-once, /draft/* staging', () => {
-    expect(prompt).toMatch(/Backable multi-step, worked:/)
-    expect(prompt).toMatch(/keeps this reuse to ONE ask for the WHOLE\s+flow \(posture \(i\)\)/)
-    expect(prompt).toMatch(/never\s+re-declare it per step/)
-    expect(prompt).toMatch(/a "scene" container\)/)
-    expect(prompt).toMatch(/"\/draft\/\*"\s+data-model prefix/)
-    expect(prompt).toMatch(/nothing is committed anywhere\s+until the flow-final confirm/)
-    expect(prompt).toMatch(/scene transitions on the one still-open ask, not answered asks/)
+  it('B1: the surface-reuse rule teaches the worked multi-step case as one StepFlow off the feed (T-0198)', () => {
+    expect(prompt).toMatch(/Multi-step, worked: when every scene of a multi-step input can be built up front, it is ONE StepFlow/)
+    expect(prompt).toMatch(/on a fresh surface the meta-line does not name as "ask" \(never a feed ask\)/)
+    expect(prompt).toMatch(/Back and Next\s+run on the client with no turn/)
+    expect(prompt).toMatch(/"\/draft\/<key>"/)
+    expect(prompt).toMatch(/its finishAction button\s+returns the whole draft in its action context/)
+    expect(prompt).toMatch(/where the catalog has a BookingForm, that form is the\s+last scene and commits itself/)
+    expect(prompt).toMatch(/after a StepFlow's finishAction returns the draft, that StepFlow's surface \(the\s+ConfirmReceipt takes its place\)/)
+    expect(prompt).not.toMatch(/backable|scene transitions/i)
+    // the step 3 catalog row or a notFor reason may say "wizard", so check only the grammar before the inventory
+    expect(prompt.slice(0, prompt.indexOf('## Available components'))).not.toMatch(/wizard/i)
   })
 
   it('B2 — the closing turn may carry exactly ONE settle update (a ConfirmReceipt status write, or strip buttons + settled badge)', () => {
@@ -143,7 +146,7 @@ describe('buildSystemPrompt backable multi-step wizard mechanics (ADR-0198 amend
     const rest = prompt.slice(start + marker.length)
     const end = rest.indexOf('\n## ')
     const body = end === -1 ? rest : rest.slice(0, end)
-    expect(body).not.toMatch(/backable|scene transitions|settle update|draft\/\*/i)
+    expect(body).not.toMatch(/Multi-step, worked|still-open ask|settle update/i)
   })
 })
 

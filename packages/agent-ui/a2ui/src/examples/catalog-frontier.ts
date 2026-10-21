@@ -484,7 +484,8 @@ const WIZARD_ID = 'ask-1'
 /** Frontier 9 — the BACKABLE MULTI-STEP wizard (GH #1192, req-a2ui-patterns.md R2 / ADR-0198's 2026-08-18
  *  amendment B1), repaired to grammar.md's CardFooter clause (the GH #1262 rulings pass, #1320 — the
  *  seed's original loose-Row nav buttons contradicted it, flagged for this follow-up repair): ONE ask
- *  surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step clause), dates → leave
+ *  surface for the WHOLE flow (posture (i), grammar.md's backable-multi-step clause until T-0198 retired it for one
+ *  StepFlow; fork 13 keeps this seed as the turn-driven reference), dates → leave
  *  type → submit, Back always free because nothing is committed until the flow-final confirm. Root is delivered
  *  ONCE as the stable wrapper ("root", never resent); the Card itself is non-root ("card"), one level
  *  down, card-anatomy in force on every step: CardContent ("ct", stable — its own children list never
@@ -1754,4 +1755,50 @@ export const confirmReceiptOrderSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed]
+const STEP_FLOW_BOOKING_ID = 'frontier-step-flow-booking'
+/** Frontier 35 (T-0198): `StepFlow`, a three-scene hotel booking walked on the client. The scenes are the node's
+ *  children (a range Calendar, an AmountPicker for the guests, a Column of Checkboxes for the extras) and `steps`
+ *  labels them; Back and Next write the bound `/step` with no agent turn, and Next gates on the scene's validity.
+ *  Every field binds under `/draft`, and `draft` binds `/draft`, so the finish action carries the whole answer in
+ *  its context. Corpus admission is a SEPARATE judged wave (disposition-allowlist.ts). */
+export const stepFlowBookingSeed: ExampleSeed = {
+  name: 'frontier-step-flow-booking',
+  description: 'A hotel booking walked in three scenes: one StepFlow over a range Calendar, a guest AmountPicker and a Column of extras Checkboxes, every field bound under /draft, with a finish action that carries the draft.',
+  promptText: 'Help me book two nights at the Harbour Hotel, step by step.',
+  surfaceId: STEP_FLOW_BOOKING_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: STEP_FLOW_BOOKING_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: STEP_FLOW_BOOKING_ID,
+        value: { step: 1, draft: { from: '2026-11-13', to: '2026-11-15', guests: 2, breakfast: true, parking: false } },
+      },
+    },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: STEP_FLOW_BOOKING_ID,
+        components: [
+          {
+            id: 'root', component: 'StepFlow',
+            steps: ['Dates', 'Guests', 'Extras'],
+            step: { path: '/step' }, draft: { path: '/draft' },
+            finishLabel: 'Review booking',
+            finishAction: { action: 'review_booking', context: { hotel: 'Harbour Hotel' } },
+            children: ['dates', 'guests', 'extras'],
+          },
+          { id: 'dates', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
+          { id: 'guests', component: 'AmountPicker', label: 'Guests', value: { path: '/draft/guests' }, min: 1, max: 6, step: 1 },
+          { id: 'extras', component: 'Column', children: ['breakfast', 'parking'] },
+          { id: 'breakfast', component: 'Checkbox', label: 'Breakfast', checked: { path: '/draft/breakfast' } },
+          { id: 'parking', component: 'Checkbox', label: 'Parking', checked: { path: '/draft/parking' } },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, stepFlowBookingSeed]

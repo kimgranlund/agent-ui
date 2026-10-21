@@ -47,8 +47,11 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  Budget 143 900 by the same formula.
  *  RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): the worst case is 145 602 chars (`agent-ui`, mode
  *  default), the T-0195 rows and grammar.md clauses on top of the AmountPicker and OptionDeck rows. Budget 146 000 by
- *  the same formula. */
-export const PROMPT_CHAR_BUDGET_BASE = 146_000
+ *  the same formula.
+ *  RE-MEASURED 2026-10-21 (T-0198 step 3): the worst case is 146 537 chars (`agent-ui`, mode default), +935 from the
+ *  ui-step-flow dogfood row, the `StepFlow` default row, its selection clause with the reciprocal `Drill` and
+ *  `ConfirmReceipt` edges, and StepFlow on the feed list. Budget 146 900 by the same formula. */
+export const PROMPT_CHAR_BUDGET_BASE = 146_900
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -81,8 +84,10 @@ export const PROMPT_CHAR_BUDGET_BASE = 146_000
  *  same grammar.md clauses and mini-skill fix BASE pays. Budget 144 900 by the same formula.
  *  RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): the worst case is 146 586 chars
  *  (`agent-ui--croupier`, mode default), the same merged rows and clauses BASE pays. Budget 146 900 by the same
- *  formula. */
-export const PROMPT_CHAR_BUDGET_DERIVED = 146_900
+ *  formula.
+ *  RE-MEASURED 2026-10-21 (T-0198 step 3): the worst case is 147 521 chars (`agent-ui--croupier`, mode default), the
+ *  same ui-step-flow dogfood row and `StepFlow` row and clause BASE pays. Budget 147 900 by the same formula. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 147_900
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

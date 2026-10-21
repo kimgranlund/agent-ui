@@ -1,0 +1,210 @@
+/* step-flow.css: ui-step-flow, the client-side wizard over a producer's scenes (T-0198, Direction B).
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-step-flow)` (specificity 0,0,0) declares the --ui-step-flow-* chain from the color
+ *       roles and the derived foundations (ADR-0245). The action buttons' geometry is left UNSET here on purpose:
+ *       the styles block reads each with the foundation token as the var() fallback, so it resolves ON the button at
+ *       its own `data-size` step, never the host's (the confirm-receipt.css idiom).
+ *   [2] STYLES BLOCK: `@scope (ui-step-flow)` consumes --ui-step-flow-*. The host is a one-column grid with areas
+ *       header and scene; every scene takes the scene area and the actions row sits on a third, implicit track, so
+ *       on the self-commit scene (actions moved into the scene area) no empty track or gap is left under it. Every
+ *       part rule is a child path from :scope, so a scene's own `label` or `back` part is never matched.
+ *
+ * The current segment is never color alone: it is taller than the others as well as filled, and the position text
+ * names the step.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-step-flow) declares --ui-step-flow-* ════════════════ */
+
+/* uses: synced from step-flow.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
+:where(ui-step-flow) {
+  /* Host grid: header, scene and actions rows (the approved mockup's group gutter). */
+  --ui-step-flow-gap: var(--md-sys-group-gutter);
+  --ui-step-flow-header-gap: var(--md-sys-control-gutter);
+
+  /* Header: "Step n of m", the current label, the segmented bar */
+  --ui-step-flow-position-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-step-flow-position-size: var(--md-sys-type-field-label);
+  --ui-step-flow-label-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-step-flow-label-size: var(--md-sys-type-title);
+  --ui-step-flow-label-weight: 600;
+  --ui-step-flow-bar-gap: var(--md-sys-c);
+  --ui-step-flow-track: var(--md-sys-color-neutral-outline-variant);
+  --ui-step-flow-fill: var(--md-sys-color-primary);
+  --ui-step-flow-segment-height: calc(var(--md-sys-c) * 1.5);
+  --ui-step-flow-current-height: calc(var(--md-sys-c) * 3); /* the shape cue beside the color cue */
+  --ui-step-flow-segment-radius: var(--md-sys-c);
+
+  /* Actions row and its buttons */
+  --ui-step-flow-actions-gap: var(--md-sys-control-gutter);
+  --ui-step-flow-action-weight: 600;
+  --ui-step-flow-back-bg: var(--md-sys-color-neutral-container-low);
+  --ui-step-flow-back-bg-hover: var(--md-sys-color-neutral-container);
+  --ui-step-flow-back-bg-active: var(--md-sys-color-neutral-container-high);
+  --ui-step-flow-back-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-step-flow-next-bg: var(--md-sys-color-primary-fill); /* T-0340: the fill ladder under on-primary ink */
+  --ui-step-flow-next-bg-hover: var(--md-sys-color-primary-fill-hover);
+  --ui-step-flow-next-bg-active: var(--md-sys-color-primary-fill-active);
+  --ui-step-flow-next-ink: var(--md-sys-color-primary-on-primary);
+  /* The glyph size is left UNSET too: the styles block reads --md-sys-glyph-box as its fallback ON the glyph, so a
+     caret takes its own button's glyph box (ADR-0245 Amendment 6). */
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-step-flow) consumes --ui-step-flow-* ════════════════ */
+
+@scope (ui-step-flow) {
+  /* Fill by default (ADR-0223): block-level, no width opinion of its own. */
+  :scope {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'header' 'scene';
+    gap: var(--ui-step-flow-gap);
+    box-sizing: border-box;
+  }
+  :scope[inline] {
+    display: inline-grid; /* ADR-0223: the one sizing opt-out, hugs its content */
+  }
+
+  /* Every scene shares one area; only the current one is displayed. */
+  :scope > * {
+    grid-area: scene;
+    min-inline-size: 0;
+  }
+  /* An inactive scene (and an empty header or actions row) takes no space. `!important` only to beat an inline
+     author style: the BookingForm root sets an inline `display: flex` (a2ui hospitality/factories.ts:447-449), which
+     outranks any stylesheet rule without it (the swatch.css:62 precedent). */
+  :scope > [hidden] {
+    display: none !important;
+  }
+
+  :scope > [data-part='header'] {
+    grid-area: header;
+    display: grid;
+    gap: var(--ui-step-flow-header-gap);
+  }
+  :scope > [data-part='header'] > [data-part='position'] {
+    color: var(--ui-step-flow-position-ink);
+    font-size: var(--ui-step-flow-position-size);
+    font-variant-numeric: tabular-nums;
+  }
+  :scope > [data-part='header'] > [data-part='label'] {
+    color: var(--ui-step-flow-label-ink);
+    font-size: var(--ui-step-flow-label-size);
+    font-weight: var(--ui-step-flow-label-weight);
+    overflow-wrap: anywhere;
+    outline: none;
+  }
+  :scope > [data-part='header'] > [data-part='label']:focus-visible {
+    /* The shared fleet ring (ADR-0009), the sanctioned direct read every control shares. */
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+    border-radius: var(--md-sys-control-radius);
+  }
+  :scope > [data-part='header'] > [data-part='bar'] {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: var(--ui-step-flow-bar-gap);
+  }
+  :scope > [data-part='header'] > [data-part='bar'] > [data-part='segment'] {
+    display: block;
+    block-size: var(--ui-step-flow-segment-height);
+    border-radius: var(--ui-step-flow-segment-radius);
+    background: var(--ui-step-flow-track);
+  }
+  :scope > [data-part='header'] > [data-part='bar'] > [data-part='segment']:is([data-state='done'], [data-state='current']) {
+    background: var(--ui-step-flow-fill);
+  }
+  :scope > [data-part='header'] > [data-part='bar'] > [data-part='segment'][data-state='current'] {
+    block-size: var(--ui-step-flow-current-height);
+  }
+
+  /* The actions row: the control's own native buttons, on the implicit third track. */
+  :scope > [data-part='actions'] {
+    grid-area: auto;
+    grid-row: 3;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ui-step-flow-actions-gap);
+  }
+  /* The self-commit row (Kim 2026-10-21): on the last scene with no finishAction the row takes the scene's area, Back
+     on its last line at the start edge, opposite the scene's own commit Button at the end. The scene is never
+     restyled and its Button never moved. */
+  :scope > [data-part='actions'][data-self-commit] {
+    grid-area: scene;
+    align-self: end;
+    justify-self: start;
+  }
+  :scope > [data-part='actions'] > :is([data-part='back'], [data-part='next'], [data-part='finish']) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--md-sys-c);
+    box-sizing: border-box;
+    block-size: var(--ui-step-flow-action-height, var(--md-sys-height));
+    padding-inline: var(--md-sys-label-inset);
+    font: inherit;
+    font-size: var(--ui-step-flow-action-font, var(--md-sys-type-control));
+    font-weight: var(--ui-step-flow-action-weight);
+    line-height: var(--md-sys-control-line-height); /* the fleet single-line control standard, a sanctioned direct read */
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-radius: var(--ui-step-flow-action-radius, var(--md-sys-control-radius));
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  :scope > [data-part='actions'] > [data-part='back'] {
+    background: var(--ui-step-flow-back-bg);
+    color: var(--ui-step-flow-back-ink);
+  }
+  :scope > [data-part='actions'] > [data-part='back']:hover {
+    background: var(--ui-step-flow-back-bg-hover);
+  }
+  :scope > [data-part='actions'] > [data-part='back']:active {
+    background: var(--ui-step-flow-back-bg-active);
+  }
+  :scope > [data-part='actions'] > :is([data-part='next'], [data-part='finish']) {
+    margin-inline-start: auto;
+    background: var(--ui-step-flow-next-bg);
+    color: var(--ui-step-flow-next-ink);
+  }
+  :scope > [data-part='actions'] > :is([data-part='next'], [data-part='finish']):hover {
+    background: var(--ui-step-flow-next-bg-hover);
+  }
+  :scope > [data-part='actions'] > :is([data-part='next'], [data-part='finish']):active {
+    background: var(--ui-step-flow-next-bg-active);
+  }
+  :scope > [data-part='actions'] > :is([data-part='back'], [data-part='next'], [data-part='finish']):focus-visible {
+    outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
+    outline-offset: var(--md-sys-state-focus-ring-offset);
+  }
+  /* A caret is its own glyph box here: the svg fills it (outranks glyph.css's slot inset). */
+  :scope > [data-part='actions'] > * > [data-part='glyph'] {
+    padding: 0;
+    inline-size: var(--ui-step-flow-glyph-size, var(--md-sys-glyph-box));
+    block-size: var(--ui-step-flow-glyph-size, var(--md-sys-glyph-box));
+  }
+
+  /* Motion: colour paint only, enumerated, and only when the user has not asked for reduced motion. */
+  @media (prefers-reduced-motion: no-preference) {
+    :scope > [data-part='actions'] > :is([data-part='back'], [data-part='next'], [data-part='finish']) {
+      transition: background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+    }
+  }
+
+  /* Forced colors: the fills flatten, so every segment and button keeps a system border. */
+  @media (forced-colors: active) {
+    :scope > [data-part='header'] > [data-part='bar'] > [data-part='segment'] {
+      border: 1px solid CanvasText;
+    }
+    :scope > [data-part='header'] > [data-part='bar'] > [data-part='segment']:is([data-state='done'], [data-state='current']) {
+      background: CanvasText;
+    }
+    :scope > [data-part='actions'] > :is([data-part='back'], [data-part='next'], [data-part='finish']) {
+      border: 1px solid ButtonText;
+    }
+  }
+}

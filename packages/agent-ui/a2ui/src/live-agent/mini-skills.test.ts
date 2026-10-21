@@ -106,11 +106,11 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
         'comparison-table',
       ]),
     )
-    expect(MINI_SKILLS).toHaveLength(23) // + option-deck (T-0193), + confirm-receipt (T-0195)
+    expect(MINI_SKILLS).toHaveLength(24) // + option-deck (T-0193), + confirm-receipt (T-0195), + step-flow (T-0198)
   })
 
   it('SPEC-R6 AC1: every shipped module carries catalogId: \'agent-ui\' except the a2ui-basic dialect module', () => {
-    expect(MINI_SKILLS).toHaveLength(23) // + option-deck (T-0193), + confirm-receipt (T-0195)
+    expect(MINI_SKILLS).toHaveLength(24) // + option-deck (T-0193), + confirm-receipt (T-0195), + step-flow (T-0198)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe(skill.id === 'basic-dialect' ? 'a2ui-basic' : 'agent-ui')
   })
 })

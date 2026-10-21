@@ -154,6 +154,8 @@
     "./controls/stat.css": "./src/controls/stat/stat.css",
     "./controls/status-stream": "./src/controls/status-stream/status-stream.ts",
     "./controls/status-stream.css": "./src/controls/status-stream/status-stream.css",
+    "./controls/step-flow": "./src/controls/step-flow/step-flow.ts",
+    "./controls/step-flow.css": "./src/controls/step-flow/step-flow.css",
     "./controls/suggestions": "./src/controls/suggestions/suggestions.ts",
     "./controls/suggestions.css": "./src/controls/suggestions/suggestions.css",
     "./controls/swatch": "./src/controls/swatch/swatch.ts",

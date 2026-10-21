@@ -606,6 +606,14 @@ export const NAV: readonly NavGroup[] = [
       { href: './confirm-receipt-doc.html', label: 'API' },
     ],
   },
+  // T-0198: the client-side wizard over a producer's scenes, tier=pattern {doc, demo}.
+  {
+    label: 'ui-step-flow',
+    links: [
+      { href: './step-flow-demo.html', label: 'Demo' },
+      { href: './step-flow-doc.html', label: 'API' },
+    ],
+  },
   // T-0193: the option deck, pick one of a few things to start, tier=pattern {doc, demo}.
   {
     label: 'ui-option-deck',
@@ -1032,7 +1040,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
       'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame', 'ui-option-deck',
     ],
   },
-  { label: 'Form composition', tags: ['ui-field', 'ui-form-provider', 'ui-theme-provider', 'ui-confirm-receipt'] },
+  { label: 'Form composition', tags: ['ui-field', 'ui-form-provider', 'ui-theme-provider', 'ui-confirm-receipt', 'ui-step-flow'] },
   {
     label: 'Data & reporting',
     tags: [

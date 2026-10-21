@@ -36,7 +36,8 @@
 //     E_QUALITY twice (rubric 1.1 + 1.2, D1 both times — the unlabeled RadioGroup / static-numbered
 //     Progress label), and the wizard technique is covered by the backable-wizard seed
 //     (catalog-frontier.ts, GH #1192), so the presentation-only variant left the shelf rather than being
-//     repaired. The archived VerdictsFiles (corpus/verdicts/) remain the machine record.
+//     repaired. The archived VerdictsFiles (corpus/verdicts/) remain the machine record. T-0198 retired grammar.md's
+//     backable-multi-step clause for one StepFlow; fork 13 keeps the backable-wizard seed.
 
 import type { ExampleSeed } from './types.ts'
 

@@ -195,7 +195,8 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     repair:
       'with its fields list (date, time, choice and party size), its value bound to the details the guest already gave so they ' +
       'arrive pre-filled, and one submit action, and drop the hand-built inputs or read-back.',
-    lacks: ['BookingConfirmation', 'ConfirmReceipt'],
+    // T-0198: a StepFlow walks the booking inputs scene by scene (its last scene may be the BookingForm), so it stands aside.
+    lacks: ['BookingConfirmation', 'ConfirmReceipt', 'StepFlow'],
     standsAsideForSettled: true,
     inputs: { types: BOOKING_INPUTS, min: 2 },
     // T-0266: a fully specified ask read back as a DescriptionList with a confirm Button is still this moment.

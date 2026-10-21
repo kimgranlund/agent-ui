@@ -2197,12 +2197,12 @@ describe('default catalog - BoardGrid via the shared validator (ADR-0243, T-0072
     expect(pd?.actionEvent).toBe('action')
     expect(pd?.bindable).toBeFalsy()
     expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, actionName: 'fire' }).valid).toBe(true)
-    // the mark is opt-in: only BoardGrid, AmountPicker (T-0196), OptionDeck (T-0193) and ConfirmReceipt's two press
-    // props (T-0195) forward a control event (ProductCard's own event stays unread)
+    // the mark is opt-in: only BoardGrid, AmountPicker (T-0196), OptionDeck (T-0193), ConfirmReceipt's two press
+    // props (T-0195) and StepFlow's finish (T-0198) forward a control event (ProductCard's own event stays unread)
     const marked = Object.entries(defaultCatalog.components).flatMap(([type, def]) =>
       Object.entries(def.properties).filter(([, p]) => p.actionEvent !== undefined).map(([prop]) => `${type}.${prop}`),
     )
-    expect(marked).toEqual(['BoardGrid.actionName', 'AmountPicker.actionName', 'OptionDeck.actionName', 'ConfirmReceipt.confirmAction', 'ConfirmReceipt.backAction'])
+    expect(marked).toEqual(['BoardGrid.actionName', 'AmountPicker.actionName', 'OptionDeck.actionName', 'ConfirmReceipt.confirmAction', 'ConfirmReceipt.backAction', 'StepFlow.finishAction'])
   })
 
   it('NEGATIVE CONTROL: a non-string actionName fails the shared validator', () => {

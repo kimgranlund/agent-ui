@@ -1212,6 +1212,25 @@
         }
       },
       "value": { "prop": "status", "event": "change" }
+    },
+    "StepFlow": {
+      "properties": {
+        "steps": { "type": { "type": "array", "items": { "type": "string" } }, "mapsTo": "steps" },
+        "step": { "type": { "type": "number" }, "bindable": true, "mapsTo": "step" },
+        "draft": { "type": { "type": "object" }, "bindable": true, "mapsTo": "draft" },
+        "finishLabel": { "type": { "type": "string" }, "mapsTo": "finishLabel" },
+        "finishAction": {
+          "type": {
+            "type": "object",
+            "properties": { "action": { "type": "string" }, "context": { "type": "object" } },
+            "required": ["action"]
+          },
+          "mapsTo": "finishAction",
+          "actionEvent": "action"
+        }
+      },
+      "value": { "prop": "step", "event": "change" },
+      "children": "ChildList"
     }
   },
 
