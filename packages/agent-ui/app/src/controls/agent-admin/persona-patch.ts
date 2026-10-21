@@ -39,6 +39,7 @@
 
 import {
   A2UI_CATALOG_KEY,
+  A2UI_DOMAINS_KEY,
   A2UI_LOCAL_PATTERNS_KEY,
   AGENT_ENABLED_KEY,
   BANKROLL_CAPABLE_KEY,
@@ -54,6 +55,7 @@ import {
   kindEnabledKey,
   sanitizeBankroll,
   sanitizeCatalog,
+  sanitizeDomains,
   sanitizeLocalPatterns,
   sanitizeModel,
   type SupportedModel,
@@ -162,6 +164,7 @@ const REFINE: Readonly<Record<string, Admit>> = {
   model: (value, deps) => sanitizeModel(value, deps.models) === value,
   [A2UI_CATALOG_KEY]: (value) => sanitizeCatalog(value) === value,
   [A2UI_LOCAL_PATTERNS_KEY]: (value) => sanitizeLocalPatterns(value) === value,
+  [A2UI_DOMAINS_KEY]: (value) => sanitizeDomains(value) === value,
   [BANKROLL_KEY]: (value) => sanitizeBankroll(value) === value,
 }
 
@@ -222,6 +225,7 @@ export const PATCHABLE_VALUE_SHAPES: Readonly<Record<string, string>> = {
   [BANKROLL_CAPABLE_KEY]: 'true or false — the agent keeps a persistent score at /bankroll',
   [A2UI_CATALOG_KEY]: 'a registered catalog id (leave it alone unless the user asks)',
   [A2UI_LOCAL_PATTERNS_KEY]: 'a shipped persona-pattern-set id (leave it alone unless the user asks)',
+  [A2UI_DOMAINS_KEY]: 'shipped domain ids joined by + in id order, such as hospitality (leave it alone unless the user asks)',
   [BANKROLL_KEY]: 'a non-negative number — the starting/current figure',
 }
 

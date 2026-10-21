@@ -16,6 +16,7 @@ import {
 import {
   AGENT_ENABLED_KEY,
   A2UI_CATALOG_KEY,
+  A2UI_DOMAINS_KEY,
   A2UI_LOCAL_PATTERNS_KEY,
   BANKROLL_CAPABLE_KEY,
   BANKROLL_KEY,
@@ -59,6 +60,7 @@ describe('the schema pins the key constants every reader names', () => {
         SURFACE_AUTHORING_KEY,
         A2UI_CATALOG_KEY,
         A2UI_LOCAL_PATTERNS_KEY,
+        A2UI_DOMAINS_KEY,
         BANKROLL_CAPABLE_KEY,
         BANKROLL_KEY,
         ...kinds.map((kind) => entriesStoreKey(kind)),

@@ -231,6 +231,7 @@ export const PERSONA_FIELDS: readonly ContentField[] = [
   { key: 'surfaceAuthoring', type: 'boolean', home: 'surface', state: true, label: 'Authoring' },
   { key: 'a2uiCatalog', type: 'string', home: 'catalog', state: true, label: 'Catalog' },
   { key: 'a2uiLocalPatterns', file: 'localPatterns', type: 'string', home: 'seed', state: true, label: 'Local patterns' },
+  { key: 'a2uiDomains', file: 'domains', type: 'string', fileType: 'strings', home: 'seed', state: true, label: 'Domains' },
   { key: 'bankrollCapable', file: 'bankroll', type: 'boolean', fileType: 'true', home: 'seed', state: true, label: 'Bankroll' },
   { key: 'bankroll', type: 'number', min: 0, home: 'bankroll', state: true, runtime: true, label: 'Stored bankroll' },
   ...PANE_ENTRY_KINDS.map(
@@ -251,7 +252,6 @@ export const PERSONA_FIELDS: readonly ContentField[] = [
   ...serverToolFields('web_fetch', 'Web fetch', 'Let the model read pages and PDFs at URLs from the conversation, with citations. No charge beyond tokens.', 'fetches', 'fetch only from these'),
   { key: 'surfaceBubbles', type: 'boolean', home: 'surface', label: 'Chat bubbles' },
   { key: 'prefers', type: 'enum', values: ['auto', 'text', 'surface'], home: 'surface', label: 'Response type' },
-  { key: 'a2uiDomains', file: 'domains', type: 'string', fileType: 'strings', home: 'seed', label: 'Domains' },
   // File only: the seed's shape and its authoring context.
   { file: 'disabledBuiltins', type: 'strings', home: 'file', label: 'Builtin sections seeded off' },
   { file: 'changelog', type: 'strings', home: 'file', label: 'Changelog' },
