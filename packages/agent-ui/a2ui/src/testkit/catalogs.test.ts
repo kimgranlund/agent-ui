@@ -4,8 +4,9 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { readdirSync } from 'node:fs'
 import { armOffline } from '../../tools/testkit/offline.ts'
 import { allCatalogs, BASE_CATALOGS } from '../../tools/testkit/catalogs.ts'
-import { derivedCatalogId } from '../catalog/compose.ts'
+import { derivedCatalogId, domainCatalogIdsFor } from '../catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
+import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../catalog/domains/manifests.ts'
 
 declare const process: { cwd(): string }
 
@@ -34,6 +35,7 @@ describe('allCatalogs', () => {
       const targets = m.targetCatalogs !== undefined && m.targetCatalogs.length > 0 ? m.targetCatalogs : ['agent-ui']
       for (const base of targets) want.add(derivedCatalogId(base, m.personaId))
     }
+    for (const id of domainCatalogIdsFor(SHIPPED_DOMAIN_CATALOG_MANIFESTS)) want.add(id)
     const ids = allCatalogs().map((c) => c.catalogId)
     expect(new Set(ids).size).toBe(ids.length)
     expect(new Set(ids)).toEqual(want)
@@ -44,8 +46,10 @@ describe('allCatalogs', () => {
     const dirs = catalogJsonDirs()
     expect(dirs.length).toBeGreaterThan(2)
     const personaIds = new Set(SHIPPED_PERSONA_CATALOG_MANIFESTS.map((m) => m.personaId))
+    const domainIds = new Set(SHIPPED_DOMAIN_CATALOG_MANIFESTS.map((m) => m.domainId))
     const covered = (dir: string): boolean =>
-      dir === 'default' || dir === 'a2ui-basic' || (dir.startsWith('personas/') && personaIds.has(dir.slice('personas/'.length)))
+      dir === 'default' || dir === 'a2ui-basic' || (dir.startsWith('personas/') && personaIds.has(dir.slice('personas/'.length))) ||
+      (dir.startsWith('domains/') && domainIds.has(dir.slice('domains/'.length)))
     expect(dirs.filter((d) => !covered(d))).toEqual([])
   })
 })
