@@ -655,6 +655,7 @@
 - note: site/agent-content/workflows/booking-flow/WORKFLOW.md:4 keeps the pre-existing "Hotel domain" em dash in the rewritten description; the new body text has none (digest-bearing). (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
 - note: packages/agent-ui/a2ui/src/agent/prompts/grammar.md:66 and :234 keep pre-existing em dashes on modified lines; no added grammar text holds one. (Appended by the conductor, same reason.)
 
-## T-0392: Composer effort menu: one selection idiom, aligned rows, glyph check, separator, contained focus ring (2026-10-21)
+## T-0199: Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (2026-10-21)
 
-- note: `.sdlc/tickets/0392-composer-effort-menu/handoff.md` Title/Intent still say "Phosphor check" while criterion 1 and the conductor note settle on the `ui-glyph` check; the Outcome should carry the settled wording.
+- decide: `site/pages/dogfood-render.browser.test.ts:1104` `PERSONA_TYPES` does not list `Itinerary`, so the two new Itinerary persona seeds (`persona-concierge-itinerary`, `persona-basic-concierge-itinerary`) sit outside the T-0144 render lint in the site browser shard.
+- decide: `.claude/docs/spec/a2ui-catalog-architecture.spec.md:79` the "Persona fragment types today" census row lists six types; the hospitality domain now also carries Itinerary.

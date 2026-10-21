@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:cb3a1c76a2b5 -->
+<!-- sdlc-lite:managed:start v1 sha256:e1a97b4492d5 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -18,12 +18,11 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
   - T-0386 grammar.md stale-affordance rule names Buttons, not an OptionDeck greet (0386-grammar-stale-affordance-deck)
   - T-0388 An OptionDeck nested under a centring parent still collapses to 0px (0388-option-deck-nested-collapse)
   - T-0389 Stylist ContrastPair browser test: the verdict pill glyph is clipped (red at base) (0389-contrast-pair-glyph-red)
-- claimed: 1
-  - T-0199 Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper (0199-itinerary-compare), claimed by claude:a8ce3b21 2026-10-21
+- claimed: 0
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 377
+- done: 378
 - dropped: 4
 
 ## Procedures

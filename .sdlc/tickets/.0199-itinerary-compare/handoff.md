@@ -2,7 +2,7 @@
 id: T-0199
 title: "Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper"
 type: feature         # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: [T-0193]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -116,3 +116,36 @@ Option compare (answered here, built in its own ticket):
 ## Plan review
 - Kim 2026-10-21: step 1 mockups approved. Itinerary Direction A (days stacked); Option compare Direction A (option columns, for its own ticket). All 16 forks accepted as recommended, so steps 2 and 3 stand as planned.
 - Kim 2026-10-21 (after step 2 blocked): fork 6 changes to no notFor edges for Itinerary (hospitality also targets a2ui-basic, which has neither Timeline nor Tabs); the Timeline boundary goes into step 3's itinerary-timeline skill prose. Stop times stay at the row's end edge (TimelineItem's own layout, fork 5).
+
+## Outcome
+
+2026-10-21 · lane: full L3 · verdict: skipped (design intake and mockups whose gate is Kim's approval (2026-10-21)) · verifier: verifier-L3 (fable) · base: af100381a8aa
+- Changed: Itinerary hospitality type (days of timed stops, per-day aside) adopted by travel and concierge; Option compare designed and split to T-0393
+- Commits: none
+- Check: step-3#1 `(red) grep -qF Itinerary site/agent-content/skills/itinerary-timeline/SKILL.md`: pass
+- Check: step-3#2 `(red) ! grep -qF TimelineItem site/agent-content/skills/itinerary-timeline/SKILL.md`: pass
+- Check: step-3#3 `(red) grep -qF Itinerary site/agent-content/workflows/trip-plan/WORKFLOW.md`: pass
+- Check: step-3#4 `(red) python3 -c "... 'hospitality' in json.loads(t).get('domains',[]) ..."`: pass
+- Check: step-3#5 `(red) python3 -c "... seedVersion > base ..."`: pass
+- Check: step-3#6 `(red) grep -qF "T-0199" site/agent-content/personas/travel/agent.md && grep -qF "T-0199" site/ag...: pass
+- Check: step-3#7 `(guard) env -u NODE_OPTIONS node scripts/generate-agent-content.mjs --check && env -u NODE_OPTIO...: pass
+- Check: step-3#8 `(guard) env -u NODE_OPTIONS npx vitest run site/pages/agent-admin-presets.test.ts site/pages/age...: pass
+- Check: step-3#9 `(guard) env -u NODE_OPTIONS npx vitest run packages/agent-ui/a2ui packages/agent-ui/components/src`: pass
+- Check: step-3#10 `(guard) env -u NODE_OPTIONS npx vitest run site/lib/sitemap.test.ts site/lib/llms.test.ts site/l...: pass
+- Check: step-3#11 `(guard) env -u NODE_OPTIONS npm run check`: pass
+- Check: step-3#12 Conductor: Kim ruled 2026-10-21 (no notFor edges, stop times at the end edge, the Timeline bounda...: pass
+- Check: step-3#1 `(red) python3 -c "... catalog.json ... Itinerary ... days bindable ... title ..."`: pass
+- Check: step-3#2 `(red) python3 -c "... selection.json ... intents <= 60 ... not t ..."` (amended: no notFor edges): pass
+- Check: step-3#3 `(red) grep -qF "Itinerary: domain('hospitality'" layers.ts && grep -qF itineraryFactory factorie...: pass
+- Check: step-3#4 `(red) grep -qF "Itinerary (T-0199)" factories.test.ts && grep -qF "Itinerary (T-0199)" hospitali...: pass
+- Check: step-3#5 `(red) test -f itinerary.visual.browser.test.ts && test -d __baselines__/itinerary.visual.browser...: pass
+- Check: step-3#6 `(red) grep -qF "component: 'Itinerary'" domain-seeds.ts && grep -qF Itinerary selection-projecti...: pass
+- Check: step-3#7 `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project packages packages...: pass
+- Check: step-3#8 `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project visual packages/a...: pass
+- Check: step-3#9 `(guard) env -u NODE_OPTIONS npx vitest run packages/agent-ui/a2ui`: pass
+- Check: step-3#10 `(guard) env -u NODE_OPTIONS npx vitest run site/lib/sitemap.test.ts site/lib/llms.test.ts site/l...: pass
+- Check: step-3#11 `(guard) env -u NODE_OPTIONS node scripts/generate-agent-assets.mjs --check && env -u NODE_OPTION...: pass
+- Deviation: step 1 verifier skipped: design intake and mockups whose gate is Kim's approval (2026-10-21)
+- Deviation: step 2 verifier skipped: covered by the ticket verifier at step 3, which reran step 2's criteria
+- Follow-up: decide: site/pages/dogfood-render.browser.test.ts:1104 PERSONA_TYPES does... -> notes.md
+- Follow-up: decide: .claude/docs/spec/a2ui-catalog-architecture.spec.md:79 the "Persona... -> notes.md
