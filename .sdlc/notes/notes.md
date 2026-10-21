@@ -654,3 +654,7 @@
 - decide: the `backable-wizard` exemplar (`corpus/exemplar/v1_0/agent-ui.jsonl`) is still retrievable on concierge turns; the manual `chat:probe` should watch for a StepFlow mixed with scene resends.
 - note: site/agent-content/workflows/booking-flow/WORKFLOW.md:4 keeps the pre-existing "Hotel domain" em dash in the rewritten description; the new body text has none (digest-bearing). (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
 - note: packages/agent-ui/a2ui/src/agent/prompts/grammar.md:66 and :234 keep pre-existing em dashes on modified lines; no added grammar text holds one. (Appended by the conductor, same reason.)
+
+## T-0392: Composer effort menu: one selection idiom, aligned rows, glyph check, separator, contained focus ring (2026-10-21)
+
+- note: `.sdlc/tickets/0392-composer-effort-menu/handoff.md` Title/Intent still say "Phosphor check" while criterion 1 and the conductor note settle on the `ui-glyph` check; the Outcome should carry the settled wording.

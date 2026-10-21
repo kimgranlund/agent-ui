@@ -182,8 +182,8 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         // the menu panel and the select listbox are closed popovers: their rows have computed style, no layout
         near(px(q(wrap, '[role="menuitem"]'), 'padding-inline-start'), edge, 'menu row text edge')
         const checked = q(wrap, '[role="menuitemcheckbox"]')
-        near(px(checked, 'inset-inline-start', '::before'), r.control.margin, 'menu check box edge')
-        near(px(checked, 'padding-inline-start'), r.control.margin + r.icon + r.control.margin, 'menu check row: box edge n + box 2n + n to the text')
+        near(px(q(checked, '[data-part="check"]'), 'inset-inline-start'), r.control.margin, 'menu check box edge') // the ui-glyph check (T-0392)
+        near(px(checked, 'padding-inline-start'), r.control.margin + Math.max(r.icon, glyphBox(r)) + r.control.margin, 'menu check row: box edge n + slot max(2n, n + 6) + n to the text')
         near(px(checked, 'padding-inline-end'), edge, 'menu check row text edge, end')
         near(px(q(wrap, 'ui-select [role="option"]'), 'padding-inline-start'), edge, 'select option row text edge')
         near(px(q(wrap, 'ui-combo-box [role="option"]'), 'padding-inline-start'), edge, 'combo-box option row text edge')

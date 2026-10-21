@@ -861,7 +861,7 @@ describe('ui-menu — selectable items: real-engine roving + commit-managed aria
     expect(items[2]!.getAttribute('aria-checked')).toBe('true')
   })
 
-  it('WHOLE-SHAPE: the checked row paints a real, non-transparent checkmark glyph; the unchecked rows do not', async () => {
+  it('WHOLE-SHAPE: the checked row shows a real ui-glyph check mark; the unchecked rows reserve the slot but hide it', async () => {
     const { el } = mount(RADIO_ITEMS)
     const panel = el.querySelector<HTMLElement>('[data-part="panel"]')!
     const items = [...panel.querySelectorAll<HTMLElement>('[role="menuitemradio"]')]
@@ -873,43 +873,38 @@ describe('ui-menu — selectable items: real-engine roving + commit-managed aria
     await el.updateComplete
     await nextFrames()
 
-    const checkedStyle = getComputedStyle(items[1]!, '::before')
-    const uncheckedStyle = getComputedStyle(items[0]!, '::before')
+    // T-0392: the mark is a ui-glyph `check` (ADR-0245 cl.5) in [data-part='check'], not a clip-path ::before.
+    const checked = items[1]!.querySelector<HTMLElement>(':scope > ui-glyph[data-part="check"]')!
+    const unchecked = items[0]!.querySelector<HTMLElement>(':scope > ui-glyph[data-part="check"]')!
+    expect(checked.getAttribute('symbol')).toBe('check')
+    expect(unchecked, 'every selectable row carries its check slot').not.toBeNull()
+    const checkedBox = checked.getBoundingClientRect()
+    const uncheckedBox = unchecked.getBoundingClientRect()
 
-    // The glyph slot itself must be a genuinely sized box on BOTH rows (the reserved-space law —
-    // rows in the same group align identically whether checked or not), and the checked row's
-    // background must actually paint (non-transparent, non-zero alpha) while the unchecked row's
-    // does not — this is what a pure ARIA-state jsdom assertion cannot catch.
-    expect(px(checkedStyle.width), `${server.browser}: the checkmark glyph slot collapsed to zero width`).toBeGreaterThan(0)
-    expect(px(checkedStyle.height), `${server.browser}: the checkmark glyph slot collapsed to zero height`).toBeGreaterThan(0)
-    expect(
-      alphaOf(checkedStyle.backgroundColor),
-      `${server.browser}: the checked row's glyph never actually painted (background stayed transparent)`,
-    ).toBeGreaterThan(0)
-    expect(
-      alphaOf(uncheckedStyle.backgroundColor),
-      `${server.browser}: an UNCHECKED row painted a checkmark — should stay transparent`,
-    ).toBe(0)
+    // The reserved-space law: the slot is a real box on BOTH rows (rows align whether checked or not), drawn
+    // only on the checked row, with a stroked path that actually inks.
+    expect(checkedBox.width, `${server.browser}: the check slot collapsed to zero width`).toBeGreaterThan(0)
+    expect(checkedBox.height, `${server.browser}: the check slot collapsed to zero height`).toBeGreaterThan(0)
+    expect(uncheckedBox.width).toBeCloseTo(checkedBox.width, 1)
+    expect(getComputedStyle(checked).visibility).toBe('visible')
+    expect(getComputedStyle(unchecked).visibility, `${server.browser}: an UNCHECKED row showed a check`).toBe('hidden')
+    const path = checked.querySelector('path')!
+    expect(path.getAttribute('d'), 'the glyph drew its mark').toBeTruthy()
+    expect(alphaOf(getComputedStyle(path).stroke), `${server.browser}: the check stroke never inked`).toBeGreaterThan(0)
 
-    // GH #634 displacement gap: the glyph slot's SIZE + paint are pinned above, but never its POSITION.
-    // Since ADR-0245 Amendment 4 the check box is a boxed item pinned at the row's edge, the box margin n
-    // (menu.css's `inset-inline-start: var(--ui-menu-item-edge)`), while --ui-menu-item-pad-inline is the text
-    // edge 2n - c. A pseudo-element has no real box for getBoundingClientRect, so read the USED inset value and
-    // compare it against the SAME row edge token resolved through a throwaway probe (repoint-safe, no px literal).
+    // GH #634 displacement: the slot sits at the row's box margin n (--ui-menu-item-edge), and the label
+    // starts n past the slot: box edge + slot + (gutter c + label inset n - c). Resolve the token through a
+    // throwaway probe (repoint-safe, no px literal).
     const probe = document.createElement('div')
     probe.style.paddingInlineStart = 'var(--ui-menu-item-edge)'
     items[1]!.append(probe)
     const expectedInset = px(getComputedStyle(probe).paddingInlineStart)
     probe.remove()
     expect(expectedInset, 'the shared --ui-menu-item-edge token resolves').toBeGreaterThan(0)
-    const checkedInset = px(checkedStyle.insetInlineStart)
-    expect(
-      checkedInset,
-      `${server.browser}: checkmark glyph inset did not track the --ui-menu-item-edge token, misaligned against the row edge`,
-    ).toBeCloseTo(expectedInset, 1)
-    // and the label starts n past the box: box edge + box + (gutter c + label inset n - c)
-    const checkSize = px(checkedStyle.inlineSize)
-    expect(px(getComputedStyle(items[1]!).paddingInlineStart) - (checkedInset + checkSize), `${server.browser}: box to text is n`).toBeCloseTo(checkedInset, 1)
+    const rowBox = items[1]!.getBoundingClientRect()
+    const checkedInset = checkedBox.left - rowBox.left
+    expect(checkedInset, `${server.browser}: check slot inset did not track --ui-menu-item-edge`).toBeCloseTo(expectedInset, 1)
+    expect(px(getComputedStyle(items[1]!).paddingInlineStart) - (checkedInset + checkedBox.width), `${server.browser}: box to text is n`).toBeCloseTo(checkedInset, 1)
   })
 })
 

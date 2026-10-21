@@ -1236,18 +1236,19 @@ describe('menu.css — TKT-0027 panel max-block-size dial (menu-max-block-size-t
 describe('menu.css — GH #135 forced-colors checkmark visible at idle, not only hover/focus', () => {
   const forcedColorsBlock = (menuCss.match(/@media \(forced-colors: active\) \{[\s\S]*\n {2}\}/) ?? [''])[0]
 
+  // T-0392: the mark is the [data-part='check'] ui-glyph (a stroke in currentColor), so the legs set `color`.
   it('GH-135: the idle checked glyph is CanvasText, not HighlightText (visible against the idle Canvas row)', () => {
     const idleRule = (forcedColorsBlock.match(
-      /:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\]::before \{[^}]*\}/,
+      /:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\] > \[data-part='check'\] \{[^}]*\}/,
     ) ?? [''])[0]
-    expect(idleRule).toMatch(/background-color:\s*CanvasText;/)
-    expect(idleRule).not.toMatch(/background-color:\s*HighlightText;/)
+    expect(idleRule).toMatch(/(?<![-\w])color:\s*CanvasText;/)
+    expect(idleRule).not.toMatch(/HighlightText/)
   })
 
   it('GH-135: HighlightText applies ONLY on the checked glyph\'s own hover/focus-visible leg', () => {
     const hoverFocusRule = (forcedColorsBlock.match(
-      /:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\]:hover::before,\s*\n\s*:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\]:focus-visible::before \{[^}]*\}/,
+      /:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\]:hover > \[data-part='check'\],\s*\n\s*:scope :is\(\[role='menuitemradio'\], \[role='menuitemcheckbox'\]\)\[aria-checked='true'\]:focus-visible > \[data-part='check'\] \{[^}]*\}/,
     ) ?? [''])[0]
-    expect(hoverFocusRule).toMatch(/background-color:\s*HighlightText;/)
+    expect(hoverFocusRule).toMatch(/(?<![-\w])color:\s*HighlightText;/)
   })
 })

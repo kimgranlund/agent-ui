@@ -84,7 +84,7 @@ properties:
   - name: model
     description: The Models picker's CURRENT selection (an id from `models`). The picker never writes this itself — a consumer supplies it and reads the committed choice back via `onModelChange` (props down, callbacks up).
   - name: efforts
-    description: OPTIONAL `readonly {id, label}[]` — same shape/opt-in law as `models`, for the Effort picker. `composer-options.ts` exports a ready-made `EFFORT_LEVELS` constant (low/medium/high/xhigh) a consumer may reuse verbatim. T-0203: an entry carrying `checked` (a boolean) renders as an on/off toggle (`role="menuitemcheckbox"`, `aria-checked`), fires `onEffortChange` with its `id` like a choice, and never becomes the selection or the trigger label; `ui-agent-admin` uses it for Thinking off and Show reasoning.
+    description: OPTIONAL `readonly {id, label}[]` — same shape/opt-in law as `models`, for the Effort picker. `composer-options.ts` exports a ready-made `EFFORT_LEVELS` constant (low/medium/high/xhigh) a consumer may reuse verbatim. T-0203: an entry carrying `checked` (a boolean) renders as an on/off toggle (`role="menuitemcheckbox"`, `aria-checked`), fires `onEffortChange` with its `id` like a choice, and never becomes the selection or the trigger label; `ui-agent-admin` uses it for Thinking off and Show reasoning. T-0392: the levels render as `menuitemradio` rows (`aria-checked` on the current one) sharing the toggles' check slot, with a `role="separator"` before the toggles.
   - name: effort
     description: The Effort picker's CURRENT selection. See `model` — same props-down/callbacks-up law, via `onEffortChange`.
   - name: providers

@@ -24,6 +24,9 @@
 
 /* ════════ [1] TOKEN BLOCK — :where(ui-menu) declares the surface default + --ui-menu-* ════════ */
 
+/* uses: synced from menu.md by scripts/codemod-uses.mjs */
+@import '../glyph/glyph.css';
+
 :where(ui-menu) {
   /* Surface plane — the popup panel is an opaque neutral surface (like popover / card). */
   --ui-menu-bg: var(--md-sys-color-neutral-surface);
@@ -115,12 +118,11 @@
      subtracts the same --ui-box-inset the row margin reads. */
   --ui-menu-item-radius: var(--md-sys-control-radius, calc(var(--md-sys-shape-corner-base) - var(--ui-box-inset, 0.375rem))); /* a row is a single-line control: the control radius, amount x h/2 (T-0374) */
 
-  /* Selectable-item variant (GH #55) — the menuitemradio/menuitemcheckbox checkmark indicator.
-     A small fixed glyph slot, indented from the item's own inline padding; visible only on
-     [aria-checked='true']. Sized off the compact-widget ramp (the checkbox.css precedent) rather
-     than a menu-specific magic number, and inked with the same "selected" accent ui-select's
-     option rows already use (--md-sys-color-primary-high) — the fleet's one selected-row-ink role. */
-  --ui-menu-check-size: var(--md-sys-icon-box, var(--md-sys-compact-sm));
+  /* Selectable-item variant (GH #55): the menuitemradio/menuitemcheckbox check mark. The 2n icon slot of the
+     control rule (the leading-icon cell) holds a ui-glyph `check` (T-0392, ADR-0245 cl.5: the n + 6 glyph box
+     centred in the slot), visible only on [aria-checked='true'], and inked with the same "selected" accent
+     ui-select's option rows already use (--md-sys-color-primary-high), the fleet's one selected-row-ink role. */
+  --ui-menu-check-size: max(var(--md-sys-icon-box, var(--md-sys-compact-sm)), var(--md-sys-glyph-box, 0px)); /* never smaller than the n + 6 mark (geometry.md, the checkbox.css precedent) */
   --ui-menu-check-gap: var(--md-sys-inset, var(--md-sys-space-xs)); /* check box to text: gutter c + label inset n - c = n */
   --ui-menu-check-ink: var(--md-sys-color-primary-high);
 
@@ -136,9 +138,10 @@
   --ui-menu-item-ink-disabled: var(--md-sys-color-neutral-outline);   /* muted, not invisible */
 
   /* Selected-row treatment for a plain-role menuitem picker (GH #704 fix) — the composer's
-     Models/Effort single-select pickers mark their current item via a bare `data-selected`
+     Models/Provider/Mode single-select pickers mark their current item via a bare `data-selected`
      attribute (conversation-composer.ts: `role=menuitem`, action semantics, not `role=option`/
-     `menuitemradio` — its own :592 comment). This paints the SAME bg+ink treatment ui-select's
+     `menuitemradio`). The Effort picker carries toggles, so it renders its levels as menuitemradio
+     rows with the check mark instead (T-0392, one selection idiom per menu). This paints the SAME bg+ink treatment ui-select's
      option rows already use for `[aria-selected='true']`, rather than the GH #55 checkmark-glyph
      mechanism above: that mechanism assumes the option-role family and reserves a glyph slot on
      EVERY row in the group so rows align (only meaningful when every row in the group carries the
@@ -274,7 +277,7 @@
   }
 
   /* Selected state (GH #704 fix) — a plain-role menuitem picker's current item (the composer's
-     Models/Effort pickers, marked via `data-selected` — token block above explains why this is a
+     Models/Provider/Mode pickers, marked via `data-selected`; the token block above explains why this is a
      bg+ink swap rather than the GH #55 checkmark mechanism). Ordered AFTER :hover, BEFORE
      :focus-visible below — same precedence ui-select's option rows use (hover < selected <
      focus-visible; select.css), so a focused row still reads as focused even when selected.
@@ -294,16 +297,15 @@
   }
 
   /* Keyboard focus ring (ADR-0009) — reads fleet tokens directly (the documented family exception:
-     every control draws the identical ring; see button.css for the precedent). Outset (positive
-     offset), matching ui-select's option ring and the fleet-wide convention (button/checkbox/
-     text-field/select/etc. all use the positive offset; only ui-tabs' inline tab-strip is inset,
-     for a different reason — adjacent siblings with no margin). FIXED (2026-07-07,
-     family-consistency pass): was the inset (negative-offset) treatment — the item's own
-     --ui-box-inset margin (≥6px) comfortably clears an outset ring (width+offset = 4px) without
-     touching the panel edge or a neighbouring row. */
+     every control draws the identical ring; see button.css for the precedent). INSET (offset = minus
+     the ring width, so the ring lies wholly inside the row's own box), the ui-tabs precedent for rows
+     with almost no margin. FIXED (T-0392): the 2026-07-07 pass made it outset on the assumption that a
+     6px row margin clears width + offset, but the derived row margin is c, narrower than that reach
+     at the root register, so the outset ring overlapped its neighbours and the panel's overflow clipped the last
+     row's ring at the bottom edge (Kim's composer effort-menu report). */
   :scope :is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):not([disabled]):not([aria-disabled='true']):focus-visible {
     outline: var(--md-sys-state-focus-ring-width) solid var(--md-sys-color-focus-ring);
-    outline-offset: var(--md-sys-state-focus-ring-offset);
+    outline-offset: calc(-1 * var(--md-sys-state-focus-ring-width));
   }
 
   /* Disabled items — muted ink, no pointer, inert to hover/focus. */
@@ -314,32 +316,38 @@
     pointer-events: none;
   }
 
-  /* Selectable-item variant (GH #55) — reserve a leading glyph slot on every menuitemradio/
-     menuitemcheckbox row (checked or not, so rows in the same group align identically), and paint
-     a checkmark only when aria-checked="true". `position: relative` makes the row the containing
-     block for the absolutely-positioned glyph (the checkbox.css ::before/::after precedent, ported
-     to a single ::before here since the row itself already provides the box/background). */
+  /* Selectable-item variant (GH #55): reserve a leading check slot on every menuitemradio/
+     menuitemcheckbox row (checked or not, so rows in the same group align identically), and show
+     the check mark only when aria-checked="true". The mark is the ui-glyph `check` menu.ts prepends
+     as `[data-part='check']` (T-0392; it replaced a hand-drawn clip-path tick). It sits absolutely in
+     the slot so the row's own nowrap/ellipsis label flow is untouched; `position: relative` makes the
+     row its containing block. */
   :scope :is([role='menuitemradio'], [role='menuitemcheckbox']) {
     position: relative;
     padding-inline-start: calc(var(--ui-menu-item-edge) + var(--ui-menu-check-size) + var(--ui-menu-check-gap));
   }
 
-  :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])::before {
-    content: '';
+  :scope :is([role='menuitemradio'], [role='menuitemcheckbox']) > [data-part='check'] {
+    --ui-glyph-slot: var(--ui-menu-check-size); /* the 2n icon cell; glyph.css centres the n + 6 mark in it */
     position: absolute;
     inset-inline-start: var(--ui-menu-item-edge);
     inset-block-start: 50%;
     transform: translateY(-50%);
-    inline-size: var(--ui-menu-check-size);
-    block-size: var(--ui-menu-check-size);
+    color: var(--ui-menu-check-ink);
+    visibility: hidden;
     pointer-events: none;
   }
 
-  /* Checkmark glyph — the same clip-path polygon tick as checkbox.css's ::after (fleet-consistent
-     shape), painted directly on the reserved ::before slot only when checked. */
-  :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']::before {
-    background-color: var(--ui-menu-check-ink);
-    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true'] > [data-part='check'] {
+    visibility: visible;
+  }
+
+  /* Group rule (T-0392): a `role="separator"` child between groups (the composer's effort levels and its
+     toggles). One outline-variant hairline across the panel, spaced by the row margin c like a row. */
+  :scope [role='separator'] {
+    margin: var(--md-sys-c, var(--ui-box-inset, 0.375rem)) 0;
+    border: 0;
+    border-block-start: 1px solid var(--ui-menu-outline);
   }
 
   /* Forced-colors (WHCM) — the surface, frame, and ink survive as system Canvas/CanvasText.
@@ -362,17 +370,21 @@
       outline: none;
     }
 
-    /* Checkmark glyph — CanvasText at idle (visible against the idle Canvas surface above); the
+    /* Check mark: CanvasText at idle (visible against the idle Canvas surface above); the
        hover/focus leg below overrides to HighlightText once the row's own background switches to
-       Highlight. A single unconditional HighlightText fill is invisible at idle in the common WHCM
+       Highlight. A single unconditional HighlightText ink is invisible at idle in the common WHCM
        themes, where HighlightText and Canvas resolve to the same extreme colour (GH #135). */
-    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']::before {
-      background-color: CanvasText;
+    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true'] > [data-part='check'] {
+      color: CanvasText;
       forced-color-adjust: none;
     }
-    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']:hover::before,
-    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']:focus-visible::before {
-      background-color: HighlightText;
+    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']:hover > [data-part='check'],
+    :scope :is([role='menuitemradio'], [role='menuitemcheckbox'])[aria-checked='true']:focus-visible > [data-part='check'] {
+      color: HighlightText;
+    }
+
+    :scope [role='separator'] {
+      border-color: CanvasText;
     }
   }
 }

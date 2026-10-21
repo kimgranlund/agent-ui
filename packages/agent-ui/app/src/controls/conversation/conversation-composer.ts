@@ -831,7 +831,7 @@ export class UIConversationComposerElement extends UIElement {
     }
     this.#effortMenu.toggleAttribute('hidden', false)
     if (this.#effortsBuiltFrom !== options) {
-      if (this.#rebuildPickerItems(this.#effortMenu, options, selected)) this.#effortsBuiltFrom = options
+      if (this.#rebuildPickerItems(this.#effortMenu, options, selected, true)) this.#effortsBuiltFrom = options
     } else {
       this.#markPickerSelection(this.#effortMenu, selected)
     }
@@ -966,7 +966,9 @@ export class UIConversationComposerElement extends UIElement {
   /** Replace a picker menu's item list wholesale (cheap for the small, static lists this control expects —
    *  a handful of models/effort levels, never a long scrollable catalog). Marks the current selection via
    *  `data-selected` (ui-menu's items are `role=menuitem` — action semantics, not `role=option` — so a
-   *  visual marker, not `aria-selected`, is the correct signal here).
+   *  visual marker, not `aria-selected`, is the correct signal here). `radio` (the Effort picker, T-0392)
+   *  renders the choices as `menuitemradio` rows instead, `aria-checked` on the current one, so they share
+   *  the toggles' check slot and check mark: one selection idiom per menu, with a separator before the toggles.
    *
    *  Answers whether it actually BUILT, so a caller only pins its `#…BuiltFrom` guard to a list it really
    *  rendered (GH #670). Returning void made the pre-connect bail below PERMANENT for any option list whose
@@ -982,7 +984,7 @@ export class UIConversationComposerElement extends UIElement {
    *  which is why this law's regression proof lives at that level (agent-admin-authoring.test.ts's GH #670
    *  block picks a real Effort option out of the Author card's own menu) rather than in this control's own
    *  suite, where a plain mount always has its panel by the first pass. */
-  #rebuildPickerItems(menu: UIMenuElement, options: readonly PickerOption[], selected: string | undefined): boolean {
+  #rebuildPickerItems(menu: UIMenuElement, options: readonly PickerOption[], selected: string | undefined, radio = false): boolean {
     const panel = menu.querySelector('[data-part="panel"]')
     if (!panel) return false // pre-connect ui-menu — its own connected() hasn't run yet; the effect re-fires once it has
     panel.replaceChildren()
@@ -991,7 +993,16 @@ export class UIConversationComposerElement extends UIElement {
     // selected item (or the first ENABLED one, if none selected yet) the roving base tabindex=0 — never a
     // disabled option (GH #257's "coming soon" precedent).
     const focusableId = selected ?? options.find((o) => !o.disabled)?.id ?? options[0]?.id
+    let previous: PickerOption | undefined
     for (const option of options) {
+      // T-0392: a rule between the choice group and the toggles that follow it (role set explicitly, so
+      // ui-menu's item collection never counts it).
+      if (radio && previous !== undefined && previous.checked === undefined && option.checked !== undefined) {
+        const rule = document.createElement('div')
+        rule.setAttribute('role', 'separator')
+        panel.append(rule)
+      }
+      previous = option
       const item = document.createElement('div')
       // ui-menu's OWN auto-role-assignment (menu.ts's #ensureParts) runs ONCE, over whatever children
       // exist at the menu's OWN first connect — the panel is still EMPTY at that moment (items are
@@ -1002,11 +1013,14 @@ export class UIConversationComposerElement extends UIElement {
         item.setAttribute('role', 'menuitemcheckbox')
         item.setAttribute('aria-checked', String(option.checked))
         item.dataset.toggle = ''
+      } else if (radio) {
+        item.setAttribute('role', 'menuitemradio')
+        item.setAttribute('aria-checked', String(option.id === selected))
       } else item.setAttribute('role', 'menuitem')
       item.setAttribute('tabindex', option.id === focusableId ? '0' : '-1')
       item.dataset.value = option.id
       item.textContent = option.label
-      item.toggleAttribute('data-selected', option.id === selected)
+      if (!radio) item.toggleAttribute('data-selected', option.id === selected)
       // GH #257 — a non-committable option (the "coming soon" provider precedent): ui-menu's own
       // click/keydown delegation already skips an `aria-disabled="true"` item (menu.ts), so this is the
       // ONLY wiring a disabled entry needs here.
@@ -1021,8 +1035,10 @@ export class UIConversationComposerElement extends UIElement {
     if (!panel) return
     for (const item of panel.children) {
       const el = item as HTMLElement
+      if (el.dataset.value === undefined) continue // the T-0392 separator
       const isSelected = el.dataset.value === selected && el.dataset.toggle === undefined
-      el.toggleAttribute('data-selected', isSelected)
+      if (el.getAttribute('role') === 'menuitemradio') el.setAttribute('aria-checked', String(isSelected))
+      else el.toggleAttribute('data-selected', isSelected)
       el.setAttribute('tabindex', isSelected ? '0' : '-1') // keep the roving base in sync with the selection
     }
   }

@@ -325,7 +325,13 @@ describe('ui-conversation-composer — the opt-in composer capabilities', () => 
     expect(toggle.getAttribute('role')).toBe('menuitemcheckbox')
     expect(toggle.getAttribute('aria-checked')).toBe('true')
     expect(toggle.hasAttribute('data-selected')).toBe(false)
-    expect((menu.querySelector('[data-value="low"]') as HTMLElement).getAttribute('role')).toBe('menuitem')
+    // T-0392: the effort levels are menuitemradio rows (the toggles' check idiom), a separator before the toggles
+    const low = menu.querySelector('[data-value="low"]') as HTMLElement
+    expect(low.getAttribute('role')).toBe('menuitemradio')
+    expect(low.getAttribute('aria-checked')).toBe('true')
+    expect(low.hasAttribute('data-selected')).toBe(false)
+    expect(low.nextElementSibling?.getAttribute('role')).toBe('separator')
+    expect(low.nextElementSibling?.nextElementSibling).toBe(toggle)
     const received: string[] = []
     el.onEffortChange((id) => received.push(id))
     toggle.dispatchEvent(new Event('click', { bubbles: true }))
