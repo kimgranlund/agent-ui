@@ -1,8 +1,8 @@
 {
   "id": "travel",
   "preset": "travel",
-  "seedVersion": 6,
-  "seedDigest": "sha256:2c4a69b6339917678d79c5e1390dbdde2ccba9c7b7084aeb2882e80a1f2ed02a",
+  "seedVersion": 7,
+  "seedDigest": "sha256:3740fdea17d243462ebaf134ae71b3ab90f0427d2c3d9e02793f31051ba4bc1f",
   "fragment": null,
   "selection": null,
   "noFragment": {
