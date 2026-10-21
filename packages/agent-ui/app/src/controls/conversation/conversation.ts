@@ -963,11 +963,12 @@ export class UIConversationElement extends UIElement {
       const ms = Date.now() - turnStartMs
       return { summary: formatActivitySummary(ms >= ACTIVITY_MIN_DURATION_MS ? formatTotalElapsed(ms) : '', retries, failed) }
     }
-    // GH #313 — reveals the bubble exactly once, on the first real content of any kind: a streamed note
-    // token, a fresh mount, the chip row, or finalize()'s own note/fallback text. A RESUMED bubble never
-    // carries `data-empty` in the first place (TKT-0079: it can only resume because it already mounted a
-    // surface on a prior turn, so it's already revealed) — `revealed` starts `true` for it, making every
-    // call below a no-op, matching state 1 (resumed turns stay visible throughout).
+    // GH #313: reveals the bubble exactly once, on the bubble's own first content: a streamed note token,
+    // the chip row, the disclosure, or finalize()'s note. A mount never reveals it (GH #1221), and a
+    // no-reply turn's tally rides the strip, not the bubble (T-0194). A RESUMED bubble (TKT-0079) whose
+    // prior turn carried prose has no `data-empty` left, so `revealed` starts `true` and every call below
+    // is a no-op (resumed turns stay visible throughout); a card-only prior turn leaves it hidden until
+    // this turn's own content lands.
     let revealed = bubble.dataset.empty === undefined
     const revealBubble = (): void => {
       if (revealed) return
