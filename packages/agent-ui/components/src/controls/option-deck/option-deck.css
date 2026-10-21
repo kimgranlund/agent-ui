@@ -107,13 +107,18 @@
 /* ════════════════ [2] STYLES BLOCK: @scope (ui-option-deck) consumes only --ui-option-deck-* ════════════════ */
 
 @scope (ui-option-deck) {
-  /* Fill by default (ADR-0223): block-level, no width opinion of its own. The host is the inline-size
-     container the one-column row reads. */
+  /* Fill by default (ADR-0223): block-level. The host is the inline-size container the one-column row reads,
+     so it has no intrinsic width: under a parent that sizes a child to content (a centring column, a flex row,
+     a centring grid cell) an auto width resolved to 0px (T-0388). The host fills the available inline size
+     itself, the ui-column `[stretch]` fill-available cascade (the last valid declaration wins per engine). */
   :scope {
     display: grid;
     gap: var(--ui-option-deck-stack-gap);
     box-sizing: border-box;
     min-inline-size: 0;
+    inline-size: -webkit-fill-available;
+    inline-size: -moz-available;
+    inline-size: stretch;
     container: option-deck / inline-size;
     color: var(--ui-option-deck-ink);
     font-size: var(--ui-option-deck-type-body);
