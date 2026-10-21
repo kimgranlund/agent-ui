@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Itinerary mockup (T-0199)</title>
+<!-- The library's foundation layer, in the foundation-styles.css order (linked directly: its bare
+     @agent-ui/shared specifiers do not resolve over file://). -->
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/tokens.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/dimensions.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/base.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations.gen.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css">
+<style>
+  /* Page chrome (not part of the composite). */
+  html, body { margin: 0; }
+  body {
+    background: var(--md-sys-color-neutral-surface);
+    color: var(--md-sys-color-neutral-on-surface);
+    font-family: var(--md-sys-typeface-sans, system-ui, sans-serif);
+    padding: var(--md-sys-layout-margin);
+  }
+  .page-head h1 { font-size: var(--md-sys-type-heading); margin: 0 0 var(--md-sys-card-gutter); }
+  .page-head p, .direction > p { margin: 0 0 var(--md-sys-card-margin); color: var(--md-sys-color-neutral-on-surface-variant); font-size: var(--md-sys-type-body); max-inline-size: 70ch; }
+  .direction { margin-block-end: calc(var(--md-sys-card-margin) * 2); }
+  .direction > h2 { font-size: var(--md-sys-type-title); margin: 0 0 var(--md-sys-card-gutter); }
+  .modes { display: flex; flex-wrap: wrap; gap: var(--md-sys-card-gutter); align-items: start; }
+  /* The 400px column: the chat column a canvas surface renders in. */
+  .column {
+    inline-size: min(100%, 400px);
+    display: grid;
+    gap: var(--md-sys-card-gutter);
+    padding: var(--md-sys-card-gutter);
+    border-radius: var(--md-sys-card-radius);
+    background: var(--md-sys-color-neutral-surface);
+    color: var(--md-sys-color-neutral-on-surface);
+    box-sizing: border-box;
+  }
+  .column[data-mode='dark'] { color-scheme: dark; }
+  .column[data-mode='light'] { color-scheme: light; }
+  .mode { margin: 0; font-size: var(--md-sys-type-group-kicker); letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-sys-color-neutral-on-surface-variant); }
+
+  /* The A2UI canvas: widget tier, scale md (20 / 24 / 28 px controls). A plain surface, no card chrome. */
+  .canvas {
+    background: var(--md-sys-color-neutral-surface-bright);
+    border-radius: var(--md-sys-widget-radius);
+    padding: var(--md-sys-widget-margin);
+    display: grid;
+    gap: var(--md-sys-widget-gutter);
+    align-content: start;
+  }
+  .state { margin: 0; font-size: var(--md-sys-type-group-kicker); letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-sys-color-neutral-on-surface-variant); }
+  .note { margin: 0; font-size: var(--md-sys-type-small-control); color: var(--md-sys-color-neutral-on-surface-variant); }
+
+  /* Itinerary: the proposed hospitality factory composite. It owns all its DOM: a ui-text title, then per day
+     a header (label plus the optional aside) over one ui-timeline of ui-timeline-item stops. */
+  .it { display: grid; gap: var(--md-sys-group-gutter); font-size: var(--md-sys-type-control); }
+  .it [data-part='title'] { margin: 0; font-size: var(--md-sys-type-title); font-weight: 600; }
+  .it [data-part='day'] { display: grid; gap: var(--md-sys-control-gutter); }
+  .it [data-part='day'] + [data-part='day'] { padding-block-start: var(--md-sys-group-gutter); border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant); }
+  .it [data-part='day-header'] { display: flex; align-items: baseline; justify-content: space-between; gap: var(--md-sys-control-gutter); flex-wrap: wrap; }
+  .it [data-part='day-label'] { margin: 0; font-size: var(--md-sys-type-control); font-weight: 600; }
+  /* The aside: short producer-filled text (weather, FX), a quiet pill, never a child slot. */
+  .it [data-part='aside'] {
+    font-size: var(--md-sys-type-small-control);
+    color: var(--md-sys-color-neutral-on-surface-variant);
+    background: var(--md-sys-color-neutral-container-low);
+    border-radius: var(--md-sys-control-radius);
+    padding: 2px var(--md-sys-control-gutter);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  /* ui-timeline / ui-timeline-item, drawn statically: a rail of markers, each stop's time, label and detail. */
+  .tl { list-style: none; margin: 0; padding: 0; display: grid; }
+  .tl li { display: grid; grid-template-columns: var(--md-sys-icon-box) 3.5em 1fr; column-gap: var(--md-sys-control-gutter); position: relative; padding-block-end: var(--md-sys-control-gutter); }
+  .tl li:last-child { padding-block-end: 0; }
+  .tl li::before { /* the rail between markers */
+    content: ''; position: absolute; inset-inline-start: calc(var(--md-sys-icon-box) / 2 - 0.5px);
+    inset-block: calc(var(--md-sys-icon-box) + 2px) 0; inline-size: 1px; background: var(--md-sys-color-neutral-outline-variant);
+  }
+  .tl li:last-child::before { display: none; }
+  .tl [data-part='marker'] { inline-size: var(--md-sys-icon-box); block-size: var(--md-sys-icon-box); border-radius: 50%; box-sizing: border-box; display: grid; place-items: center; margin-block-start: 1px; }
+  .tl [data-status='done'] [data-part='marker'] { background: var(--md-sys-color-success); color: var(--md-sys-color-success-on-success); }
+  .tl [data-status='done'] [data-part='marker'] svg { inline-size: 70%; block-size: 70%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tl [data-status='active'] [data-part='marker'] { border: 2px solid var(--md-sys-color-primary); }
+  .tl [data-status='active'] [data-part='marker']::after { content: ''; inline-size: 40%; block-size: 40%; border-radius: 50%; background: var(--md-sys-color-primary); }
+  .tl [data-status='pending'] [data-part='marker'] { border: 2px solid var(--md-sys-color-neutral-on-surface-variant); }
+  .tl [data-part='time'] { font-variant-numeric: tabular-nums; color: var(--md-sys-color-neutral-on-surface-variant); }
+  .tl [data-part='label'] { font-weight: 500; }
+  .tl [data-part='detail'] { grid-column: 3; color: var(--md-sys-color-neutral-on-surface-variant); font-size: var(--md-sys-type-small-control); }
+  .tl [data-status='done'] [data-part='label'] { color: var(--md-sys-color-neutral-on-surface-variant); }
+  .tl .sr { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); }
+
+  /* Direction B only: the day strip, one day at a time. */
+  .it [data-part='days-strip'] { display: flex; gap: var(--md-sys-control-gutter); }
+  .it [data-part='days-strip'] button {
+    font: inherit; border: 0; margin: 0; cursor: pointer; flex: 1;
+    block-size: var(--md-sys-height); border-radius: var(--md-sys-control-radius);
+    background: var(--md-sys-color-neutral-container-low); color: var(--md-sys-color-neutral-on-surface);
+  }
+  .it [data-part='days-strip'] button[aria-selected='true'] { background: var(--md-sys-color-primary-fill); color: var(--md-sys-color-primary-on-primary); font-weight: 600; }
+
+  /* A sibling follow-up Button outside the composite (the itinerary emits nothing). */
+  .follow { font: inherit; border: 0; margin: 0; cursor: pointer; inline-size: 100%; block-size: var(--md-sys-height); border-radius: var(--md-sys-control-radius); background: var(--md-sys-color-primary-container-low); color: var(--md-sys-color-primary-high); }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>Itinerary, design mockup</h1>
+  <p>T-0199 step 1. A hospitality domain factory composite over ui-text, ui-timeline and ui-timeline-item. Each tile is an A2UI canvas at <code>data-tier="widget" data-scale="md"</code> inside the 400px chat column, drawn light and dark. A three-day Lisbon trip: day 1 done, day 2 under way with a weather aside, day 3 pending with an FX aside. Status marks are TimelineItem's own shapes (check disc, ring with a dot, hollow ring), never color alone. Static drawing: the build renders the real controls.</p>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="g-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5"/></symbol>
+</svg>
+
+<!-- ====================================================================================== -->
+<section class="direction" data-direction="a">
+  <h2>Direction A: every day stacked (recommended)</h2>
+  <p>A day header, then that day's timeline, for every day in order. The whole trip reads top to bottom with no extra control; the aside sits at the end of its day header. A follow-up ask stays a Button outside the composite.</p>
+  <div class="modes">
+    <div class="column" data-mode="light">
+      <p class="mode">Light, 400px column</p>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction A, three days">
+        <p class="state">Three days, day 2 under way</p>
+        <div class="it" role="group" aria-label="Lisbon, 3 days">
+          <h3 data-part="title">Lisbon, 3 days</h3>
+
+          <section data-part="day" aria-label="Fri 14 Nov">
+            <div data-part="day-header"><h4 data-part="day-label">Fri 14 Nov, arrival</h4></div>
+            <ol class="tl">
+              <li data-status="done"><span data-part="marker"><svg><use href="#g-check"/></svg></span><span data-part="time">10:40</span><span data-part="label">Land at LIS <span class="sr">(done)</span></span><span data-part="detail">TP 1351, terminal 1</span></li>
+              <li data-status="done"><span data-part="marker"><svg><use href="#g-check"/></svg></span><span data-part="time">12:30</span><span data-part="label">Check in, Alfama Patio <span class="sr">(done)</span></span><span data-part="detail">Rua das Escolas Gerais 3</span></li>
+              <li data-status="done"><span data-part="marker"><svg><use href="#g-check"/></svg></span><span data-part="time">19:30</span><span data-part="label">Dinner, Taberna da Rua <span class="sr">(done)</span></span></li>
+            </ol>
+          </section>
+
+          <section data-part="day" aria-label="Sat 15 Nov">
+            <div data-part="day-header"><h4 data-part="day-label">Sat 15 Nov, Belem</h4><span data-part="aside">18°C, sun</span></div>
+            <ol class="tl">
+              <li data-status="done"><span data-part="marker"><svg><use href="#g-check"/></svg></span><span data-part="time">09:00</span><span data-part="label">Tram 15 to Belem <span class="sr">(done)</span></span></li>
+              <li data-status="active"><span data-part="marker"></span><span data-part="time">10:00</span><span data-part="label">Jeronimos Monastery <span class="sr">(now)</span></span><span data-part="detail">Tickets on your phone</span></li>
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">12:30</span><span data-part="label">Pasteis de Belem <span class="sr">(next)</span></span></li>
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">15:00</span><span data-part="label">MAAT riverside walk <span class="sr">(next)</span></span></li>
+            </ol>
+          </section>
+
+          <section data-part="day" aria-label="Sun 16 Nov">
+            <div data-part="day-header"><h4 data-part="day-label">Sun 16 Nov, Sintra</h4><span data-part="aside">1 EUR = 1.08 USD</span></div>
+            <ol class="tl">
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">08:15</span><span data-part="label">Train from Rossio <span class="sr">(next)</span></span><span data-part="detail">40 min, Viva Viagem card</span></li>
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">10:00</span><span data-part="label">Pena Palace <span class="sr">(next)</span></span></li>
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">17:00</span><span data-part="label">Check out, airport transfer <span class="sr">(next)</span></span></li>
+            </ol>
+          </section>
+        </div>
+        <button class="follow">Evening plan</button>
+        <p class="note">One bound <code>days</code> path, updated in place as legs are chosen.</p>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================================== -->
+<section class="direction" data-direction="b">
+  <h2>Direction B: one day at a time behind a day strip</h2>
+  <p>A strip of day chips, one day's timeline shown. Shorter, but it hides two thirds of the trip behind unpressed chips (the Tabs "hides half the ask" reasoning) and adds a control the composite must own: the reason A is recommended.</p>
+  <div class="modes">
+    <div class="column" data-mode="light">
+      <p class="mode">Light, 400px column</p>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction B, day 2 shown">
+        <p class="state">Day 2 selected, day 2 under way</p>
+        <div class="it" role="group" aria-label="Lisbon, 3 days">
+          <h3 data-part="title">Lisbon, 3 days</h3>
+          <div data-part="days-strip" role="tablist" aria-label="Days">
+            <button role="tab" aria-selected="false" tabindex="-1">Fri 14</button>
+            <button role="tab" aria-selected="true">Sat 15</button>
+            <button role="tab" aria-selected="false" tabindex="-1">Sun 16</button>
+          </div>
+          <section data-part="day" aria-label="Sat 15 Nov" role="tabpanel">
+            <div data-part="day-header"><h4 data-part="day-label">Sat 15 Nov, Belem</h4><span data-part="aside">18°C, sun</span></div>
+            <ol class="tl">
+              <li data-status="done"><span data-part="marker"><svg><use href="#g-check"/></svg></span><span data-part="time">09:00</span><span data-part="label">Tram 15 to Belem <span class="sr">(done)</span></span></li>
+              <li data-status="active"><span data-part="marker"></span><span data-part="time">10:00</span><span data-part="label">Jeronimos Monastery <span class="sr">(now)</span></span><span data-part="detail">Tickets on your phone</span></li>
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">12:30</span><span data-part="label">Pasteis de Belem <span class="sr">(next)</span></span></li>
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">15:00</span><span data-part="label">MAAT riverside walk <span class="sr">(next)</span></span></li>
+            </ol>
+          </section>
+        </div>
+        <button class="follow">Evening plan</button>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction B, day 3 shown">
+        <p class="state">Day 3 selected, all pending</p>
+        <div class="it" role="group" aria-label="Lisbon, 3 days">
+          <h3 data-part="title">Lisbon, 3 days</h3>
+          <div data-part="days-strip" role="tablist" aria-label="Days">
+            <button role="tab" aria-selected="false" tabindex="-1">Fri 14</button>
+            <button role="tab" aria-selected="false" tabindex="-1">Sat 15</button>
+            <button role="tab" aria-selected="true">Sun 16</button>
+          </div>
+          <section data-part="day" aria-label="Sun 16 Nov" role="tabpanel">
+            <div data-part="day-header"><h4 data-part="day-label">Sun 16 Nov, Sintra</h4><span data-part="aside">1 EUR = 1.08 USD</span></div>
+            <ol class="tl">
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">08:15</span><span data-part="label">Train from Rossio <span class="sr">(next)</span></span><span data-part="detail">40 min, Viva Viagem card</span></li>
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">10:00</span><span data-part="label">Pena Palace <span class="sr">(next)</span></span></li>
+              <li data-status="pending"><span data-part="marker"></span><span data-part="time">17:00</span><span data-part="label">Check out, airport transfer <span class="sr">(next)</span></span></li>
+            </ol>
+          </section>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Draw each direction's dark column as a copy of its light one (color-scheme: dark resolves the light-dark() tokens).
+  for (const modes of document.querySelectorAll('.direction .modes')) {
+    const light = modes.querySelector('.column[data-mode="light"]')
+    const dark = light.cloneNode(true)
+    dark.dataset.mode = 'dark'
+    dark.querySelector('.mode').textContent = 'Dark, 400px column'
+    modes.append(dark)
+  }
+</script>
+</body>
+</html>

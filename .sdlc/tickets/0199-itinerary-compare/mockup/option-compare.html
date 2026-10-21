@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OptionCompare mockup (T-0199)</title>
+<!-- The library's foundation layer, in the foundation-styles.css order (linked directly: its bare
+     @agent-ui/shared specifiers do not resolve over file://). -->
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/tokens.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/dimensions.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/base.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations.gen.css">
+<link rel="stylesheet" href="../../../../packages/agent-ui/shared/src/tokens/foundations-bridge.gen.css">
+<style>
+  /* Page chrome (not part of the control). */
+  html, body { margin: 0; }
+  body {
+    background: var(--md-sys-color-neutral-surface);
+    color: var(--md-sys-color-neutral-on-surface);
+    font-family: var(--md-sys-typeface-sans, system-ui, sans-serif);
+    padding: var(--md-sys-layout-margin);
+  }
+  .page-head h1 { font-size: var(--md-sys-type-heading); margin: 0 0 var(--md-sys-card-gutter); }
+  .page-head p, .direction > p { margin: 0 0 var(--md-sys-card-margin); color: var(--md-sys-color-neutral-on-surface-variant); font-size: var(--md-sys-type-body); max-inline-size: 70ch; }
+  .direction { margin-block-end: calc(var(--md-sys-card-margin) * 2); }
+  .direction > h2 { font-size: var(--md-sys-type-title); margin: 0 0 var(--md-sys-card-gutter); }
+  .modes { display: flex; flex-wrap: wrap; gap: var(--md-sys-card-gutter); align-items: start; }
+  /* The 400px column: the chat column a canvas surface renders in. */
+  .column {
+    inline-size: min(100%, 400px);
+    display: grid;
+    gap: var(--md-sys-card-gutter);
+    padding: var(--md-sys-card-gutter);
+    border-radius: var(--md-sys-card-radius);
+    background: var(--md-sys-color-neutral-surface);
+    color: var(--md-sys-color-neutral-on-surface);
+    box-sizing: border-box;
+    min-inline-size: 0;
+  }
+  .column[data-mode='dark'] { color-scheme: dark; }
+  .column[data-mode='light'] { color-scheme: light; }
+  .mode { margin: 0; font-size: var(--md-sys-type-group-kicker); letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-sys-color-neutral-on-surface-variant); }
+
+  /* The A2UI canvas: widget tier, scale md (20 / 24 / 28 px controls). A plain surface, no card chrome. */
+  .canvas {
+    background: var(--md-sys-color-neutral-surface-bright);
+    border-radius: var(--md-sys-widget-radius);
+    padding: var(--md-sys-widget-margin);
+    display: grid;
+    gap: var(--md-sys-widget-gutter);
+    align-content: start;
+    min-inline-size: 0;
+  }
+  .state { margin: 0; font-size: var(--md-sys-type-group-kicker); letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-sys-color-neutral-on-surface-variant); }
+  .note { margin: 0; font-size: var(--md-sys-type-small-control); color: var(--md-sys-color-neutral-on-surface-variant); }
+
+  /* ui-option-compare: the proposed control (pattern tier). Tokens follow the ui-option-deck roles. */
+  .oc {
+    --ui-option-compare-option-bg: var(--md-sys-color-neutral-container-low);
+    --ui-option-compare-option-ink: var(--md-sys-color-neutral-on-surface);
+    --ui-option-compare-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+    --ui-option-compare-best-ring: var(--md-sys-color-primary);
+    --ui-option-compare-pill-bg: var(--md-sys-color-primary-container-low);
+    --ui-option-compare-pill-ink: var(--md-sys-color-primary-high);
+    --ui-option-compare-selected-bg: var(--md-sys-color-primary-container);
+    --ui-option-compare-selected-ring: var(--md-sys-color-primary-fill);
+    --ui-option-compare-pick-bg: var(--md-sys-color-primary-fill);
+    --ui-option-compare-pick-ink: var(--md-sys-color-primary-on-primary);
+    display: grid;
+    gap: var(--md-sys-group-gutter);
+    font-size: var(--md-sys-type-control);
+    min-inline-size: 0;
+  }
+  .oc [data-part='heading'] { margin: 0; font-size: var(--md-sys-type-title); font-weight: 600; }
+  .oc [data-part='pill'] {
+    display: inline-flex; align-items: center; gap: 4px; justify-self: start;
+    font-size: var(--md-sys-type-small-control); font-weight: 600;
+    padding: 1px var(--md-sys-control-gutter); border-radius: 999px;
+    background: var(--ui-option-compare-pill-bg); color: var(--ui-option-compare-pill-ink);
+  }
+  .oc [data-part='pill'][data-kind='pick'] { background: var(--ui-option-compare-pick-bg); color: var(--ui-option-compare-pick-ink); }
+  .oc svg { inline-size: 1em; block-size: 1em; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Direction A: a grid. Column 1 is the label column (pinned when the options scroll); each option column is
+     one role="option" target spanning every row (subgrid), so the whole column is the press target. */
+  .oc [data-part='scroller'] { overflow-x: auto; min-inline-size: 0; }
+  .oc [data-part='grid'] {
+    display: grid;
+    grid-template-columns: max-content repeat(var(--n), minmax(7.5em, 1fr));
+    grid-template-rows: repeat(var(--rows), auto);
+    column-gap: var(--md-sys-control-gutter);
+  }
+  .oc [data-part='labels'], .oc [data-part='option'] { display: grid; grid-row: 1 / -1; grid-template-rows: subgrid; }
+  .oc [data-part='labels'] { position: sticky; inset-inline-start: 0; z-index: 1; background: var(--md-sys-color-neutral-surface-bright); padding-inline-end: var(--md-sys-control-gutter); }
+  .oc [data-part='labels'] > * { color: var(--ui-option-compare-label-ink); font-size: var(--md-sys-type-small-control); padding-block: 6px; align-self: center; }
+  .oc [data-part='option'] {
+    background: var(--ui-option-compare-option-bg); color: var(--ui-option-compare-option-ink);
+    border-radius: var(--md-sys-control-radius); padding-inline: var(--md-sys-label-inset);
+    cursor: pointer; box-shadow: inset 0 0 0 1px transparent;
+  }
+  .oc [data-part='option'] > * { padding-block: 6px; align-self: center; font-variant-numeric: tabular-nums; }
+  .oc [data-part='option'] [data-part='title'] { font-weight: 600; }
+  .oc [data-part='option'][data-best] { box-shadow: inset 0 0 0 2px var(--ui-option-compare-best-ring); }
+  .oc [data-part='option'][aria-selected='true'] { background: var(--ui-option-compare-selected-bg); box-shadow: inset 0 0 0 2px var(--ui-option-compare-selected-ring); }
+  .oc [data-part='option']:focus-visible { outline: 2px solid var(--md-sys-color-focus-ring, var(--md-sys-color-primary)); outline-offset: 2px; }
+  .oc [data-part='head-row'] { display: grid; gap: 2px; align-content: start; }
+  .oc [data-part='subtitle'] { color: var(--ui-option-compare-label-ink); font-size: var(--md-sys-type-small-control); font-weight: 400; }
+
+  /* Direction B: option cards, each repeating its row labels so the rows align card to card. */
+  .oc [data-part='cards'] { display: grid; gap: var(--md-sys-control-gutter); }
+  .oc [data-part='card'] {
+    display: grid; gap: 4px; padding: var(--md-sys-control-gutter) var(--md-sys-label-inset);
+    border-radius: var(--md-sys-control-radius); background: var(--ui-option-compare-option-bg); cursor: pointer;
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+  .oc [data-part='card'][data-best] { box-shadow: inset 0 0 0 2px var(--ui-option-compare-best-ring); }
+  .oc [data-part='card'][aria-selected='true'] { background: var(--ui-option-compare-selected-bg); box-shadow: inset 0 0 0 2px var(--ui-option-compare-selected-ring); }
+  .oc [data-part='card-head'] { display: flex; justify-content: space-between; align-items: center; gap: var(--md-sys-control-gutter); }
+  .oc [data-part='card'] dl { margin: 0; display: grid; grid-template-columns: 6em 1fr; row-gap: 2px; }
+  .oc [data-part='card'] dt { color: var(--ui-option-compare-label-ink); font-size: var(--md-sys-type-small-control); }
+  .oc [data-part='card'] dd { margin: 0; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<header class="page-head">
+  <h1>ui-option-compare, design mockup</h1>
+  <p>T-0199 step 1 (the compare half; built in its own ticket). Each tile is an A2UI canvas at <code>data-tier="widget" data-scale="md"</code> inside the 400px chat column, drawn light and dark. A listbox: each option is one <code>role="option"</code> target with no Button inside it. The best option carries a "Best" text pill plus a ring, the picked one a "Your pick" pill plus a fill, never color alone. Static drawing.</p>
+</header>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="g-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 5"/></symbol>
+  <symbol id="g-star" viewBox="0 0 16 16"><path d="M8 2l1.8 3.8 4.2.5-3.1 2.9.8 4.1L8 11.3 4.3 13.3l.8-4.1L2 6.3l4.2-.5z"/></symbol>
+</svg>
+
+<!-- ====================================================================================== -->
+<section class="direction" data-direction="a">
+  <h2>Direction A: option columns beside a label column (recommended)</h2>
+  <p>Rows align by construction, so a value reads across options at a glance. Each column is the press target. At the 400px column a fourth option scrolls inside the control while the label column stays pinned.</p>
+  <div class="modes">
+    <div class="column" data-mode="light">
+      <p class="mode">Light, 400px column</p>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction A, three options, best marked">
+        <p class="state">Three options, best marked, no pick yet</p>
+        <div class="oc">
+          <h3 data-part="heading" id="a1-h">Lisbon to Porto</h3>
+          <div data-part="scroller">
+            <div data-part="grid" role="listbox" aria-labelledby="a1-h" tabindex="0" style="--n: 3; --rows: 5">
+              <div data-part="labels" aria-hidden="true"><span></span><span>Duration</span><span>Price</span><span>Departs</span><span>Changes</span></div>
+              <div data-part="option" role="option" aria-selected="false" data-best>
+                <div data-part="head-row"><span data-part="pill"><svg><use href="#g-star"/></svg>Best</span><span data-part="title">Train</span><span data-part="subtitle">Alfa Pendular</span></div>
+                <span>2h 50m</span><span>EUR 32</span><span>09:09</span><span>None</span>
+              </div>
+              <div data-part="option" role="option" aria-selected="false">
+                <div data-part="head-row"><span data-part="title">Bus</span><span data-part="subtitle">Rede Expressos</span></div>
+                <span>3h 30m</span><span>EUR 19</span><span>08:30</span><span>None</span>
+              </div>
+              <div data-part="option" role="option" aria-selected="false">
+                <div data-part="head-row"><span data-part="title">Flight</span><span data-part="subtitle">TP 1940</span></div>
+                <span>55m</span><span>EUR 89</span><span>11:15</span><span>None</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction A, picked">
+        <p class="state">Picked: Bus (value = bus), select then action</p>
+        <div class="oc">
+          <h3 data-part="heading" id="a2-h">Lisbon to Porto</h3>
+          <div data-part="scroller">
+            <div data-part="grid" role="listbox" aria-labelledby="a2-h" tabindex="0" aria-activedescendant="a2-bus" style="--n: 3; --rows: 5">
+              <div data-part="labels" aria-hidden="true"><span></span><span>Duration</span><span>Price</span><span>Departs</span><span>Changes</span></div>
+              <div data-part="option" role="option" aria-selected="false" data-best>
+                <div data-part="head-row"><span data-part="pill"><svg><use href="#g-star"/></svg>Best</span><span data-part="title">Train</span><span data-part="subtitle">Alfa Pendular</span></div>
+                <span>2h 50m</span><span>EUR 32</span><span>09:09</span><span>None</span>
+              </div>
+              <div data-part="option" role="option" aria-selected="true" id="a2-bus">
+                <div data-part="head-row"><span data-part="pill" data-kind="pick"><svg><use href="#g-check"/></svg>Your pick</span><span data-part="title">Bus</span><span data-part="subtitle">Rede Expressos</span></div>
+                <span>3h 30m</span><span>EUR 19</span><span>08:30</span><span>None</span>
+              </div>
+              <div data-part="option" role="option" aria-selected="false">
+                <div data-part="head-row"><span data-part="title">Flight</span><span data-part="subtitle">TP 1940</span></div>
+                <span>55m</span><span>EUR 89</span><span>11:15</span><span>None</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction A, four options">
+        <p class="state">Four options, scrolls inside, labels pinned</p>
+        <div class="oc">
+          <h3 data-part="heading" id="a3-h">Lisbon to Porto</h3>
+          <div data-part="scroller">
+            <div data-part="grid" role="listbox" aria-labelledby="a3-h" tabindex="0" style="--n: 4; --rows: 5">
+              <div data-part="labels" aria-hidden="true"><span></span><span>Duration</span><span>Price</span><span>Departs</span><span>Changes</span></div>
+              <div data-part="option" role="option" aria-selected="false" data-best>
+                <div data-part="head-row"><span data-part="pill"><svg><use href="#g-star"/></svg>Best</span><span data-part="title">Train</span><span data-part="subtitle">Alfa Pendular</span></div>
+                <span>2h 50m</span><span>EUR 32</span><span>09:09</span><span>None</span>
+              </div>
+              <div data-part="option" role="option" aria-selected="false">
+                <div data-part="head-row"><span data-part="title">Bus</span><span data-part="subtitle">Rede Expressos</span></div>
+                <span>3h 30m</span><span>EUR 19</span><span>08:30</span><span>None</span>
+              </div>
+              <div data-part="option" role="option" aria-selected="false">
+                <div data-part="head-row"><span data-part="title">Flight</span><span data-part="subtitle">TP 1940</span></div>
+                <span>55m</span><span>EUR 89</span><span>11:15</span><span>None</span>
+              </div>
+              <div data-part="option" role="option" aria-selected="false">
+                <div data-part="head-row"><span data-part="title">Car</span><span data-part="subtitle">Rental, A1</span></div>
+                <span>3h 10m</span><span>EUR 64</span><span>Any</span><span>None</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="note">The fourth column sits past the edge; the label column stays in view while it scrolls.</p>
+      </section>
+    </div>
+  </div>
+</section>
+
+<!-- ====================================================================================== -->
+<section class="direction" data-direction="b">
+  <h2>Direction B: option cards with aligned attribute rows</h2>
+  <p>Each option is a card and each card repeats its row labels. It fits four options at 400px without scrolling, but a reader compares by scanning down and back up across cards, and the labels repeat once per card: the reason A is recommended.</p>
+  <div class="modes">
+    <div class="column" data-mode="light">
+      <p class="mode">Light, 400px column</p>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction B, three options, Bus picked">
+        <p class="state">Three options, best marked, Bus picked</p>
+        <div class="oc">
+          <h3 data-part="heading" id="b1-h">Lisbon to Porto</h3>
+          <div data-part="cards" role="listbox" aria-labelledby="b1-h" tabindex="0" aria-activedescendant="b1-bus">
+            <div data-part="card" role="option" aria-selected="false" data-best>
+              <div data-part="card-head"><span data-part="title"><b>Train</b>, Alfa Pendular</span><span data-part="pill"><svg><use href="#g-star"/></svg>Best</span></div>
+              <dl><dt>Duration</dt><dd>2h 50m</dd><dt>Price</dt><dd>EUR 32</dd><dt>Departs</dt><dd>09:09</dd></dl>
+            </div>
+            <div data-part="card" role="option" aria-selected="true" id="b1-bus">
+              <div data-part="card-head"><span data-part="title"><b>Bus</b>, Rede Expressos</span><span data-part="pill" data-kind="pick"><svg><use href="#g-check"/></svg>Your pick</span></div>
+              <dl><dt>Duration</dt><dd>3h 30m</dd><dt>Price</dt><dd>EUR 19</dd><dt>Departs</dt><dd>08:30</dd></dl>
+            </div>
+            <div data-part="card" role="option" aria-selected="false">
+              <div data-part="card-head"><span data-part="title"><b>Flight</b>, TP 1940</span></div>
+              <dl><dt>Duration</dt><dd>55m</dd><dt>Price</dt><dd>EUR 89</dd><dt>Departs</dt><dd>11:15</dd></dl>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="canvas" data-tier="widget" data-scale="md" aria-label="Direction B, four options">
+        <p class="state">Four options, no pick yet</p>
+        <div class="oc">
+          <h3 data-part="heading" id="b2-h">Lisbon to Porto</h3>
+          <div data-part="cards" role="listbox" aria-labelledby="b2-h" tabindex="0">
+            <div data-part="card" role="option" aria-selected="false" data-best>
+              <div data-part="card-head"><span data-part="title"><b>Train</b>, Alfa Pendular</span><span data-part="pill"><svg><use href="#g-star"/></svg>Best</span></div>
+              <dl><dt>Duration</dt><dd>2h 50m</dd><dt>Price</dt><dd>EUR 32</dd><dt>Departs</dt><dd>09:09</dd></dl>
+            </div>
+            <div data-part="card" role="option" aria-selected="false">
+              <div data-part="card-head"><span data-part="title"><b>Bus</b>, Rede Expressos</span></div>
+              <dl><dt>Duration</dt><dd>3h 30m</dd><dt>Price</dt><dd>EUR 19</dd><dt>Departs</dt><dd>08:30</dd></dl>
+            </div>
+            <div data-part="card" role="option" aria-selected="false">
+              <div data-part="card-head"><span data-part="title"><b>Flight</b>, TP 1940</span></div>
+              <dl><dt>Duration</dt><dd>55m</dd><dt>Price</dt><dd>EUR 89</dd><dt>Departs</dt><dd>11:15</dd></dl>
+            </div>
+            <div data-part="card" role="option" aria-selected="false">
+              <div data-part="card-head"><span data-part="title"><b>Car</b>, Rental, A1</span></div>
+              <dl><dt>Duration</dt><dd>3h 10m</dd><dt>Price</dt><dd>EUR 64</dd><dt>Departs</dt><dd>Any</dd></dl>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Draw each direction's dark column as a copy of its light one (color-scheme: dark resolves the light-dark() tokens).
+  for (const modes of document.querySelectorAll('.direction .modes')) {
+    const light = modes.querySelector('.column[data-mode="light"]')
+    const dark = light.cloneNode(true)
+    dark.dataset.mode = 'dark'
+    dark.querySelector('.mode').textContent = 'Dark, 400px column'
+    for (const el of dark.querySelectorAll('[id]')) el.id += '-dark'
+    for (const el of dark.querySelectorAll('[aria-labelledby]')) el.setAttribute('aria-labelledby', el.getAttribute('aria-labelledby') + '-dark')
+    for (const el of dark.querySelectorAll('[aria-activedescendant]')) el.setAttribute('aria-activedescendant', el.getAttribute('aria-activedescendant') + '-dark')
+    modes.append(dark)
+  }
+</script>
+</body>
+</html>
