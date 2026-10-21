@@ -3,6 +3,13 @@ import { whenFlushed } from '@agent-ui/components'
 import { locationFor, type FieldLocation } from './field-location.ts'
 import { PERSONA_STATE_KEYS } from './persona-patch.ts'
 import { UIAgentAdminElement } from './agent-admin.ts'
+import { SERVER_TOOL_SETTING_KEYS } from './agent-admin-schema.ts'
+import { PERSONA_FIELD_BY_KEY } from './content-fields.ts'
+
+/** T-0391: the server tool keys are pane-edited, not patchable, but they render in the Model fold and its
+ *  tool drawers, so the anchor gates walk them beside `PERSONA_STATE_KEYS`. */
+const SERVER_TOOL_KEYS: readonly string[] = Object.values(SERVER_TOOL_SETTING_KEYS).flatMap((keys) => Object.values(keys).filter((k): k is string => k !== undefined))
+const ANCHORED_KEYS: readonly string[] = [...PERSONA_STATE_KEYS, ...SERVER_TOOL_KEYS]
 
 // field-location.test.ts — SPEC-R2's two parity gates (follow-the-change, GH #695/#721; LLD-C2). The map
 // is a small hand-grouped listing over derived key spreads — these gates, not the listing, are what make
@@ -53,7 +60,7 @@ describe('field-location — anchor parity against the composed DOM (SPEC-R2 AC2
     await whenFlushed()
 
     const emitted = new Map<string, FieldLocation>()
-    for (const key of PERSONA_STATE_KEYS) {
+    for (const key of ANCHORED_KEYS) {
       const location = locationFor(key)
       if (location !== undefined) emitted.set(`${location.section}/${location.item}`, location)
     }
@@ -66,6 +73,59 @@ describe('field-location — anchor parity against the composed DOM (SPEC-R2 AC2
       const fold = section!.querySelector(`[data-part="settings-item"][data-item="${location.item}"]`)
       expect(fold, `fold anchor ${location.section} › ${location.item} must exist inside its section`).not.toBeNull()
       expect(fold!.getAttribute('summary'), `${location.item}'s fold summary`).toBe(location.itemLabel)
+    }
+  })
+})
+
+describe('T-0391 layout: the Agent tab item mappings', () => {
+  it('T-0391 layout: tagline and category map to Agent, the set-once model rows to Advanced, effort and thinking stay in Model, bankroll to Danger zone', () => {
+    const at = (key: string): string | undefined => {
+      const l = locationFor(key)
+      return l && `${l.section}/${l.item}/${l.itemLabel}`
+    }
+    for (const key of ['tagline', 'category']) expect(at(key), key).toBe('agent-content/agent/Agent')
+    for (const key of ['effort', 'thinking', 'model', 'modelsIncluded']) expect(at(key), key).toBe('agent-content/model/Model')
+    for (const key of ['showReasoning', 'maxTokens', 'cacheTtl']) expect(at(key), key).toBe('agent-content/advanced/Advanced')
+    for (const key of ['bankroll', 'bankrollCapable']) expect(at(key), key).toBe('agent-content/danger/Danger zone')
+  })
+})
+
+// ── T-0391: the drawer level (fork 6, Kim 2026-10-21: a drawer field washes its trigger, never opens it) ──
+describe('T-0391 drawer: the drawer level of the field→location map', () => {
+  it('T-0391 drawer: modelsIncluded maps to the Manage models drawer, each tool\'s detail keys to its own drawer, the enabled keys stay drawer-less', () => {
+    expect(locationFor('modelsIncluded')).toMatchObject({ section: 'agent-content', item: 'model', drawer: 'models', drawerLabel: 'Manage models' })
+    for (const key of ['model', 'effort', 'thinking']) expect(locationFor(key)?.drawer, key).toBeUndefined()
+    for (const [tool, { enabled, ...detail }] of Object.entries(SERVER_TOOL_SETTING_KEYS)) {
+      expect(locationFor(enabled), enabled).toMatchObject({ section: 'agent-content', item: 'model' })
+      expect(locationFor(enabled)?.drawer, `${enabled} stays on its open row`).toBeUndefined()
+      const label = PERSONA_FIELD_BY_KEY.get(enabled)?.label
+      expect(label, `${enabled} has a schema label`).toBeTruthy()
+      for (const key of Object.values(detail)) {
+        expect(locationFor(key!), key).toMatchObject({ section: 'agent-content', item: 'model', drawer: `tool-${tool}`, drawerLabel: label })
+      }
+    }
+  })
+
+  it('T-0391 drawer: every drawer a location names sits in its fold anchor with its heading and its trigger', async () => {
+    const admin = document.createElement('ui-agent-admin') as UIAgentAdminElement
+    document.body.append(admin)
+    mounted.push(admin)
+    await whenFlushed()
+
+    const drawers = new Map<string, FieldLocation>()
+    for (const key of ANCHORED_KEYS) {
+      const location = locationFor(key)
+      if (location?.drawer !== undefined) drawers.set(`${location.section}/${location.item}/${location.drawer}`, location)
+    }
+    expect([...drawers.values()].map((l) => l.drawer).sort()).toEqual(['models', ...Object.keys(SERVER_TOOL_SETTING_KEYS).map((tool) => `tool-${tool}`)].sort())
+
+    for (const location of drawers.values()) {
+      const fold = admin.querySelector(`div[data-role="${location.section}"] [data-part="settings-item"][data-item="${location.item}"]`)
+      expect(fold, `fold anchor ${location.item}`).not.toBeNull()
+      const drawer = fold!.querySelector(`ui-drawer[data-drawer="${location.drawer}"]`)
+      expect(drawer, `drawer ${location.drawer} must sit inside the ${location.item} fold`).not.toBeNull()
+      expect(drawer!.querySelector('[data-part="drawer-heading"]')?.textContent, `${location.drawer}'s heading`).toBe(location.drawerLabel)
+      expect(fold!.querySelector(`[data-part="drawer-trigger"][data-opens="${location.drawer}"]`), `${location.drawer}'s trigger`).not.toBeNull()
     }
   })
 })

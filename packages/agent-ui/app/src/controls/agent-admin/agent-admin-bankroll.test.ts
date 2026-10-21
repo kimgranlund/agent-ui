@@ -7,6 +7,7 @@
 
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
+import { installDialogPolyfill } from '@agent-ui/shared/testing/dialog-polyfill'
 import '@agent-ui/app/agent-admin'
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import { createMemoryStore } from '@agent-ui/app'
@@ -23,6 +24,8 @@ import {
 // mounts real FACE form controls (ui-switch/ui-text-field/ui-slider) that call them on connect.
 let realAttachInternals: typeof HTMLElement.prototype.attachInternals
 beforeAll(() => {
+  // T-0391: the bankroll Reset confirms through the Danger zone's `ui-modal`; jsdom has no `<dialog>` modal.
+  installDialogPolyfill()
   realAttachInternals = HTMLElement.prototype.attachInternals
   HTMLElement.prototype.attachInternals = function (this: HTMLElement): ElementInternals {
     const internals = realAttachInternals.call(this) as unknown as Record<string, unknown>
@@ -417,19 +420,17 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     for (const el of mounted.splice(0)) el.remove()
   })
 
-  /** GH #541 — the whole FOLD is what hides now: Bankroll is its own group, not a row among the Surface
-   *  Options modalities (a stored figure is not an output modality). GH #574 — that group now sits in the
-   *  Agent tab (persona state lives with the persona), not adjacent to Surface Options at all: the two
-   *  folds live in different tabs since the split. */
-  function bankrollItem(el: UIAgentAdminElement): HTMLElement {
-    return el.querySelector('[data-part="settings-item"][data-item="bankroll"]') as HTMLElement
+  /** T-0391: the Bankroll fold retired: the row is the Agent tab's closed Danger zone fold's last row (a
+   *  stored figure is not an output modality), and the ROW is what hides for a persona that never opted in. */
+  function dangerItem(el: UIAgentAdminElement): HTMLElement {
+    return el.querySelector('[data-part="settings-item"][data-item="danger"]') as HTMLElement
   }
 
   function bankrollRow(el: UIAgentAdminElement): HTMLElement {
     return el.querySelector('[data-part="bankroll-row"]') as HTMLElement
   }
 
-  it('GH #541/#574: the row lives OUTSIDE Surface Options, in its own fold in the Agent tab, directly after Model', async () => {
+  it('T-0391: the row lives OUTSIDE Surface Options, in the Agent tab\'s Danger zone fold, after Reset and Delete', async () => {
     const el = document.createElement('ui-agent-admin') as UIAgentAdminElement
     el.store = createMemoryStore({ initial: { [BANKROLL_CAPABLE_KEY]: true } })
     document.body.append(el)
@@ -437,12 +438,10 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     await whenFlushed()
     const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
     expect(surfaceOptions.contains(bankrollRow(el)), 'never inside the modality card').toBe(false)
-    expect(bankrollItem(el).contains(bankrollRow(el))).toBe(true)
-    // GH #574 — Bankroll rides the Agent tab now (who it is), directly after Model — Surface Options
-    // moved to its OWN tab, so the two folds are no longer siblings at all.
+    expect(dangerItem(el).contains(bankrollRow(el))).toBe(true)
     const agentContent = el.querySelector('[data-role="agent-content"]') as HTMLElement
-    expect(agentContent.contains(bankrollItem(el)), 'Bankroll lives in the Agent tab').toBe(true)
-    expect((el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement).nextElementSibling).toBe(bankrollItem(el))
+    expect(agentContent.contains(dangerItem(el)), 'the Danger zone lives in the Agent tab').toBe(true)
+    expect(bankrollRow(el).previousElementSibling?.getAttribute('data-part')).toBe('delete-agent-row')
   })
 
   it('HIDDEN for a persona that never opted in (a bare default store)', async () => {
@@ -451,7 +450,7 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
-    expect(bankrollItem(el).hidden).toBe(true)
+    expect(bankrollRow(el).hidden).toBe(true)
   })
 
   it('VISIBLE for a persona that opted in', async () => {
@@ -460,7 +459,7 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
-    expect(bankrollItem(el).hidden).toBe(false)
+    expect(bankrollRow(el).hidden).toBe(false)
   })
 
   it('a persona SWITCH (a real store reassignment) re-derives visibility — never sticky from the prior persona', async () => {
@@ -469,10 +468,10 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     document.body.append(el)
     mounted.push(el)
     await whenFlushed()
-    expect(bankrollItem(el).hidden).toBe(false)
+    expect(bankrollRow(el).hidden).toBe(false)
     el.store = createMemoryStore({}) // a different persona, never opted in
     await whenFlushed()
-    expect(bankrollItem(el).hidden).toBe(true)
+    expect(bankrollRow(el).hidden).toBe(true)
   })
 
   it('clicking Reset clears the stored figure — a re-render reads "no stored bankroll" back', async () => {
@@ -484,6 +483,10 @@ describe('ui-agent-admin settings pane — GH #525 design call 3: the bankroll R
     const resetBtn = bankrollRow(el).querySelector('[data-part="bankroll-reset"]') as HTMLElement
     expect(resetBtn).not.toBeNull()
     resetBtn.dispatchEvent(new Event('click', { bubbles: true }))
+    await whenFlushed()
+    // T-0391: the click only opens the shared confirm; the figure clears on its confirm button.
+    expect(sanitizeBankroll(el.store!.get(BANKROLL_KEY))).toBe(550)
+    ;(el.querySelector('[data-part="danger-confirm-button"]') as HTMLElement).dispatchEvent(new Event('click', { bubbles: true }))
     await whenFlushed()
     expect(sanitizeBankroll(el.store!.get(BANKROLL_KEY))).toBeUndefined()
   })

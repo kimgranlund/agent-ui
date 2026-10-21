@@ -75,6 +75,11 @@
   --ui-agent-admin-danger-bg-hover: var(--md-sys-color-danger-container);
   --ui-agent-admin-danger-bg-active: var(--md-sys-color-danger-container-high);
   --ui-agent-admin-danger-ink: var(--md-sys-color-danger-high);
+  /* T-0391: the solid destructive (the Danger zone confirm): the danger fill and its on-danger ink. */
+  --ui-agent-admin-danger-fill: var(--md-sys-color-danger);
+  --ui-agent-admin-danger-fill-hover: var(--md-sys-color-danger-hover);
+  --ui-agent-admin-danger-fill-active: var(--md-sys-color-danger-active);
+  --ui-agent-admin-danger-on-fill: var(--md-sys-color-danger-on-danger);
   --ui-agent-admin-danger-item-ink: var(--md-sys-color-danger-on-surface-variant);
   --ui-agent-admin-scrollbar-width: none; /* the app-chrome look: NO visible scrollbars in this surface's panes (scrolling stays live) */
   --ui-agent-admin-code-surface: var(--md-sys-color-neutral-container-low, var(--md-sys-color-neutral-surface)); /* vision rev.5 — the Context tabs' mono JSON preview plane (the frame's containerLow tint) */
@@ -611,11 +616,11 @@
   /* The Model GRID (2026-07-19 rev.2) — provider-grouped rows [ label | include switch | default
      checkbox ], carded like the entry sections (the same chrome recipe). Provider labels mirror the
      shared heading register at a quieter weight. */
-  /* T-0142: one grid, rows and the header on subgrid, so the "On" / "Default" header cells sit exactly over
-     the switch and radio columns. */
+  /* T-0142: one grid, rows and the header on subgrid, so the "On" header cell sits exactly over the switch
+     column (T-0391: the Default column became the Model fold's Default model select). */
   [data-part='model-grid'] {
     display: grid;
-    grid-template-columns: 1fr auto auto;
+    grid-template-columns: 1fr auto;
     column-gap: var(--ui-agent-admin-row-gap);
     /* GH #191 follow-up — this is a LIST of rows (grouped by provider), the same kind of container as
        [data-part='entry-list']/[data-part='surface-options'] below, both 0.5rem: it had been minted at
@@ -656,8 +661,7 @@
   [data-part='model-grid-head'] > :not(:first-child) {
     justify-self: center;
   }
-  [data-part='model-row'] > [data-part='model-include'],
-  [data-part='model-row'] > [data-part='model-default'] {
+  [data-part='model-row'] > [data-part='model-include'] {
     justify-self: center;
   }
   [data-part='model-row-label'] {
@@ -969,7 +973,10 @@
      token-repoint discipline, no new color role), removed by agent-admin.ts on `animationend` (+ a
      timeout fallback). Reduced motion: no animation — a static primary outline instead, held until the
      same timeout clears the attribute (SPEC-R5 AC2: appears and clears, no motion). */
-  [data-part='settings-item'][data-attention] {
+  /* T-0391: a drawer field's change also washes the drawer's trigger, the same keyframe on a second
+     element (agent-admin.ts filters `animationend` by that name, so a renamed keyframe would never clear). */
+  [data-part='settings-item'][data-attention],
+  [data-part='drawer-trigger'][data-attention] {
     animation: ui-admin-attention 1.6s ease-out;
   }
   @keyframes ui-admin-attention {
@@ -981,7 +988,8 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    [data-part='settings-item'][data-attention] {
+    [data-part='settings-item'][data-attention],
+    [data-part='drawer-trigger'][data-attention] {
       animation: none;
       outline: 2px solid var(--md-sys-color-primary);
     }
@@ -1001,8 +1009,110 @@
     background: var(--ui-agent-admin-surface);
   }
 
+  /* T-0391: the row hides whole for a persona that never opted in (the reset-agent-row [hidden] cure). */
+  [data-part='bankroll-row'][hidden] {
+    display: none;
+  }
+
   [data-part='bankroll-label'] {
     flex: 0 0 auto;
+  }
+
+  /* T-0391: the Danger zone's shared confirm: the heading and sentence in the body register, the actions
+     trailing on one row (Cancel, then the destructive confirm, which takes the delete-agent danger repoint). */
+  [data-part='danger-confirm-heading'] {
+    margin: 0;
+    font-size: var(--md-sys-typescale-title-medium-size);
+    color: var(--ui-agent-admin-ink);
+  }
+  [data-part='danger-confirm-body'] {
+    margin-block-end: 0; /* the content region's sibling gap sets the space above */
+    color: var(--ui-agent-admin-label-ink);
+  }
+  [data-part='danger-confirm-actions'] {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--ui-agent-admin-row-gap);
+  }
+
+  /* T-0391: the Model fold's drawer openers. Manage models fills its own row; each server tool's open row is
+     [ switch | label | spacer | Configure ] on the shared card chrome, under a kicker. A closed drawer paints
+     nothing (the host is display:contents, the dialog part closed). */
+  [data-part='server-tools'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-list-gap);
+  }
+  [data-part='server-tools'][hidden],
+  [data-part='server-tool-row'][hidden] {
+    display: none;
+  }
+  [data-part='server-tools-heading'] {
+    --ui-text-color: var(--ui-agent-admin-label-ink);
+  }
+  [data-part='server-tool-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+    box-sizing: border-box;
+    padding: var(--ui-agent-admin-card-pad);
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+  [data-part='server-tool-label'] {
+    flex: 0 0 auto;
+  }
+
+  /* T-0391: a drawer's heading in the title register; its content region stacks the detail unit and the
+     domain list editors. */
+  [data-part='drawer-heading'] {
+    margin: 0;
+    font-size: var(--md-sys-typescale-title-medium-size);
+    color: var(--ui-agent-admin-ink);
+  }
+  [data-part='drawer-content'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-section-gap);
+  }
+
+  /* T-0391: a domain list editor: its label and help in the field register, one [ text field | Remove ] row
+     per domain, then Add domain. */
+  [data-part='domain-list'] {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--ui-agent-admin-list-gap);
+  }
+  [data-part='domain-list-label'] {
+    font-size: var(--md-sys-type-field-label, var(--md-sys-typescale-label-small-size));
+    color: var(--ui-agent-admin-ink);
+  }
+  [data-part='domain-list-help'] {
+    font-size: var(--md-sys-type-field-label, var(--md-sys-typescale-label-small-size));
+    color: var(--ui-agent-admin-label-ink);
+  }
+  [data-part='domain-rows'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-list-gap);
+  }
+  /* Add domain hugs at the start edge (`inline`), so the stretching column does not spread its icon and label. */
+  [data-part='domain-add'] {
+    align-self: flex-start;
+  }
+  [data-part='domain-rows']:empty {
+    display: none;
+  }
+  [data-part='domain-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+  }
+  [data-part='domain-input'] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
   }
 
   /* S7-d (LLD §16.4) — "Reset Agent" at the Model fold's content END: a SIBLING of model-grid (never a
@@ -1093,6 +1203,14 @@
     --ui-button-bg-hover: var(--ui-agent-admin-danger-bg-hover);
     --ui-button-bg-active: var(--ui-agent-admin-danger-bg-active);
     --ui-button-ink: var(--ui-agent-admin-danger-ink);
+  }
+  /* T-0391: the Danger zone confirm's destructive button is `variant="solid"` repointed one family over
+     (primary fill to danger fill, on-primary to on-danger ink): the solid destructive the mockup shows. */
+  [data-part='danger-confirm-button'] {
+    --ui-button-bg: var(--ui-agent-admin-danger-fill);
+    --ui-button-bg-hover: var(--ui-agent-admin-danger-fill-hover);
+    --ui-button-bg-active: var(--ui-agent-admin-danger-fill-active);
+    --ui-button-ink: var(--ui-agent-admin-danger-on-fill);
   }
 
   /* GH #845 (LLD §6) — the overflow menu's own Delete item. VERIFIED against menu.css at build time (the

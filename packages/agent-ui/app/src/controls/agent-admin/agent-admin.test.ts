@@ -4,7 +4,7 @@ import { UIAgentAdminElement } from './agent-admin.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_GENUI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog, PREFERS_KEY } from './agent-admin-schema.ts'
+import { SERVER_TOOL_SETTING_KEYS, defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_GENUI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog, PREFERS_KEY } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, initialEntryValues, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK } from './entries.ts'
 import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack, type NewEntryInput } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListHandlers } from '../entry-list/entry-list.ts'
@@ -1105,8 +1105,9 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
     const capabilitiesItems = topItemsOf(capabilities)
     const surfaceItems = topItemsOf(surface)
 
-    expect(agentItems.map((i) => i.getAttribute('data-item'))).toEqual(['agent', 'model', 'bankroll'])
-    expect(agentItems.map((i) => i.getAttribute('summary'))).toEqual(['Agent', 'Model', 'Bankroll'])
+    // T-0391: the Bankroll fold retired into the Danger zone; Advanced holds the Model section's set-once rows.
+    expect(agentItems.map((i) => i.getAttribute('data-item'))).toEqual(['agent', 'model', 'advanced', 'danger'])
+    expect(agentItems.map((i) => i.getAttribute('summary'))).toEqual(['Agent', 'Model', 'Advanced', 'Danger zone'])
     // GH #1197 (2026-08-18) — 'team' joined as a SIXTH Capabilities fold, deliberately: a team is a
     // distinct record (a GM pick + a nested member roster), not another `CAPABILITY_KINDS` row, so it
     // rides alongside the original five rather than replacing or reordering any of them. This is a real,
@@ -1127,14 +1128,17 @@ describe('UIAgentAdminElement — shell composition (ADR-0179): the three places
       'agent', 'model', 'surface', 'bankroll', ENTRY_KINDS.promptSection,
       ENTRY_KINDS.skill, ENTRY_KINDS.workflow, ENTRY_KINDS.resource, ENTRY_KINDS.tool, ENTRY_KINDS.patternSource,
     ]
-    const CURRENT_FLAT_SET = [...OLD_FLAT_SET, 'team']
+    // T-0391: 'bankroll' retired into 'danger', and 'advanced' joined.
+    const CURRENT_FLAT_SET = [...OLD_FLAT_SET.filter((item) => item !== 'bankroll'), 'team', 'advanced', 'danger']
     const allItems = [...agentItems, ...capabilitiesItems, ...surfaceItems]
     const union = allItems.map((i) => i.getAttribute('data-item'))
     expect([...union].sort()).toEqual([...CURRENT_FLAT_SET].sort())
     expect(new Set(union).size, 'no fold duplicated across tabs').toBe(union.length)
     expect(union.length, 'no fold silently dropped').toBe(CURRENT_FLAT_SET.length)
 
-    for (const item of allItems) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(true)
+    // T-0391: every fold defaults open except the set-once Advanced and the destructive Danger zone.
+    const closedAtRest = ['advanced', 'danger']
+    for (const item of allItems) expect(item.hasAttribute('open'), `${item.getAttribute('data-item')} defaults open`).toBe(!closedAtRest.includes(item.getAttribute('data-item')!))
     // The section content is the fold's BODY (the disclosure adopted it — SPEC-R16 children=body).
     expect(agent.querySelector('[data-item="agent"] [data-part="body"] ui-settings')).not.toBeNull()
     expect(agent.querySelector('[data-item="model"] [data-part="body"] [data-part="model-grid"]')).not.toBeNull()
@@ -1346,6 +1350,8 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     el.onResetRequest(() => { calls += 1 })
     expect(row.hidden, 'registering AFTER connect reveals the row (the GH #666 order rule)').toBe(false)
     btn.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    expect(calls, 'T-0391: the click only opens the confirm').toBe(0)
+    ;(el.querySelector('[data-part="danger-confirm-button"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(calls).toBe(1)
   })
 
@@ -1365,14 +1371,14 @@ describe('UIAgentAdminElement — the unified header bar (S7-c, ADR-0179 GH #686
     expect(label, 'the label still exists in the DOM (never removed) — [hidden] on the row is what hides it, not a separate removal').not.toBeNull()
   })
 
-  it('onResetRequest: the button lives at the model-grid fold\'s content end, a sibling of model-grid, never inside it (a #renderModelGrid re-render must not wipe it)', () => {
+  it('onResetRequest: the button lives in the Danger zone fold, never inside model-grid (a #renderModelGrid re-render must not wipe it)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     el.onResetRequest(() => {})
-    const modelFold = el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement
-    const grid = modelFold.querySelector('[data-part="model-grid"]') as HTMLElement
-    const btn = modelFold.querySelector('[data-part="reset-agent-button"]') as HTMLElement
-    expect(grid.contains(btn), 'the button is a SIBLING of model-grid, not a child wiped by its replaceChildren re-render').toBe(false)
-    expect(modelFold.contains(btn), 'still inside the SAME fold, at its content end').toBe(true)
+    const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    const dangerFold = el.querySelector('[data-part="settings-item"][data-item="danger"]') as HTMLElement
+    const btn = dangerFold.querySelector('[data-part="reset-agent-button"]') as HTMLElement
+    expect(grid.contains(btn), 'never a child wiped by the grid\'s replaceChildren re-render').toBe(false)
+    expect(dangerFold.contains(btn), 'T-0391: the Danger zone holds it').toBe(true)
     // Force a model-grid re-render (a store write the grid subscribes to) — the button must survive.
     el.store?.set('model', el.store.get('model'))
     expect(el.querySelector('[data-part="reset-agent-button"]'), 'survives a model-grid re-render').not.toBeNull()
@@ -1623,18 +1629,20 @@ describe("UIAgentAdminElement — the picker's roster-actions group + the two-ax
 
     el.setAgentRoster([{ id: 'two', label: 'Two', deletable: true }], 'two')
     ;(el.querySelector('[data-part="delete-agent-button"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    // T-0391: the config row confirms first; the id is still read when the confirm runs the action.
+    ;(el.querySelector('[data-part="danger-confirm-button"]') as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
     expect(deleted, 'the config row carries the NEW active id — read at invoke, never captured at build').toEqual(['one', 'two'])
   })
 
-  it('delete-agent-row is a SIBLING of model-grid inside the model fold — a grid re-render must not wipe it (GH #709/#845)', () => {
+  it('delete-agent-row sits in the Danger zone after Reset, outside model-grid, so a grid re-render must not wipe it (GH #709/#845, T-0391)', () => {
     const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
     el.onDeleteAgentRequest(() => {})
     el.setAgentRoster([{ id: 'custom', label: 'Custom', deletable: true }], 'custom')
-    const modelFold = el.querySelector('[data-part="settings-item"][data-item="model"]') as HTMLElement
-    const grid = modelFold.querySelector('[data-part="model-grid"]') as HTMLElement
-    const row = modelFold.querySelector('[data-part="delete-agent-row"]') as HTMLElement
+    const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    const dangerFold = el.querySelector('[data-part="settings-item"][data-item="danger"]') as HTMLElement
+    const row = dangerFold.querySelector('[data-part="delete-agent-row"]') as HTMLElement
     expect(grid.contains(row), "never inside the wholesale-replaceChildren'd grid").toBe(false)
-    expect(modelFold.contains(row), "still at the SAME fold's content end").toBe(true)
+    expect(dangerFold.contains(row), 'T-0391: the Danger zone holds it').toBe(true)
     expect(row.previousElementSibling?.getAttribute('data-part'), 'it lands after Reset, the ruled order').toBe('reset-agent-row')
     el.store?.set('model', el.store.get('model'))
     expect(el.querySelector('[data-part="delete-agent-button"]'), 'survives a model-grid re-render').not.toBeNull()
@@ -1971,12 +1979,20 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     const agentContent = el.querySelector('[data-role="agent-content"]') as HTMLElement
     const settingsEl = agentContent.querySelector('ui-settings') as UISettingsElement
     expect(settingsEl).toBeInstanceOf(UISettingsElement)
-    // T-0306: the schema splits across two single-section units, Agent in the Agent fold and Model in the Model fold.
+    // T-0306: the schema splits across single-section units, Agent in the Agent fold and Model in the Model
+    // fold; T-0391 moves the Model section's showReasoning, maxTokens and cacheTtl into the Advanced fold,
+    // and the server tool keys out to the fold's own tool rows and their drawers.
     const modelSettingsEl = agentContent.querySelector('[data-item="model"] ui-settings') as UISettingsElement
+    const advancedSettingsEl = agentContent.querySelector('[data-item="advanced"] ui-settings') as UISettingsElement
     expect(settingsEl.schema?.sections).toEqual(el.schema?.sections.filter((s) => s.id !== 'model'))
-    expect(modelSettingsEl.schema?.sections).toEqual(el.schema?.sections.filter((s) => s.id === 'model'))
+    const modelFields = el.schema?.sections.find((s) => s.id === 'model')?.fields.map((f) => f.key)
+    const advancedKeys = ['showReasoning', 'maxTokens', 'cacheTtl']
+    const serverToolKeys = Object.values(SERVER_TOOL_SETTING_KEYS).flatMap((keys) => Object.values(keys))
+    expect(modelSettingsEl.schema?.sections[0]?.fields.map((f) => f.key)).toEqual(modelFields?.filter((k) => !advancedKeys.includes(k) && !serverToolKeys.includes(k)))
+    expect(advancedSettingsEl.schema?.sections[0]?.fields.map((f) => f.key)).toEqual(modelFields?.filter((k) => advancedKeys.includes(k)))
     expect(settingsEl.store).toBe(el.store)
     expect(modelSettingsEl.store).toBe(el.store)
+    expect(advancedSettingsEl.store).toBe(el.store)
 
     const capabilitiesContent = el.querySelector('[data-role="capabilities-content"]') as HTMLElement
     const capabilitiesSections = [...capabilitiesContent.querySelectorAll('[data-part="entry-section"]')]
@@ -4655,7 +4671,7 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     // T-0142: one header row names the columns; provider headings are the kicker eyebrow
     const head = grid.firstElementChild as HTMLElement
     expect(head.getAttribute('data-part')).toBe('model-grid-head')
-    expect([...head.children].map((c) => c.textContent)).toEqual(['Model', 'On', 'Default'])
+    expect([...head.children].map((c) => c.textContent)).toEqual(['Model', 'On'])
     for (const p of grid.querySelectorAll('[data-part="model-provider"]')) {
       expect([p.localName, p.getAttribute('variant')]).toEqual(['ui-text', 'kicker'])
     }
@@ -4678,12 +4694,13 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     const lockSwitch = defaultRow.querySelector('[data-part="model-include"]') as HTMLElement & { checked: boolean; disabled: boolean }
     expect(lockSwitch.checked, 'the default is always offered').toBe(true)
     expect(lockSwitch.disabled, 'the default row cannot be excluded').toBe(true)
-    const defaultBox = defaultRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }
-    expect(defaultBox.checked).toBe(true)
-    expect(defaultBox.tagName.toLowerCase(), 'the default column is a RADIO system (rev.3)').toBe('ui-radio')
+    // T-0391: the Default column moved to the Model fold's Default model select.
+    expect(defaultRow.querySelector('[data-part="model-default"]'), 'no Default column').toBeNull()
+    const select = el.querySelector('[data-part="settings-item"][data-item="model"] [data-field="model"] ui-select') as HTMLElement & { value: string }
+    expect(select.value).toBe('claude-haiku-5-5')
   })
 
-  it('the include switch writes modelsIncluded; the default radio moves `model` and re-includes', async () => {
+  it('the include switch writes modelsIncluded; the Default model select moves `model` and re-includes', async () => {
     const { el, store } = mountAdmin()
     await el.updateComplete
     const grid = el.querySelector('[data-part="model-grid"]') as HTMLElement
@@ -4696,20 +4713,15 @@ describe('ui-agent-admin — the Model GRID (2026-07-19 rev.2)', () => {
     sw.dispatchEvent(new Event('change'))
     expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5-5']).toBe(false)
     await el.updateComplete
-    // move the default to Sonnet — re-includes it AND moves `model`; the old default row unchecks
-    const freshSonnetRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
-      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-sonnet-5-5',
-    )!
-    const box = freshSonnetRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }
-    box.checked = true
-    box.dispatchEvent(new Event('change'))
+    // move the default to Sonnet through the Default model select (T-0391): re-includes it AND moves `model`
+    const select = el.querySelector('[data-part="default-model-select"]') as HTMLElement & { value: string }
+    select.value = 'claude-sonnet-5-5'
+    select.dispatchEvent(new CustomEvent('select', { detail: 'claude-sonnet-5-5' }))
     expect(store.get('model')).toBe('claude-sonnet-5-5')
     expect((store.get('modelsIncluded') as Record<string, boolean>)['claude-sonnet-5-5'], 'defaulting re-includes').toBe(true)
     await el.updateComplete
-    const haikuRow = [...el.querySelectorAll<HTMLElement>('[data-part="model-row"]')].find(
-      (r) => r.querySelector('[data-part="model-row-label"]')?.getAttribute('title') === 'claude-haiku-5-5',
-    )!
-    expect((haikuRow.querySelector('[data-part="model-default"]') as HTMLElement & { checked: boolean }).checked, 'radio semantics: the old default unchecked').toBe(false)
+    const defaultRow = el.querySelector('[data-part="model-row"][data-default]') as HTMLElement
+    expect(defaultRow.querySelector('[data-part="model-row-label"]')?.getAttribute('title'), 'the grid follows the new default').toBe('claude-sonnet-5-5')
   })
 })
 
@@ -5579,5 +5591,179 @@ describe('prefers persona setting', () => {
     const { seen } = await runSurfaceTurn(createMemoryStore({ initial: { [PREFERS_KEY]: 'cards please' } }))
     expect(seen).toHaveLength(1)
     expect(seen[0]!.prefers).toBe('auto')
+  })
+})
+
+// ── T-0391: the Agent tab's open fields, the closed Advanced and Danger zone folds, the shared confirm ──
+describe('T-0391 layout: the Agent tab', () => {
+  const fold = (el: Element, item: string): HTMLElement => el.querySelector(`[data-role="agent-content"] > [data-part="settings-item"][data-item="${item}"]`) as HTMLElement
+
+  it('T-0391 layout: every open control carries its data-field, and the set-once rows sit in Advanced', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store?.set('model', 'claude-haiku-5-5')
+    await whenFlushed()
+    const agent = fold(el, 'agent')
+    const model = fold(el, 'model')
+    for (const key of ['name', 'tagline', 'category']) expect(agent.querySelector(`[data-field~="${key}"]`), `Agent fold: ${key}`).not.toBeNull()
+    expect(agent.querySelector('[data-field="tagline"] > ui-text-field')).not.toBeNull()
+    expect(agent.querySelector('[data-field="category"] > ui-select')).not.toBeNull()
+    expect(model.querySelector('ui-field[data-field="model"] > ui-select'), 'the Default model select').not.toBeNull()
+    expect(model.querySelector('[data-part="model-grid"]')?.getAttribute('data-field'), 'the grid keeps modelsIncluded only').toBe('modelsIncluded')
+    for (const key of ['effort', 'thinking']) expect(model.querySelector(`ui-settings [data-field="${key}"]`), `Model fold: ${key}`).not.toBeNull()
+    for (const key of ['showReasoning', 'maxTokens', 'cacheTtl']) {
+      expect(model.querySelector(`[data-field="${key}"]`), `${key} left the Model fold`).toBeNull()
+      expect(fold(el, 'advanced').querySelector(`ui-settings [data-field="${key}"]`), `Advanced fold: ${key}`).not.toBeNull()
+    }
+    for (const part of ['reset-agent-row', 'delete-agent-row', 'bankroll-row']) expect(fold(el, 'danger').querySelector(`[data-part="${part}"]`), part).not.toBeNull()
+  })
+
+  it('T-0391 layout: the Advanced and Danger folds are closed at rest; Agent and Model stay open; Danger zone is last', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    expect(fold(el, 'advanced').hasAttribute('open')).toBe(false)
+    expect(fold(el, 'danger').hasAttribute('open')).toBe(false)
+    expect(fold(el, 'agent').hasAttribute('open')).toBe(true)
+    expect(fold(el, 'model').hasAttribute('open')).toBe(true)
+    const items = [...el.querySelectorAll('[data-role="agent-content"] > [data-part="settings-item"]')]
+    expect(items.at(-1)).toBe(fold(el, 'danger'))
+  })
+
+  it('T-0391 layout: a danger button opens the shared confirm modal; the action fires only on confirm, never on Cancel', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    let resets = 0
+    const deleted: string[] = []
+    el.onResetRequest(() => { resets += 1 })
+    el.onDeleteAgentRequest((id) => deleted.push(id))
+    el.setAgentRoster([{ id: 'mine', label: 'Mine', deletable: true }], 'mine')
+    const modal = el.querySelector('ui-modal[data-part="danger-confirm"]') as HTMLElement & { open: boolean }
+    expect(el.querySelectorAll('ui-modal[data-part="danger-confirm"]'), 'one shared modal').toHaveLength(1)
+    const click = (part: string): void => void (el.querySelector(`[data-part="${part}"]`) as HTMLElement).dispatchEvent(new MouseEvent('click', { bubbles: true }))
+
+    click('reset-agent-button')
+    await whenFlushed()
+    expect(modal.open, 'Reset opens the confirm').toBe(true)
+    expect(el.querySelector('[data-part="danger-confirm-heading"]')?.textContent).toBe('Reset Agent?')
+    expect(el.querySelector('[data-part="danger-confirm-body"]')?.textContent).not.toBe('')
+    click('danger-confirm-cancel')
+    await whenFlushed()
+    expect(modal.open, 'Cancel closes it').toBe(false)
+    expect(resets, 'Cancel never runs the action').toBe(0)
+
+    click('reset-agent-button')
+    click('danger-confirm-button')
+    await whenFlushed()
+    expect(resets, 'confirm runs it once').toBe(1)
+    expect(modal.open).toBe(false)
+
+    click('delete-agent-button')
+    await whenFlushed()
+    expect(el.querySelector('[data-part="danger-confirm-heading"]')?.textContent).toBe('Delete this agent?')
+    expect(el.querySelector('[data-part="danger-confirm-button"]')?.textContent).toBe('Delete Agent')
+    expect(deleted, 'the click alone deletes nothing').toEqual([])
+    click('danger-confirm-cancel')
+    click('danger-confirm-button')
+    expect(deleted, 'a confirm after Cancel has no pending action').toEqual([])
+    click('delete-agent-button')
+    click('danger-confirm-button')
+    expect(deleted).toEqual(['mine'])
+    expect(resets, 'the shared modal never crossed actions').toBe(1)
+  })
+
+  it('T-0391 layout: tagline and category are disabled for a non-deletable entry; onAgentMetaRequest receives the patch for a deletable one', () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    const patches: Array<[string, { tagline?: string; category?: string }]> = []
+    el.onAgentMetaRequest((id, patch) => patches.push([id, patch]))
+    const tagline = el.querySelector('[data-field="tagline"] > ui-text-field') as HTMLElement & { value: string; disabled: boolean }
+    const category = el.querySelector('[data-field="category"] > ui-select') as HTMLElement & { value: string; disabled: boolean }
+
+    el.setAgentRoster([{ id: 'preset', label: 'Preset', tagline: 'Shipped', category: 'games' }], 'preset')
+    expect(tagline.value).toBe('Shipped')
+    expect(category.value).toBe('games')
+    expect(tagline.disabled, 'a shipped preset is read-only').toBe(true)
+    expect(category.disabled).toBe(true)
+
+    el.setAgentRoster([{ id: 'preset', label: 'Preset' }, { id: 'mine', label: 'Mine', deletable: true, tagline: 'Old' }], 'mine')
+    expect(tagline.disabled).toBe(false)
+    expect(category.disabled).toBe(false)
+    expect(category.value, 'no category reads empty').toBe('')
+    tagline.value = 'New line'
+    tagline.dispatchEvent(new Event('change', { bubbles: true }))
+    category.value = 'hospitality'
+    category.dispatchEvent(new CustomEvent('select', { bubbles: true, detail: 'hospitality' }))
+    expect(patches).toEqual([
+      ['mine', { tagline: 'New line' }],
+      ['mine', { category: 'hospitality' }],
+    ])
+  })
+})
+
+// ── T-0391: the Model fold's drawers and the domain list editor ──
+describe('T-0391 drawer: the Model fold drawers', () => {
+  const modelFold = (el: Element): HTMLElement => el.querySelector('[data-role="agent-content"] > [data-part="settings-item"][data-item="model"]') as HTMLElement
+  const drawerOf = (el: Element, name: string): HTMLElement & { open: boolean } =>
+    modelFold(el).querySelector(`ui-drawer[data-drawer="${name}"]`) as HTMLElement & { open: boolean }
+  const listOf = (el: Element, key: string): HTMLElement => modelFold(el).querySelector(`[data-part="domain-list"][data-field="${key}"]`) as HTMLElement
+  const inputsOf = (list: HTMLElement): Array<HTMLElement & { value: string }> => [...list.querySelectorAll('[data-part="domain-input"]')] as Array<HTMLElement & { value: string }>
+  const ALLOWED = SERVER_TOOL_SETTING_KEYS.web_search.allowedDomains
+
+  it('T-0391 drawer: clicking a trigger opens its drawer', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store?.set('model', 'claude-haiku-5-5')
+    await whenFlushed()
+    const triggers = [...modelFold(el).querySelectorAll<HTMLElement>('[data-part="drawer-trigger"]')]
+    expect(triggers.map((t) => t.getAttribute('data-opens'))).toEqual(['models', 'tool-web_search', 'tool-web_fetch'])
+    for (const trigger of triggers) {
+      const drawer = drawerOf(el, trigger.getAttribute('data-opens')!)
+      expect(drawer.open, 'closed at rest').toBe(false)
+      trigger.click()
+      await whenFlushed()
+      expect(drawer.open, `${trigger.getAttribute('data-opens')} opens on its own trigger`).toBe(true)
+      for (const other of triggers) if (other !== trigger) expect(drawerOf(el, other.getAttribute('data-opens')!).open, 'only its own drawer').toBe(false)
+      ;(drawer.querySelector('[data-part="drawer-done"]') as HTMLElement).click()
+      await whenFlushed()
+      expect(drawer.open, 'Done closes it').toBe(false)
+    }
+    // the roster, the tool's detail unit and its domain lists live inside the drawers
+    expect(drawerOf(el, 'models').querySelector('[data-part="model-grid"][data-field="modelsIncluded"]')).not.toBeNull()
+    const search = drawerOf(el, 'tool-web_search')
+    for (const key of ['webSearchMaxUses', 'webSearchCity', 'webSearchRegion', 'webSearchCountry', 'webSearchTimezone']) expect(search.querySelector(`ui-settings [data-field="${key}"]`), key).not.toBeNull()
+    for (const key of ['webSearchAllowedDomains', 'webSearchBlockedDomains']) expect(search.querySelector(`[data-part="domain-list"][data-field="${key}"]`), key).not.toBeNull()
+    expect(modelFold(el).querySelector('[data-part="server-tool-row"][data-field="webSearch"] [data-part="server-tool-toggle"]'), 'the switch stays on the open row').not.toBeNull()
+  })
+
+  it('T-0391 drawer: a stored comma string renders one row per domain', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store?.set(ALLOWED, ' a.com,b.org , ,c.net ')
+    await whenFlushed()
+    expect(inputsOf(listOf(el, ALLOWED)).map((input) => input.value)).toEqual(['a.com', 'b.org', 'c.net'])
+    expect(listOf(el, ALLOWED).querySelectorAll('[data-part="domain-remove"]')).toHaveLength(3)
+    el.store?.set(ALLOWED, '')
+    await whenFlushed()
+    expect(inputsOf(listOf(el, ALLOWED)), 'an empty string renders no rows').toHaveLength(0)
+  })
+
+  it('T-0391 drawer: Add, edit and Remove in a domain list write the joined string', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store?.set(ALLOWED, 'a.com, b.org')
+    await whenFlushed()
+    const list = listOf(el, ALLOWED)
+    ;(list.querySelector('[data-part="domain-add"]') as HTMLElement).click()
+    await whenFlushed()
+    expect(inputsOf(list), 'Add appends a blank row').toHaveLength(3)
+    expect(el.store?.get(ALLOWED), 'a blank row writes nothing').toBe('a.com, b.org')
+    const added = inputsOf(list)[2]!
+    added.value = 'c.net'
+    added.dispatchEvent(new Event('change', { bubbles: true }))
+    await whenFlushed()
+    expect(el.store?.get(ALLOWED)).toBe('a.com, b.org, c.net')
+    expect(inputsOf(list)[2], 'its own write keeps the edited row').toBe(added)
+    const first = inputsOf(list)[0]!
+    first.value = 'x.io'
+    first.dispatchEvent(new Event('change', { bubbles: true }))
+    await whenFlushed()
+    expect(el.store?.get(ALLOWED)).toBe('x.io, b.org, c.net')
+    ;(list.querySelectorAll('[data-part="domain-remove"]')[1] as HTMLElement).click()
+    await whenFlushed()
+    expect(el.store?.get(ALLOWED)).toBe('x.io, c.net')
+    expect(inputsOf(list).map((input) => input.value)).toEqual(['x.io', 'c.net'])
   })
 })

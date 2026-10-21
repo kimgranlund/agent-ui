@@ -454,7 +454,12 @@ ui-agent-admin
     └── [data-slot="content"] div[data-part="pane-holder"]            container-type: inline-size; data-show + data-primary
         ├── [data-part="chat-pane"]      #conversation                 (byte-unchanged)
         ├── [data-part="settings-pane"]  settings-nav + 5 section units (internals untouched; "Reset Agent" joins the
-        │                                                              model-grid fold's content end)
+        │                                                              model-grid fold's content end; T-0391 moved it, Delete
+        │                                                              and the bankroll row into the Agent tab's closed
+        │                                                              Danger zone fold, behind one confirm modal; T-0391 also
+        │                                                              moved the model-grid into the Model fold's "Manage
+        │                                                              models" ui-drawer and each server tool's details into
+        │                                                              a "Configure" ui-drawer, opened only by their triggers)
         └── [data-part="copilot-pane"]   #authoringConversation        (the GH #666 card, renamed from author-pane)
 ```
 

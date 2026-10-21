@@ -194,3 +194,24 @@ describe('follow-the-change — SPEC-R5: wash mechanics, real animationend + red
     }
   })
 })
+
+describe('follow-the-change, T-0391 drawer: a drawer field washes its trigger, never opens the drawer (both engines)', () => {
+  it('T-0391 drawer: a consumed modelsIncluded patch washes the trigger and opens no drawer', async () => {
+    const { el } = mountAt(1200)
+    await frames()
+    const focusBefore = document.activeElement
+
+    await runPatchTurn(el, { values: { modelsIncluded: { [SUPPORTED_MODELS[1]!.id]: false } } })
+
+    const trigger = foldOf(el, 'model').querySelector('[data-part="drawer-trigger"][data-opens="models"]') as HTMLElement
+    expect(trigger, 'anti-vacuous: the Manage models trigger sits in the Model fold').not.toBeNull()
+    expect(trigger.hasAttribute('data-attention'), 'the trigger carries the change cue').toBe(true)
+    expect(getComputedStyle(trigger).animationName, 'the wash keyframe runs on the trigger').toBe('ui-admin-attention')
+    const drawer = foldOf(el, 'model').querySelector('ui-drawer[data-drawer="models"]') as HTMLElement & { open: boolean }
+    expect(drawer.open, 'the models drawer stays closed').toBe(false)
+    expect(document.querySelector('dialog[open]'), 'no dialog opened anywhere').toBeNull()
+    expect(document.activeElement, 'keyboard focus is untouched').toBe(focusBefore)
+    for (let i = 0; i < 60 && trigger.hasAttribute('data-attention'); i++) await new Promise((r) => setTimeout(r, 50))
+    expect(trigger.hasAttribute('data-attention'), 'the trigger wash clears after it runs').toBe(false)
+  })
+})

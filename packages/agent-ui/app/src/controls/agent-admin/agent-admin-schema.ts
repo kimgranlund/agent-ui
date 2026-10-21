@@ -171,6 +171,9 @@ export const MODEL_SETTING_KEYS = {
   cacheTtl: 'cacheTtl',
 } as const
 
+/** T-0391: the Model section rows the Agent tab's closed Advanced fold holds; the Model fold keeps the rest. */
+export const ADVANCED_MODEL_SETTING_KEYS: readonly string[] = [MODEL_SETTING_KEYS.showReasoning, MODEL_SETTING_KEYS.maxTokens, MODEL_SETTING_KEYS.cacheTtl]
+
 /** T-0203: the server tool store keys (pane-edited, not persona-file state), derived from the one key
  *  vocabulary (`SERVER_TOOL_KEY`): per tool its switch, max uses and domain lists, plus the search location. */
 export const SERVER_TOOL_SETTING_KEYS = Object.fromEntries(
@@ -242,10 +245,12 @@ function settingsFieldFor(field: ContentField, row: ModelCapabilities | undefine
  *  `model`'s capability row: a field appears only when the model accepts that setting, and a select offers
  *  only the values the row lists. A model with no row (an OpenAI or Gemini roster id) gets no section.
  *  Temperature is gone: the 5.5 models accept only 1.0. */
-export function modelSettingsSection(model: string): SettingsSection | undefined {
+export function modelSettingsSection(model: string, keys?: readonly string[]): SettingsSection | undefined {
   const row = capabilitiesFor(model)
   if (!row) return undefined
-  const fields = PERSONA_FIELDS.filter((f) => f.home === 'model')
+  // T-0391: `keys` narrows the section to those rows, so the Model and Advanced folds each hold a
+  // schema-derived unit.
+  const fields = PERSONA_FIELDS.filter((f) => f.home === 'model' && (keys === undefined || (f.key !== undefined && keys.includes(f.key))))
     .map((f) => settingsFieldFor(f, row))
     .filter((f): f is SettingsField => f !== undefined)
   return { id: 'model', label: 'Model', description: 'The settings this agent\'s model accepts; each one reaches the API.', fields }

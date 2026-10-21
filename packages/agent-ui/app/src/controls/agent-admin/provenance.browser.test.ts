@@ -14,7 +14,7 @@ import './agent-admin.css'
 import './agent-admin.ts'
 import type { UIAgentAdminElement } from './agent-admin.ts'
 import '@agent-ui/icons/phosphor'
-import { BANKROLL_CAPABLE_KEY, BANKROLL_KEY, MODELS_INCLUDED_KEY, SURFACE_AUTHORING_KEY } from './agent-admin-schema.ts'
+import { BANKROLL_CAPABLE_KEY, BANKROLL_KEY, SURFACE_AUTHORING_KEY } from './agent-admin-schema.ts'
 import { PANE_HOMES, PERSONA_FIELDS, PERSONA_FIELD_BY_KEY } from './content-fields.ts'
 import { createOverlayStore, emptyOverlay, rebaseOverlay, setOverlayKey, type OverlayStore, type Provenance } from './agent-overlay.ts'
 import { createMemoryStore } from '../settings/memory-store.ts'
@@ -87,8 +87,14 @@ describe('ACS-R10: the pane renders exactly the schema', () => {
     for (const toggle of pane.querySelectorAll<HTMLElement>('[data-part="kind-enabled"][data-field]')) {
       expect(toggle.getAttribute('aria-label')).toBe(`${labelOf(toggle.getAttribute('data-field')!)} enabled`)
     }
+    // T-0391 (Kim 2026-10-21): inside a server tool's drawer, whose heading names the tool, a field shows its
+    // schema label without the tool name ("Web search max uses" reads "Max uses").
     for (const field of pane.querySelectorAll<HTMLElement & { label: string }>('ui-field[data-field]')) {
-      expect(field.label).toBe(labelOf(field.getAttribute('data-field')!))
+      const full = labelOf(field.getAttribute('data-field')!)
+      const toolKey = field.closest('[data-part="server-tool-row"]')?.getAttribute('data-field')
+      const prefix = toolKey ? `${labelOf(toolKey)} ` : undefined
+      const rest = prefix && full.startsWith(prefix) ? full.slice(prefix.length) : undefined
+      expect(field.label).toBe(rest ? rest.charAt(0).toUpperCase() + rest.slice(1) : full)
     }
   })
 })
@@ -192,12 +198,15 @@ describe('ACS-R8: provenance, the modified marker, the diff and reset', () => {
   })
 
   it('a control whose places two surfaces wrote reads Mixed, never one of them', async () => {
-    const store = overlayStore()
+    // T-0391 split the model grid's two keys (the Default model select carries `model`), so the two-place
+    // control here is a list: the Builder removes a seed entry, the user reorders the rest.
+    const seedEntry = (id: string, order: number): Entry => ({ ...SEED_SKILL, id, label: id, order })
+    const store = overlayStore({ ...SEED, [SKILL_KEY]: [seedEntry('a', 0), seedEntry('b', 1), seedEntry('c', 2)] })
     const el = await mount(store)
-    store.setFrom('model', 'claude-opus-5-5', 'builder')
-    store.set(MODELS_INCLUDED_KEY, { 'gpt-4.1': true })
-    await until(() => provenanceOf(el, 'model') === 'mixed', 'the model grid reads mixed')
-    expect(el.querySelector('[data-part="model-grid"] + [data-part="field-provenance"] [data-part="provenance-source"]')?.textContent).toBe('Mixed')
+    store.setFrom(SKILL_KEY, [seedEntry('b', 1), seedEntry('c', 2)], 'builder')
+    store.set(SKILL_KEY, [seedEntry('c', 0), seedEntry('b', 1)])
+    await until(() => provenanceOf(el, SKILL_KEY) === 'mixed', 'the skill list reads mixed')
+    expect(stripFor(el, SKILL_KEY)?.querySelector('[data-part="provenance-source"]')?.textContent).toBe('Mixed')
   })
 
   it('a whole-record store (an import) stamps its provenance on every control and offers no reset', async () => {

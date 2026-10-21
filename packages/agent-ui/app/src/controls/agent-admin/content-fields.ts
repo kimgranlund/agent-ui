@@ -18,15 +18,15 @@
  *  of `<id>@<version>` refs; `true` and `false` a literal that is the only admitted value. */
 export type FieldType = 'id' | 'string' | 'boolean' | 'integer' | 'number' | 'enum' | 'strings' | 'refs' | 'flags' | 'entries' | 'true' | 'false'
 
-/** Where a field is edited. The first eight are the admin settings pane; `roster` is the Manage agents
- *  card; `seed` is seeded from the content file and never edited in the pane (a persona's catalog fragment
+/** Where a field is edited. The first eight are the admin settings pane; `roster` is the roster record,
+ *  edited in the pane's Agent fold (tagline, category) and the Manage agents card (label); `seed` is seeded from the content file and never edited in the pane (a persona's catalog fragment
  *  and domains); `state` is persona state no control writes (the two kind switches the pane does not
  *  mount); `file` exists only in the content file (roster identity and authoring notes). */
 export const FIELD_HOMES = ['agent', 'model', 'model-grid', 'switch', 'surface', 'catalog', 'entries', 'bankroll', 'roster', 'seed', 'state', 'file'] as const
 export type FieldHome = (typeof FIELD_HOMES)[number]
 
 /** The homes the settings pane renders a control for, each tagged `data-field` with its store key. */
-export const PANE_HOMES: readonly FieldHome[] = ['agent', 'model', 'model-grid', 'switch', 'surface', 'catalog', 'entries', 'bankroll']
+export const PANE_HOMES: readonly FieldHome[] = ['agent', 'model', 'model-grid', 'switch', 'surface', 'catalog', 'entries', 'bankroll', 'roster']
 
 /** The settings form's layout hints for a field the `ui-settings` form renders (homes `agent` and `model`).
  *  `gate` names the model capability row member that decides whether the field shows and which values it
@@ -113,8 +113,8 @@ function serverToolFields(tool: ServerToolName, label: string, description: stri
   return [
     { key, type: 'boolean', home: 'model', label, description, form: { control: 'boolean', ...gate, default: false } },
     { key: `${key}MaxUses`, type: 'integer', min: 0, home: 'model', label: `${label} max uses`, description: `The most ${uses} per turn. 0 sets no limit.`, form: { control: 'number', ...gate, default: 0 } },
-    { key: `${key}AllowedDomains`, type: 'string', home: 'model', label: `${label} allowed domains`, description: `Comma-separated; ${allowedNote}. Used instead of blocked domains when both are set.`, form: { control: 'text', ...gate, default: '' } },
-    { key: `${key}BlockedDomains`, type: 'string', home: 'model', label: `${label} blocked domains`, description: `Comma-separated; never ${uses === 'searches' ? 'search these' : 'fetch from these'}.`, form: { control: 'text', ...gate, default: '' } },
+    { key: `${key}AllowedDomains`, type: 'string', home: 'model', label: `${label} allowed domains`, description: `One domain per row; ${allowedNote}. Used instead of blocked domains when both are set.`, form: { control: 'text', ...gate, default: '' } },
+    { key: `${key}BlockedDomains`, type: 'string', home: 'model', label: `${label} blocked domains`, description: `One domain per row; never ${uses === 'searches' ? 'search these' : 'fetch from these'}.`, form: { control: 'text', ...gate, default: '' } },
   ]
 }
 
@@ -136,8 +136,10 @@ export const PERSONA_FIELDS: readonly ContentField[] = [
   { file: 'order', type: 'integer', min: 1, home: 'file', label: 'Roster position' },
   { file: 'roster', type: 'false', home: 'file', label: 'In the roster' },
   { file: 'label', type: 'string', nonEmpty: true, required: true, home: 'roster', label: 'Label' },
-  { file: 'tagline', type: 'string', nonEmpty: true, required: true, home: 'file', label: 'Tagline' },
-  { file: 'category', type: 'enum', values: PRESET_CATEGORIES, home: 'file', label: 'Category' },
+  // T-0391: tagline and category are roster record fields the Agent fold edits (`onAgentMetaRequest`), not
+  // store state: a store key so the pane can tag their controls, no `state` flag.
+  { key: 'tagline', file: 'tagline', type: 'string', nonEmpty: true, required: true, home: 'roster', label: 'Tagline' },
+  { key: 'category', file: 'category', type: 'enum', values: PRESET_CATEGORIES, home: 'roster', label: 'Category' },
   {
     key: 'name',
     file: 'name',

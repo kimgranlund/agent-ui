@@ -347,12 +347,19 @@ describe('ui-agent-admin — a help icon on every section header of the Agent, C
   it.each([
     ['agent', 'agent'],
     ['model', 'model'],
-    ['bankroll', 'bankroll'],
   ])('the Agent tab’s %s section header carries its own icon', async (item, key) => {
     const el = await mountAdmin()
     const help = helpOnHeadingRow(el, 'settings-item', item)
     expect(help, `${item}: the icon must ride the heading row, not the fold body`).not.toBeNull()
     expect(help!.getAttribute('data-help')).toBe(key)
+  })
+
+  it('T-0391: the bankroll help rides the Danger zone bankroll row’s trailing content, before Reset', async () => {
+    const el = await mountAdmin()
+    const row = el.querySelector('[data-part="settings-item"][data-item="danger"] [data-part="bankroll-row"]') as HTMLElement
+    const help = row.querySelector(':scope > [data-part="admin-help"]')
+    expect(help?.getAttribute('data-help')).toBe('bankroll')
+    expect(help?.nextElementSibling?.getAttribute('data-part')).toBe('bankroll-reset')
   })
 
   it.each([
@@ -476,7 +483,6 @@ describe('ui-agent-admin help placement — trailing edge, and `[?] [switch]` wh
     for (const [part, item] of [
       ['settings-item', 'surface'],
       ['settings-item', 'model'],
-      ['settings-item', 'bankroll'],
       ['settings-item', ENTRY_KINDS.promptSection],
       ['context-item', 'agent'],
     ] as const) {
