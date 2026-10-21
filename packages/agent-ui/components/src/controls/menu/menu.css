@@ -22,12 +22,10 @@
  * roles FIRST.
  */
 
+/* ════════ [1] TOKEN BLOCK — :where(ui-menu) declares the surface default + --ui-menu-* ════════ */
+
 /* uses: synced from menu.md by scripts/codemod-uses.mjs */
 @import '../glyph/glyph.css';
-
-@import '../glyph/glyph.css'; /* the selectable row's check mark (T-0392) */
-
-/* ════════ [1] TOKEN BLOCK — :where(ui-menu) declares the surface default + --ui-menu-* ════════ */
 
 :where(ui-menu) {
   /* Surface plane — the popup panel is an opaque neutral surface (like popover / card). */

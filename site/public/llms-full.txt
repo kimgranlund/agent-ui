@@ -3438,7 +3438,9 @@ is the **trigger** (marked internally with `data-part="trigger"`); it stays in d
 Remaining children are moved into the control-created **panel** (`<div data-part="panel" role="menu"
 popover="auto">`) at connect time. The panel enters the Popover API **top layer** via `showPopover()`
 — above any `overflow`/`transform` ancestor, positioned by the JS controller. Item children
-auto-receive `role=menuitem` and `tabindex=-1` if they don't already carry a role.
+auto-receive `role=menuitem` and `tabindex=-1` if they don't already carry a role. A child marked
+`role="separator"` is a group rule (an outline-variant hairline, T-0392): it keeps its role, gets no
+tabindex, and is never an item.
 
 ## Open / close
 
@@ -3473,8 +3475,11 @@ to opt into. On commit, the control also writes `aria-checked`:
 Both roles always carry `aria-checked` (the role requires it); the control stamps a default
 `"false"` at connect for any item missing it (over the SAME descendant-deep item set `#itemsIn`
 collects, not just direct panel children), but leaves an author-pre-set `aria-checked="true"`
-(declaring the initial choice) untouched. A checkmark indicator (`--ui-menu-check-*` tokens) renders
-on `[aria-checked='true']` — plain `menuitem` rows are unaffected (still no `aria-checked`, which
+(declaring the initial choice) untouched. Every selectable row gets a decorative `<ui-glyph
+symbol="check" data-part="check">` (the library check mark, ADR-0245 cl.5; T-0392 replaced the old
+clip-path tick), prepended at connect and again on each open so rows appended later are covered. It
+sits in the reserved check slot (`--ui-menu-check-*` tokens) on every row, so labels align, and shows
+only on `[aria-checked='true']`; plain `menuitem` rows are unaffected (still no `aria-checked`, which
 stays invalid on that role).
 
 The control only writes `aria-checked` in response to a user commit (click/Enter/Space). A consumer
@@ -3484,8 +3489,9 @@ invariant itself for that write — the control does not observe or reconcile it
 _Historical (GH #710): the site's agent-admin canvas-header consumer used to satisfy this — its
 preset-apply loop was one-true-by-construction on every non-commit write path (persisted-load, Reset
 persona) — before that consumer retired in S7-d (GH #684/#701; `agent-admin-app.ts` no longer writes
-`aria-checked` there). As of this writing no live consumer exercises the selectable-item variant's
-non-commit write path; the pattern above is exercised only via the control's own commit machinery._
+`aria-checked` there). Since T-0392 the composer's Effort picker (`conversation-composer.ts`,
+`#markPickerSelection`) writes its `menuitemradio` rows' `aria-checked` from the `effort` prop, one true
+by construction._
 
 ## Keyboard navigation
 

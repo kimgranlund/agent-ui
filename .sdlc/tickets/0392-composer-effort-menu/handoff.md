@@ -1,6 +1,6 @@
 ---
 id: T-0392
-title: "Composer effort menu: one selection idiom, aligned rows, Phosphor check, separator, contained focus ring"
+title: "Composer effort menu: one selection idiom, aligned rows, glyph check, separator, contained focus ring"
 type: bug             # feature | bug | chore | spike | idea
 status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
@@ -17,12 +17,12 @@ The chat composer's effort menu (Low, Medium, High, X-High, Thinking off, Show r
 
 ## Intent
 - Do:
-  1. Replace the clip-path checkmark (`packages/agent-ui/components/src/controls/menu/menu.css:340`) with the curated Phosphor `check` glyph through the icon pack (ADR-0066).
+  1. Replace the clip-path checkmark (`packages/agent-ui/components/src/controls/menu/menu.css:340`) with the library `ui-glyph` `check` (ADR-0245 cl.5: a functional check is the glyph, not the pictorial pack icon).
   2. Make the effort group `menuitemradio` rows with the same check slot as the toggle rows, so all labels align (today the toggles reserve a check slot at `menu.css:322-325` and the effort rows are plain `menuitem`s at `packages/agent-ui/app/src/controls/conversation/conversation-composer.ts:1000`), and drop the bg plus blue-ink `data-selected` swap for the selected effort.
   3. Add a separator between the effort group and the toggles.
   4. Keep the focus ring of the last row (Show reasoning) inside the panel's bottom edge.
 - Non-goals: the menu's items or their behaviour; other menus beyond what the shared `ui-menu` change carries.
-- Done when: a visual browser test (screenshot) of the open effort menu shows aligned labels, the Phosphor check on the selected effort and on a set toggle, a separator, and the last row's focus ring inside the panel; row radius and insets agree with the geometry rules (`.claude/docs/references/geometry.md`, the ADR-0245 ramp); `npm run check` plus the menu and conversation tests exit 0.
+- Done when: a visual browser test (screenshot) of the open effort menu shows aligned labels, the glyph check on the selected effort and on a set toggle, a separator, and the last row's focus ring inside the panel; row radius and insets agree with the geometry rules (`.claude/docs/references/geometry.md`, the ADR-0245 ramp); `npm run check` plus the menu and conversation tests exit 0.
 - If Do needs more steps than this level allows (L1-L2 3, L3 6, L4 10, L5 15), file two tickets.
 
 ## Context

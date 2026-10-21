@@ -901,7 +901,9 @@
       "tag": "ui-menu",
       "tier": "pattern",
       "description": "A keyboard-navigable overlay menu opened from a trigger, with roving focus and type-ahead selection.",
-      "uses": [],
+      "uses": [
+        "ui-glyph"
+      ],
       "catalogs": [
         "agent-ui"
       ]
