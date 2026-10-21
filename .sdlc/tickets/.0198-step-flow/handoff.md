@@ -2,7 +2,7 @@
 id: T-0198
 title: "Step flow pattern: step n of m, Back and Next, shared /draft data"
 type: feature         # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P3         # P1 | P2 | P3
 depends: [T-0197]    # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -90,3 +90,40 @@ Ask (architect, debate rule): propose the exact replacement text for each gramma
 
 Ask (plan-reviewer, debate rule): review the architect's proposed wording in `.sdlc/runtime/tasks/0198-step-flow/architect-L1.md` as the second voice. Is each after-span unambiguous to a model and in the grammar's register, with no added em dashes? Does span A's kept general scope (one surface across a flow, the Lexicographer case) still read right once span C stops teaching turn-driven scene swaps? Does span C teach StepFlow consistently with the answered forks (OUT of the feed, client Back and Next, /draft binding, both finish modes) and with span B's ConfirmReceipt hand-off? Are the dependents complete and the byte delta right? Verdict pass or replan, with any exact wording fixes.
 - Debate outcome 2026-10-21: the architect (architect-L1.md) and the fable reviewer (plan-reviewer-L1-2.md, pass) agree. Spans A, B, C and D land in step 4 as the architect wrote them, plus the reviewer's span E (grammar.md:66 "multi-step ask flow" -> "multi-step flow", with its pin at system-prompt-grammar.test.ts:55), with a deliberate prompt-equivalence recapture.
+
+## Outcome
+
+2026-10-21 · lane: full L3 · verdict: skipped (design intake and mockup whose gate is Kim's approval (Direction B, 2026-10-21)) · verifier: verifier-L2 (sonnet) · base: 092d60e250a2
+- Changed: ui-step-flow (StepFlow) with client Back and Next and validity-gated Next, its catalog row and mini-skill; concierge booking-flow adopts it; grammar.md teaches it (debated)
+- Commits: b921c9f T-0198: StepFlow preview sample tree; mini-skill scopes the BookingForm last scene
+- Check: step-4#1 (red) `grep -qF StepFlow .../booking-flow/WORKFLOW.md`: pass
+- Check: step-4#2 (red) WORKFLOW.md shrinks by more than 500 bytes vs `$SDLC_BASE_SHA`: pass
+- Check: step-4#3 (red) `! grep -qF "Back Button" WORKFLOW.md`: pass
+- Check: step-4#4 (red) concierge seedVersion above base and `T-0198` in concierge/agent.md: pass
+- Check: step-4#5 (red) `grep -qF StepFlow .../prompts/grammar.md`: pass
+- Check: step-4#6 (red) `grep -qF "StepFlow last scene with a BookingForm (T-0198)" hospitality.browser.test.ts`: pass
+- Check: step-4#7 hospitality browser test && dogfood-render browser test exits 0: pass
+- Check: step-4#8 (guard) `generate-agent-content.mjs --check` exits 0: pass
+- Check: step-4#9 (guard) agent-admin presets/app/seed-digests, agent-manifest, agent-content vitest: pass
+- Check: step-4#10 (guard) `vitest run packages/agent-ui/a2ui packages/agent-ui/components/src`: pass
+- Check: step-4#11 (guard) sitemap, llms, a2ui-catalog-tiers, capability-registry vitest: pass
+- Check: step-4#12 (guard) `npm run check` exits 0: pass
+- Check: step-4#13 conductor rule 2 (whole jsdom suite): pass
+- Check: step-4#14 conductor rebuild note (step-flow.md BookingForm scope): pass
+- Check: step-4#1 vitest step-flow jsdom: pass
+- Check: step-4#2 browser step-flow (chromium and webkit): pass
+- Check: step-4#3 visual step-flow: pass
+- Check: step-4#4 baselines dir, two browser test titles, nine descriptor parts: pass
+- Check: step-4#5 four site files exist: pass
+- Check: step-4#6 ui-step-flow wired in main.ts, _page.ts, frontmatter.ts, component-preview.ts: pass
+- Check: step-4#7 dogfood-fleet.gen.ts, capability-registry.json, llms.txt, sitemap.json: pass
+- Check: step-4#8 dogfood-render browser && `_page.visual.browser.test.ts`: pass
+- Check: step-4#23 #step-2#9, #step-2#10, #step-2#11 guards: pass
+- Check: step-4#12 (guard) generate-controls, codemod-uses, generate-agent-assets `--check`, foundations-census and ...: pass
+- Check: step-4#1 to #step-3#7 and #step-3#9 (red greps and python checks): pass
+- Check: step-4#8 (red) `### 5.2 Agentic (6 default types)` and `ui-step-flow` in the catalog spec: pass
+- Check: step-4#27 #step-3#10, #step-3#11, #step-3#12 guards: pass
+- Deviation: step 1 verifier skipped: design intake and mockup whose gate is Kim's approval (Direction B, 2026-10-21)
+- Deviation: step 2 verifier skipped: covered by the ticket verifiers at step 4 (verifier-L3 then verifier-L2), which reran step 2's criteria
+- Deviation: step 3 verifier skipped: covered by the ticket verifiers at step 4, which reran step 3's criteria
+- Follow-up: decide: the backable-wizard exemplar corpus/exemplar/v1_0/agent-ui.jsonl is... -> notes.md

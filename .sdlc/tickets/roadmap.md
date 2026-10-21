@@ -5,7 +5,6 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
-| T-0198 | [0198-step-flow](0198-step-flow/handoff.md) | Step flow pattern: step n of m, Back and Next, shared /draft data | feature | L3 | P3 | T-0197 | 🟡 claimed |
 | T-0199 | [0199-itinerary-compare](0199-itinerary-compare/handoff.md) | Itinerary and Option compare patterns for Travel, Curator, Concierge and Shopkeeper | feature | L3 | P3 | T-0193 | 🔵 ready |
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 | T-0383 | [0383-conversation-browser-reds](0383-conversation-browser-reds/handoff.md) | conversation.browser.test.ts: 4 resumed-bubble and composed-path reds | bug | L2 | P2 | none | 🔵 ready |
@@ -16,4 +15,4 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0389 | [0389-contrast-pair-glyph-red](0389-contrast-pair-glyph-red/handoff.md) | Stylist ContrastPair browser test: the verdict pill glyph is clipped (red at base) | bug | L1 | P2 | none | 🔵 ready |
 | T-0390 | [0390-site-agent-content-workflows-table](0390-site-agent-content-workflows-table/handoff.md) | site/agent-content/workflows/table-reservation/WORKFLOW.md:12... | idea | L2 | P2 | none | ⏳ proposed |
 
-Closed: 376 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 377 done, 4 dropped (git log or .NNNN-* folders)
