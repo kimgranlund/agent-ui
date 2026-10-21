@@ -22,18 +22,19 @@ function sidecars(dir: string): string[] {
 interface Sidecar {
   catalogId?: string
   personaId?: string
+  domainId?: string
   types: Record<string, { intents: string[]; notFor: { type: string }[] }>
 }
 
 describe('deriveSelectionCases', () => {
-  it('every notFor edge across the five sidecars yields exactly one case', () => {
+  it('every notFor edge across every sidecar (bases, personas, domains) yields exactly one case', () => {
     const files = sidecars(CATALOG_DIR)
     expect(files.length).toBeGreaterThan(0)
     const expected: string[] = []
     const prompts = new Map<string, string>()
     for (const file of files) {
       const doc = JSON.parse(readFileSync(file, 'utf8')) as Sidecar
-      const source = doc.catalogId ?? doc.personaId
+      const source = doc.catalogId ?? doc.personaId ?? doc.domainId
       expect(typeof source, file).toBe('string')
       for (const [a, entry] of Object.entries(doc.types)) {
         for (const edge of entry.notFor) {

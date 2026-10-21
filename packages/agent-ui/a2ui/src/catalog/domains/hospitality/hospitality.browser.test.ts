@@ -1,4 +1,4 @@
-// concierge.browser.test.ts — a real Chromium/WebKit engine drives `BookingForm`'s FULL, connected
+// hospitality.browser.test.ts — a real Chromium/WebKit engine drives `BookingForm`'s FULL, connected
 // behavior through the real `createRenderer()` (the `input-multi-slot.browser.test.ts` precedent this
 // file follows): native cross-descendant validity gating (ADR-0054/ADR-0050, jsdom-unreachable per
 // `factories.test.ts`'s own header — jsdom's `ElementInternals` has no `setFormValue`/`setValidity`) and
@@ -32,8 +32,8 @@ describe('BookingForm — real submitGate required-gating (ADR-0054, native, no 
     const sent: A2uiClientMessage[] = []
     r.onClientMessage((m) => sent.push(m))
 
-    await r.preload('agent-ui--concierge') // ADR-0241: a lazy record; loaded, the ingest below applies synchronously
-    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui--concierge' } })
+    await r.preload('agent-ui--hospitality') // ADR-0241: a lazy record; loaded, the ingest below applies synchronously
+    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'agent-ui--hospitality' } })
     r.ingestMessage({
       version: 'v1.0',
       updateComponents: {
@@ -82,8 +82,8 @@ describe('BookingForm → BookingConfirmation — a real day-cell pick round-tri
     const sent: A2uiClientMessage[] = []
     r.onClientMessage((m) => sent.push(m))
 
-    await r.preload('agent-ui--concierge') // ADR-0241: a lazy record; loaded, the ingest below applies synchronously
-    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's2', catalogId: 'agent-ui--concierge' } })
+    await r.preload('agent-ui--hospitality') // ADR-0241: a lazy record; loaded, the ingest below applies synchronously
+    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: 's2', catalogId: 'agent-ui--hospitality' } })
     r.ingestMessage({
       version: 'v1.0',
       updateComponents: {
@@ -163,8 +163,8 @@ async function mountStay(width: number): Promise<{ mount: HTMLElement; r: Return
   document.body.append(mount)
   const r = createRenderer()
   r.mount(mount)
-  await r.preload('agent-ui--concierge')
-  r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: `stay-${width}`, catalogId: 'agent-ui--concierge' } })
+  await r.preload('agent-ui--hospitality')
+  r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: `stay-${width}`, catalogId: 'agent-ui--hospitality' } })
   r.ingestMessage({
     version: 'v1.0',
     updateDataModel: {
@@ -373,9 +373,9 @@ async function mountKinds(fields: unknown[], value: Record<string, unknown> = {}
   r.mount(mount)
   const sent: A2uiClientMessage[] = []
   r.onClientMessage((m) => sent.push(m))
-  await r.preload('agent-ui--concierge')
+  await r.preload('agent-ui--hospitality')
   const id = `kinds-${Math.random().toString(36).slice(2)}`
-  r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui--concierge' } })
+  r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: id, catalogId: 'agent-ui--hospitality' } })
   r.ingestMessage({ version: 'v1.0', updateDataModel: { surfaceId: id, path: '/booking', value } })
   r.ingestMessage({
     version: 'v1.0',

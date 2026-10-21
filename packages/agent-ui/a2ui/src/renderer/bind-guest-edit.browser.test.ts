@@ -77,7 +77,7 @@ describe('a guest edit in a bound field keeps its text and reaches the data mode
   })
 
   it('BookingForm text, number and date fields (a typed date is the ISO on the commit that typed it)', async () => {
-    const s = await mountSurface('agent-ui--concierge', { stay: { guestName: 'Ada', guests: '2', checkIn: '2026-11-14' } }, [
+    const s = await mountSurface('agent-ui--hospitality', { stay: { guestName: 'Ada', guests: '2', checkIn: '2026-11-14' } }, [
       { id: 'root', component: 'Column', children: ['form', 'go'] },
       {
         id: 'form',

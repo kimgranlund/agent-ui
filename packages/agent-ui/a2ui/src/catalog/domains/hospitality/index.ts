@@ -1,4 +1,4 @@
-// index.ts — the `concierge` persona-scoped local pattern set (SPEC-R1, GH #497). Promotes the ONE
+// index.ts — the `hospitality` domain (T-0197; first shipped as the concierge persona fragment, SPEC-R1, GH #497). Promotes the ONE
 // concierge idiom the decomp note's promotion table rules a real validation-enforceability win —
 // `booking-flow` — into two catalog types, `BookingForm`/`BookingConfirmation` (the note's own §1
 // argument: required-gating and confirmation-value-drift both close BY CONSTRUCTION, not by better
@@ -14,21 +14,21 @@
 // reject-loud name-collision check (SPEC-R2), which trivially passes (`BookingForm`/`BookingConfirmation`
 // are new names on both bases). `renderer-persona-catalogs.test.ts` proves this with a real fixture.
 //
-// The browser-only, factory-bearing PersonaCatalogPackage (`renderer.ts`'s constructor consumes this
-// directly). `manifest.ts` carries the SAME `personaId`/`fragment`/`targetCatalogs` data, factory-free
+// The browser-only, factory-bearing DomainCatalogPackage (`domains/body.ts` composes it on demand).
+// `manifest.ts` carries the SAME `domainId`/`fragment`/`targetCatalogs` data, factory-free
 // and DOM-less, so a server host can compose derived catalog DOCUMENTS without ever importing this
 // file (GH #516 — see `manifest.ts`'s own header for why that import boundary is load-bearing).
 
-import type { PersonaCatalogPackage } from '../../compose.ts'
-import { CONCIERGE_PERSONA_ID, conciergeFragment, conciergeTargetCatalogs } from './manifest.ts'
-import { conciergeFactories } from './factories.ts'
+import type { DomainCatalogPackage } from '../../compose.ts'
+import { HOSPITALITY_DOMAIN_ID, hospitalityFragment, hospitalityTargetCatalogs } from './manifest.ts'
+import { hospitalityFactories } from './factories.ts'
 
-export { CONCIERGE_PERSONA_ID, conciergeFragment, conciergeTargetCatalogs, conciergeFactories }
+export { HOSPITALITY_DOMAIN_ID, hospitalityFragment, hospitalityTargetCatalogs, hospitalityFactories }
 
-/** The derive-then-register input `composePersonaCatalogs` (SPEC-R2) consumes directly. */
-export const conciergePersona: PersonaCatalogPackage = {
-  personaId: CONCIERGE_PERSONA_ID,
-  fragment: conciergeFragment,
-  factories: conciergeFactories,
-  targetCatalogs: conciergeTargetCatalogs,
+/** The package `composeDomainEntry` (CA-R2) composes onto each base it targets. */
+export const hospitalityDomain: DomainCatalogPackage = {
+  domainId: HOSPITALITY_DOMAIN_ID,
+  fragment: hospitalityFragment,
+  factories: hospitalityFactories,
+  targetCatalogs: hospitalityTargetCatalogs,
 }

@@ -89,7 +89,7 @@ describe('built-in catalog records: the bijection with the shipped bodies (ADR-0
 
 describe('the gate bites (planted drift)', () => {
   const basic = BUILTIN_CATALOG_RECORDS.find((r) => r.id === 'a2ui-basic')!
-  const concierge = BUILTIN_CATALOG_RECORDS.find((r) => r.id === 'agent-ui--concierge')!
+  const concierge = BUILTIN_CATALOG_RECORDS.find((r) => r.id === 'agent-ui--hospitality')!
 
   it('a manifest missing one function, or one with a widened callableFrom, is caught', async () => {
     const body = await loadCatalogBody(basic)
@@ -103,7 +103,7 @@ describe('the gate bites (planted drift)', () => {
     const body = await loadCatalogBody(concierge)
     expect(concierge.submitGate).toContain('ui-form-provider')
     expect(manifestProblems({ ...concierge, submitGate: [] }, body)).toEqual(['submitGate differs'])
-    expect(manifestProblems({ ...concierge, id: 'agent-ui--other' }, body)).toEqual(['body declares agent-ui--concierge'])
+    expect(manifestProblems({ ...concierge, id: 'agent-ui--other' }, body)).toEqual(['body declares agent-ui--hospitality'])
   })
 
   it('a persona whose fragment collides with its base fails at load as one CatalogLoadError carrying the compose error', async () => {

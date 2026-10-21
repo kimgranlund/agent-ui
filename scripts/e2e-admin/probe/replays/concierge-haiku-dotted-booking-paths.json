@@ -5,7 +5,7 @@
   "agent": "concierge",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "2026-10-16.jsonl:275,2026-10-16.jsonl:276,2026-10-16.jsonl:277,2026-10-16.jsonl:278 (catalog agent-ui--concierge)",
+  "source": "2026-10-16.jsonl:275,2026-10-16.jsonl:276,2026-10-16.jsonl:277,2026-10-16.jsonl:278 (catalog agent-ui--hospitality)",
   "steps": [
     {
       "say": "What are the opening hours of the pool, gym and spa? Check the property-knowledge-base."
@@ -25,7 +25,7 @@
       "lines": [
         "{\"a2uiMeta\":{\"textDelta\":\"The Grand Meridian's pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. In season, book spa treatments at least a day ahead.\"}}",
         "{\"a2uiMeta\":{\"note\":\"The Grand Meridian's pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. In season, book spa treatments at least a day ahead.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### property-knowledge-base (resource)\\nAccessibility, policy, group-booking, and wedding facts the concierge cites.\\n\\nStep-free throughout — ramped entrance, lifts to every floor, four ADA rooms with roll-in showers and a portable hoist on request. Check-in 15:00, check-out 11:00; late check-out to 14:00 subject to availability. Cancellations are free up to 48h before arrival, one night’s rate after. Groups of 10+ rooms get a dedicated coordinator and a 10% rate; the event spaces seat 120 banquet-style or 200 standing. Weddings run three packages — Intimate, Classic, Grand — covering the ballroom or the waterfront terrace, in-house catering from Vela’s kitchen, and a preferred-vendor list for florists and photographers; quote a package, never a firm price, without confirming the date with the events team. Pool (25m, heated) and gym open 06:00–22:00; spa 09:00–20:00 — book treatments at least a day ahead in season.\\n\\nWhat are the opening hours of the pool, gym and spa? Check the property-knowledge-base.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48304,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2214}],\"over\":false},\"miniSkillIds\":[\"greeting-card\",\"nested-record-editor\",\"feature-collection\"],\"cacheBoundary\":46090}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"facilities-hours\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"facilities-hours\",\"catalogId\":\"agent-ui--hospitality\"}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"facilities-hours\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"header\",\"content\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"child\":\"title\"},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Pool, gym and spa hours\",\"variant\":\"h4\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"hours\"]},{\"id\":\"hours\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Pool (25m, heated)\",\"value\":\"06:00 to 22:00\"},{\"label\":\"Gym\",\"value\":\"06:00 to 22:00\"},{\"label\":\"Spa\",\"value\":\"09:00 to 20:00\"},{\"label\":\"Spa booking\",\"value\":\"Book treatments at least a day ahead in season\"}]}]}}"
       ],
       "rounds": [
@@ -41,7 +41,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "facilities-hours",
-                      "catalogId": "agent-ui--concierge"
+                      "catalogId": "agent-ui--hospitality"
                     }
                   },
                   {
@@ -274,7 +274,7 @@
     {
       "lines": [
         "{\"a2uiMeta\":{\"note\":\"Here's your booking for the Half-day coastal boat tour on Saturday 21 November 2026 for two guests, under Alex Moreau. Please check the details and submit when you're ready.\",\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Book the half-day coastal boat tour on Saturday 21 November 2026 for two guests, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46090,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":46090}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"tour-booking\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"tour-booking\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
         "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"tour-booking\",\"value\":{\"booking\":{\"tour\":\"coastal-boat\",\"date\":\"2026-11-21\",\"guests\":\"2\",\"name\":\"Alex Moreau\"}}}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"tour-booking\",\"components\":[{\"id\":\"root\",\"component\":\"BookingForm\",\"title\":\"Book your tour\",\"fields\":[{\"kind\":\"select\",\"label\":\"Tour\",\"path\":\"booking.tour\",\"required\":true,\"options\":[{\"label\":\"Half-day coastal boat tour\",\"value\":\"coastal-boat\"}]},{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"booking.date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"booking.guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"},{\"label\":\"2 guests\",\"value\":\"2\"},{\"label\":\"3 guests\",\"value\":\"3\"},{\"label\":\"4 guests\",\"value\":\"4\"}]},{\"kind\":\"text\",\"label\":\"Name\",\"path\":\"booking.name\",\"required\":true}],\"value\":{\"path\":\"/booking\"},\"child\":\"bookBtn\"},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Submit booking\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"submit\":true,\"context\":{\"booking\":{\"path\":\"/booking\"}}}}]}}"
       ],
@@ -291,7 +291,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "tour-booking",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },
@@ -408,7 +408,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "tour-booking",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },
@@ -611,7 +611,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "tour-confirmation",
-                      "catalogId": "agent-ui--concierge"
+                      "catalogId": "agent-ui--hospitality"
                     }
                   },
                   {

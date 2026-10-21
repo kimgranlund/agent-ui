@@ -19,7 +19,7 @@ const REAL_ROOT = process.cwd()
 
 describe('catalog-files: the registry resolves each registered id to ITS OWN catalog', () => {
   it('registers exactly the seed catalog ids, in order', () => {
-    expect(CATALOG_IDS).toEqual(['agent-ui', 'a2ui-basic', 'agent-ui--croupier', 'agent-ui--concierge'])
+    expect(CATALOG_IDS).toEqual(['agent-ui', 'a2ui-basic', 'agent-ui--croupier', 'agent-ui--hospitality'])
     expect(Object.keys(CATALOG_FILES)).toEqual([...CATALOG_IDS])
     expect(BASE_CATALOG_IDS).toEqual(['agent-ui', 'a2ui-basic'])
   })
@@ -42,7 +42,7 @@ describe('catalog-files: the registry resolves each registered id to ITS OWN cat
   it('a persona shard id composes its fragment over its base: the persona composite is present, the base keeps its rows (T-0240)', () => {
     const base = loadCatalogById(REAL_ROOT, 'agent-ui')
     const croupier = loadCatalogById(REAL_ROOT, 'agent-ui--croupier')
-    const concierge = loadCatalogById(REAL_ROOT, 'agent-ui--concierge')
+    const concierge = loadCatalogById(REAL_ROOT, 'agent-ui--hospitality')
     expect(base.components['CardTable']).toBeUndefined()
     expect(croupier.components['CardTable']).toBeDefined()
     expect(croupier.components['BookingForm']).toBeUndefined()

@@ -5,7 +5,7 @@
   "agent": "concierge",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "2026-10-16.jsonl:464,2026-10-16.jsonl:465 (catalog agent-ui--concierge)",
+  "source": "2026-10-16.jsonl:464,2026-10-16.jsonl:465 (catalog agent-ui--hospitality)",
   "steps": [
     {
       "say": "What spa services can I book during my stay?"
@@ -19,7 +19,7 @@
       "lines": [
         "{\"a2uiMeta\":{\"textDelta\":\"The Grand Meridian spa offers six treatments, which you can book during your stay. The spa is open 09:00 to 20:00, and in season treatments should be booked at least a day ahead.\"}}",
         "{\"a2uiMeta\":{\"note\":\"The Grand Meridian spa offers six treatments, which you can book during your stay. The spa is open 09:00 to 20:00, and in season treatments should be booked at least a day ahead.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What spa services can I book during my stay?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":47605,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1515}],\"over\":false},\"miniSkillIds\":[\"greeting-card\",\"product-presentation\"],\"cacheBoundary\":46090}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-menu\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-menu\",\"catalogId\":\"agent-ui--hospitality\"}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-menu\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"grid\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Spa treatments\",\"variant\":\"h4\"},{\"id\":\"grid\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"16rem\",\"children\":[\"t1\",\"t2\",\"t3\",\"t4\",\"t5\",\"t6\"]},{\"id\":\"t1\",\"component\":\"ProductCard\",\"title\":\"Swedish massage\",\"subtitle\":\"60 minutes\",\"price\":\"€120\",\"priceNote\":\"per session\",\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa_treatment\",\"context\":{\"treatment\":\"swedish-massage\"}}},{\"id\":\"t2\",\"component\":\"ProductCard\",\"title\":\"Deep-tissue massage\",\"subtitle\":\"60 minutes\",\"price\":\"€135\",\"priceNote\":\"per session\",\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa_treatment\",\"context\":{\"treatment\":\"deep-tissue-massage\"}}},{\"id\":\"t3\",\"component\":\"ProductCard\",\"title\":\"Hot-stone massage\",\"subtitle\":\"90 minutes\",\"price\":\"€170\",\"priceNote\":\"per session\",\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa_treatment\",\"context\":{\"treatment\":\"hot-stone-massage\"}}},{\"id\":\"t4\",\"component\":\"ProductCard\",\"title\":\"Sea-salt and lemon body scrub\",\"subtitle\":\"45 minutes\",\"price\":\"€95\",\"priceNote\":\"per session\",\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa_treatment\",\"context\":{\"treatment\":\"sea-salt-lemon-body-scrub\"}}},{\"id\":\"t5\",\"component\":\"ProductCard\",\"title\":\"Hydrating facial\",\"subtitle\":\"50 minutes\",\"price\":\"€110\",\"priceNote\":\"per session\",\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa_treatment\",\"context\":{\"treatment\":\"hydrating-facial\"}}},{\"id\":\"t6\",\"component\":\"ProductCard\",\"title\":\"Couples massage\",\"subtitle\":\"60 minutes for two\",\"price\":\"€230\",\"priceNote\":\"for two\",\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa_treatment\",\"context\":{\"treatment\":\"couples-massage\"}}}]}}"
       ],
       "rounds": [
@@ -35,7 +35,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "spa-menu",
-                      "catalogId": "agent-ui--concierge"
+                      "catalogId": "agent-ui--hospitality"
                     }
                   },
                   {
@@ -270,7 +270,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "ask-3",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },

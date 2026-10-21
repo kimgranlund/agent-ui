@@ -64,8 +64,8 @@ const mount = async (width: string, columns: number, scheme: 'light' | 'dark') =
     wrap.append(cell)
     const r = createRenderer()
     r.mount(cell)
-    await r.preload('agent-ui--concierge')
-    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: form.id, catalogId: 'agent-ui--concierge' } })
+    await r.preload('agent-ui--hospitality')
+    r.ingestMessage({ version: 'v1.0', createSurface: { surfaceId: form.id, catalogId: 'agent-ui--hospitality' } })
     r.ingestMessage({ version: 'v1.0', updateDataModel: { surfaceId: form.id, path: '/booking', value: form.value } })
     r.ingestMessage({
       version: 'v1.0',

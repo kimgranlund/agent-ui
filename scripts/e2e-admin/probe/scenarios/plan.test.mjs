@@ -24,6 +24,13 @@ const roster = readdirSync(personasDir)
     return JSON.parse(/^---\n([\s\S]*?)\n---/.exec(text)[1]).roster !== false
   })
   .sort()
+/** T-0197: a preset's effective catalog id from its frontmatter: its domains (`agent-ui--hospitality`), else its
+ *  local pattern set (`agent-ui--croupier`), else the base. */
+const presetCatalogId = (id) => {
+  const fm = JSON.parse(/^---\n([\s\S]*?)\n---/.exec(readFileSync(new URL(`${id}/agent.md`, personasDir), 'utf8'))[1])
+  if (fm.domains !== undefined) return `agent-ui--${[...fm.domains].sort().join('+')}`
+  return fm.localPatterns !== undefined ? `agent-ui--${fm.localPatterns}` : 'agent-ui'
+}
 
 const run = (argv, compile) => {
   let out = ''
@@ -102,7 +109,7 @@ describe('plan.ts', () => {
   it('every smoke scenario is one or two turns, each expecting a type its preset catalog holds', () => {
     const resolve = nodeCatalogResolver(root.pathname)
     for (const { agent, scenarios } of SMOKE_PRESETS) {
-      const catalog = resolve(`agent-ui--${agent}`) ?? resolve('agent-ui')
+      const catalog = resolve(presetCatalogId(agent))
       for (const s of scenarios) {
         expect(s.tags, `${agent} ${s.name}`).toEqual(['smoke'])
         expect(s.steps.length, `${agent} ${s.name}`).toBeGreaterThanOrEqual(1)

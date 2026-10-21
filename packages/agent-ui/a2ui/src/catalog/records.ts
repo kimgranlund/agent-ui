@@ -75,7 +75,6 @@ const BASES = {
 /** Each shipped persona: its id, the bases its `targetCatalogs` names, and its own submit-gate factory tags. */
 const PERSONAS: readonly (readonly [string, readonly (keyof typeof BASES)[], readonly string[]])[] = [
   ['fixture-demo', ['agent-ui', 'a2ui-basic'], []],
-  ['concierge', ['agent-ui', 'a2ui-basic'], ['ui-form-provider']],
   ['croupier', ['agent-ui', 'a2ui-basic'], []],
   ['quizmaster', ['agent-ui', 'a2ui-basic'], []],
   ['stylist', ['agent-ui'], []],
@@ -92,10 +91,9 @@ function derivedRecord(baseId: keyof typeof BASES, personaId: string, submitGate
   }
 }
 
-/** Each shipped domain (`domains/index.ts`): its id, the bases it targets, its own submit-gate factory tags. Empty
- *  until W1 lands the first domain. */
+/** Each shipped domain (`domains/index.ts`): its id, the bases it targets, its own submit-gate factory tags. */
 export type DomainRecordRow = readonly [string, readonly (keyof typeof BASES)[], readonly string[]]
-export const DOMAINS: readonly DomainRecordRow[] = []
+export const DOMAINS: readonly DomainRecordRow[] = [['hospitality', ['agent-ui', 'a2ui-basic'], ['ui-form-provider']]]
 
 /** A domain-set record: the base's functions (a shipped domain declares none), the union of every gate list. The
  *  body composes the domains in id order (`domains/body.ts`). */

@@ -23,7 +23,7 @@ describe('T-0207: selected domains', () => {
   it('a base id selects none; a persona catalog selects its fragment domain; a domain id selects its tail', () => {
     expect(selectedDomains('agent-ui')).toEqual([])
     expect(selectedDomains('agent-ui--croupier')).toContain('games')
-    expect(selectedDomains('agent-ui--concierge')).toContain('hospitality')
+    expect(selectedDomains('agent-ui--hospitality')).toContain('hospitality')
     expect(selectedDomains('agent-ui--stylist')).not.toContain('games')
     expect([...selectedDomains('agent-ui--design+games')].sort()).toEqual(['design', 'games'])
   })

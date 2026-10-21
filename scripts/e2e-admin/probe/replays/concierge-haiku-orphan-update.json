@@ -5,7 +5,7 @@
   "agent": "concierge",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "2026-10-16.jsonl:944,2026-10-16.jsonl:945,2026-10-16.jsonl:946 (catalog agent-ui--concierge)",
+  "source": "2026-10-16.jsonl:944,2026-10-16.jsonl:945,2026-10-16.jsonl:946 (catalog agent-ui--hospitality)",
   "steps": [
     {
       "say": "Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau."
@@ -37,7 +37,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "ask-1",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },
@@ -377,7 +377,7 @@
       "lines": [
         "{\"a2uiMeta\":{\"textDelta\":\"Your spa booking is confirmed and held for Alex Moreau: a 60-minute Swedish massage (€120) on Thursday 19 November 2026 at 15:00, for one guest. Thank you for booking with the Grand Meridian. Is there anything else I can help you with, or are we all set?\"}}",
         "{\"a2uiMeta\":{\"note\":\"Your spa booking is confirmed for Alex Moreau.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Those details are right, please confirm the booking.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_MISSING\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":48290,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2200}],\"over\":false},\"miniSkillIds\":[\"feature-collection\",\"structured-container\",\"greeting-card\"],\"cacheBoundary\":46090}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"booking-confirmation-1\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"booking-confirmation-1\",\"catalogId\":\"agent-ui--hospitality\"}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"booking-confirmation-1\",\"components\":[{\"id\":\"root\",\"component\":\"BookingConfirmation\",\"title\":\"Spa booking confirmed\",\"rows\":[{\"label\":\"Guest\",\"value\":\"Alex Moreau\"},{\"label\":\"Treatment\",\"value\":\"Swedish massage, 60 min, €120\"},{\"label\":\"Date\",\"value\":\"Thursday 19 November 2026\"},{\"label\":\"Time\",\"value\":\"15:00\"},{\"label\":\"Party size\",\"value\":\"1 guest\"}],\"data\":{\"guestName\":\"Alex Moreau\",\"treatment\":\"swedish-60\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"party\":\"1\"}}]}}"
       ],
       "rounds": [
@@ -397,7 +397,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "booking-confirmation-1",
-                      "catalogId": "agent-ui--concierge"
+                      "catalogId": "agent-ui--hospitality"
                     }
                   },
                   {

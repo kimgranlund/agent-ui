@@ -16,8 +16,9 @@ import { CATALOG_COVERAGE_EXEMPT, seedsForCatalog } from './index.ts'
 import { BUILTIN_CATALOG_RECORDS } from '../catalog/records.ts'
 import { A2UI_BASIC_CANONICAL_URI, a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
-import { composePersonaCatalogDocs } from '../catalog/compose.ts'
+import { composeDomainCatalogDocs, composePersonaCatalogDocs } from '../catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
+import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../catalog/domains/manifests.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import type { A2uiServerMessage } from '../protocol.ts'
 import { isDerivedCatalogId, splitCatalogId } from '../catalog/catalog-id.ts'
@@ -28,13 +29,13 @@ type SeedsFor = (catalogId: string) => readonly { messages: readonly A2uiServerM
 /** Every catalog id the gate judges: the renderer's records minus the canonical-URI alias. */
 const catalogIds = (): string[] => BUILTIN_CATALOG_RECORDS.map((r) => r.id).filter((id) => id !== A2UI_BASIC_CANONICAL_URI)
 
-/** The two base documents and every derived document the shipped personas compose over them. */
+/** The two base documents and every derived document the shipped personas and (T-0197) domains compose over them. */
 function catalogDocuments(): Map<string, Catalog> {
   const bases = new Map<string, Catalog>([
     ['agent-ui', defaultCatalog],
     ['a2ui-basic', a2uiBasicCatalog],
   ])
-  return new Map([...bases, ...composePersonaCatalogDocs(bases, SHIPPED_PERSONA_CATALOG_MANIFESTS)])
+  return new Map([...bases, ...composePersonaCatalogDocs(bases, SHIPPED_PERSONA_CATALOG_MANIFESTS), ...composeDomainCatalogDocs(bases, SHIPPED_DOMAIN_CATALOG_MANIFESTS)])
 }
 
 /** The types `id` owns: every component of a base; a derived id's components minus its base's. */

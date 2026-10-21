@@ -27,7 +27,7 @@ import { parseDescriptor, splitFrontmatter } from '@agent-ui/components/descript
 import { a2uiBasicFactories } from '../catalog/a2ui-basic/factories.ts'
 import { defaultFactories } from '../catalog/default/factories.ts'
 import { EXCLUSION_ALLOWLIST } from '../catalog/default/exclusions.ts'
-import { conciergeFactories } from '../catalog/personas/concierge/factories.ts'
+import { hospitalityFactories } from '../catalog/domains/hospitality/factories.ts'
 import { croupierFactories } from '../catalog/personas/croupier/factories.ts'
 import { fixtureDemoFactories } from '../catalog/personas/fixture-demo/factories.ts'
 import { quizmasterFactories } from '../catalog/personas/quizmaster/factories.ts'
@@ -107,7 +107,6 @@ describe('tag parity: the pure rule equals the factory tag', () => {
   })
 
   it.each([
-    ['concierge', conciergeFactories],
     ['croupier', croupierFactories],
     ['fixture-demo', fixtureDemoFactories],
     ['quizmaster', quizmasterFactories],
@@ -122,7 +121,7 @@ describe('tag parity: the pure rule equals the factory tag', () => {
   it('the persona tag join is not vacuous: PlayingCard is tagged, the composition types are not', () => {
     const tagged = Object.values(REGISTRY.personas).flat().filter((r) => r.kind === 'type' && r.tag !== undefined).map((r) => r.name)
     expect(tagged).toEqual(['PlayingCard'])
-    expect(Object.keys(conciergeFactories).sort()).toEqual(['BookingConfirmation', 'BookingForm'])
+    expect(Object.keys(hospitalityFactories).sort()).toEqual(['BookingConfirmation', 'BookingForm'])
   })
 
   it('the QuestionCard key: the quizmaster table holds exactly QuestionCard, an untagged ui-card composite', () => {
@@ -181,7 +180,7 @@ describe('fleet join: the registry joins descriptors, the components registry an
   })
 
   it('every `ui-*` tag an a2ui-basic or persona factory mints is a fleet control', () => {
-    for (const table of [a2uiBasicFactories, conciergeFactories, croupierFactories, fixtureDemoFactories, quizmasterFactories, stylistFactories]) {
+    for (const table of [a2uiBasicFactories, hospitalityFactories, croupierFactories, fixtureDemoFactories, quizmasterFactories, stylistFactories]) {
       expect(unknownTags(table, controlTags)).toEqual([])
     }
   })
@@ -197,7 +196,11 @@ describe('fleet join: the registry joins descriptors, the components registry an
 
 describe('scope: every mini-skill and corpus shard names a registered catalog id', () => {
   const baseIds = SOURCES.catalogs.map((c) => c.catalogId)
-  const registered = new Set([...baseIds, ...SOURCES.fragments.flatMap((f) => f.targetCatalogs.filter((b) => baseIds.includes(b)).map((b) => `${b}--${f.personaId}`))])
+  const registered = new Set([
+    ...baseIds,
+    ...SOURCES.fragments.flatMap((f) => f.targetCatalogs.filter((b) => baseIds.includes(b)).map((b) => `${b}--${f.personaId}`)),
+    ...DOMAIN_FRAGMENTS.flatMap((d) => d.targetCatalogs.filter((b) => baseIds.includes(b)).map((b) => `${b}--${d.domainId}`)), // T-0197
+  ])
 
   it('every mini-skill', () => {
     expect(SOURCES.miniSkills.length).toBeGreaterThan(0)
@@ -284,7 +287,7 @@ describe('personas: the loader list equals the shipped manifests, and the views 
     expect(loader).toEqual(shipped)
   })
 
-  it('T-0202: the hard-coded domain list and targets equal SHIPPED_DOMAIN_CATALOG_MANIFESTS (none ship before W1)', () => {
+  it('T-0202: the hard-coded domain list and targets equal SHIPPED_DOMAIN_CATALOG_MANIFESTS (hospitality first, T-0197)', () => {
     const byId = (a: { domainId: string }, b: { domainId: string }): number => (a.domainId < b.domainId ? -1 : 1)
     const shipped = SHIPPED_DOMAIN_CATALOG_MANIFESTS.map((m) => ({ domainId: m.domainId, targetCatalogs: [...(m.targetCatalogs ?? [])] })).sort(byId)
     const loader = DOMAIN_FRAGMENTS.map((d) => ({ domainId: d.domainId, targetCatalogs: [...d.targetCatalogs] })).sort(byId)

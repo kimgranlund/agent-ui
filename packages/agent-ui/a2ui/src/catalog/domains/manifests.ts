@@ -3,5 +3,6 @@
 // `SHIPPED_DOMAIN_CATALOGS` by `records.test.ts`.
 
 import type { DomainCatalogManifest } from '../compose.ts'
+import { hospitalityManifest } from './hospitality/manifest.ts'
 
-export const SHIPPED_DOMAIN_CATALOG_MANIFESTS: readonly DomainCatalogManifest[] = []
+export const SHIPPED_DOMAIN_CATALOG_MANIFESTS: readonly DomainCatalogManifest[] = [hospitalityManifest]

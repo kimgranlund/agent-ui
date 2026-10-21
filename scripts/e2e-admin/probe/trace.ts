@@ -15,7 +15,7 @@ import type { AgentTraceLine } from '../../../packages/agent-ui/a2ui/tools/agent
 import type { TurnInput, Turn } from '../../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
 import type { Catalog } from '../../../packages/agent-ui/a2ui/src/catalog/catalog.ts'
 import { splitCatalogId } from '../../../packages/agent-ui/a2ui/src/catalog/catalog-id.ts'
-import { conciergeSemanticChecks } from '../../../packages/agent-ui/a2ui/src/catalog/personas/concierge/checks.ts'
+import { hospitalitySemanticChecks } from '../../../packages/agent-ui/a2ui/src/catalog/domains/hospitality/checks.ts'
 import { croupierSemanticChecks } from '../../../packages/agent-ui/a2ui/src/catalog/personas/croupier/checks.ts'
 import { HIDDEN_STATE_CHECKS } from '../../../packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts'
 import { compositeMomentChecks } from '../../../packages/agent-ui/a2ui/src/catalog/composite-moments.ts'
@@ -129,13 +129,18 @@ function scriptedRound(round: ProbeRound): string | ScriptedToolRound {
 /** T-0222: the persona semantic checks the dev proxy passes `produce()` (`semanticChecksDeps`), by persona id.
  *  Plain Node cannot import the persona manifests (their catalog JSON imports), so this names each persona's
  *  checks module; `trace.test.mjs` pins it to `SHIPPED_PERSONA_CATALOG_MANIFESTS`. */
-export const PERSONA_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { concierge: conciergeSemanticChecks, croupier: croupierSemanticChecks }
+export const PERSONA_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { croupier: croupierSemanticChecks }
 
-/** The semantic checks a live turn on this catalog ran: its persona's (`<base>--<persona>`), (T-0230) the
- *  hidden game state checks every catalog runs, then (T-0208) the composite-moment checks and (T-0258) the framed-choice check and (T-0193) the option-deck count check, gated on the types the catalog declares, as `semanticChecksDeps` does. */
+/** T-0197: the domain semantic checks, by domain id, named the same way; `trace.test.mjs` pins it to
+ *  `SHIPPED_DOMAIN_CATALOG_MANIFESTS`. */
+export const DOMAIN_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { hospitality: hospitalitySemanticChecks }
+
+/** The semantic checks a live turn on this catalog ran: its persona's (`<base>--<persona>`) or each domain's
+ *  (`<base>--<d1>+<d2>`), (T-0230) the hidden game state checks every catalog runs, then (T-0208) the composite-moment checks and (T-0258) the framed-choice check and (T-0193) the option-deck count check, gated on the types the catalog declares, as `semanticChecksDeps` does. */
 export function replaySemanticChecks(catalog: Catalog): readonly SemanticCheck[] {
-  const persona = splitCatalogId(catalog.catalogId).tail ?? ''
-  return gateChecksOnCatalog([...(PERSONA_SEMANTIC_CHECKS[persona] ?? []), ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck], catalog)
+  const tail = splitCatalogId(catalog.catalogId).tail ?? ''
+  const own = PERSONA_SEMANTIC_CHECKS[tail] ?? tail.split('+').flatMap((d) => DOMAIN_SEMANTIC_CHECKS[d] ?? [])
+  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck], catalog)
 }
 
 export interface ReplayContext {

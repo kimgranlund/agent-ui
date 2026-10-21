@@ -80,7 +80,7 @@
 // (emphasis, end) row per entry, hairline dividers between rows.
 
 import type { WidgetFactory } from '../../types.ts'
-import { sizedActionButtons } from '../action-row.ts'
+import { sizedActionButtons } from '../../personas/action-row.ts'
 
 // ── display formatting (the wire value is never touched) ────────────────────────────────────────────
 
@@ -662,7 +662,7 @@ export const bookingConfirmationFactory: WidgetFactory = {
 
 /** Every component the fragment's `catalog.json` declares MUST appear here (the FACTORY_MISSING
  *  precondition, mirroring `fixture-demo/factories.ts`). */
-export const conciergeFactories: Record<string, WidgetFactory> = {
+export const hospitalityFactories: Record<string, WidgetFactory> = {
   BookingForm: bookingFormFactory,
   BookingConfirmation: bookingConfirmationFactory,
 }

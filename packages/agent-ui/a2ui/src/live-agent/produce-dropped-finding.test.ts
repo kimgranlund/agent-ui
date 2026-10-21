@@ -9,19 +9,19 @@ import { produce, ProduceHalt } from '../agent/produce.ts'
 import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
 import { composeCatalog } from '../catalog/compose.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
-import { conciergeFragment } from '../catalog/personas/concierge/manifest.ts'
-import { conciergeSemanticChecks } from '../catalog/personas/concierge/checks.ts'
+import { hospitalityFragment } from '../catalog/domains/hospitality/manifest.ts'
+import { hospitalitySemanticChecks } from '../catalog/domains/hospitality/checks.ts'
 import { compositeMomentChecks } from '../catalog/composite-moments.ts'
 import { gateChecksOnCatalog } from '../catalog/semantic-check.ts'
 
-const catalog = composeCatalog(defaultCatalog, conciergeFragment, 'concierge')
-const semanticChecks = gateChecksOnCatalog([...conciergeSemanticChecks, ...compositeMomentChecks], catalog)
+const catalog = composeCatalog(defaultCatalog, hospitalityFragment, 'hospitality')
+const semanticChecks = gateChecksOnCatalog([...hospitalitySemanticChecks, ...compositeMomentChecks], catalog)
 const input: TurnInput = { kind: 'intent', text: 'Book the first one for Thursday 19 November 2026 at 15:00, one guest, name Alex Moreau.', session: { turns: [] } }
 
 // :157 round 1, less its update to the session's spa-menu: a hand-built read-back on ask-1.
 const READ_BACK =
   '{"a2uiMeta":{"note":"Here is your booking. Shall I confirm it?","ask":{"surfaceId":"ask-1"}}}\n' +
-  '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui--concierge","sendDataModel":true}}\n' +
+  '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui--hospitality","sendDataModel":true}}\n' +
   '{"version":"v1.0","updateDataModel":{"surfaceId":"ask-1","path":"/booking","value":{"treatment":"swedish-massage","date":"2026-11-19","time":"15:00","guests":1,"guestName":"Alex Moreau"}}}\n' +
   JSON.stringify({
     version: 'v1.0',
@@ -42,7 +42,7 @@ const READ_BACK =
 const PROSE = '{"a2uiMeta":{"note":"Review the details and press Confirm booking when they are right.","target":{"surfaceId":"ask-1"}}}'
 
 const surface = (sid: string, components: unknown[], meta = '{"a2uiMeta":{"note":"Here it is."}}'): string =>
-  `${meta}\n{"version":"v1.0","createSurface":{"surfaceId":"${sid}","catalogId":"agent-ui--concierge"}}\n` + JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: sid, components } })
+  `${meta}\n{"version":"v1.0","createSurface":{"surfaceId":"${sid}","catalogId":"agent-ui--hospitality"}}\n` + JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: sid, components } })
 const TABLE = surface('table-1', [{ id: 'root', component: 'Text', text: 'Swedish massage, 60 minutes, 120 euros.' }])
 const both = (a: string, b: string): string => `${a}\n${b.split('\n').slice(1).join('\n')}`
 const FORM = surface('ask-1', [{ id: 'root', component: 'BookingForm', title: 'Spa booking', fields: [{ kind: 'text', path: 'name', label: 'Name' }], value: { path: '/booking' } }])

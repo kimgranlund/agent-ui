@@ -3,7 +3,8 @@
 // base; `site/pages/agent-admin-presets.ts` owns that table and sits above this package, so it is restated here.
 // Round 2 traces showed zero-score padding (agent-roster-drawer, agent-task-status) on Croupier and Admiral turns and
 // no hospitality composite on Concierge turns; this pin holds the fix. A shard change that moves a pin is a deliberate
-// re-pin, read against the turn it names. T-0240 re-pinned after admitting the domain seeds (a croupier, concierge,
+// re-pin, read against the turn it names. T-0197: the concierge and restaurant compose the hospitality domain
+// (`agent-ui--hospitality`). T-0240 re-pinned after admitting the domain seeds (a croupier, concierge,
 // lexicographer and admiral turn now each rank its own composite first) and three frontier seeds. T-0253 re-pinned
 // croupier and quizmaster after the games family rule: another game's board no longer ranks on a card table's turn.
 // T-0268 adds the Lexicographer's opening turns, which reach the word board through its prompt's "word game".
@@ -32,11 +33,11 @@ const shard = (readdirSync(SHARD_DIR) as string[])
   .filter((l) => l.trim() !== '')
   .map((l) => JSON.parse(l) as CorpusRecord)
 
-/** The effective catalog's types: the default catalog's plus the persona fragment's rows. */
+/** The effective catalog's types: the default catalog's plus the persona fragment's or (T-0197) each domain's rows. */
 function typesOf(catalogId: string): string[] {
   const { tail } = splitCatalogId(catalogId)
-  const home = tail === undefined ? undefined : `personas/${tail}`
-  return [...Object.keys(defaultCatalog.components), ...Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => r.home === home).map(([t]) => t)]
+  const homes = tail === undefined ? [] : [`personas/${tail}`, ...tail.split('+').map((d) => `domains/${d}`)]
+  return [...Object.keys(defaultCatalog.components), ...Object.entries(CATALOG_LAYER_MAP).filter(([, r]) => homes.includes(r.home)).map(([t]) => t)]
 }
 
 // T-0315: the `/secret/<key>` names each shipped preset's foundation declares, read from the persona rows of the
@@ -54,12 +55,14 @@ const hiddenStateOf = (preset: string): readonly string[] => HIDDEN_STATE[preset
 
 const PINS: readonly (readonly [preset: string, catalogId: string, turn: string, top: readonly string[]])[] = [
   ['croupier', 'agent-ui--croupier', 'Deal again', ['domain-croupier-card-table-round', 'frontier-round-outcome']],
-  ['concierge', 'agent-ui--concierge', 'Book me a spa treatment for tomorrow afternoon', ['domain-concierge-booking-request', 'frontier-service-gateway', 'invite-decline-then-focus-block']],
+  ['concierge', 'agent-ui--hospitality', 'Book me a spa treatment for tomorrow afternoon', ['domain-concierge-booking-request', 'frontier-service-gateway', 'invite-decline-then-focus-block']],
   ['quizmaster', 'agent-ui--quizmaster', 'Next question please', ['trivia-round-resume', 'frontier-round-outcome', 'card-layouts']],
   ['stylist', 'agent-ui--stylist', 'Check the contrast of my brand palette', ['brand-palette', 'booking-reservation', 'ops-report']],
   // Known poor (T-0318): rank 3 is frontier-product-card-rooms, a room-booking card on a KPI turn.
   ['quant', 'agent-ui', 'Show me the KPI dashboard for last quarter', ['card-layouts', 'frontier-column-chart-revenue']],
-  ['restaurant', 'agent-ui', 'What is on the menu tonight', ['travel-itinerary', 'frontier-review-split', 'frontier-result-card-win']],
+  // Known poor (T-0197): the hospitality domain's own records rank first by the T-0238 rule (a ServiceCard gateway, the
+  // booking request) on a menu turn, since no menu exemplar is in the domain; pinned so a domain shard change re-pins.
+  ['restaurant', 'agent-ui--hospitality', 'What is on the menu tonight', ['frontier-service-gateway', 'domain-concierge-booking-request', 'travel-itinerary']],
   ['travel', 'agent-ui', 'Plan a three day trip itinerary to Lisbon', ['frontier-trip-card', 'structured-container-trip-summary', 'comparison-pricing-table']],
   // Known poor (T-0318): rank 3 is frontier-product-card-rooms, off the collection domain.
   ['curator', 'agent-ui', 'Show me the highlights of the collection', ['customer-review-card', 'slideshow-gallery']],
@@ -89,7 +92,7 @@ describe('retrieve: the shipped-preset ranking pin (T-0238)', () => {
 // first phrasing ranked the then hotel read-back third on the Concierge and first on the base catalog.
 describe('retrieve: a booking confirm turn does not surface the receipt exemplar (T-0318)', () => {
   const turns = ['Yes that works, show me the summary so I can confirm', 'Those details are right, please confirm the booking.']
-  it.each(['agent-ui--concierge', 'agent-ui'].flatMap((c) => turns.map((t) => [c, t] as const)))('%s on "%s"', (catalogId, turn) => {
+  it.each(['agent-ui--hospitality', 'agent-ui'].flatMap((c) => turns.map((t) => [c, t] as const)))('%s on "%s"', (catalogId, turn) => {
     const got = retrieve(shard, { intent: turn, k: 5, catalogId, protocolVersion: 'v1.0', componentTypes: typesOf(catalogId) })
     expect(got.map((r) => r.name)).not.toContain('frontier-booking-receipt')
   })
@@ -107,7 +110,7 @@ describe('retrieve: a booking confirm turn does not surface a read-back exemplar
     'Book the room for those dates, I want to confirm the stay.',
     'Go ahead and book it',
   ]
-  it.each(['agent-ui--concierge', 'agent-ui'].flatMap((c) => turns.map((t) => [c, t] as const)))('%s on "%s"', (catalogId, turn) => {
+  it.each(['agent-ui--hospitality', 'agent-ui'].flatMap((c) => turns.map((t) => [c, t] as const)))('%s on "%s"', (catalogId, turn) => {
     const got = retrieve(shard, { intent: turn, k: 5, catalogId, protocolVersion: 'v1.0', componentTypes: typesOf(catalogId) })
     expect(got.map((r) => r.name).filter((n) => n === 'confirmation-view' || n === 'backable-wizard')).toEqual([])
   })

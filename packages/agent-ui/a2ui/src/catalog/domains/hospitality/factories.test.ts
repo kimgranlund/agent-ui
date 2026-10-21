@@ -6,16 +6,16 @@
 // effects jsdom's `ElementInternals` does not implement — every probe below keeps its built elements
 // DETACHED (never `document.body.appendChild`ed), so `connectedCallback` never fires and the gap never
 // bites. Full connected/submit/gating behavior (native validity, `values()` aggregation) is proven in a
-// REAL browser — `concierge.browser.test.ts` — not here.
+// REAL browser — `hospitality.browser.test.ts` — not here.
 
 import { describe, it, expect } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
-import { bookingFormFactory, bookingConfirmationFactory, conciergeFactories } from './factories.ts'
-import { conciergeFragment } from './index.ts'
+import { bookingFormFactory, bookingConfirmationFactory, hospitalityFactories } from './factories.ts'
+import { hospitalityFragment } from './index.ts'
 
 describe('concierge factories — table parity (mirrors fixture-demo/factories.test.ts)', () => {
   it('declares exactly one factory per fragment component type — no gap, no extra', () => {
-    expect(Object.keys(conciergeFactories).sort()).toEqual(Object.keys(conciergeFragment.components).sort())
+    expect(Object.keys(hospitalityFactories).sort()).toEqual(Object.keys(hospitalityFragment.components).sort())
   })
 })
 
@@ -386,7 +386,7 @@ describe('BookingForm field kinds (T-0197)', () => {
   })
 
   it('the aggregate holds one scalar per path: one named control per path, two for a dateRange', () => {
-    // Detached, values() is vacuously {} (form-provider.ts); the real aggregate is proven in concierge.browser.test.ts.
+    // Detached, values() is vacuously {} (form-provider.ts); the real aggregate is proven in hospitality.browser.test.ts.
     // Here: one form control named per path, so values() holds one scalar per path, two for the dateRange.
     const el = build([stay, seating, { kind: 'time', path: 'at', label: 'At' }, { kind: 'stepper', path: 'covers', label: 'Covers' }])
     const named = [...el.querySelectorAll('ui-text-field, ui-radio-group, ui-amount-picker, ui-select')].map((c) => (c as Control).name)

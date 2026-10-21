@@ -266,7 +266,7 @@ describe('GH #1737 - the multi-shard gate bites (planted in-memory records)', ()
   })
 
   it('an UNREGISTERED catalogId fails loudly: catalogFor throws naming the registered ids, and tier-1 for such a record throws, never falling back to the default catalog', () => {
-    expect(() => catalogFor('made-up')).toThrow(/unregistered catalogId "made-up" \(registered: agent-ui, a2ui-basic, agent-ui--croupier, agent-ui--concierge\)/)
+    expect(() => catalogFor('made-up')).toThrow(/unregistered catalogId "made-up" \(registered: agent-ui, a2ui-basic, agent-ui--croupier, agent-ui--hospitality\)/)
     expect(() => catalogFor('toString')).toThrow(/unregistered/) // an Object.prototype key is not a catalog
     const stray = recordOf('planted-unregistered', 'made-up', agentUiRecord.a2uiOutput)
     expect(() => tier1Verdict(stray)).toThrow(/unregistered catalogId "made-up"/)

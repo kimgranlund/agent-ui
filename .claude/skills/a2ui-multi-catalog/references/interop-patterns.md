@@ -103,7 +103,7 @@ override; a collision against one base never blocks another base's non-colliding
 full policy prose is ADR-0172 cl.4 + `persona-catalog-composition.spec.md` SPEC-R3 (cite, don't
 restate — this section's earlier copy is exactly what GH #761 thinned).
 
-**Naming: `<base>--<persona>`.** `agent-ui--concierge`, `a2ui-basic--croupier` — the base id is
+**Naming: `<base>--<persona>`.** `agent-ui--croupier`, `a2ui-basic--quizmaster` — the base id is
 always the FIRST segment, so a reader (or `sanitizeCatalog`) can tell which base a derived id
 came from without a lookup. A fragment MAY target more than one base (its own `targetCatalogs`
 field) — a fragment naming both `agent-ui` and `a2ui-basic` produces TWO independently-composed,
@@ -112,8 +112,8 @@ Worked pattern (both shipped bases):
 
 ```
 targetCatalogs: ['agent-ui', 'a2ui-basic']
-  → composeCatalog(agentUiCatalog, fragment, 'concierge')   registers as agent-ui--concierge
-  → composeCatalog(a2uiBasicCatalog, fragment, 'concierge') registers as a2ui-basic--concierge
+  → composeCatalog(agentUiCatalog, fragment, 'croupier')   registers as agent-ui--croupier
+  → composeCatalog(a2uiBasicCatalog, fragment, 'croupier') registers as a2ui-basic--croupier
 ```
 
 An unregistered `targetCatalogs` entry (a typo, or a not-yet-shipped third base) fails loud the

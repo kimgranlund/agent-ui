@@ -18,8 +18,9 @@ import type { A2uiClientMessage } from '../renderer/renderer.ts'
 import { BUILTIN_CATALOG_RECORDS } from '../catalog/records.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
-import { composePersonaCatalogDocs } from '../catalog/compose.ts'
+import { composeDomainCatalogDocs, composePersonaCatalogDocs } from '../catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
+import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../catalog/domains/manifests.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
 
@@ -48,14 +49,16 @@ const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error:
 /** Every derived `<base>--<persona>` id the renderer records. */
 const DERIVED_IDS: readonly string[] = BUILTIN_CATALOG_RECORDS.map((r) => r.id).filter(isDerivedCatalogId)
 
-/** Each derived id's composed catalog document, over the two real bases. */
-const DERIVED_DOCS: ReadonlyMap<string, Catalog> = composePersonaCatalogDocs(
-  new Map<string, Catalog>([
-    ['agent-ui', defaultCatalog],
-    ['a2ui-basic', a2uiBasicCatalog],
-  ]),
-  SHIPPED_PERSONA_CATALOG_MANIFESTS,
-)
+/** Each derived id's composed catalog document, over the two real bases: the persona pairings and (T-0197) the
+ *  domain ids. */
+const BASE_DOCS = new Map<string, Catalog>([
+  ['agent-ui', defaultCatalog],
+  ['a2ui-basic', a2uiBasicCatalog],
+])
+const DERIVED_DOCS: ReadonlyMap<string, Catalog> = new Map([
+  ...composePersonaCatalogDocs(BASE_DOCS, SHIPPED_PERSONA_CATALOG_MANIFESTS),
+  ...composeDomainCatalogDocs(BASE_DOCS, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
+])
 
 /** The jsdom real-host smoke (`examples.test.ts` `renderSmoke`): load each named catalog, mount, ingest every
  *  message as a JSONL line, finalize, dispose, and return every client message the host emitted. */

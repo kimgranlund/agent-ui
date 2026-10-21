@@ -5,7 +5,7 @@
   "agent": "concierge",
   "model": "claude-opus-5-5",
   "effort": "medium",
-  "source": "2026-10-15.jsonl:322,2026-10-15.jsonl:323,2026-10-15.jsonl:324,2026-10-15.jsonl:325 (catalog agent-ui--concierge)",
+  "source": "2026-10-15.jsonl:322,2026-10-15.jsonl:323,2026-10-15.jsonl:324,2026-10-15.jsonl:325 (catalog agent-ui--hospitality)",
   "steps": [
     {
       "say": "What spa services can I book during my stay?"
@@ -25,7 +25,7 @@
       "lines": [
         "{\"a2uiMeta\":{\"textDelta\":\"I don't have the spa's full treatment menu with me, so I won't guess at specific treatments or prices. Here's what I can confirm:\\n\\n- **Spa hours:** 09:00 to 20:00 daily\\n- **Booking notice:** In season, book treatments at least a day ahead\\n- **Also open to guests:** the 25m pool and the gym, 06:00 to 22:00\\n\\nI can check today's treatment list and prices with the front desk. Or, if you know what you'd like, such as a massage, a facial or a couples session, tell me the day and time you prefer and I'll set it up.\"}}",
         "{\"a2uiMeta\":{\"note\":\"I don't have the spa's full treatment menu with me, so I won't guess at specific treatments or prices. Here's what I can confirm:\\n\\n- **Spa hours:** 09:00 to 20:00 daily\\n- **Booking notice:** In season, book treatments at least a day ahead\\n- **Also open to guests:** the 25m pool and the gym, 06:00 to 22:00\\n\\nI can check today's treatment list and prices with the front desk. Or, if you know what you'd like, such as a massage, a facial or a couples session, tell me the day and time you prefer and I'll set it up.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What spa services can I book during my stay?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":47605,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1515}],\"over\":false},\"miniSkillIds\":[\"greeting-card\",\"product-presentation\"],\"cacheBoundary\":46090}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-info\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-info\",\"catalogId\":\"agent-ui--hospitality\"}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-info\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hdr\",\"body\"]},{\"id\":\"hdr\",\"component\":\"CardHeader\",\"children\":[\"title\",\"badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Grand Meridian Spa\",\"variant\":\"h4\"},{\"id\":\"badge\",\"component\":\"Badge\",\"label\":\"Open daily\",\"intent\":\"info\"},{\"id\":\"body\",\"component\":\"CardContent\",\"children\":[\"facts\",\"note\"]},{\"id\":\"facts\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Spa hours\",\"value\":\"09:00 – 20:00\"},{\"label\":\"Booking notice\",\"value\":\"At least one day ahead in season\"},{\"label\":\"Pool & gym\",\"value\":\"06:00 – 22:00\"},{\"label\":\"Treatment menu\",\"value\":\"Being checked with the front desk\"}]},{\"id\":\"note\",\"component\":\"Text\",\"text\":\"Tell me your preferred treatment, day and time, and I'll arrange the booking.\",\"variant\":\"caption\"}]}}"
       ],
       "rounds": [
@@ -41,7 +41,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "spa-info",
-                      "catalogId": "agent-ui--concierge"
+                      "catalogId": "agent-ui--hospitality"
                     }
                   },
                   {
@@ -200,7 +200,7 @@
       "lines": [
         "{\"a2uiMeta\":{\"textDelta\":\"Here's your spa booking for you to check. Please confirm and I'll reserve it.\\n\\n- **Treatment:** 60-minute massage\\n- **Date and time:** Thursday 19 November 2026, 15:00 to 16:00\\n- **Guest:** Alex Moreau (one guest)\\n\\nThe time falls within spa hours, which are 09:00 to 20:00, and it's well over the one-day booking notice. Do you want me to confirm this booking? If you'd like a particular style of massage, such as relaxing or deep tissue, or need to change anything, tell me before you confirm.\"}}",
         "{\"a2uiMeta\":{\"note\":\"Here's your spa booking for you to check. Please confirm and I'll reserve it.\\n\\n- **Treatment:** 60-minute massage\\n- **Date and time:** Thursday 19 November 2026, 15:00 to 16:00\\n- **Guest:** Alex Moreau (one guest)\\n\\nThe time falls within spa hours, which are 09:00 to 20:00, and it's well over the one-day booking notice. Do you want me to confirm this booking? If you'd like a particular style of massage, such as relaxing or deep tissue, or need to change anything, tell me before you confirm.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46090,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":46090}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
         "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"booking\":{\"service\":\"60-minute massage\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":1,\"name\":\"Alex Moreau\"}}}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hdr\",\"body\",\"foot\"]},{\"id\":\"hdr\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Spa booking summary\",\"variant\":\"h4\"},{\"id\":\"body\",\"component\":\"CardContent\",\"children\":[\"receipt\"]},{\"id\":\"receipt\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Treatment\",\"value\":\"60-minute massage\"},{\"label\":\"Date\",\"value\":\"Thursday 19 November 2026\"},{\"label\":\"Time\",\"value\":\"15:00 – 16:00\"},{\"label\":\"Guests\",\"value\":\"1\"},{\"label\":\"Name\",\"value\":\"Alex Moreau\"}]},{\"id\":\"foot\",\"component\":\"CardFooter\",\"children\":[\"confirmBtn\"]},{\"id\":\"confirmBtn\",\"component\":\"Button\",\"label\":\"Confirm booking\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_spa_booking\",\"context\":{\"booking\":{\"path\":\"/booking\"}}}}]}}"
       ],
@@ -217,7 +217,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "ask-1",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },
@@ -403,7 +403,7 @@
       "lines": [
         "{\"a2uiMeta\":{\"note\":\"- **Treatment:** 60-minute massage\\n- **Date and time:** Thursday 19 November 2026, 16:00 to 17:00\\n- **Guest:** Alex Moreau (one guest)\\n\\nThe spa closes at 20:00, so this time works. Do you want me to confirm this booking?\",\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Make it 16:00 instead, same day.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[\"TEXT_JSONL_IGNORED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46090,\"sections\":[{\"id\":\"grammar\",\"chars\":25630},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":46090}}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hdr\",\"body\"]}]}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
         "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-2\",\"value\":{\"booking\":{\"service\":\"60-minute massage\",\"date\":\"2026-11-19\",\"time\":\"16:00\",\"guests\":1,\"name\":\"Alex Moreau\"}}}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hdr\",\"body\",\"foot\"]},{\"id\":\"hdr\",\"component\":\"CardHeader\",\"children\":[\"title\",\"badge\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Spa booking summary\",\"variant\":\"h4\"},{\"id\":\"badge\",\"component\":\"Badge\",\"label\":\"Updated\",\"intent\":\"info\"},{\"id\":\"body\",\"component\":\"CardContent\",\"children\":[\"receipt\"]},{\"id\":\"receipt\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Treatment\",\"value\":\"60-minute massage\"},{\"label\":\"Date\",\"value\":\"Thursday 19 November 2026\"},{\"label\":\"Time\",\"value\":\"16:00 – 17:00\"},{\"label\":\"Guests\",\"value\":\"1\"},{\"label\":\"Name\",\"value\":\"Alex Moreau\"}]},{\"id\":\"foot\",\"component\":\"CardFooter\",\"children\":[\"confirmBtn\"]},{\"id\":\"confirmBtn\",\"component\":\"Button\",\"label\":\"Confirm booking\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_spa_booking\",\"context\":{\"booking\":{\"path\":\"/booking\"}}}}]}}"
       ],
@@ -437,7 +437,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "ask-2",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },
@@ -749,7 +749,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "ask-2",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },

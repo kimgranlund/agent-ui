@@ -11,7 +11,7 @@
     {
       "id": "concierge-booking-form",
       "persona": "concierge",
-      "catalogId": "agent-ui--concierge",
+      "catalogId": "agent-ui--hospitality",
       "prompt": "I want to book a table for two on Friday",
       "expectType": "BookingForm"
     },

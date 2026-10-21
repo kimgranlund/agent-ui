@@ -14,7 +14,7 @@ import { asArchivedGuidanceConflict, ROUTING_MODELS, ROUTING_PACK_FILE, ROUTING_
 const read = (rel) => readFileSync(new URL(rel, new URL('../../../../', import.meta.url)), 'utf8')
 const catalogTypes = (rel) => Object.keys(JSON.parse(read(rel)).types)
 const DEFAULT_TYPES = catalogTypes('packages/agent-ui/a2ui/src/catalog/default/selection.json')
-const CONCIERGE_TYPES = catalogTypes('packages/agent-ui/a2ui/src/catalog/personas/concierge/selection.json')
+const CONCIERGE_TYPES = catalogTypes('packages/agent-ui/a2ui/src/catalog/domains/hospitality/selection.json')
 const CROUPIER_TYPES = catalogTypes('packages/agent-ui/a2ui/src/catalog/personas/croupier/selection.json')
 const scenario = (name) => ROUTING_SCENARIOS.find((s) => s.name === name)
 

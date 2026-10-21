@@ -118,9 +118,9 @@ export const personaConciergeBookingSeed: PersonaExampleSeed = {
   promptText: BOOKING_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
-  catalogId: 'agent-ui--concierge',
+  catalogId: 'agent-ui--hospitality',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--concierge', sendDataModel: true } },
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--hospitality', sendDataModel: true } },
     { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
     {
       version: 'v1.0',
@@ -151,9 +151,9 @@ export const personaBasicConciergeBookingSeed: PersonaExampleSeed = {
   promptText: BOOKING_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
-  catalogId: 'a2ui-basic--concierge',
+  catalogId: 'a2ui-basic--hospitality',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'a2ui-basic--concierge', sendDataModel: true } },
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'a2ui-basic--hospitality', sendDataModel: true } },
     { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
     {
       version: 'v1.0',
@@ -185,9 +185,9 @@ export const personaConciergeBookingConfirmedSeed: PersonaExampleSeed = {
   promptText: CONFIRM_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
-  catalogId: 'agent-ui--concierge',
+  catalogId: 'agent-ui--hospitality',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--concierge' } },
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--hospitality' } },
     { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
     { version: 'v1.0', updateComponents: { surfaceId: BOOKING_SID, components: [BOOKING_CONFIRMATION] } },
   ],
@@ -202,9 +202,9 @@ export const personaBasicConciergeBookingConfirmedSeed: PersonaExampleSeed = {
   promptText: CONFIRM_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
-  catalogId: 'a2ui-basic--concierge',
+  catalogId: 'a2ui-basic--hospitality',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'a2ui-basic--concierge' } },
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'a2ui-basic--hospitality' } },
     { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
     { version: 'v1.0', updateComponents: { surfaceId: BOOKING_SID, components: [BOOKING_CONFIRMATION] } },
   ],
@@ -232,9 +232,9 @@ export const personaConciergeStaySeed: PersonaExampleSeed = {
   promptText: 'Book a stay for two guests under the name Ada Lovelace, arriving 14 November 2026 and leaving 17 November.',
   surfaceId: STAY_SID,
   protocolVersion: 'v1.0',
-  catalogId: 'agent-ui--concierge',
+  catalogId: 'agent-ui--hospitality',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: STAY_SID, catalogId: 'agent-ui--concierge', sendDataModel: true } },
+    { version: 'v1.0', createSurface: { surfaceId: STAY_SID, catalogId: 'agent-ui--hospitality', sendDataModel: true } },
     {
       version: 'v1.0',
       updateDataModel: {

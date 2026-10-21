@@ -37,7 +37,7 @@ const emptyFragment: CatalogFragment = { components: {}, functions: {} }
 
 describe('derivedCatalogId — OF1b naming convention', () => {
   it('is `<base>--<persona>`', () => {
-    expect(derivedCatalogId('agent-ui', 'concierge')).toBe('agent-ui--concierge')
+    expect(derivedCatalogId('agent-ui', 'stylist')).toBe('agent-ui--stylist')
     expect(derivedCatalogId('a2ui-basic', 'croupier')).toBe('a2ui-basic--croupier')
   })
 })
@@ -143,16 +143,16 @@ describe('composePersonaCatalogs — SPEC-R2 derive-then-register step', () => {
   it('registers one derived catalog per (fragment, targeted base) pairing', () => {
     const registry = registryWithBases()
     const persona: PersonaCatalogPackage = {
-      personaId: 'concierge',
+      personaId: 'stylist',
       fragment: { components: { Widget: comp('Widget') }, functions: {} },
       factories: { Widget: fakeFactory('div') },
       targetCatalogs: ['agent-ui', 'a2ui-basic'],
     }
     composePersonaCatalogs(registry, [persona])
-    expect(registry.get('agent-ui--concierge')).toBeDefined()
-    expect(registry.get('a2ui-basic--concierge')).toBeDefined()
-    expect(Object.keys(registry.get('agent-ui--concierge')!.catalog.components).sort()).toEqual(['Card', 'Widget'])
-    expect(Object.keys(registry.get('a2ui-basic--concierge')!.catalog.components).sort()).toEqual(['Text', 'Widget'])
+    expect(registry.get('agent-ui--stylist')).toBeDefined()
+    expect(registry.get('a2ui-basic--stylist')).toBeDefined()
+    expect(Object.keys(registry.get('agent-ui--stylist')!.catalog.components).sort()).toEqual(['Card', 'Widget'])
+    expect(Object.keys(registry.get('a2ui-basic--stylist')!.catalog.components).sort()).toEqual(['Text', 'Widget'])
   })
 
   it('absent targetCatalogs defaults to [\'agent-ui\'] alone', () => {

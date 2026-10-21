@@ -1,4 +1,6 @@
-// checks.ts: the concierge persona's semantic checks (ADR-0238), run by `produce()` on every `<base>--concierge` turn.
+// checks.ts: the hospitality domain's semantic checks (ADR-0238, W0 D4; first the concierge persona's), run by `produce()` on
+// every turn whose catalog holds the domain (`<base>--hospitality`), each gated on its own `requires` types. The
+// check ids keep their `concierge-` prefix: recorded traces and replays name them.
 //
 // T-0265 (the recorded Haiku 5.5 spa booking, round 3 regress-concierge-spa-booking-haiku-1): the services ask, the
 // booking and its confirmation were each answered in prose with no surface, so the guest never saw a treatment list, a
@@ -168,7 +170,7 @@ export const conciergeSurfaceRequired: SemanticCheck = {
 }
 
 /** T-0316 (D2): a services or facility ask answered with no surface is SURFACE_MISSING, on a catalog that holds the
- *  ProductCard Grid and the Card with a DescriptionList those asks name; a2ui-basic--concierge holds neither, so it
+ *  ProductCard Grid and the Card with a DescriptionList those asks name; a2ui-basic--hospitality holds neither, so it
  *  never asks there for types it cannot emit (T-0202 D4). */
 export const conciergeListingSurfaceRequired: SemanticCheck = surfaceRequired(
   'concierge-listing-surface-required',
@@ -205,5 +207,5 @@ export const conciergeEditApplied: SemanticCheck = {
   },
 }
 
-/** Every concierge semantic check, in the order `produce()` runs them. */
-export const conciergeSemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired, conciergeListingSurfaceRequired, conciergeBookingFieldPaths, conciergeEditApplied]
+/** Every hospitality semantic check, in the order `produce()` runs them. */
+export const hospitalitySemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired, conciergeListingSurfaceRequired, conciergeBookingFieldPaths, conciergeEditApplied]

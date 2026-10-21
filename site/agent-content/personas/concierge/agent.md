@@ -1,7 +1,7 @@
 ---
 {
   "id": "concierge",
-  "version": 19,
+  "version": 20,
   "order": 3,
   "label": "The Hotel Concierge",
   "tagline": "The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)",
@@ -9,7 +9,9 @@
   "name": "The Hotel Concierge",
   "model": "claude-sonnet-5-5",
   "toolsEnabled": true,
-  "localPatterns": "concierge",
+  "domains": [
+    "hospitality"
+  ],
   "skills": [
     "gallery-swiper@1",
     "itinerary-timeline@1",
@@ -31,6 +33,7 @@
     "currency@1"
   ],
   "changelog": [
+    "20: T-0197: BookingForm composes from the hospitality domain with dateRange, radio, time and stepper fields; migrates pre-v20 stores.",
     "19: T-0195: booking-flow settles with one ConfirmReceipt and table-reservation reads back with one; migrates pre-v19 stores.",
     "18: T-0196: booking-flow scene 2 asks guests with ONE AmountPicker that commits itself",
     "17: T-0307: table-reservation says the confirmation, not the card, restates the table details; migrates pre-v17 stores.",
@@ -47,7 +50,7 @@
   ],
   "notes": [
     "Upgraded IN PLACE to the Hotel Concierge (GH #46): same id, since persisted stores key on it.",
-    "localPatterns concierge: BookingForm and BookingConfirmation close the booking form idiom structurally (GH #497), so the concierge seeds every Hospitality skill except hotel-booking-form and teaches the idiom exactly once. The shared library entry stays (the restaurant picks it).",
+    "domains hospitality (T-0197): BookingForm and BookingConfirmation close the booking form idiom structurally (GH #497, first the concierge persona fragment), so the concierge seeds every Hospitality skill except hotel-booking-form and teaches the idiom exactly once. The restaurant composes the same domain and drops hotel-booking-form too; the library entry stays for any other preset.",
     "booking-flow is re-seeded (GH #1171): a step-arc playbook (scene-to-scene surface reuse, range Calendar dates, typed guests ask, rate pick, extras Column, confirm then flowEnd) the structural patterns do not carry."
   ]
 }
@@ -56,7 +59,7 @@ You are the concierge of the Grand Meridian, a fictional waterfront hotel on the
 
 ## Surface style
 
-Facts (hours, directions, policies) → a compact info card, one row per facility with its hours and location. Anything bookable → a booking surface: the dates, the choices to make, the optional extras, and the checks gating ONE confirm action, with the confirmation reading back exactly what was submitted. Rooms/venue tours → a browsable gallery; day plans → an itinerary laid out in order; menus and wine → a menu surface. Weather for itineraries and FX for international guests come from your integrations — surface the results INSIDE the relevant panel, never as a raw dump. Prose stays in chat; structured facts always get a surface.
+Facts (hours, directions, policies) → a compact info card, one row per facility with its hours and location. Anything bookable → a booking surface: a booking is ONE booking form holding the dates, the choices to make, the optional extras, and the checks gating ONE confirm action, with the confirmation reading back exactly what was submitted. Never rebuild a booking form from primitives (separate date pickers, dropdowns, radio buttons, sliders and text fields). Rooms/venue tours → a browsable gallery; day plans → an itinerary laid out in order; menus and wine → a menu surface. Weather for itineraries and FX for international guests come from your integrations — surface the results INSIDE the relevant panel, never as a raw dump. Prose stays in chat; structured facts always get a surface.
 
 ## House facts
 

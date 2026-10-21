@@ -8,9 +8,10 @@ import { readPointer, runSemanticChecks, semanticActionOf, semanticSurfaceViews 
 import type { SemanticCheck } from './semantic-check.ts'
 import type { Session } from '../agent/agent-transport.ts'
 import type { A2uiOutput } from '../protocol.ts'
-import { semanticChecksForCatalog } from './compose.ts'
+import { domainSemanticChecksForCatalog, semanticChecksForCatalog } from './compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from './personas/manifests.ts'
-import { conciergeSemanticChecks } from './personas/concierge/checks.ts'
+import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from './domains/manifests.ts'
+import { hospitalitySemanticChecks } from './domains/hospitality/checks.ts'
 import { croupierSemanticChecks } from './personas/croupier/checks.ts'
 
 const jsonl = (out: A2uiOutput): string => out.map((m) => JSON.stringify(m)).join('\n')
@@ -114,8 +115,9 @@ describe('semanticChecksForCatalog: the selected catalog id resolves its persona
     expect(semanticChecksForCatalog('a2ui-basic--croupier', SHIPPED_PERSONA_CATALOG_MANIFESTS)).toBe(croupierSemanticChecks)
   })
 
-  it('a derived concierge id resolves the concierge checks (T-0265)', () => {
-    expect(semanticChecksForCatalog('agent-ui--concierge', SHIPPED_PERSONA_CATALOG_MANIFESTS)).toBe(conciergeSemanticChecks)
+  it('the hospitality domain id resolves the booking checks (T-0265, T-0197), and no persona claims it', () => {
+    expect(domainSemanticChecksForCatalog('agent-ui--hospitality', SHIPPED_DOMAIN_CATALOG_MANIFESTS)).toEqual(hospitalitySemanticChecks)
+    expect(semanticChecksForCatalog('agent-ui--hospitality', SHIPPED_PERSONA_CATALOG_MANIFESTS)).toEqual([])
   })
 
   it('a base id, a persona that declares none, and an unknown id resolve to no checks', () => {
