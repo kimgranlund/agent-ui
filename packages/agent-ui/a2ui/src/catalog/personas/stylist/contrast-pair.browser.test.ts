@@ -90,9 +90,12 @@ describe('ContrastPair in a real engine', () => {
       expect(rect(glyph).width).toBeGreaterThan(0)
     }
     expect(getComputedStyle(pills[0]!).clipPath).toBe('none')
-    expect(getComputedStyle(pills[0]!.querySelector('[data-part="glyph"]')!).clipPath).not.toBe(
-      getComputedStyle(pills[1]!.querySelector('[data-part="glyph"]')!).clipPath,
-    )
+    // the shape channel is the ui-glyph library mark, a drawn svg path (T-0351), not a clip-path
+    const mark = (pill: HTMLElement) => pill.querySelector('[data-part="glyph"] svg path')?.getAttribute('d')
+    expect(mark(pills[0]!), 'Fail draws no mark').toBeTruthy()
+    expect(mark(pills[1]!), 'Pass draws no mark').toBeTruthy()
+    expect(mark(pills[0]!), 'Fail and Pass share one mark').not.toBe(mark(pills[1]!))
+    expect(mark(pills[0]!)).toBe(mark(pills[2]!)) // the two Fail pills draw the same cross
   })
 
   it('no left-edge accent: every element\'s left border matches its right border in width and color', async () => {
