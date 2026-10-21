@@ -380,6 +380,8 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   OptionDeck: { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.', actionName: 'start' },
   // ConfirmReceipt (T-0195): the string and enum knobs here; rows, items, totalLabel/totalPath, data and the two actions have no preview sample (the preview gate does not require one).
   ConfirmReceipt: { title: 'Your order', status: 'pending', refPath: 'ref' },
+  // StepFlow (T-0198): the finish label here; `steps`, `finishAction` and the scenes ride SAMPLE_TREES rootRef.
+  StepFlow: { finishLabel: 'Book' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -964,6 +966,22 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       ],
     },
     extras: [],
+  }),
+  // StepFlow (T-0198): a three-scene booking walk, one scene per child, labels in `steps`; the finish press sends `finishAction`.
+  StepFlow: () => ({
+    rootRef: {
+      steps: ['Dates', 'Guests', 'Confirm'],
+      finishAction: { action: 'book' },
+      children: ['s_sf_dates', 's_sf_guests', 's_sf_confirm'],
+    },
+    extras: [
+      { id: 's_sf_dates', component: 'Column', children: ['s_sf_d1'] },
+      { id: 's_sf_d1', component: 'Text', variant: 'body', text: 'Check in Fri 14 Nov, check out Sun 16 Nov.' },
+      { id: 's_sf_guests', component: 'Column', children: ['s_sf_g1'] },
+      { id: 's_sf_g1', component: 'Text', variant: 'body', text: 'Two adults, no children.' },
+      { id: 's_sf_confirm', component: 'Column', children: ['s_sf_c1'] },
+      { id: 's_sf_c1', component: 'Text', variant: 'body', text: 'Harbour View Suite, 2 nights, $624.' },
+    ],
   }),
   // Breadcrumb (GH #1515): a realistic 4-level path (the site doc/demo pages' own reference shape) — three
   // linked crumbs (Text.href, ADR-0114) + a plain current-page leaf (no href) — the real job, not the
