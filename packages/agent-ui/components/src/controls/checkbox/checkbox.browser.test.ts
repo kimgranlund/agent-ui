@@ -15,6 +15,8 @@ import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-compact-*)
 import './checkbox.css'                             // the control stylesheet (direct — pre-barrel)
 import './checkbox.ts'                             // self-define (registers ui-checkbox)
+import '../text-field/text-field.css'               // the field the label type is measured against (T-0197)
+import '../text-field/text-field.ts'
 import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
@@ -218,6 +220,29 @@ describe('ui-checkbox -- ADR-0223 two postures (fill default / [inline] hug, bot
 
 // ADR-0245 clauses 3 and 4: inside an opt-in region the box is max(2n, n + 6), the radius n/2, and the check and dash
 // span the n + 6 glyph box (T-0374), centred in the box; the dash is max(1.5px, c/2) tall. Against scale.mjs resolve().
+// T-0197: the option label takes the control type role, so it reads at the field text size, not the 1px larger body.
+describe('ui-checkbox label type (T-0197)', () => {
+  it('option text is the field text (T-0197)', () => {
+    for (const region of [{ tier: 'widget', scale: 'md' }, null]) {
+      const wrap = document.createElement('div')
+      if (region) {
+        wrap.setAttribute('data-tier', region.tier)
+        wrap.setAttribute('data-scale', region.scale)
+      }
+      const field = document.createElement('ui-text-field')
+      const option = document.createElement('ui-checkbox')
+      option.textContent = 'Window seat'
+      wrap.append(field, option)
+      document.body.append(wrap)
+      try {
+        expect(getComputedStyle(option).fontSize, region ? 'widget md' : 'root').toBe(getComputedStyle(field).fontSize)
+      } finally {
+        wrap.remove()
+      }
+    }
+  })
+})
+
 describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', () => {
   const mountIn = (scale: string, size: string, props: Record<string, boolean> = {}): { wrap: HTMLElement; el: HTMLElement } => {
     const wrap = document.createElement('div')

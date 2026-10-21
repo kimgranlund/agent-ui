@@ -99,6 +99,7 @@ geometry:
   inlineSize: var(--md-sys-compact-md)  # the indicator box width = same (square circle)
   dotInset: c + 1 (dot = icon box − 2c − 2 = 2n − 2c − 2, ADR-0245 Amendment 3, which never shrinks as n grows); 22% of box under the legacy opt-out (::after dot diameter = box − 2×22%-of-box, same maths as the prior box-shadow annulus)
   labelGap: var(--ui-radio-gap)     # gap between circle and label slot (n)
+  labelFont: var(--ui-radio-font)   # = var(--md-sys-type-control), the field text at every register (T-0197)
 
 forcedColors: A `@media (forced-colors: active)` block keeps the idle ring visible (ButtonText border) and, when checked, maps the ring+fill to Highlight and the dot (::after) to HighlightText — the platform's own paired "on-fill" colour (forced-color-adjust: none preserves both). The focus ring survives via --md-sys-color-focus-ring → Highlight.
 ---
