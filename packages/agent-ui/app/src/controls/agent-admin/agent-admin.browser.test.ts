@@ -1625,6 +1625,10 @@ describe('ui-agent-admin — list-row vertical rhythm stays consistent across th
     const { el } = mountAgentAdmin()
     await el.updateComplete
     const modelGrid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    // T-0391: the grid lives in the closed Manage models drawer; open it so its rows paint, then measure.
+    const modelsDrawer = el.querySelector('ui-drawer[data-drawer="models"]') as HTMLElement & { open: boolean }
+    modelsDrawer.open = true
+    await new Promise((r) => requestAnimationFrame(r))
     const entryList = el.querySelector('[data-part="entry-list"]') as HTMLElement
     const surfaceOptions = el.querySelector('[data-part="surface-options"]') as HTMLElement
     expect(modelGrid).not.toBeNull()
@@ -1641,6 +1645,7 @@ describe('ui-agent-admin — list-row vertical rhythm stays consistent across th
     expect(rows.length).toBeGreaterThanOrEqual(2)
     const gapPx = rows[1].getBoundingClientRect().top - rows[0].getBoundingClientRect().bottom
     expect(gapPx).toBeCloseTo(Number.parseFloat(modelGridGap), 1)
+    modelsDrawer.open = false
   })
 })
 
@@ -1726,7 +1731,7 @@ describe('ui-agent-admin — segment content wins its OWN display:flex, not supe
 // `reset-agent-row` joined `model-grid` as its sibling, and the UA default `display:block` zeroed
 // the gap `--ui-agent-admin-section-gap` was supposed to give them. ────────────────────────────────
 describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so its cards get a real gap (GH #706)', () => {
-  it('a real, non-zero measured gap separates the Default model field, the Model settings card and the models-list card (T-0391 order)', async () => {
+  it('a real, non-zero measured gap separates the Default model field, the Model settings card and the Manage models trigger row (T-0391 order)', async () => {
     const { el } = mountAgentAdmin('Agent')
     await el.updateComplete
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -1735,7 +1740,8 @@ describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so i
     const body = modelFold.querySelector('[data-part="details"] > [data-part="body"]') as HTMLElement
     const defaultModel = body.querySelector(':scope > ui-field[data-field="model"]') as HTMLElement
     const modelSettings = body.querySelector(':scope > ui-settings') as HTMLElement
-    const grid = body.querySelector('[data-part="model-grid"]') as HTMLElement
+    // T-0391: the grid moved into the Manage models drawer; its trigger row is the body's next direct child.
+    const grid = body.querySelector(':scope > [data-part="drawer-row"]') as HTMLElement
 
     expect(getComputedStyle(body).display, 'the body wins display:flex, not the UA default display:block').toBe('flex')
     for (const box of [defaultModel, modelSettings, grid]) expect(box.getBoundingClientRect().height, 'a real, painted box').toBeGreaterThan(0)
@@ -1743,7 +1749,7 @@ describe('ui-agent-admin — the Model fold body wins its OWN display:flex, so i
     const expectedGapPx = Number.parseFloat(getComputedStyle(body).rowGap)
     expect(expectedGapPx, 'a real, non-zero declared section gap to measure against').toBeGreaterThan(0)
     expect(modelSettings.getBoundingClientRect().top - defaultModel.getBoundingClientRect().bottom, 'the Default model field and the Model settings card do not butt together').toBeCloseTo(expectedGapPx, 0)
-    expect(grid.getBoundingClientRect().top - modelSettings.getBoundingClientRect().bottom, 'the Model settings card and the models card do not butt together').toBeCloseTo(expectedGapPx, 0)
+    expect(grid.getBoundingClientRect().top - modelSettings.getBoundingClientRect().bottom, 'the Model settings card and the Manage models row do not butt together').toBeCloseTo(expectedGapPx, 0)
   })
 
   // GH #709 — the SAME failure class this describe block's own GH #706 fix already named for settings-item
@@ -1834,7 +1840,14 @@ describe('ui-agent-admin — GH #225: the Settings sections fold like the Contex
     await clickTab('Agent')
     const modelItem = agentItems.find((i) => i.getAttribute('data-item') === 'model')!
     const modelGrid = el.querySelector('[data-part="model-grid"]') as HTMLElement
+    // T-0391: the grid paints inside the Manage models drawer; open it to measure, then close it again so
+    // the fold-collapse measurement below reads the fold alone.
+    const modelsDrawer = el.querySelector('ui-drawer[data-drawer="models"]') as HTMLElement & { open: boolean }
+    modelsDrawer.open = true
+    await new Promise((r) => requestAnimationFrame(r))
     expect(modelGrid.getBoundingClientRect().height).toBeGreaterThan(0)
+    modelsDrawer.open = false
+    await new Promise((r) => requestAnimationFrame(r))
     const modelSummary = modelItem.querySelector(':scope > [data-part="details"] > [data-part="summary"]') as HTMLElement
     const openHeight = modelItem.getBoundingClientRect().height
     expect(openHeight).toBeGreaterThan(modelSummary.getBoundingClientRect().height)

@@ -72,6 +72,14 @@ per-key table that can drift (the `persona-patch.ts` hoisting rationale, applied
 - AC3 (fail-closed): an unmapped key returns `undefined` and the reaction skips it silently —
   never a throw (the §3-filter drop discipline; a throw would fail the turn).
 
+> T-0391 note (2026-10-21): `FieldLocation` gains optional `drawer` (the `ui-drawer`'s
+> `data-drawer` inside the fold) and `drawerLabel` (its heading copy). `modelsIncluded` maps to the
+> Model fold's `models` drawer ("Manage models"); each server tool's max uses, domain and location
+> keys map to its `tool-<tool>` drawer, headed by the tool switch's schema label, while the switch
+> key itself stays drawer-less on its open row. The anchor-parity gate walks the server tool keys
+> beside `PERSONA_STATE_KEYS` and, for a location with a drawer, also checks the drawer, its heading
+> text and its trigger (`[data-part="drawer-trigger"][data-opens=<drawer>]`) inside the fold anchor.
+
 **SPEC-R3 — The wide-band reaction (GH #695's headline behavior, post-#686 model; PRD-G1).**
 On trigger, coalesced per patch event (SPEC-R6):
 
@@ -94,6 +102,13 @@ On trigger, coalesced per patch event (SPEC-R6):
 4. **Scroll**: `scrollIntoView({ block: 'nearest' })` on the owning fold, `behavior: 'smooth'`
    except under `prefers-reduced-motion: reduce` (then `'auto'`).
 5. **Mark**: the attention wash (SPEC-R5) on every changed fold in this patch event.
+
+> T-0391 note (2026-10-21): a changed location that carries a `drawer` also washes that drawer's
+> trigger in its fold, wherever the fold washes (step 5, SPEC-R4's suppressed visible folds, the
+> pending replay, the SPEC-R7 receipt click). Folds still wash once per `(section, item)`; each
+> distinct drawer trigger washes once. No reaction opens a drawer or moves focus (Kim 2026-10-21,
+> fork 6): the drawer opens only on the user's own click of its trigger, so ADR-0181 cl.2 holds
+> unchanged and AC3 holds on every path.
 
 - AC1 (the ticket's own scenario): user on Capabilities, consumed patch writes `model` → the
   settings pane is shown, sub-nav lands on Agent, the `data-item="model"` fold is scrolled into
@@ -143,6 +158,12 @@ styled in `agent-admin.css` as a ~1.6s ease-out box-shadow/outline wash on the e
 outline held ~1.6s, no animation. It is NOT ADR-0159's receipt pattern (that is a status-stream
 turn-lifecycle collapse — different job); the conversational half of this feature is SPEC-R7's
 plain note line. No persistent badge/count in v1.
+
+> T-0391 note (2026-10-21): the same wash, unchanged, also lands on a drawer field's trigger
+> (`[data-part='drawer-trigger'][data-attention]`, the same `ui-admin-attention` keyframe, timeout
+> fallback and reduced-motion outline). It is the wash on a second element, not a badge: it clears
+> like the fold's, so "no persistent badge/count" still holds. No reaction opens the drawer or moves
+> focus (Kim 2026-10-21, fork 6; ADR-0181 cl.2 unchanged).
 
 - AC1: `data-attention` present immediately after a visible-path reaction; absent after the wash
   completes (browser, animationend observed).

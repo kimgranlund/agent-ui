@@ -968,7 +968,10 @@
      token-repoint discipline, no new color role), removed by agent-admin.ts on `animationend` (+ a
      timeout fallback). Reduced motion: no animation — a static primary outline instead, held until the
      same timeout clears the attribute (SPEC-R5 AC2: appears and clears, no motion). */
-  [data-part='settings-item'][data-attention] {
+  /* T-0391: a drawer field's change also washes the drawer's trigger, the same keyframe on a second
+     element (agent-admin.ts filters `animationend` by that name, so a renamed keyframe would never clear). */
+  [data-part='settings-item'][data-attention],
+  [data-part='drawer-trigger'][data-attention] {
     animation: ui-admin-attention 1.6s ease-out;
   }
   @keyframes ui-admin-attention {
@@ -980,7 +983,8 @@
     }
   }
   @media (prefers-reduced-motion: reduce) {
-    [data-part='settings-item'][data-attention] {
+    [data-part='settings-item'][data-attention],
+    [data-part='drawer-trigger'][data-attention] {
       animation: none;
       outline: 2px solid var(--md-sys-color-primary);
     }
@@ -1024,6 +1028,82 @@
     display: flex;
     justify-content: flex-end;
     gap: var(--ui-agent-admin-row-gap);
+  }
+
+  /* T-0391: the Model fold's drawer openers. Manage models fills its own row; each server tool's open row is
+     [ switch | label | spacer | Configure ] on the shared card chrome, under a kicker. A closed drawer paints
+     nothing (the host is display:contents, the dialog part closed). */
+  [data-part='server-tools'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-list-gap);
+  }
+  [data-part='server-tools'][hidden],
+  [data-part='server-tool-row'][hidden] {
+    display: none;
+  }
+  [data-part='server-tools-heading'] {
+    --ui-text-color: var(--ui-agent-admin-label-ink);
+  }
+  [data-part='server-tool-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+    box-sizing: border-box;
+    padding: var(--ui-agent-admin-card-pad);
+    border: 1px solid var(--ui-agent-admin-border);
+    border-radius: var(--ui-agent-admin-entry-radius);
+    background: var(--ui-agent-admin-surface);
+  }
+  [data-part='server-tool-label'] {
+    flex: 0 0 auto;
+  }
+
+  /* T-0391: a drawer's heading in the title register; its content region stacks the detail unit and the
+     domain list editors. */
+  [data-part='drawer-heading'] {
+    margin: 0;
+    font-size: var(--md-sys-typescale-title-medium-size);
+    color: var(--ui-agent-admin-ink);
+  }
+  [data-part='drawer-content'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-section-gap);
+  }
+
+  /* T-0391: a domain list editor: its label and help in the field register, one [ text field | Remove ] row
+     per domain, then Add domain. */
+  [data-part='domain-list'] {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--ui-agent-admin-list-gap);
+  }
+  [data-part='domain-list-label'] {
+    font-size: var(--md-sys-type-field-label, var(--md-sys-typescale-label-small-size));
+    color: var(--ui-agent-admin-ink);
+  }
+  [data-part='domain-list-help'] {
+    font-size: var(--md-sys-type-field-label, var(--md-sys-typescale-label-small-size));
+    color: var(--ui-agent-admin-label-ink);
+  }
+  [data-part='domain-rows'] {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ui-agent-admin-list-gap);
+  }
+  [data-part='domain-rows']:empty {
+    display: none;
+  }
+  [data-part='domain-row'] {
+    display: flex;
+    align-items: center;
+    gap: var(--ui-agent-admin-row-gap);
+  }
+  [data-part='domain-input'] {
+    flex: 1 1 auto;
+    min-inline-size: 0;
   }
 
   /* S7-d (LLD §16.4) — "Reset Agent" at the Model fold's content END: a SIBLING of model-grid (never a

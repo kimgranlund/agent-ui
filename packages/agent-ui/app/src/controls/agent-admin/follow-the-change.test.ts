@@ -427,3 +427,106 @@ describe('GH #1105 — the receipt renders as a REAL clickable list (never a new
     expect(log.children.length).toBe(bubblesBefore)
   })
 })
+
+// ── T-0391 drawer (fork 6, Kim 2026-10-21): a Co-pilot edit to a drawer field washes the drawer's trigger
+// with the SPEC-R5 change cue and never opens the drawer or moves focus (ADR-0181 cl.2 holds unchanged).
+// `modelsIncluded` is the one patchable drawer field (the server tool keys are pane-edited only).
+describe('T-0391 drawer: follow-the-change washes a drawer trigger, never opens the drawer', () => {
+  const MODELS_PATCH = { values: { modelsIncluded: { [SUPPORTED_MODELS[1]!.id]: false } } }
+  const triggerOf = (el: UIAgentAdminElement): HTMLElement =>
+    el.querySelector('[data-part="settings-item"][data-item="model"] [data-part="drawer-trigger"][data-opens="models"]') as HTMLElement
+  const drawerOf = (el: UIAgentAdminElement): HTMLElement & { open: boolean } =>
+    el.querySelector('[data-part="settings-item"][data-item="model"] ui-drawer[data-drawer="models"]') as HTMLElement & { open: boolean }
+  const washedTriggers = (el: UIAgentAdminElement): string[] =>
+    Array.from(el.querySelectorAll('[data-part="drawer-trigger"][data-attention]')).map((t) => t.getAttribute('data-opens') ?? '')
+
+  it('T-0391 drawer: a consumed modelsIncluded patch washes the Manage models trigger and opens no drawer', async () => {
+    const { el } = mountAdmin({
+      store: personaStore(),
+      authoringStore: personaStore(BUILDER),
+      events: [{ kind: 'patch', patch: MODELS_PATCH }, { kind: 'note', note: 'set' }],
+    })
+    await whenFlushed()
+    stubWide(el)
+    settingsNavOf(el).selected = 'capabilities-content'
+    await whenFlushed()
+    expect(triggerOf(el), 'anti-vacuous: the trigger exists').not.toBeNull()
+    expect(drawerOf(el).open, 'anti-vacuous: closed before the patch').toBe(false)
+    const focusBefore = document.activeElement
+    await submitAuthoring(el, 'drop the second model')
+    expect(settingsNavOf(el).selected).toBe('agent-content')
+    expect(washed(el)).toContain('model')
+    expect(triggerOf(el).hasAttribute('data-attention'), 'the Manage models trigger carries the change cue').toBe(true)
+    expect(drawerOf(el).open, 'the drawer stays closed').toBe(false)
+    expect(el.querySelector('dialog[open]'), 'no dialog opened').toBeNull()
+    expect(document.activeElement, 'focus never moves').toBe(focusBefore)
+  })
+
+  it('T-0391 drawer: a model patch washes no trigger', async () => {
+    const { el } = mountAdmin({
+      store: personaStore(),
+      authoringStore: personaStore(BUILDER),
+      events: [{ kind: 'patch', patch: { values: { model: SUPPORTED_MODELS[1]!.id } } }, { kind: 'note', note: 'set' }],
+    })
+    await whenFlushed()
+    stubWide(el)
+    await submitAuthoring(el, 'use the second model')
+    expect(washed(el), 'anti-vacuous: the fold washed').toContain('model')
+    expect(washedTriggers(el)).toEqual([])
+  })
+
+  it('T-0391 drawer: a model patch then a modelsIncluded patch washes the Model fold once and still washes the trigger', async () => {
+    const { el } = mountAdmin({
+      store: personaStore(),
+      authoringStore: personaStore(BUILDER),
+      events: [{ kind: 'patch', patch: { values: { model: SUPPORTED_MODELS[1]!.id, ...MODELS_PATCH.values } } }, { kind: 'note', note: 'set' }],
+    })
+    await whenFlushed()
+    stubWide(el)
+    await submitAuthoring(el, 'model and roster')
+    expect(washed(el).filter((item) => item === 'model')).toHaveLength(1)
+    expect(washedTriggers(el)).toEqual(['models'])
+    expect(drawerOf(el).open).toBe(false)
+  })
+
+  it('T-0391 drawer: with focus inside the pane the visible trigger washes and no drawer opens', async () => {
+    const { el } = mountAdmin({
+      store: personaStore(),
+      authoringStore: personaStore(BUILDER),
+      events: [{ kind: 'patch', patch: MODELS_PATCH }, { kind: 'note', note: 'set' }],
+    })
+    await whenFlushed()
+    stubWide(el)
+    expect(settingsNavOf(el).selected, 'Agent is the selected (visible) section').toBe('agent-content')
+    const pane = el.querySelector('[data-part="settings-pane"]') as HTMLElement
+    const focusable = document.createElement('button')
+    pane.append(focusable)
+    focusable.focus()
+    expect(pane.contains(document.activeElement)).toBe(true)
+    await submitAuthoring(el, 'suppressed')
+    expect(triggerOf(el).hasAttribute('data-attention'), 'the visible trigger washes').toBe(true)
+    expect(drawerOf(el).open).toBe(false)
+    expect(document.activeElement, 'focus stays where the user put it').toBe(focusable)
+    focusable.remove()
+  })
+
+  it('T-0391 drawer: a queued drawer location washes its trigger on the user\'s own reveal', async () => {
+    const { el } = mountAdmin({
+      store: personaStore(),
+      authoringStore: personaStore(BUILDER),
+      events: [{ kind: 'patch', patch: MODELS_PATCH }, { kind: 'note', note: 'set' }],
+    })
+    await whenFlushed()
+    // NO stub: jsdom's empty getClientRects IS the narrow band (the SPEC-R4 AC2 degrade)
+    await submitAuthoring(el, 'narrow')
+    expect(washed(el)).toEqual([])
+    expect(washedTriggers(el), 'nothing washes while nothing paints').toEqual([])
+    stubWide(el)
+    const seam = el as unknown as { setPaneVisibilitySeam(s: readonly ('chat' | 'settings' | 'copilot')[], p: 'chat' | 'settings' | 'copilot'): void }
+    seam.setPaneVisibilitySeam(['settings'], 'settings')
+    await whenFlushed()
+    expect(washed(el)).toContain('model')
+    expect(triggerOf(el).hasAttribute('data-attention'), 'the queued trigger washes on the reveal').toBe(true)
+    expect(drawerOf(el).open).toBe(false)
+  })
+})

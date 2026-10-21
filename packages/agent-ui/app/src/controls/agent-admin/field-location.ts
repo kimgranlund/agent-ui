@@ -40,21 +40,27 @@ import {
   A2UI_LOCAL_PATTERNS_KEY,
   BANKROLL_CAPABLE_KEY,
   BANKROLL_KEY,
+  SERVER_TOOL_SETTING_KEYS,
   kindEnabledKey,
 } from './agent-admin-schema.ts'
+import { PERSONA_FIELD_BY_KEY } from './content-fields.ts'
 import { ENTRY_KINDS } from './entries.ts'
 import { entriesStoreKey } from '../entry-list/entry-data.ts'
 
 /** WHERE one patchable persona key renders (SPEC-R2): the pane (always `'settings'` today — every
  *  patchable key lives in the Settings place), the settings section's `data-role`, the owning
  *  `settings-item` fold's `data-item` key, and the human copy for both (the section's `data-segment`
- *  label, the fold's `summary`). */
+ *  label, the fold's `summary`). T-0391: a key whose control sits inside a `ui-drawer` in that fold also
+ *  names the drawer (`data-drawer`) and its heading (`drawerLabel`); its trigger is the fold's
+ *  `[data-part="drawer-trigger"][data-opens=<drawer>]`. */
 export interface FieldLocation {
   pane: 'settings'
   section: 'agent-content' | 'capabilities-content' | 'surface-content'
   sectionLabel: string
   item: string
   itemLabel: string
+  drawer?: string
+  drawerLabel?: string
 }
 
 /** The four generic capability kinds that render as their OWN top-level Capabilities folds — skill/
@@ -74,8 +80,8 @@ const SECTION_LABELS: Record<FieldLocation['section'], string> = {
   'surface-content': 'Surface',
 }
 
-function loc(section: FieldLocation['section'], item: string, itemLabel: string): FieldLocation {
-  return { pane: 'settings', section, sectionLabel: SECTION_LABELS[section], item, itemLabel }
+function loc(section: FieldLocation['section'], item: string, itemLabel: string, drawer?: { drawer: string; drawerLabel: string }): FieldLocation {
+  return { pane: 'settings', section, sectionLabel: SECTION_LABELS[section], item, itemLabel, ...drawer }
 }
 
 /** One location per key GROUP, spread from the canonical constants (never a hand-listed per-key table).
@@ -87,7 +93,16 @@ const LOCATIONS: ReadonlyMap<string, FieldLocation> = new Map<string, FieldLocat
   ...(['name', AGENT_ENABLED_KEY, 'tagline', 'category'] as const).map((k) => [k, loc('agent-content', 'agent', 'Agent')] as const),
   // T-0306: the Model section's settings render in the Model fold; T-0391 moves the set-once three into the
   // closed Advanced fold.
-  ...(['model', MODELS_INCLUDED_KEY, MODEL_SETTING_KEYS.effort, MODEL_SETTING_KEYS.thinking] as const).map((k) => [k, loc('agent-content', 'model', 'Model')] as const),
+  ...(['model', MODEL_SETTING_KEYS.effort, MODEL_SETTING_KEYS.thinking] as const).map((k) => [k, loc('agent-content', 'model', 'Model')] as const),
+  // T-0391: the model roster sits in the Model fold's Manage models drawer; each server tool's switch stays
+  // on its open row and the tool's other keys sit in that tool's drawer, headed by the switch's own label.
+  [MODELS_INCLUDED_KEY, loc('agent-content', 'model', 'Model', { drawer: 'models', drawerLabel: 'Manage models' })],
+  ...Object.entries(SERVER_TOOL_SETTING_KEYS).flatMap(([tool, { enabled, ...detail }]) => [
+    [enabled, loc('agent-content', 'model', 'Model')] as const,
+    ...Object.values(detail).map(
+      (k) => [k, loc('agent-content', 'model', 'Model', { drawer: `tool-${tool}`, drawerLabel: PERSONA_FIELD_BY_KEY.get(enabled)?.label ?? enabled })] as const,
+    ),
+  ]),
   ...([MODEL_SETTING_KEYS.showReasoning, MODEL_SETTING_KEYS.maxTokens, MODEL_SETTING_KEYS.cacheTtl] as const).map((k) => [k, loc('agent-content', 'advanced', 'Advanced')] as const),
   // T-0391: the bankroll row sits in the closed Danger zone fold with Reset and Delete.
   ...([BANKROLL_CAPABLE_KEY, BANKROLL_KEY] as const).map((k) => [k, loc('agent-content', 'danger', 'Danger zone')] as const),

@@ -74,6 +74,7 @@ import '@agent-ui/components/controls/text-field'
 // only the TYPE (a mount function is not a custom element and owns no registration), so a consumer that
 // mounts a `entryDrawer` section registers `ui-drawer` itself — this element is that consumer.
 import '@agent-ui/components/controls/drawer'
+import type { UIDrawerElement } from '@agent-ui/components/controls/drawer'
 import '@agent-ui/components/controls/modal'
 // S7-c (LLD §16.1/§16.3) — the unified header bar's own controls: `ui-toggle` (S7-a, ADR-0179 GH #686
 // Amendment) for the wide pane pills, `ui-segmented-control`/`ui-segment` for the narrow single-select
@@ -167,6 +168,7 @@ import {
   sanitizePrefers,
   defaultAgentConfigSchema,
   agentConfigSchema,
+  modelSettingsSection,
   ADVANCED_MODEL_SETTING_KEYS,
   resolveAgentEffort,
   resolveModelSettings,
@@ -206,7 +208,7 @@ import {
 // the rows' own native `title` hints.
 import { buildAdminHelp, buildAdminHelpForSummary } from './admin-help.ts'
 import { EFFORT_LEVELS, type EffortLevel, type TurnReference, type ContextItem, type PickerOption, type CapabilityRow } from '../conversation/composer-options.ts'
-import { capabilitiesFor, effortsAllowing, DEFAULT_DISPLAY, SERVER_TOOL_KEY } from '@agent-ui/a2ui/agent/model-capabilities'
+import { capabilitiesFor, effortsAllowing, DEFAULT_DISPLAY, SERVER_TOOL_KEY, type ServerTool } from '@agent-ui/a2ui/agent/model-capabilities'
 // GH #1211 — the ingest handler's rejection toast (req-doc-ingestion.md R1's "visible reason" AC): a
 // `ui-toast-region` this element mounts and owns itself (toast-region.md's "v1 ownership is
 // consumer-mounted" law — there is no static singleton to reach for instead).
@@ -795,10 +797,11 @@ export class UIAgentAdminElement extends UIElement {
   /** The settings pane wrapper — the paint-probe subject (SPEC-R3 step 2: `getClientRects().length > 0`
    *  is the ONE band signal; never a JS re-derivation of the 52.5rem line, §16.2's law). */
   #settingsPane: HTMLElement | null = null
-  /** Queued attention (SPEC-R4.2): section `data-role` → the fold `data-item`s owed a wash when the user
-   *  next reveals that section themselves. Per-draft — cleared on persona switch (`#resetConversationState`,
-   *  the `#conversationEpoch` reset family); never persisted. */
-  #pendingAttention: Map<string, Set<string>> = new Map()
+  /** Queued attention (SPEC-R4.2): section `data-role` → the locations owed a wash when the user next
+   *  reveals that section themselves, keyed `${item}/${drawer ?? ''}` (T-0391: a drawer location also washes
+   *  its trigger). Per-draft — cleared on persona switch (`#resetConversationState`, the
+   *  `#conversationEpoch` reset family); never persisted. */
+  #pendingAttention: Map<string, Map<string, FieldLocation>> = new Map()
   /** Whether the settings pane painted at the LAST `#applyPaneVisibility` — the not-painting → painting
    *  transition detector behind SPEC-R4.2's fire hook (b) (a pane reveal with no section flip is the
    *  common case: the sub-nav defaults to Agent selected, so hook (a) alone never fires AC2's scenario). */
@@ -807,8 +810,8 @@ export class UIAgentAdminElement extends UIElement {
    *  `#setPanesShown` calls inside the reaction re-enter `#applyPaneVisibility`, and hook (b) must not
    *  read that never-painted flicker as a user-driven reveal (LLD §4's named guard). */
   #inFollowChange = false
-  /** Per-fold wash teardown (SPEC-R5) — re-washing an already-washed fold must cancel the OLD timer/
-   *  listener or the earlier deadline strips the new wash early. */
+  /** Per-element wash teardown (SPEC-R5; a fold or, T-0391, a drawer trigger): re-washing an already-washed
+   *  element must cancel the OLD timer/listener or the earlier deadline strips the new wash early. */
   #washCleanup: WeakMap<HTMLElement, () => void> = new WeakMap()
   /** GH #1105 — the SPEC-R7 receipt blocks this element itself just minted, keyed by the EXACT flattened
    *  text `#patchReceiptFor` returned, each carrying the structured deduped locations it was flattened
@@ -890,6 +893,9 @@ export class UIAgentAdminElement extends UIElement {
   #modelGrid: HTMLElement | null = null
   /** The grid subscription's own teardown (never the shared #unsubscribes map — rewires clear it). */
   #modelGridUnsub: (() => void) | undefined
+  /** T-0391: each server tool's open row (its switch) and its drawer (the detail unit, the two domain lists),
+   *  composed once and re-synced from the store by `#syncServerTools`. */
+  #serverTools: Map<ServerTool, ServerToolParts> = new Map()
   // The no-subscribe fallback trigger — `#updateEntries` calls this directly ONLY when the current
   // store has no `subscribe` method to notify it instead (component-reviewer MODERATE fix).
   #renders: Map<string, () => void> = new Map()
@@ -1071,7 +1077,10 @@ export class UIAgentAdminElement extends UIElement {
         if (key === MODEL_SETTING_KEYS.effort || key === 'model') this.#syncEffortFromAgent()
         // T-0203: the effort menu's toggles and the server tool rows follow the agent's settings.
         if (key === MODEL_SETTING_KEYS.thinking || key === MODEL_SETTING_KEYS.showReasoning) this.#syncEffortOptions()
-        if (key === 'model' || SERVER_TOOL_STORE_KEYS.has(key)) this.#syncEntryRosters()
+        if (key === 'model' || SERVER_TOOL_STORE_KEYS.has(key)) {
+          this.#syncEntryRosters()
+          this.#syncServerTools() // T-0391: the open rows and drawers follow the model's row and the stored values
+        }
       })
       this.#syncModelSchema()
       this.#syncEffortFromAgent()
@@ -1113,6 +1122,7 @@ export class UIAgentAdminElement extends UIElement {
           this.#advancedSettingsEl.store = store
           this.#advancedSettingsEl.hidden = advancedSchema === undefined
         }
+        this.#syncServerTools()
         this.#rewireAllSections(store)
         this.#rewireProvenance(store)
         // GH #1212 — warm the IndexedDB-routed resource cache for whatever this store currently holds
@@ -1732,7 +1742,23 @@ export class UIAgentAdminElement extends UIElement {
     // only because `settingsItem(...)`'s content rest-parameter and a `slot="summary"` child are two
     // different things: the icon must be appended AFTER, like every other slotted control on this file.
     // GH #845's `deleteAgentRow` rides the SAME call as ordinary fold CONTENT — the two are orthogonal.
-    const modelItem = settingsItem('model', 'Model', defaultModelField, modelSettingsEl, modelGrid)
+    // T-0391: the Model fold's set-once structured config moves into drawers (the GH #917 `entryDrawer`
+    // precedent). A drawer opens ONLY on its own trigger's click (fork 6, Kim 2026-10-21): follow-the-change
+    // washes the trigger of a drawer field and never opens the drawer. Each trigger sits in this fold beside
+    // its drawer, so `locationFor`'s `(section, item, drawer)` finds both.
+    const modelsDrawer = this.#buildDrawer('models', 'Manage models', modelGrid)
+    const modelsRow = document.createElement('div')
+    modelsRow.setAttribute('data-part', 'drawer-row')
+    modelsRow.append(drawerTrigger(modelsDrawer, 'Manage models', 'list'), modelsDrawer)
+    const serverTools = document.createElement('div')
+    serverTools.setAttribute('data-part', 'server-tools')
+    const serverToolsHeading = document.createElement('ui-text')
+    serverToolsHeading.setAttribute('variant', 'kicker')
+    serverToolsHeading.setAttribute('size', 'sm')
+    serverToolsHeading.setAttribute('data-part', 'server-tools-heading')
+    serverToolsHeading.textContent = 'Server tools'
+    serverTools.append(serverToolsHeading, ...(Object.keys(SERVER_TOOL_SETTING_KEYS) as ServerTool[]).map((tool) => this.#buildServerTool(tool)))
+    const modelItem = settingsItem('model', 'Model', defaultModelField, modelSettingsEl, modelsRow, serverTools)
     modelItem.append(buildAdminHelpForSummary('model'))
     // T-0391: the set-once Model rows, closed at rest (`settingsItem` opens every fold; these two do not).
     const advancedItem = settingsItem('advanced', 'Advanced', advancedSettingsEl)
@@ -2332,8 +2358,7 @@ export class UIAgentAdminElement extends UIElement {
       const active = document.activeElement
       if (active !== null && this.#settingsPane !== null && this.#settingsPane.contains(active)) {
         const selected = this.#settingsNav?.selected ?? ''
-        const visible = locations.filter((l) => l.section === selected)
-        for (const l of this.#dedupeLocations(visible)) this.#washFold(l)
+        this.#washLocations(locations.filter((l) => l.section === selected))
         this.#queuePending(locations.filter((l) => l.section !== selected))
         return
       }
@@ -2345,7 +2370,7 @@ export class UIAgentAdminElement extends UIElement {
       // step 4 — scroll the target fold into the pane's viewport
       this.#scrollToFold(target)
       // step 5 — wash every changed fold in the target section; queue the cross-section rest (SPEC-R4.2)
-      for (const l of this.#dedupeLocations(locations.filter((l) => l.section === target.section))) this.#washFold(l)
+      this.#washLocations(locations.filter((l) => l.section === target.section))
       this.#queuePending(locations.filter((l) => l.section !== target.section))
     } finally {
       this.#inFollowChange = false
@@ -2368,6 +2393,19 @@ export class UIAgentAdminElement extends UIElement {
     return out
   }
 
+  /** Wash each changed fold once, then (T-0391) each distinct drawer trigger once: a patch carrying `model`
+   *  then `modelsIncluded` dedupes to one Model fold wash and still washes the Manage models trigger. No
+   *  drawer opens and nothing takes focus (fork 6, Kim 2026-10-21; ADR-0181 cl.2 unchanged). */
+  #washLocations(locations: readonly FieldLocation[]): void {
+    for (const l of this.#dedupeLocations(locations)) this.#washFold(l)
+    const triggers = new Set<string>()
+    for (const l of locations) {
+      if (l.drawer === undefined || triggers.has(`${l.section}/${l.item}/${l.drawer}`)) continue
+      triggers.add(`${l.section}/${l.item}/${l.drawer}`)
+      this.#washTrigger(l)
+    }
+  }
+
   #foldFor(location: FieldLocation): HTMLElement | null {
     return this.#settingsPane?.querySelector(`[data-role="${location.section}"] [data-part="settings-item"][data-item="${location.item}"]`) ?? null
   }
@@ -2382,31 +2420,28 @@ export class UIAgentAdminElement extends UIElement {
     fold.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' })
   }
 
-  /** Queue attention for later reveal (SPEC-R4.2) — deduped into the per-section sets. */
+  /** Queue attention for later reveal (SPEC-R4.2), deduped per section by `${item}/${drawer ?? ''}`, each
+   *  key holding its whole location (T-0391: the drawer rides along, so the reveal washes its trigger). */
   #queuePending(locations: readonly FieldLocation[]): void {
     for (const l of locations) {
-      const items = this.#pendingAttention.get(l.section) ?? new Set<string>()
-      items.add(l.item)
-      this.#pendingAttention.set(l.section, items)
+      const queued = this.#pendingAttention.get(l.section) ?? new Map<string, FieldLocation>()
+      const key = `${l.item}/${l.drawer ?? ''}`
+      if (!queued.has(key)) queued.set(key, l)
+      this.#pendingAttention.set(l.section, queued)
     }
   }
 
-  /** Fire queued attention for `section` (SPEC-R4.2): every queued fold washes, the FIRST scrolls, the
-   *  queue clears for that section (repeat visits: no wash — AC2). Called by both fire hooks: a section
-   *  flip (`#applySettingsSection`) and a write-driven pane reveal (`#applyPaneVisibility`). */
+  /** Fire queued attention for `section` (SPEC-R4.2): the FIRST queued fold scrolls, every queued fold
+   *  washes once and every queued drawer trigger washes (T-0391), the queue clears for that section (repeat
+   *  visits: no wash — AC2). Called by both fire hooks: a section flip (`#applySettingsSection`) and a
+   *  write-driven pane reveal (`#applyPaneVisibility`). */
   #firePendingFor(section: string): void {
-    const items = this.#pendingAttention.get(section)
-    if (items === undefined || items.size === 0) return
+    const queued = this.#pendingAttention.get(section)
+    if (queued === undefined || queued.size === 0) return
     this.#pendingAttention.delete(section)
-    let first = true
-    for (const item of items) {
-      const location = { pane: 'settings', section, sectionLabel: '', item, itemLabel: '' } as FieldLocation
-      if (first) {
-        this.#scrollToFold(location)
-        first = false
-      }
-      this.#washFold(location)
-    }
+    const locations = [...queued.values()]
+    this.#scrollToFold(locations[0]!)
+    this.#washLocations(locations)
   }
 
   /** The receipt line block (SPEC-R7): one `Updated <sectionLabel> › <itemLabel>` line per changed
@@ -2499,36 +2534,51 @@ export class UIAgentAdminElement extends UIElement {
     }
     this.#scrollToFold(location)
     this.#washFold(location) // the SPEC-R5 attention wash — same cue as follow-the-change (GH #1105 follow-up)
+    this.#washTrigger(location) // T-0391: a drawer location's trigger washes too; the drawer stays closed
     const summary = this.#foldFor(location)?.querySelector<HTMLElement>('[data-part="summary"]')
     if (summary === undefined || summary === null) return
     summary.tabIndex = 0
     summary.focus()
   }
 
-  /** The attention wash (SPEC-R5): `data-attention` on the owning fold, removed on `animationend` for the
-   *  named keyframe plus a timeout fallback (jsdom fires no animation events; reduced-motion runs none).
-   *  Re-washing an already-washed fold restarts (cancel old teardown → remove → reflow → re-add). */
+  /** The attention wash (SPEC-R5) on the owning fold. */
   #washFold(location: FieldLocation): void {
     const fold = this.#foldFor(location)
-    if (fold === null) return
-    this.#washCleanup.get(fold)?.()
-    if (fold.hasAttribute('data-attention')) {
-      fold.removeAttribute('data-attention')
-      void fold.offsetWidth // force a reflow so the re-added attribute restarts the animation
+    if (fold !== null) this.#wash(fold)
+  }
+
+  /** T-0391: the same wash on a drawer location's trigger (`[data-part="drawer-trigger"][data-opens=<drawer>]`
+   *  in its fold): the cue that a drawer field changed, the SPEC-R5 wash on a second element, never a badge.
+   *  A location with no drawer washes no trigger. */
+  #washTrigger(location: FieldLocation): void {
+    if (location.drawer === undefined) return
+    const trigger = this.#foldFor(location)?.querySelector<HTMLElement>(`[data-part="drawer-trigger"][data-opens="${location.drawer}"]`)
+    if (trigger) this.#wash(trigger)
+  }
+
+  /** The attention wash itself (SPEC-R5): `data-attention` on `element`, removed on its own `animationend`
+   *  for the named keyframe plus a timeout fallback (jsdom fires no animation events; reduced-motion runs
+   *  none). A trigger's `animationend` bubbles through its fold, so the fold ignores any target but itself.
+   *  Re-washing an already-washed element restarts (cancel old teardown → remove → reflow → re-add). */
+  #wash(element: HTMLElement): void {
+    this.#washCleanup.get(element)?.()
+    if (element.hasAttribute('data-attention')) {
+      element.removeAttribute('data-attention')
+      void element.offsetWidth // force a reflow so the re-added attribute restarts the animation
     }
-    fold.setAttribute('data-attention', '')
+    element.setAttribute('data-attention', '')
     const onEnd = (event: AnimationEvent): void => {
-      if (event.animationName === 'ui-admin-attention') cleanup()
+      if (event.target === element && event.animationName === 'ui-admin-attention') cleanup()
     }
     const timer = setTimeout(() => cleanup(), 2500)
     const cleanup = (): void => {
       clearTimeout(timer)
-      fold.removeEventListener('animationend', onEnd)
-      fold.removeAttribute('data-attention')
-      this.#washCleanup.delete(fold)
+      element.removeEventListener('animationend', onEnd)
+      element.removeAttribute('data-attention')
+      this.#washCleanup.delete(element)
     }
-    fold.addEventListener('animationend', onEnd)
-    this.#washCleanup.set(fold, cleanup)
+    element.addEventListener('animationend', onEnd)
+    this.#washCleanup.set(element, cleanup)
   }
 
   /** GH #665 — a quiet identity header for a conversation region: the fleet's `ui-text[variant='kicker']`
@@ -3241,7 +3291,8 @@ export class UIAgentAdminElement extends UIElement {
       this.#provenanceObserver = new MutationObserver((records) => {
         if (records.some(regeneratedRows)) this.#scheduleProvenance()
       })
-      for (const unit of [this.#settingsEl, this.#modelSettingsEl, this.#advancedSettingsEl]) if (unit) this.#provenanceObserver.observe(unit, { childList: true, subtree: true })
+      const toolUnits = [...this.#serverTools.values()].map((parts) => parts.unit)
+      for (const unit of [this.#settingsEl, this.#modelSettingsEl, this.#advancedSettingsEl, ...toolUnits]) if (unit) this.#provenanceObserver.observe(unit, { childList: true, subtree: true })
     }
     this.#scheduleProvenance()
   }
@@ -3785,6 +3836,170 @@ export class UIAgentAdminElement extends UIElement {
     }
     store.set('model', id)
     if (store.subscribe === undefined) this.#renderModelGrid()
+  }
+
+  /** T-0391: one Agent tab drawer (`data-drawer=<name>`), its children built while it is detached:
+   *  `ui-drawer` moves them into its dialog part once, at connect (drawer.md `slots: []`). Labelled by its
+   *  heading child; the footer's Done closes it. Its trigger (`drawerTrigger`) is the only opener. */
+  #buildDrawer(name: string, heading: string, ...content: HTMLElement[]): UIDrawerElement {
+    const drawer = document.createElement('ui-drawer') as UIDrawerElement
+    drawer.setAttribute('edge', 'end')
+    drawer.setAttribute('data-drawer', name)
+    const headingId = this.#nextId('drawer-heading')
+    drawer.setAttribute('aria-labelledby', headingId)
+    const header = document.createElement('header')
+    const title = document.createElement('h2')
+    title.id = headingId
+    title.setAttribute('data-part', 'drawer-heading')
+    title.textContent = heading
+    header.append(title)
+    const body = document.createElement('div')
+    body.setAttribute('data-region', 'content')
+    body.setAttribute('data-part', 'drawer-content')
+    body.append(...content)
+    const footer = document.createElement('footer')
+    const done = document.createElement('ui-button') as UIButtonElement
+    done.setAttribute('data-part', 'drawer-done')
+    done.textContent = 'Done'
+    done.addEventListener('click', () => {
+      drawer.open = false
+    })
+    footer.append(done)
+    drawer.append(header, body, footer)
+    return drawer
+  }
+
+  /** T-0391: one server tool's open row in the Model fold (`[ switch | label | spacer | Configure ]`, tagged
+   *  with the switch's key) and its drawer: a `ui-settings` unit for max uses (and web search's location) plus
+   *  the allowed and blocked domain list editors. Built for every tool; `#syncServerTools` hides the row
+   *  while the model's capability row does not list the tool. */
+  #buildServerTool(tool: ServerTool): HTMLElement {
+    const keys = SERVER_TOOL_SETTING_KEYS[tool]
+    const label = fieldLabel(keys.enabled)
+    const row = document.createElement('div')
+    row.setAttribute('data-part', 'server-tool-row')
+    row.setAttribute('data-tool', tool)
+    row.setAttribute('data-field', keys.enabled)
+    const toggle = document.createElement('ui-switch') as HTMLElement & { checked: boolean }
+    toggle.setAttribute('data-part', 'server-tool-toggle')
+    toggle.setAttribute('aria-label', label)
+    toggle.addEventListener('change', (event) => {
+      event.stopPropagation()
+      this.store?.set(keys.enabled, toggle.checked)
+    })
+    const rowLabel = document.createElement('span')
+    rowLabel.setAttribute('data-part', 'server-tool-label')
+    rowLabel.textContent = label
+    rowLabel.title = PERSONA_FIELD_BY_KEY.get(keys.enabled)?.description ?? ''
+    const spacer = document.createElement('span')
+    spacer.setAttribute('data-part', 'surface-spacer')
+    // The detail unit (same event-boundary guards as the Model fold's own unit).
+    const unit = new UISettingsElement()
+    unit.setAttribute('data-part', 'server-tool-settings')
+    unit.addEventListener('select', (event) => event.stopPropagation())
+    unit.addEventListener('change', (event) => event.stopPropagation())
+    const lists = [keys.allowedDomains, keys.blockedDomains].map((key) => this.#buildDomainList(key))
+    const drawer = this.#buildDrawer(`tool-${tool}`, label, unit, ...lists.map((list) => list.element))
+    row.append(toggle, rowLabel, spacer, drawerTrigger(drawer, 'Configure', 'gear', 'ghost'), drawer)
+    this.#serverTools.set(tool, { row, toggle, unit, lists })
+    return row
+  }
+
+  /** T-0391: a domain list editor (`data-part="domain-list"`, tagged with its key): one row per domain (a
+   *  `ui-text-field` and Remove) plus Add domain. The store keeps the comma string `domainsOf` reads
+   *  (agent-admin-schema.ts): the editor splits it on commas on read and writes `list.join(', ')`. Add
+   *  appends a blank row locally and writes nothing until it holds a domain. */
+  #buildDomainList(key: string): DomainList {
+    const label = fieldLabel(key)
+    const element = document.createElement('div')
+    element.setAttribute('data-part', 'domain-list')
+    element.setAttribute('data-field', key)
+    const heading = document.createElement('span')
+    heading.setAttribute('data-part', 'domain-list-label')
+    heading.textContent = label
+    const help = document.createElement('span')
+    help.setAttribute('data-part', 'domain-list-help')
+    help.textContent = PERSONA_FIELD_BY_KEY.get(key)?.description ?? ''
+    const rows = document.createElement('div')
+    rows.setAttribute('data-part', 'domain-rows')
+    const add = document.createElement('ui-button') as UIButtonElement
+    add.setAttribute('variant', 'ghost')
+    add.setAttribute('data-part', 'domain-add')
+    const addIcon = document.createElement('ui-icon')
+    addIcon.setAttribute('slot', 'leading')
+    addIcon.setAttribute('symbol', 'plus')
+    add.append(addIcon, document.createTextNode('Add domain'))
+    element.append(heading, help, rows, add)
+
+    let draft: string[] = []
+    const write = (): void => this.store?.set(key, domainsIn(draft).join(', '))
+    const render = (): void => {
+      rows.replaceChildren(
+        ...draft.map((domain, index) => {
+          const row = document.createElement('div')
+          row.setAttribute('data-part', 'domain-row')
+          const input = document.createElement('ui-text-field') as HTMLElement & { value: string; label: string }
+          input.setAttribute('data-part', 'domain-input')
+          input.label = `${label} ${index + 1}`
+          input.value = domain
+          input.addEventListener('input', (event) => event.stopPropagation())
+          input.addEventListener('change', (event) => {
+            event.stopPropagation()
+            draft[index] = input.value
+            write()
+          })
+          const remove = document.createElement('ui-button') as UIButtonElement
+          remove.setAttribute('variant', 'soft')
+          remove.setAttribute('data-part', 'domain-remove')
+          remove.textContent = 'Remove'
+          remove.addEventListener('click', () => {
+            draft.splice(index, 1)
+            render()
+            write()
+          })
+          row.append(input, remove)
+          return row
+        }),
+      )
+    }
+    add.addEventListener('click', () => {
+      draft.push('')
+      render()
+    })
+    // A store value the draft already holds (this editor's own write) re-renders nothing, so a field being
+    // edited keeps its node; any other value (a reset, a patch, a persona switch) replaces the rows.
+    const sync = (): void => {
+      const stored = domainsIn(String(this.store?.get(key) ?? '').split(','))
+      if (JSON.stringify(stored) === JSON.stringify(domainsIn(draft))) return
+      draft = stored
+      render()
+    }
+    return { element, sync }
+  }
+
+  /** T-0391: the server tool rows and drawers from the store and the model's capability row: a row shows
+   *  only when the row lists the tool (the gate `settingsFieldFor` applies, through `modelSettingsSection`'s
+   *  key filter), its switch reads the stored value, its drawer unit holds the tool's max uses and location
+   *  fields for this model, and each domain list re-reads its comma string. */
+  #syncServerTools(): void {
+    const store = this.store
+    const model = this.#modelFor(store)
+    let anyShown = false
+    for (const [tool, parts] of this.#serverTools) {
+      const { enabled, allowedDomains: _allowed, blockedDomains: _blocked, ...detail } = SERVER_TOOL_SETTING_KEYS[tool]
+      parts.row.hidden = (modelSettingsSection(model, [enabled])?.fields.length ?? 0) === 0
+      anyShown ||= !parts.row.hidden
+      parts.toggle.checked = store?.get(enabled) === true
+      const section = modelSettingsSection(model, Object.values(detail).filter((k): k is string => k !== undefined))
+      const schema: SettingsSchema | undefined =
+        section !== undefined && section.fields.length > 0 ? { version: 1, sections: [{ ...section, id: `tool-${tool}`, label: fieldLabel(enabled) }] } : undefined
+      if (JSON.stringify(schema) !== JSON.stringify(parts.unit.schema)) parts.unit.schema = schema
+      if (parts.unit.store !== store) parts.unit.store = store
+      parts.unit.hidden = schema === undefined
+      for (const list of parts.lists) list.sync()
+    }
+    const group = this.#serverTools.values().next().value?.row.parentElement
+    if (group) group.hidden = !anyShown
   }
 
   /** T-0391: the Danger zone's shared confirm modal, built with its children BEFORE it connects
@@ -5484,6 +5699,43 @@ function settingsItem(key: string, summary: string, ...content: HTMLElement[]): 
   return item
 }
 
+/** T-0391: one server tool's composed parts (`#buildServerTool`), re-synced by `#syncServerTools`. */
+interface ServerToolParts {
+  row: HTMLElement
+  toggle: HTMLElement & { checked: boolean }
+  unit: UISettingsElement
+  lists: DomainList[]
+}
+
+/** T-0391: a domain list editor and its store re-read (`#buildDomainList`). */
+interface DomainList {
+  element: HTMLElement
+  sync: () => void
+}
+
+/** T-0391: a domain list's entries trimmed, blanks dropped (the `domainsOf` read, agent-admin-schema.ts). */
+function domainsIn(list: readonly string[]): string[] {
+  return list.map((domain) => domain.trim()).filter((domain) => domain !== '')
+}
+
+/** T-0391: a drawer's one opener, `ui-button[data-part="drawer-trigger"][data-opens=<drawer>]`, beside its
+ *  drawer in the same fold. Its own click is the only code path that sets the drawer's `open` (fork 6,
+ *  Kim 2026-10-21): follow-the-change washes it and never opens the drawer. */
+function drawerTrigger(drawer: UIDrawerElement, label: string, symbol: string, variant: 'soft' | 'ghost' = 'soft'): HTMLElement {
+  const trigger = document.createElement('ui-button') as UIButtonElement
+  trigger.setAttribute('variant', variant)
+  trigger.setAttribute('data-part', 'drawer-trigger')
+  trigger.setAttribute('data-opens', drawer.getAttribute('data-drawer') ?? '')
+  const icon = document.createElement('ui-icon')
+  icon.setAttribute('slot', 'leading')
+  icon.setAttribute('symbol', symbol)
+  trigger.append(icon, document.createTextNode(label))
+  trigger.addEventListener('click', () => {
+    drawer.open = true
+  })
+  return trigger
+}
+
 /** T-0391: one open control outside a `ui-settings` unit, wrapped in a `ui-field` labelled by its schema row
  *  and tagged `data-field` with its key (the provenance strip and the pane coverage test read both). */
 function metaField(key: string, control: HTMLElement): HTMLElement {
@@ -5495,12 +5747,13 @@ function metaField(key: string, control: HTMLElement): HTMLElement {
 }
 
 /** T-0391: split the `model` section's unit into the Model fold's rows and the Advanced fold's
- *  (`ADVANCED_MODEL_SETTING_KEYS`); either side is `undefined` when it holds no field. */
+ *  (`ADVANCED_MODEL_SETTING_KEYS`); either side is `undefined` when it holds no field. The server tool keys
+ *  leave the Model fold's unit: their switches are the fold's own rows, the rest sit in each tool's drawer. */
 function splitAdvancedFields(schema: SettingsSchema | undefined): [SettingsSchema | undefined, SettingsSchema | undefined] {
   const section = schema?.version === 1 ? schema.sections[0] : undefined
   if (schema === undefined || section === undefined) return [schema, undefined]
   const advanced = section.fields.filter((f) => ADVANCED_MODEL_SETTING_KEYS.includes(f.key))
-  const main = section.fields.filter((f) => !ADVANCED_MODEL_SETTING_KEYS.includes(f.key))
+  const main = section.fields.filter((f) => !ADVANCED_MODEL_SETTING_KEYS.includes(f.key) && !SERVER_TOOL_STORE_KEYS.has(f.key))
   return [
     main.length > 0 ? { ...schema, sections: [{ ...section, fields: main }] } : undefined,
     advanced.length > 0 ? { ...schema, sections: [{ ...section, id: 'advanced', label: 'Advanced', fields: advanced }] } : undefined,

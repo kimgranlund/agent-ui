@@ -4,7 +4,7 @@ import { UIAgentAdminElement } from './agent-admin.ts'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
 import { UISettingsElement } from '../settings/settings.ts'
 import { UIConversationElement } from '../conversation/conversation.ts'
-import { defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_GENUI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog, PREFERS_KEY } from './agent-admin-schema.ts'
+import { SERVER_TOOL_SETTING_KEYS, defaultAgentConfigSchema, SUPPORTED_MODELS, DEFAULT_MODEL_ID, SURFACE_MARKDOWN_KEY, SURFACE_A2UI_KEY, SURFACE_GENUI_KEY, SURFACE_PLANNER_KEY, A2UI_CATALOG_KEY, A2UI_CATALOG_OPTIONS, DEFAULT_A2UI_CATALOG_ID, sanitizeCatalog, PREFERS_KEY } from './agent-admin-schema.ts'
 import { ENTRY_KINDS, initialEntryValues, composeSystemPrompt, DEFAULT_SYSTEM_PROMPT_FALLBACK } from './entries.ts'
 import { entriesStoreKey, readEntries, type Entry, type EntryLibraryPack, type NewEntryInput } from '../entry-list/entry-data.ts'
 import { mountEntryList, showAddError, type EntryListHandlers } from '../entry-list/entry-list.ts'
@@ -1980,13 +1980,15 @@ describe('UIAgentAdminElement — composition (GH #52/ADR-0154: chat + {Settings
     const settingsEl = agentContent.querySelector('ui-settings') as UISettingsElement
     expect(settingsEl).toBeInstanceOf(UISettingsElement)
     // T-0306: the schema splits across single-section units, Agent in the Agent fold and Model in the Model
-    // fold; T-0391 moves the Model section's showReasoning, maxTokens and cacheTtl into the Advanced fold.
+    // fold; T-0391 moves the Model section's showReasoning, maxTokens and cacheTtl into the Advanced fold,
+    // and the server tool keys out to the fold's own tool rows and their drawers.
     const modelSettingsEl = agentContent.querySelector('[data-item="model"] ui-settings') as UISettingsElement
     const advancedSettingsEl = agentContent.querySelector('[data-item="advanced"] ui-settings') as UISettingsElement
     expect(settingsEl.schema?.sections).toEqual(el.schema?.sections.filter((s) => s.id !== 'model'))
     const modelFields = el.schema?.sections.find((s) => s.id === 'model')?.fields.map((f) => f.key)
     const advancedKeys = ['showReasoning', 'maxTokens', 'cacheTtl']
-    expect(modelSettingsEl.schema?.sections[0]?.fields.map((f) => f.key)).toEqual(modelFields?.filter((k) => !advancedKeys.includes(k)))
+    const serverToolKeys = Object.values(SERVER_TOOL_SETTING_KEYS).flatMap((keys) => Object.values(keys))
+    expect(modelSettingsEl.schema?.sections[0]?.fields.map((f) => f.key)).toEqual(modelFields?.filter((k) => !advancedKeys.includes(k) && !serverToolKeys.includes(k)))
     expect(advancedSettingsEl.schema?.sections[0]?.fields.map((f) => f.key)).toEqual(modelFields?.filter((k) => advancedKeys.includes(k)))
     expect(settingsEl.store).toBe(el.store)
     expect(modelSettingsEl.store).toBe(el.store)
@@ -5691,5 +5693,77 @@ describe('T-0391 layout: the Agent tab', () => {
       ['mine', { tagline: 'New line' }],
       ['mine', { category: 'hospitality' }],
     ])
+  })
+})
+
+// ── T-0391: the Model fold's drawers and the domain list editor ──
+describe('T-0391 drawer: the Model fold drawers', () => {
+  const modelFold = (el: Element): HTMLElement => el.querySelector('[data-role="agent-content"] > [data-part="settings-item"][data-item="model"]') as HTMLElement
+  const drawerOf = (el: Element, name: string): HTMLElement & { open: boolean } =>
+    modelFold(el).querySelector(`ui-drawer[data-drawer="${name}"]`) as HTMLElement & { open: boolean }
+  const listOf = (el: Element, key: string): HTMLElement => modelFold(el).querySelector(`[data-part="domain-list"][data-field="${key}"]`) as HTMLElement
+  const inputsOf = (list: HTMLElement): Array<HTMLElement & { value: string }> => [...list.querySelectorAll('[data-part="domain-input"]')] as Array<HTMLElement & { value: string }>
+  const ALLOWED = SERVER_TOOL_SETTING_KEYS.web_search.allowedDomains
+
+  it('T-0391 drawer: clicking a trigger opens its drawer', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store?.set('model', 'claude-haiku-5-5')
+    await whenFlushed()
+    const triggers = [...modelFold(el).querySelectorAll<HTMLElement>('[data-part="drawer-trigger"]')]
+    expect(triggers.map((t) => t.getAttribute('data-opens'))).toEqual(['models', 'tool-web_search', 'tool-web_fetch'])
+    for (const trigger of triggers) {
+      const drawer = drawerOf(el, trigger.getAttribute('data-opens')!)
+      expect(drawer.open, 'closed at rest').toBe(false)
+      trigger.click()
+      await whenFlushed()
+      expect(drawer.open, `${trigger.getAttribute('data-opens')} opens on its own trigger`).toBe(true)
+      for (const other of triggers) if (other !== trigger) expect(drawerOf(el, other.getAttribute('data-opens')!).open, 'only its own drawer').toBe(false)
+      ;(drawer.querySelector('[data-part="drawer-done"]') as HTMLElement).click()
+      await whenFlushed()
+      expect(drawer.open, 'Done closes it').toBe(false)
+    }
+    // the roster, the tool's detail unit and its domain lists live inside the drawers
+    expect(drawerOf(el, 'models').querySelector('[data-part="model-grid"][data-field="modelsIncluded"]')).not.toBeNull()
+    const search = drawerOf(el, 'tool-web_search')
+    for (const key of ['webSearchMaxUses', 'webSearchCity', 'webSearchRegion', 'webSearchCountry', 'webSearchTimezone']) expect(search.querySelector(`ui-settings [data-field="${key}"]`), key).not.toBeNull()
+    for (const key of ['webSearchAllowedDomains', 'webSearchBlockedDomains']) expect(search.querySelector(`[data-part="domain-list"][data-field="${key}"]`), key).not.toBeNull()
+    expect(modelFold(el).querySelector('[data-part="server-tool-row"][data-field="webSearch"] [data-part="server-tool-toggle"]'), 'the switch stays on the open row').not.toBeNull()
+  })
+
+  it('T-0391 drawer: a stored comma string renders one row per domain', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store?.set(ALLOWED, ' a.com,b.org , ,c.net ')
+    await whenFlushed()
+    expect(inputsOf(listOf(el, ALLOWED)).map((input) => input.value)).toEqual(['a.com', 'b.org', 'c.net'])
+    expect(listOf(el, ALLOWED).querySelectorAll('[data-part="domain-remove"]')).toHaveLength(3)
+    el.store?.set(ALLOWED, '')
+    await whenFlushed()
+    expect(inputsOf(listOf(el, ALLOWED)), 'an empty string renders no rows').toHaveLength(0)
+  })
+
+  it('T-0391 drawer: Add, edit and Remove in a domain list write the joined string', async () => {
+    const el = mount(document.createElement('ui-agent-admin') as UIAgentAdminElement)
+    el.store?.set(ALLOWED, 'a.com, b.org')
+    await whenFlushed()
+    const list = listOf(el, ALLOWED)
+    ;(list.querySelector('[data-part="domain-add"]') as HTMLElement).click()
+    await whenFlushed()
+    expect(inputsOf(list), 'Add appends a blank row').toHaveLength(3)
+    expect(el.store?.get(ALLOWED), 'a blank row writes nothing').toBe('a.com, b.org')
+    const added = inputsOf(list)[2]!
+    added.value = 'c.net'
+    added.dispatchEvent(new Event('change', { bubbles: true }))
+    await whenFlushed()
+    expect(el.store?.get(ALLOWED)).toBe('a.com, b.org, c.net')
+    expect(inputsOf(list)[2], 'its own write keeps the edited row').toBe(added)
+    const first = inputsOf(list)[0]!
+    first.value = 'x.io'
+    first.dispatchEvent(new Event('change', { bubbles: true }))
+    await whenFlushed()
+    expect(el.store?.get(ALLOWED)).toBe('x.io, b.org, c.net')
+    ;(list.querySelectorAll('[data-part="domain-remove"]')[1] as HTMLElement).click()
+    await whenFlushed()
+    expect(el.store?.get(ALLOWED)).toBe('x.io, c.net')
+    expect(inputsOf(list).map((input) => input.value)).toEqual(['x.io', 'c.net'])
   })
 })

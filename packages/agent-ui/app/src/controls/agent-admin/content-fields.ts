@@ -113,8 +113,8 @@ function serverToolFields(tool: ServerToolName, label: string, description: stri
   return [
     { key, type: 'boolean', home: 'model', label, description, form: { control: 'boolean', ...gate, default: false } },
     { key: `${key}MaxUses`, type: 'integer', min: 0, home: 'model', label: `${label} max uses`, description: `The most ${uses} per turn. 0 sets no limit.`, form: { control: 'number', ...gate, default: 0 } },
-    { key: `${key}AllowedDomains`, type: 'string', home: 'model', label: `${label} allowed domains`, description: `Comma-separated; ${allowedNote}. Used instead of blocked domains when both are set.`, form: { control: 'text', ...gate, default: '' } },
-    { key: `${key}BlockedDomains`, type: 'string', home: 'model', label: `${label} blocked domains`, description: `Comma-separated; never ${uses === 'searches' ? 'search these' : 'fetch from these'}.`, form: { control: 'text', ...gate, default: '' } },
+    { key: `${key}AllowedDomains`, type: 'string', home: 'model', label: `${label} allowed domains`, description: `One domain per row; ${allowedNote}. Used instead of blocked domains when both are set.`, form: { control: 'text', ...gate, default: '' } },
+    { key: `${key}BlockedDomains`, type: 'string', home: 'model', label: `${label} blocked domains`, description: `One domain per row; never ${uses === 'searches' ? 'search these' : 'fetch from these'}.`, form: { control: 'text', ...gate, default: '' } },
   ]
 }
 
