@@ -2,7 +2,7 @@
 id: T-0388
 title: "An OptionDeck nested under a centring parent still collapses to 0px"
 type: bug             # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -28,3 +28,18 @@ Fill-by-default stays the contract (the `inline` boolean opts out). Run the whol
 - The whole dogfood render lint stays green: `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts`
 - The dogfood compose gate stays green: `env -u NODE_OPTIONS node scripts/dogfood-compose.mjs --gate`
 - The standing gate stays green: `env -u NODE_OPTIONS npm run check`
+- Conductor: run the whole jsdom suite once (the solo regenerated two fixtures after its run). Judge the `inline-size: stretch` fix against ADR-0223 fill-by-default and sizing-gates.test.ts, and whether ui-option-deck lacking the `inline` opt-out is a gap for this ticket or a follow-up.
+- Conductor 2026-10-21: ran the whole jsdom suite on bf54cea54: exit 0, 17144 passed (verifier criterion #6).
+
+## Outcome
+
+2026-10-21 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 4b95ae06d541
+- Changed: OptionDeck host stretches to its parent, so a shrink-to-fit parent no longer collapses it to 0px
+- Commits: bf54cea T-0388: OptionDeck host stretches to its parent so a shrink-to-fit parent cannot collapse it
+- Check: 1 Deck nested in a centring column, flex row and centring grid cell fills its parent in Chromium an...: pass
+- Check: 2 Option-deck visual baselines unchanged: pass
+- Check: 3 Whole dogfood render lint green: pass
+- Check: 4 Dogfood compose gate green: pass
+- Check: 5 Standing gate green: pass
+- Follow-up: note: packages/agent-ui/components/src/controls/option-deck/option-deck.c... -> notes.md
+- Follow-up: decide: ui-option-deck declares no inline hug opt-out git grep inline... -> notes.md
