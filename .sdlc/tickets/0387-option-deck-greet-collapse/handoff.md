@@ -30,3 +30,8 @@ Guesses, not verified: (a) the deck host gets a zero or min-content inline size 
 
 ## Constraints
 Fix the cause in the control or the host, not in the persona prompt. Add a browser test that mounts the deck inside the chat surface (or the same container contract) and asserts a sane heading width and visible option cards. Run the whole dogfood render lint.
+
+## Acceptance criteria
+1. An OptionDeck root in the chat mount (`ui-surface-host[wrap][bare]`) spans the surface content box, its heading reads on one line and all four cards paint; the test was red (deck 0px, Chromium and WebKit) before the fix: `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project packages packages/agent-ui/app/src/controls/surface-host/surface-host.browser.test.ts` exits 0.
+2. `applyRootStretch` stretches a `ui-option-deck` root and leaves an `[inline]` one alone: `env -u NODE_OPTIONS npx vitest run packages/agent-ui/app/src/controls/surface-host` exits 0.
+3. The standing gate and the whole dogfood render lint stay green: `env -u NODE_OPTIONS npm run check` exits 0 and `env -u NODE_OPTIONS npx vitest run --config vitest.browser.config.ts --project site site/pages/dogfood-render.browser.test.ts site/lib/canvas-surface.browser.test.ts` exits 0.

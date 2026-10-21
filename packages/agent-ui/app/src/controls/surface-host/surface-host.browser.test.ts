@@ -517,6 +517,57 @@ describe('ui-surface-host — GH #892: a Row/Card root fills the mount, an intri
   })
 })
 
+// ── T-0387: the Croupier greet's OptionDeck root in the chat mount ────────────────────────────────────
+//
+// ui-option-deck is its own inline-size query container, so its intrinsic inline size is zero. Under the
+// surface's `align-items: center` an unstretched deck root resolved to 0px: the heading wrapped per letter and
+// every auto-fit card track collapsed to nothing (Kim's live Test Chat, 2026-10-20).
+
+describe('ui-surface-host: an OptionDeck root fills the chat mount (T-0387)', () => {
+  it('[wrap][bare] in-bubble mount: the greet deck spans the surface, its heading reads on one line, its cards show', () => {
+    const { host } = mountBareHost()
+    host.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'greet-1', catalogId: 'agent-ui--croupier' } }))
+    host.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'greet-1',
+          components: [
+            {
+              id: 'root',
+              component: 'OptionDeck',
+              heading: 'What are we playing?',
+              subheading: 'Bankroll: 985 chips',
+              options: [
+                { value: 'blackjack', title: 'Blackjack', description: 'Beat the dealer to 21.', tone: 'primary', index: 'A' },
+                { value: 'texas-holdem', title: 'Texas Hold’em', description: 'Two hole cards, five on the board.', tone: 'accent', index: 'K' },
+                { value: 'five-card-draw', title: 'Five-card draw', description: 'Discard, draw once, then show down.', tone: 'info', index: '5' },
+              ],
+              allowRandom: true,
+              actionName: 'pick_game',
+            },
+          ],
+        },
+      }),
+    )
+    host.finalize()
+    const surface = host.querySelector('[data-part="surface"]') as HTMLElement
+    const deck = surface.firstElementChild as HTMLElement
+    expect(deck.tagName.toLowerCase()).toBe('ui-option-deck')
+    expect(deck.getBoundingClientRect().width, 'the OptionDeck root collapsed under the mount').toBeCloseTo(contentWidth(surface), 0)
+
+    const heading = deck.querySelector('[data-part="heading"]') as HTMLElement
+    const lineHeight = Number.parseFloat(getComputedStyle(heading).lineHeight) || Number.parseFloat(getComputedStyle(heading).fontSize) * 1.5
+    expect(heading.getBoundingClientRect().height, 'the heading wrapped onto several lines').toBeLessThan(lineHeight * 1.5)
+
+    const cards = Array.from(deck.querySelectorAll<HTMLElement>('[data-part="option"]'))
+    expect(cards).toHaveLength(4) // three games plus Surprise me
+    for (const card of cards) {
+      expect(card.getBoundingClientRect().width, `card ${card.dataset.key} has no visible width`).toBeGreaterThan(100)
+    }
+  })
+})
+
 // ── GH #742/ADR-0183 Amendment — view transitions on RE-RENDERS, real platform (the jsdom half stubs
 // the API; this is the genuine startViewTransition where the engine ships it, and the feature-detect
 // honesty where it does not — the router probe's established split) ───────────────────────────────────

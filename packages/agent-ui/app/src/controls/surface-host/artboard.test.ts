@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { applyRootStretch } from './artboard.ts'
 
-// applyRootStretch's widget-root branch (ADR-0046 Amendment 7, the canvas gutter rule; T-0084): the ADR-0243
+// applyRootStretch's widget-root branch (ADR-0046 Amendment 7, the canvas gutter rule; T-0084, T-0387): the
 // widget roots fill the canvas like a container root, unless they carry the ADR-0223 `inline` hug opt-out, and
 // an intrinsic control root still keeps its natural width. The painted width is
 // site/lib/canvas-surface.browser.test.ts's job; this pins the branch itself.
@@ -14,8 +14,8 @@ function surfaceWith(tag: string, attrs: Record<string, string> = {}): { surface
   return { surface, root }
 }
 
-describe('applyRootStretch: the ADR-0243 widget roots fill the canvas', () => {
-  for (const tag of ['ui-game-hud', 'ui-product-card', 'ui-board-grid']) {
+describe('applyRootStretch: the widget roots fill the canvas', () => {
+  for (const tag of ['ui-game-hud', 'ui-product-card', 'ui-board-grid', 'ui-option-deck']) {
     it(`a ${tag} root is stretched`, () => {
       const { surface, root } = surfaceWith(tag)
       applyRootStretch(surface)
