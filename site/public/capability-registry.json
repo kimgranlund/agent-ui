@@ -1553,6 +1553,27 @@
       "catalogs": []
     },
     {
+      "id": "control:ui-step-flow",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/step-flow/step-flow.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "T-0198 step 2 — TEMPORARY seed, shipped ahead of its catalog row: the ui-step-flow control lands first, and step 3 lands the StepFlow row + factory and drains this entry (the T-0193 OptionDeck shape)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-step-flow",
+      "tier": "pattern",
+      "description": "A client-side wizard that shows its scene children one at a time under a \"Step n of m\" bar, with Back and Next of its own, Next gated on the scene's validity, and a last scene that commits.",
+      "uses": [
+        "ui-glyph"
+      ],
+      "catalogs": []
+    },
+    {
       "id": "control:ui-suggestions",
       "kind": "control",
       "source": {

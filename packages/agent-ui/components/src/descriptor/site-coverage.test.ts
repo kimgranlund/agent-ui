@@ -297,11 +297,12 @@ describe('site coverage — every shipped component has its required per-tier pa
     // ui-amount-picker (T-0196): the bounded number picker, tier=pattern, {doc, demo} at birth.
     // ui-option-deck (T-0193): the pick-one-to-start deck of option cards, tier=pattern, {doc, demo} at birth.
     // ui-confirm-receipt (T-0195): the read-back, confirm and receipt record, tier=pattern, {doc, demo} at birth.
+    // ui-step-flow (T-0198): the client-side wizard over a producer's scenes, tier=pattern, {doc, demo} at birth.
     // ui-board-grid (ADR-0243, T-0069 C1): a board of cells to target or mark, its {doc, demo} pages ship with the control.
     expect(COMPONENTS.filter((c) => c.tier === 'pattern').map((c) => c.name).sort()).toEqual(
       [
         'amount-picker', 'board-grid', 'breadcrumb', 'calendar', 'color-picker', 'combo-box', 'command-modal', 'confirm-receipt', 'disclosure', 'drill', 'file-drop', 'form-popover', 'game-hud', 'menu', 'modal',
-        'multi-select', 'option-deck', 'pagination', 'popover', 'product-card', 'result-card', 'segmented-control', 'select', 'service-card', 'status-stream', 'suggestions', 'swiper',
+        'multi-select', 'option-deck', 'pagination', 'popover', 'product-card', 'result-card', 'segmented-control', 'select', 'service-card', 'status-stream', 'step-flow', 'suggestions', 'swiper',
         'swiper-paddles', 'swiper-pagination', 'tabs', 'timeline', 'timeline-item', 'toast', 'toolbar', 'tooltip',
       ],
     )

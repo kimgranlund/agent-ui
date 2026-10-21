@@ -1237,6 +1237,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // T-0198: the client-side wizard over a producer's scenes, tier=pattern {doc, demo}.
+  {
+    label: 'ui-step-flow',
+    cards: [
+      {
+        href: './step-flow-demo.html',
+        title: 'Demo',
+        blurb: 'A five-scene booking walked on the client: Step n of m over a segmented bar, Back and Next with no agent turn, Next refused on an invalid field, and a last scene that commits itself.',
+      },
+      {
+        href: './step-flow-doc.html',
+        title: 'API reference',
+        blurb: 'The wizard: scenes as direct children, the bindable step, the draft aggregate on finish, and the self-commit row, generated from step-flow.md.',
+      },
+    ],
+  },
   // T-0193: the option deck, pick one of a few things to start, tier=pattern {doc, demo}.
   {
     label: 'ui-option-deck',
