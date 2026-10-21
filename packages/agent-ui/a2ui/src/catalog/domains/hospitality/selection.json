@@ -1,11 +1,11 @@
 {
-  "personaId": "concierge",
+  "domainId": "hospitality",
   "types": {
     "BookingForm": {
       "intents": [
         "collect booking details",
-        "reserve a table, spa slot, tour or room",
-        "date, time, choice and party-size fields in one form"
+        "a stay from arrival to departure",
+        "a seating or time and party size"
       ],
       "notFor": [
         {

@@ -95,7 +95,7 @@ describe('agent manifests: the drift gate', () => {
 
   it('bites: selection-digest', () => {
     const input = clone()
-    ;(input.folders.find((f) => f.id === 'concierge')!.selection as Record<string, unknown>)['planted'] = true
+    ;(input.folders.find((f) => f.id === 'quizmaster')!.selection as Record<string, unknown>)['planted'] = true
     expect(legsOf(input)).toContain('selection-digest')
   })
 

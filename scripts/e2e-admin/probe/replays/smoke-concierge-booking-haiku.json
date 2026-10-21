@@ -5,7 +5,7 @@
   "agent": "concierge",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "2026-10-18.jsonl:4,2026-10-18.jsonl:5 (catalog agent-ui--concierge)",
+  "source": "2026-10-18.jsonl:4,2026-10-18.jsonl:5 (catalog agent-ui--hospitality)",
   "steps": [
     {
       "say": "Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.",
@@ -30,7 +30,7 @@
     {
       "lines": [
         "{\"a2uiMeta\":{\"note\":\"Here's your spa booking: a 60-minute Swedish massage on Thursday 19 November 2026 at 15:00 for one guest, Alex Moreau, at €120. Check the details and press Book now to confirm, or tell me what to change.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"FEED_SCOPE\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46065,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
         "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"booking\":{\"service\":\"Swedish massage\",\"guestName\":\"Alex Moreau\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":\"1\",\"price\":\"€120\"}}}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"BookingForm\",\"title\":\"Spa booking\",\"fields\":[{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Treatment\",\"path\":\"service\",\"required\":true,\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"Swedish massage\"}]},{\"kind\":\"select\",\"label\":\"Time\",\"path\":\"time\",\"required\":true,\"options\":[{\"label\":\"15:00\",\"value\":\"15:00\"}]},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"}]}],\"value\":{\"path\":\"/booking\"},\"child\":\"bookBtn\"},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book now\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"context\":{\"booking\":{\"path\":\"/booking\"}},\"submit\":true}}]}}"
       ],
@@ -47,7 +47,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "ask-1",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },
@@ -160,7 +160,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "ask-1",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },
@@ -338,7 +338,7 @@
       "lines": [
         "{\"a2uiMeta\":{\"textDelta\":\"Your spa booking is confirmed and held: a 60-minute Swedish massage for one guest, Alex Moreau, on Thursday 19 November 2026 at 15:00, at €120. Please arrive a few minutes early so you can settle in before your treatment. Our spa is open 09:00 to 20:00. Is there anything else I can help with, or are we all set?\"}}",
         "{\"a2uiMeta\":{\"note\":\"Your spa booking is confirmed.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Those details are right, please confirm the booking.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_MISSING\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":47547,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1482}],\"over\":false},\"miniSkillIds\":[\"feature-collection\",\"greeting-card\"],\"cacheBoundary\":46065}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"booking-confirmation-1\",\"catalogId\":\"agent-ui--concierge\"}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"booking-confirmation-1\",\"catalogId\":\"agent-ui--hospitality\"}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"booking-confirmation-1\",\"components\":[{\"id\":\"root\",\"component\":\"BookingConfirmation\",\"title\":\"Spa booking confirmed\",\"rows\":[{\"label\":\"Treatment\",\"value\":\"Swedish massage, 60 min\"},{\"label\":\"Guest\",\"value\":\"Alex Moreau\"},{\"label\":\"Guests\",\"value\":\"1 guest\"},{\"label\":\"Date\",\"value\":\"Thursday 19 November 2026\"},{\"label\":\"Time\",\"value\":\"15:00\"},{\"label\":\"Price\",\"value\":\"€120\"}],\"data\":{\"service\":\"Swedish massage\",\"guestName\":\"Alex Moreau\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":\"1\",\"price\":\"€120\"}}]}}"
       ],
       "rounds": [
@@ -358,7 +358,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "booking-confirmation-1",
-                      "catalogId": "agent-ui--concierge"
+                      "catalogId": "agent-ui--hospitality"
                     }
                   },
                   {

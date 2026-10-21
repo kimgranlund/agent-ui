@@ -430,12 +430,12 @@ describe('the trace line records per-turn routing (T-0239)', () => {
   it('a concierge turn: the knowledge base is index-only, the booking flow loaded in full from history', async () => {
     state.script = ['{"a2uiMeta":{"note":"Late check-out to 14:00 is possible on request."}}']
     const session = { turns: [{ role: 'user', content: BOOKING_FRAMED }, { role: 'assistant', content: '{"a2uiMeta":{"note":"Which day?"}}' }] }
-    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: 'Is late check-out possible?', session }), catalogId: 'agent-ui--concierge', personaSystem: CONCIERGE_PERSONA })
+    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: 'Is late check-out possible?', session }), catalogId: 'agent-ui--hospitality', personaSystem: CONCIERGE_PERSONA })
     expect(out.status).toBe(200)
     const line = writtenLines().at(-1)!
-    expect(line).toMatchObject({ agent: 'concierge', outcome: 'ok' })
+    expect(line).toMatchObject({ agent: 'hospitality', outcome: 'ok' }) // T-0197: no body agent, so the label is the domain tail
     const routing = line.routing!
-    expect(routing.catalog).toEqual({ id: 'agent-ui--concierge', base: 'agent-ui', persona: 'concierge', domains: [] })
+    expect(routing.catalog).toEqual({ id: 'agent-ui--hospitality', base: 'agent-ui', domains: ['hospitality'] })
     expect(routing.references).toEqual([
       { kind: 'resource', name: 'property-knowledge-base', load: 'index-only', via: 'index' },
       { kind: 'resource', name: 'curated-local-guides', load: 'index-only', via: 'index' },
@@ -460,7 +460,7 @@ describe('the trace line carries the probe run id (T-0259)', () => {
   const quick = (): void => {
     state.script = ['{"a2uiMeta":{"note":"Late check-out to 14:00 is possible on request."}}']
   }
-  const body = (): Record<string, unknown> => ({ input: { kind: 'intent', text: 'late check-out?', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5', catalogId: 'agent-ui--concierge' })
+  const body = (): Record<string, unknown> => ({ input: { kind: 'intent', text: 'late check-out?', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5', catalogId: 'agent-ui--hospitality' })
 
   it('a produce turn sent with x-a2ui-run-id writes it as runId; a turn without the header writes none', async () => {
     quick()
@@ -521,7 +521,7 @@ describe('stop reason, max_tokens and the prompt store (T-0311)', () => {
   async function turnWith(events: ProviderEvent[][], runId?: string): Promise<TurnTraceCollector> {
     let call = 0
     const t = new TurnTraceCollector({ route: 'produce', provider: 'anthropic', model: 'claude-haiku-5-5', user: 'hello', ...(runId !== undefined ? { runId } : {}) })
-    t.noteRouting('agent-ui--concierge', undefined)
+    t.noteRouting('agent-ui--hospitality', undefined)
     const provider = t.wrapProvider({
       async *stream(req) {
         for (const ev of events[call++] ?? []) req.onEvent?.(ev)
@@ -593,7 +593,7 @@ describe('stop reason, max_tokens and the prompt store (T-0311)', () => {
 
   it('a live produce turn through the dev proxy writes the store: every section digest resolves, no key is stored', async () => {
     state.script = ['{"a2uiMeta":{"note":"Late check-out to 14:00 is possible on request."}}']
-    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: 'late check-out?', session: { turns: [] } }), catalogId: 'agent-ui--concierge', personaSystem: `${CONCIERGE_PERSONA}\nInternal: ${KEY}` })
+    const out = await post('/produce', { ...produceBody({ kind: 'intent', text: 'late check-out?', session: { turns: [] } }), catalogId: 'agent-ui--hospitality', personaSystem: `${CONCIERGE_PERSONA}\nInternal: ${KEY}` })
     expect(out.status).toBe(200)
     const line = writtenLines().at(-1)!
     const sections = line.routing!.sections!

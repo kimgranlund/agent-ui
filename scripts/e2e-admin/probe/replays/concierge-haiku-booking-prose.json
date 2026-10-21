@@ -4,7 +4,7 @@
   "name": "concierge-haiku-booking-prose",
   "agent": "concierge",
   "model": "claude-haiku-5-5",
-  "source": "2026-10-15.jsonl:135,2026-10-15.jsonl:136,2026-10-15.jsonl:137 (catalog agent-ui--concierge); round 3 run regress-concierge-spa-booking-haiku-1 (T-0261), turns 0 to 2",
+  "source": "2026-10-15.jsonl:135,2026-10-15.jsonl:136,2026-10-15.jsonl:137 (catalog agent-ui--hospitality); round 3 run regress-concierge-spa-booking-haiku-1 (T-0261), turns 0 to 2",
   "steps": [
     {
       "say": "What spa services can I book during my stay?"

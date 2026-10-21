@@ -112,10 +112,6 @@ export const SELECTION_PROJECTION: SelectionProjection = {
     },
   },
   persona: {
-    "concierge": {
-      "BookingForm": {"intents":["collect booking details","reserve a table, spa slot, tour or room","date, time, choice and party-size fields in one form"],"notFor":[{"type":"BookingConfirmation","why":"showing a confirmed booking"},{"type":"TextField","why":"one loose input outside a booking"},{"type":"Column","why":"an ad hoc stack of unrelated inputs"}]},
-      "BookingConfirmation": {"intents":["confirm a completed booking","summary rows of a finished booking"],"notFor":[{"type":"BookingForm","why":"collecting booking details"},{"type":"Card","why":"a generic bounded surface"},{"type":"Text","why":"a one-line status message"}]},
-    },
     "croupier": {
       "PlayingCard": {"intents":["show one playing card","a face-up or face-down card in a hand"],"notFor":[{"type":"Card","why":"a content surface"},{"type":"Image","why":"a card picture; PlayingCard draws its own face"},{"type":"Text","why":"a rank or suit written as words"},{"type":"CardTable","why":"a whole table with both hands and the moves"}]},
       "CardTable": {"intents":["a blackjack table: bet, hands, actions, result"],"notFor":[{"type":"PlayingCard","why":"one card"},{"type":"Card","why":"a content surface"}]},
@@ -129,5 +125,8 @@ export const SELECTION_PROJECTION: SelectionProjection = {
     "stylist": {
       "ContrastPair": {"intents":["a text color on a background with its contrast rating"],"notFor":[{"type":"Swatch","why":"one color alone"}]},
     },
+  },
+  domain: {
+    "hospitality": {"types":{"BookingForm":{"intents":["collect booking details","a stay from arrival to departure","a seating or time and party size"],"notFor":[{"type":"BookingConfirmation","why":"showing a confirmed booking"},{"type":"TextField","why":"one loose input outside a booking"},{"type":"Column","why":"an ad hoc stack of unrelated inputs"}]},"BookingConfirmation":{"intents":["confirm a completed booking","summary rows of a finished booking"],"notFor":[{"type":"BookingForm","why":"collecting booking details"},{"type":"Card","why":"a generic bounded surface"},{"type":"Text","why":"a one-line status message"}]}},"append":{}},
   },
 }

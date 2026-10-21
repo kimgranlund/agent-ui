@@ -49,7 +49,7 @@ describe('asset-source', () => {
   })
 
   it('listAssets(catalog/personas) lists the three persona folders', () => {
-    expect(listAssets('catalog/personas')).toEqual(['concierge', 'croupier', 'fixture-demo', 'quizmaster', 'stylist'])
+    expect(listAssets('catalog/personas')).toEqual(['croupier', 'fixture-demo', 'quizmaster', 'stylist'])
   })
 
   it('listAssets throws AgentAssetError when nothing lies under the key', () => {

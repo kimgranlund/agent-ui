@@ -150,6 +150,25 @@ describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () =>
   }
 })
 
+// T-0197: the option label takes the control type role, so it reads at the field text size, not the 1px larger body.
+describe('ui-radio label type (T-0197)', () => {
+  it('option text is the field text (T-0197)', () => {
+    for (const region of [{ tier: 'widget', scale: 'md' }, null]) {
+      const wrapper = document.createElement('div')
+      if (region) {
+        wrapper.setAttribute('data-tier', region.tier)
+        wrapper.setAttribute('data-scale', region.scale)
+      }
+      const field = document.createElement('ui-text-field')
+      const option = document.createElement('ui-radio') as UIRadioElement
+      option.textContent = 'Luigi\'s'
+      wrapper.append(field, option)
+      mount(wrapper)
+      expect(getComputedStyle(option).fontSize, region ? 'widget md' : 'root').toBe(getComputedStyle(field).fontSize)
+    }
+  })
+})
+
 // ── S3 browser smoke: real focus roves the group ─────────────────────────────────────────────────
 
 describe('ui-radio browser smoke — real focus roves the group', () => {

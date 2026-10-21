@@ -15,8 +15,8 @@ import { canonicalDigest } from '../lib/agent-manifest/agent-manifest.ts'
 const PERSONA_DIGESTS: Record<string, string> = {
   croupier: 'sha256:af63636ced529226d3394519bb7d36883ef77dbcc3f897ac618b02a040ddb9b5',
   quant: 'sha256:2f361b72b293456b7b83ddde5da2594d2e0d6c6719cac70ae9024329e9cd16ea',
-  concierge: 'sha256:6cec1459930007fa11611d4185203f3f4daf8f54721e4add66ff55ffb04b3371',
-  restaurant: 'sha256:2b43054e201bb07bf767721601ad36be7d285b7f4aa5ac95b34825296ad5ca3b',
+  concierge: 'sha256:ef2b09336e2b067b2d1fd86ff9e8eddd67c27d8a1c57988822cced2d962abf75',
+  restaurant: 'sha256:82659fe3220dd8725168898448d043f91a2257b2fe9250a3a09e51fe28bf6444',
   travel: 'sha256:2c4a69b6339917678d79c5e1390dbdde2ccba9c7b7084aeb2882e80a1f2ed02a',
   curator: 'sha256:81881cbdf3a5c96c88bf0ef47a874a020d8dc99d97520b3cd2f1763896fbcf49',
   stylist: 'sha256:5be5c45f741dd489178106991cf29bd19acc06721e592b446c7f3d95954a4226',
@@ -29,10 +29,10 @@ const PERSONA_DIGESTS: Record<string, string> = {
   alchemist: 'sha256:82635280f88abbbb9f9035e3193694d3ab47e619378192ad2b7bce3d17ece26c',
   'dungeon-master': 'sha256:28338295337eb41790cef55fb3cec257ff2bf3d3bca165cc4fac072280add2c8',
 }
-const BUILDER_DIGEST = 'sha256:3127b77df486f0a96fec2cd99ec93fbeacade3aac9545b5e66f689925eac94c6'
-const PRESETS_DIGEST = 'sha256:4656bb56b60ceff2dfa10451beaced981ecc2559739f76bd51dc434b02a70f08'
+const BUILDER_DIGEST = 'sha256:f68026d14f91395bf3f2861e45bb8ebdfb75a6fc9f4341074f83a983ec8d164a'
+const PRESETS_DIGEST = 'sha256:6fe02905bae69b6492a9ef0316d6dd9cda5ac0cf1b2b820b817e0aa907d1dd3b'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
-const LIBRARIES_DIGEST = 'sha256:bfc846062b2e484b24a5cdc1fe5eca8c13decf359ad568f4b8d18324875b6bb0'
+const LIBRARIES_DIGEST = 'sha256:6b6a475a2241f48e8694103515b178b18649ed3233b3afbee2c1c4a767577284'
 
 describe('agent-admin seeds: byte-identical across the T-0160 move to content files', () => {
   it('every roster preset assembles to its pinned digest', () => {

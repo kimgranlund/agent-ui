@@ -35,7 +35,7 @@ describe('the page model', () => {
     const ids = catalogIds(REGISTRY)
     expect(ids.slice(0, 2)).toEqual(['agent-ui', 'a2ui-basic'])
     expect(ids).toContain('agent-ui--croupier')
-    expect(ids).toContain('a2ui-basic--concierge')
+    expect(ids).toContain('a2ui-basic--croupier')
   })
 
   it('the croupier view lists PlayingCard with its tag, descriptor tier and use clause, marked persona-only', () => {

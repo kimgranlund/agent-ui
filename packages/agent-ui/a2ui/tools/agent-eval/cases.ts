@@ -4,7 +4,8 @@
 // `selection.json` sidecar (ADR-0232). The case prompts for A (A's first intent, verbatim), expects A, and
 // forbids B. Base cases come through `selectionGuidanceFor` on the registered base catalogs; persona cases
 // come from each persona dir that holds a `selection.json`, composed against the `agent-ui` base exactly
-// as the runtime derives `agent-ui--<persona>`, keeping only the edges of the fragment's OWN types.
+// as the runtime derives `agent-ui--<persona>`, keeping only the edges of the fragment's OWN types; domain cases
+// (T-0197) the same way from each shipped domain (`DOMAIN_FRAGMENTS`) over `agent-ui--<domain>`.
 //
 // The persona list is `SHIPPED_PERSONA_IDS` (`src/catalog/personas/ids.ts`, T-0209), the one list the runtime
 // guidance resolver reads too, held equal to `SHIPPED_PERSONA_CATALOG_MANIFESTS` by its test. Fragments and
@@ -16,15 +17,17 @@
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { loadCatalogById } from '../catalog-files.ts'
+import { isCatalogId, loadCatalogById } from '../catalog-files.ts'
 import { composeCatalog, loadCatalogFragment } from '../../src/catalog/compose.ts'
 import type { CatalogFragment } from '../../src/catalog/compose.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import type { Session } from '../../src/agent/agent-transport.ts'
 import { selectionGuidanceFor } from '../../src/agent/selection-guidance.ts'
 import { SHIPPED_PERSONA_IDS } from '../../src/catalog/personas/ids.ts'
+import { DOMAIN_FRAGMENTS } from '../registry/load.ts'
 
 const PERSONAS_DIR = 'packages/agent-ui/a2ui/src/catalog/personas'
+const DOMAINS_DIR = 'packages/agent-ui/a2ui/src/catalog/domains'
 const BASE_IDS = ['agent-ui', 'a2ui-basic'] as const
 const PERSONA_BASE = 'agent-ui'
 
@@ -32,7 +35,7 @@ const PERSONA_BASE = 'agent-ui'
 export interface SelectionCase {
   /** `<source>:<A>-><B>`. */
   readonly id: string
-  /** The sidecar pin: `agent-ui`, `a2ui-basic`, or a persona id. */
+  /** The sidecar pin: `agent-ui`, `a2ui-basic`, a persona id or a domain id. */
   readonly source: string
   readonly catalogId: string
   readonly expectType: string
@@ -78,19 +81,21 @@ export function personaFragmentTypes(): Map<string, string[]> {
 
 const catalogCache = new Map<string, Catalog>()
 
-/** Load a case catalog by id, cached per id: a base id (`agent-ui`, `a2ui-basic`) or a derived
- *  `agent-ui--<persona>` id composed from the persona's fragment. Throws on any other id. */
+/** Load a case catalog by id, cached per id: a base id (`agent-ui`, `a2ui-basic`), a derived
+ *  `agent-ui--<persona>` id composed from the persona's fragment, or another registered seed catalog id (the
+ *  `agent-ui--hospitality` domain, T-0197). Throws on any other id. */
 export function loadCaseCatalog(catalogId: string): Catalog {
   const cached = catalogCache.get(catalogId)
   if (cached !== undefined) return cached
   let catalog: Catalog
-  if ((BASE_IDS as readonly string[]).includes(catalogId)) {
-    catalog = loadCatalogById(root(), catalogId as (typeof BASE_IDS)[number])
-  } else {
-    const prefix = `${PERSONA_BASE}--`
-    const personaId = catalogId.startsWith(prefix) ? catalogId.slice(prefix.length) : ''
-    if (!personaIds().includes(personaId)) throw new Error(`agent-eval: unknown case catalog "${catalogId}"`)
+  const prefix = `${PERSONA_BASE}--`
+  const personaId = catalogId.startsWith(prefix) ? catalogId.slice(prefix.length) : ''
+  if (personaIds().includes(personaId)) {
     catalog = composeCatalog(loadCaseCatalog(PERSONA_BASE), personaFragment(personaId), personaId)
+  } else if (isCatalogId(catalogId)) {
+    catalog = loadCatalogById(root(), catalogId)
+  } else {
+    throw new Error(`agent-eval: unknown case catalog "${catalogId}"`)
   }
   catalogCache.set(catalogId, catalog)
   return catalog
@@ -122,6 +127,11 @@ export function deriveSelectionCases(): SelectionCase[] {
   for (const id of BASE_IDS) out.push(...casesFrom(id, loadCaseCatalog(id), undefined))
   for (const [personaId, types] of personaFragmentTypes()) {
     out.push(...casesFrom(personaId, loadCaseCatalog(`${PERSONA_BASE}--${personaId}`), types))
+  }
+  for (const { domainId, targetCatalogs } of DOMAIN_FRAGMENTS) {
+    if (!targetCatalogs.includes(PERSONA_BASE)) continue
+    const doc: unknown = JSON.parse(readFileSync(join(root(), DOMAINS_DIR, domainId, 'catalog.json'), 'utf8'))
+    out.push(...casesFrom(domainId, loadCaseCatalog(`${PERSONA_BASE}--${domainId}`), Object.keys(loadCatalogFragment(doc).components)))
   }
   return out
 }

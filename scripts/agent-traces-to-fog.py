@@ -258,7 +258,7 @@ def selftest() -> int:
     routed = {'v': 1, 'at': '2026-10-15T10:00:00.000Z', 'route': 'produce', 'agent': 'concierge', 'model': 'm', 'outcome': 'ok', 'user': 'hours?',
               'retries': [{'round': 2, 'failures': [{'code': 'PARSE', 'path': ''}]}],
               'trace': {'rounds': 2, 'healed': 0, 'failureCodes': ['PARSE'], 'exemplarIds': ['ex-1'], 'promptChars': 30},
-              'routing': {'catalog': {'id': 'agent-ui--concierge', 'base': 'agent-ui', 'persona': 'concierge', 'domains': []},
+              'routing': {'catalog': {'id': 'agent-ui--hospitality', 'base': 'agent-ui', 'domains': ['hospitality']},
                           'references': [{'kind': 'resource', 'name': 'property-knowledge-base', 'load': 'index-only', 'via': 'index'},
                                          {'kind': 'workflow', 'name': 'booking-flow', 'load': 'full', 'via': 'history'}],
                           'miniSkills': ['card-layout'], 'cacheBoundary': 20,
@@ -282,7 +282,7 @@ def selftest() -> int:
     check(states.get('workflow:booking-flow') == 'read', 'full entry is read')
     check(states.get('mini-skill:card-layout') == 'read' and states.get('section:grammar') == 'read', 'mini-skill and section are read')
     included = {(c['eventId'], c['sourceId']) for c in data['contextRecords']}
-    check(('e0', 'workflow:booking-flow') in included and ('e0', 'persona:concierge') in included, 'included records for loaded sources')
+    check(('e0', 'workflow:booking-flow') in included and ('e0', 'domain:hospitality') in included, 'included records for loaded sources')
     check([c['sourceId'] for c in data['candidates']] == ['resource:property-knowledge-base'], 'index-only entry is an available candidate')
     off = dict(routed, routing=dict(routed['routing'], sections=[{'id': 'persona', 'chars': 10, 'cache': 'volatile'}]))
     with tempfile.TemporaryDirectory() as tmp:

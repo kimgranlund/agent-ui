@@ -5,7 +5,7 @@
   "agent": "concierge",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "2026-10-15.jsonl:57,2026-10-15.jsonl:58,2026-10-15.jsonl:59,2026-10-15.jsonl:60 (catalog agent-ui--concierge)",
+  "source": "2026-10-15.jsonl:57,2026-10-15.jsonl:58,2026-10-15.jsonl:59,2026-10-15.jsonl:60 (catalog agent-ui--hospitality)",
   "steps": [
     {
       "say": "What spa services can I book during my stay?"

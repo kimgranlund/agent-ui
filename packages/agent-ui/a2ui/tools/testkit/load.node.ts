@@ -5,14 +5,15 @@
 //     `__seeded__/<layer>/` directory (regular files directly in it; Kim's 2026-10-05 ruling).
 //   - `nodeCatalogResolver(cwd)` resolves a catalog id lazily: a base id through `loadCatalogById`, and
 //     `<base>--<persona>` through `composeCatalog(base, loadCatalogFragment(<persona catalog.json>),
-//     persona)` (the `tools/agent-eval/cases.ts` precedent). Plain Node cannot import the catalog modules
+//     persona)` (the `tools/agent-eval/cases.ts` precedent), and `<base>--<d1>+<d2>` through
+//     `composeDomainCatalog` over each `domains/<id>/catalog.json` (T-0197). Plain Node cannot import the catalog modules
 //     (`ERR_IMPORT_ATTRIBUTE_MISSING` on their JSON imports), so this resolver is the Node path; a parity
 //     test (`load.test.ts`) holds it equal to the module catalogs.
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import type { Catalog } from '../../src/catalog/catalog.ts'
-import { composeCatalog, loadCatalogFragment } from '../../src/catalog/compose.ts'
+import { composeCatalog, composeDomainCatalog, loadCatalogFragment } from '../../src/catalog/compose.ts'
 import { splitCatalogId } from '../../src/catalog/catalog-id.ts'
 import { isCatalogId, loadCatalogById } from '../catalog-files.ts'
 import { verifyPins } from '../agent-eval/pins.ts'
@@ -20,6 +21,7 @@ import type { KitFile } from './load.vite.ts'
 
 export const KIT_REL = 'packages/agent-ui/a2ui/tools/testkit'
 const PERSONAS_REL = 'packages/agent-ui/a2ui/src/catalog/personas'
+const DOMAINS_REL = 'packages/agent-ui/a2ui/src/catalog/domains'
 
 function jsonFiles(dir: string): string[] {
   if (!existsSync(dir)) return []
@@ -75,6 +77,14 @@ export function nodeCatalogResolver(cwd: string): (catalogId: string) => Catalog
         const file = join(cwd, PERSONAS_REL, persona, 'catalog.json')
         if (base !== undefined && existsSync(file)) {
           catalog = composeCatalog(base, loadCatalogFragment(JSON.parse(readFileSync(file, 'utf8'))), persona)
+        } else if (base !== undefined) {
+          const files = persona.split('+').map((d) => ({ domainId: d, file: join(cwd, DOMAINS_REL, d, 'catalog.json') }))
+          if (new Set(files.map((f) => f.domainId)).size === files.length && files.every((f) => existsSync(f.file))) {
+            const domains = files.map((f) => ({ domainId: f.domainId, fragment: loadCatalogFragment(JSON.parse(readFileSync(f.file, 'utf8'))) }))
+            const derived = composeDomainCatalog(base, domains)
+            // A reversed or repeated spelling is not a shipped id.
+            if (derived.catalogId === id) catalog = derived
+          }
         }
       }
     }

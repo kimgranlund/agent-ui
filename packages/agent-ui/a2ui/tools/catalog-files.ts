@@ -47,7 +47,7 @@ export const CATALOG_FILES: Readonly<Record<SeedCatalogId, string>> = {
   'agent-ui': 'packages/agent-ui/a2ui/src/catalog/default/catalog.json',
   'a2ui-basic': 'packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json',
   'agent-ui--croupier': 'packages/agent-ui/a2ui/src/catalog/personas/croupier/catalog.json',
-  'agent-ui--concierge': 'packages/agent-ui/a2ui/src/catalog/personas/concierge/catalog.json',
+  'agent-ui--hospitality': 'packages/agent-ui/a2ui/src/catalog/domains/hospitality/catalog.json',
 }
 
 /** The registered catalog ids, in registration order (for usage and error text). */

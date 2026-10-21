@@ -47,9 +47,11 @@ export const PERSONA_FRAGMENTS: readonly { readonly personaId: string; readonly 
 ).sort((a, b) => (a.personaId < b.personaId ? -1 : 1))
 
 /** T-0202 (catalog architecture CA-R7): the shipped domain fragments and their bases, hard-coded and held equal to
- *  `SHIPPED_DOMAIN_CATALOG_MANIFESTS` by `registry-wiring.test.ts`. Empty until W1 lands the first domain; their
- *  sidecars reach the selection projection under `domain`, which is omitted while this list is empty. */
-export const DOMAIN_FRAGMENTS: readonly { readonly domainId: string; readonly targetCatalogs: readonly string[] }[] = []
+ *  `SHIPPED_DOMAIN_CATALOG_MANIFESTS` by `registry-wiring.test.ts`. Their sidecars reach the selection projection
+ *  under `domain`, which is omitted while this list is empty. Hospitality is the first (T-0197). */
+export const DOMAIN_FRAGMENTS: readonly { readonly domainId: string; readonly targetCatalogs: readonly string[] }[] = [
+  { domainId: 'hospitality', targetCatalogs: ['agent-ui', 'a2ui-basic'] },
+]
 
 /** The corpus shard kinds, one folder each under `corpus/`. */
 const CORPUS_KINDS = ['exemplar', 'multi-turn', 'repair'] as const

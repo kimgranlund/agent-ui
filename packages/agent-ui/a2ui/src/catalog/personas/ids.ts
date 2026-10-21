@@ -3,4 +3,4 @@
 // `ids.test.ts` holds it equal to `SHIPPED_PERSONA_CATALOG_MANIFESTS`, so a persona added there without a line here
 // reds, and the reverse.
 
-export const SHIPPED_PERSONA_IDS: readonly string[] = ['fixture-demo', 'concierge', 'croupier', 'quizmaster', 'stylist']
+export const SHIPPED_PERSONA_IDS: readonly string[] = ['fixture-demo', 'croupier', 'quizmaster', 'stylist']

@@ -33,7 +33,7 @@ export type BaseCatalogId = 'agent-ui' | 'a2ui-basic'
  *  fragment (CardTable, BookingForm) is admitted against the composed `<base>--<persona>` catalog and lands in
  *  `corpus/exemplar/v1_0/<base>--<persona>.jsonl`. Listed one by one, never a template, so each stays a
  *  deliberate registration. */
-export type PersonaShardCatalogId = 'agent-ui--croupier' | 'agent-ui--concierge'
+export type PersonaShardCatalogId = 'agent-ui--croupier' | 'agent-ui--hospitality'
 
 /** The catalog ids a corpus seed may render against: the two bases and the persona shards. Widening this union
  *  is a deliberate act: every `Record<SeedCatalogId, ...>` registry (the Node-side catalog file map, the
@@ -66,7 +66,7 @@ export interface ExampleSeed<C extends SeedCatalogId = 'agent-ui'> {
  *  their own `allPersonaSeeds` shelf. A persona CORPUS seed is an `ExampleSeed<PersonaShardCatalogId>` on
  *  `allPersonaCorpusSeeds` instead (T-0240). */
 export interface PersonaExampleSeed extends Omit<ExampleSeed<SeedCatalogId>, 'catalogId'> {
-  /** The derived catalog id this seed renders against, for example `agent-ui--concierge`. */
+  /** The derived catalog id this seed renders against, for example `agent-ui--hospitality`. */
   catalogId: `${BaseCatalogId}--${string}`
 }
 

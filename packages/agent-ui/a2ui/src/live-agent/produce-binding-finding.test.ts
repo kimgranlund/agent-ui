@@ -11,18 +11,18 @@ import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
 import { readMetaLine } from '../agent/meta-line.ts'
 import { composeCatalog } from '../catalog/compose.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
-import { conciergeFragment } from '../catalog/personas/concierge/manifest.ts'
-import { conciergeSemanticChecks } from '../catalog/personas/concierge/checks.ts'
+import { hospitalityFragment } from '../catalog/domains/hospitality/manifest.ts'
+import { hospitalitySemanticChecks } from '../catalog/domains/hospitality/checks.ts'
 import { compositeMomentChecks } from '../catalog/composite-moments.ts'
 import { gateChecksOnCatalog } from '../catalog/semantic-check.ts'
 
-const catalog = composeCatalog(defaultCatalog, conciergeFragment, 'concierge')
-const semanticChecks = gateChecksOnCatalog([...conciergeSemanticChecks, ...compositeMomentChecks], catalog)
+const catalog = composeCatalog(defaultCatalog, hospitalityFragment, 'hospitality')
+const semanticChecks = gateChecksOnCatalog([...hospitalitySemanticChecks, ...compositeMomentChecks], catalog)
 const input: TurnInput = { kind: 'intent', text: 'What spa services can I book during my stay?', session: { turns: [] } }
 
 const NOTE = '{"a2uiMeta":{"note":"Here are the spa treatments you can book."}}'
 const surface = (components: unknown[]): string =>
-  `${NOTE}\n{"version":"v1.0","createSurface":{"surfaceId":"spa-menu","catalogId":"agent-ui--concierge"}}\n` +
+  `${NOTE}\n{"version":"v1.0","createSurface":{"surfaceId":"spa-menu","catalogId":"agent-ui--hospitality"}}\n` +
   JSON.stringify({ version: 'v1.0', updateComponents: { surfaceId: 'spa-menu', components } })
 const TABLE = surface([
   {

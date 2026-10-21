@@ -8,6 +8,7 @@ import { describe, it, expect } from 'vitest'
 import { createMemoryStore } from '../settings/memory-store.ts'
 import {
   A2UI_CATALOG_KEY,
+  A2UI_DOMAINS_KEY,
   A2UI_LOCAL_PATTERNS_KEY,
   AGENT_ENABLED_KEY,
   BANKROLL_CAPABLE_KEY,
@@ -76,6 +77,7 @@ describe('the canonical key set (LLD-C1) — one enumeration, two consumers', ()
         [MODELS_INCLUDED_KEY]: { [DEFAULT_MODEL_ID]: true },
         [A2UI_CATALOG_KEY]: 'agent-ui',
         [A2UI_LOCAL_PATTERNS_KEY]: undefined, // no selection is the only universally-valid value here
+        [A2UI_DOMAINS_KEY]: 'hospitality', // a shipped domain (T-0197)
         [BANKROLL_KEY]: 25,
       }
       const value = key in probe ? probe[key] : true // every remaining key is a switch

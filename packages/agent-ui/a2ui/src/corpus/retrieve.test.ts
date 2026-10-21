@@ -455,7 +455,7 @@ describe('retrieve: the effective-catalog type filter (T-0202)', () => {
 })
 
 // T-0238: exemplars follow the turn's selected domains, as mini-skills do. `agent-ui--croupier` selects `games`,
-// `agent-ui--concierge` selects `hospitality`, a base id selects none.
+// `agent-ui--hospitality` selects `hospitality`, a base id selects none.
 describe('retrieve: the selected-domain rule (T-0238)', () => {
   const records = [
     exemplar({ name: 'board', promptText: 'show the game board', componentsUsed: ['BoardGrid', 'Text'] }),
@@ -466,7 +466,7 @@ describe('retrieve: the selected-domain rule (T-0238)', () => {
 
   it('a domain turn never retrieves another domain composite, and ranks its own first', () => {
     // T-0273: a croupier turn now drops the board too (another game's composite), so a concierge turn shows the rule.
-    const names = retrieve(records, query({ intent: 'show the game board', catalogId: 'agent-ui--concierge' })).map((r) => r.name)
+    const names = retrieve(records, query({ intent: 'show the game board', catalogId: 'agent-ui--hospitality' })).map((r) => r.name)
     expect(names).toEqual(['service', 'plain'])
   })
 
@@ -484,7 +484,7 @@ describe('retrieve: the selected-domain rule (T-0238)', () => {
   })
 
   it('the fallback tier never pads with a zero-score record', () => {
-    const names = retrieve(records, query({ intent: 'roster', catalogId: 'agent-ui--concierge' })).map((r) => r.name)
+    const names = retrieve(records, query({ intent: 'roster', catalogId: 'agent-ui--hospitality' })).map((r) => r.name)
     expect(names).toEqual(['service', 'unrelated'])
   })
 
@@ -500,7 +500,7 @@ describe('retrieve: the persona-shard scope rule (T-0240)', () => {
   const records = [
     exemplar({ name: 'base-table', promptText: 'deal a hand of cards at the table' }),
     exemplar({ name: 'croupier-table', promptText: 'deal a hand of cards at the table', catalogId: 'agent-ui--croupier' }),
-    exemplar({ name: 'concierge-booking', promptText: 'deal a hand of cards at the table', catalogId: 'agent-ui--concierge' }),
+    exemplar({ name: 'concierge-booking', promptText: 'deal a hand of cards at the table', catalogId: 'agent-ui--hospitality' }),
     exemplar({ name: 'basic-croupier', promptText: 'deal a hand of cards at the table', catalogId: 'a2ui-basic--croupier' }),
   ]
 
@@ -510,7 +510,7 @@ describe('retrieve: the persona-shard scope rule (T-0240)', () => {
   })
 
   it('another persona turn never sees that shard', () => {
-    const names = retrieve(records, query({ intent: 'deal a hand of cards', catalogId: 'agent-ui--concierge' })).map((r) => r.name)
+    const names = retrieve(records, query({ intent: 'deal a hand of cards', catalogId: 'agent-ui--hospitality' })).map((r) => r.name)
     expect(names.sort()).toEqual(['base-table', 'concierge-booking'])
   })
 

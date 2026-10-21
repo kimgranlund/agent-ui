@@ -13,8 +13,10 @@ import type { GenUiMode } from '../../src/agent/gen-ui-mode.ts'
 import type { Catalog } from '../../src/catalog/catalog.ts'
 import { defaultCatalog } from '../../src/catalog/default/index.ts'
 import { a2uiBasicCatalog } from '../../src/catalog/a2ui-basic/index.ts'
-import { composeCatalog } from '../../src/catalog/compose.ts'
+import { composeCatalog, composeDomainCatalogDocs } from '../../src/catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOGS } from '../../src/catalog/personas/index.ts'
+import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../../src/catalog/domains/manifests.ts'
+import { splitCatalogId } from '../../src/catalog/catalog-id.ts'
 
 // Typed off the builder's own parameter, never `CorpusRecord` by name: `src/corpus/*` is import-barred
 // outside itself (ADR-0062), the `produce-loop.test.ts` precedent.
@@ -82,15 +84,22 @@ export function worstArgs(
 
 export const BASES: Readonly<Record<string, Catalog>> = { 'agent-ui': defaultCatalog, 'a2ui-basic': a2uiBasicCatalog }
 
-/** Every shipped persona fragment composed onto each base it targets, with that base's id. */
-export const DERIVED_CATALOGS: readonly { catalog: Catalog; baseId: string }[] = SHIPPED_PERSONA_CATALOGS.flatMap((p) =>
-  (p.targetCatalogs !== undefined && p.targetCatalogs.length > 0 ? p.targetCatalogs : ['agent-ui']).map((baseId) => ({
-    catalog: composeCatalog(BASES[baseId]!, p.fragment, p.personaId),
-    baseId,
+/** Every shipped persona fragment composed onto each base it targets, then every shipped domain set composed
+ *  onto each base its domains target (`<base>--<d1>+<d2>`, T-0197), each with that base's id. */
+export const DERIVED_CATALOGS: readonly { catalog: Catalog; baseId: string }[] = [
+  ...SHIPPED_PERSONA_CATALOGS.flatMap((p) =>
+    (p.targetCatalogs !== undefined && p.targetCatalogs.length > 0 ? p.targetCatalogs : ['agent-ui']).map((baseId) => ({
+      catalog: composeCatalog(BASES[baseId]!, p.fragment, p.personaId),
+      baseId,
+    })),
+  ),
+  ...[...composeDomainCatalogDocs(new Map(Object.entries(BASES)), SHIPPED_DOMAIN_CATALOG_MANIFESTS).values()].map((catalog) => ({
+    catalog,
+    baseId: splitCatalogId(catalog.catalogId).base,
   })),
-)
+]
 
-/** A base or shipped `<base>--<persona>` catalog by id, with its base id; undefined for any other id. */
+/** A base or shipped `<base>--<persona>` or `<base>--<domains>` catalog by id, with its base id; undefined for any other id. */
 export function catalogForId(id: string): { catalog: Catalog; baseId: string } | undefined {
   if (Object.hasOwn(BASES, id)) return { catalog: BASES[id]!, baseId: id }
   return DERIVED_CATALOGS.find((d) => d.catalog.catalogId === id)

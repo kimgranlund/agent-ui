@@ -80,7 +80,7 @@ const deckOptions = (n: number): { value: string; title: string }[] =>
   ['plan a trip', 'write a story', 'learn a recipe', 'start a quiz', 'draft an email', 'pick a book', 'set a goal', 'compare phones', 'name a pet']
     .slice(0, n)
     .map((value) => ({ value, title: value[0]!.toUpperCase() + value.slice(1) }))
-const CONCIERGE = 'agent-ui--concierge'
+const CONCIERGE = 'agent-ui--hospitality'
 const CROUPIER = 'agent-ui--croupier'
 const STYLIST = 'agent-ui--stylist'
 

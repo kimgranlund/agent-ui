@@ -87,8 +87,8 @@ describe('sanitizeDomains and the domains effective id (CA-R3)', () => {
     expect(resolveEffectiveCatalogId('agent-ui', undefined, 'hospitality+design', seeded)).toBe('agent-ui--design+hospitality')
     expect(resolveEffectiveCatalogId('a2ui-basic', undefined, 'games', seeded)).toBe('a2ui-basic--games')
     expect(resolveEffectiveCatalogId('a2ui-basic', undefined, 'games+design', seeded)).toBe('a2ui-basic')
-    expect(resolveEffectiveCatalogId('agent-ui', 'concierge', 'games', seeded), 'a domains selection wins over the local set').toBe('agent-ui--games')
-    expect(resolveEffectiveCatalogId('agent-ui', 'concierge', undefined, seeded)).toBe('agent-ui--concierge')
+    expect(resolveEffectiveCatalogId('agent-ui', 'stylist', 'games', seeded), 'a domains selection wins over the local set').toBe('agent-ui--games')
+    expect(resolveEffectiveCatalogId('agent-ui', 'stylist', undefined, seeded)).toBe('agent-ui--stylist')
   })
 
   it('sanitizeCatalog refuses a domain id while no domain ships, and any non-canonical spelling', () => {

@@ -17,7 +17,7 @@
 // (SPEC-R2 AC3's own second half).
 //
 // Derived-id naming (OF1b, ruled): `<base>--<persona>` (`derivedCatalogId` below) — e.g.
-// `agent-ui--concierge`, `a2ui-basic--croupier`. Disambiguates by construction once composition targets
+// `agent-ui--stylist`, `a2ui-basic--croupier`. Disambiguates by construction once composition targets
 // more than one base (SPEC-N5's widening) — a bare `croupier` alone could not tell a reader or
 // `sanitizeCatalog` which base it derived from.
 //
@@ -99,7 +99,7 @@ export class CatalogComposeError extends Error {
   }
 }
 
-/** OF1b — the derived-catalogId naming convention: `<base>--<persona>` (e.g. `agent-ui--concierge`,
+/** OF1b — the derived-catalogId naming convention: `<base>--<persona>` (e.g. `agent-ui--stylist`,
  *  `a2ui-basic--croupier`). One derivation per (fragment, targeted base) pairing (SPEC-R2) — never a
  *  three-way merge. */
 export function derivedCatalogId(baseId: string, personaId: string): string {

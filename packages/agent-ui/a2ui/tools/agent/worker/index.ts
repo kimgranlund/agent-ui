@@ -57,7 +57,7 @@ import basicCatalogRaw from '../../../src/catalog/a2ui-basic/catalog.json'
 import corpusShardRaw from '../../../corpus/exemplar/v1_0/agent-ui.jsonl'
 // T-0240: the persona shards, the rest of the agent-ui family the dev proxy reads through `loadAgentUiExemplarShards`
 // (a Worker cannot read a directory; `tools/corpus/exemplar-shards.test.ts` holds this list equal to the files).
-import conciergeShardRaw from '../../../corpus/exemplar/v1_0/agent-ui--concierge.jsonl'
+import hospitalityShardRaw from '../../../corpus/exemplar/v1_0/agent-ui--hospitality.jsonl'
 import croupierShardRaw from '../../../corpus/exemplar/v1_0/agent-ui--croupier.jsonl'
 
 interface Env {
@@ -89,7 +89,7 @@ const basicCatalog: Catalog = loadCatalog(basicCatalogRaw)
 // `agent-ui--croupier`) resolves to its REAL composed catalog instead of silently degrading to the
 // default via `selectCatalog`'s fail-closed fallback.
 const catalogs = buildCatalogMap(catalog, basicCatalog)
-const shard: CorpusRecord[] = [corpusShardRaw, conciergeShardRaw, croupierShardRaw]
+const shard: CorpusRecord[] = [corpusShardRaw, croupierShardRaw, hospitalityShardRaw]
   .flatMap((raw) => raw.split('\n'))
   .filter((l) => l.trim().length > 0)
   .map((l) => JSON.parse(l) as CorpusRecord)

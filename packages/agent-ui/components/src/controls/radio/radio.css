@@ -7,6 +7,7 @@
  *       radio box tracks scale automatically (ADR-0038 pattern). [checked] reflects so the dot selector
  *       works as a CSS attribute hook (the custom state :state(checked) is the browser-only alternative;
  *       both selectors appear for coverage).
+ *       T-0197: the label text takes the control type role (--ui-radio-font), so an option reads at the field text size.
  *   [2] STYLES BLOCK — `@scope (ui-radio)` consumes only `--ui-radio-*`.
  *       Anatomy: the host is an inline-flex row; `::before` is the circular indicator box (border-radius
  *       50%); `::after` is the checked DOT, a separate absolutely-positioned circle centred on `::before`
@@ -57,16 +58,21 @@
 
   /* Gap: between the circle and the label slot (font/2, the anatomy gap law — density-bearing). */
   --ui-radio-gap: var(--md-sys-inset, var(--md-sys-gap-md));
+
+  /* Label type: the control role, the field text at every register (T-0197; body type is 1px larger). */
+  --ui-radio-font: var(--md-sys-type-control, var(--md-sys-font-md));
 }
 
 /* [size] → compact ramp repoint (ADR-0041). Gap follows the font-size tier (density gap = font/2). */
 :where(ui-radio[size='sm']) {
   --ui-radio-box: var(--md-sys-icon-box, var(--md-sys-compact-sm));
   --ui-radio-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-radio-font: var(--md-sys-type-control, var(--md-sys-font-sm));
 }
 :where(ui-radio[size='lg']) {
   --ui-radio-box: var(--md-sys-icon-box, var(--md-sys-compact-lg));
   --ui-radio-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-radio-font: var(--md-sys-type-control, var(--md-sys-font-lg));
 }
 
 /* disabled → the fleet disabled recipe (T-0139): the ring keeps its outline at outline-variant, the checked fill
@@ -93,6 +99,7 @@
     align-items: center;
     gap: var(--ui-radio-gap);
     position: relative;
+    font-size: var(--ui-radio-font);
 
     /* Control-standard single-line line-height (ADR-0036): 1 keeps the text box = the font box. */
     line-height: var(--md-sys-control-line-height);

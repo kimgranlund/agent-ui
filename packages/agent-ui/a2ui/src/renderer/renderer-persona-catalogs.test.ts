@@ -97,13 +97,13 @@ describe('createRenderer — SPEC-R2 derive-then-register wiring, real construct
 // derive-then-register wiring end-to-end for `BookingForm` itself (`ui-form-provider` carries no form
 // association of its own — form-provider.ts extends `UIElement` directly, never `UIFormElement`). Full
 // connected/submit/gating/aggregation behavior is proven in a real browser —
-// `catalog/personas/concierge/concierge.browser.test.ts`. `PlayingCard` (`ui-card`+`ui-text`, neither
+// `catalog/domains/hospitality/hospitality.browser.test.ts`. `PlayingCard` (`ui-card`+`ui-text`, neither
 // form-associated) has no such gap and is proven fully connected here.
 
 describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R2 derive-then-register wiring, real constructor)', () => {
-  it('agent-ui--concierge resolves BookingForm as a real ui-form-provider (fields: [] — jsdom-safe)', async () => {
-    const { r, mount, sent, cleanup } = await harness('agent-ui--concierge')
-    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's5', catalogId: 'agent-ui--concierge' } }))
+  it('agent-ui--hospitality resolves BookingForm as a real ui-form-provider (fields: [] — jsdom-safe)', async () => {
+    const { r, mount, sent, cleanup } = await harness('agent-ui--hospitality')
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's5', catalogId: 'agent-ui--hospitality' } }))
     r.ingest(
       line({
         version: 'v1.0',
@@ -117,9 +117,9 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     cleanup()
   })
 
-  it('agent-ui--concierge resolves BookingConfirmation as a real ui-card, rows bound to a live data-model object', async () => {
-    const { r, mount, sent, cleanup } = await harness('agent-ui--concierge')
-    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's6', catalogId: 'agent-ui--concierge' } }))
+  it('agent-ui--hospitality resolves BookingConfirmation as a real ui-card, rows bound to a live data-model object', async () => {
+    const { r, mount, sent, cleanup } = await harness('agent-ui--hospitality')
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's6', catalogId: 'agent-ui--hospitality' } }))
     r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 's6', path: '/booking', value: { checkIn: '2026-08-10' } } }))
     r.ingest(
       line({
@@ -149,9 +149,9 @@ describe('createRenderer — GH #497 concierge/croupier content personas (SPEC-R
     cleanup()
   })
 
-  it('a2ui-basic--concierge resolves too — the SAME fragment composed independently over the OTHER base', async () => {
-    const { r, mount, sent, cleanup } = await harness('a2ui-basic--concierge')
-    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's7', catalogId: 'a2ui-basic--concierge' } }))
+  it('a2ui-basic--hospitality resolves too — the SAME fragment composed independently over the OTHER base', async () => {
+    const { r, mount, sent, cleanup } = await harness('a2ui-basic--hospitality')
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 's7', catalogId: 'a2ui-basic--hospitality' } }))
     r.ingest(line({ version: 'v1.0', updateComponents: { surfaceId: 's7', components: [{ id: 'root', component: 'BookingForm', fields: [] }] } }))
     expect(sent.filter(isError)).toEqual([])
     expect(mount.querySelector('ui-form-provider')).not.toBeNull()

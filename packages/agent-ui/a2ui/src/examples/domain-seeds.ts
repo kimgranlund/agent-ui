@@ -90,7 +90,7 @@ export const domainCroupierRoundSeed: ExampleSeed<'agent-ui--croupier'> = {
 const BOOKING_SID = 'stay-booking'
 
 /** The Concierge's request turn: the guest's choices start empty and travel back on submit. */
-export const domainConciergeBookingSeed: ExampleSeed<'agent-ui--concierge'> = {
+export const domainConciergeBookingSeed: ExampleSeed<'agent-ui--hospitality'> = {
   name: 'domain-concierge-booking-request',
   description:
     'The concierge persona over the agent-ui base: one BookingForm titled "Book your stay" as the surface root, ' +
@@ -102,9 +102,9 @@ export const domainConciergeBookingSeed: ExampleSeed<'agent-ui--concierge'> = {
   promptText: 'I\'d like to book a room at the hotel. Let me pick my dates, the room type and whether I want breakfast.',
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
-  catalogId: 'agent-ui--concierge',
+  catalogId: 'agent-ui--hospitality',
   messages: [
-    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--concierge', sendDataModel: true } },
+    { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--hospitality', sendDataModel: true } },
     {
       version: 'v1.0',
       updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: { checkIn: '', checkOut: '', roomType: '', breakfast: '' } },

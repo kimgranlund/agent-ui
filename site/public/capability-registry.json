@@ -2075,23 +2075,6 @@
       "records": 83
     },
     {
-      "id": "corpus-shard:exemplar/agent-ui--concierge",
-      "kind": "corpus-shard",
-      "source": {
-        "path": "packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui--concierge.jsonl"
-      },
-      "status": {
-        "state": "scoped"
-      },
-      "consumers": [
-        "prompt",
-        "corpus"
-      ],
-      "name": "exemplar/agent-ui--concierge",
-      "scope": "agent-ui--concierge",
-      "records": 1
-    },
-    {
       "id": "corpus-shard:exemplar/agent-ui--croupier",
       "kind": "corpus-shard",
       "source": {
@@ -2106,6 +2089,23 @@
       ],
       "name": "exemplar/agent-ui--croupier",
       "scope": "agent-ui--croupier",
+      "records": 1
+    },
+    {
+      "id": "corpus-shard:exemplar/agent-ui--hospitality",
+      "kind": "corpus-shard",
+      "source": {
+        "path": "packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui--hospitality.jsonl"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "corpus"
+      ],
+      "name": "exemplar/agent-ui--hospitality",
+      "scope": "agent-ui--hospitality",
       "records": 1
     },
     {
@@ -6097,100 +6097,6 @@
     }
   ],
   "personas": {
-    "concierge": [
-      {
-        "id": "fragment:concierge",
-        "kind": "fragment",
-        "source": {
-          "path": "packages/agent-ui/a2ui/src/catalog/personas/concierge/catalog.json"
-        },
-        "status": {
-          "state": "shipped"
-        },
-        "consumers": [
-          "prompt",
-          "renderer"
-        ],
-        "name": "concierge",
-        "targetCatalogs": [
-          "agent-ui",
-          "a2ui-basic"
-        ]
-      },
-      {
-        "id": "type:concierge/BookingConfirmation",
-        "kind": "type",
-        "source": {
-          "path": "packages/agent-ui/a2ui/src/catalog/personas/concierge/catalog.json",
-          "record": "BookingConfirmation"
-        },
-        "status": {
-          "state": "emittable"
-        },
-        "consumers": [
-          "prompt",
-          "renderer",
-          "eval"
-        ],
-        "name": "BookingConfirmation",
-        "scope": "concierge",
-        "intents": [
-          "confirm a completed booking",
-          "summary rows of a finished booking"
-        ],
-        "notFor": [
-          {
-            "type": "BookingForm",
-            "why": "collecting booking details"
-          },
-          {
-            "type": "Card",
-            "why": "a generic bounded surface"
-          },
-          {
-            "type": "Text",
-            "why": "a one-line status message"
-          }
-        ]
-      },
-      {
-        "id": "type:concierge/BookingForm",
-        "kind": "type",
-        "source": {
-          "path": "packages/agent-ui/a2ui/src/catalog/personas/concierge/catalog.json",
-          "record": "BookingForm"
-        },
-        "status": {
-          "state": "emittable"
-        },
-        "consumers": [
-          "prompt",
-          "renderer",
-          "eval"
-        ],
-        "name": "BookingForm",
-        "scope": "concierge",
-        "intents": [
-          "collect booking details",
-          "reserve a table, spa slot, tour or room",
-          "date, time, choice and party-size fields in one form"
-        ],
-        "notFor": [
-          {
-            "type": "BookingConfirmation",
-            "why": "showing a confirmed booking"
-          },
-          {
-            "type": "TextField",
-            "why": "one loose input outside a booking"
-          },
-          {
-            "type": "Column",
-            "why": "an ad hoc stack of unrelated inputs"
-          }
-        ]
-      }
-    ],
     "croupier": [
       {
         "id": "fragment:croupier",

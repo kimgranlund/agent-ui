@@ -451,7 +451,7 @@ describe('ui-surface-host: a cold lazy catalog settles before the post-ingest de
 
   it('disconnecting while the load is pending leaves nothing behind: the late settle touches neither the old nor a rebuilt artboard', async () => {
     const el = mount(document.createElement('ui-surface-host') as UISurfaceHostElement)
-    el.ingest(create('cold-gone', 'a2ui-basic--concierge'))
+    el.ingest(create('cold-gone', 'a2ui-basic--hospitality'))
     el.ingest(column('cold-gone'))
     el.finalize()
     const parent = el.parentElement!

@@ -12,6 +12,7 @@ import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS, composeLiveSystemPrompt } from '@
 import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
 import { lintSectionContent } from '@agent-ui/app/agent-admin-prompt-lint'
 import { SELECTION_PROJECTION } from '@agent-ui/a2ui/registry'
+import { SHIPPED_DOMAIN_CATALOGS } from '@agent-ui/a2ui'
 import { committedSecretKeys, secretKeysNamedIn, type CorpusRecord } from '@agent-ui/a2ui/corpus'
 import {
   AGENT_PRESETS,
@@ -467,7 +468,9 @@ const FRAGMENT_TYPES: Record<string, Set<string>> = Object.fromEntries(
     .filter((id) => existsSync(`${CATALOG_DIR}/personas/${id}/catalog.json`))
     .map((id) => [id, new Set(Object.keys(catalogComponents(`${CATALOG_DIR}/personas/${id}/catalog.json`)))]),
 )
-const ALL_TYPES = new Set([...DEFAULT_TYPES, ...Object.values(FRAGMENT_TYPES).flatMap((types) => [...types])])
+// T-0197: a preset's `domains` compose their types onto its base too (the hospitality domain's BookingForm).
+const DOMAIN_TYPES: Record<string, Set<string>> = Object.fromEntries(SHIPPED_DOMAIN_CATALOGS.map((d) => [d.domainId, new Set(Object.keys(d.fragment.components))]))
+const ALL_TYPES = new Set([...DEFAULT_TYPES, ...[...Object.values(FRAGMENT_TYPES), ...Object.values(DOMAIN_TYPES)].flatMap((types) => [...types])])
 const TEXT_VARIANTS = new Set(DEFAULT_COMPONENTS.Text!.properties!.variant!.type!.enum!)
 
 /** Every catalog-shaped claim one prose text makes. */
@@ -497,7 +500,9 @@ describe('preset and library prose against the live catalogs (T-0159)', () => {
     for (const preset of AGENT_PRESETS) {
       const fragment = preset.localPatterns === undefined ? new Set<string>() : FRAGMENT_TYPES[preset.localPatterns]
       expect(fragment, `${preset.id} localPatterns names a shipped fragment`).toBeDefined()
-      const scope = new Set([...DEFAULT_TYPES, ...fragment!])
+      const domains = (preset.domains ?? []).map((id) => DOMAIN_TYPES[id])
+      for (const d of domains) expect(d, `${preset.id} domains names a shipped domain`).toBeDefined()
+      const scope = new Set([...DEFAULT_TYPES, ...fragment!, ...domains.flatMap((d) => [...d!])])
       const texts: [string, string][] = [
         ['surfaceStyle', preset.surfaceStyle],
         ...[...preset.skills, ...preset.workflows].flatMap((e): [string, string][] => [[e.id, `${e.description} ${e.content}`]]),

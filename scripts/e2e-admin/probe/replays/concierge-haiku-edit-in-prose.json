@@ -5,7 +5,7 @@
   "agent": "concierge",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "2026-10-16.jsonl:1201,2026-10-16.jsonl:1202,2026-10-16.jsonl:1203 (catalog agent-ui--concierge)",
+  "source": "2026-10-16.jsonl:1201,2026-10-16.jsonl:1202,2026-10-16.jsonl:1203 (catalog agent-ui--hospitality)",
   "steps": [
     {
       "say": "Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau."
@@ -22,7 +22,7 @@
       "lines": [
         "{\"a2uiMeta\":{\"textDelta\":\"I've prepared your spa booking: a 60-minute Swedish massage (€120) on Thursday 19 November 2026 at 15:00 for one guest, Alex Moreau. Please check the details and press Book now to confirm, or tell me what to change.\"}}",
         "{\"a2uiMeta\":{\"note\":\"Your Swedish massage booking for Thursday 19 November 2026 at 15:00 is ready to confirm below.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_MISSING\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":142000,\"total\":46065,\"sections\":[{\"id\":\"grammar\",\"chars\":25605},{\"id\":\"components\",\"chars\":20315},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":46065}}}",
-        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking\",\"catalogId\":\"agent-ui--concierge\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
         "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-booking\",\"value\":{\"booking\":{\"treatment\":\"swedish-massage\",\"treatmentLabel\":\"Swedish massage, 60 min, €120\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":1,\"guestName\":\"Alex Moreau\"}}}}",
         "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking\",\"components\":[{\"id\":\"root\",\"component\":\"BookingForm\",\"title\":\"Spa booking\",\"fields\":[{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Treatment\",\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"swedish-massage\"},{\"label\":\"Deep-tissue massage, 60 min, €135\",\"value\":\"deep-tissue-massage\"},{\"label\":\"Hot-stone massage, 90 min, €170\",\"value\":\"hot-stone-massage\"},{\"label\":\"Sea-salt and lemon body scrub, 45 min, €95\",\"value\":\"sea-salt-lemon-scrub\"},{\"label\":\"Hydrating facial, 50 min, €110\",\"value\":\"hydrating-facial\"},{\"label\":\"Couples massage, 60 min, €230 for two\",\"value\":\"couples-massage\"}],\"path\":\"treatment\",\"required\":true},{\"kind\":\"select\",\"label\":\"Time\",\"options\":[{\"label\":\"15:00\",\"value\":\"15:00\"}],\"path\":\"time\",\"required\":true},{\"kind\":\"text\",\"label\":\"Guest name\",\"path\":\"guestName\",\"required\":true}],\"value\":{\"path\":\"/booking\"}},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book now\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"context\":{\"booking\":{\"path\":\"/booking\"}},\"submit\":true}}]}}"
       ],
@@ -43,7 +43,7 @@
                     "version": "v1.0",
                     "createSurface": {
                       "surfaceId": "spa-booking",
-                      "catalogId": "agent-ui--concierge",
+                      "catalogId": "agent-ui--hospitality",
                       "sendDataModel": true
                     }
                   },

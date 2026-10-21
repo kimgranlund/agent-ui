@@ -1,21 +1,11 @@
 {
   "id": "concierge",
   "preset": "concierge",
-  "seedVersion": 19,
-  "seedDigest": "sha256:6cec1459930007fa11611d4185203f3f4daf8f54721e4add66ff55ffb04b3371",
-  "fragment": {
-    "personaId": "concierge",
-    "types": [
-      "BookingConfirmation",
-      "BookingForm"
-    ],
-    "targetCatalogs": [
-      "agent-ui",
-      "a2ui-basic"
-    ],
-    "digest": "sha256:3a78262b0746e2a39fb71168ac8478b4c32fc56ee2d67b7438f404a04d460d85"
-  },
-  "selection": {
-    "digest": "sha256:ec21a6bbe0d03478b625f7515e5696e65e0f30d624710a568b2cc9f06dd49402"
+  "seedVersion": 20,
+  "seedDigest": "sha256:ef2b09336e2b067b2d1fd86ff9e8eddd67c27d8a1c57988822cced2d962abf75",
+  "fragment": null,
+  "selection": null,
+  "noFragment": {
+    "why": "Composes the hospitality domain (BookingForm, BookingConfirmation), T-0197"
   }
 }

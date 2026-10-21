@@ -13,10 +13,10 @@ import { composeCatalog, loadCatalogFragment } from './compose.ts'
 import { validateCatalogConformance } from './conformance.ts'
 import defaultCatalogRaw from './default/catalog.json'
 import basicCatalogRaw from './a2ui-basic/catalog.json'
-import conciergeFragmentRaw from './personas/concierge/catalog.json'
+import hospitalityFragmentRaw from './domains/hospitality/catalog.json'
 import stylistFragmentRaw from './personas/stylist/catalog.json'
 import defaultSelection from './default/selection.json'
-import conciergeSelection from './personas/concierge/selection.json'
+import conciergeSelection from './domains/hospitality/selection.json'
 import stylistSelection from './personas/stylist/selection.json'
 
 const view = (components: A2uiComponent[], surfaceId = 's1'): SurfaceView => ({
@@ -148,7 +148,7 @@ describe('composite moment checks (T-0208)', () => {
   })
 
   it('T-0262: the shape the repair asks for passes the concierge catalog, and a bound rows fails it', () => {
-    const concierge = composeCatalog(loadCatalog(defaultCatalogRaw), loadCatalogFragment(conciergeFragmentRaw), 'concierge')
+    const concierge = composeCatalog(loadCatalog(defaultCatalogRaw), loadCatalogFragment(hospitalityFragmentRaw), 'hospitality')
     const asked: A2uiComponent = { id: 'root', component: 'BookingConfirmation', title: 'Spa booking confirmed', data: { path: '/booking' }, rows: [{ label: 'Date', path: 'date' }] }
     expect(validateCatalogConformance(asked, concierge)).toEqual([])
     expect(validateCatalogConformance({ ...asked, rows: { path: '/booking/rows' } }, concierge)).toEqual([{ code: 'CATALOG', path: 'root.rows' }])
@@ -1128,14 +1128,14 @@ describe('composite moment checks (T-0208)', () => {
     expect(codes([...SPA_TABLE, table])).not.toContain('PRODUCT_CARD_MISSING')
   })
 
-  it('the catalog gate keeps the booking rows only on agent-ui--concierge, the games and ProductCard rows on agent-ui, and none on a2ui-basic', () => {
+  it('the catalog gate keeps the booking rows only on agent-ui--hospitality, the games and ProductCard rows on agent-ui, and none on a2ui-basic', () => {
     const base = loadCatalog(defaultCatalogRaw)
-    const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
+    const concierge = composeCatalog(base, loadCatalogFragment(hospitalityFragmentRaw), 'hospitality')
     const basic = loadCatalog(basicCatalogRaw)
     const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
     const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-swatch']
     expect(ids(base)).toEqual(games)
-    expect(concierge.catalogId).toBe('agent-ui--concierge')
+    expect(concierge.catalogId).toBe('agent-ui--hospitality')
     expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', ...games])
     expect(ids(basic)).toEqual([])
   })
@@ -1344,7 +1344,7 @@ describe('a palette set out in the reply with no token surface is SURFACE_MISSIN
   const proseCheck = compositeMomentChecks.find((c) => c.id === 'composite-prose-swatch')!
   const base = loadCatalog(defaultCatalogRaw)
   const stylist = composeCatalog(base, loadCatalogFragment(stylistFragmentRaw), 'stylist')
-  const concierge = composeCatalog(base, loadCatalogFragment(conciergeFragmentRaw), 'concierge')
+  const concierge = composeCatalog(base, loadCatalogFragment(hospitalityFragmentRaw), 'hospitality')
   const RECORDED =
     "A calm blue palette for a banking app should feel steady and trustworthy, not loud. I've anchored it on a deep navy primary, a softer steel-blue secondary for supporting elements, and a muted sky accent for highlights. Body-text pairings clear 4.5:1 contrast. The steel-blue secondary falls short on white text, so keep it for charts, icons and non-text accents."
   const msgs = (sid: string, components: A2uiComponent[], create = true): A2uiOutput => [

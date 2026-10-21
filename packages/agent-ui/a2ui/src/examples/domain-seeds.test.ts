@@ -13,8 +13,9 @@ import { createRenderer } from '../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../renderer/renderer.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { a2uiBasicCatalog } from '../catalog/a2ui-basic/index.ts'
-import { composePersonaCatalogDocs } from '../catalog/compose.ts'
+import { composeDomainCatalogDocs, composePersonaCatalogDocs, domainSemanticChecksForCatalog, semanticChecksForCatalog } from '../catalog/compose.ts'
 import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '../catalog/personas/manifests.ts'
+import { SHIPPED_DOMAIN_CATALOG_MANIFESTS } from '../catalog/domains/manifests.ts'
 import { HIDDEN_STATE_CHECKS } from '../catalog/hidden-state-checks.ts'
 import { compositeMomentChecks } from '../catalog/composite-moments.ts'
 import { framedChoiceCheck } from '../catalog/framed-choice-check.ts'
@@ -41,12 +42,18 @@ const BASES = new Map<string, Catalog>([
   ['agent-ui', defaultCatalog],
   ['a2ui-basic', a2uiBasicCatalog],
 ])
-const CATALOGS: ReadonlyMap<string, Catalog> = new Map([...BASES, ...composePersonaCatalogDocs(BASES, SHIPPED_PERSONA_CATALOG_MANIFESTS)])
+const CATALOGS: ReadonlyMap<string, Catalog> = new Map([
+  ...BASES,
+  ...composePersonaCatalogDocs(BASES, SHIPPED_PERSONA_CATALOG_MANIFESTS),
+  ...composeDomainCatalogDocs(BASES, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
+])
 
-/** The checks a live turn on `catalogId` runs: the persona's own, then the hidden-state and composite-moment rows, the framed-choice check and the option-deck count check. */
+/** The checks a live turn on `catalogId` runs: the persona's or each domain's own, then the hidden-state and composite-moment rows, the framed-choice check and the option-deck count check. */
 function liveChecks(catalogId: string, catalog: Catalog) {
-  const persona = catalogId.split('--')[1]
-  const own = SHIPPED_PERSONA_CATALOG_MANIFESTS.find((m) => m.personaId === persona)?.semanticChecks ?? []
+  const own = [
+    ...semanticChecksForCatalog(catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS),
+    ...domainSemanticChecksForCatalog(catalogId, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
+  ]
   return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck], catalog)
 }
 

@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BookingForm field kinds mockup (T-0197)</title>
+<!-- Real controls, not a drawing: the inline module below loads the library's foundation, the fleet sheet
+     (`@agent-ui/components/all.css`) and every control (`@agent-ui/components/all`). Its bare specifiers need a
+     resolver, so open this page through Vite from the repo, for example
+     `npx vite .sdlc/tickets/0197-bookingform-kinds/mockup --config /dev/null --strictPort false`
+     with `server.fs.allow` reaching the repo root (the screenshot script does exactly that), never over file://.
+     The DOM mirrors what `bookingFormFactory` builds (factories.ts): the `ui-form-provider` root as a column, a
+     `[data-part="card"]` div painted as the card surface and a `[data-box]` holding a `ui-text` h4 title and a
+     `fields` column (one `ui-field` per labelled control, a `date-row` flex run for linked dates), and the
+     producer's one child Button at md under the card, end-aligned (Kim 2026-10-20, like ConfirmReceipt's action
+     bar). The new kinds are proposed: `radio`, `time`, `stepper`, `dateRange`. -->
+<script type="module">
+  import '@agent-ui/components/foundation-styles.css'
+  import '@agent-ui/components/base-styles.css'
+  import '@agent-ui/components/all.css'
+  import '@agent-ui/components/all'
+</script>
+<style>
+  /* Page chrome (not part of the composite). */
+  html, body { margin: 0; }
+  body {
+    background: var(--md-sys-color-neutral-surface-dim, var(--md-sys-color-neutral-surface));
+    color: var(--md-sys-color-neutral-on-surface);
+    padding: 16px;
+  }
+  .board { display: grid; gap: 24px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 400px)); }
+  .sheet-head { margin: 0 0 8px; font: inherit; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--md-sys-color-neutral-on-surface-variant); }
+  .sheet-note { margin: 8px 0 0; font-size: 12px; color: var(--md-sys-color-neutral-on-surface-variant); }
+  /* The A2UI canvas: widget tier, scale md (20 / 24 / 28 px controls). A plain surface, no card chrome. */
+  .canvas { background: var(--md-sys-color-neutral-surface-bright, var(--md-sys-color-neutral-surface)); padding: 12px; border-radius: 12px; }
+  /* What bookingFormFactory.create() writes on el.style: the root column, the Button under the card at the end edge. */
+  .booking-form { display: flex; flex-direction: column; align-items: flex-end; gap: var(--md-sys-widget-gutter); }
+  /* And on the card part (paintCardSurface plus the box padding). */
+  .booking-form > [data-part='card'] {
+    align-self: stretch;
+    box-sizing: border-box;
+    background-color: var(--md-sys-color-neutral-surface);
+    border: 1px solid var(--md-sys-color-neutral-outline-variant);
+    border-radius: var(--md-sys-shape-corner-base);
+    display: flow-root;
+    padding-block: var(--ui-box-pad-block);
+    padding-inline: var(--ui-box-pad-inline);
+  }
+  .booking-form [data-part='fields'] { display: flex; flex-direction: column; gap: var(--ui-box-gap); margin-block-start: var(--ui-box-gap); }
+  .booking-form [data-part='date-row'] { display: flex; flex-wrap: wrap; gap: var(--ui-box-gap); }
+  .booking-form [data-part='date-row'] > ui-field { flex: 1 1 12rem; }
+</style>
+</head>
+<body>
+<div class="board">
+
+  <!-- Sheet 1: the Maitre d' table booking. dateSingle, radio, stepper, text, one Confirm Button. -->
+  <section>
+    <h2 class="sheet-head">Sheet 1. Maitre d' table booking</h2>
+    <div class="canvas" data-tier="widget" data-scale="md">
+      <ui-form-provider class="booking-form">
+        <div data-part="card" data-box>
+        <ui-text as="h4" variant="title" size="md" data-part="title">Book a table at Vela</ui-text>
+        <div data-part="fields">
+          <!-- kind dateSingle (unchanged, T-0135): a ui-field over ui-text-field type=date -->
+          <div data-part="date-row">
+            <ui-field label="Date" data-a2ui-booking-field="date" data-part="date-field">
+              <ui-text-field type="date" name="date" label="Date" placeholder="Choose date" value="2026-10-24" required></ui-text-field>
+            </ui-field>
+          </div>
+          <!-- kind radio (new): a ui-field over a ui-radio-group of the item's options -->
+          <ui-field label="Seating" data-a2ui-booking-field="seating">
+            <ui-radio-group name="seating" orientation="horizontal" required>
+              <ui-radio value="18:00">18:00</ui-radio>
+              <ui-radio value="20:30" checked>20:30</ui-radio>
+            </ui-radio-group>
+          </ui-field>
+          <!-- kind stepper (new): a self-labelled ui-amount-picker, no actionName, no ui-field -->
+          <ui-amount-picker data-a2ui-booking-field="covers" name="covers" label="Covers" min="1" max="12" step="1" value="2"></ui-amount-picker>
+          <!-- kind text (unchanged) -->
+          <ui-field label="Dietary notes" data-a2ui-booking-field="notes">
+            <ui-text-field type="text" name="notes" label="Dietary notes" placeholder="Allergies, occasions"></ui-text-field>
+          </ui-field>
+        </div>
+        </div>
+        <!-- The producer's one child Button (submit:true), stepped down to md by sizedActionButtons, under the card -->
+        <ui-button size="md">Confirm</ui-button>
+      </ui-form-provider>
+    </div>
+  </section>
+
+  <!-- Sheet 2: the Concierge stay. dateRange, time, stepper, select. -->
+  <section>
+    <h2 class="sheet-head">Sheet 2. Concierge stay</h2>
+    <div class="canvas" data-tier="widget" data-scale="md">
+      <ui-form-provider class="booking-form">
+        <div data-part="card" data-box>
+        <ui-text as="h4" variant="title" size="md" data-part="title">Your stay at the Grand Meridian</ui-text>
+        <div data-part="fields">
+          <!-- kind dateRange (new): one item {path: checkIn, endPath: checkOut, label: Arrival, endLabel: Departure},
+               drawn as the existing linked date-row; the end field's min is the start date -->
+          <div data-part="date-row">
+            <ui-field label="Arrival" data-a2ui-booking-field="checkIn" data-part="date-field">
+              <ui-text-field type="date" name="checkIn" label="Arrival" placeholder="Choose date" value="2026-11-06" required></ui-text-field>
+            </ui-field>
+            <ui-field label="Departure" data-a2ui-booking-field="checkOut" data-part="date-field">
+              <ui-text-field type="date" name="checkOut" label="Departure" placeholder="Choose date" value="2026-11-09" min="2026-11-06" required></ui-text-field>
+            </ui-field>
+          </div>
+          <!-- kind time (new): a ui-field over ui-text-field type=time -->
+          <ui-field label="Arrival time" data-a2ui-booking-field="arrivalTime">
+            <ui-text-field type="time" name="arrivalTime" label="Arrival time" value="15:30"></ui-text-field>
+          </ui-field>
+          <!-- kind stepper (new) -->
+          <ui-amount-picker data-a2ui-booking-field="guests" name="guests" label="Guests" min="1" max="4" step="1" value="2"></ui-amount-picker>
+          <!-- kind select (unchanged) -->
+          <ui-field label="Room" data-a2ui-booking-field="room">
+            <ui-select name="room" label="Room" placeholder="Choose one" value="sea-double" required>
+              <div role="option" value="garden-double">Garden double</div>
+              <div role="option" value="sea-double">Sea-view double</div>
+              <div role="option" value="junior-suite">Junior suite</div>
+              <div role="option" value="cliff-suite">Cliff suite</div>
+            </ui-select>
+          </ui-field>
+        </div>
+        </div>
+        <ui-button size="md">Book stay</ui-button>
+      </ui-form-provider>
+    </div>
+    <p class="sheet-note">The composite takes the producer's one child Button; sheet 2 shows it so the form is complete.</p>
+  </section>
+
+  <!-- Sheet 3: the fork 5 alternative. The same stepper wrapped in a ui-field, so its label reads like every other
+       field label (the picker hides its own label part when a ui-field owns the label, amount-picker.md). -->
+  <section>
+    <h2 class="sheet-head">Sheet 3. Fork 5 alternative: stepper under a ui-field</h2>
+    <div class="canvas" data-tier="widget" data-scale="md">
+      <ui-form-provider class="booking-form">
+        <div data-part="card" data-box>
+        <ui-text as="h4" variant="title" size="md" data-part="title">Book a table at Vela</ui-text>
+        <div data-part="fields">
+          <ui-field label="Seating" data-a2ui-booking-field="seating-alt">
+            <ui-radio-group name="seatingAlt" orientation="horizontal">
+              <ui-radio value="18:00" checked>18:00</ui-radio>
+              <ui-radio value="20:30">20:30</ui-radio>
+            </ui-radio-group>
+          </ui-field>
+          <ui-field label="Covers" data-a2ui-booking-field="covers-alt">
+            <ui-amount-picker name="coversAlt" label="Covers" min="1" max="12" step="1" value="4"></ui-amount-picker>
+          </ui-field>
+        </div>
+        </div>
+        <ui-button size="md">Confirm</ui-button>
+      </ui-form-provider>
+    </div>
+    <p class="sheet-note">Compare the Covers label with sheet 1, where the picker labels itself.</p>
+  </section>
+
+</div>
+</body>
+</html>

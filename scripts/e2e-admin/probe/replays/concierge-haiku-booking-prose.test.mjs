@@ -1,4 +1,4 @@
-// Built from the round 3 run regress-concierge-spa-booking-haiku-1 (T-0261), turns 0 to 2 (catalog agent-ui--concierge).
+// Built from the round 3 run regress-concierge-spa-booking-haiku-1 (T-0261), turns 0 to 2 (catalog agent-ui--hospitality).
 // Keyless: the recorded model rounds replay through the real produce(), then the probe checks run with
 // no browser. The browser leg is `npm run chat:probe -- --replay concierge-haiku-booking-prose.json` from this folder.
 import { readFileSync } from 'node:fs'

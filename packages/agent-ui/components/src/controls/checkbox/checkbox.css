@@ -3,6 +3,7 @@
  *   [1] TOKEN BLOCK  — `:where(ui-checkbox)` (specificity 0,0,0) declares the --ui-checkbox-* chain from
  *       the colour roles (--md-sys-color-{family}-{role}) and the widget-box ramp (--md-sys-compact-{size}, ADR-0041).
  *       [size] repoints the box to the correct compact tier; [disabled] takes the fleet disabled recipe (T-0139).
+ *       T-0197: the label text takes the control type role (--ui-checkbox-font), so an option reads at the field text size.
  *   [2] STYLES BLOCK — `@scope (ui-checkbox)` consumes ONLY --ui-checkbox-*. The host is inline-flex
  *       (box + optional label text). ::before paints the square widget box (2px border + background fill).
  *       ::after paints the glyph (checkmark or indeterminate-dash), positioned absolutely within the box
@@ -35,6 +36,9 @@
   /* Label gap — the rhythm between the box and the optional label text (density-bearing, via --md-sys-gap-md). */
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-md));
 
+  /* Label type: the control role, the field text at every register (T-0197; body type is 1px larger). */
+  --ui-checkbox-font: var(--md-sys-type-control, var(--md-sys-font-md));
+
   /* Mark box: the check and the dash span the n + 6 glyph box (--md-sys-glyph-box, ADR-0245 cl.3/4, T-0374) inside an opt-in region,
      centred in the max(2n, n + 6) box (the box grows to hold the mark at n 4 and 5, never shrinks it); outside,
      today's 60% of the box inset 20%, which the centring formula yields unchanged. The pseudo-element marks stay
@@ -62,10 +66,12 @@
 :where(ui-checkbox[size='sm']) {
   --ui-checkbox-box: max(var(--md-sys-icon-box, var(--md-sys-compact-sm)), var(--md-sys-glyph-box, 0px));
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
+  --ui-checkbox-font: var(--md-sys-type-control, var(--md-sys-font-sm));
 }
 :where(ui-checkbox[size='lg']) {
   --ui-checkbox-box: max(var(--md-sys-icon-box, var(--md-sys-compact-lg)), var(--md-sys-glyph-box, 0px));
   --ui-checkbox-gap: var(--md-sys-inset, var(--md-sys-gap-lg));
+  --ui-checkbox-font: var(--md-sys-type-control, var(--md-sys-font-lg));
 }
 
 /* [disabled] → the fleet disabled recipe (T-0139): the box keeps its border at outline-variant, the checked fill
@@ -89,6 +95,7 @@
     align-items: center;
     gap: var(--ui-checkbox-gap);
     position: relative; /* containing block for the absolutely-positioned ::after glyph */
+    font-size: var(--ui-checkbox-font);
     cursor: pointer;
     -webkit-user-select: none; /* WebKit/Safari still requires the prefix; the label is a control surface, not selectable text */
     user-select: none;

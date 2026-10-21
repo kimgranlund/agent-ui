@@ -34,14 +34,18 @@ export interface ModalityVocabulary {
   terms: readonly string[]
 }
 
-/** The COMPOUND catalog type names: every emittable type (a key of any base or persona `selection.json`
+/** The COMPOUND catalog type names: every emittable type (a key of any base, persona or domain `selection.json`
  *  sidecar, which `selection-guidance.test.ts` holds equal to the catalogs) made of two or more glued
  *  capitalized words. Derived from the generated, browser-safe `SELECTION_PROJECTION` (T-0159; the old hand
  *  list froze on 2026-08-04 and missed 16 default compounds and every persona-fragment type), so a new
  *  catalog type joins the list with no edit here and no catalog body is pulled into a settings pane. */
 const COMPOUND_CATALOG_TYPES: readonly string[] = [
   ...new Set(
-    [...Object.values(SELECTION_PROJECTION.base), ...Object.values(SELECTION_PROJECTION.persona)].flatMap((types) =>
+    [
+      ...Object.values(SELECTION_PROJECTION.base),
+      ...Object.values(SELECTION_PROJECTION.persona),
+      ...Object.values(SELECTION_PROJECTION.domain ?? {}).map((d) => d.types), // T-0197: the hospitality domain's BookingForm
+    ].flatMap((types) =>
       Object.keys(types).filter((type) => /^[A-Z][a-z0-9]+[A-Z]/.test(type)),
     ),
   ),
