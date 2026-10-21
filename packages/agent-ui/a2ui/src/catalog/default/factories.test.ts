@@ -45,6 +45,7 @@ import {
   badgeFactory,
   toggleFactory,
   confirmReceiptFactory,
+  stepFlowFactory,
   defaultFactories,
 } from './factories.ts'
 import { defaultCatalog } from './index.ts'
@@ -1329,6 +1330,100 @@ describe('default catalog factories — ConfirmReceipt (T-0195)', () => {
     expect(receipt.querySelector('button')).toBeNull()
     expect(receipt.querySelector('[data-part="mark"]')).not.toBeNull()
     expect(sent.filter(isAction)).toHaveLength(0)
+    cleanup()
+  })
+})
+
+// T-0198: StepFlow end to end through the renderer: the bound `step` is the value mark, the scenes are the node's
+// ChildList, and the finish press forwards `finishAction` by its `detail.action` with the bound `/draft` folded in.
+describe('default catalog factories - StepFlow (T-0198)', () => {
+  const isAction = (m: A2uiClientMessage): m is A2uiActionMessage => 'action' in m
+  const line = (message: A2uiServerMessage): string => JSON.stringify(message)
+  const mountFlow = (): { mount: HTMLElement; sent: A2uiClientMessage[]; cleanup: () => void } => {
+    const sent: A2uiClientMessage[] = []
+    const r = createRenderer({ newId: () => 'act-1', now: () => '2026-10-21T00:00:00.000Z' })
+    r.onClientMessage((m) => void sent.push(m))
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'sf', catalogId: 'agent-ui' } }))
+    r.ingest(line({ version: 'v1.0', updateDataModel: { surfaceId: 'sf', value: { step: 1, draft: { nights: 2, breakfast: true } } } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'sf',
+          components: [
+            { id: 'root', component: 'Column', children: ['flow', 'echo'] },
+            {
+              id: 'flow',
+              component: 'StepFlow',
+              steps: ['Dates', 'Extras', 'Review'],
+              step: { path: '/step' },
+              draft: { path: '/draft' },
+              finishLabel: 'Review stay',
+              finishAction: { action: 'review_stay', context: { hotel: 'H-1' } },
+              children: ['s1', 's2', 's3'],
+            },
+            { id: 's1', component: 'Text', text: 'Pick your dates' },
+            { id: 's2', component: 'Text', text: 'Add extras' },
+            { id: 's3', component: 'Text', text: 'All set' },
+            { id: 'echo', component: 'Text', text: { path: '/step' } },
+          ],
+        },
+      }),
+    )
+    return { mount, sent, cleanup: () => { r.dispose(); mount.remove() } }
+  }
+  const pressOf = (mount: HTMLElement, name: string): HTMLElement => mount.querySelector(`ui-step-flow [data-part="${name}"]`) as HTMLElement
+  const echoOf = (mount: HTMLElement): string => (mount.querySelector('ui-step-flow + ui-text') as HTMLElement).textContent ?? ''
+
+  it('StepFlow → ui-step-flow: two-way bound on step via change (the Tabs shape)', () => {
+    expect(stepFlowFactory.tag).toBe('ui-step-flow')
+    expect(stepFlowFactory.value).toEqual({ prop: 'step', event: 'change' })
+    expect(defaultFactories.StepFlow).toBe(stepFlowFactory)
+  })
+
+  it('the ChildList children land as the scenes, one shown at a time', async () => {
+    const { mount, cleanup } = mountFlow()
+    await whenFlushed()
+    const flow = mount.querySelector('ui-step-flow') as HTMLElement
+    const scenes = Array.from(flow.children).filter((c) => c.tagName === 'UI-TEXT') as HTMLElement[]
+    expect(scenes.map((s) => s.textContent)).toEqual(['Pick your dates', 'Add extras', 'All set'])
+    expect(scenes.map((s) => s.hidden)).toEqual([false, true, true])
+    cleanup()
+  })
+
+  it('Next writes the bound step path, and Back writes it back', async () => {
+    const { mount, sent, cleanup } = mountFlow()
+    await whenFlushed()
+    expect(echoOf(mount)).toBe('1')
+    pressOf(mount, 'next').click()
+    await whenFlushed()
+    expect(echoOf(mount)).toBe('2')
+    pressOf(mount, 'back').click()
+    await whenFlushed()
+    expect(echoOf(mount)).toBe('1')
+    expect(sent.filter(isAction)).toHaveLength(0)
+    cleanup()
+  })
+
+  it('a finish press forwards the finishAction name with the bound draft folded into its context', async () => {
+    const { mount, sent, cleanup } = mountFlow()
+    await whenFlushed()
+    pressOf(mount, 'next').click()
+    await whenFlushed()
+    pressOf(mount, 'next').click()
+    await whenFlushed()
+    expect(echoOf(mount)).toBe('3')
+    expect(pressOf(mount, 'finish').textContent).toContain('Review stay')
+    pressOf(mount, 'finish').click()
+    await whenFlushed()
+    const actions = sent.filter(isAction)
+    expect(actions).toHaveLength(1)
+    expect(actions[0]!.action).toMatchObject({
+      surfaceId: 'sf', name: 'review_stay', sourceComponentId: 'flow', context: { hotel: 'H-1', draft: { nights: 2, breakfast: true } },
+    })
     cleanup()
   })
 })

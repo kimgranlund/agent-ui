@@ -1559,10 +1559,11 @@
         "path": "packages/agent-ui/components/src/controls/step-flow/step-flow.md"
       },
       "status": {
-        "state": "excluded",
-        "reason": "T-0198 step 2 — TEMPORARY seed, shipped ahead of its catalog row: the ui-step-flow control lands first, and step 3 lands the StepFlow row + factory and drains this entry (the T-0193 OptionDeck shape)."
+        "state": "catalogued"
       },
       "consumers": [
+        "prompt",
+        "renderer",
         "site"
       ],
       "tag": "ui-step-flow",
@@ -1571,7 +1572,9 @@
       "uses": [
         "ui-glyph"
       ],
-      "catalogs": []
+      "catalogs": [
+        "agent-ui"
+      ]
     },
     {
       "id": "control:ui-suggestions",
@@ -2817,6 +2820,22 @@
       "scope": "agent-ui"
     },
     {
+      "id": "mini-skill:step-flow",
+      "kind": "mini-skill",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/agent/prompts/mini-skills/step-flow.md"
+      },
+      "status": {
+        "state": "scoped"
+      },
+      "consumers": [
+        "prompt",
+        "shim"
+      ],
+      "name": "step-flow",
+      "scope": "agent-ui"
+    },
+    {
       "id": "mini-skill:structured-container",
       "kind": "mini-skill",
       "source": {
@@ -4035,6 +4054,10 @@
         {
           "type": "DescriptionList",
           "why": "label and value pairs with no confirm step"
+        },
+        {
+          "type": "StepFlow",
+          "why": "collecting the draft one scene at a time"
         }
       ]
     },
@@ -4167,6 +4190,10 @@
         {
           "type": "Breadcrumb",
           "why": "showing the path only"
+        },
+        {
+          "type": "StepFlow",
+          "why": "a flow walked in order with Back and Next"
         }
       ]
     },
@@ -5503,6 +5530,39 @@
         {
           "type": "GameHud",
           "why": "a game score with its status"
+        }
+      ]
+    },
+    {
+      "id": "type:agent-ui/StepFlow",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "StepFlow"
+      },
+      "status": {
+        "state": "feed-excluded",
+        "reason": "hides all but one scene behind its own Back and Next (the Tabs reasoning) and its commit is a control-owned finish action (the ConfirmReceipt reason) (T-0198 fork 8); a StepFlow lives on a canvas surface the meta-line does not name as ask."
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "StepFlow",
+      "scope": "agent-ui",
+      "tag": "ui-step-flow",
+      "intents": [
+        "a multi-step flow with Back and Next, building one draft"
+      ],
+      "notFor": [
+        {
+          "type": "Drill",
+          "why": "stepping into nested levels"
+        },
+        {
+          "type": "ConfirmReceipt",
+          "why": "reading a finished draft back to confirm"
         }
       ]
     },

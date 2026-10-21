@@ -1108,6 +1108,10 @@
         {
           "type": "Breadcrumb",
           "why": "showing the path only"
+        },
+        {
+          "type": "StepFlow",
+          "why": "a flow walked in order with Back and Next"
         }
       ]
     },
@@ -1235,6 +1239,10 @@
         {
           "type": "DescriptionList",
           "why": "label and value pairs with no confirm step"
+        },
+        {
+          "type": "StepFlow",
+          "why": "collecting the draft one scene at a time"
         }
       ]
     },
@@ -1263,6 +1271,21 @@
         {
           "type": "ChoiceGroup",
           "why": "a value picked inside a form"
+        }
+      ]
+    },
+    "StepFlow": {
+      "intents": [
+        "a multi-step flow with Back and Next, building one draft"
+      ],
+      "notFor": [
+        {
+          "type": "Drill",
+          "why": "stepping into nested levels"
+        },
+        {
+          "type": "ConfirmReceipt",
+          "why": "reading a finished draft back to confirm"
         }
       ]
     }

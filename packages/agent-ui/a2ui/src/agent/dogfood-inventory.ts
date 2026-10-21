@@ -107,7 +107,9 @@ import type { SelectionEntry } from './selection-guidance.ts'
 // RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): 31 608 chars with the ui-confirm-receipt,
 // ui-amount-picker and ui-option-deck rows and all three selection clauses; budget 32 000 (measured rounded up to the
 // next 100, plus 300).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 32_000
+// RE-MEASURED 2026-10-21 (T-0198 step 3): 32 133 chars with the ui-step-flow row and the `StepFlow` selection clause
+// and its reciprocal edges on `Drill` and `ConfirmReceipt`; budget 32 500 (measured rounded up to the next 100, plus 300).
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 32_500
 
 /** The character budget for the selection clauses the dogfood inventory carries: the sum of the clause
  *  lengths `dogfoodInventory()` appends to its rows. Held by a `prompt-drift.test.ts` leg, never by runtime

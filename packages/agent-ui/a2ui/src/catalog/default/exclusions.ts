@@ -42,8 +42,8 @@
  *  and DRAINS all three seeds (the residue guard fails if one is left in place).
  *  T-0193 (`ui-option-deck`) re-seeded the same shape at step 2; step 3 lands the `OptionDeck` row + factory
  *  and DRAINS that seed too.
- *  T-0198 (`ui-step-flow`) re-seeds the same shape at step 2; step 3 lands the `StepFlow` row + factory and
- *  DRAINS that seed. */
+ *  T-0198 (`ui-step-flow`) re-seeded the same shape at step 2; step 3 lands the `StepFlow` row + factory and
+ *  DRAINS that seed too. */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor
@@ -97,9 +97,6 @@ export const EXCLUSION_ALLOWLIST: ReadonlyMap<string, string> = new Map<string, 
     'fragment + mini-skills teach it; a default-catalog row would hand every generic agent a casino-' +
     'domain object with no teaching context. Widening to the default catalog is a separate, later ' +
     'intake (the mint-vs-compose TYPE arm), never a drive-by row.'],
-  ['StepFlow',
-    'T-0198 step 2 — TEMPORARY seed, shipped ahead of its catalog row: the ui-step-flow control lands first, and ' +
-    'step 3 lands the StepFlow row + factory and drains this entry (the T-0193 OptionDeck shape).'],
   ['Glyph',
     'ADR-0245 cl.2 and cl.4 (T-0093): ui-glyph is a functional-mark atom that controls render inside their own ' +
     'slots; the A2UI wire stays catalog-invisible to the foundations overhaul (no row gains a property), and an ' +

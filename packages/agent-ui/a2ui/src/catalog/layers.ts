@@ -39,6 +39,8 @@ export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.free
   // agent); no prop names a field, so it is the Suggestions class, not core.
   OptionDeck: agentic,
   ConfirmReceipt: agentic,
+  // T-0198: a client-side wizard over scene children building one draft; no prop names a domain, so agentic.
+  StepFlow: agentic,
   // §5.3 domain types still homed in the default catalog (W2 moves each to its domain)
   BoardGrid: domain('games', 'default'),
   GameHud: domain('games', 'default'),

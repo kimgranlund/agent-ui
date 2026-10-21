@@ -407,6 +407,23 @@ describe('composite moment checks (T-0208)', () => {
     ).toEqual([])
   })
 
+  // T-0198: a booking walked as one StepFlow holds Calendar and RadioGroup (BOOKING_INPUTS at min 2) in its scenes;
+  // the StepFlow stands aside, while the same scenes in a plain Column still get the BookingForm repair.
+  it('negative control: a booking StepFlow over a Calendar and a RadioGroup yields none', () => {
+    const scenes: A2uiComponent[] = [
+      { id: 'dates', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
+      { id: 'room', component: 'RadioGroup', value: { path: '/draft/room' }, children: ['king', 'twin'] },
+      { id: 'king', component: 'Radio', value: 'king', label: 'King room' },
+      { id: 'twin', component: 'Radio', value: 'twin', label: 'Twin room' },
+    ]
+    const flow: A2uiComponent = {
+      id: 'root', component: 'StepFlow', steps: ['Dates', 'Room'], step: { path: '/step' }, draft: { path: '/draft' },
+      finishLabel: 'Book the room', finishAction: { action: 'book_room' }, children: ['dates', 'room'],
+    }
+    expect(codes([flow, ...scenes])).toEqual([])
+    expect(codes([{ id: 'root', component: 'Column', children: ['t', 'dates', 'room'] }, { id: 't', component: 'Text', text: 'Book a room' }, ...scenes])).toEqual(['BOOKING_FORM_MISSING'])
+  })
+
   it('negative control: a croupier CardTable betting surface yields none', () => {
     expect(
       codes([
