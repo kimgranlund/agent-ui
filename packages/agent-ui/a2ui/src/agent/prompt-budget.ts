@@ -52,8 +52,11 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  ui-step-flow dogfood row, the `StepFlow` default row, its selection clause with the reciprocal `Drill` and
  *  `ConfirmReceipt` edges, and StepFlow on the feed list. Budget 146 900 by the same formula.
  *  RE-MEASURED 2026-10-21 (T-0395): the worst case is 146 879 chars (`agent-ui`, mode default; 146 811 before), +68
- *  from grammar.md's game-ask own-commit exception and OptionCompare's pick intent. Budget 147 200 by the same formula. */
-export const PROMPT_CHAR_BUDGET_BASE = 147_200
+ *  from grammar.md's game-ask own-commit exception and OptionCompare's pick intent. Budget 147 200 by the same formula.
+ *  RE-MEASURED 2026-10-22 (T-0397): the worst case is 147 377 chars (`agent-ui`, mode default; 146 896 before), +481
+ *  from grammar.md's BookingForm settle-in-place clauses and the confirm-receipt mini-skill. Budget 147 700 by the same
+ *  formula. */
+export const PROMPT_CHAR_BUDGET_BASE = 147_700
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -90,8 +93,10 @@ export const PROMPT_CHAR_BUDGET_BASE = 147_200
  *  RE-MEASURED 2026-10-21 (T-0198 step 3): the worst case is 147 521 chars (`agent-ui--croupier`, mode default), the
  *  same ui-step-flow dogfood row and `StepFlow` row and clause BASE pays. Budget 147 900 by the same formula.
  *  RE-MEASURED 2026-10-21 (T-0395): the worst case is 147 863 chars (`agent-ui--croupier`, mode default; 147 795
- *  before), the same grammar.md exception and OptionCompare intent BASE pays. Budget 148 200 by the same formula. */
-export const PROMPT_CHAR_BUDGET_DERIVED = 148_200
+ *  before), the same grammar.md exception and OptionCompare intent BASE pays. Budget 148 200 by the same formula.
+ *  RE-MEASURED 2026-10-22 (T-0397): the worst case is 148 361 chars (`agent-ui--croupier`, mode default; 147 880
+ *  before), the same grammar.md clauses and mini-skill BASE pays. Budget 148 700 by the same formula. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 148_700
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

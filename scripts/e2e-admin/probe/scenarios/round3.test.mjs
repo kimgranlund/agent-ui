@@ -3,6 +3,7 @@
 // cover every round 2 ticket, the long flows run on all three models, runs go Haiku then Sonnet then Opus, and
 // `live-commands.sh` is exactly the generated script, which the capped runner describes.
 import { existsSync, readFileSync } from 'node:fs'
+import { asArchivedBookingConfirmation } from './concierge.ts'
 import { withoutSkipMarks } from './croupier.ts'
 import { asArchivedConciergeDomain, asArchivedGuidanceConflict } from './routing.ts'
 import { describe, expect, it } from 'vitest'
@@ -84,7 +85,7 @@ describe('live round 3', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND3_FILE)
-    expect(text).toBe(withoutSkipMarks(asArchivedConciergeDomain(asArchivedGuidanceConflict(round3CommandsScript()))))
+    expect(text).toBe(withoutSkipMarks(asArchivedBookingConfirmation(asArchivedConciergeDomain(asArchivedGuidanceConflict(round3CommandsScript())))))
     const described = describeCommands(text)
     expect(described).toHaveLength(44)
     expect(described.at(-1)).toBe('long-concierge-booking-opus-1: concierge on claude-opus-5-5, 5 steps, 4 --expect-turn, 1 --expect-routing')

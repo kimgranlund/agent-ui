@@ -36,3 +36,14 @@ Ask (architect, debate rule): propose exact replacement text for grammar.md's bo
 
 Ask (plan-reviewer, debate rule): review the architect's wording in `.sdlc/runtime/tasks/0397-booking-confirm-grammar/architect-L1.md` as the second voice. Is "a booking collected in a BookingForm" the right discriminator (travel composes hospitality but keeps trip-plan's read-back)? Are the G-spans and the mini-skill span unambiguous to a model and consistent with the two workflows, confirm-receipt.ts and widget.ts? Is the `asArchivedBookingConfirmation` archive transform the right way to keep finished round pins byte-identical (T-0398, in flight, adds a similar transform to the same routing.ts for the concierge-to-hospitality relabel)? Check budgets, pins, digests and em dashes. Verdict pass or replan, with any exact wording fixes.
 - Debate outcome 2026-10-22: the architect (architect-L1.md) and the fable reviewer (plan-reviewer-L1.md, pass) agree. Grammar G1, G2a, G2b and mini-skill M land as written, with the concierge probe changes, the asArchivedBookingConfirmation transform, the pins, the recapture, and a deliberate budget re-measure.
+
+## Acceptance criteria
+verifier: L3
+- grammar.md carries G1, G2a and G2b and mini-skills/confirm-receipt.md:6 carries M exactly as architect-L1.md gives them; the two existing settle arms stay verbatim.
+- concierge.ts confirm turns and expectComponents expect ConfirmReceipt; `asArchivedBookingConfirmation` maps them back on concierge lines and wraps every round byte pin (round, round3 to round10), composed with T-0398's `asArchivedConciergeDomain`; nothing under `.sdlc/evals` changes.
+- New pins in system-prompt-grammar.test.ts (B2) and mini-skills.test.ts (confirm-receipt); prompt-equivalence baseline recaptured; assets.gen.ts regenerated; prompt budgets re-measured (BASE 147 700, DERIVED 148 700, RE-MEASURED T-0397 notes); LIBRARIES_DIGEST re-pinned; meta-line-vocabulary.md and composition-patterns.md repaired.
+- `env -u NODE_OPTIONS npm run check` exit 0
+- `env -u NODE_OPTIONS npx vitest run --project packages packages/agent-ui/a2ui` exit 0
+- `env -u NODE_OPTIONS npx vitest run --project scripts scripts/e2e-admin/probe` exit 0
+- `env -u NODE_OPTIONS npx vitest run site/pages/agent-admin-seed-digests.test.ts` exit 0
+- `env -u NODE_OPTIONS npx vitest run` exit 0 (whole jsdom suite, once)

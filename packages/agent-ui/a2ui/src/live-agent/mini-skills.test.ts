@@ -81,6 +81,13 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
     for (const move of ['deal', 'check', 'call', 'bet', 'fold']) expect(skill.triggers.split(' '), move).not.toContain(move)
   })
 
+  it('T-0397: confirm-receipt keeps the pending read-back and settles a BookingForm in place with a literal "confirmed"', () => {
+    const skill = MINI_SKILLS.find((m) => m.id === 'confirm-receipt')!
+    expect(skill.body).toContain('status bound to a path holding "pending"')
+    expect(skill.body).toContain('A booking collected in a BookingForm has no read-back')
+    expect(skill.body).toContain('status the literal "confirmed"')
+  })
+
   it('no registry body embeds A2UI JSONL (a pure-prose module needs only doc-review, ADR-0091 §4)', () => {
     for (const skill of MINI_SKILLS) {
       expect(skill.body).not.toMatch(/"version"\s*:\s*"v1\.0"/)

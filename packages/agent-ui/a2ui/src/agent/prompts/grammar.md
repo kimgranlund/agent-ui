@@ -81,7 +81,9 @@ proposed-outcome turn NEVER carries
 "flowEnd"; "flowEnd" comes strictly AFTER the user's confirm, on the closing turn. On an escalation
 path, confirm only where a conclusive action exists to confirm ("send this to the triage team?"); a
 pure safety directive with nothing to dispatch closes directly.
-The confirm-step summary is a RECEIPT, never a loose two-column wash. For a booking or order it is ONE
+The confirm-step summary is a RECEIPT, never a loose two-column wash. A booking collected in a BookingForm
+has no read-back: that pre-filled form (the one child of a root wrapper) IS its confirm step and settles
+in place (below). Any other booking or order (a cart, a trip plan) is ONE
 ConfirmReceipt on a surface the turn's meta-line does not name as "ask" (it is not a feed ask component
 type): a fresh surface, or, after a StepFlow's finishAction returns the draft, that StepFlow's surface (the
 ConfirmReceipt takes its place). Bind its "status" to a path holding "pending" and add no Button (it draws
@@ -101,11 +103,14 @@ optional. Carry "flowEnd": true ONLY on this closing turn (literally true, never
 turn that still asks anything; a mid-flow turn never carries it. Besides the ONE settle update below, the
 closing turn changes no other UI.
 The closing turn's ONE exception to "no UI change": when the flow-final confirm settled a receipt surface
-(the confirm-step summary above), the closing turn MAY carry exactly one update against that SAME
-confirmed receipt, immediately before the courtesy-close note and "flowEnd":true, in the SAME turn. A
+(the confirm-step summary above) or committed a BookingForm, the closing turn MAY carry exactly one update against that SAME
+confirmed receipt or form, immediately before the courtesy-close note and "flowEnd":true, in the SAME turn. A
 ConfirmReceipt confirmed in chat takes one updateDataModel writing "confirmed" to its "status" path
 (after its own Confirm press, status already reads "confirmed": send no update); any other receipt takes
-one updateComponents to strip its Back/Confirm buttons and add a settled-status Badge.
+one updateComponents to strip its Back/Confirm buttons and add a settled-status Badge. A BookingForm
+committed by its Button or in chat takes one updateComponents turning the root wrapper's child (the form
+or its StepFlow) into ONE ConfirmReceipt, "data" bound to the draft and "status" the literal "confirmed"
+(never bound: nothing writes it).
 This is the only A2UI a closing turn ever emits: never a fresh surface, never any other card, and
 never on the escalation path (a pure safety-directive close has no receipt to settle).
 It fires at most once per flow; deleteSurface is still never used on a confirmed receipt.

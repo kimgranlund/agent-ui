@@ -1,14 +1,15 @@
 // T-0225: live round 2's scenarios are well-formed before any credit is spent. Keyless: every Concierge,
 // Lexicographer and Admiral run parses as a live probe with its own steps and per-turn expectations, every
 // expected type is in the catalog, every model is in the admin picker, and `.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh`
-// is exactly the generated script, in spend order (Haiku, Sonnet, Opus).
+// is exactly the generated script, in spend order (Haiku, Sonnet, Opus) (with the concierge confirm turns mapped back as
+// they ran, T-0397).
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 // T-0160: the presets are content files; their ids come from the agent-content registry.
 import { AGENT_CONTENT } from '../../../../site/agent-content/registry.gen.ts'
 import { parseProbeCli } from '../cli.ts'
 import { ADMIRAL_SCENARIOS } from './admiral.ts'
-import { CONCIERGE_SCENARIOS } from './concierge.ts'
+import { asArchivedBookingConfirmation, CONCIERGE_SCENARIOS } from './concierge.ts'
 import { CROUPIER_MODELS, CROUPIER_ROUND_SCENARIOS, STUD_STREET, withoutSkipMarks } from './croupier.ts'
 import { LEXICOGRAPHER_SCENARIOS } from './lexicographer.ts'
 import { MODEL_ORDER, ROUND_PRESETS, roundCommandsScript, roundRuns } from './round.ts'
@@ -55,9 +56,9 @@ describe('live round 2 scenarios', () => {
     }
   })
 
-  it('the Concierge measures BookingForm, BookingConfirmation, DescriptionList and ProductCard; the games measure BoardGrid and ResultCard', () => {
+  it('the Concierge measures BookingForm, ConfirmReceipt, DescriptionList and ProductCard; the games measure BoardGrid and ResultCard', () => {
     const turnTypes = (scenarios) => new Set(scenarios.flatMap((s) => s.steps.flatMap((step) => step.expect ?? [])))
-    expect([...turnTypes(CONCIERGE_SCENARIOS)].sort()).toEqual(['BookingConfirmation', 'BookingForm', 'DescriptionList', 'ProductCard'])
+    expect([...turnTypes(CONCIERGE_SCENARIOS)].sort()).toEqual(['BookingForm', 'ConfirmReceipt', 'DescriptionList', 'ProductCard'])
     for (const scenarios of [LEXICOGRAPHER_SCENARIOS, ADMIRAL_SCENARIOS]) expect([...turnTypes(scenarios)].sort()).toEqual(['BoardGrid', 'ResultCard'])
   })
 
@@ -66,15 +67,16 @@ describe('live round 2 scenarios', () => {
     const flow = CONCIERGE_SCENARIOS.find((s) => s.name === 'facilities-then-tour')
     const step = flow.steps.find((st) => st.say === 'What services could I add for the rest of my stay?')
     expect(step.expect).toEqual(['ProductCard'])
-    expect(flow.expectComponents).toEqual(['DescriptionList', 'BookingForm', 'BookingConfirmation', 'ProductCard'])
+    expect(flow.expectComponents).toEqual(['DescriptionList', 'BookingForm', 'ConfirmReceipt', 'ProductCard'])
     expect(JSON.stringify(flow)).not.toContain('ServiceCard')
   })
 
-  // T-0312: a ruled oracle expects its ruling's composite (T-0266 and T-0289: a chat confirm settles as a
-  // BookingConfirmation; T-0296: a surrender ends on one ResultCard).
+  // T-0312: a ruled oracle expects its ruling's composite (T-0266, T-0289: a chat confirm on a complete BookingForm is
+  // the submission, and it settles in place as one ConfirmReceipt, T-0385, T-0390; T-0296: a surrender ends on one
+  // ResultCard).
   it('the ruled confirm and surrender oracles expect their rulings\' composites', () => {
     const step = (scenarios, name, text) => scenarios.find((s) => s.name === name).steps.find((st) => st.say === text)
-    expect(step(CONCIERGE_SCENARIOS, 'spa-booking', 'Those details are right, please confirm the booking.').expect).toEqual(['BookingConfirmation'])
+    expect(step(CONCIERGE_SCENARIOS, 'spa-booking', 'Those details are right, please confirm the booking.').expect).toEqual(['ConfirmReceipt'])
     expect(step(ADMIRAL_SCENARIOS, 'concede', 'I surrender. Reveal your fleet.').expect).toEqual(['ResultCard'])
   })
 
@@ -117,6 +119,6 @@ describe('live round 2 scenarios', () => {
   })
 
   it('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh is the generated script', () => {
-    expect(read('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh')).toBe(withoutSkipMarks(roundCommandsScript()))
+    expect(read('.sdlc/evals/rounds/2026-10-15-r2-presets/live-commands.sh')).toBe(withoutSkipMarks(asArchivedBookingConfirmation(roundCommandsScript())))
   })
 })
