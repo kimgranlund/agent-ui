@@ -194,10 +194,11 @@ interface Lexicon {
 
 const lexicons = new Map<string, Lexicon>()
 
-/** The head noun and what may follow it, shared by every gated branch: plural allowed, "list of" and "of contents" never. */
+/** The head noun and what may follow it, shared by every gated branch: plural allowed, "list of", "of contents" and
+ *  "form of payment" (T-0408) never. */
 function nounTail(nouns: readonly string[]): string {
   const rest = nouns.filter((n) => n !== 'list')
-  return `(?:${nouns.includes('list') ? 'list(?!\\s+of\\b)|' : ''}${alt(rest)})s?(?!\\s+of\\s+contents)${NOUN_END}`
+  return `(?!forms?\\s+of\\s+payments?\\b)(?:${nouns.includes('list') ? 'list(?!\\s+of\\b)|' : ''}${alt(rest)})s?(?!\\s+of\\s+contents)${NOUN_END}`
 }
 
 /** The text and surface lexicons. An `owned` noun (one the catalog's domain types name) leaves the open gated rule and

@@ -152,6 +152,27 @@ describe('lexicon round 2', () => {
   })
 })
 
+describe('"form of payment" is a phrase, not a form surface (T-0408)', () => {
+  const concierge = ['Card', 'Text', 'BookingForm', 'BookingConfirmation']
+  const payment = [
+    'make me a form of payment',
+    'build me a form of payment',
+    'build a form of payment',
+    'what forms of payment do you take',
+    'make me a form of payment, please',
+  ]
+  it.each(payment)('no override with no catalog types: %s', (t) => expect(detectUserOverride(intent(t))).toBeUndefined())
+  it.each(payment)('no override in a catalog that owns form: %s', (t) =>
+    expect(detectUserOverride(intent(t), concierge)).toBeUndefined())
+  it.each(['make me a form', 'build a form for the booking', 'make me a form of the order details'])(
+    'surface still forced: %s',
+    (t) => {
+      expect(detectUserOverride(intent(t))).toBe('surface')
+      expect(detectUserOverride(intent(t), concierge)).toBe('surface')
+    },
+  )
+})
+
 describe('a noun a catalog domain type owns is not a surface noun there (T-0348)', () => {
   const croupier = ['Card', 'Text', 'PlayingCard', 'CardTable']
   const base = ['Card', 'Text', 'ProductCard', 'ResultCard', 'Table']

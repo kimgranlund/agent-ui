@@ -378,7 +378,7 @@
 
 - decide: packages/agent-ui/a2ui/src/agent/response-type.ts:177 "show me a playing card" now forces a surface in croupier (base: none) because `domainLeadWords` turns "playing" from PlayingCard into a format modifier.
 - decide: packages/agent-ui/a2ui/src/agent/response-type.ts:177 the solo reported that "show me a card table" forces a surface in croupier. My probe returned none in croupier (and `surface` in quizmaster, the same as base), so the solo's claim does not reproduce. Kim should still say which result is wanted.
-- decide: packages/agent-ui/a2ui/src/agent/response-type.ts:224 "make me a form of payment" still forces a surface in concierge ("of" is in NOUN_END after a build verb plus "a").
+- decide: packages/agent-ui/a2ui/src/agent/response-type.ts:224 "make me a form of payment" still forces a surface in concierge ("of" is in NOUN_END after a build verb plus "a"). -> T-0408
 - note: the default catalog also changed. "build me a deck of cards" and "I worked as a card dealer" were `surface` at base and are none now (the `of` non-modifier and the NOUN_END on the "as a" phrases).
 - note: I could not remove the scratch probe dir /var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0354-verifier-L1 (rm was denied). The throwaway worktree was removed.
 
