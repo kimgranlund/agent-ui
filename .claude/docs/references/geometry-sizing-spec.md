@@ -9,11 +9,12 @@ The section numbers (§1 to §7) are kept because ADR bodies cite them.
 
 **The thesis.** Geometry is arithmetic, not taste: a control's box is `4n`, and every glyph it carries sits in
 a `2n` slot, centered. Tier, scale and size choose n; everything else is a formula over it, so a height and
-its font, icon, padding and radius pair by construction. One config owns the system: the skill's
-`scale.mjs` (CFG, `resolve()`, `check()`), vendored to `@agent-ui/shared/src/tokens/scale.mjs`, emitted as
-`foundations.gen.css` by `scripts/generate-foundations.mjs` (which refuses to write when `check()` returns a
-failure). Changing the system means editing CFG, never a
-stylesheet.
+its font, icon, padding and radius pair by construction. Two resolvers feed the sheets (T-0372): the repo's
+`scale.mjs` (CFG, `resolve()`, `check()`) at `@agent-ui/shared/src/tokens/scale.mjs`, the frozen former skill
+revision, and the skill's current resolver vendored untouched under
+`@agent-ui/shared/src/tokens/vendor/mathematical-design-system/`. `scripts/generate-foundations.mjs` emits
+`foundations.gen.css` and `foundations-bridge.gen.css` from both and refuses to write when `check()` returns a
+failure. Changing the system means editing a resolver's config, never a stylesheet.
 
 ---
 

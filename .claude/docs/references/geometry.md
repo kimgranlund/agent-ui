@@ -6,8 +6,9 @@
 > `[scale]` tiers, `[density]` and the frame/rhythm split are retired. The
 > derivation, the per-control table and the history live in
 > [`geometry-sizing-spec.md`](./geometry-sizing-spec.md); this doc is the resolved *law*. The numbers
-> come from `@agent-ui/shared`'s `scale.mjs` (CFG, `resolve()`, `check()`) through the generated
-> `foundations.gen.css`, never from a stylesheet.
+> come from two resolvers (T-0372): `@agent-ui/shared`'s `scale.mjs` (CFG, `resolve()`, `check()`) and the
+> skill's current resolver vendored under `tokens/vendor/mathematical-design-system/`, through the generated
+> `foundations.gen.css` and `foundations-bridge.gen.css`, never from a stylesheet.
 
 ## The one rule: one n per element
 
