@@ -2,7 +2,7 @@
 id: T-0394
 title: "OptionDeck gains the ADR-0223 inline opt-out"
 type: feature        # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -35,3 +35,17 @@ ui-option-deck follows ADR-0223 fill-by-default with the one sanctioned opt-out:
 - `env -u NODE_OPTIONS npm run check` exits 0.
 - `env -u NODE_OPTIONS npx vitest run` exits 0.
 - The OptionDeck catalog row does not expose `inline`: no default catalog row carries an `inline` property, and the OptionCompare precedent ships `inline` on the control only.
+
+## Outcome
+
+2026-10-21 · lane: solo L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 05650993413d
+- Changed: ui-option-deck gains the reflected inline opt-out (hugs as one column of cards); the catalog row stays without it
+- Commits: b5defa9 T-0394: OptionDeck gains the reflected inline opt-out (hugs as one column of cards)
+- Check: 1 option-deck browser test (packages project) exits 0: pass
+- Check: 2 option-deck visual browser test exits 0: pass
+- Check: 3 sizing-gates + option-deck jsdom exits 0: pass
+- Check: 4 `npm run check` exits 0: pass
+- Check: 5 whole jsdom suite exits 0: pass
+- Check: 6 OptionDeck catalog row does not expose `inline`: pass
+- Follow-up: note: packages/agent-ui/components/src/controls/option-deck/option-deck.c... -> notes.md
+- Follow-up: note: the scratch dir... -> notes.md
