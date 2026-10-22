@@ -2,7 +2,7 @@
 id: T-0393
 title: "OptionCompare: pick one of two to four options with aligned attribute rows"
 type: feature        # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L3             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0199]        # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -47,3 +47,50 @@ Ask (architect, debate rule): propose the exact text for the four model-read spa
 
 Ask (plan-reviewer, debate rule): review the architect's proposed wording in `.sdlc/runtime/tasks/0393-option-compare/architect-L1.md` as the second voice. Are spans A to D clear to a model and consistent with forks 15 and 16, the OptionCompare catalog row and sidecar, and the OptionDeck boundary? Is the deviation (persona surfaceStyle clauses describe the control in plain words because the P6 lint forbids catalog type names there; the changelog line names it) sound against prompt-lint.ts and agent-admin-presets.test.ts? Are the budgets, triggers, pins, digests, seedVersion bumps and baseline keys complete, with no added em dashes? Verdict pass or replan, with any exact wording fixes.
 - Debate outcome 2026-10-21: the architect (architect-L1.md) and the fable reviewer (plan-reviewer-L1-2.md, pass) agree. Spans A to D land as the architect wrote them, with the reviewer's three notes (persona style clauses in plain words with the type name only in the changelog line; the mini-skills.test.ts pin swap; travel tagline "comparison cards" to "a leg compare").
+
+## Outcome
+
+2026-10-21 · lane: full L3 · verdict: skipped (covered by the ticket verifier at step 3, which reran step 1's criteria) · verifier: verifier-L3 (fable) · base: bc76e32bfa0a
+- Changed: ui-option-compare (OptionCompare) with its agentic catalog row; comparison-table teaches the pick; travel and shopkeeper adopt it (debated)
+- Commits: none
+- Check: step-3#1 (red) `grep -qF OptionCompare comparison-table.md && grep -qF OptionCompare node-idioms.md`: pass
+- Check: step-3#2 (guard) triggers line byte-identical: pass
+- Check: step-3#3 (red) WORKFLOW.md has OptionCompare, no ProductCard, no "Button per row": pass
+- Check: step-3#4 (red) travel and shopkeeper name OptionCompare and T-0393: pass
+- Check: step-3#5 (red) seedVersion raised over base for both manifests: pass
+- Check: step-3#6 (red) travel.ts expects 'OptionCompare' and no 'ProductCard': pass
+- Check: step-3#7 `grep -q "^## Debate" ticket handoff` exit 0 and the builder result records one gate_lock jsdom r...: pass
+- Check: step-3#8 (guard) `generate-agent-content.mjs --check && generate-agent-assets.mjs --check`: pass
+- Check: step-3#9 (guard) vitest agent-admin presets, app, seed-digests, prompt-budget, `site/lib/agent-manifest`, ...: pass
+- Check: step-3#10 (guard) vitest `packages/agent-ui/a2ui packages/agent-ui/components/src packages/agent-ui/app/src...: pass
+- Check: step-3#11 (guard) vitest `site/lib/sitemap.test.ts site/lib/llms.test.ts site/lib/a2ui-catalog-tiers.test.t...: pass
+- Check: step-3#12 (guard) `env -u NODE_OPTIONS npm run check`: pass
+- Check: step-3#13 Conductor: debate settled, architect spans and reviewer notes applied exactly, whole jsdom suite ...: pass
+- Check: step-3#1 (red) jsdom `controls/option-compare`: pass
+- Check: step-3#2 browser packages project `controls/option-compare` (chromium and webkit): pass
+- Check: step-3#3 visual `option-compare.visual.browser.test.ts`: pass
+- Check: step-3#4 (red) `__baselines__` dir, 400px scroll test name, descriptor parts: pass
+- Check: step-3#5 (red) site doc and demo pages wired: pass
+- Check: step-3#6 (red) `_page.ts` and `generate-sitemap.mjs` Form composition tags: pass
+- Check: step-3#7 (red) registry.gen, dogfood-fleet.gen, capability-registry, llms.txt, sitemap.json: pass
+- Check: step-3#8 (red) artboard.ts and artboard.test.ts: pass
+- Check: step-3#9 `dogfood-render.browser.test.ts` (site project) and `_page.visual.browser.test.ts`: pass
+- Check: step-3#10 (guard) vitest `components/src` + `artboard.test.ts`: pass
+- Check: step-3#11 (guard) vitest `packages/agent-ui/a2ui`: pass
+- Check: step-3#12 (guard) site/lib five tests, `generate-controls --check`, `codemod-uses --check`, `generate-agent...: pass
+- Check: step-3#1 (red) catalog.json OptionCompare row shape: pass
+- Check: step-3#2 (red) selection.json intents and the OptionDeck notFor pair: pass
+- Check: step-3#3 (red) layers.ts, feed-catalog.ts, a2ui-catalog-tiers.ts: pass
+- Check: step-3#4 (red) factories, index.test, catalog.ts, option-compare-action.test.ts: pass
+- Check: step-3#5 (red) frontier seed, examples index, import-seeds, allowlist: pass
+- Check: step-3#6 (red) component-preview.ts OptionCompare entries: pass
+- Check: step-3#7 (red) spec "### 5.2 Agentic (7 default types)" and ui-option-compare: pass
+- Check: step-3#8 (red) assets.gen.ts and selection-projection.gen.ts: pass
+- Check: step-3#9 (guard) vitest `packages/agent-ui/a2ui`: pass
+- Check: step-3#10 (guard) site/lib four tests + `generate-agent-assets --check` + `generate-controls --check`: pass
+- Deviation: step 1 verifier skipped: covered by the ticket verifier at step 3, which reran step 1's criteria
+- Deviation: step 2 verifier skipped: covered by the ticket verifier at step 3, which reran step 2's criteria
+- Deviation: step-3: process deviation: red-checkpoint: missing: attempt 73d4277e4a3d4cb8bee4e59d39284222, handoff sha256 b18ba8dc274e, 5 of 5 (red) criteria without a pre-edit red control: `grep -qF OptionCompare packages/agent-ui/a2ui/src/agent/prompts/min...`; `grep -qF OptionCompare site/agent-content/workflows/trip-plan/WORKF...`; `for p in travel shopkeeper; do grep -qF OptionCompare "site/agent-c...`; `python3 -c "import json,os,subprocess,sys; ps=['site/lib/agent-mani...`; `grep -qF "'OptionCompare'" scripts/e2e-admin/probe/scenarios/travel...`
+- Follow-up: decide: site/agent-content/personas/travel/agent.md:7 and :44: note: the... -> notes.md
+- Follow-up: decide: scripts/e2e-admin/probe/replays/smoke-travel-compare-legs-haiku.jso... -> notes.md
+- Follow-up: decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0393-s3-v... -> notes.md

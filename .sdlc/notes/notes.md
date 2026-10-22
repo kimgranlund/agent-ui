@@ -662,3 +662,10 @@
 ## T-0383: conversation.browser.test.ts: 4 resumed-bubble and composed-path reds (2026-10-21)
 
 - note: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/T-0383-wave-w0383/packages/agent-ui/app/src/controls/conversation/conversation.browser.test.ts has no test for "finalized card-only turn leaves the bubble hidden" (the T-0194 tally-on-strip half); optional follow-up if the conductor wants it pinned.
+
+## T-0393: OptionCompare: pick one of two to four options with aligned attribute rows (2026-10-21)
+
+- decide: site/agent-content/personas/travel/agent.md:7 and :44: note: the two em dashes on the rewritten lines ("planning — a leg compare", "itinerary — the FX figure") predate this step (same characters on the removed lines); over the whole range `bc76e32bf..HEAD` the only other added em dash sits inside the minified `DOGFOOD_JS` string of the generated `sandbox-frame/dogfood/dogfood-assets.ts`.
+- decide: scripts/e2e-admin/probe/replays/smoke-travel-compare-legs-haiku.json: note: left as a recorded ProductCard round on purpose (handoff Do); re-recording needs the live run.
+- decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0393-s3-verifier-L3: note: the throwaway worktree `base` is removed (`git worktree list` shows none); the prefix dir still holds the dispatcher's `.owner.json`, which I did not write.
+- decide: packages/agent-ui/a2ui/src/catalog/default/selection.json OptionCompare intents: note: the second intent "legs, rooms, plans or products side by side" carries no pick word, so a facts-only "compare plans side by side" ask can route to OptionCompare at the sidecar; the comparison-table body carries the facts-only Stat-plus-Table branch, and the conductor's live chat:probe is the measurement. (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
