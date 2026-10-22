@@ -13,6 +13,7 @@
 // T-0318: a pin holds only the ranks a reader can defend for its turn and compares that prefix; the ranks after it are
 // known poor (zero-signal padding off the turn's domain) and are named in a comment on the row, never pinned as correct.
 // T-0315: each pin passes the preset's hidden-state keys; the Mentalist row moved to the T-0315 describe (no board frames).
+// T-0396 re-pinned after admitting the six shelf seeds: the Itinerary now leads the travel turn.
 import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'node:fs'
 import { retrieve, committedSecretKeys, secretKeysNamedIn } from './retrieve.ts'
@@ -54,18 +55,19 @@ const HIDDEN_STATE: Readonly<Record<string, readonly string[]>> = Object.fromEnt
 const hiddenStateOf = (preset: string): readonly string[] => HIDDEN_STATE[preset] ?? []
 
 const PINS: readonly (readonly [preset: string, catalogId: string, turn: string, top: readonly string[]])[] = [
-  ['croupier', 'agent-ui--croupier', 'Deal again', ['domain-croupier-card-table-round', 'frontier-round-outcome']],
-  ['concierge', 'agent-ui--hospitality', 'Book me a spa treatment for tomorrow afternoon', ['domain-concierge-booking-request', 'frontier-service-gateway', 'invite-decline-then-focus-block']],
+  ['croupier', 'agent-ui--croupier', 'Deal again', ['domain-croupier-card-table-round', 'frontier-amount-picker-bet', 'frontier-round-outcome']],
+  ['concierge', 'agent-ui--hospitality', 'Book me a spa treatment for tomorrow afternoon', ['domain-concierge-booking-request', 'frontier-service-gateway', 'domain-hospitality-itinerary-trip']],
   ['quizmaster', 'agent-ui--quizmaster', 'Next question please', ['trivia-round-resume', 'frontier-round-outcome', 'card-layouts']],
   ['stylist', 'agent-ui--stylist', 'Check the contrast of my brand palette', ['brand-palette', 'booking-reservation', 'ops-report']],
   // Known poor (T-0318): rank 3 is frontier-product-card-rooms, a room-booking card on a KPI turn.
   ['quant', 'agent-ui', 'Show me the KPI dashboard for last quarter', ['card-layouts', 'frontier-column-chart-revenue']],
   // Known poor (T-0197): the hospitality domain's own records rank first by the T-0238 rule (a ServiceCard gateway, the
-  // booking request) on a menu turn, since no menu exemplar is in the domain; pinned so a domain shard change re-pins.
-  ['restaurant', 'agent-ui--hospitality', 'What is on the menu tonight', ['frontier-service-gateway', 'domain-concierge-booking-request', 'travel-itinerary']],
-  // Known poor (T-0199): travel composes the hospitality domain, whose own records rank first by the T-0238 rule; the
-  // Itinerary seed is not admitted to the shard yet, so the booking request leads a trip turn.
-  ['travel', 'agent-ui--hospitality', 'Plan a three day trip itinerary to Lisbon', ['domain-concierge-booking-request', 'frontier-service-gateway', 'frontier-trip-card']],
+  // booking request, since T-0396 the Itinerary) on a menu turn, since no menu exemplar is in the domain; pinned so a
+  // domain shard change re-pins.
+  ['restaurant', 'agent-ui--hospitality', 'What is on the menu tonight', ['domain-hospitality-itinerary-trip', 'frontier-service-gateway', 'domain-concierge-booking-request']],
+  // T-0199, re-pinned by T-0396: travel composes the hospitality domain, whose own records rank first by the T-0238 rule;
+  // the admitted Itinerary seed now leads a trip turn, ahead of the booking request and the ServiceCard gateway.
+  ['travel', 'agent-ui--hospitality', 'Plan a three day trip itinerary to Lisbon', ['domain-hospitality-itinerary-trip', 'domain-concierge-booking-request', 'frontier-service-gateway']],
   // Known poor (T-0318): rank 3 is frontier-product-card-rooms, off the collection domain.
   ['curator', 'agent-ui', 'Show me the highlights of the collection', ['customer-review-card', 'slideshow-gallery']],
   ['shopkeeper', 'agent-ui', 'Show me the product options', ['frontier-choice-group-rooms', 'frontier-column-chart-revenue', 'frontier-product-card-rooms']],
@@ -75,11 +77,13 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
   // Known poor (T-0318): rank 2 is the expense-claim receipt, matched on the bare "I" of its prompt.
   ['lexicographer', 'agent-ui', 'I give up.', ['domain-lexicographer-game-over']],
   ['lexicographer', 'agent-ui', 'Show me the word.', ['domain-lexicographer-game-over', 'domain-lexicographer-word-board', 'frontier-product-card-rooms']],
-  ['admiral', 'agent-ui', 'Fire at B3', ['domain-admiral-battleship-board', 'frontier-product-card-rooms', 'restaurant-menu']],
-  ['alchemist', 'agent-ui', 'Mix the two elements', ['media-file-grid', 'list-nested', 'pattern-settings-form']],
-  // Known poor (T-0335): rank 3 is plan-and-execute-plan, off the quest domain (it was the then hotel wizard); pinned so a
-  // shard change that moves it is a deliberate re-pin.
-  ['dungeon-master', 'agent-ui', 'I open the door and look around', ['frontier-game-hud-quest', 'frontier-service-gateway', 'plan-and-execute-plan']],
+  // Known poor (T-0396): ranks 2 and 3 are the StepFlow hotel booking and a room-booking card, off the fleet domain.
+  ['admiral', 'agent-ui', 'Fire at B3', ['domain-admiral-battleship-board', 'frontier-step-flow-booking', 'frontier-product-card-rooms']],
+  // Known poor (T-0396): rank 2 is the ConfirmReceipt order read-back, off the mixing domain.
+  ['alchemist', 'agent-ui', 'Mix the two elements', ['media-file-grid', 'frontier-confirm-receipt-order', 'list-nested']],
+  // Known poor (T-0335, re-pinned by T-0396): rank 3 is the ConfirmReceipt order read-back, off the quest domain (it was
+  // plan-and-execute-plan, before that the then hotel wizard); pinned so a shard change that moves it is a deliberate re-pin.
+  ['dungeon-master', 'agent-ui', 'I open the door and look around', ['frontier-game-hud-quest', 'frontier-service-gateway', 'frontier-confirm-receipt-order']],
 ]
 
 describe('retrieve: the shipped-preset ranking pin (T-0238)', () => {

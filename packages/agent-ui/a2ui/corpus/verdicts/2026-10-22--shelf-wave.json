@@ -1,0 +1,14 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.5",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-10-22",
+  "verdicts": {
+    "frontier-amount-picker-bet": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "frontier-option-deck-picker": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "frontier-confirm-receipt-order": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "frontier-step-flow-booking": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "frontier-option-compare-legs": { "qualityScore": 4, "passed": true, "failingDimensions": [] },
+    "domain-hospitality-itinerary-trip": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}

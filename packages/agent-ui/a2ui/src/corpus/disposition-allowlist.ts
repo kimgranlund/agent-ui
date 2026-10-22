@@ -252,42 +252,9 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // 2026-10-15t16-24-49z--t0240-domain-exemplars.json); entries DRAINED. `frontier-board-grid-guesses` judged 2/5
   // (D1, D2) in the same wave and DROPPED from the shelf (the ADR-0165 drop path); the archive holds the refusal.
 
-  // T-0196 (2026-10-20): `frontier-amount-picker-bet`, the pending-state shape for the new `AmountPicker` default
-  // row. DELETE it when the judged pipeline lands.
-  ['frontier-amount-picker-bet',
-    'T-0196 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
-    '`AmountPicker` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
-  // T-0193 (2026-10-20): `frontier-option-deck-picker`, the same pending-state shape (NO VERDICT SOUGHT YET, not a
-  // refusal). Added to `catalog-frontier.ts` with the `OptionDeck` default-catalog row to close its coverage gap;
-  // judged admission is a follow-up, the T-0072 precedent. Run the judged pipeline (`import-seeds.ts` with a real
-  // VerdictsFile) and DELETE this entry when it lands.
-  ['frontier-option-deck-picker',
-    'T-0193 - NO VERDICT SOUGHT YET, not a refusal. Closes the catalog-coverage gap for the new `OptionDeck` ' +
-    'type; judged admission is a follow-up, the T-0072 precedent (ADR-0068\'s never-self-judged discipline - ' +
-    'this authoring session assigns no rubric score to its own seed).'],
-  // T-0195 (2026-10-20): `frontier-confirm-receipt-order`, the same pending-state shape for the new
-  // `ConfirmReceipt` default row. DELETE it when the judged pipeline lands.
-  ['frontier-confirm-receipt-order',
-    'T-0195 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
-    '`ConfirmReceipt` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
-  // T-0198 (2026-10-21): `frontier-step-flow-booking`, the same pending-state shape for the new `StepFlow`
-  // default row. DELETE it when the judged pipeline lands.
-  ['frontier-step-flow-booking',
-    'T-0198 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
-    '`StepFlow` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
-  // T-0393 (2026-10-21): `frontier-option-compare-legs`, the same pending-state shape for the new `OptionCompare`
-  // default row. DELETE it when the judged pipeline lands.
-  ['frontier-option-compare-legs',
-    'T-0393 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
-    '`OptionCompare` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
-  // T-0199 (2026-10-21): `domain-hospitality-itinerary-trip`, the same pending-state shape for the new hospitality
-  // `Itinerary` domain type. DELETE it when the judged pipeline lands.
-  ['domain-hospitality-itinerary-trip',
-    'T-0199 - NO VERDICT SOUGHT YET, not a refusal. Closes the catalog-coverage gap for the new hospitality ' +
-    '`Itinerary` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
-    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
+  // T-0396 (2026-10-22): T-0196 `frontier-amount-picker-bet`, T-0193 `frontier-option-deck-picker`, T-0195
+  // `frontier-confirm-receipt-order`, T-0198 `frontier-step-flow-booking`, T-0393 `frontier-option-compare-legs` and
+  // T-0199 `domain-hospitality-itinerary-trip` judged PASS by an independent a2ui-review-agent (StepFlow after its
+  // stable-root and Field-wrapped Calendar fix) and admitted in one wave (archived 2026-10-22--shelf-wave.json);
+  // entries DRAINED.
 ])

@@ -819,22 +819,21 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'frontier-game-hud-quest': { passed: false, qualityScore: 2 },
     // ADR-0244/T-0089 - the ResultCard coverage-gap seed, refused here for the same zero-admission reason.
     'frontier-result-card-win': { passed: false, qualityScore: 2 },
-    // T-0196 - the AmountPicker coverage-gap seed, refused here for the same zero-admission reason.
+    // T-0196, T-0193, T-0195, T-0198 and T-0393 - the AmountPicker, OptionDeck, ConfirmReceipt, StepFlow and
+    // OptionCompare coverage-gap seeds; refused here for the same zero-admission reason (all five judged and
+    // admitted by T-0396).
     'frontier-amount-picker-bet': { passed: false, qualityScore: 2 },
-    // T-0193 - the OptionDeck coverage-gap seed, refused here for the same zero-admission reason.
     'frontier-option-deck-picker': { passed: false, qualityScore: 2 },
-    // T-0195 - the ConfirmReceipt coverage-gap seed, refused here for the same zero-admission reason.
     'frontier-confirm-receipt-order': { passed: false, qualityScore: 2 },
-    // T-0198 - the StepFlow coverage-gap seed, refused here for the same zero-admission reason.
     'frontier-step-flow-booking': { passed: false, qualityScore: 2 },
-    // T-0393 - the OptionCompare coverage-gap seed, refused here for the same zero-admission reason.
     'frontier-option-compare-legs': { passed: false, qualityScore: 2 },
     // T-0245/T-0240 - the four domain seeds (domain-seeds.ts), refused here for the same zero-admission reason.
     'domain-lexicographer-word-board': { passed: false, qualityScore: 2 },
     'domain-admiral-battleship-board': { passed: false, qualityScore: 2 },
     'domain-croupier-card-table-round': { passed: false, qualityScore: 2 },
     'domain-concierge-booking-request': { passed: false, qualityScore: 2 },
-    // T-0199 - the hospitality Itinerary seed (domain-seeds.ts), refused here for the same zero-admission reason.
+    // T-0199 - the hospitality Itinerary seed (domain-seeds.ts), refused here for the same zero-admission reason
+    // (judged and admitted by T-0396).
     'domain-hospitality-itinerary-trip': { passed: false, qualityScore: 2 },
   }
 
