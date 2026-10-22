@@ -141,3 +141,29 @@ describe('ui-option-deck: fills a shrink-to-fit parent', () => {
     })
   }
 })
+
+// T-0394: `inline` is the ADR-0223 opt-out. In the same shrink-to-fit parents the deck hugs its content instead:
+// it drops its inline-size container (which has no intrinsic width), so it is as wide as its one card track, never
+// 0px and narrower than the parent. The fill block above is the negative control.
+describe('ui-option-deck: inline hugs its content', () => {
+  const PARENTS: Record<string, string> = {
+    'a centring column': 'display:flex; flex-direction:column; align-items:center;',
+    'a flex row': 'display:flex; flex-direction:row;',
+    'a centring grid cell': 'display:grid; justify-items:center;',
+  }
+  for (const [name, css] of Object.entries(PARENTS)) {
+    it(`an inline deck nested in ${name} hugs its widest card`, async () => {
+      const { deck } = await mount('40rem', { inline: true })
+      expect(deck.hasAttribute('inline')).toBe(true)
+      const parent = document.createElement('div')
+      parent.style.cssText = css
+      deck.parentElement!.append(parent)
+      parent.append(deck)
+      await deck.updateComplete
+      const width = deck.getBoundingClientRect().width
+      expect(width).toBeGreaterThan(0)
+      expect(width).toBeLessThan(parent.getBoundingClientRect().width - 1)
+      expect(cards(deck)[0]!.getBoundingClientRect().width).toBeCloseTo(width, 0)
+    })
+  }
+})

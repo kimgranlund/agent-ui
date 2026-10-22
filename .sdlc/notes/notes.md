@@ -669,3 +669,8 @@
 - decide: scripts/e2e-admin/probe/replays/smoke-travel-compare-legs-haiku.json: note: left as a recorded ProductCard round on purpose (handoff Do); re-recording needs the live run.
 - decide: /Users/kimgranlund/Projects/nonoun/agent-ui.worktrees/tmp/0393-s3-verifier-L3: note: the throwaway worktree `base` is removed (`git worktree list` shows none); the prefix dir still holds the dispatcher's `.owner.json`, which I did not write.
 - decide: packages/agent-ui/a2ui/src/catalog/default/selection.json OptionCompare intents: note: the second intent "legs, rooms, plans or products side by side" carries no pick word, so a facts-only "compare plans side by side" ask can route to OptionCompare at the sidecar; the comparison-table body carries the facts-only Stat-plus-Table branch, and the conductor's live chat:probe is the measurement. (Appended by the conductor: tickets.py 0.25.1 dropped it as a path-prefix duplicate.)
+
+## T-0394: OptionDeck gains the ADR-0223 inline opt-out (2026-10-21)
+
+- note: `packages/agent-ui/components/src/controls/option-deck/option-deck.css:9` the header comment line grew past the surrounding wrap width after the `[inline]` clause was appended; cosmetic only.
+- note: the scratch dir `/var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0394-verifier-L2` could not be removed (rm denied); it holds only the log files of this run. The throwaway worktree was removed.

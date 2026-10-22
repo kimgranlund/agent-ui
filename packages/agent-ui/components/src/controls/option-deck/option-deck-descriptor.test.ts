@@ -23,7 +23,7 @@ const css = readFileSync(`${DIR}/option-deck.css`, 'utf8') as string
 
 const { fence, body } = splitFrontmatter(md)
 const parsed = parseDescriptor(fence)
-const ATTR_NAMES = ['options', 'value', 'actionName', 'allowRandom', 'randomLabel', 'heading', 'subheading', 'disabled']
+const ATTR_NAMES = ['options', 'value', 'actionName', 'allowRandom', 'randomLabel', 'heading', 'subheading', 'disabled', 'inline']
 
 describe('option-deck.md descriptor: structural validity', () => {
   it('has a leading frontmatter fence and a prose body', () => {

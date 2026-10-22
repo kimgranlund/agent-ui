@@ -9,4 +9,4 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | T-0385 | [0385-site-agent-content-workflows-booking](0385-site-agent-content-workflows-booking/handoff.md) | site/agent-content/workflows/booking-flow/WORKFLOW.md:12 settles... | idea | L2 | P2 | none | ⏳ proposed |
 | T-0390 | [0390-site-agent-content-workflows-table](0390-site-agent-content-workflows-table/handoff.md) | site/agent-content/workflows/table-reservation/WORKFLOW.md:12... | idea | L2 | P2 | none | ⏳ proposed |
 
-Closed: 385 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 386 done, 4 dropped (git log or .NNNN-* folders)

@@ -56,6 +56,11 @@ attributes:             # attributes-as-API, the generation source for option-de
     default: false
     reflect: true       # reflected; a disabled deck commits nothing and has no tab stop
     description: Disables every card; no pick, no event.
+  - name: inline
+    type: boolean
+    default: false
+    reflect: true       # ADR-0223 R2: the one sizing opt-out; the host hugs its content under [inline]
+    description: Hugs the content instead of filling the container (the one sizing opt-out).
 
 properties: []          # no manual accessors beyond the typed props
 
@@ -131,7 +136,7 @@ geometry:
   cardRadius: var(--ui-option-deck-radius)     # = --md-sys-card-radius
   cardPadding: var(--ui-option-deck-pad)       # = --md-sys-widget-margin, the body inset
   cardMin: var(--ui-option-deck-card-min)      # = 40n, the auto-fit track floor
-  note: Container spacing only, no control-height row of its own. The grid is `repeat(auto-fit, minmax(min(100%, 40n), 1fr))`, so a 400px column falls to one track and a card turns into a horizontal row (band leading, text trailing) under a 30rem container, the 400px column at every register. Block-level fill by default (ADR-0223); never horizontal scroll.
+  note: Container spacing only, no control-height row of its own. The grid is `repeat(auto-fit, minmax(min(100%, 40n), 1fr))`, so a 400px column falls to one track and a card turns into a horizontal row (band leading, text trailing) under a 30rem container, the 400px column at every register. Block-level fill by default (ADR-0223); never horizontal scroll. Under `[inline]` the host hugs its content and drops its inline-size container, so it never turns into rows: the grid repeats one track, a column of cards as wide as the widest card.
 
 forcedColors: Every card keeps a CanvasText border, the selected card gains a Highlight outline, the band pattern and chip tint drop to Canvas, and the pick pill gains a CanvasText border so it reads without its fill.
 ---
