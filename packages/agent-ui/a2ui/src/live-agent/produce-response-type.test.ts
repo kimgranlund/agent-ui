@@ -739,6 +739,30 @@ describe('T-0172: structured render_surface, prose routing, surface loss', () =>
     expect(finalMeta(lines).trace?.failureCodes).not.toContain('SURFACE_DROPPED')
   })
 
+  it('T-0410: a retired surface is tallied SURFACE_REPLACED on the trace, naming the retired and the new id', async () => {
+    const { provider, reqs, calls } = scripted([
+      { text: 'Booking.', call: [surface(`${brokenAsk('ask-1')}\n${column('greet-1')}`)] },
+      { text: 'Booking.', call: [surface(`${column('greet-1')}\n${column('info-1')}`)] },
+    ])
+    const lines = await run(intentOf('book a table'), provider, { maxRounds: 2 })
+    expect(calls()).toBe(2)
+    expect(contentOf(lines)).toEqual([...column('greet-1').split('\n'), ...column('info-1').split('\n')])
+    const trace = finalMeta(lines).trace
+    expect(trace?.failureCodes).toEqual(['IDGRAPH', 'SURFACE_REPLACED'])
+    expect(trace?.replaced).toEqual([{ surfaceId: 'ask-1', by: 'info-1' }])
+    for (const req of reqs()) expect(JSON.stringify(req)).not.toContain('SURFACE_REPLACED') // trace-only, never model-read
+  })
+
+  it('T-0410: a turn that retires nothing carries no SURFACE_REPLACED tally', async () => {
+    const { provider } = scripted([
+      { text: 'Booking.', call: [surface(brokenAsk('ask-1'))] },
+      { text: 'Booking.', call: [surface(column('ask-1'))] },
+    ])
+    const lines = await run(intentOf('book a table'), provider, { maxRounds: 2 })
+    expect(finalMeta(lines).trace?.failureCodes).not.toContain('SURFACE_REPLACED')
+    expect(finalMeta(lines).trace?.replaced).toBeUndefined()
+  })
+
   it('T-0328: a rename that needs a second repair round ships', async () => {
     const { provider, calls } = scripted([
       { text: 'Booking.', call: [surface(brokenAsk('ask-1'))] },

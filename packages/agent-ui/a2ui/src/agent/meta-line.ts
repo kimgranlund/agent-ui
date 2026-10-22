@@ -114,6 +114,9 @@ export interface TurnTrace {
   miniSkillIds?: string[]
   /** T-0239: the characters of the stable, cached system-prompt prefix (T-0206); the sections after it are volatile. */
   cacheBoundary?: number
+  /** T-0410: each surface a round retired under T-0328's one-per-new-id rule, and the new id that retired it; tallied
+   *  `SURFACE_REPLACED` in `failureCodes`. Absent when the turn retired none. Trace-only, never fed back to the model. */
+  replaced?: { surfaceId: string; by: string }[]
 }
 
 /** ADR-0234 (proposed): provider-billed token counts for one upstream request, or a sum over a turn. The
