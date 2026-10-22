@@ -21,7 +21,8 @@
 //   --root <dir>        scan another tree (a scratch copy for a negative control); default: this repo
 //   --allowlist <file>  read another allowlist; default: <root>/scripts/foundations-allowlist.json
 
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { join, relative } from 'node:path'
 import { RULES, findingsIn, hasOwner, kindOf, lineOf } from './lib/foundations-rules.mjs'
@@ -29,8 +30,10 @@ import { RULES, findingsIn, hasOwner, kindOf, lineOf } from './lib/foundations-r
 const REPO = fileURLToPath(new URL('..', import.meta.url))
 const SCAN_DIRS = ['packages', 'site']
 const SKIP_DIRS = new Set(['node_modules', '__baselines__', '__fixtures__', '__screenshots__', 'public'])
-// A vendored module (tokens/vendor/, T-0372) is a byte copy of its source: no rule applies, nothing there is edited.
-export const SKIP_FILE = /\.gen\.|(?:^|\/)dogfood-assets\.ts$|(?:^|\/)vendor\//
+// The two vendored modules (T-0372) are byte copies of their source: no rule applies, nothing there is edited. The
+// match runs on the repo-relative path and names the two files only, so a repo-authored file beside them (the
+// `.d.mts` type surfaces) or under any other vendor-named folder is still scanned.
+export const SKIP_FILE = /\.gen\.|(?:^|\/)dogfood-assets\.ts$|(?:^|\/)tokens\/vendor\/mathematical-design-system\/(?:scale|curvature)\.mjs$/
 
 function walk(dir, root, out) {
   let entries
@@ -43,7 +46,7 @@ function walk(dir, root, out) {
     if (e.name.startsWith('.') || SKIP_DIRS.has(e.name) || e.name.startsWith('dist')) continue
     const full = join(dir, e.name)
     if (e.isDirectory()) walk(full, root, out)
-    else if (e.isFile() && kindOf(e.name) !== null && !SKIP_FILE.test(full)) out.push(relative(root, full))
+    else if (e.isFile() && kindOf(e.name) !== null && !SKIP_FILE.test(relative(root, full))) out.push(relative(root, full))
   }
   return out
 }
@@ -172,7 +175,21 @@ function selftest() {
   check('axes: a css selector is found', rule('a.css', ':is([scale="ui-lg"]) x { color: red; }', 'axes') === 1)
   check('axes: data-scale, transform scale() and --md-sys-scale pass', rule('a.css', 'x[data-scale="sm"] { transform: scale(2); font-size: calc(1px * var(--md-sys-scale)); }', 'axes') === 0)
   check('axes: a test title or comment naming [scale] passes', rule('a.ts', `it('no [size]/[scale] selector', () => {}) // [density]`, 'axes') === 0)
-  check('skip: a vendored module is not scanned, a sibling of it is', SKIP_FILE.test('packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs') && !SKIP_FILE.test('packages/agent-ui/shared/src/tokens/scale.mjs'))
+  const VENDOR = 'packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system'
+  check('skip: the two vendored modules are not scanned, a sibling of them is', SKIP_FILE.test(`${VENDOR}/scale.mjs`) && SKIP_FILE.test(`${VENDOR}/curvature.mjs`) && !SKIP_FILE.test('packages/agent-ui/shared/src/tokens/scale.mjs'))
+  check('skip: a repo-authored .d.mts beside the vendored modules and a file under another vendor folder are scanned', !SKIP_FILE.test(`${VENDOR}/scale.d.mts`) && !SKIP_FILE.test('packages/agent-ui/x/src/vendor/a.ts'))
+  const tree = mkdtempSync(join(tmpdir(), 'census-vendor-'))
+  try {
+    const planted = "el.style.fontSize = 'var(--md-sys-type-group-label)'\n"
+    for (const rel of [`${VENDOR}/scale.mjs`, `${VENDOR}/planted.ts`, 'packages/agent-ui/x/src/vendor/a.ts']) {
+      mkdirSync(join(tree, rel, '..'), { recursive: true })
+      writeFileSync(join(tree, rel), planted)
+    }
+    const keys = [...census(tree).keys()]
+    check('skip: a finding planted in a vendor-named folder is found, the vendored copy is not scanned', keys.includes(`${VENDOR}/planted.ts#tokens`) && keys.includes('packages/agent-ui/x/src/vendor/a.ts#tokens') && !keys.some((k) => k.startsWith(`${VENDOR}/scale.mjs#`)))
+  } finally {
+    rmSync(tree, { recursive: true, force: true })
+  }
   const d = gateDiff(['a#px', 'b#px'], ['a#px', 'c#glyph'])
   check('gate: an unlisted finding and a stale entry are both reported', d.unlisted.join() === 'b#px' && d.stale.join() === 'c#glyph')
   check('gate: a listed finding is green', gateDiff(['a#px'], ['a#px']).unlisted.length + gateDiff(['a#px'], ['a#px']).stale.length === 0)

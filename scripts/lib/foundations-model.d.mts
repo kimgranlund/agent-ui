@@ -1,4 +1,4 @@
-/** Type surface for foundations-model.mjs (T-0372, T-0373): the generator's inputs, resolve() (the sheet's tokens
+/** Type surface for foundations-model.mjs (T-0372, T-0373, T-0374): the generator's inputs, resolve() (the sheet's tokens
  *  as px, plus the control surface anatomy) and the guards on both. */
 import type { Density, Step, Tier } from '../../packages/agent-ui/shared/src/tokens/vendor/mathematical-design-system/scale.mjs'
 

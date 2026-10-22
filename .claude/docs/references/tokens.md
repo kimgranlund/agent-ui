@@ -3,7 +3,7 @@
 > Canonical naming + role standard for agent-ui color. The dimensional tokens (every size) are not here:
 > they derive from one n per element, and container spacing from m, see
 > [`geometry-sizing-spec.md`](./geometry-sizing-spec.md) §1 and ADR-0245 with its Amendments 3 and 8 (the root is
-> product / md) (`@agent-ui/shared` `foundations.gen.css`, generated from `scale.mjs`, never hand-edited). **Derived** from the value source
+> product / md) (`@agent-ui/shared` `foundations.gen.css` and `foundations-bridge.gen.css`, generated from the repo's `scale.mjs` and the skill's current resolver vendored under `tokens/vendor/mathematical-design-system/` (T-0372), never hand-edited). **Derived** from the value source
 > `@agent-ui/shared/src/tokens/tokens.css` (OKLCH primitives + semantic roles) — the values live there
 > and are not duplicated here; this doc describes the *system*. Distilled 2026-06-26 · adopted into
 > `@agent-ui/shared` 2026-06-26.
