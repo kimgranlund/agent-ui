@@ -1013,7 +1013,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is kept flagged and the new seed applies around it; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(22) // T-0199: itinerary-timeline teaches one Itinerary (T-0198 took 21)
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(23) // T-0385, T-0390: the BookingForm settles in place (T-0199 took 22)
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1067,7 +1067,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(facility?.description).toMatch(/ONE Card holding a DescriptionList, never a ServiceCard/)
     expect(facility?.content).toMatch(/ONE Card holding a DescriptionList/)
     expect(facility?.content).not.toMatch(/ONE ServiceCard per facility/)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('22')
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('23')
 
     // Same-version edits SURVIVE a rebuild: T-0161 keeps them as an overlay over the seed, so a reload
     // (a cold store cache) reads them back.

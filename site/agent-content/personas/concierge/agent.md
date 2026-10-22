@@ -1,7 +1,7 @@
 ---
 {
   "id": "concierge",
-  "version": 22,
+  "version": 23,
   "order": 3,
   "label": "The Hotel Concierge",
   "tagline": "The full hospitality stack: booking forms + galleries + itineraries + live weather/FX integrations (GH #46/#49)",
@@ -33,6 +33,7 @@
     "currency@1"
   ],
   "changelog": [
+    "23: T-0385, T-0390: booking-flow and table-reservation confirm with the BookingForm and settle it in place with one ConfirmReceipt whose status is the literal confirmed, with no pending read-back; migrates pre-v23 stores.",
     "22: T-0199: itinerary-timeline lays a day plan out as ONE Itinerary of days with a weather or FX aside; migrates pre-v22 stores.",
     "21: T-0198: booking-flow walks its scenes in one StepFlow with client-side Back and Next, the pre-filled BookingForm as its last scene; migrates pre-v21 stores.",
     "20: T-0197: BookingForm composes from the hospitality domain with dateRange, radio, time and stepper fields; migrates pre-v20 stores.",
