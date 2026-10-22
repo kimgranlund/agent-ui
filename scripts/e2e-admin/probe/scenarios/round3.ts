@@ -73,8 +73,8 @@ export const ROUND2_TICKETS = ['T-0214', 'T-0229', 'T-0230', 'T-0231', 'T-0232',
 function regressionRouting(agent: string, step: ProbeStep, index: number): RoutingExpect | undefined {
   const text = 'say' in step ? step.say : ''
   if (agent === 'croupier' && index === 0) return { domains: ['croupier'], exemplars: { include: [CARD_TABLE], exclude: [WORD_BOARD, BATTLESHIP_BOARD] } }
-  if (agent === 'concierge' && /^Book /.test(text)) return { domains: ['concierge'], exemplars: { include: [BOOKING_REQUEST] } }
-  if (agent === 'concierge' && /late check-out/.test(text)) return { domains: ['concierge'], references: KB_FULL }
+  if (agent === 'concierge' && /^Book /.test(text)) return { domains: ['hospitality'], exemplars: { include: [BOOKING_REQUEST] } }
+  if (agent === 'concierge' && /late check-out/.test(text)) return { domains: ['hospitality'], references: KB_FULL }
   if (agent === 'lexicographer' && index === 1) return { exemplars: { include: [WORD_BOARD] } }
   if (agent === 'admiral' && index === 0) return { exemplars: { include: [BATTLESHIP_BOARD] } }
   return undefined
@@ -121,7 +121,7 @@ export const LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundScenario 
       tags: ['long'],
       steps: [
         say('What spa services can I book during my stay?', undefined, 'ProductCard'),
-        say('Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', { domains: ['concierge'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),
+        say('Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.', { domains: ['hospitality'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),
         say('Make it 16:00 instead, same day.', undefined, 'BookingForm'),
         say('Those details are right, please confirm the booking.', undefined, 'BookingConfirmation'),
         say("Thanks, that's all."),

@@ -74,7 +74,7 @@ export const ROUND4_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundSc
       name: 'booking-confirm',
       tags: ['long'],
       steps: [
-        say(BOOK_ASK, { domains: ['concierge'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),
+        say(BOOK_ASK, { domains: ['hospitality'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),
         say('Those details are right, please confirm the booking.', undefined, 'BookingConfirmation'),
         say("Thanks, that's all."),
       ],
@@ -88,7 +88,7 @@ export const ROUND4_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundSc
       name: 'spa-services',
       tags: ['long'],
       steps: [
-        say('What spa services can I book during my stay?', { domains: ['concierge'] }, 'ProductCard'),
+        say('What spa services can I book during my stay?', { domains: ['hospitality'] }, 'ProductCard'),
         say('Book the first one for Thursday 19 November 2026 at 15:00, one guest, name Alex Moreau.', undefined, 'BookingForm'),
       ],
       expectComponents: ['ProductCard', 'BookingForm'],

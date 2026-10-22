@@ -163,7 +163,7 @@ export async function runProbeSelftest(): Promise<number> {
     ['correction note', record({ proseText: 'Corrected: the 250 bet is now taken out of your bankroll, which leaves 750.' }), 'no-internal-leak'],
     ['surface id', record({ proseText: 'Table-3 is open. Set your bet and deal.' }), 'no-internal-leak'],
     // T-0260: each part of an `expectRouting` oracle bites on its own.
-    ['off-domain', record({ routing: { ...ROUTED, domains: ['concierge'] } }), 'routing-expect'],
+    ['off-domain', record({ routing: { ...ROUTED, domains: ['hospitality'] } }), 'routing-expect'],
     ['exemplar missing', record({ routing: { ...ROUTED, exemplars: [] } }), 'routing-expect'],
     ['exemplar excluded', record({ routing: { ...ROUTED, exemplars: [...ROUTED.exemplars, 'booking-reservation'] } }), 'routing-expect'],
     ['section missing', record({ routing: { ...ROUTED, sections: ['grammar'] } }), 'routing-expect'],

@@ -34,7 +34,8 @@ describe('routing pressure pack', () => {
       expect(cmd.agent).toBe(s.agent)
       expect(cmd.model).toBe(model.id)
       expect(cmd.steps).toEqual(s.steps)
-      for (const step of cmd.steps) expect(step.expectRouting?.domains).toEqual([s.agent])
+      // The Concierge composes the hospitality domain (T-0197), so its turns label `hospitality`, not the preset id.
+      for (const step of cmd.steps) expect(step.expectRouting?.domains).toEqual([s.agent === 'concierge' ? 'hospitality' : s.agent])
     }
   })
 
@@ -58,9 +59,10 @@ describe('routing pressure pack', () => {
   })
 
   it('doc-only expects the house facts in the persona section, not the knowledge base fetched full (T-0270)', () => {
-    // The routing round 3 recorded on routing-doc-only-haiku-1 t0 (a correct answer: late check-out to 14:00, no fee named).
+    // The routing round 3 recorded on routing-doc-only-haiku-1 t0 (a correct answer: late check-out to 14:00, no fee named),
+    // with the domain relabeled `hospitality`: T-0197 moved the Concierge from its `concierge` persona catalog to that domain.
     const seen = {
-      domains: ['concierge'],
+      domains: ['hospitality'],
       exemplars: ['domain-concierge-booking-request', 'frontier-service-gateway', 'travel-itinerary'],
       sections: ['grammar', 'components', 'functions', 'few-shot', 'mini-skills', 'persona'],
       references: [{ name: 'booking-flow', load: 'index-only' }, { name: 'property-knowledge-base', load: 'index-only' }],

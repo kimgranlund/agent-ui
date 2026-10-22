@@ -3,7 +3,7 @@
 // $42 cap; and `live-commands.sh` is exactly the generated script, which the capped runner describes.
 import { readFileSync } from 'node:fs'
 import { withoutSkipMarks } from './croupier.ts'
-import { asArchivedGuidanceConflict } from './routing.ts'
+import { asArchivedConciergeDomain, asArchivedGuidanceConflict } from './routing.ts'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
 import { describeCommands } from '../run-capped.ts'
@@ -49,7 +49,7 @@ describe('live round 9', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND9_FILE)
-    expect(text).toBe(withoutSkipMarks(asArchivedGuidanceConflict(round9CommandsScript())))
+    expect(text).toBe(withoutSkipMarks(asArchivedConciergeDomain(asArchivedGuidanceConflict(round9CommandsScript()))))
     expect(text).toContain('run-capped.ts .sdlc/evals/rounds/2026-10-17-r9-matrix/live-commands.sh --cap 42 --round r9-matrix')
     const described = describeCommands(text)
     expect(described).toHaveLength(87)
