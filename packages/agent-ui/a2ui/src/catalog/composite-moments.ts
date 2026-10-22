@@ -40,6 +40,10 @@
 // gold", a sales dashboard, a receipt or a booking that says "you won" stays clean, a croupier hand settles on its own
 // table, and a round result Toast is never read.
 //
+// T-0409: hospitality and commerce turns share the catalog, so GAME_WORDS holds only words a game being played uses
+// (quest, HP, the word was). game, games and adventure name a topic or a product as often ("Your Iceland adventure", a
+// loyalty game, a game show, board games on a shelf) and open no gate; no recorded game surface needed them.
+//
 // T-0365: the T-0362 re-record (round 2026-10-18-t0362-smoke) hand-built two strips that row missed. A question, round,
 // turn, guess or attempt `counter` ("Q1 of 20", "Q 1/20", "Round 2/5") is a game stat, while a bare "3 of 6" or "3/6"
 // (an inventory count, an order line) is none, and a counter alone never names a game (a hiring "Round 2 of 4" beside a
@@ -170,8 +174,9 @@ const SERVICES_ASK = /\b(services|treatments|amenities|menu)\b/i
 const BOOK_ASK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would) like (a|an) (table|room|treatment|massage|tour|appointment)\b/i
 
 /** T-0358, T-0364: the words that name a game on a surface with no board. Generic words (player, level, round, turn)
- *  name none: a podcast player or a Gold level is no game. */
-export const GAME_WORDS = /\b(game|games|quest|hp|quiz|trivia|twenty questions|the answer was|the word was|deal sheet|adventure|dungeon)\b/i
+ *  name none: a podcast player or a Gold level is no game. T-0409: nor do game, games and adventure (a travel adventure,
+ *  a game show, board games for sale). */
+export const GAME_WORDS = /\b(quest|hp|quiz|trivia|twenty questions|the answer was|the word was|deal sheet|dungeon)\b/i
 /** T-0361 review: the GameHud gate also takes round and turn (T-0358's Negotiator, "Round 3, your turn"); its two-stat strip
  *  keeps a dashboard out. */
 const HUD_GAME_WORDS = new RegExp(`\\b(round|rounds|turn|turns)\\b|${GAME_WORDS.source}`, 'i')

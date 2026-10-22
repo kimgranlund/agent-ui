@@ -516,6 +516,15 @@ function playsMove(intent: string): boolean {
   return !(SMALL_TALK.test(intent) && !MOVE_WORD.test(intent))
 }
 
+/** T-0409: the model's own names for a surface's job: its id, its component ids and its action names, split into words
+ *  ("word-game", "newGameBtn", "new_game"). A game named there is the game in play; in display text "game" is as often a
+ *  product or a page ("Board games and puzzles", "Game settings"). */
+function namesGame(surfaceId: string, comps: readonly A2uiComponent[]): boolean {
+  const actionOf = (c: A2uiComponent): unknown => (typeof c['action'] === 'object' && c['action'] !== null ? (c['action'] as Record<string, unknown>)['action'] : undefined)
+  const names = [surfaceId, ...comps.flatMap((c) => [c.id, actionOf(c)])].filter((n): n is string => typeof n === 'string')
+  return names.some((n) => /\bgame\b/i.test(n.replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ')))
+}
+
 /** T-0366: the player's words as a repair message may quote them: one line, no quotes, at most 60 characters. */
 function quoted(intent: string): string {
   const flat = intent.replace(/["'“”‘’`]/g, '').replace(/\s+/g, ' ').trim()
@@ -526,9 +535,9 @@ function quoted(intent: string): string {
  * T-0366 (the T-0362 smoke re-record, Haiku 5.5, traces 4 and 6): "I offer 20." targeting deal-1 and "I open the door
  * and step inside." targeting quest-log were each answered in one round with a reply and no render_surface call, so
  * the HUD kept the old price and the log the old scene. ACTION_NOT_APPLIED: a say turn whose meta-line declares an open
- * game surface its target (the surface it says it will change: a GameHud, or the shared game words) and plays a move
- * there sends that target no update; only an update to that surface id applies the move. A surface another check owns
- * (a board, a card table, a booking) is left to that check, so a move gets one ACTION_NOT_APPLIED.
+ * game surface its target (the surface it says it will change: a GameHud, the shared game words, or T-0409 a game in its
+ * own names) and plays a move there sends that target no update; only an update to that surface id applies the move. A
+ * surface another check owns (a board, a card table, a booking) is left to that check, so a move gets one ACTION_NOT_APPLIED.
  */
 export const boardlessMoveAppliedCheck: SemanticCheck = {
   id: 'boardless-move-applied',
@@ -539,7 +548,7 @@ export const boardlessMoveAppliedCheck: SemanticCheck = {
     if (game === undefined || surfaces.some((v) => v.surfaceId === target)) return []
     const comps = [...game.components.values()]
     if (comps.some((c) => OWNED_ELSEWHERE.has(c.component)) || hasFleetCue(game) || hasWordCue(game)) return []
-    if (!comps.some((c) => c.component === 'GameHud') && !GAME_WORDS.test(`${target} ${JSON.stringify(comps)}`)) return []
+    if (!comps.some((c) => c.component === 'GameHud') && !GAME_WORDS.test(`${target} ${JSON.stringify(comps)}`) && !namesGame(target, comps)) return []
     return [
       {
         code: 'ACTION_NOT_APPLIED',
