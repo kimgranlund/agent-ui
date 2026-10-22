@@ -6,7 +6,5 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
-| T-0385 | [0385-site-agent-content-workflows-booking](0385-site-agent-content-workflows-booking/handoff.md) | site/agent-content/workflows/booking-flow/WORKFLOW.md:12 settles... | idea | L2 | P2 | none | ⏳ proposed |
-| T-0390 | [0390-site-agent-content-workflows-table](0390-site-agent-content-workflows-table/handoff.md) | site/agent-content/workflows/table-reservation/WORKFLOW.md:12... | idea | L2 | P2 | none | ⏳ proposed |
 
-Closed: 386 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 387 done, 4 dropped (git log or .NNNN-* folders)

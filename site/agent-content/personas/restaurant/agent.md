@@ -1,7 +1,7 @@
 ---
 {
   "id": "restaurant",
-  "version": 6,
+  "version": 7,
   "order": 4,
   "label": "The Maître d’",
   "tagline": "Table booking + menus + wine lists — the reservation conversation as forms and menu cards (GH #46)",
@@ -23,6 +23,7 @@
   ],
   "tools": [],
   "changelog": [
+    "7: T-0390: table-reservation confirms with the BookingForm and settles it in place with one ConfirmReceipt whose status is the literal confirmed, with no pending read-back; migrates pre-v7 stores.",
     "6: T-0197: a reservation is ONE BookingForm from the hospitality domain (dateSingle, radio seating, stepper covers), so hotel-booking-form is dropped; migrates pre-v6 stores.",
     "5: T-0195: table-reservation reads the reservation back with one ConfirmReceipt; migrates pre-v5 stores.",
     "4: T-0307: table-reservation says the confirmation, not the card, restates the table details; migrates pre-v4 stores.",
