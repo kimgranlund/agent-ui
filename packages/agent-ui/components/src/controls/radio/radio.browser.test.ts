@@ -290,14 +290,23 @@ describe('ui-radio browser smoke: checked fill role and the ink hook (T-0340)', 
     return c
   }
 
-  it('default: the checked ring and fill are both --md-sys-color-primary-fill (one solid circle)', () => {
-    const el = mount(document.createElement('ui-radio') as UIRadioElement)
-    el.checked = true
-    const before = getComputedStyle(el, '::before')
-    const fill = resolve(el, 'var(--md-sys-color-primary-fill)')
-    expect(before.backgroundColor).toBe(fill)
-    expect(before.borderTopColor).toBe(fill)
-  })
+  // Both schemes: in light, primary and primary-fill are both tone 550, so only the dark leg (450 vs 600)
+  // tells a solid primary-fill circle from a ring drawn on plain primary. The wrapper's own color-scheme
+  // re-resolves the light-dark() chain for the radio's pseudo-elements and the probe alike.
+  it.each(['light', 'dark'] as const)(
+    'default (%s scheme): the checked ring and fill are both --md-sys-color-primary-fill (one solid circle)',
+    (scheme) => {
+      const wrap = mount(document.createElement('div') as HTMLElement)
+      wrap.style.colorScheme = scheme
+      const el = document.createElement('ui-radio') as UIRadioElement
+      wrap.append(el)
+      el.checked = true
+      const before = getComputedStyle(el, '::before')
+      const fill = resolve(el, 'var(--md-sys-color-primary-fill)')
+      expect(before.backgroundColor).toBe(fill)
+      expect(before.borderTopColor).toBe(fill)
+    },
+  )
 
   it('a set --ui-radio-ink recolours BOTH the checked ring and the fill', () => {
     const el = mount(document.createElement('ui-radio') as UIRadioElement)
