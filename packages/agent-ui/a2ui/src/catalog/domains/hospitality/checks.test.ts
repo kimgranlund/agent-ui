@@ -57,6 +57,26 @@ describe('concierge-surface-required (T-0265)', () => {
     expect(said('Those details are right, please confirm the booking.')).not.toEqual([])
     expect(said('Those details are right, please confirm the booking.', receipt)).toEqual([])
   })
+
+  // T-0399: booking-flow and table-reservation settle in place with a literal "confirmed" ConfirmReceipt (T-0385, T-0390).
+  // Any surface answers the ask, so `requires` stays the catalog gate: ConfirmReceipt is in neither a2ui-basic nor the
+  // hospitality fragment, and adding it would drop this check on a2ui-basic--hospitality.
+  it('a confirm ask settled in place by a literal confirmed ConfirmReceipt passes, and requires stays the catalog gate', () => {
+    const settle: A2uiOutput = [
+      {
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'spa-booking',
+          components: [
+            { id: 'root', component: 'Column', children: ['receipt'] },
+            { id: 'receipt', component: 'ConfirmReceipt', title: 'Booked', data: { path: '/draft' }, rows: [{ label: 'Treatment', path: 'treatment' }], status: 'confirmed' },
+          ],
+        },
+      },
+    ] as A2uiOutput
+    expect(said('Those details are right, please confirm the booking.', settle)).toEqual([])
+    expect(conciergeSurfaceRequired.requires).not.toContain('ConfirmReceipt')
+  })
 })
 
 // T-0278: round 4 (2026-10-15-r4-fixes :114-:115, Haiku 5.5). The pre-filled spa BookingForm, as recorded, with the
