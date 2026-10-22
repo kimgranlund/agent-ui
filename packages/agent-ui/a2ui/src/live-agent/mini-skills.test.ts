@@ -592,7 +592,7 @@ describe('media-grid — the GH #1377 Grid-of-Image photo gallery module', () =>
   })
 })
 
-describe('comparison-table — the GH #1377 Stat-tiles-plus-Table plan-comparison module', () => {
+describe('comparison-table: the OptionCompare pick plus the GH #1377 facts-only Stat-tiles-plus-Table module (T-0393)', () => {
   it('fires on a compare-pricing-plans intent', () => {
     const result = selectMiniSkills('compare pricing plans side by side', MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
     expect(result.map((m) => m.id)).toContain('comparison-table')
@@ -603,10 +603,10 @@ describe('comparison-table — the GH #1377 Stat-tiles-plus-Table plan-compariso
     expect(result.map((m) => m.id)).not.toContain('comparison-table')
   })
 
-  it('teaches the Stat-tiles-above-Table composition and routes feature-collection/product-presentation away', () => {
+  it('teaches ONE OptionCompare for a pick and Stat tiles above one Table for a facts-only comparison (T-0393)', () => {
     const skill = MINI_SKILLS.find((m) => m.id === 'comparison-table')!
     expect(skill.body).toMatch(/a Grid of headline Stat tiles .* ABOVE one shared Table/)
-    expect(skill.body).toMatch(/not feature-collection's bare single-purpose Table/)
+    expect(skill.body).toMatch(/is ONE OptionCompare, never a Table with a Button per row/)
   })
 })
 

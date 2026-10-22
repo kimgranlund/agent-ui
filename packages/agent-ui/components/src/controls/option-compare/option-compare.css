@@ -1,0 +1,236 @@
+/* option-compare.css: ui-option-compare, options as columns over aligned attribute rows (T-0393, Direction A of
+ * .sdlc/tickets/.0199-itinerary-compare/mockup/option-compare.html, approved by Kim 2026-10-21).
+ *
+ *   [1] TOKEN BLOCK: `:where(ui-option-compare)` (specificity 0,0,0) declares the --ui-option-compare-* chain from
+ *       the color roles (mapped as the mockup maps them, after the ui-option-deck roles) and the derived
+ *       foundations (ADR-0245): every length reads n, c, inset or a level token, so the control follows the
+ *       register it sits in (widget / md on an A2UI canvas).
+ *   [2] STYLES BLOCK: `@scope (ui-option-compare)` consumes only --ui-option-compare-*. The host is a block-level
+ *       stack: heading, then the scroller. The scroller holds the grid: the pinned label column, then one column
+ *       per option, each spanning every grid row through subgrid so the rows align across options. When the
+ *       option tracks do not fit (a fourth option at the 400px column) the scroller scrolls them and the label
+ *       column stays sticky at the inline start. The host declares no container (the T-0387 and T-0388 lesson),
+ *       so it keeps an intrinsic width inside a shrink-to-fit parent.
+ *
+ * Best and picked are never color alone: Best is a text pill with a star plus a ring, the pick a "Your pick" pill
+ * with a check plus a fill and a ring.
+ */
+
+/* ════════════════ [1] TOKEN BLOCK: :where(ui-option-compare) declares --ui-option-compare-* ════════════════ */
+
+:where(ui-option-compare) {
+  /* Host: heading over the scroller */
+  --ui-option-compare-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-option-compare-type-body: var(--md-sys-type-control);
+  --ui-option-compare-heading-size: var(--md-sys-type-title);
+  --ui-option-compare-stack-gap: var(--md-sys-group-gutter);
+
+  /* Grid */
+  --ui-option-compare-column-gap: var(--md-sys-control-gutter);
+  --ui-option-compare-column-min: calc(var(--md-sys-inset) * 15); /* 15n, the option track floor: the mockup's 7.5em at widget / md */
+  --ui-option-compare-cell-pad: calc(var(--md-sys-c) * 3);
+  --ui-option-compare-ring-room: calc(var(--md-sys-state-focus-ring-width) + var(--md-sys-state-focus-ring-offset));
+
+  /* Label column: opaque on the A2UI canvas, so the scrolled columns pass under it */
+  --ui-option-compare-labels-bg: var(--md-sys-color-neutral-surface-bright);
+  --ui-option-compare-label-ink: var(--md-sys-color-neutral-on-surface-variant);
+  --ui-option-compare-label-size: var(--md-sys-type-small-control);
+
+  /* Option column */
+  --ui-option-compare-option-bg: var(--md-sys-color-neutral-container-low);
+  --ui-option-compare-option-ink: var(--md-sys-color-neutral-on-surface);
+  --ui-option-compare-option-pad: var(--md-sys-label-inset);
+  --ui-option-compare-radius: var(--md-sys-control-radius);
+  --ui-option-compare-head-gap: var(--md-sys-c);
+  --ui-option-compare-ring-width: var(--md-sys-c);
+  --ui-option-compare-best-ring: var(--md-sys-color-primary);
+  --ui-option-compare-selected-bg: var(--md-sys-color-primary-container);
+  --ui-option-compare-selected-ring: var(--md-sys-color-primary-fill);
+  --ui-option-compare-focus-width: var(--md-sys-state-focus-ring-width);
+  --ui-option-compare-focus-offset: var(--md-sys-state-focus-ring-offset);
+  --ui-option-compare-focus-ring: var(--md-sys-color-focus-ring);
+  --ui-option-compare-motion: var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
+
+  /* Pill: Best (quiet) and Your pick (filled), full pills at the small control type */
+  --ui-option-compare-pill-bg: var(--md-sys-color-primary-container-low);
+  --ui-option-compare-pill-ink: var(--md-sys-color-primary-high);
+  --ui-option-compare-pick-bg: var(--md-sys-color-primary-fill);
+  --ui-option-compare-pick-ink: var(--md-sys-color-primary-on-primary);
+  --ui-option-compare-pill-size: var(--md-sys-type-small-control);
+  --ui-option-compare-pill-pad-block: var(--md-sys-chip-margin);
+  --ui-option-compare-pill-pad-inline: var(--md-sys-control-gutter);
+  --ui-option-compare-pill-gap: var(--md-sys-chip-gutter);
+  --ui-option-compare-pill-radius: calc(var(--md-sys-inset) * 100);
+}
+
+/* ════════════════ [2] STYLES BLOCK: @scope (ui-option-compare) consumes only --ui-option-compare-* ════════════════ */
+
+@scope (ui-option-compare) {
+  /* Fill by default (ADR-0223): block-level, no container, so the host keeps an intrinsic width. */
+  :scope {
+    display: grid;
+    gap: var(--ui-option-compare-stack-gap);
+    box-sizing: border-box;
+    min-inline-size: 0;
+    color: var(--ui-option-compare-ink);
+    font-size: var(--ui-option-compare-type-body);
+  }
+  :scope[inline] {
+    display: inline-grid; /* ADR-0223: the one sizing opt-out, hugs its content */
+  }
+
+  :scope > [data-part='heading'] {
+    margin: 0;
+    font-size: var(--ui-option-compare-heading-size);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  /* The scroll box: the option tracks scroll here, never the host. Block padding and the end padding leave room
+     for the focus ring, which the scroll clip would cut otherwise. */
+  :scope > [data-part='scroller'] {
+    min-inline-size: 0;
+    overflow-x: auto;
+    padding-block: var(--ui-option-compare-ring-room);
+    padding-inline-end: var(--ui-option-compare-ring-room);
+  }
+
+  /* fit-content with a 100% floor: the grid fills the scroller while the tracks fit, and grows to its min-content
+     (every track floor) when they do not, so the sticky label column has the whole scroll range to travel. */
+  :scope [data-part='grid'] {
+    display: grid;
+    inline-size: fit-content;
+    min-inline-size: 100%;
+    box-sizing: border-box;
+    grid-template-columns: max-content repeat(var(--ui-option-compare-columns, 1), minmax(var(--ui-option-compare-column-min), 1fr));
+    grid-template-rows: repeat(var(--ui-option-compare-rows, 1), auto);
+    column-gap: var(--ui-option-compare-column-gap);
+  }
+
+  :scope [data-part='labels'],
+  :scope [data-part='option'] {
+    display: grid;
+    grid-row: 1 / -1;
+    grid-template-rows: subgrid;
+    min-inline-size: 0;
+  }
+
+  :scope [data-part='labels'] {
+    position: sticky;
+    inset-inline-start: 0;
+    z-index: 1;
+    background: var(--ui-option-compare-labels-bg);
+    padding-inline-end: var(--ui-option-compare-column-gap);
+  }
+  :scope [data-part='labels'] > * {
+    align-self: center;
+    padding-block: var(--ui-option-compare-cell-pad);
+    color: var(--ui-option-compare-label-ink);
+    font-size: var(--ui-option-compare-label-size);
+  }
+
+  /* The option column: the whole column is the target. */
+  :scope [data-part='option'] {
+    box-sizing: border-box;
+    padding-inline: var(--ui-option-compare-option-pad);
+    border-radius: var(--ui-option-compare-radius);
+    background: var(--ui-option-compare-option-bg);
+    color: var(--ui-option-compare-option-ink);
+    box-shadow: inset 0 0 0 var(--ui-option-compare-ring-width) transparent;
+    cursor: pointer;
+    transition: background-color var(--ui-option-compare-motion), box-shadow var(--ui-option-compare-motion);
+  }
+  :scope [data-part='option'] > * {
+    align-self: center;
+    padding-block: var(--ui-option-compare-cell-pad);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums;
+  }
+  :scope [data-part='option'][data-best] {
+    box-shadow: inset 0 0 0 var(--ui-option-compare-ring-width) var(--ui-option-compare-best-ring);
+  }
+  :scope [data-part='option'][aria-selected='true'] {
+    background: var(--ui-option-compare-selected-bg);
+    box-shadow: inset 0 0 0 var(--ui-option-compare-ring-width) var(--ui-option-compare-selected-ring);
+  }
+  :scope [data-part='option']:focus-visible {
+    outline: var(--ui-option-compare-focus-width) solid var(--ui-option-compare-focus-ring);
+    outline-offset: var(--ui-option-compare-focus-offset);
+  }
+
+  :scope [data-part='head-row'] {
+    display: grid;
+    gap: var(--ui-option-compare-head-gap);
+    align-self: start;
+    align-content: start;
+  }
+  :scope [data-part='title'] {
+    font-weight: 600;
+  }
+  :scope [data-part='subtitle'] {
+    color: var(--ui-option-compare-label-ink);
+    font-size: var(--ui-option-compare-label-size);
+  }
+
+  :scope [data-part='pill'] {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    gap: var(--ui-option-compare-pill-gap);
+    padding-block: var(--ui-option-compare-pill-pad-block);
+    padding-inline: var(--ui-option-compare-pill-pad-inline);
+    border-radius: var(--ui-option-compare-pill-radius);
+    background: var(--ui-option-compare-pill-bg);
+    color: var(--ui-option-compare-pill-ink);
+    font-size: var(--ui-option-compare-pill-size);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  :scope [data-part='pill'][data-kind='pick'] {
+    background: var(--ui-option-compare-pick-bg);
+    color: var(--ui-option-compare-pick-ink);
+  }
+  :scope [data-part='pill'] > svg {
+    inline-size: 1em;
+    block-size: 1em;
+    flex: none;
+  }
+
+  /* The cell: its row label rides inside, visually hidden but announced (ADR-0057, the service-card status-text
+     technique), never aria-hidden. */
+  :scope [data-part='cell'] {
+    position: relative;
+  }
+  :scope [data-part='cell-label'] {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :scope [data-part='option'] {
+      transition: none;
+    }
+  }
+
+  /* Forced colors: the fills and rings flatten, so every option keeps a system border, the best option a thicker
+     one, the pick a Highlight outline and the pill a CanvasText border. */
+  @media (forced-colors: active) {
+    :scope [data-part='option'] {
+      border: 1px solid CanvasText;
+    }
+    :scope [data-part='option'][data-best] {
+      border-width: var(--ui-option-compare-ring-width);
+    }
+    :scope [data-part='option'][aria-selected='true'] {
+      outline: var(--ui-option-compare-ring-width) solid Highlight;
+    }
+    :scope [data-part='pill'] {
+      border: 1px solid CanvasText;
+    }
+  }
+}

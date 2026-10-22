@@ -374,6 +374,11 @@ seed), not `Grid`.
 Real: `examples/commerce-hospitality.ts:185-188` (`listing-photo-grid`); contrast `examples/high-frequency-patterns.ts:265-269` (`media-file-grid`, Attachment tiles).
 
 ## Comparison-table — Stat tiles above a shared Table (GH #1377)
+When the user picks one of two to four options compared on the same attributes (legs, rooms, plans,
+products), emit ONE `OptionCompare` instead (T-0393): shared `rows` `[{key, label}]`, `options`
+`[{value, title, subtitle?, values: {<key>: text}}]`, `best` on the recommended option and `actionName` set (a
+press sends `action.context.value`); never a `Table` with a `Button` per row, never a `Card` or `ProductCard`
+per option. The Stat-plus-Table shape below is the facts-only comparison, with no pick.
 Side-by-side plan/product comparison: a `Grid` of headline `Stat` tiles (one `Card` per option, `label`+
 `value` — price or the option's own quantified pitch) ABOVE one shared `Table` whose `columns` are the
 options and whose `rows` are features, cell values the exact per-option answer — this is `comparison-

@@ -951,6 +951,28 @@
       ]
     },
     {
+      "id": "control:ui-option-compare",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/option-compare/option-compare.md"
+      },
+      "status": {
+        "state": "catalogued"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "site"
+      ],
+      "tag": "ui-option-compare",
+      "tier": "pattern",
+      "description": "Two to four options as columns over aligned attribute rows, with a best mark; the whole column is the pick.",
+      "uses": [],
+      "catalogs": [
+        "agent-ui"
+      ]
+    },
+    {
       "id": "control:ui-option-deck",
       "kind": "control",
       "source": {
@@ -4781,6 +4803,35 @@
       "notFor": []
     },
     {
+      "id": "type:agent-ui/OptionCompare",
+      "kind": "type",
+      "source": {
+        "path": "packages/agent-ui/a2ui/src/catalog/default/catalog.json",
+        "record": "OptionCompare"
+      },
+      "status": {
+        "state": "emittable"
+      },
+      "consumers": [
+        "prompt",
+        "renderer",
+        "eval"
+      ],
+      "name": "OptionCompare",
+      "scope": "agent-ui",
+      "tag": "ui-option-compare",
+      "intents": [
+        "pick one of two to four options compared on the same rows",
+        "legs, rooms, plans or products side by side"
+      ],
+      "notFor": [
+        {
+          "type": "OptionDeck",
+          "why": "one pick that starts something"
+        }
+      ]
+    },
+    {
       "id": "type:agent-ui/OptionDeck",
       "kind": "type",
       "source": {
@@ -4806,6 +4857,10 @@
         {
           "type": "ChoiceGroup",
           "why": "a value picked inside a form"
+        },
+        {
+          "type": "OptionCompare",
+          "why": "options compared on the same attributes"
         }
       ]
     },

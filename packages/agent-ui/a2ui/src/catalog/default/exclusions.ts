@@ -43,7 +43,9 @@
  *  T-0193 (`ui-option-deck`) re-seeded the same shape at step 2; step 3 lands the `OptionDeck` row + factory
  *  and DRAINS that seed too.
  *  T-0198 (`ui-step-flow`) re-seeded the same shape at step 2; step 3 lands the `StepFlow` row + factory and
- *  DRAINS that seed too. */
+ *  DRAINS that seed too.
+ *  T-0393 (`ui-option-compare`) re-seeded the same shape at step 1; step 2 lands the `OptionCompare` row + factory
+ *  and DRAINS that seed. */
 //
 // `ToastRegion`/`ThemeProvider`/`StatusStream`/`SwiperPagination`/`SwiperPaddles`/`SwiperLabel`/`CommandModal` are
 // the only PERMANENT entries — NOT catalogue-bound AT ALL (app-surface/theming/live-streaming/chrome-anchor

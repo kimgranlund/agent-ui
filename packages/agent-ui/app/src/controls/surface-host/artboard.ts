@@ -12,9 +12,11 @@ import { UIContainerElement } from '@agent-ui/components'
  *  each is a full-width surface by role, but extends `UIElement`, not `UIContainerElement`, so the container
  *  branch below never reached it and a GameHud root hugged its content beside filling siblings. The ADR-0243
  *  three, plus ui-option-deck (T-0387): it is its own inline-size query container, so it has no intrinsic width
- *  and an unstretched deck root collapsed to 0px under the surface's `align-items: center`. Named by tag, not
- *  by a broader discriminator, so no other intrinsic root changes width. */
-const WIDGET_ROOTS: ReadonlySet<string> = new Set(['ui-product-card', 'ui-board-grid', 'ui-game-hud', 'ui-option-deck'])
+ *  and an unstretched deck root collapsed to 0px under the surface's `align-items: center`. Plus
+ *  ui-option-compare (T-0393): a full-width surface by role that extends `UIElement`, so an unstretched root
+ *  would hug its content under the same `align-items: center`. Named by tag, not by a broader discriminator, so
+ *  no other intrinsic root changes width. */
+const WIDGET_ROOTS: ReadonlySet<string> = new Set(['ui-product-card', 'ui-board-grid', 'ui-game-hud', 'ui-option-deck', 'ui-option-compare'])
 
 /** applyRootStretch — the rendered surface's ROOT should fill the artboard's available width (up to its
  *  definite cap, min(32rem, …) in artboard.css — the checkered artboard's own deliberate aesthetic, GH

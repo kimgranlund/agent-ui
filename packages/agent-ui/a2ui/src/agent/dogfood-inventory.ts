@@ -109,7 +109,10 @@ import type { SelectionEntry } from './selection-guidance.ts'
 // next 100, plus 300).
 // RE-MEASURED 2026-10-21 (T-0198 step 3): 32 133 chars with the ui-step-flow row and the `StepFlow` selection clause
 // and its reciprocal edges on `Drill` and `ConfirmReceipt`; budget 32 500 (measured rounded up to the next 100, plus 300).
-export const DOGFOOD_INVENTORY_CHAR_BUDGET = 32_500
+// RE-MEASURED 2026-10-21 (T-0393 step 2): 32 612 chars with the ui-option-compare row, the `OptionCompare` selection
+// clause and its reciprocal edge on `OptionDeck`; budget 33 000 (measured rounded up to the next 100, plus 300), per the
+// SPEC-R13(b) v0.18 amendment in genui-surface.spec.md.
+export const DOGFOOD_INVENTORY_CHAR_BUDGET = 33_000
 
 /** The character budget for the selection clauses the dogfood inventory carries: the sum of the clause
  *  lengths `dogfoodInventory()` appends to its rows. Held by a `prompt-drift.test.ts` leg, never by runtime
@@ -125,8 +128,10 @@ export const DOGFOOD_INVENTORY_CHAR_BUDGET = 32_500
  *  RE-MEASURED 2026-10-20 (T-0193, merged over T-0196): 9 959 chars with the `OptionDeck` clause and its reciprocal
  *  `ChoiceGroup` edge added; budget 10 300 (measured rounded up to the next 100, plus 300).
  *  RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): 10 307 chars with the `ConfirmReceipt`,
- *  `AmountPicker` and `OptionDeck` clauses and their reciprocal edges; budget 10 700 by the same formula. */
-export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 10_700
+ *  `AmountPicker` and `OptionDeck` clauses and their reciprocal edges; budget 10 700 by the same formula.
+ *  RE-MEASURED 2026-10-21 (T-0393 step 2): 10 829 chars with the `StepFlow` and `OptionCompare` clauses and their
+ *  reciprocal edges; budget 11 200 by the same formula, per the SPEC-R13(b) v0.18 amendment. */
+export const DOGFOOD_GUIDANCE_CHAR_BUDGET = 11_200
 
 /** Every tag the inventory TEACHES, tag-sorted — each descriptor's own `tag:` scalar PLUS the family
  *  siblings that ride its row (GH #346). The "inventory-taught tags" half of SPEC-R13 AC2's set-equality

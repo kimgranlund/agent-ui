@@ -827,6 +827,8 @@ describe('import-seeds main() — the verdict archive (ADR-0165) + the GH #1346 
     'frontier-confirm-receipt-order': { passed: false, qualityScore: 2 },
     // T-0198 - the StepFlow coverage-gap seed, refused here for the same zero-admission reason.
     'frontier-step-flow-booking': { passed: false, qualityScore: 2 },
+    // T-0393 - the OptionCompare coverage-gap seed, refused here for the same zero-admission reason.
+    'frontier-option-compare-legs': { passed: false, qualityScore: 2 },
     // T-0245/T-0240 - the four domain seeds (domain-seeds.ts), refused here for the same zero-admission reason.
     'domain-lexicographer-word-board': { passed: false, qualityScore: 2 },
     'domain-admiral-battleship-board': { passed: false, qualityScore: 2 },

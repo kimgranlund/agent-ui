@@ -100,6 +100,8 @@
     "./controls/modal.css": "./src/controls/modal/modal.css",
     "./controls/multi-select": "./src/controls/multi-select/multi-select.ts",
     "./controls/multi-select.css": "./src/controls/multi-select/multi-select.css",
+    "./controls/option-compare": "./src/controls/option-compare/option-compare.ts",
+    "./controls/option-compare.css": "./src/controls/option-compare/option-compare.css",
     "./controls/option-deck": "./src/controls/option-deck/option-deck.ts",
     "./controls/option-deck.css": "./src/controls/option-deck/option-deck.css",
     "./controls/otp-field": "./src/controls/otp-field/otp-field.ts",

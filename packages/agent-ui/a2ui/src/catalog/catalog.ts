@@ -120,7 +120,8 @@ export interface PropDef {
    * `{ name: detail.action, context: detail.context }`, so a control that reports WHERE it was activated
    * (`BoardGrid`'s `{row, col}`) reaches the agent. Declared by `BoardGrid.actionName` and by
    * `ConfirmReceipt.confirmAction` and `.backAction` (T-0195, object-valued: the control emits the object as its detail)
-   * and `StepFlow.finishAction` (T-0198, the same object shape with the bound draft folded into its context), all `'action'`;
+   * and `StepFlow.finishAction` (T-0198, the same object shape with the bound draft folded into its context)
+   * and `OptionCompare.actionName` (T-0393, the BoardGrid string shape with the picked value as context), all `'action'`;
    * absent ⇒ no own-event forwarding, byte-identical for every other prop (`ProductCard`'s own `action`
    * event stays unread).
    */
