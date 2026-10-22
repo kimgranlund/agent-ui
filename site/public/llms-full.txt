@@ -3801,7 +3801,7 @@ picked card shows a "Your pick" pill. With `allowRandom` set, a dashed Surprise 
 
 A click, Enter or Space on a card sets `value` to the card's key and fires `select` with that key. When
 `actionName` is set, an `action` event follows with `{action, context: {value}}`. The Surprise me card's key is
-`random`. The deck stays with the picked card marked, and every card stays pressable, so a second pick changes
+`random`, so `random` is reserved: an authored option whose value is `random` is dropped. The deck stays with the picked card marked, and every card stays pressable, so a second pick changes
 the choice. Setting `value` from outside marks that card the same way. There are no buttons inside a card.
 
 ## Tones
