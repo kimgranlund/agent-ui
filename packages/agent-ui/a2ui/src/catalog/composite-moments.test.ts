@@ -3,7 +3,7 @@
 // where its types live, and every row's moment is one of its composite's selection intents.
 
 import { describe, expect, it } from 'vitest'
-import { COMPOSITE_MOMENTS, TOKEN_TYPES, askedCompositeMoment, proseColors, compositeAnswered, compositeMomentCheck, compositeMomentChecks } from './composite-moments.ts'
+import { COMPOSITE_MOMENTS, TOKEN_TYPES, askedCompositeMoment, proseColors, compositeAnswered, compositeMomentCheck, compositeMomentChecks, isSettledSignal } from './composite-moments.ts'
 import type { CompositeMoment } from './composite-moments.ts'
 import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews, sessionComponentTypes, sessionSurfaceViews } from './semantic-check.ts'
 import type { SurfaceView } from './semantic-check.ts'
@@ -1350,6 +1350,39 @@ describe('BOOKING_CONFIRMATION_MISSING reads settled-status signals, not caption
   it('the BookingForm row still fires on an unsettled read-back (no Badge)', () => {
     const unsettled = R9_85.filter((c) => c.id !== 'settled').map((c) => (c.id === 'footer' ? { ...c, children: ['bookBtn'] } : c))
     expect(findings(unsettled)).toEqual(['BOOKING_FORM_MISSING'])
+  })
+})
+
+// T-0399: booking-flow and table-reservation settle in place with ONE ConfirmReceipt whose status is the literal "confirmed"
+// (T-0385, T-0390). That receipt is a settled-status signal, and it is the confirmation itself, so neither booking row fires
+// on it and it answers a carried BOOKING_CONFIRMATION_MISSING.
+describe('a settled ConfirmReceipt is a settled signal and answers the confirmation (T-0399)', () => {
+  const findings = (components: A2uiComponent[], intent?: string) =>
+    runSemanticChecks(compositeMomentChecks, { surfaces: [view(components, 'ask-1')], ...(intent !== undefined ? { intent } : {}) }).findings.map((f) => f.code)
+  const receipt = (status: unknown): A2uiComponent[] => [
+    { id: 'root', component: 'Column', children: ['receipt'] },
+    { id: 'receipt', component: 'ConfirmReceipt', title: 'Booked', data: { path: '/draft' }, rows: [{ label: 'Date', path: 'date' }], status },
+  ]
+
+  it('isSettledSignal reads a literal "confirmed" ConfirmReceipt, never a bound or pending one', () => {
+    expect(isSettledSignal(receipt('confirmed')[1]!)).toBe(true)
+    expect(isSettledSignal(receipt('pending')[1]!)).toBe(false)
+    expect(isSettledSignal(receipt({ path: '/draft/status' })[1]!)).toBe(false)
+    expect(isSettledSignal({ id: 'b', component: 'Badge', label: 'Booked' })).toBe(true)
+    expect(isSettledSignal({ id: 't', component: 'Text', text: 'Booked', variant: 'h4' })).toBe(true)
+    expect(isSettledSignal({ id: 't', component: 'Text', text: 'Booked', variant: 'caption' })).toBe(false)
+  })
+
+  it('the settle-in-place receipt gives no finding, with or without the confirm turn', () => {
+    for (const status of ['confirmed', 'pending', { path: '/draft/status' }]) {
+      expect(findings(receipt(status))).toEqual([])
+      expect(findings(receipt(status), 'Those details are right, please confirm the booking.')).toEqual([])
+    }
+  })
+
+  it('a ConfirmReceipt answers a carried BOOKING_CONFIRMATION_MISSING', () => {
+    const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'BookingConfirmation')!
+    expect(compositeAnswered(row, [view(receipt('confirmed'))])).toBe(true)
   })
 })
 

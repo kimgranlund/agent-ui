@@ -24,7 +24,8 @@
 //
 // T-0333: the BookingConfirmation row reads its settled words only from status signals (`settledSignals`), so a caption
 // that says "confirmed" or "booked" is no hand-built confirmation (round 9 cluster G), and the BookingForm row stands aside
-// for a surface that already holds one.
+// for a surface that already holds one. T-0399: a ConfirmReceipt with the literal status "confirmed" is a settled signal
+// too, and the confirmation row lacks ConfirmReceipt, so the T-0385 settle in place fires neither row.
 //
 // T-0358: the GameHud row's `boardless.statStrip` reads a surface with no BoardGrid: on a surface whose words name a game
 // (quest, HP, deal sheet), two or more game-stat items (HP, gold, mood, asking price, confidence, questions) in Badges,
@@ -131,8 +132,8 @@ export interface CompositeMoment {
   /** T-0322: on a turn whose words match `ask.cue`, a component of `types` that lists a row matching `cue` (a priced
    *  DescriptionList row, a priced List item), while the surface words match `words`. */
   readonly pricedRows?: { readonly types: readonly string[]; readonly cue: RegExp }
-  /** T-0333: read `words` only from settled-status signals (a Badge, a Card or CardHeader title, a heading Text h1 to h5),
-   *  never caption or body Text, so a note that says "can be confirmed with the front desk" is no settled booking. */
+  /** T-0333: read `words` only from settled-status signals (a Badge, a Card or CardHeader title, a heading Text h1 to h5,
+   *  T-0399: a literal "confirmed" ConfirmReceipt), never caption or body Text, so a note that says "can be confirmed with the front desk" is no settled booking. */
   readonly settledSignals?: boolean
   /** T-0333: skip the surface when it holds a settled-status signal, unless a live read-back confirm is still on it (that is
    *  not settled), so the BookingConfirmation repair and this one never fire together. */
@@ -213,7 +214,8 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       "in place of the hand-built Card, never inside one: resend the Card's id as the BookingConfirmation (a root Card needs the " +
       'surface re-created and its data model sent again), with its title, data bound to the booking object, and rows as a literal ' +
       'array of {label, path} where each path is a key of that object (never bind rows itself); drop the hand-built rows.',
-    lacks: ['BookingForm'],
+    // T-0399: a ConfirmReceipt is the confirmation itself (booking-flow and table-reservation settle with one, T-0385).
+    lacks: ['BookingForm', 'ConfirmReceipt'],
     notInside: ['Card'],
     noInputs: BOOKING_INPUTS,
     words: SETTLED_WORDS,
@@ -361,9 +363,14 @@ function rowTexts(c: A2uiComponent, view: SurfaceView): string[] {
   })
 }
 
-/** T-0333: a settled-status signal: a Badge, a Card or CardHeader title, or a heading Text (h1 to h5), never caption or body Text. */
-const isSettledSignal = (c: A2uiComponent): boolean =>
-  c.component === 'Badge' || c.component === 'Card' || c.component === 'CardHeader' || (c.component === 'Text' && /^h[1-5]$/.test(String(c['variant'] ?? '')))
+/** T-0333: a settled-status signal: a Badge, a Card or CardHeader title, or a heading Text (h1 to h5), never caption or body Text.
+ *  T-0399: also a ConfirmReceipt whose status is the literal "confirmed" (the T-0385 settle in place), never a bound or pending one. */
+export const isSettledSignal = (c: A2uiComponent): boolean =>
+  c.component === 'Badge' ||
+  c.component === 'Card' ||
+  c.component === 'CardHeader' ||
+  (c.component === 'Text' && /^h[1-5]$/.test(String(c['variant'] ?? ''))) ||
+  (c.component === 'ConfirmReceipt' && c['status'] === 'confirmed')
 
 /** A prop as written, or read from the data model when bound (`{path}`). */
 function bound(v: unknown, view: SurfaceView): unknown {
