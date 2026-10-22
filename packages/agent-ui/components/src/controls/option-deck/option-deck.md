@@ -16,7 +16,7 @@ attributes:             # attributes-as-API, the generation source for option-de
     type: json          # {value, title, description?, icon?, image?, imageAlt?, meta?, tone?, index?}[], JSON-string attribute form
     default: ''         # the LIVE default is `[]`; `String([])===''` is the bijection form (the result-card.md stats row precedent)
     reflect: false      # NOT reflected; a JSON-string attribute round-trips through the codec, not setAttribute
-    codec: { import: './option-deck-model.ts', name: 'optionsProp' }  # ADR-0173 OF1: from(null)=[], malformed JSON also falls back to [], never throws; cleanOptions drops entries without value or title, cuts meta to 3 and keeps index as a string
+    codec: { import: './option-deck-model.ts', name: 'optionsProp' }  # ADR-0173 OF1: from(null)=[], malformed JSON also falls back to [], never throws; cleanOptions drops entries without value or title or whose value is the reserved `random`, cuts meta to 3 and keeps index as a string
     description: The option cards, in order. Each has a value and a title, and may add a description, an icon or image, up to three meta chips, a tone and a corner index.
   - name: value
     type: string
@@ -161,7 +161,7 @@ picked card shows a "Your pick" pill. With `allowRandom` set, a dashed Surprise 
 
 A click, Enter or Space on a card sets `value` to the card's key and fires `select` with that key. When
 `actionName` is set, an `action` event follows with `{action, context: {value}}`. The Surprise me card's key is
-`random`. The deck stays with the picked card marked, and every card stays pressable, so a second pick changes
+`random`, so `random` is reserved: an authored option whose value is `random` is dropped. The deck stays with the picked card marked, and every card stays pressable, so a second pick changes
 the choice. Setting `value` from outside marks that card the same way. There are no buttons inside a card.
 
 ## Tones
