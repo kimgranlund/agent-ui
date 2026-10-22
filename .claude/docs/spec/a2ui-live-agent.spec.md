@@ -655,7 +655,9 @@ gate stay UNTOUCHED regardless of mode.
 (ADR-0097 §4, SPEC-R14).** Beside the note-line instruction, the GRAMMAR half MUST teach: an INVARIANT
 mechanics block — present, verbatim-identical, in EVERY mode — instructing how to emit a feed ask (the
 meta `ask` field; a fresh `ask-<n>` surface id; `sendDataModel: true`; EXACTLY ONE commit Button with
-`wantResponse` omitted; the payload is the ask surface ONLY, no canvas change in the same turn; AT MOST one
+`wantResponse` omitted, or none when the answer control commits by its own press (an OptionDeck, an
+AmountPicker with `actionName`); the payload is the ask surface ONLY (plus at most one retire-update
+and, in a game, its ONE HUD surface), no other canvas change in the same turn; AT MOST one
 ask per turn; the note-standalone rule — the note MUST always carry the full question in prose, since it is
 the ask's own ADR-0088 degrade path) plus a feed-allowed component-type list DERIVED from
 `FEED_SURFACE_TYPES` (`feed-catalog.ts`, SPEC-R15) at composition time, so drift between the two is

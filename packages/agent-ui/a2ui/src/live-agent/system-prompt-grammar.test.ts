@@ -567,6 +567,16 @@ describe('buildSystemPrompt feed-ask mechanics — mode-invariant (ADR-0097 §4)
     expect(prompt).toMatch(/In\s+a\s+game\s+whose\s+stats\s+live\s+on\s+a\s+GameHud,\s+every\s+stat,\s+score\s+and\s+progress\s+stays\s+on\s+its\s+HUD\s+surface/)
     expect(prompt).toMatch(/reply\s+with\s+the\s+note\s+alone\s+\(in\s+a\s+game,\s+plus\s+the\s+update\s+to\s+its\s+HUD\s+surface\)/)
     expect(prompt).toMatch(/its\s+ONE\s+settle\s+update\s+is\s+the\s+end-state\s+update\s+to\s+its\s+HUD\s+surface/)
+    // T-0395: a game ask's commit Button carries the T-0384 own-commit exception.
+    expect(prompt).toMatch(/ONE\s+commit\s+Button\s+\(none\s+when\s+that\s+control\s+commits\s+by\s+its\s+own\s+press\)/)
+  })
+
+  // T-0395: OptionCompare's second selection intent routes only a pick, so a facts-only side-by-side ask keeps
+  // the comparison-table branch.
+  it("T-0395: OptionCompare's selection intents both name a pick", () => {
+    expect(buildSystemPrompt(defaultCatalog, [])).toContain(
+      'use: pick one of two to four options compared on the same rows; pick a leg, room, plan or product shown side by side',
+    )
   })
 
   it('the note-standalone rule is present — the note must ALWAYS carry the full question in prose', () => {

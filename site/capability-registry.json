@@ -4822,7 +4822,7 @@
       "tag": "ui-option-compare",
       "intents": [
         "pick one of two to four options compared on the same rows",
-        "legs, rooms, plans or products side by side"
+        "pick a leg, room, plan or product shown side by side"
       ],
       "notFor": [
         {

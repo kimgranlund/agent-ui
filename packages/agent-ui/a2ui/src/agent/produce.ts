@@ -1196,7 +1196,7 @@ const FEED_SCOPE_HUD_HINT =
   ' FEED_SCOPE means the surface your meta-line names as "ask" can hold only simple question parts, never the type ' +
   "named. In a game, keep the ask: move the GameHud and every other type named to the game's HUD surface beside " +
   'the ask (its own id, created once and updated after), and leave only the question, the answer control and its ' +
-  'ONE commit Button on the ask.'
+  'ONE commit Button (none when that control commits by its own press) on the ask.'
 
 /** T-0363: true when the round's FEED_SCOPE types include GameHud and are all HUD types. */
 function hudOnAsk(failures: readonly RoundFailure[]): boolean {
