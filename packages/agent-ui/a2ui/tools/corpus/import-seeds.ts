@@ -354,11 +354,11 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
       productCardRoomsSeed, // ADR-0243/T-0072 - the ProductCard coverage-gap seed; judged and admitted (T-0240)
       gameHudQuestSeed, // ADR-0243/T-0072 - the GameHud coverage-gap seed; judged and admitted (T-0240)
       resultCardWinSeed, // ADR-0244/T-0089 - the ResultCard coverage-gap seed; judged and admitted (T-0240)
-      amountPickerBetSeed, // T-0196 - the AmountPicker coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
-      optionDeckPickerSeed, // T-0193 - the OptionDeck coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
-      confirmReceiptOrderSeed, // T-0195 - the ConfirmReceipt coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
-      stepFlowBookingSeed, // T-0198 - the StepFlow coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
-      optionCompareLegsSeed, // T-0393 - the OptionCompare coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)
+      amountPickerBetSeed, // T-0196 - the AmountPicker coverage-gap seed; judged and admitted by T-0396
+      optionDeckPickerSeed, // T-0193 - the OptionDeck coverage-gap seed; judged and admitted by T-0396
+      confirmReceiptOrderSeed, // T-0195 - the ConfirmReceipt coverage-gap seed; judged and admitted by T-0396
+      stepFlowBookingSeed, // T-0198 - the StepFlow coverage-gap seed; judged and admitted by T-0396
+      optionCompareLegsSeed, // T-0393 - the OptionCompare coverage-gap seed; judged and admitted by T-0396
     ],
   },
   { module: 'structured-container.ts', seeds: [structuredContainerSeed] }, // GH #808 S5 — SPEC-R9's exemplar
@@ -415,7 +415,7 @@ const BASIC_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'a2ui-basic'>> = [
  * each seed renders against a persona shard catalog (`<base>--<persona>`). */
 const PERSONA_SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<PersonaShardCatalogId>> = [
   {
-    module: 'domain-seeds.ts', // T-0245/T-0240: the CardTable round and the BookingForm request; T-0199 the Itinerary, admission pending the judged wave (disposition-allowlist.ts)
+    module: 'domain-seeds.ts', // T-0245/T-0240: the CardTable round and the BookingForm request; T-0199 the Itinerary, judged and admitted by T-0396
     seeds: [domainCroupierRoundSeed, domainConciergeBookingSeed, domainItineraryTripSeed],
   },
 ]

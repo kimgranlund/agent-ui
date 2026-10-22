@@ -1627,8 +1627,8 @@ const AMOUNT_PICKER_BET_ID = 'frontier-amount-picker-bet'
 /** Frontier 32 (T-0196): `AmountPicker`, a blackjack bet. One node holds the bounded number (5 to 250 in steps of 5,
  *  the bankroll as max), four preset chips, the slider, a USD readout and the one Place bet commit. The value is
  *  bound to the data model, so the commit's action context and the model hold the same number. It replaces the
- *  Card plus Slider plus Button the bet idiom spent, whose slider and button drifted apart. Corpus admission is a
- *  SEPARATE judged wave (disposition-allowlist.ts). */
+ *  Card plus Slider plus Button the bet idiom spent, whose slider and button drifted apart. Judged and
+ *  admitted to the corpus by T-0396. */
 export const amountPickerBetSeed: ExampleSeed = {
   name: 'frontier-amount-picker-bet',
   description: 'A blackjack bet: one AmountPicker bounded by the bankroll, with 25, 50, 100 and 250 chips, a slider, a dollar readout and a Place bet commit, its value bound to the data model.',
@@ -1666,8 +1666,8 @@ const OPTION_DECK_PICKER_ID = 'frontier-option-deck-picker'
  *  static options (each value a concrete starter intent, a tone, an icon, a corner index and meta chips) plus the
  *  Surprise me card (`allowRandom`, which sends `random`). `actionName: "start"` forwards one A2UI action per pressed
  *  card carrying `context.value`, and the bound `value` path holds the pick before the action leaves. It replaces the
- *  Row of Buttons, each wrapped in its own bordered Card, the ruled lone-button-frame defect. Corpus admission is a
- *  SEPARATE judged wave (disposition-allowlist.ts, the T-0072 precedent). */
+ *  Row of Buttons, each wrapped in its own bordered Card, the ruled lone-button-frame defect. Judged and
+ *  admitted to the corpus by T-0396. */
 export const optionDeckPickerSeed: ExampleSeed = {
   name: 'frontier-option-deck-picker',
   description: 'A game picker: one OptionDeck with a heading, three option cards (value a concrete starter intent, tone, icon, corner index, meta chips) and a Surprise me card, actionName "start" forwarding the pick, the value bound to the data model.',
@@ -1706,8 +1706,8 @@ const CONFIRM_RECEIPT_ORDER_ID = 'frontier-confirm-receipt-order'
  *  line items, the subtotal and delivery rows, the total and the Back and Confirm actions; every shown value is
  *  read from the bound `/order` record and `status` binds `/order/status`, so a Confirm press writes `confirmed`
  *  there and a re-render settles into the receipt instead of asking again. It replaces the hand-built Card,
- *  DescriptionList and Button row the order presets spent. Corpus admission is a SEPARATE judged wave
- *  (disposition-allowlist.ts). */
+ *  DescriptionList and Button row the order presets spent. Judged and admitted to the
+ *  corpus by T-0396. */
 export const confirmReceiptOrderSeed: ExampleSeed = {
   name: 'frontier-confirm-receipt-order',
   description: 'A Shopkeeper order read back to confirm: one ConfirmReceipt with two line items, subtotal and delivery rows and a total, all bound to the data model, with Back and Confirm actions and a pending status that settles into the receipt.',
@@ -1756,14 +1756,15 @@ export const confirmReceiptOrderSeed: ExampleSeed = {
 }
 
 const STEP_FLOW_BOOKING_ID = 'frontier-step-flow-booking'
-/** Frontier 35 (T-0198): `StepFlow`, a three-scene hotel booking walked on the client. The scenes are the node's
- *  children (a range Calendar, an AmountPicker for the guests, a Column of Checkboxes for the extras) and `steps`
- *  labels them; Back and Next write the bound `/step` with no agent turn, and Next gates on the scene's validity.
+/** Frontier 35 (T-0198): `StepFlow`, a three-scene hotel booking walked on the client. A root Column holds the
+ *  StepFlow under its own id (the stable root wrapper a read-back can replace it in, T-0396). The scenes are the
+ *  node's children (a Field-wrapped range Calendar, an AmountPicker for the guests, a Column of Checkboxes for the
+ *  extras) and `steps` labels them; Back and Next write the bound `/step` with no agent turn, and Next gates on the scene's validity.
  *  Every field binds under `/draft`, and `draft` binds `/draft`, so the finish action carries the whole answer in
- *  its context. Corpus admission is a SEPARATE judged wave (disposition-allowlist.ts). */
+ *  its context. Judged and admitted to the corpus by T-0396. */
 export const stepFlowBookingSeed: ExampleSeed = {
   name: 'frontier-step-flow-booking',
-  description: 'A hotel booking walked in three scenes: one StepFlow over a range Calendar, a guest AmountPicker and a Column of extras Checkboxes, every field bound under /draft, with a finish action that carries the draft.',
+  description: 'A hotel booking walked in three scenes: a root Column holding one StepFlow over a Field-wrapped range Calendar, a guest AmountPicker and a Column of extras Checkboxes, every field bound under /draft, with a finish action that carries the draft.',
   promptText: 'Help me book two nights at the Harbour Hotel, step by step.',
   surfaceId: STEP_FLOW_BOOKING_ID,
   protocolVersion: 'v1.0',
@@ -1782,15 +1783,17 @@ export const stepFlowBookingSeed: ExampleSeed = {
       updateComponents: {
         surfaceId: STEP_FLOW_BOOKING_ID,
         components: [
+          { id: 'root', component: 'Column', children: ['booking'] },
           {
-            id: 'root', component: 'StepFlow',
+            id: 'booking', component: 'StepFlow',
             steps: ['Dates', 'Guests', 'Extras'],
             step: { path: '/step' }, draft: { path: '/draft' },
             finishLabel: 'Review booking',
             finishAction: { action: 'review_booking', context: { hotel: 'Harbour Hotel' } },
             children: ['dates', 'guests', 'extras'],
           },
-          { id: 'dates', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
+          { id: 'dates', component: 'Field', label: 'Dates', child: 'dates_cal' },
+          { id: 'dates_cal', component: 'Calendar', mode: 'range', valueStart: { path: '/draft/from' }, valueEnd: { path: '/draft/to' } },
           { id: 'guests', component: 'AmountPicker', label: 'Guests', value: { path: '/draft/guests' }, min: 1, max: 6, step: 1 },
           { id: 'extras', component: 'Column', children: ['breakfast', 'parking'] },
           { id: 'breakfast', component: 'Checkbox', label: 'Breakfast', checked: { path: '/draft/breakfast' } },
@@ -1805,8 +1808,8 @@ const OPTION_COMPARE_LEGS_ID = 'frontier-option-compare-legs'
 /** Frontier 36 (T-0393): `OptionCompare`, three ways from Lisbon to Porto compared on the same four rows. One node
  *  holds the Train, Bus and Flight columns over Duration, Price, Departs and Changes, with `best` on Train; the
  *  whole column is the pick, `value` binds `/trip/leg`, and `actionName` sends `choose` with the picked value. It
- *  replaces a Table with a Button per row or a ProductCard Grid. Corpus admission is a SEPARATE judged wave
- *  (disposition-allowlist.ts). */
+ *  replaces a Table with a Button per row or a ProductCard Grid. Judged and admitted to the
+ *  corpus by T-0396. */
 export const optionCompareLegsSeed: ExampleSeed = {
   name: OPTION_COMPARE_LEGS_ID,
   description: 'Three ways from Lisbon to Porto side by side: one OptionCompare with Train, Bus and Flight columns over Duration, Price, Departs and Changes rows, Train marked best, the pick bound to /trip/leg and sent as a choose action.',
