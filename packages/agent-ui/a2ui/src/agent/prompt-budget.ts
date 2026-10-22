@@ -50,8 +50,10 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  the same formula.
  *  RE-MEASURED 2026-10-21 (T-0198 step 3): the worst case is 146 537 chars (`agent-ui`, mode default), +935 from the
  *  ui-step-flow dogfood row, the `StepFlow` default row, its selection clause with the reciprocal `Drill` and
- *  `ConfirmReceipt` edges, and StepFlow on the feed list. Budget 146 900 by the same formula. */
-export const PROMPT_CHAR_BUDGET_BASE = 146_900
+ *  `ConfirmReceipt` edges, and StepFlow on the feed list. Budget 146 900 by the same formula.
+ *  RE-MEASURED 2026-10-21 (T-0395): the worst case is 146 879 chars (`agent-ui`, mode default; 146 811 before), +68
+ *  from grammar.md's game-ask own-commit exception and OptionCompare's pick intent. Budget 147 200 by the same formula. */
+export const PROMPT_CHAR_BUDGET_BASE = 147_200
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -86,8 +88,10 @@ export const PROMPT_CHAR_BUDGET_BASE = 146_900
  *  (`agent-ui--croupier`, mode default), the same merged rows and clauses BASE pays. Budget 146 900 by the same
  *  formula.
  *  RE-MEASURED 2026-10-21 (T-0198 step 3): the worst case is 147 521 chars (`agent-ui--croupier`, mode default), the
- *  same ui-step-flow dogfood row and `StepFlow` row and clause BASE pays. Budget 147 900 by the same formula. */
-export const PROMPT_CHAR_BUDGET_DERIVED = 147_900
+ *  same ui-step-flow dogfood row and `StepFlow` row and clause BASE pays. Budget 147 900 by the same formula.
+ *  RE-MEASURED 2026-10-21 (T-0395): the worst case is 147 863 chars (`agent-ui--croupier`, mode default; 147 795
+ *  before), the same grammar.md exception and OptionCompare intent BASE pays. Budget 148 200 by the same formula. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 148_200
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

@@ -1676,6 +1676,7 @@ describe("produce() a game's HUD surface beside its ask (T-0363)", () => {
     expect(repair).toContain('FEED_SCOPE at ask-1:GameHud')
     expect(repair).toContain('FEED_SCOPE at ask-1:TimelineItem')
     expect(repair).toContain(HUD_HINT)
+    expect(repair).toContain('ONE commit Button (none when that control commits by its own press)')
     expect(repair).not.toContain('leave "ask" out')
     expect(readMetaLine(lines[0]!)!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
   })

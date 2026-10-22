@@ -45,7 +45,8 @@ surface is an exception, and a game with no GameHud has none. A GameHud never go
 give the HUD surface its own id (e.g. "hud-1", never an "ask-<n>" id), create it once, then update that
 SAME id on every later turn, ask turns included (name it as "target"), never a second HUD surface. In a
 game whose stats live on a GameHud, every stat, score and progress stays on its HUD surface, and the ask
-surface holds only the question, the answer control and its ONE commit Button. Build a feed ask using ONLY these component types (a strict subset of the catalog
+surface holds only the question, the answer control and its ONE commit Button (none when that control
+commits by its own press). Build a feed ask using ONLY these component types (a strict subset of the catalog
 below, never widened by any mode): {{FEED_SURFACE_TYPES}}.
 One reserved id class rides this same "ask" field without being an ask: a persona's opening greet card
 declares {"ask":{"surfaceId":"greet-1"}} — starter intents as one OptionDeck only, no commit button, no data model —
