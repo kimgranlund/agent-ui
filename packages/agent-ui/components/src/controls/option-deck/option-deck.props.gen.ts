@@ -20,4 +20,6 @@ export const props = {
   subheading: prop.string(''),
   // Disables every card; no pick, no event. — generated from option-deck.md attributes.disabled — edit the descriptor, not this file.
   disabled: { ...prop.boolean(false), reflect: true },
+  // Hugs the content instead of filling the container (the one sizing opt-out). — generated from option-deck.md attributes.inline — edit the descriptor, not this file.
+  inline: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema

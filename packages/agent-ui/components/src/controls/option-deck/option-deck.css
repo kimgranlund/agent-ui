@@ -6,7 +6,7 @@
  *       the deck follows the register it sits in (widget / md on an A2UI canvas). The per-tone repoints, keyed on
  *       each card's control-written `[data-tone]`, live here too, so the styles block reads only its own chain.
  *   [2] STYLES BLOCK: `@scope (ui-option-deck)` consumes only --ui-option-deck-*. The host is a block-level stack:
- *       heading, subheading, then the auto-fit card grid. Each card is a tone header band (a token cross-hatch, a
+ *       heading, subheading, then the auto-fit card grid; `[inline]` hugs instead (ADR-0223). Each card is a tone header band (a token cross-hatch, a
  *       corner index, an icon disc) over a text body (title, description, meta chips); the picked card adds the
  *       Your pick pill. Under a 30rem container (the 400px column, one track at every register) a card turns into a
  *       horizontal row, band leading.
@@ -122,6 +122,13 @@
     container: option-deck / inline-size;
     color: var(--ui-option-deck-ink);
     font-size: var(--ui-option-deck-type-body);
+  }
+  /* ADR-0223: the one sizing opt-out, hugs its content. An inline-size container has no intrinsic width, so the
+     hug drops the container too; the one-column row query then never matches. */
+  :scope[inline] {
+    display: inline-grid;
+    inline-size: auto;
+    container-type: normal;
   }
 
   :scope > [data-part='heading'] {
