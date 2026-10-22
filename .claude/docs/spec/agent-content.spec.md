@@ -282,8 +282,7 @@ ticket against this SPEC runs that ticket's named tests and checks each cited `f
    unflagged, when its digest equals the stored version's FINAL seed value, or any of that version's values
    when the row is marked `untouchedWins` citing the ruling that every listed value is an untouched seed (Kim
    2026-10-17, T-0355 option C; an unmarked earlier in-version value may be one a user picked over the later
-   seed). Any other differing value is kept and
-   flagged `seedChanged`. A copy with no version marker is of unknown version: no digests apply. Entry lists
+   seed). Any other differing value is kept and flagged `seedChanged`. A copy with no version marker is of unknown version: no digests apply. Entry lists
    carry no digests yet, so they stay on the flagged path. ACS-R8's
    per-op `source` landed with T-0162 (item 7). The Teams pane takes its store through `ui-agent-admin`'s
    `setTeamStore`; the page's store writes through the `teamsResource` mutations.

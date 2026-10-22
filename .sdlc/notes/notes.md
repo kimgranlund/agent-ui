@@ -385,7 +385,7 @@
 ## T-0355: Per-version seed field digests so a migration tells an untouched old seed value from a user edit (2026-10-18)
 
 - decide: site/agent-content/seed-history.ts:29-38: note: only Quizmaster v1 `model` is recorded; the v2 to v6 bumps moved entry lists, which the table and `diffOverlay` do not digest yet (spec ACS-R7 item 6 says so), so a pre-overlay store at v2 to v5 keeps every differing entry flagged, the T-0161 behaviour. -> T-0398
-- decide: .claude/docs/spec/agent-content.spec.md:283-284: note: the sentence `Any other differing value is kept and` wraps mid-clause onto the next line; a cosmetic reflow.
+- decide: .claude/docs/spec/agent-content.spec.md:283-284: note: the sentence `Any other differing value is kept and` wraps mid-clause onto the next line; a cosmetic reflow. -> reflowed 2026-10-22 overnight
 
 ## T-0356: The other seven controls build their glyphs through createGlyph, with no host aria-hidden (2026-10-18)
 
