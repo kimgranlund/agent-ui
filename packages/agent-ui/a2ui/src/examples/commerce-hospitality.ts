@@ -94,15 +94,16 @@ export const commerceProductCardSeed: ExampleSeed = {
 }
 
 const OPTIONS_ID = 'product-options-quantity'
-/** variant-picker + quantity, composed: a size SegmentedControl (3 short labels — S/M/L, the
- *  booking-reservation room-type precedent, catalog-coverage.ts:135-141) and a Field-wrapped
- *  `type:'number'` quantity TextField, gated by one FormProvider (both required, add-to-cart blocked
- *  until a size is chosen), ending in the Add-to-cart commit Button. */
+/** variant-picker + quantity, composed: a size SegmentedControl (3 short labels, S/M/L, the
+ *  booking-reservation room-type precedent, catalog-coverage.ts:135-141) and a bounded quantity
+ *  AmountPicker (the quantity mini-skill's one picker, T-0400; no `actionName`, since the card's own
+ *  Button commits), gated by one FormProvider (add-to-cart blocked until a size is chosen), ending in
+ *  the Add-to-cart commit Button. */
 export const productOptionsQuantitySeed: ExampleSeed = {
   name: 'product-options-quantity',
   description:
-    'A product detail add-to-cart card — a size SegmentedControl and a quantity number TextField, both Field-wrapped and gated by one FormProvider, with an Add-to-cart Button.',
-  promptText: 'Show this sneaker with a size picker (S, M, L), a quantity field, and an add-to-cart button.',
+    'A product detail add-to-cart card: a Field-wrapped size SegmentedControl and a bounded quantity AmountPicker, gated by one FormProvider, with an Add-to-cart Button.',
+  promptText: 'Show this sneaker with a size picker (S, M, L), a quantity picker, and an add-to-cart button.',
   surfaceId: OPTIONS_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
@@ -112,7 +113,7 @@ export const productOptionsQuantitySeed: ExampleSeed = {
       version: 'v1.0',
       updateDataModel: {
         surfaceId: OPTIONS_ID,
-        value: { product: { name: 'Trail Runner Sneaker', size: '', qty: '1' } },
+        value: { product: { name: 'Trail Runner Sneaker', size: '', qty: 1 } },
       },
     },
     {
@@ -128,7 +129,7 @@ export const productOptionsQuantitySeed: ExampleSeed = {
           { id: 'head', component: 'CardHeader', children: ['title'] },
           { id: 'title', component: 'Text', variant: 'h4', text: { path: '/product/name' } },
           { id: 'content', component: 'CardContent', children: ['col'] },
-          { id: 'col', component: 'Column', gap: 'md', children: ['f_size', 'f_qty'] },
+          { id: 'col', component: 'Column', gap: 'md', children: ['f_size', 'qty_picker'] },
           { id: 'f_size', component: 'Field', label: 'Size', child: 'seg_size' },
           {
             id: 'seg_size', component: 'SegmentedControl', name: 'size', required: true,
@@ -137,10 +138,9 @@ export const productOptionsQuantitySeed: ExampleSeed = {
           { id: 'seg_s', component: 'Segment', value: 's', label: 'S' },
           { id: 'seg_m', component: 'Segment', value: 'm', label: 'M' },
           { id: 'seg_l', component: 'Segment', value: 'l', label: 'L' },
-          { id: 'f_qty', component: 'Field', label: 'Quantity', child: 'qty_field' },
           {
-            id: 'qty_field', component: 'TextField', name: 'qty', type: 'number', min: '1', step: 1, required: true,
-            value: { path: '/product/qty' },
+            id: 'qty_picker', component: 'AmountPicker', name: 'qty', label: 'Quantity',
+            value: { path: '/product/qty' }, min: 1, max: 10, step: 1,
           },
           { id: 'foot', component: 'CardFooter', children: ['btn_add'] },
           {

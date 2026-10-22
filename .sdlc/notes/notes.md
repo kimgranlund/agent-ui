@@ -598,7 +598,7 @@
 - note: `packages/agent-ui/components/src/controls/amount-picker/amount-picker-model.ts:14` formats currency with the currency's own fraction digits (a bet reads "$250.00"), where `mockup-light.png` draws the bet tile as "$250"; the Design's Formatting codec rules, so the mockup is the one that differs.
 - note: `packages/agent-ui/components/src/controls/amount-picker/__screenshots__/` is a gitignored leftover from the builder's failed WebKit run (outside my rm prefix); harmless to the tree.
 - note: the two visual runs (#3, #11) end with vitest's "Tests closed successfully but something prevents the main process from exiting" after exit 0; pre-existing browser-runner behaviour, not this step.
-- decide: packages/agent-ui/a2ui/src/examples/commerce-hospitality.ts:140-142 (`product-options-quantity`, a judged exemplar in packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl) still models the quantity as Field plus TextField `type:'number'` `min:'1'`; a quantity turn can retrieve it beside the new mini-skill.
+- decide: packages/agent-ui/a2ui/src/examples/commerce-hospitality.ts:140-142 (`product-options-quantity`, a judged exemplar in packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl) still models the quantity as Field plus TextField `type:'number'` `min:'1'`; a quantity turn can retrieve it beside the new mini-skill. -> T-0400
 - note: site/agent-content/personas/negotiator/agent.md:20-23 runs its changelog oldest first against the "newest first" rule in site/agent-content/AGENTS.md:35; pre-existing order, the new line follows it.
 - note: site/agent-content/skills/cart-summary/SKILL.md:12 nests parentheses (`(name, an AmountPicker for the quantity (min 1, ...) bound to ..., line price)`); readable, verbatim from the handoff.
 - note: the builder report gives crud-entry-list as 799 chars; measured 791 (body without the trailing newline, 790). Immaterial to the budget matrix.
@@ -680,3 +680,7 @@
 
 - note: the `agent-admin-presets.test.ts` seed-history cases read the digests from `registry.runtime.gen.ts`, not from `seed-history.ts`. Removing only the `seed-history.ts` row is caught by `registry-freshness.test.ts`, not by the presets test. Both pass on the built tree.
 - note: `.claude/docs/rubrics/a2ui-skill-pattern.md:38` now cites `agent-ui--croupier` / `a2ui-basic--croupier` as the worked example, which matches the existing `a2ui-basic--croupier` pairing.
+
+## T-0400: Re-curate the product-options-quantity exemplar onto AmountPicker through the judged replace path (2026-10-22)
+
+- note: scratch dir /var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0400-verifier-L2 could not be removed (rm denied); it holds only my probe scripts and logs. No throwaway worktrees were created.
