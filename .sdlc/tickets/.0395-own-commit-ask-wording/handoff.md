@@ -2,7 +2,7 @@
 id: T-0395
 title: "Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule"
 type: chore           # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -44,3 +44,20 @@ verifier: L3
 - assets.gen.ts, selection-projection.gen.ts and both capability-registry.json copies are regenerated; the prompt-equivalence baseline moves only `default`, `defaultExplicit`, `specific` and `blueSky`.
 - Pins in system-prompt-grammar.test.ts (game-ask parenthetical, OptionCompare clause) and produce-loop.test.ts (repair hint) pass.
 - `npm run check` exit 0; `npx vitest run` (whole jsdom suite, `env -u NODE_OPTIONS`) exit 0.
+- Conductor: verify the spans landed exactly as debated (architect-L1.md, plan-reviewer-L1.md), the recapture moved only the four expected keys, the pins bite, and the re-measured budgets follow the prompt-budget.ts rule. Run npm run check, the a2ui prompt and selection tests and the whole jsdom suite once.
+
+## Outcome
+
+2026-10-21 · lane: solo L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 05650993413d
+- Changed: Game ask, repair hint and spec carry the own-commit exception; OptionCompare's second intent names the pick; prompt budgets re-measured (debated)
+- Commits: bb22122 T-0395: game ask, repair hint and spec carry the own-commit exception; OptionCompare's intent names the pick; prompt budgets re-measured (debated)
+- Check: 1 grammar.md game ask, FEED_SCOPE_HUD_HINT parenthetical, spec :658 own-commit clause plus 3b (arch...: pass
+- Check: 2 OptionCompare `intents[1]` is "pick a leg, room, plan or product shown side by side": pass
+- Check: 3 `PROMPT_CHAR_BUDGET_BASE = 147_200`, `PROMPT_CHAR_BUDGET_DERIVED = 148_200`, each with a `RE-MEAS...: pass
+- Check: 4 assets.gen.ts, selection-projection.gen.ts and both capability-registry.json copies regenerated; ...: pass
+- Check: 5 Pins in system-prompt-grammar.test.ts (game-ask parenthetical, OptionCompare clause) and produce-...: pass
+- Check: 6 `npm run check` exit 0; `npx vitest run` (whole jsdom suite, `env -u NODE_OPTIONS`) exit 0: pass
+- Check: 7 Conductor: spans landed as debated, recapture moved only the four keys, pins bite, budgets follow...: pass
+- Follow-up: decide: .sdlc/tickets/0395-own-commit-ask-wording/handoff.md:20 note: cites... -> notes.md
+- Follow-up: decide: .sdlc/notes/notes.md:671 note: the T-0393 decide: line about... -> notes.md
+- Follow-up: decide: site/agent-content/game-hud-placement.test.ts:28 note: pins exactly... -> notes.md
