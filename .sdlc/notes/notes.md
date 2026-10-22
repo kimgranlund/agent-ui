@@ -688,3 +688,8 @@
 ## T-0403: The concierge and restaurant personas and the concierge booking-confirmed exemplar settle a booking in place with ConfirmReceipt, not a BookingConfirmation read-back (2026-10-22)
 
 - note: site/agent-content/personas/concierge/agent.md:65 carries an em dash ("Weather for itineraries and FX ... — surface the results"); it predates this build and is not in the diff's added clause.
+
+## T-0404: follow-ups (2026-10-22)
+(Appended by the conductor: tickets.py 0.25.1 drops path-led follow-ups.)
+- decide: a validator or semantic check for a non-root component id changing type in an update: the renderer (renderer/tree.ts:170 guards only root; :608-620 rewires the old element; :758 ignores component) silently mis-renders it. Named by the T-0404 architect, reviewer and solo.
+- decide: grammar.md G2b (:111) "turning the root wrapper's child ... into ONE ConfirmReceipt" can read as retyping the form id, which the renderer mis-renders; the safe mechanism is resending root with a new receipt id (persona-exemplars BOOKING_SETTLED). grammar.md is byte-pinned: Kim's ruling (corpus judge Low finding, T-0404).
