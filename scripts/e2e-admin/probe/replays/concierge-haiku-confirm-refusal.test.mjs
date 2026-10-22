@@ -12,7 +12,8 @@ import { offlineReplay } from '../trace.ts'
 // "fabricated system notice" and the BookingConfirmation reference as a fabrication. The Concierge house facts now say a
 // chat confirm on a complete form IS the submission, the SURFACE_MISSING confirm repair asks for a read-back with no
 // reference, and every repair opens as a check result, not a notice. Rounds 1 and 2 stay as recorded; round 3 is AUTHORED
-// to the SURFACE_MISSING instruction (the live turn refused it): a BookingConfirmation reading back the form. The replay
+// to the SURFACE_MISSING instruction (the live turn refused it): a BookingConfirmation reading back the form (the repair
+// as recorded; since T-0401 it asks for the settle in place). The replay
 // proves the repair reaches the model and the repaired round ships; Haiku's live compliance is the next round's to show.
 it('concierge-haiku-confirm-refusal: the chat confirm on a complete form ships one BookingConfirmation', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-confirm-refusal.json', import.meta.url), 'utf8'))

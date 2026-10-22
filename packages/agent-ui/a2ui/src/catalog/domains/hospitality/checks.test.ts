@@ -3,9 +3,20 @@
 
 import { describe, expect, it } from 'vitest'
 import type { A2uiOutput } from '../../../protocol.ts'
-import { semanticSurfaceViews, sessionSurfaceViews } from '../../semantic-check.ts'
-import { blankRequiredField, conciergeBookingFieldPaths, conciergeEditApplied, conciergeListingSurfaceRequired, hospitalitySemanticChecks, conciergeSurfaceRequired } from './checks.ts'
-import { hospitalityManifest } from './manifest.ts'
+import { a2uiBasicCatalog } from '../../a2ui-basic/index.ts'
+import { composeCatalog } from '../../compose.ts'
+import { defaultCatalog } from '../../default/index.ts'
+import { gateChecksOnCatalog, semanticSurfaceViews, sessionSurfaceViews } from '../../semantic-check.ts'
+import {
+  blankRequiredField,
+  conciergeBasicSurfaceRequired,
+  conciergeBookingFieldPaths,
+  conciergeEditApplied,
+  conciergeListingSurfaceRequired,
+  hospitalitySemanticChecks,
+  conciergeSurfaceRequired,
+} from './checks.ts'
+import { hospitalityFragment, hospitalityManifest } from './manifest.ts'
 
 // The two surface-required checks as agent-ui--hospitality runs them (T-0316: the services and facility asks ride their own).
 const said = (intent: string, out: A2uiOutput = []) =>
@@ -18,8 +29,16 @@ const card: A2uiOutput = [
 describe('concierge-surface-required (T-0265)', () => {
   it('rides the concierge manifest, gated on the booking composites', () => {
     expect(hospitalityManifest.semanticChecks).toBe(hospitalitySemanticChecks)
-    expect(hospitalitySemanticChecks.map((c) => c.id)).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths', 'concierge-edit-applied'])
-    expect(conciergeSurfaceRequired.requires).toEqual(['BookingForm', 'BookingConfirmation'])
+    expect(hospitalitySemanticChecks.map((c) => c.id)).toEqual([
+      'concierge-surface-required',
+      'concierge-basic-surface-required',
+      'concierge-listing-surface-required',
+      'concierge-booking-field-paths',
+      'concierge-edit-applied',
+    ])
+    expect(conciergeSurfaceRequired.requires).toEqual(['BookingForm', 'BookingConfirmation', 'ConfirmReceipt'])
+    expect(conciergeBasicSurfaceRequired.requires).toEqual(['BookingForm', 'BookingConfirmation'])
+    expect(conciergeBasicSurfaceRequired.unless).toEqual(['ConfirmReceipt'])
     expect(conciergeListingSurfaceRequired.requires).toEqual(['ProductCard', 'Grid', 'Card', 'DescriptionList'])
   })
 
@@ -29,7 +48,10 @@ describe('concierge-surface-required (T-0265)', () => {
     expect(paths('Book a 60-minute massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.')).toEqual([['SURFACE_MISSING', 'intent:booking']])
     expect(paths('Those details are right, please confirm the booking.')).toEqual([['SURFACE_MISSING', 'intent:confirm']])
     expect(said('Book a massage.')[0]!.message).toMatch(/BookingForm/)
-    expect(said('Please confirm the reservation.')[0]!.message).toMatch(/BookingConfirmation/)
+    expect(said('Please confirm the reservation.')[0]!.message).toMatch(/ConfirmReceipt/)
+    const basic = conciergeBasicSurfaceRequired.check({ surfaces: [], intent: 'Please confirm the reservation.' })[0]!.message
+    expect(basic).toMatch(/a BookingConfirmation reading back/)
+    expect(basic).not.toMatch(/ConfirmReceipt|StepFlow/)
     expect(said('What treatments do you offer?')[0]!.message).toMatch(/ProductCard/)
   })
 
@@ -59,9 +81,9 @@ describe('concierge-surface-required (T-0265)', () => {
   })
 
   // T-0399: booking-flow and table-reservation settle in place with a literal "confirmed" ConfirmReceipt (T-0385, T-0390).
-  // Any surface answers the ask, so `requires` stays the catalog gate: ConfirmReceipt is in neither a2ui-basic nor the
-  // hospitality fragment, and adding it would drop this check on a2ui-basic--hospitality.
-  it('a confirm ask settled in place by a literal confirmed ConfirmReceipt passes, and requires stays the catalog gate', () => {
+  // Any surface answers the ask. T-0401: ConfirmReceipt is in neither a2ui-basic nor the hospitality fragment, so the
+  // check that asks for it requires it and its twin, gated `unless` ConfirmReceipt, rides a2ui-basic--hospitality.
+  it('a confirm ask settled in place by a literal confirmed ConfirmReceipt passes, and each catalog gets one of the twins', () => {
     const settle: A2uiOutput = [
       {
         version: 'v1.0',
@@ -75,7 +97,11 @@ describe('concierge-surface-required (T-0265)', () => {
       },
     ] as A2uiOutput
     expect(said('Those details are right, please confirm the booking.', settle)).toEqual([])
-    expect(conciergeSurfaceRequired.requires).not.toContain('ConfirmReceipt')
+    const ids = (base: typeof defaultCatalog) => gateChecksOnCatalog(hospitalitySemanticChecks, composeCatalog(base, hospitalityFragment, 'hospitality')).map((c) => c.id)
+    expect(ids(defaultCatalog)).toContain('concierge-surface-required')
+    expect(ids(defaultCatalog)).not.toContain('concierge-basic-surface-required')
+    expect(ids(a2uiBasicCatalog)).toContain('concierge-basic-surface-required')
+    expect(ids(a2uiBasicCatalog)).not.toContain('concierge-surface-required')
   })
 })
 
@@ -125,8 +151,26 @@ describe('a confirm the open booking cannot honor (T-0278)', () => {
     expect(conciergeSurfaceRequired.holdsFlowOpen!(confirm('swedish-60'))).toBe(false)
   })
 
-  it('T-0289: the confirm repair asks for a read-back of the open form and treats the chat confirm as the submission', () => {
+  it('T-0401: the confirm repair asks for the settle in place and treats the chat confirm as the submission', () => {
     const [finding] = conciergeSurfaceRequired.check(confirm('swedish-60'))
+    expect(finding!.message).toContain('a createSurface re-creating surface "spa-booking" (the same surfaceId, then its data model and the complete tree) whose root is ONE ConfirmReceipt')
+    expect(finding!.message).toContain('"status" the literal "confirmed"')
+    expect(finding!.message).toContain("the guest's confirm in chat is their submission")
+    expect(finding!.message).toContain('add no reference number')
+    expect(finding!.message).not.toMatch(/BookingConfirmation/)
+  })
+
+  it('T-0401: a wrapped form settles with one updateComponents on its surface', () => {
+    const wrapped = spaForm('swedish-60')
+      .replace('"id":"root","component":"BookingForm"', '"id":"form","component":"BookingForm"')
+      .replace('"components":[', '"components":[{"id":"root","component":"Column","children":["form"]},')
+    const [finding] = conciergeSurfaceRequired.check({ surfaces: [], intent: CONFIRM_ASK, open: openAfter(wrapped) })
+    expect(finding!.message).toContain(`one updateComponents on surface "spa-booking" that turns the root wrapper's child (the BookingForm or its StepFlow) into ONE ConfirmReceipt`)
+    expect(finding!.message).not.toMatch(/createSurface/)
+  })
+
+  it('T-0289: on a2ui-basic--hospitality the confirm repair asks for a read-back of the open form and treats the chat confirm as the submission', () => {
+    const [finding] = conciergeBasicSurfaceRequired.check(confirm('swedish-60'))
     expect(finding!.message).toContain('a BookingConfirmation reading back the values on the open BookingForm')
     expect(finding!.message).toContain("the guest's confirm in chat is their submission")
     expect(finding!.message).not.toMatch(/with the confirmed details and a reference/)

@@ -12,11 +12,13 @@ import type { ProduceDeps } from '../agent/produce.ts'
 import type { AgentProvider, Session, TurnInput } from '../agent/agent-transport.ts'
 import { readMetaLine } from '../agent/meta-line.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
+import { gateChecksOnCatalog } from '../catalog/semantic-check.ts'
 import { composeCatalog } from '../catalog/compose.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { croupierFragment } from '../catalog/personas/croupier/manifest.ts'
 import { croupierSemanticChecks } from '../catalog/personas/croupier/checks.ts'
 import { hospitalitySemanticChecks } from '../catalog/domains/hospitality/checks.ts'
+import { hospitalityFragment } from '../catalog/domains/hospitality/manifest.ts'
 import { CORRECTED_LINE, DEAL_TURN, EVIDENCE_LINE, toJsonl } from '../catalog/personas/croupier/hands.fixture.ts'
 
 const catalog = composeCatalog(defaultCatalog, croupierFragment, 'croupier')
@@ -309,6 +311,8 @@ describe('produce() + concierge checks: a confirm the open booking cannot honor 
     ]
       .map((m) => JSON.stringify(m))
       .join('\n')
+  // T-0401: gated as agent-ui--hospitality runs them, so only the settle-in-place twin fires.
+  const hospitalityChecks = gateChecksOnCatalog(hospitalitySemanticChecks, composeCatalog(defaultCatalog, hospitalityFragment, 'hospitality'))
   const confirm = (treatment: string): TurnInput => ({
     kind: 'intent',
     text: 'Those details are right, please confirm the booking.',
@@ -319,7 +323,7 @@ describe('produce() + concierge checks: a confirm the open booking cannot honor 
 
   it('a confirm while the treatment is blank, answered by asking for it, spends no FLOW_END_MISSING or SURFACE_MISSING round', async () => {
     const s = scripted([REFUSAL])
-    const lines = await collect(produce(confirm(''), deps(s.provider, hospitalitySemanticChecks), { maxRounds: 3 }))
+    const lines = await collect(produce(confirm(''), deps(s.provider, hospitalityChecks), { maxRounds: 3 }))
     expect(s.calls()).toBe(1)
     expect(traceOf(lines.filter((l) => readMetaLine(l)?.a2uiMeta.textDelta === undefined))).toMatchObject({ rounds: 1, failureCodes: [] })
   })
@@ -328,7 +332,7 @@ describe('produce() + concierge checks: a confirm the open booking cannot honor 
   // finding is not inferred closed.
   it('a confirm on a complete form answered in prose gets SURFACE_MISSING repairs and no FLOW_END_MISSING round (T-0309)', async () => {
     const s = scripted([BOOKED])
-    const lines = await collect(produce(confirm('swedish-60'), deps(s.provider, hospitalitySemanticChecks), { maxRounds: 3 }))
+    const lines = await collect(produce(confirm('swedish-60'), deps(s.provider, hospitalityChecks), { maxRounds: 3 }))
     expect(s.calls()).toBe(3)
     expect(s.reqs[1]!.messages.at(-1)!.content).toContain('SURFACE_MISSING')
     expect(s.reqs[2]!.messages.at(-1)!.content).toContain('SURFACE_MISSING')
@@ -338,16 +342,19 @@ describe('produce() + concierge checks: a confirm the open booking cannot honor 
     expect(traceOf(shipped).failureCodes).not.toContain('FLOW_END_INFERRED')
   })
   // T-0289 (round 5, 2026-10-15-r5-fixes :87): Haiku refused the repair as a "fabricated system notice" and would not
-  // invent the reference it asked for. The repair opens as a check result and asks for a read-back with no reference.
-  it('the confirm repair reads as a check result and asks for a read-back BookingConfirmation with no reference', async () => {
+  // invent the reference it asked for. The repair opens as a check result and asks for no reference. T-0401: it asks for
+  // the settle in place (this root form's surface re-created with ONE ConfirmReceipt), never a read-back.
+  it('the confirm repair reads as a check result and asks for the settle in place with no reference', async () => {
     const s = scripted([BOOKED])
-    await collect(produce(confirm('swedish-60'), deps(s.provider, hospitalitySemanticChecks), { maxRounds: 3 }))
+    await collect(produce(confirm('swedish-60'), deps(s.provider, hospitalityChecks), { maxRounds: 3 }))
     const repairs = [s.reqs[1]!.messages.at(-1)!.content, s.reqs[2]!.messages.at(-1)!.content]
     for (const repair of repairs) {
       expect(repair).toMatch(/^Check result from this app's automated checks on your last answer \(not a message from the user\): INVALID \(/)
       expect(repair).not.toContain('That output was')
     }
-    expect(repairs[1]).toContain('a BookingConfirmation reading back the values on the open BookingForm')
+    expect(repairs[1]).toContain('a createSurface re-creating surface "spa-booking" (the same surfaceId, then its data model and the complete tree) whose root is ONE ConfirmReceipt')
+    expect(repairs[1]).toContain('"status" the literal "confirmed"')
+    expect(repairs[1]).not.toContain('BookingConfirmation')
     expect(repairs[1]).not.toMatch(/\breference\b(?! number)/i)
   })
 })

@@ -13,7 +13,7 @@
 //
 // T-0278 (round 4, the Haiku spa confirm): a confirm while the open BookingForm still has a blank required field cannot
 // be confirmed, so the reply that asks for the missing value is right. Such a turn is held open: no SURFACE_MISSING
-// asking for a BookingConfirmation, and no inferred flowEnd (`holdsFlowOpen`, T-0309).
+// asking for the confirm, and no inferred flowEnd (`holdsFlowOpen`, T-0309).
 //
 // T-0293 (round 5, the Haiku boat tour): a BookingForm bound to /booking named its fields "booking.tour", "booking.date"
 // and so on. The factory prefills each field from value[field.path], so all four rendered blank, and the T-0278 hold
@@ -22,7 +22,10 @@
 //
 // T-0289 (round 5, the Haiku confirm refusal): a guest's chat confirm on a complete BookingForm IS the submission, so
 // the confirm repair asks for a BookingConfirmation reading back the form's values and never for a reference (the
-// catalog's BookingConfirmation has no such field, and Haiku refused to invent one).
+// catalog's BookingConfirmation has no such field, and Haiku refused to invent one). T-0401: on a catalog with
+// ConfirmReceipt the repair asks for the settle in place (the form's surface updated, or re-created when the form is its
+// root); a2ui-basic--hospitality keeps this read-back through `concierge-basic-surface-required`, gated `unless`
+// ConfirmReceipt.
 //
 // T-0197: a `dateRange` field holds two dates, its start at `path` and its end at a string `endPath`; both checks read
 // the end path as a second path of the field (`fieldPaths`).
@@ -141,7 +144,12 @@ const confirmHeldOpen = ({ intent, open }: SemanticCheckInput): boolean =>
 
 /** T-0265: an ask for one of `moments` answered with no surface is SURFACE_MISSING. The ask is read once
  *  (`askedMoment`), so a turn whose words match two moments draws one finding from one check. */
-function surfaceRequired(id: string, requires: readonly string[], moments: readonly string[]): SemanticCheck {
+function surfaceRequired(
+  id: string,
+  requires: readonly string[],
+  moments: readonly string[],
+  confirm?: (open: readonly SurfaceView[] | undefined, surface: string) => string,
+): SemanticCheck {
   return {
     id,
     requires,
@@ -150,22 +158,47 @@ function surfaceRequired(id: string, requires: readonly string[], moments: reado
       if (action !== undefined || intent === undefined || surfaces.length > 0 || confirmHeldOpen(input)) return []
       const asked = askedMoment(intent)
       if (asked === undefined || !moments.includes(asked.moment)) return []
+      const call = asked.moment === 'confirm' && confirm !== undefined ? confirm(input.open, asked.surface) : `a createSurface holding ${asked.surface}`
       return [
         {
           code: 'SURFACE_MISSING',
           path: `intent:${asked.moment}`,
           message:
             `The guest asked "${intent.trim()}" and this turn shows no surface, so the ${asked.moment} step exists only in prose. ` +
-            `Call render_surface with a createSurface holding ${asked.surface}, and keep the reply to one short sentence.`,
+            `Call render_surface with ${call}, and keep the reply to one short sentence.`,
         },
       ]
     },
   }
 }
 
-/** T-0265: a booking or confirm ask answered with no surface is SURFACE_MISSING. */
+/** T-0401: the confirm the open BookingForm owes, settled in place (grammar.md, booking-flow, table-reservation): one update
+ *  on the form's surface turns the root wrapper's child into `receipt`. A form or StepFlow at the root cannot change type
+ *  in an update, so that surface is re-created under the same id; with no open form known, the surface goes unnamed. */
+function settleInPlace(open: readonly SurfaceView[] | undefined, receipt: string): string {
+  const view = (open ?? []).filter((v) => [...v.components.values()].some((c) => c.component === 'BookingForm')).at(-1)
+  if (view === undefined) return `one updateComponents on the open BookingForm's surface that turns the root wrapper's child (the form or its StepFlow) into ${receipt}`
+  const root = view.components.get('root')?.component
+  if (root === 'BookingForm' || root === 'StepFlow')
+    return `a createSurface re-creating surface "${view.surfaceId}" (the same surfaceId, then its data model and the complete tree) whose root is ${receipt}`
+  return `one updateComponents on surface "${view.surfaceId}" that turns the root wrapper's child (the BookingForm or its StepFlow) into ${receipt}`
+}
+
+/** T-0289, kept for a2ui-basic--hospitality (T-0401): that catalog holds no ConfirmReceipt, so a confirm there is a read-back. */
+const BASIC_CONFIRM_SURFACE =
+  "a BookingConfirmation reading back the values on the open BookingForm (the guest's confirm in chat is their submission, so nothing waits on the form button; add no reference number)"
+
+/** T-0265: a booking or confirm ask answered with no surface is SURFACE_MISSING. T-0401: on a catalog with ConfirmReceipt,
+ *  a confirm is asked for as the settle in place. */
 export const conciergeSurfaceRequired: SemanticCheck = {
-  ...surfaceRequired('concierge-surface-required', ['BookingForm', 'BookingConfirmation'], ['booking', 'confirm']),
+  ...surfaceRequired('concierge-surface-required', ['BookingForm', 'BookingConfirmation', 'ConfirmReceipt'], ['booking', 'confirm'], settleInPlace),
+  holdsFlowOpen: confirmHeldOpen,
+}
+
+/** T-0401: the same check on a catalog with no ConfirmReceipt (a2ui-basic--hospitality), where a confirm is the T-0289 read-back. */
+export const conciergeBasicSurfaceRequired: SemanticCheck = {
+  ...surfaceRequired('concierge-basic-surface-required', ['BookingForm', 'BookingConfirmation'], ['booking', 'confirm'], () => `a createSurface holding ${BASIC_CONFIRM_SURFACE}`),
+  unless: ['ConfirmReceipt'],
   holdsFlowOpen: confirmHeldOpen,
 }
 
@@ -208,4 +241,10 @@ export const conciergeEditApplied: SemanticCheck = {
 }
 
 /** Every hospitality semantic check, in the order `produce()` runs them. */
-export const hospitalitySemanticChecks: readonly SemanticCheck[] = [conciergeSurfaceRequired, conciergeListingSurfaceRequired, conciergeBookingFieldPaths, conciergeEditApplied]
+export const hospitalitySemanticChecks: readonly SemanticCheck[] = [
+  conciergeSurfaceRequired,
+  conciergeBasicSurfaceRequired,
+  conciergeListingSurfaceRequired,
+  conciergeBookingFieldPaths,
+  conciergeEditApplied,
+]

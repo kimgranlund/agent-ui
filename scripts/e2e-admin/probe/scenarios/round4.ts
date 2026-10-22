@@ -7,7 +7,7 @@
 //   regenerated from the current generators (`round3.ts`, `routing.ts`, `round.ts`), so the T-0270 doc-only and
 //   T-0272 stud fixes carry through.
 // - L. Long flows on Haiku and Sonnet: a fully specified Concierge booking through confirmation (a pre-filled
-//   BookingForm, then one BookingConfirmation, T-0266), a spa services ask then a booking from it (ProductCard,
+//   BookingForm, then its confirm, T-0266; the settled ConfirmReceipt since T-0401, mapped back for the archive), a spa services ask then a booking from it (ProductCard,
 //   T-0267, T-0279), and a Lexicographer game from the opening through a give-up and a replay (word board on the opening,
 //   T-0268; ResultCard and the game-over exemplar on the give-up, T-0274).
 //
@@ -75,10 +75,10 @@ export const ROUND4_LONG_FLOWS: ReadonlyArray<{ agent: string; scenario: RoundSc
       tags: ['long'],
       steps: [
         say(BOOK_ASK, { domains: ['hospitality'], exemplars: { include: [BOOKING_REQUEST] } }, 'BookingForm'),
-        say('Those details are right, please confirm the booking.', undefined, 'BookingConfirmation'),
+        say('Those details are right, please confirm the booking.', undefined, 'ConfirmReceipt'),
         say("Thanks, that's all."),
       ],
-      expectComponents: ['BookingForm', 'BookingConfirmation'],
+      expectComponents: ['BookingForm', 'ConfirmReceipt'],
     },
   },
   {

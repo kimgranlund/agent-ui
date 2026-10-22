@@ -51,7 +51,7 @@ describe('live round 4', () => {
 
   it('the long flows carry the fix oracles on Haiku and Sonnet', () => {
     const flow = (name) => ROUND4_LONG_FLOWS.find((f) => f.scenario.name === name).scenario
-    expect(flow('booking-confirm').steps.flatMap((s) => s.expect ?? [])).toEqual(['BookingForm', 'BookingConfirmation'])
+    expect(flow('booking-confirm').steps.flatMap((s) => s.expect ?? [])).toEqual(['BookingForm', 'ConfirmReceipt'])
     expect(flow('booking-confirm').steps[0].expectRouting.exemplars).toEqual({ include: ['domain-concierge-booking-request'] })
     expect(flow('spa-services').steps[0].expect).toEqual(['ProductCard'])
     const game = flow('game-give-up').steps
