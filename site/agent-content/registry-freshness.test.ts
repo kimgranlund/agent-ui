@@ -92,10 +92,13 @@ describe('agent-content registry: freshness and schema', () => {
     expect(validateSeedHistory(discovered.records, SEED_HISTORY)).toEqual([])
     expect(SEED_DIGESTS['quizmaster']?.['1']?.['model']).toEqual([valueDigest('claude-haiku-4-5-20251001'), valueDigest('claude-haiku-5-5')])
     expect(digestsIn(committedRuntime)).toEqual(JSON.parse(JSON.stringify(SEED_DIGESTS)))
-    const literal = JSON.stringify(digestsIn(committedRuntime))
+    expect(SEED_DIGESTS['concierge']?.['19']?.['a2uiLocalPatterns'], 'T-0398: the v5 to v19 local pattern set').toEqual([valueDigest('concierge')])
+    // Only the digest arrays are checked: a persona id key (`concierge`) may equal a seeded value.
+    const leaves = Object.values(digestsIn(committedRuntime)).flatMap((versions) => Object.values(versions).flatMap((keys) => Object.values(keys).flat()))
+    for (const leaf of leaves) expect(leaf, 'a SEED_DIGESTS entry is a digest').toMatch(/^fnv:[0-9a-f]{16}$/)
     for (const versions of Object.values(SEED_HISTORY))
       for (const keys of Object.values(versions))
-        for (const row of Object.values(keys)) for (const value of row.seeded) expect(literal, 'a history value leaked into SEED_DIGESTS').not.toContain(JSON.stringify(value))
+        for (const row of Object.values(keys)) for (const value of row.seeded) expect(leaves, 'a history value leaked into SEED_DIGESTS').not.toContain(value)
     expect(generateRuntimeModule(discovered.records, { quizmaster: { '1': { model: { seeded: ['claude-haiku-4-0'] } } } }), 'a history edit changes the module').not.toBe(committedRuntime)
   })
 

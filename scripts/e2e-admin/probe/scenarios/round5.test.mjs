@@ -4,6 +4,7 @@
 // exactly the generated script, which the capped runner describes.
 import { readFileSync } from 'node:fs'
 import { withoutSkipMarks } from './croupier.ts'
+import { asArchivedConciergeDomain } from './routing.ts'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
 import { describeCommands } from '../run-capped.ts'
@@ -71,7 +72,7 @@ describe('live round 5', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND5_FILE)
-    expect(text).toBe(withoutSkipMarks(round5CommandsScript()))
+    expect(text).toBe(withoutSkipMarks(asArchivedConciergeDomain(round5CommandsScript())))
     expect(text).toContain('run-capped.ts .sdlc/evals/rounds/2026-10-15-r5-fixes/live-commands.sh --cap 15 --round r5-fixes')
     const described = describeCommands(text)
     expect(described).toHaveLength(29)

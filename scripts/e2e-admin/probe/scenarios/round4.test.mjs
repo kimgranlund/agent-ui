@@ -9,7 +9,7 @@ import { parseProbeCli } from '../cli.ts'
 import { describeCommands } from '../run-capped.ts'
 import { round3CommandsScript, round3Runs } from './round3.ts'
 import { roundCommandsScript } from './round.ts'
-import { routingCommandsScript } from './routing.ts'
+import { asArchivedConciergeDomain, routingCommandsScript } from './routing.ts'
 import { R3_FAILED, ROUND4_DIR, ROUND4_FILE, ROUND4_LONG_FLOWS, round4CommandsScript, round4Runs } from './round4.ts'
 
 const root = new URL('../../../../', import.meta.url)
@@ -70,7 +70,7 @@ describe('live round 4', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND4_FILE)
-    expect(text).toBe(withoutSkipMarks(round4CommandsScript()))
+    expect(text).toBe(withoutSkipMarks(asArchivedConciergeDomain(round4CommandsScript())))
     expect(text).toContain('run-capped.ts .sdlc/evals/rounds/2026-10-15-r4-fixes/live-commands.sh --cap 15 --round r4-fixes')
     const described = describeCommands(text)
     expect(described).toHaveLength(37)

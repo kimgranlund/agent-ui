@@ -26,6 +26,25 @@ export interface SeededValues {
 export type SeedHistory = Readonly<Record<string, Readonly<Record<string, Readonly<Record<string, SeededValues>>>>>>
 
 export const SEED_HISTORY: SeedHistory = {
+  concierge: {
+    // v5 (GH #497, 2026-08-06) seeded the `concierge` local pattern set; v20 (T-0197, 2026-10-21) moved the
+    // BookingForm to the hospitality domain (`a2uiDomains`) and dropped it. Every version between kept it unchanged.
+    '5': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '6': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '7': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '8': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '9': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '10': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '11': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '12': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '13': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '14': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '15': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '16': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '17': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '18': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+    '19': { a2uiLocalPatterns: { seeded: ['concierge'] } },
+  },
   quizmaster: {
     // v1 (TKT-0074, 2026-07-16) seeded the dated Haiku 4.5 id; T-0030 (2026-10-07) moved it to Haiku 5.5
     // without a bump. Versions 2 to 6 moved entry lists only (and T-0185 retired `temperature`).

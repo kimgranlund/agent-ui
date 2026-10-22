@@ -368,6 +368,42 @@ describe('the Quizmaster seedVersion bump (T-0036, T-0355): an untouched saved m
   })
 })
 
+describe('the Concierge v20 move off local patterns (T-0197, T-0398): an untouched saved a2uiLocalPatterns takes the new seed', () => {
+  const concierge = () => personaFromPreset(AGENT_PRESETS.find((p) => p.id === 'concierge')!)
+
+  // v5 (GH #497) to v19 seeded `a2uiLocalPatterns: 'concierge'`; v20 (T-0197) composes the hospitality domain instead
+  // and seeds no local patterns. seed-history.ts lists the value under each of those versions, so a pre-overlay copy
+  // still holding it is untouched and takes the new seed; a value no version seeded is kept, flagged.
+  for (const version of ['5', '19']) {
+    it(`a pre-bump store (seedVersion ${version}) holding 'concierge' takes the new seed, unflagged`, () => {
+      const persona = concierge()
+      resetPersona(persona)
+      localStorage.setItem(`${PREFIX}.concierge.seedVersion`, version)
+      localStorage.setItem(`${PREFIX}.concierge.a2uiLocalPatterns`, JSON.stringify('concierge'))
+      expect(personaModified(persona)).toEqual([])
+      expect(personaStore(persona).get('a2uiLocalPatterns')).toBeUndefined()
+      resetPersona(persona)
+    })
+  }
+
+  it('a pre-bump store (seedVersion 19) holding a value no version seeded keeps it, flagged', () => {
+    const persona = concierge()
+    resetPersona(persona)
+    localStorage.setItem(`${PREFIX}.concierge.seedVersion`, '19')
+    localStorage.setItem(`${PREFIX}.concierge.a2uiLocalPatterns`, JSON.stringify('croupier'))
+    expect(personaModified(persona).map((m) => m.key)).toEqual(['a2uiLocalPatterns'])
+    resetPersona(persona)
+  })
+
+  it('a store with no seedVersion marker is of unknown version: even the old seed is kept, flagged', () => {
+    const persona = concierge()
+    resetPersona(persona)
+    localStorage.setItem(`${PREFIX}.concierge.a2uiLocalPatterns`, JSON.stringify('concierge'))
+    expect(personaModified(persona).map((m) => m.key)).toEqual(['a2uiLocalPatterns'])
+    resetPersona(persona)
+  })
+})
+
 // ── T-0161: a shipped persona's edits are a diff over its seed, merged (never wiped) on a seed update ──
 describe('agent content overlays (T-0161)', () => {
   beforeEach(() => {

@@ -36,7 +36,8 @@ const GAME_BOARDS = ['domain-admiral-battleship-board', 'domain-lexicographer-wo
 const CORE_SECTIONS = ['grammar', 'components', 'persona']
 
 const croupier = (extra: Omit<RoutingExpect, 'domains'> = {}): RoutingExpect => ({ domains: ['croupier'], ...extra })
-const concierge = (extra: Omit<RoutingExpect, 'domains'> = {}): RoutingExpect => ({ domains: ['concierge'], ...extra })
+/** The Concierge preset composes the hospitality domain (T-0197), so its trace routing labels `hospitality`. */
+const concierge = (extra: Omit<RoutingExpect, 'domains'> = {}): RoutingExpect => ({ domains: ['hospitality'], ...extra })
 const KB_FULL: RoutingExpect['references'] = [{ name: 'property-knowledge-base', load: 'full' }]
 /** T-0270: house facts (late check-out to 14:00) ride the persona section; the knowledge base is listed, not required full. */
 const HOUSE_FACTS = concierge({ sections: ['persona'], references: [{ name: 'property-knowledge-base' }] })
@@ -166,6 +167,15 @@ export const asArchivedGuidanceConflict = (script: string): string =>
             .replace(/(--say Stand\.) --expect-turn CardTable /, '$1 ')
         : line,
     )
+    .join('\n')
+
+/** T-0398: the Concierge routing label as rounds 3 to 10 ran it. T-0197 moved the Concierge onto the hospitality domain,
+ *  so its turns now label `hospitality`; those `live-commands.sh` archives are never rewritten and keep `concierge`.
+ *  A round's pin compares its archive to the generated script through this, on the Concierge's lines only. */
+export const asArchivedConciergeDomain = (script: string): string =>
+  script
+    .split('\n')
+    .map((line) => (line.includes('--agent concierge ') ? line.replaceAll('\\"domains\\":[\\"hospitality\\"]', '\\"domains\\":[\\"concierge\\"]') : line))
     .join('\n')
 
 /** `scripts/e2e-admin/probe/scenarios/routing-pack.sh`. */

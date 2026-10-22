@@ -4,7 +4,7 @@
 // `live-commands.sh` is exactly the generated script, which the capped runner describes.
 import { existsSync, readFileSync } from 'node:fs'
 import { withoutSkipMarks } from './croupier.ts'
-import { asArchivedGuidanceConflict } from './routing.ts'
+import { asArchivedConciergeDomain, asArchivedGuidanceConflict } from './routing.ts'
 import { describe, expect, it } from 'vitest'
 import { parseProbeCli } from '../cli.ts'
 import { describeCommands, describeRound } from '../run-capped.ts'
@@ -63,7 +63,7 @@ describe('live round 3', () => {
     const croupier = regressionScenario(REGRESSIONS[0]).steps[0].expectRouting
     expect(croupier.exemplars).toEqual({ include: ['domain-croupier-card-table-round'], exclude: ['domain-lexicographer-word-board', 'domain-admiral-battleship-board'] })
     const tour = regressionScenario(REGRESSIONS.find((r) => r.scenario === 'facilities-then-tour')).steps
-    expect(tour.find((s) => /late check-out/.test(s.say ?? ''))?.expectRouting).toEqual({ domains: ['concierge'], references: [{ name: 'property-knowledge-base', load: 'full' }] })
+    expect(tour.find((s) => /late check-out/.test(s.say ?? ''))?.expectRouting).toEqual({ domains: ['hospitality'], references: [{ name: 'property-knowledge-base', load: 'full' }] })
     expect(tour.find((s) => /late check-out/.test(s.say ?? ''))?.say).not.toContain('property-knowledge-base')
     expect(tour.find((s) => /^Book /.test(s.say ?? ''))?.expectRouting?.exemplars).toEqual({ include: ['domain-concierge-booking-request'] })
   })
@@ -84,7 +84,7 @@ describe('live round 3', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND3_FILE)
-    expect(text).toBe(withoutSkipMarks(asArchivedGuidanceConflict(round3CommandsScript())))
+    expect(text).toBe(withoutSkipMarks(asArchivedConciergeDomain(asArchivedGuidanceConflict(round3CommandsScript()))))
     const described = describeCommands(text)
     expect(described).toHaveLength(44)
     expect(described.at(-1)).toBe('long-concierge-booking-opus-1: concierge on claude-opus-5-5, 5 steps, 4 --expect-turn, 1 --expect-routing')

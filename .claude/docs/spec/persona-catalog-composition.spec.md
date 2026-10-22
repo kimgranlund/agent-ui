@@ -160,7 +160,7 @@ construction, one derived catalog per (shipped `catalog/personas/<persona-id>/` 
 base catalog id `B` its `targetCatalogs` names) pairing, beside the `agent-ui` default and the two
 `a2ui-basic` ids (the short id and its canonical-URI inbound alias, SPEC-N4). Each pairing is a lazy
 record (`catalog/records.ts`) under its own derived `catalogId` per OF1b's `<base>--<persona-id>`
-convention (§5), e.g. `agent-ui--concierge` and `a2ui-basic--croupier`. The first time a surface names
+convention (§5), e.g. `agent-ui--croupier` and `a2ui-basic--croupier`. The first time a surface names
 it (or `preload` does, runtime SPEC-R9 AC4), `composeCatalog(base, local)` runs once with `base` = the
 shipped body for `B` (`agent-ui` or `a2ui-basic`, never the canonical-URI alias, which is
 inbound-only and never a composition target, ADR-0169 cl.13), and the result registers into that
@@ -457,7 +457,8 @@ every fragment author regardless of whether they ever collide.
 ### OF1b — Derived-catalogId naming convention → ruled: **`<base>--<persona>`**
 
 Kim's verbatim selection: *"`<base>--<persona>` (Recommended)."* — e.g. `agent-ui--concierge`,
-`a2ui-basic--croupier` (the relay comment's own examples). Encoded in SPEC-R2 above; directly
+`a2ui-basic--croupier` (the relay comment's own examples; T-0197 later retired the concierge persona catalog for the
+`agent-ui--hospitality` domain catalog). Encoded in SPEC-R2 above; directly
 supports SPEC-N5's widening below — once composition targets more than one base, a naming
 convention that NAMES the base disambiguates by construction (an id like `croupier` alone could
 not tell a reader or `sanitizeCatalog` which base it derived from; `<base>--<persona>` can).
