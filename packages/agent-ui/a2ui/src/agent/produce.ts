@@ -1432,13 +1432,15 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     usage = next
   }
   let roundModel = model // RTS-R9: `onRepairRound` may swap one round's model; the trace records the shipped round's
+  const replaced: { surfaceId: string; by: string }[] = [] // T-0410: every T-0328 retirement this turn, for the trace alone
   const traceFor = (rounds: number, healed: number, failureCodes: string[]): TurnTrace => ({
     turnIndex,
     query: { intent: query.intent, k: query.k },
     exemplarIds,
     rounds,
     healed,
-    failureCodes,
+    failureCodes: replaced.length > 0 ? [...failureCodes, 'SURFACE_REPLACED'] : failureCodes, // T-0410: a factual tally, never a retry trigger
+    ...(replaced.length > 0 ? { replaced: [...replaced] } : {}),
     model: roundModel,
     prompt: promptReport,
     ...(usage !== undefined ? { usage: { ...usage } } : {}),
@@ -1999,7 +2001,13 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const deletedThisRound = new Set(assembled.output.flatMap((msg) => ('deleteSurface' in msg ? [msg.deleteSurface.surfaceId] : [])))
     const left = [...builtSurfaces].filter((sid) => !createdThisRound.has(sid) && !deletedThisRound.has(sid))
     const newIds = builtSurfaceIds(assembled.output, input.session).filter((sid) => !everBuilt.has(sid))
-    for (const sid of left.filter((s) => !protectedSurfaces.has(s)).slice(0, newIds.length)) builtSurfaces.delete(sid) // T-0328: retired
+    left
+      .filter((s) => !protectedSurfaces.has(s))
+      .slice(0, newIds.length)
+      .forEach((sid, i) => {
+        builtSurfaces.delete(sid) // T-0328: retired
+        replaced.push({ surfaceId: sid, by: newIds[i]! }) // T-0410: the trace names it
+      })
     const dropped = left.filter((sid) => builtSurfaces.has(sid))
     stampCreateSurfaceCatalogId(assembled.output, deps.catalog.catalogId) // ADR-0169 cl.4 — the server-selected catalog is authoritative, unconditional + idempotent, BEFORE validateA2ui runs
     // SPEC-N3 — the shared validator, no fork; TKT-0081 — seeded with the session's prior graphs so the

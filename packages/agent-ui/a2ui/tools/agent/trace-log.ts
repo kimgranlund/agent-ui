@@ -254,7 +254,7 @@ export interface AgentTraceLine {
   usage?: TokenUsage
   /** T-0259: the probe run this turn belongs to (`x-a2ui-run-id`, `run-id.ts`); absent outside probe runs. */
   runId?: string
-  trace?: Pick<TurnTrace, 'rounds' | 'healed' | 'failureCodes' | 'exemplarIds'> & { promptChars?: number; promptOver?: boolean }
+  trace?: Pick<TurnTrace, 'rounds' | 'healed' | 'failureCodes' | 'exemplarIds' | 'replaced'> & { promptChars?: number; promptOver?: boolean }
   routing?: TraceRouting
   /** T-0163: the agent content the turn ran with; absent on a turn whose body named no agent (no stamp, and
    *  no persona on the produce route or agent label on the chat route). */
@@ -795,6 +795,7 @@ export class TurnTraceCollector {
               healed: t.healed,
               failureCodes: t.failureCodes,
               exemplarIds: t.exemplarIds,
+              ...(t.replaced !== undefined ? { replaced: t.replaced } : {}), // T-0410
               ...(t.prompt !== undefined ? { promptChars: t.prompt.total, promptOver: t.prompt.over } : {}),
             },
           }
