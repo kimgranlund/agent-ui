@@ -632,7 +632,13 @@ function reconcileHarness() {
       else setAttr(el, prop, value)
     },
   }
-  const factories: Record<string, WidgetFactory> = { Column: containerFactory('div'), Row: containerFactory('div'), Text: textFactory }
+  // `Receipt` mints a DIFFERENT tag (`section`) so a retype resend (T-0405) is observable as `tagName`.
+  const factories: Record<string, WidgetFactory> = {
+    Column: containerFactory('div'),
+    Row: containerFactory('div'),
+    Receipt: containerFactory('section'),
+    Text: textFactory,
+  }
 
   const catalog = {
     catalogId: 'demo',
@@ -640,6 +646,7 @@ function reconcileHarness() {
     components: {
       Column: { name: 'Column', properties: { gap: { type: { type: 'string' }, mapsTo: 'gap' } } },
       Row: { name: 'Row', properties: { gap: { type: { type: 'string' }, mapsTo: 'gap' } } },
+      Receipt: { name: 'Receipt', properties: { title: { type: { type: 'string' }, mapsTo: 'title' } } },
       Text: {
         name: 'Text',
         properties: {
@@ -954,5 +961,151 @@ describe('M1 review fix: an unresolved-type resend must not re-emit CATALOG from
 
     tree.apply(msg([{ id: 'x', component: 'Nope', foo: 'a' }])) // `bar` dropped — a prop-only resend
     expect(errors.length).toBe(before) // #resetOmittedProps must not re-resolve create() and re-emit
+  })
+})
+
+describe('T-0405: a non-root id resent with a DIFFERENT component type re-mounts in its slot (RSR-C4 type gate)', () => {
+  it('a retyped leaf mounts a fresh widget of the new type in the same slot; the old element and its bound-prop effect are disposed; siblings are untouched', () => {
+    const { surface, tree } = reconcileHarness()
+    surface.data.value = { x: 'bound' }
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['a', 't', 'c'] },
+        { id: 'a', component: 'Text', text: 'A' },
+        { id: 't', component: 'Text', text: { path: '/x' } },
+        { id: 'c', component: 'Text', text: 'C' },
+      ]),
+    )
+    const root = tree.rootElement!
+    const [aEl, oldEl, cEl] = [...root.children] as HTMLElement[]
+    expect(oldEl.tagName).toBe('SPAN')
+    expect(inspect(surface.data).subscribers).toBe(1) // t's `{path}` effect
+
+    tree.apply(msg([{ id: 't', component: 'Receipt', title: 'Booked' }]))
+
+    const newEl = root.children[1] as HTMLElement
+    expect(newEl.tagName).toBe('SECTION') // the NEW type renders, not a rewired span
+    expect(newEl).not.toBe(oldEl)
+    expect(newEl.getAttribute('data-title')).toBe('Booked')
+    expect(surface.widgets.get('t')).toBe(newEl)
+    expect(root.contains(oldEl)).toBe(false)
+    expect(inspect(surface.data).subscribers).toBe(0) // the old record's binding is gone with its element
+    expect(root.children).toHaveLength(3)
+    expect(root.children[0]).toBe(aEl) // same slot, siblings never re-minted
+    expect(root.children[2]).toBe(cEl)
+  })
+
+  it('a retyped container keeps a still-referenced child element, disposes a dropped child, and mounts a newly-referenced one, in the new order', () => {
+    const { surface, tree } = reconcileHarness()
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['form'] },
+        { id: 'form', component: 'Column', children: ['f1', 'f2'] },
+        { id: 'f1', component: 'Text', text: 'F1' },
+        { id: 'f2', component: 'Text', text: 'F2' },
+      ]),
+    )
+    const root = tree.rootElement!
+    const oldForm = root.children[0] as HTMLElement
+    const f2El = oldForm.children[1] as HTMLElement
+
+    tree.apply(
+      msg([
+        { id: 'form', component: 'Receipt', children: ['f2', 'r1'] },
+        { id: 'r1', component: 'Text', text: 'R1' },
+      ]),
+    )
+
+    const newForm = root.children[0] as HTMLElement
+    expect(newForm.tagName).toBe('SECTION')
+    expect(root.contains(oldForm)).toBe(false)
+    expect([...newForm.children].map((c) => c.textContent)).toEqual(['F2', 'R1'])
+    expect(newForm.children[0]).toBe(f2El) // the surviving child is moved, never re-minted
+    expect(surface.widgets.has('f1')).toBe(false) // dropped child disposed (SPEC-N1)
+    expect(surface.components.has('f1')).toBe(false)
+  })
+
+  it('a retyped container drops the old pending anchor it no longer references, and patches a still-referenced pending child into the NEW element', () => {
+    const { surface, tree } = reconcileHarness()
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['form'] },
+        { id: 'form', component: 'Column', children: ['gone', 'kept'] }, // neither child has arrived
+      ]),
+    )
+    const root = tree.rootElement!
+
+    tree.apply(msg([{ id: 'form', component: 'Receipt', children: ['kept'] }]))
+    const newForm = root.children[0] as HTMLElement
+    expect(newForm.tagName).toBe('SECTION')
+
+    tree.apply(
+      msg([
+        { id: 'gone', component: 'Text', text: 'GONE' },
+        { id: 'kept', component: 'Text', text: 'KEPT' },
+      ]),
+    )
+    expect(surface.widgets.has('gone')).toBe(false) // the old element's anchor was purged: nothing orphan-minted
+    expect(newForm.children).toHaveLength(1)
+    expect(newForm.children[0]?.textContent).toBe('KEPT')
+    expect(surface.widgets.get('kept')?.parentNode).toBe(newForm)
+  })
+
+  it('a retyped container whose old children were a dynamic-list TEMPLATE tears the list down; a new TEMPLATE under the new type mounts live', async () => {
+    const { surface, tree } = reconcileHarness()
+    surface.data.value = { rows: [{ label: 'a' }, { label: 'b' }] }
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['grid'] },
+        { id: 'grid', component: 'Row', children: { path: '/rows', componentId: 'item' } },
+        { id: 'item', component: 'Text', text: { path: 'label' } },
+      ]),
+    )
+    const root = tree.rootElement!
+    const oldGrid = root.children[0] as HTMLElement
+    expect(oldGrid.children).toHaveLength(2)
+
+    tree.apply(msg([{ id: 'grid', component: 'Receipt', children: ['done'] }, { id: 'done', component: 'Text', text: 'Done' }]))
+    const receipt = root.children[0] as HTMLElement
+    expect(receipt.tagName).toBe('SECTION')
+    expect(receipt.textContent).toBe('Done')
+    // The old list's loop and item effects are disposed: only the surface-owned `/rows` path memo
+    // (binding.ts, released at surface teardown) still reads `surface.data`, exactly as after an
+    // ordinary RSR-C7 removal of a list container.
+    expect(inspect(surface.data).subscribers).toBe(1)
+
+    // ...and back: retype to a container carrying a TEMPLATE again; the fresh list reacts to data writes.
+    tree.apply(msg([{ id: 'grid', component: 'Row', children: { path: '/rows', componentId: 'item' } }]))
+    const grid = root.children[0] as HTMLElement
+    expect(grid.tagName).toBe('DIV')
+    expect(grid.children).toHaveLength(2)
+    expect(surface.widgets.has('done')).toBe(false) // dropped static child disposed
+    surface.data.value = { rows: [{ label: 'a' }, { label: 'b' }, { label: 'c' }] }
+    await whenFlushed()
+    expect(grid.children).toHaveLength(3)
+  })
+
+  it('control: a SAME-type resend still reconciles onto the SAME element (RSR-C6 unchanged)', () => {
+    const { tree } = reconcileHarness()
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['t'] },
+        { id: 't', component: 'Text', text: 'first' },
+      ]),
+    )
+    const el = tree.rootElement!.children[0]
+    tree.apply(msg([{ id: 't', component: 'Text', text: 'second' }]))
+    expect(tree.rootElement!.children[0]).toBe(el)
+    expect(el.textContent).toBe('second')
+  })
+
+  it('control: a retyped ROOT is still an id-graph error and keeps the existing root element (SPEC-R3 AC2 unchanged)', () => {
+    const { errors, tree } = reconcileHarness()
+    tree.apply(msg([{ id: 'root', component: 'Column', children: [] }]))
+    const rootEl = tree.rootElement
+    tree.apply(msg([{ id: 'root', component: 'Receipt', children: [] }]))
+    expect(errors.map((e) => e.code)).toEqual(['IDGRAPH'])
+    expect(tree.rootElement).toBe(rootEl)
+    expect(rootEl?.tagName).toBe('DIV')
   })
 })

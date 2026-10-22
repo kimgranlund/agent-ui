@@ -450,12 +450,68 @@ export class SurfaceTree {
    * skips SPEC-R2's prop rewire, and vice versa. T-0172 (SPEC-R4 REV): `"root"` reconciles too, once the
    * IDGRAPH guard in `apply` has let a same-type resend through; its element stays the one the host
    * attached, so the surface keeps its mount, marker and register attributes.
+   *
+   * T-0405: a resend that changes `component` is a REPLACEMENT (A2UI v1.0 `updateComponents` adds or
+   * updates by id), never a rewire: the old element cannot become a widget of another type, so the id
+   * re-mounts in its slot (`#remountNode`). Only a non-root id gets here with a new type; a retyped
+   * `root` is dropped as an IDGRAPH in `apply` (SPEC-R3 AC2).
    */
   #reconcileNode(id: string, previous: A2uiComponent, next: A2uiComponent): void {
+    if (previous.component !== next.component) {
+      this.#remountNode(id, previous)
+      return
+    }
     const oldRefs = childRefs(previous)
     const newRefs = childRefs(next)
     if (!sameOrder(oldRefs, newRefs)) this.#reconcileChildren(id, oldRefs, newRefs)
     if (!samePropsDeep(previous, next)) this.#reconcileProps(id, previous, next)
+  }
+
+  /**
+   * Retype re-mount (T-0405): tear down `id`'s old widget and mount a fresh one of the new type in the
+   * SAME slot. `surface.components` already holds the NEW record (`apply` upserts before the diff), so the
+   * old child list comes from `previous`. `#disposeSubtree(id)` is deliberately NOT called on `id` itself:
+   * it would walk the NEW record's children and delete the buffered record of every child the new record
+   * still references. Children follow the RSR-C5 id-diff instead: an old child the new record drops is
+   * disposed (`#disposeSubtree`), a surviving child's element is MOVED into the new element (never
+   * re-minted) because `#mountNode` reuses an existing widget, and a newly-referenced id mounts fresh or
+   * holds a pending anchor (SPEC-R4). An old child that never arrived loses the anchor the old element
+   * held for it, so a later delivery cannot patch into the discarded element. Disposing `childrenScope`
+   * also tears down a dynamic-list TEMPLATE rooted in the old element (SPEC-N1 AC1); a template on the new
+   * record mounts fresh through `#mountNode`'s ordinary `#mountChildrenInto`.
+   */
+  #remountNode(id: string, previous: A2uiComponent): void {
+    const oldEl = this.#surface.widgets.get(id)! // guaranteed present: this id is a resend of a mounted node
+    const oldRefs = childRefs(previous)
+    const newSet = new Set(childRefs(this.#surface.components.get(id)!))
+    for (const childId of oldRefs) {
+      if (this.#surface.widgets.has(childId)) {
+        if (!newSet.has(childId)) this.#disposeSubtree(childId) // SPEC-R1 AC2, SPEC-N1
+        continue
+      }
+      const anchors = this.#pendingParents.get(childId)
+      if (anchors !== undefined) {
+        const remaining = anchors.filter((a) => !oldEl.contains(a))
+        if (remaining.length > 0) this.#pendingParents.set(childId, remaining)
+        else this.#pendingParents.delete(childId)
+      }
+    }
+    const pair = this.#nodeScopes.get(id)
+    pair?.propsScope.dispose()
+    pair?.childrenScope.dispose()
+    pair?.ac.abort()
+    this.#nodeScopes.delete(id)
+    this.#surface.widgets.delete(id) // clears `#mountNode`'s reuse guard so it mints from the new record
+    // Reveal-order bookkeeping (ADR-0194) for the old element; `#mountStaticChildrenOrdered` re-establishes it.
+    this.#siblingOrder.delete(id)
+    this.#revealedCount.delete(id)
+    for (const childId of oldRefs) if (this.#childContainer.get(childId) === id) this.#childContainer.delete(childId)
+
+    const el = this.#mountNode(id) as HTMLElement // a record is buffered for `id`, so never an anchor here
+    // Swap into the old element's physical slot (its actual parentNode, which a child-relocating container
+    // may have changed, TKT-0031). Survivors were already moved out of `oldEl` by the mount above.
+    const parent = oldEl.parentNode
+    if (parent !== null) parent.replaceChild(el, oldEl)
   }
 
   /**
