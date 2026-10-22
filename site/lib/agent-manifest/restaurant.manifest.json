@@ -1,8 +1,8 @@
 {
   "id": "restaurant",
   "preset": "restaurant",
-  "seedVersion": 7,
-  "seedDigest": "sha256:e98f4ddb690c02f7bd5b1629caa7ee7cb757b3409fbafa8630f8d41f6d6f1aa9",
+  "seedVersion": 8,
+  "seedDigest": "sha256:6628561bbf3c9d1e4e218dd3fc6060a28ede6c6ed289386d2db101487c0b83f3",
   "fragment": null,
   "selection": null,
   "noFragment": {

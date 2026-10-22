@@ -72,7 +72,7 @@ export const personaBasicFixtureDemoSeed: PersonaExampleSeed = {
 
 const BOOKING_SID = 'concierge-booking'
 
-/** The room-type choices, shared by the form's select and the confirmation's read-back row. */
+/** The room-type choices, shared by the form's select and the settled receipt's room-type row. */
 const ROOM_OPTIONS = [
   { value: 'king', label: 'King room' },
   { value: 'twin', label: 'Twin room' },
@@ -88,10 +88,10 @@ const BOOKING_FIELDS = [
 ]
 
 /** Every detail the guest named, written once at `/booking`: the form opens pre-filled with it (T-0266), and the
- *  confirmation reads it back after the submit. */
+ *  settled receipt (on a2ui-basic, the confirmation) shows it after the submit. */
 const BOOKING_DATA = { checkIn: '2026-11-14', checkOut: '2026-11-17', roomType: 'king', breakfast: 'Yes' }
 
-/** The confirmation's rows, read from the same `/booking` object the form writes; the room type reads as its label. */
+/** The settled receipt's rows (and the a2ui-basic confirmation's): keys in the same /booking object the form writes; the room type shows as its label. */
 const BOOKING_ROWS = [
   { label: 'Arrival', path: 'checkIn' },
   { label: 'Departure', path: 'checkOut' },
@@ -102,9 +102,17 @@ const BOOKING_ROWS = [
 const BOOKING_PROMPT = 'Book me a king room at the hotel, arriving 14 November 2026 and leaving 17 November, with breakfast.'
 const CONFIRM_PROMPT = 'Those details are right, please confirm the booking.'
 
-/** The confirm turn's surface root (T-0289, T-0308): ONE BookingConfirmation reading the form's values back, no
- *  reference number. The same node on both bases. */
+/** The a2ui-basic confirm turn's surface root (T-0289, T-0308): ONE BookingConfirmation with the form's values, no
+ *  reference number. That catalog holds no ConfirmReceipt; agent-ui settles in place instead (T-0403). */
 const BOOKING_CONFIRMATION = { id: 'root', component: 'BookingConfirmation', title: 'Booked', rows: BOOKING_ROWS, data: { path: '/booking' } }
+
+/** The agent-ui confirm turn (grammar G2b, booking-flow, T-0403): the root wrapper's one child, the form until the
+ *  guest confirms, settled in place into ONE ConfirmReceipt, "data" bound to the draft and "status" the literal
+ *  "confirmed" (never bound, so it draws no Back or Confirm), with no reference number. */
+const BOOKING_SETTLED = [
+  { id: 'root', component: 'Column', children: ['receipt'] },
+  { id: 'receipt', component: 'ConfirmReceipt', title: 'Booked', rows: BOOKING_ROWS, data: { path: '/booking' }, status: 'confirmed' },
+]
 
 /** The concierge persona over agent-ui: the request turn, a BookingForm pre-filled with every detail the guest gave. */
 export const personaConciergeBookingSeed: PersonaExampleSeed = {
@@ -175,13 +183,14 @@ export const personaBasicConciergeBookingSeed: PersonaExampleSeed = {
   ],
 }
 
-/** The concierge persona over agent-ui: the confirm turn, the booking settled as one BookingConfirmation. */
+/** The concierge persona over agent-ui: the confirm turn, the booking settled in place as one ConfirmReceipt (T-0403). */
 export const personaConciergeBookingConfirmedSeed: PersonaExampleSeed = {
   name: 'persona-concierge-booking-confirmed',
   description:
-    'The concierge persona over the agent-ui base, on the turn after the guest confirms: the surface root is ONE ' +
-    'BookingConfirmation titled "Booked" whose rows read the arrival, departure, room type (as its label, King ' +
-    'room) and breakfast back from the same /booking object the form wrote, with no reference number.',
+    'The concierge persona over the agent-ui base, on the turn after the guest confirms: the booking settles in ' +
+    'place, so the root Column wrapper\'s one child is ONE ConfirmReceipt titled "Booked", its data bound to the ' +
+    'same /booking object the form wrote and its status the literal "confirmed", so it draws no Back or Confirm. ' +
+    'Its rows show the arrival, departure, room type (as its label, King room) and breakfast, with no reference number.',
   promptText: CONFIRM_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
@@ -189,16 +198,16 @@ export const personaConciergeBookingConfirmedSeed: PersonaExampleSeed = {
   messages: [
     { version: 'v1.0', createSurface: { surfaceId: BOOKING_SID, catalogId: 'agent-ui--hospitality' } },
     { version: 'v1.0', updateDataModel: { surfaceId: BOOKING_SID, path: '/booking', value: BOOKING_DATA } },
-    { version: 'v1.0', updateComponents: { surfaceId: BOOKING_SID, components: [BOOKING_CONFIRMATION] } },
+    { version: 'v1.0', updateComponents: { surfaceId: BOOKING_SID, components: BOOKING_SETTLED } },
   ],
 }
 
-/** The concierge persona over a2ui-basic: the same confirm turn. */
+/** The concierge persona over a2ui-basic: the confirm turn as one BookingConfirmation, the type that catalog has. */
 export const personaBasicConciergeBookingConfirmedSeed: PersonaExampleSeed = {
   name: 'persona-basic-concierge-booking-confirmed',
   description:
-    'The concierge persona over the a2ui-basic base, on the turn after the guest confirms: the same ' +
-    'BookingConfirmation titled "Booked" as the surface root, reading the booking back from /booking.',
+    'The concierge persona over the a2ui-basic base, on the turn after the guest confirms: ONE BookingConfirmation ' +
+    'titled "Booked" as the surface root, showing the booking from /booking (this catalog holds no ConfirmReceipt).',
   promptText: CONFIRM_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',

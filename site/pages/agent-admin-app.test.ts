@@ -1013,7 +1013,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
   it('a persisted OLD-version store is kept flagged and the new seed applies around it; same-version edits survive', async () => {
     const { presetStore, AGENT_PRESETS, resetPreset } = await import('./agent-admin-presets.ts')
     const concierge = AGENT_PRESETS.find((p) => p.id === 'concierge')!
-    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(23) // T-0385, T-0390: the BookingForm settles in place (T-0199 took 22)
+    expect(concierge.seedVersion, 'the upgrade declares its bump').toBe(24) // T-0403: the surface style and House facts settle in place too (T-0385, T-0390 took 23)
 
     // Simulate a PRE-upgrade browser: old persisted content, NO seedVersion marker (=1 implicitly).
     resetPreset(concierge) // clean slate for the probe (drops cache + keys)
@@ -1053,6 +1053,11 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(flow.content).not.toMatch(/#[A-Z]{2}\d+/)
     expect(concierge.houseFacts).toMatch(/booking form pre-filled/)
     expect(concierge.houseFacts).not.toMatch(/read them back/)
+    // T-0403: the House facts and the surface style settle a confirmed booking in place, with no read-back.
+    expect(concierge.houseFacts).toMatch(/settle that same form in place as one confirmed receipt/)
+    expect(concierge.houseFacts).not.toMatch(/reading back/)
+    expect(concierge.surfaceStyle).toMatch(/that same form settles in place into one confirmed receipt/)
+    expect(concierge.surfaceStyle).not.toMatch(/reading back/)
     // T-0267: the spa treatment list rides the House facts, so a spa services ask has treatments to list.
     expect(concierge.houseFacts).toMatch(/Spa treatments: Swedish massage, 60 min, €120;[^.]*Hydrating facial/)
     // T-0279 (Kim's ruling): a priced, bookable services list is one ProductCard each, never a Table or a ServiceCard.
@@ -1067,7 +1072,7 @@ describe('presetStore — seedVersion migration (the in-place Concierge upgrade)
     expect(facility?.description).toMatch(/ONE Card holding a DescriptionList, never a ServiceCard/)
     expect(facility?.content).toMatch(/ONE Card holding a DescriptionList/)
     expect(facility?.content).not.toMatch(/ONE ServiceCard per facility/)
-    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('23')
+    expect(localStorage.getItem('agent-admin-app.concierge.seedVersion')).toBe('24')
 
     // Same-version edits SURVIVE a rebuild: T-0161 keeps them as an overlay over the seed, so a reload
     // (a cold store cache) reads them back.

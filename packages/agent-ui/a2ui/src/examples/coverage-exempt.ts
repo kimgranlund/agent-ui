@@ -8,4 +8,9 @@ export const CATALOG_COVERAGE_EXEMPT: Readonly<Record<string, Readonly<Record<st
   'a2ui-basic': {
     Card: 'Basic Card wraps one child and has no header or footer slots (basic-exemplars.ts module header).',
   },
+  'agent-ui--hospitality': {
+    BookingConfirmation:
+      'On agent-ui a confirmed booking settles its BookingForm in place as a ConfirmReceipt (grammar G2b, T-0397, T-0403), so ' +
+      'no agent-ui seed shows a BookingConfirmation; persona-basic-concierge-booking-confirmed previews it on a2ui-basic--hospitality.',
+  },
 }
