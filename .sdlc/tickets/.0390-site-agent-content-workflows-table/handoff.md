@@ -2,7 +2,7 @@
 id: T-0390
 title: "site/agent-content/workflows/table-reservation/WORKFLOW.md:12..."
 type: idea            # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -22,3 +22,9 @@ site/agent-content/workflows/table-reservation/WORKFLOW.md:12: decide: the reser
 
 ## Constraints
 Model-read workflow text goes through the debate rule; no em dashes; seedVersion bumps re-pin digests.
+
+## Outcome
+
+2026-10-21 · lane: full L2 · verdict: closed by reason (delivered with T-0385 (table-reservation and booking-flow now teach one confirm shape: the BookingForm confirms and settles in place; debated; verified by the 0385 verifier-L3)) · verifier: none · base: none
+- Changed: see commits
+- Commits: none

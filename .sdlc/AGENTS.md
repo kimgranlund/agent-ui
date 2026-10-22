@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:169e4df88bb0 -->
+<!-- sdlc-lite:managed:start v1 sha256:6e00ec0fdf60 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -10,16 +10,12 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 ## Stages
 
 - proposed: 0
-- ready: 2
-  - T-0394 OptionDeck gains the ADR-0223 inline opt-out (0394-option-deck-inline)
-  - T-0395 Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (0395-own-commit-ask-wording)
-- claimed: 2
-  - T-0385 site/agent-content/workflows/booking-flow/WORKFLOW.md:12 settles... (0385-site-agent-content-workflows-booking), claimed by claude:a8ce3b21 2026-10-21
-  - T-0390 site/agent-content/workflows/table-reservation/WORKFLOW.md:12... (0390-site-agent-content-workflows-table), claimed by claude:a8ce3b21 2026-10-21
+- ready: 0
+- claimed: 0
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 385
+- done: 387
 - dropped: 4
 
 ## Procedures

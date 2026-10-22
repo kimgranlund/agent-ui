@@ -2,7 +2,7 @@
 id: T-0385
 title: "site/agent-content/workflows/booking-flow/WORKFLOW.md:12 settles..."
 type: idea            # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -26,7 +26,7 @@ Model-read workflow text goes through the debate rule; no em dashes; seedVersion
 - Lane: solo because size L2 (steps.py lane); overnight goal 2026-10-21
 
 ## Debate: booking and table settle wording (T-0385 with T-0390)
-Bundled with T-0390 (`.sdlc/tickets/0390-site-agent-content-workflows-table/handoff.md`), decided by the conductor under Kim's 2026-10-21 overnight goal. The workflow bodies are model-read, so the wording goes through the debate rule (Opus architect, then fable plan-reviewer) before a solo applies it.
+Bundled with T-0390 (`.sdlc/tickets/.0390-site-agent-content-workflows-table/handoff.md`), decided by the conductor under Kim's 2026-10-21 overnight goal. The workflow bodies are model-read, so the wording goes through the debate rule (Opus architect, then fable plan-reviewer) before a solo applies it.
 
 Ask (architect, debate rule): first re-check both premises against the current tree (T-0198 rewrote booking-flow onto a StepFlow; T-0386 changed the stale-affordance rule). Then propose exact replacement text so that (1) T-0385: the booking-flow settle names a reachable confirmed state (what writes "confirmed", in one settle update, never a pending re-ask), and (2) T-0390: table-reservation and booking-flow, both seeded on the concierge, agree on whether the BookingForm is the confirm step or a ConfirmReceipt read-back follows it, picking the one consistent shape with evidence from confirm-receipt, the hospitality BookingForm, and grammar.md. For each span give before text with line numbers, after text and why; no em dashes; list dependents (seedVersion bumps, digests, probe scenarios). If a premise no longer holds, say so and propose no edit for it. Write no file except your result.
 
@@ -38,3 +38,16 @@ Covers T-0385 and T-0390 together (one diff). Wording is the debate-settled text
 - [ ] booking-flow line 12 and table-reservation line 12 carry the architect's after text; concierge is version 23 and restaurant version 7, each with a new first changelog line holding no inner double quotes; spec.md:282 cites both workflows as confirm-then-settle, not a read-back: `env -u NODE_OPTIONS node scripts/generate-agent-content.mjs --check`
 - [ ] seedVersion pins, persona digests and the presets and libraries digests are re-pinned; the booking-flow content pins stay green; the prompt budget holds: `env -u NODE_OPTIONS npx vitest run --project site site/pages/agent-admin-app.test.ts site/pages/agent-admin-seed-digests.test.ts site/pages/agent-admin-prompt-budget.test.ts site/agent-content site/lib/agent-manifest`
 - [ ] the standing gate: `env -u NODE_OPTIONS npm run check`
+- Conductor: verify both WORKFLOW.md lines landed exactly as debated (architect-L1.md spans, plan-reviewer-L1.md notes), the seed bumps and digest re-pins are generated not hand-typed, the changelog JSON parses, and T-0390's handoff is satisfied. Say whether the four concierge probe scenario expectations (BookingConfirmation on the confirm turn) are now stale and need changing in this ticket. Run npm run check and the whole jsdom suite once.
+
+## Outcome
+
+2026-10-21 · lane: solo L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 05650993413d
+- Changed: booking-flow settles with a literal confirmed ConfirmReceipt in one update; table-reservation confirms with the BookingForm and settles in place (debated)
+- Commits: none
+- Check: 1 booking-flow line 12 and table-reservation line 12 carry the architect's after text; concierge is...: pass
+- Check: 2 seedVersion pins, persona digests and the presets and libraries digests are re-pinned; the bookin...: pass
+- Check: 3 the standing gate: `env -u NODE_OPTIONS npm run check`: pass
+- Follow-up: note: conductor asks: both WORKFLOW.md lines match architect-L1.md spans... -> notes.md
+- Follow-up: decide: scripts/e2e-admin/probe/scenarios/concierge.ts:28,39,52,66 and... -> notes.md
+- Follow-up: note: site/agent-content/workflows/trip-plan/WORKFLOW.md:12 and... -> notes.md
