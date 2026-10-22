@@ -2,7 +2,7 @@
 id: T-0396
 title: "Admit the six shelved seeds to the A2UI corpus through one judged run"
 type: chore           # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -33,3 +33,15 @@ The six seeds shelved this wave (OptionDeck T-0193, ConfirmReceipt T-0195, Amoun
 - The six seeds are rows in `agent-ui.jsonl` (five) and `agent-ui--hospitality.jsonl` (the Itinerary), and `packages/agent-ui/a2ui/corpus/verdicts/2026-10-22--shelf-wave.json` is in the tree.
 - `disposition-allowlist.ts` holds no "NO VERDICT SOUGHT YET" entry for the six seeds.
 - `npm run check` and `npm test` exit 0.
+- Conductor 2026-10-22: verdicts came from the a2ui-review-agent critic (first pass five PASS and StepFlow FAIL D1; the solo fixed the StepFlow seed: root Column wrapper, Field-wrapped Calendar; rejudged PASS 4). The solo's phase 1 and 2 were one resumed session; judge the seed fix too. Check that the admitted rows match the judged verdicts, the archive and shard land together, the re-pinned retrieval rows are measured (not hand-picked), and say whether the new Known-poor game rows (admiral, alchemist, dungeon-master pulling booking seeds) are a retrieval regression worth a ticket.
+
+## Outcome
+
+2026-10-21 · lane: solo L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 05650993413d
+- Changed: Six shelved seeds judged by the a2ui-review-agent critic and admitted in one judged run (StepFlow seed fixed and rejudged); verdicts archive committed with the shard
+- Commits: ecae62c T-0396: admit the six shelved seeds through one judged run; verdicts archive with the shard
+- Check: 1 corpus, examples, import-seeds and registry generate tests exit 0: pass
+- Check: 2 six seeds are rows in the shards and the verdicts archive is in the tree: pass
+- Check: 3 no "NO VERDICT SOUGHT YET" entry for the six seeds: pass
+- Check: 4 `npm run check` and `npm test` exit 0: pass
+- Follow-up: note: the retrieve-presets "Known poor" rows for admiral, alchemist and... -> notes.md
