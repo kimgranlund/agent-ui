@@ -22,7 +22,7 @@
     {
       "id": "comparison-table",
       "triggers": "comparison compare plans pricing tiers versus side-by-side which plan",
-      "body": "Side-by-side plan/product comparison: a Grid of headline Stat tiles (one Card per option, `label`+`value` — price or the option's own quantified pitch) ABOVE one shared Table whose `columns` are the options and whose `rows` are features, cell values the exact per-option answer (comparison-pricing-table is the proof). This is Stat-tiles-plus-Table TOGETHER as one composed card — not feature-collection's bare single-purpose Table, and not product-presentation's per-item Card+Image+Badge tile (comparison strips the photo/Badge chrome; it is about scanning facts, not browsing items). Keep the Stat row and the Table under one Card/CardContent so they read as one comparison, not two unrelated blocks."
+      "body": "Picking one of two to four options compared on the same attributes (legs, rooms, plans, products) is ONE OptionCompare, never a Table with a Button per row and never a Card or ProductCard per option. rows: [{key, label}], shared by every option; options: [{value, title, subtitle?, values: {<key>: text}}], one short answer per row key. Set best to the recommended option's value, if any, and always set actionName (e.g. \"choose\"): a press sends action.context.value. The whole column is the pick: add no Button. Over four, show the best four and say so. Not for starting something (an OptionDeck). A facts-only comparison with no pick is a Grid of headline Stat tiles (one per option) ABOVE one shared Table, options as columns, features as rows, under one Card (comparison-pricing-table)."
     },
     {
       "id": "confirm-receipt",
