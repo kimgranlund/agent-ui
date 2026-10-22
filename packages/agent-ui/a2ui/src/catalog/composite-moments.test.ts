@@ -1056,10 +1056,59 @@ describe('composite moment checks (T-0208)', () => {
     const anyHeading: CompositeMoment = { ...row, logOf: { ...row.logOf!, heading: /./ } }
     const fires = (m: CompositeMoment, components: A2uiComponent[]): string[] =>
       runSemanticChecks([compositeMomentCheck(m)], { surfaces: [view(components)] }).findings.map((f) => f.code)
-    for (const name of ['adventure itinerary', 'quest inventory list', 'quiz question list']) expect(fires(anyHeading, NOT_QUEST_LOGS[name]!), name).toEqual(['TIMELINE_MISSING'])
+    for (const name of ['quest inventory list', 'quiz question list']) expect(fires(anyHeading, NOT_QUEST_LOGS[name]!), name).toEqual(['TIMELINE_MISSING'])
     const anySurface: CompositeMoment = { ...anyHeading, boardless: { game: /./ } }
-    for (const name of ['order history', 'changelog', 'chat history']) expect(fires(anySurface, NOT_QUEST_LOGS[name]!), name).toEqual(['TIMELINE_MISSING'])
+    // T-0409: adventure names no game, so the itinerary needs the game gate opened too.
+    for (const name of ['order history', 'changelog', 'chat history', 'adventure itinerary']) expect(fires(anySurface, NOT_QUEST_LOGS[name]!), name).toEqual(['TIMELINE_MISSING'])
     expect(fires({ ...row, boardless: { game: /./ } }, NOT_QUEST_LOGS['changelog']!), 'changelog, heading kept').toEqual([])
+  })
+
+  // T-0409: hospitality and commerce turns run on the same catalog, and a word that names a game as a topic or a product
+  // (an Iceland adventure, a loyalty game, a game show) is no game being played. Each was a misfire on the T-0364 tree.
+  const NOT_GAMES: Record<string, { code: string; components: A2uiComponent[] }> = {
+    'concierge travel journal': {
+      code: 'TIMELINE_MISSING',
+      components: [
+        { id: 'root', component: 'Card', children: ['t', 'lbl', 'days'] },
+        { id: 't', component: 'Text', text: 'Your Iceland adventure', variant: 'h4' },
+        { id: 'lbl', component: 'Text', text: 'Travel journal', variant: 'label' },
+        { id: 'days', component: 'Column', children: ['d1', 'd2'] },
+        { id: 'd1', component: 'Text', text: 'Reykjavik and the Golden Circle' },
+        { id: 'd2', component: 'Text', text: 'Glacier hike at Skaftafell' },
+      ],
+    },
+    'receipt with a loyalty game': {
+      code: 'RESULT_CARD_MISSING',
+      components: [
+        { id: 'root', component: 'Card', children: ['title', 'rows', 'promo'] },
+        { id: 'title', component: 'Text', text: 'Order #881 confirmed', variant: 'h4' },
+        { id: 'rows', component: 'DescriptionList', rows: [{ label: 'Total', value: '$42.10' }] },
+        { id: 'promo', component: 'Text', text: 'Thanks! Play again in our loyalty game next week.', variant: 'caption' },
+      ],
+    },
+    'podcast card about a game show': {
+      code: 'RESULT_CARD_MISSING',
+      components: [
+        { id: 'root', component: 'Card', children: ['title', 't', 'again'] },
+        { id: 'title', component: 'Text', text: 'Podcast player', variant: 'h4' },
+        { id: 't', component: 'Text', text: 'Episode 42: the game show that changed TV. You win nothing, but you learn a lot.' },
+        { id: 'again', component: 'Button', label: 'Play again' },
+      ],
+    },
+  }
+
+  for (const [name, { code, components }] of Object.entries(NOT_GAMES)) {
+    it(`T-0409 negative control: a ${name} yields no ${code}`, () => {
+      expect(codes(components)).not.toContain(code)
+    })
+  }
+
+  it('T-0409: each non-game negative fires with the board-less game gate opened, so the gate is what keeps it quiet', () => {
+    for (const [name, { code, components }] of Object.entries(NOT_GAMES)) {
+      const row = COMPOSITE_MOMENTS.find((m) => `${m.composite.replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase()}_MISSING` === code)!
+      const open: CompositeMoment = { ...row, boardless: { ...row.boardless!, game: /./ } }
+      expect(runSemanticChecks([compositeMomentCheck(open)], { surfaces: [view(components)] }).findings.map((f) => f.code), name).toEqual([code])
+    }
   })
 
   it("T-0361 review: no row reads another composite's props, so a GameHud whose status says Game over is no hand-built result", () => {

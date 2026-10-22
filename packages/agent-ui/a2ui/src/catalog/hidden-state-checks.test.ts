@@ -6,7 +6,7 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import type { A2uiOutput, A2uiServerMessage } from '../protocol.ts'
+import type { A2uiComponent, A2uiOutput, A2uiServerMessage } from '../protocol.ts'
 import { boardlessMoveAppliedCheck, fleetConcedeCheck, fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
@@ -490,6 +490,29 @@ describe('T-0366: boardless-move-applied', () => {
     }
     expect(said(shop, 'Add that one to the cart.', 'storefront-1', [data('storefront-1', { cart: ['lantern'] })])).toEqual([])
     expect(said(shop, 'Add that one to the cart.', 'storefront-1')).toEqual([])
+  })
+
+  // T-0409: a word that names a game as a product or a page (board games on a shelf, game settings) is no open game.
+  const page = (sid: string, components: A2uiComponent[]): SemanticTurnLog => ({
+    turns: [assistant([create(sid), { version: 'v1.0', updateComponents: { surfaceId: sid, components } } as A2uiServerMessage])],
+  })
+
+  it('a storefront with board games stays quiet with no update', () => {
+    const shop = page('storefront-1', [
+      { id: 'root', component: 'Column', children: ['t', 'sale'] },
+      { id: 't', component: 'Text', text: 'Toys and gifts', variant: 'h4' },
+      { id: 'sale', component: 'Text', text: 'Board games and puzzles, 20% off' },
+    ])
+    expect(said(shop, 'Add that one to the cart.', 'storefront-1')).toEqual([])
+  })
+
+  it('a game settings page stays quiet with no update', () => {
+    const settings = page('settings-1', [
+      { id: 'root', component: 'Column', children: ['t', 'sound'] },
+      { id: 't', component: 'Text', text: 'Game settings', variant: 'h4' },
+      { id: 'sound', component: 'Switch', label: 'Sound effects' },
+    ])
+    expect(said(settings, 'Turn it on.', 'settings-1')).toEqual([])
   })
 
   it('a prose move at a board the fleet or word check owns gets one ACTION_NOT_APPLIED, from that check', () => {
