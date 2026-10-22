@@ -1,0 +1,9 @@
+{
+  "rubric": "a2ui-corpus",
+  "rubricVersion": "1.5",
+  "judgedBy": "a2ui-review-agent",
+  "date": "2026-10-22T10:26:05Z",
+  "verdicts": {
+    "domain-concierge-booking-request": { "qualityScore": 4, "passed": true, "failingDimensions": [] }
+  }
+}

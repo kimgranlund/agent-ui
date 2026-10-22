@@ -108,21 +108,25 @@ const BOOKING_CONFIRMATION = { id: 'root', component: 'BookingConfirmation', tit
 
 /** The agent-ui confirm turn (grammar G2b, booking-flow, T-0403): the root wrapper's one child, the form until the
  *  guest confirms, settled in place into ONE ConfirmReceipt, "data" bound to the draft and "status" the literal
- *  "confirmed" (never bound, so it draws no Back or Confirm), with no reference number. */
+ *  "confirmed" (never bound, so it draws no Back or Confirm), with no reference number. It is the one update the
+ *  request seed's surface takes (T-0404): its bare root Column resent with the new `receipt` id as its child, never
+ *  `form` retyped (the renderer reconciles a retyped non-root id onto the old element). */
 const BOOKING_SETTLED = [
   { id: 'root', component: 'Column', children: ['receipt'] },
   { id: 'receipt', component: 'ConfirmReceipt', title: 'Booked', rows: BOOKING_ROWS, data: { path: '/booking' }, status: 'confirmed' },
 ]
 
-/** The concierge persona over agent-ui: the request turn, a BookingForm pre-filled with every detail the guest gave. */
+/** The concierge persona over agent-ui: the request turn, a BookingForm pre-filled with every detail the guest gave, the
+ *  one child of a bare root Column wrapper so the confirm settles in place with one update (grammar G2b, T-0404). */
 export const personaConciergeBookingSeed: PersonaExampleSeed = {
   name: 'persona-concierge-booking',
   description:
     'The concierge persona over the agent-ui base, on an ask that names every detail: one BookingForm titled ' +
-    '"Book your stay" as the surface root, pre-filled from /booking with the dateSingle arrival and departure ' +
+    '"Book your stay" as the one child of a root Column wrapper, pre-filled from /booking with the dateSingle arrival and departure ' +
     '(drawn as two date fields), the king room on the room-type select and Yes on the breakfast choice. Its child ' +
     'Book now Button is a submit action whose context carries /booking, and the surface sends its data model. No ' +
-    'confirmation renders before the guest submits.',
+    'confirmation renders before the guest submits; the confirm turns the wrapper\'s child into ONE ConfirmReceipt ' +
+    '(persona-concierge-booking-confirmed).',
   promptText: BOOKING_PROMPT,
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
@@ -135,7 +139,8 @@ export const personaConciergeBookingSeed: PersonaExampleSeed = {
       updateComponents: {
         surfaceId: BOOKING_SID,
         components: [
-          { id: 'root', component: 'BookingForm', title: 'Book your stay', fields: BOOKING_FIELDS, value: { path: '/booking' }, child: 'submitBtn' },
+          { id: 'root', component: 'Column', children: ['form'] },
+          { id: 'form', component: 'BookingForm', title: 'Book your stay', fields: BOOKING_FIELDS, value: { path: '/booking' }, child: 'submitBtn' },
           {
             id: 'submitBtn',
             component: 'Button',
@@ -292,12 +297,13 @@ const STAY_FIELDS = [
   { kind: 'dateSingle', path: 'checkOut', label: 'Departure', required: true },
 ]
 
-/** The concierge persona over agent-ui: a BookingForm using the text and number kinds and a two-field date range. */
+/** The concierge persona over agent-ui: a BookingForm using the text and number kinds and a two-field date range, the
+ *  one child of a bare root Column wrapper (T-0404). */
 export const personaConciergeStaySeed: PersonaExampleSeed = {
   name: 'persona-concierge-stay-details',
   description:
     'The concierge persona over the agent-ui base, on an ask that names every detail: a BookingForm titled ' +
-    '"Your stay" as the surface root, pre-filled from /stay with the text guest name, the number guest count and ' +
+    '"Your stay" as the one child of a root Column wrapper, pre-filled from /stay with the text guest name, the number guest count and ' +
     'the date range as two dateSingle fields (arrival, departure), all required. Its child Reserve Button is a ' +
     'submit action whose context carries /stay, and the surface sends its data model. No confirmation renders ' +
     'before the guest submits.',
@@ -320,7 +326,8 @@ export const personaConciergeStaySeed: PersonaExampleSeed = {
       updateComponents: {
         surfaceId: STAY_SID,
         components: [
-          { id: 'root', component: 'BookingForm', title: 'Your stay', fields: STAY_FIELDS, value: { path: '/stay' }, child: 'submitBtn' },
+          { id: 'root', component: 'Column', children: ['form'] },
+          { id: 'form', component: 'BookingForm', title: 'Your stay', fields: STAY_FIELDS, value: { path: '/stay' }, child: 'submitBtn' },
           {
             id: 'submitBtn',
             component: 'Button',

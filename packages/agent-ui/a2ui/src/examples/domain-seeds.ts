@@ -13,6 +13,8 @@
 // T-0274 adds a fifth, the Lexicographer game-over turn (a give-up reveals the word on a ResultCard over the settled
 // board), because the only ResultCard exemplar on the shard was a blackjack win and a give-up turn retrieved none.
 // T-0199 adds a sixth, a hospitality Itinerary: a three-day trip with a weather and an exchange-rate aside.
+// T-0404 puts the Concierge BookingForm under a bare root Column wrapper, so its confirm settles in place with one
+// updateComponents (grammar G2b) instead of re-creating the surface.
 //
 // T-0240 shelves them as corpus candidates: the base seeds on `allSeeds`, the two persona seeds on
 // `allPersonaCorpusSeeds`, admitted against the composed `<base>--<persona>` catalog into that persona's shard.
@@ -90,16 +92,18 @@ export const domainCroupierRoundSeed: ExampleSeed<'agent-ui--croupier'> = {
 
 const BOOKING_SID = 'stay-booking'
 
-/** The Concierge's request turn: the guest's choices start empty and travel back on submit. */
+/** The Concierge's request turn: the guest's choices start empty and travel back on submit; the form is the one child
+ *  of a root Column wrapper (T-0404). */
 export const domainConciergeBookingSeed: ExampleSeed<'agent-ui--hospitality'> = {
   name: 'domain-concierge-booking-request',
   description:
-    'The concierge persona over the agent-ui base: one BookingForm titled "Book your stay" as the surface root, ' +
-    'its aggregate two-way bound to /booking: required arrival and departure dateSingle fields, a required ' +
+    'The concierge persona over the agent-ui base: one BookingForm titled "Book your stay" as the one child of a ' +
+    'root Column wrapper, its aggregate two-way bound to /booking: required arrival and departure dateSingle fields, a required ' +
     'room-type select (king, twin or junior suite) and a breakfast Yes / No choice, all starting unanswered. ' +
     'Its child Book now Button is a submit action, so the form holds it until every required field is filled, and ' +
     'its context carries /booking; the surface also sends its data model, so the guest\'s choices reach the ' +
-    'agent. No confirmation renders on the request turn: the read-back belongs to the turn after the submit.',
+    'agent. No confirmation renders on the request turn: once the guest confirms, that same form settles in place, ' +
+    'one updateComponents turning the wrapper\'s child into ONE ConfirmReceipt whose status is "confirmed".',
   promptText: 'I\'d like to book a room at the hotel. Let me pick my dates, the room type and whether I want breakfast.',
   surfaceId: BOOKING_SID,
   protocolVersion: 'v1.0',
@@ -115,8 +119,9 @@ export const domainConciergeBookingSeed: ExampleSeed<'agent-ui--hospitality'> = 
       updateComponents: {
         surfaceId: BOOKING_SID,
         components: [
+          { id: 'root', component: 'Column', children: ['form'] },
           {
-            id: 'root',
+            id: 'form',
             component: 'BookingForm',
             title: 'Book your stay',
             fields: [
