@@ -2,6 +2,7 @@
 // model, name and order, out under the round 9 folder; the expected spend is round 8's ledger spend and sits under the
 // $42 cap; and `live-commands.sh` is exactly the generated script, which the capped runner describes.
 import { readFileSync } from 'node:fs'
+import { asArchivedBookingConfirmation } from './concierge.ts'
 import { withoutSkipMarks } from './croupier.ts'
 import { asArchivedConciergeDomain, asArchivedGuidanceConflict } from './routing.ts'
 import { describe, expect, it } from 'vitest'
@@ -49,7 +50,7 @@ describe('live round 9', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND9_FILE)
-    expect(text).toBe(withoutSkipMarks(asArchivedConciergeDomain(asArchivedGuidanceConflict(round9CommandsScript()))))
+    expect(text).toBe(withoutSkipMarks(asArchivedBookingConfirmation(asArchivedConciergeDomain(asArchivedGuidanceConflict(round9CommandsScript())))))
     expect(text).toContain('run-capped.ts .sdlc/evals/rounds/2026-10-17-r9-matrix/live-commands.sh --cap 42 --round r9-matrix')
     const described = describeCommands(text)
     expect(described).toHaveLength(87)

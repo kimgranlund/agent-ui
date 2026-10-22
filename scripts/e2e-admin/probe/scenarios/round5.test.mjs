@@ -3,6 +3,7 @@
 // T-0285 facility-hours flow added and no run twice; runs go Haiku then Sonnet then Opus; and `live-commands.sh` is
 // exactly the generated script, which the capped runner describes.
 import { readFileSync } from 'node:fs'
+import { asArchivedBookingConfirmation } from './concierge.ts'
 import { withoutSkipMarks } from './croupier.ts'
 import { asArchivedConciergeDomain } from './routing.ts'
 import { describe, expect, it } from 'vitest'
@@ -72,7 +73,7 @@ describe('live round 5', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND5_FILE)
-    expect(text).toBe(withoutSkipMarks(asArchivedConciergeDomain(round5CommandsScript())))
+    expect(text).toBe(withoutSkipMarks(asArchivedBookingConfirmation(asArchivedConciergeDomain(round5CommandsScript()))))
     expect(text).toContain('run-capped.ts .sdlc/evals/rounds/2026-10-15-r5-fixes/live-commands.sh --cap 15 --round r5-fixes')
     const described = describeCommands(text)
     expect(described).toHaveLength(29)

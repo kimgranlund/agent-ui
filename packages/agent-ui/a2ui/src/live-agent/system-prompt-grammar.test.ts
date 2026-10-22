@@ -122,7 +122,7 @@ describe('buildSystemPrompt multi-step StepFlow mechanics (T-0198; ADR-0198 amen
     expect(prompt.slice(0, prompt.indexOf('## Available components'))).not.toMatch(/wizard/i)
   })
 
-  it('B2 — the closing turn may carry exactly ONE settle update (a ConfirmReceipt status write, or strip buttons + settled badge)', () => {
+  it('B2: the closing turn may carry exactly ONE settle update (a ConfirmReceipt status write, a BookingForm swapped for a confirmed ConfirmReceipt, or strip buttons and a settled badge)', () => {
     expect(prompt).toMatch(/The closing turn's ONE exception to "no UI change"/)
     expect(prompt).toMatch(/MAY carry exactly one update against that SAME\s+confirmed receipt/)
     expect(prompt).not.toMatch(/exactly one updateComponents against/)
@@ -131,6 +131,12 @@ describe('buildSystemPrompt multi-step StepFlow mechanics (T-0198; ADR-0198 amen
     expect(prompt).toMatch(/strip its Back\/Confirm buttons and add a settled-status Badge/)
     expect(prompt).toMatch(/never on the escalation path/)
     expect(prompt).toMatch(/It fires at most once per flow; deleteSurface is\s+still never used on a confirmed receipt/)
+    // T-0397: a booking collected in a BookingForm has no read-back and settles in place as a confirmed ConfirmReceipt
+    expect(prompt).toMatch(/A booking collected in a BookingForm\s+has no read-back: that pre-filled form \(the one child of a root wrapper\) IS its confirm step and settles\s+in place/)
+    expect(prompt).toMatch(/Any other booking or order \(a cart, a trip plan\) is ONE\s+ConfirmReceipt on a surface/)
+    expect(prompt).toMatch(/or committed a BookingForm, the closing turn MAY carry exactly one update against that SAME\s+confirmed receipt or form/)
+    expect(prompt).toMatch(/A BookingForm\s+committed by its Button or in chat takes one updateComponents turning the root wrapper's child \(the form\s+or its StepFlow\) into ONE ConfirmReceipt, "data" bound to the draft and "status" the literal "confirmed"\s+\(never bound: nothing writes it\)/)
+    expect(prompt).not.toMatch(/For a booking or order it is ONE/)
   })
 
   it('B2 never widens "closing turn emits NO A2UI at all" into a blanket exception — it stays confined to the one settle update', () => {

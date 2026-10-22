@@ -32,7 +32,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
 const BUILDER_DIGEST = 'sha256:f68026d14f91395bf3f2861e45bb8ebdfb75a6fc9f4341074f83a983ec8d164a'
 const PRESETS_DIGEST = 'sha256:7d2e3b9953e1a5485bc25f23e63d5cc97acc8dc976f510fb75911093b9a85ac4'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
-const LIBRARIES_DIGEST = 'sha256:1a1117fb7dedc49426e32958a07dccde9a2055bcd54e3a4c85a01f1530846c41'
+const LIBRARIES_DIGEST = 'sha256:646d70b764fe079cd5a688c16809d6c1487ea79e556f363cb201efe57f1c82d8'
 
 describe('agent-admin seeds: byte-identical across the T-0160 move to content files', () => {
   it('every roster preset assembles to its pinned digest', () => {

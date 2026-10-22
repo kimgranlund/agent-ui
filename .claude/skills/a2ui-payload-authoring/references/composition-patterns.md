@@ -75,8 +75,8 @@ record it acts on through a bound action `context`.
 
 **Policies + consequences.** The footer carries follow-ups, never a commit: the change already
 happened. T-0335 (2026-10-17) replaced the seed's dinner-reservation read-back with a Confirm
-button: a booking with every detail is a pre-filled BookingForm (T-0266) and its confirm settles as
-a BookingConfirmation (T-0289), so no booking read-back is taught here. A non-booking confirm step
+button: a booking with every detail is a pre-filled BookingForm (T-0266) and its confirm settles in
+place as a ConfirmReceipt (T-0385, T-0390), so no booking read-back is taught here. A non-booking confirm step
 follows grammar.md's confirm-before-concluding law. **Boundary:** the `frontier-booking-receipt`
 seed (#1185, T-0318) exercises the DescriptionList PRIMITIVE bare, with a status Badge and no
 buttons; this section is the whole three-slot CARD with its footer.

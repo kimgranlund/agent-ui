@@ -85,7 +85,11 @@ must compose correctly:
   already-confirmed receipt's surface, in the SAME turn as the close: a `ConfirmReceipt` confirmed
   in chat takes one `updateDataModel` writing `"confirmed"` to its bound `status` path (its own
   Confirm press already wrote it, so nothing is sent); any other receipt takes one
-  `updateComponents` that strips its Back/Confirm buttons and adds a settled-status Badge. At most
+  `updateComponents` that strips its Back/Confirm buttons and adds a settled-status Badge. A
+  BookingForm committed by its Button or in chat (a booking collected in a BookingForm has no
+  read-back, T-0385, T-0390, T-0397) takes one `updateComponents` turning the root wrapper's child
+  (the form or its StepFlow) into ONE `ConfirmReceipt`, `data` bound to the draft and `status` the
+  literal `"confirmed"`. At most
   once per flow; never a fresh surface, never any
   other card; never on the escalation path (a pure safety-directive close has no receipt to
   settle); never a `deleteSurface` (the confirmed receipt stays a durable history anchor).

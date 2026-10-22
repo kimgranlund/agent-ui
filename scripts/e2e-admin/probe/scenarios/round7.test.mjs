@@ -2,6 +2,7 @@
 // runs per its ledger, every Haiku long flow runs once, runs go cheapest first by round 6 cost, and
 // `live-commands.sh` is exactly the generated script, which the capped runner describes.
 import { readFileSync } from 'node:fs'
+import { asArchivedBookingConfirmation } from './concierge.ts'
 import { withoutSkipMarks } from './croupier.ts'
 import { asArchivedConciergeDomain } from './routing.ts'
 import { describe, expect, it } from 'vitest'
@@ -61,7 +62,7 @@ describe('live round 7', () => {
 
   it('live-commands.sh is the generated script, and the capped runner describes every run keyless', () => {
     const text = read(ROUND7_FILE)
-    expect(text).toBe(withoutSkipMarks(asArchivedConciergeDomain(round7CommandsScript())))
+    expect(text).toBe(withoutSkipMarks(asArchivedBookingConfirmation(asArchivedConciergeDomain(round7CommandsScript()))))
     expect(text).toContain('run-capped.ts .sdlc/evals/rounds/2026-10-16-r7-fails/live-commands.sh --cap 6 --round r7-fails')
     const described = describeCommands(text)
     expect(described).toHaveLength(15)
