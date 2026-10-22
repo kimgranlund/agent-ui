@@ -1269,6 +1269,22 @@ const CARD_GROUPS: readonly CardGroup[] = [
       },
     ],
   },
+  // T-0393: the option compare, pick one of a few options by aligned attribute rows, tier=pattern {doc, demo}.
+  {
+    label: 'ui-option-compare',
+    cards: [
+      {
+        href: './option-compare-demo.html',
+        title: 'Demo',
+        blurb: 'Lisbon to Porto as option columns: the best mark, a pick with the select and action events logged, and a fourth option scrolling inside the control at 400px with the labels pinned.',
+      },
+      {
+        href: './option-compare-doc.html',
+        title: 'API reference',
+        blurb: 'The option compare: pinned label column, option columns over subgrid rows, the Best and Your pick pills and the hidden row labels, generated from option-compare.md.',
+      },
+    ],
+  },
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
     label: 'ui-description-list',

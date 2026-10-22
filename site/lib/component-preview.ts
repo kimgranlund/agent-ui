@@ -1453,6 +1453,9 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // ui-option-deck (T-0193): `heading` and `subheading` are the string knobs; `options` is set as a property in
   // COMPONENT_SAMPLE_INIT (a JSON array, not a knob value).
   'ui-option-deck': { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.' },
+  // ui-option-compare (T-0393): `heading` and `best` are the string knobs; `rows` and `options` are set as
+  // properties in COMPONENT_SAMPLE_INIT (JSON arrays, not knob values).
+  'ui-option-compare': { heading: 'Lisbon to Porto', best: 'train' },
   // ui-confirm-receipt (T-0195): only the `status` enum is seeded as a knob; title, rows, items, total, data and
   // the actions are set as properties in COMPONENT_SAMPLE_INIT (`title` would write the global attribute, not
   // `receipt-title`, and the JSON props are data, not knobs).
@@ -1692,6 +1695,21 @@ const COMPONENT_SAMPLE_INIT: Record<string, (el: HTMLElement) => void> = {
         { value: 'draw', title: 'Five-card draw', description: 'Swap up to three cards once, then show down.', icon: 'sparkle', tone: 'info', index: '5', meta: ['2 to 6 players', '10 min', 'Easy'] },
       ],
     }),
+  // ui-option-compare (T-0393): the Lisbon to Porto legs of the approved mockup, three options over four rows.
+  'ui-option-compare': (el) =>
+    Object.assign(el, {
+      rows: [
+        { key: 'duration', label: 'Duration' },
+        { key: 'price', label: 'Price' },
+        { key: 'departs', label: 'Departs' },
+        { key: 'changes', label: 'Changes' },
+      ],
+      options: [
+        { value: 'train', title: 'Train', subtitle: 'Alfa Pendular', values: { duration: '2h 50m', price: 'EUR 32', departs: '09:09', changes: 'None' } },
+        { value: 'bus', title: 'Bus', subtitle: 'Rede Expressos', values: { duration: '3h 30m', price: 'EUR 19', departs: '08:30', changes: 'None' } },
+        { value: 'flight', title: 'Flight', subtitle: 'TP 1940', values: { duration: '55m', price: 'EUR 89', departs: '11:15', changes: 'None' } },
+      ],
+    }),
 }
 
 // ── SLOT_TEXT gating — component mode (the fleet-wide hardening) ──────────────────────────────────────────────
@@ -1757,6 +1775,7 @@ export const NO_SLOT_TEXT = new Set([
   'ui-game-hud', // every part is control-built from props and patched in place; no light-DOM content model (slots: [], the ui-playing-card precedent)
   'ui-amount-picker', // every part is control-built from props and patched in place; no light-DOM content model (slots: [] in amount-picker.md, T-0196)
   'ui-option-deck', // every part is control-built from the options prop and patched in place; no light-DOM content model (slots: [] in option-deck.md)
+  'ui-option-compare', // every part is control-built from the rows and options props and patched in place; no light-DOM content model (slots: [] in option-compare.md)
   'ui-result-card', // the parts are control-built from props and patched in place; its only children are the producer's buttons (slots: [] in result-card.md), so a host-level SLOT_TEXT write would destroy the part tree
   'ui-confirm-receipt', // T-0195: the record and actions parts are control-built from props (slots: [] in confirm-receipt.md), so a host-level SLOT_TEXT write would destroy the part tree
   'ui-description-list', // connected() builds row/label/value spans (replaceChildren) from the rows PROP — no light-DOM content model at all (slots: [] — description-list.md, ADR-0201)

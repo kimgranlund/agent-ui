@@ -951,6 +951,25 @@
       ]
     },
     {
+      "id": "control:ui-option-compare",
+      "kind": "control",
+      "source": {
+        "path": "packages/agent-ui/components/src/controls/option-compare/option-compare.md"
+      },
+      "status": {
+        "state": "excluded",
+        "reason": "T-0393 step 1: ui-option-compare ships ahead of its catalog row (the ADR-0224 service-card S1 shape); step 2 lands the agentic OptionCompare row + factory and DRAINS this seed (the residue guard fails if it stays)."
+      },
+      "consumers": [
+        "site"
+      ],
+      "tag": "ui-option-compare",
+      "tier": "pattern",
+      "description": "Two to four options as columns over aligned attribute rows, with a best mark; the whole column is the pick.",
+      "uses": [],
+      "catalogs": []
+    },
+    {
       "id": "control:ui-option-deck",
       "kind": "control",
       "source": {

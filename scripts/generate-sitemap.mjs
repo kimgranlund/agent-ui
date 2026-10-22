@@ -74,7 +74,7 @@ const L1_TAXONOMY = {
     'ui-popover', 'ui-tooltip', 'ui-menu', 'ui-select', 'ui-multi-select', 'ui-form-popover',
     'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame', 'ui-option-deck',
   ],
-  'Form composition': ['ui-field', 'ui-form-provider', 'ui-theme-provider', 'ui-confirm-receipt', 'ui-step-flow'],
+  'Form composition': ['ui-field', 'ui-form-provider', 'ui-theme-provider', 'ui-confirm-receipt', 'ui-step-flow', 'ui-option-compare'],
   'Data & reporting': [
     'ui-table', 'ui-stat', 'ui-game-hud', 'ui-result-card', 'ui-description-list',
     'ui-source-list', 'ui-badge', 'ui-pagination', 'ui-suggestions', 'ui-breadcrumb',

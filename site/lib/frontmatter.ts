@@ -108,6 +108,8 @@ import gameHudMd from '../../packages/agent-ui/components/src/controls/game-hud/
 import resultCardMd from '../../packages/agent-ui/components/src/controls/result-card/result-card.md?raw'
 // T-0193 - ui-option-deck, the pick-one-to-start deck of option cards (tier=pattern => {doc, demo}).
 import optionDeckMd from '../../packages/agent-ui/components/src/controls/option-deck/option-deck.md?raw'
+// T-0393 - ui-option-compare, options as columns over aligned attribute rows (tier=pattern => {doc, demo}).
+import optionCompareMd from '../../packages/agent-ui/components/src/controls/option-compare/option-compare.md?raw'
 // T-0195 - ui-confirm-receipt, the read-back, confirm and receipt record (tier=pattern => {doc, demo}).
 import confirmReceiptMd from '../../packages/agent-ui/components/src/controls/confirm-receipt/confirm-receipt.md?raw'
 // T-0198 - ui-step-flow, the client-side wizard over a producer's scenes (tier=pattern => {doc, demo}).
@@ -283,6 +285,8 @@ export const loadGameHudDoc = (): ComponentDoc => parseDoc(gameHudMd)
 export const loadResultCardDoc = (): ComponentDoc => parseDoc(resultCardMd)
 // T-0193 - ui-option-deck, the pick-one-to-start deck of option cards (tier=pattern => {doc, demo}).
 export const loadOptionDeckDoc = (): ComponentDoc => parseDoc(optionDeckMd)
+// T-0393 - ui-option-compare, options as columns over aligned attribute rows (tier=pattern => {doc, demo}).
+export const loadOptionCompareDoc = (): ComponentDoc => parseDoc(optionCompareMd)
 // T-0195 - ui-confirm-receipt, the read-back, confirm and receipt record (tier=pattern => {doc, demo}).
 export const loadConfirmReceiptDoc = (): ComponentDoc => parseDoc(confirmReceiptMd)
 // T-0198 - ui-step-flow, the client-side wizard over a producer's scenes (tier=pattern => {doc, demo}).

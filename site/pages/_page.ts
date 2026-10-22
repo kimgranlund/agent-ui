@@ -622,6 +622,14 @@ export const NAV: readonly NavGroup[] = [
       { href: './option-deck-doc.html', label: 'API' },
     ],
   },
+  // T-0393: the option compare, pick one of a few options by aligned attribute rows, tier=pattern {doc, demo}.
+  {
+    label: 'ui-option-compare',
+    links: [
+      { href: './option-compare-demo.html', label: 'Demo' },
+      { href: './option-compare-doc.html', label: 'API' },
+    ],
+  },
   // ADR-0201 (GH #1185) — the key–value receipt primitive, same Display-class {doc}-only shape.
   {
     label: 'ui-description-list',
@@ -1040,7 +1048,7 @@ export const NAV_TAXONOMY: readonly NavTaxonomyGroup[] = [
       'ui-combo-box', 'ui-command-modal', 'ui-sandbox-frame', 'ui-option-deck',
     ],
   },
-  { label: 'Form composition', tags: ['ui-field', 'ui-form-provider', 'ui-theme-provider', 'ui-confirm-receipt', 'ui-step-flow'] },
+  { label: 'Form composition', tags: ['ui-field', 'ui-form-provider', 'ui-theme-provider', 'ui-confirm-receipt', 'ui-step-flow', 'ui-option-compare'] },
   {
     label: 'Data & reporting',
     tags: [

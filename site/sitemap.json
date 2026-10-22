@@ -388,6 +388,15 @@
       "group": "Overlays & pickers"
     },
     {
+      "name": "Option Compare",
+      "tag": "ui-option-compare",
+      "url": "./option-compare-demo.html",
+      "description": "Two to four options as columns over aligned attribute rows, with a best mark; the whole column is the pick.",
+      "level": "L1",
+      "section": "Components",
+      "group": "Form composition"
+    },
+    {
       "name": "Option Deck",
       "tag": "ui-option-deck",
       "url": "./option-deck-demo.html",
