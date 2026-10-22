@@ -12,7 +12,8 @@ import { offlineReplay } from '../trace.ts'
 // fields, the T-0278 hold kept SURFACE_MISSING quiet, and the turn said the tour "is booked" in prose with no surface.
 // The concierge check now sends that form back as BOOKING_FIELD_PATH naming the key-only paths, and a mis-pathed field
 // never holds a confirm open. Turn 2's round 2 is AUTHORED to that finding (round 1's form with key-only paths), and
-// turn 3's round 2 to the SURFACE_MISSING repair (a BookingConfirmation); the live turns had one round each. The replay
+// turn 3's round 2 to the SURFACE_MISSING repair (a BookingConfirmation, the repair as recorded; since T-0401 it asks for
+// the settle in place); the live turns had one round each. The replay
 // proves the findings and the repaired shapes, not Haiku's live compliance.
 it('concierge-haiku-dotted-booking-paths: the dotted-path form is sent back and the prose booking no longer passes', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-dotted-booking-paths.json', import.meta.url), 'utf8'))

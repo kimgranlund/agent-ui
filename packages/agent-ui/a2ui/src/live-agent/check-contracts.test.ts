@@ -81,6 +81,7 @@ const deckOptions = (n: number): { value: string; title: string }[] =>
     .slice(0, n)
     .map((value) => ({ value, title: value[0]!.toUpperCase() + value.slice(1) }))
 const CONCIERGE = 'agent-ui--hospitality'
+const BASIC_CONCIERGE = 'a2ui-basic--hospitality'
 const CROUPIER = 'agent-ui--croupier'
 const STYLIST = 'agent-ui--stylist'
 
@@ -117,6 +118,24 @@ const bookingForm = (path: (key: string) => string): A2uiOutput =>
     { booking: BOOKING },
   )
 const bookingSession = [{ say: 'A table at Vela for four on 20 October at 20:00, please.', out: bookingForm((k) => k) }]
+/** T-0401: the same form on a2ui-basic--hospitality (whose Button holds a child, so the form goes without one), and
+ *  wrapped in a root Column so a confirm reads the updateComponents arm. */
+const basicBookingForm: A2uiOutput = bookingForm((k) => k).map((m) => {
+  if ('createSurface' in m) return create('booking-1', BASIC_CONCIERGE)
+  if (!('updateComponents' in m)) return m
+  const form = m.updateComponents.components.find((c: A2uiComponent) => c.id === 'root')!
+  const { child: _child, ...bare } = form as Record<string, unknown>
+  return comps('booking-1', [bare])
+})
+const wrappedBookingForm: A2uiOutput = bookingForm((k) => k).map((m) =>
+  'updateComponents' in m
+    ? comps('booking-1', [
+        { id: 'root', component: 'Column', children: ['form'] },
+        ...m.updateComponents.components.map((c: A2uiComponent) => (c.id === 'root' ? { ...c, id: 'form' } : c)),
+      ])
+    : m,
+)
+const wrappedBookingSession = [{ say: bookingSession[0]!.say, out: wrappedBookingForm }]
 const confirmation = surface(
   'confirm-1',
   CONCIERGE,
@@ -503,6 +522,11 @@ const CONTRACTS: Record<string, Contract> = {
     pass: { catalog: CONCIERGE, intent: 'Book a table for four on Friday at 8 pm.', output: bookingForm((k) => k) },
     fail: { catalog: CONCIERGE, intent: 'Book a table for four on Friday at 8 pm.', output: [] },
   },
+  'concierge-basic-surface-required': {
+    code: 'SURFACE_MISSING',
+    pass: { catalog: BASIC_CONCIERGE, intent: 'Book a table for four on Friday at 8 pm.', output: basicBookingForm },
+    fail: { catalog: BASIC_CONCIERGE, intent: 'Book a table for four on Friday at 8 pm.', output: [] },
+  },
   'concierge-listing-surface-required': {
     code: 'SURFACE_MISSING',
     pass: { catalog: CONCIERGE, intent: 'What spa services can I book?', output: services },
@@ -700,6 +724,12 @@ const PROBES: Record<string, readonly Fixture[]> = {
   'concierge-surface-required': [
     { catalog: CONCIERGE, intent: 'Book a 60-minute massage on Thursday at 15:00.', output: [] },
     { catalog: CONCIERGE, intent: 'Yes, confirm the table for four.', output: [] },
+    { catalog: CONCIERGE, session: bookingSession, intent: 'Yes, confirm the table for four.', output: [] },
+    { catalog: CONCIERGE, session: wrappedBookingSession, intent: 'Yes, confirm the table for four.', output: [] },
+  ],
+  'concierge-basic-surface-required': [
+    { catalog: BASIC_CONCIERGE, intent: 'Yes, confirm the table for four.', output: [] },
+    { catalog: BASIC_CONCIERGE, session: [{ say: bookingSession[0]!.say, out: basicBookingForm }], intent: 'Yes, confirm the table for four.', output: [] },
   ],
   'concierge-listing-surface-required': [{ catalog: CONCIERGE, intent: 'When do the pool and gym close?', output: [] }],
   'framed-choice': [

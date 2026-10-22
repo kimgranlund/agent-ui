@@ -226,6 +226,14 @@ describe('semantic checks attach to their domain and self-gate on their types (D
     expect(gateChecksOnCatalog([ungated], defaultCatalog)).toEqual([ungated])
   })
 
+  it('T-0401: a check is dropped on a catalog that declares any type it is gated unless', () => {
+    const twin: SemanticCheck = { id: 'basic-only', unless: ['ConfirmReceipt'], check: () => [] }
+    expect(Object.hasOwn(defaultCatalog.components, 'ConfirmReceipt')).toBe(true)
+    expect(Object.hasOwn(a2uiBasicCatalog.components, 'ConfirmReceipt')).toBe(false)
+    expect(gateChecksOnCatalog([twin], defaultCatalog)).toEqual([])
+    expect(gateChecksOnCatalog([twin], a2uiBasicCatalog)).toEqual([twin])
+  })
+
   it('the shipped croupier checks declare the types they read, which its derived catalogs hold', () => {
     const croupier = SHIPPED_PERSONA_CATALOG_MANIFESTS.find((m) => m.personaId === 'croupier')!
     expect(croupier.semanticChecks!.every((c) => (c.requires ?? []).length > 0)).toBe(true)

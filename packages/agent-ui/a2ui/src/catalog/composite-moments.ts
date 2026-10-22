@@ -26,6 +26,8 @@
 // that says "confirmed" or "booked" is no hand-built confirmation (round 9 cluster G), and the BookingForm row stands aside
 // for a surface that already holds one. T-0399: a ConfirmReceipt with the literal status "confirmed" is a settled signal
 // too, and the confirmation row lacks ConfirmReceipt, so the T-0385 settle in place fires neither row.
+// T-0401: the confirm ask's surface is that settle in place; the hospitality twin on a catalog with no ConfirmReceipt
+// keeps the T-0289 read-back.
 //
 // T-0358: the GameHud row's `boardless.statStrip` reads a surface with no BoardGrid: on a surface whose words name a game
 // (quest, HP, deal sheet), two or more game-stat items (HP, gold, mood, asking price, confidence, questions) in Badges,
@@ -226,7 +228,9 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       cue: CONFIRM_ASK,
       rank: 0,
       surface:
-        "a BookingConfirmation reading back the values on the open BookingForm (the guest's confirm in chat is their submission, so nothing waits on the form button; add no reference number)",
+        'ONE ConfirmReceipt, "data" bound to the draft the form\'s value is bound to and "status" the literal "confirmed" (never ' +
+        "bound: nothing writes it; the guest's confirm in chat is their submission, so nothing waits on the form button; add no " +
+        'reference number)',
     },
   },
   {

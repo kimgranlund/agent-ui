@@ -75,7 +75,8 @@ export const CONCIERGE_MODELS: ReadonlyArray<{ id: string; short: string }> = [
 
 /** T-0397: the finished rounds ran the concierge confirm turns expecting BookingConfirmation (round 2 to round 10); the
  *  scenarios now expect the settled ConfirmReceipt the workflows teach (T-0385, T-0390). Maps a current generator's
- *  script back to the archived bytes, on concierge lines only. */
+ *  script back to the archived bytes, on concierge lines only. T-0401: the routing long-session and the round 3 and
+ *  round 4 long flows too. */
 export const asArchivedBookingConfirmation = (script: string): string =>
   script
     .split('\n')

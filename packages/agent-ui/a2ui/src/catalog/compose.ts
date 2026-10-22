@@ -346,7 +346,7 @@ export interface DomainCatalogManifest {
   /** The base(s) this domain composes onto. Absent or empty: `agent-ui` alone. */
   targetCatalogs?: readonly string[]
   /** This domain's semantic checks (D4): run on every turn whose effective catalog holds the domain, each gated
-   *  on its own `requires` types (`gateChecksOnCatalog`). */
+   *  on its own `requires` and `unless` types (`gateChecksOnCatalog`). */
   semanticChecks?: readonly SemanticCheck[]
 }
 
