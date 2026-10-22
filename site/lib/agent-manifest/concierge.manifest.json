@@ -1,8 +1,8 @@
 {
   "id": "concierge",
   "preset": "concierge",
-  "seedVersion": 23,
-  "seedDigest": "sha256:c31551edf7aedde3ef647288a83068541469ea65b8d4302caf944e418620165f",
+  "seedVersion": 24,
+  "seedDigest": "sha256:cf5d3147520f0502fcf78586731f4533a73709e11a8f4c18ceff73b528e824f7",
   "fragment": null,
   "selection": null,
   "noFragment": {

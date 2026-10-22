@@ -15,8 +15,8 @@ import { canonicalDigest } from '../lib/agent-manifest/agent-manifest.ts'
 const PERSONA_DIGESTS: Record<string, string> = {
   croupier: 'sha256:af63636ced529226d3394519bb7d36883ef77dbcc3f897ac618b02a040ddb9b5',
   quant: 'sha256:2f361b72b293456b7b83ddde5da2594d2e0d6c6719cac70ae9024329e9cd16ea',
-  concierge: 'sha256:c31551edf7aedde3ef647288a83068541469ea65b8d4302caf944e418620165f',
-  restaurant: 'sha256:e98f4ddb690c02f7bd5b1629caa7ee7cb757b3409fbafa8630f8d41f6d6f1aa9',
+  concierge: 'sha256:cf5d3147520f0502fcf78586731f4533a73709e11a8f4c18ceff73b528e824f7',
+  restaurant: 'sha256:6628561bbf3c9d1e4e218dd3fc6060a28ede6c6ed289386d2db101487c0b83f3',
   travel: 'sha256:6c278799c52a10627305adf37d415713076cbc6ce0d6ce431ef7195af9dd2a29',
   curator: 'sha256:81881cbdf3a5c96c88bf0ef47a874a020d8dc99d97520b3cd2f1763896fbcf49',
   stylist: 'sha256:5be5c45f741dd489178106991cf29bd19acc06721e592b446c7f3d95954a4226',
@@ -30,7 +30,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
   'dungeon-master': 'sha256:28338295337eb41790cef55fb3cec257ff2bf3d3bca165cc4fac072280add2c8',
 }
 const BUILDER_DIGEST = 'sha256:f68026d14f91395bf3f2861e45bb8ebdfb75a6fc9f4341074f83a983ec8d164a'
-const PRESETS_DIGEST = 'sha256:7d2e3b9953e1a5485bc25f23e63d5cc97acc8dc976f510fb75911093b9a85ac4'
+const PRESETS_DIGEST = 'sha256:882274c1e38a55dbf082093261b3a8a258755d406b0cbbf8bb64a122e29caf8e'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
 const LIBRARIES_DIGEST = 'sha256:2f75cdabd8c5886be98a5fc003c05967376ff4d2a2abc312fe99f480f4c314cd'
 

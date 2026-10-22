@@ -684,3 +684,7 @@
 ## T-0397: grammar.md and the confirm-receipt mini-skill teach the booking settle in place; concierge probe scenarios expect ConfirmReceipt (2026-10-22)
 
 - note: scripts/e2e-admin/probe/scenarios/routing.ts:78-92, round3.ts:126-129, round4.ts:78-81 still expect BookingConfirmation on the concierge confirm turns, so `--tag routing` and `--tag long` replans keep the old oracle; outside this ticket's Do (architect-L1.md:158 names it as follow-up).
+
+## T-0403: The concierge and restaurant personas and the concierge booking-confirmed exemplar settle a booking in place with ConfirmReceipt, not a BookingConfirmation read-back (2026-10-22)
+
+- note: site/agent-content/personas/concierge/agent.md:65 carries an em dash ("Weather for itineraries and FX ... — surface the results"); it predates this build and is not in the diff's added clause.
