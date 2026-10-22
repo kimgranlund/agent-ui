@@ -38,3 +38,4 @@ An agent asking the user to pick one of two to four options that differ on the s
 - grammar.md is byte-pinned; any grammar line goes through the debate rule. Model-read text (the mini-skill) gets a second voice.
 - No native form elements beyond descriptor-documented internal activation buttons; ARIA via ElementInternals; the library ramp; no em dashes.
 - Lane: full because size L3 decides before planning (steps.py lane)
+- Kim 2026-10-21: step 1 OptionCompare render approved as rendered (light, dark, 400px goldens against mockup Direction A).

@@ -2198,11 +2198,11 @@ describe('default catalog - BoardGrid via the shared validator (ADR-0243, T-0072
     expect(pd?.bindable).toBeFalsy()
     expect(validateOne({ component: 'BoardGrid', rows: 2, cols: 2, actionName: 'fire' }).valid).toBe(true)
     // the mark is opt-in: only BoardGrid, AmountPicker (T-0196), OptionDeck (T-0193), ConfirmReceipt's two press
-    // props (T-0195) and StepFlow's finish (T-0198) forward a control event (ProductCard's own event stays unread)
+    // props (T-0195), StepFlow's finish (T-0198) and OptionCompare (T-0393) forward a control event (ProductCard's own event stays unread)
     const marked = Object.entries(defaultCatalog.components).flatMap(([type, def]) =>
       Object.entries(def.properties).filter(([, p]) => p.actionEvent !== undefined).map(([prop]) => `${type}.${prop}`),
     )
-    expect(marked).toEqual(['BoardGrid.actionName', 'AmountPicker.actionName', 'OptionDeck.actionName', 'ConfirmReceipt.confirmAction', 'ConfirmReceipt.backAction', 'StepFlow.finishAction'])
+    expect(marked).toEqual(['BoardGrid.actionName', 'AmountPicker.actionName', 'OptionDeck.actionName', 'ConfirmReceipt.confirmAction', 'ConfirmReceipt.backAction', 'StepFlow.finishAction', 'OptionCompare.actionName'])
   })
 
   it('NEGATIVE CONTROL: a non-string actionName fails the shared validator', () => {
@@ -2330,5 +2330,66 @@ describe('default catalog - OptionDeck via the shared validator (T-0193)', () =>
     expect(validateOne({ component: 'OptionDeck', options: [], actionName: 5 }).valid).toBe(false)
     expect(validateOne({ component: 'OptionDeck', options: [], allowRandom: 'yes' }).valid).toBe(false)
     expect(validateOne({ component: 'OptionDeck', options: [], inline: true }).valid).toBe(false)
+  })
+})
+
+describe('default catalog - OptionCompare via the shared validator (T-0393)', () => {
+  it('a representative three-leg compare validates 0 failures, with literals and bound arrays', () => {
+    expect(
+      validateOne({
+        component: 'OptionCompare',
+        heading: 'Lisbon to Porto',
+        rows: [
+          { key: 'duration', label: 'Duration' },
+          { key: 'price', label: 'Price' },
+        ],
+        options: [
+          { value: 'train', title: 'Train', subtitle: 'Alfa Pendular', values: { duration: '2h 50m', price: '€31' } },
+          { value: 'bus', title: 'Bus', values: { duration: '3h 30m', price: '€15' } },
+          { value: 'flight', title: 'Flight', values: { duration: '55m', price: '€89' } },
+        ],
+        best: 'train',
+        value: { path: '/trip/leg' },
+        actionName: 'choose',
+      }),
+    ).toEqual({ valid: true, failures: [] })
+    expect(
+      validateOne({ component: 'OptionCompare', options: { path: '/cmp/options' }, rows: { path: '/cmp/rows' }, best: { path: '/cmp/best' } }).valid,
+    ).toBe(true)
+  })
+
+  it('options, rows, best and value are bindable; heading and actionName are not; value two-way binds on select; no children', () => {
+    const props = defaultCatalog.components.OptionCompare.properties
+    for (const p of ['options', 'rows', 'best', 'value']) {
+      expect(props[p]?.bindable, p).toBe(true)
+      expect(props[p]?.mapsTo, p).toBe(p)
+    }
+    for (const p of ['heading', 'actionName']) {
+      expect(props[p]?.bindable, p).toBeFalsy()
+      expect(props[p]?.mapsTo, p).toBe(p)
+    }
+    expect(defaultCatalog.components.OptionCompare.value).toEqual([{ prop: 'value', event: 'select' }])
+    expect(defaultCatalog.components.OptionCompare.children).toBeUndefined()
+    expect(defaultFactories.OptionCompare.tag).toBe('ui-option-compare')
+    expect(defaultFactories.OptionCompare.value).toEqual([{ prop: 'value', event: 'select' }])
+  })
+
+  // A row `action` (mapsTo: 'action') would fire on any host click with a static context (ADR-0244 Alternatives),
+  // so the compare forwards its own `action` event through actionName, byte-for-byte the BoardGrid prop.
+  it('actionName is the forwarded-action channel and there is no row action prop', () => {
+    expect(defaultCatalog.components.OptionCompare.properties.actionName).toEqual(
+      defaultCatalog.components.BoardGrid.properties.actionName,
+    )
+    expect(Object.values(defaultCatalog.components.OptionCompare.properties).some((d) => d.mapsTo === 'action')).toBe(false)
+  })
+
+  // Item shape (value, title and values required; key and label required) is hardened by the control
+  // (`cleanOptions`, `cleanRows`), not the static validator, which does not descend into array items.
+  it('NEGATIVE CONTROL: a non-array options or rows, a non-string actionName or best and an unexposed knob all fail', () => {
+    expect(validateOne({ component: 'OptionCompare', options: 'train' }).valid).toBe(false)
+    expect(validateOne({ component: 'OptionCompare', options: [], rows: 'duration' }).valid).toBe(false)
+    expect(validateOne({ component: 'OptionCompare', options: [], actionName: 5 }).valid).toBe(false)
+    expect(validateOne({ component: 'OptionCompare', options: [], best: 1 }).valid).toBe(false)
+    expect(validateOne({ component: 'OptionCompare', options: [], inline: true }).valid).toBe(false)
   })
 })

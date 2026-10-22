@@ -1566,6 +1566,20 @@ export const amountPickerFactory: WidgetFactory = accessorFactory('ui-amount-pic
  */
 export const optionDeckFactory: WidgetFactory = accessorFactory('ui-option-deck', [{ prop: 'value', event: 'select' }])
 
+/**
+ * `OptionCompare` to `ui-option-compare` (T-0393). Every property is a 1:1 reflecting accessor (verified against
+ * `option-compare.md`); `options`, `rows`, `best` and `value` are bindable. The control hardens `options` and `rows`
+ * itself (entries without a value and title, or a key and label, dropped, repeated ones too), so a bound value that
+ * never passed the static validator cannot break the render (the GameHud precedent).
+ *
+ * `actionName` rides the generic own-event forwarding, on the `optionDeckFactory` model: the row marks it
+ * `actionEvent: 'action'`, so the renderer applies it and also listens for the control's DOM `action` event,
+ * sending `{action, context: {value}}` to the agent as one A2UI action per picked column. The row-level `value`
+ * mark two-way binds the pick on `select`, which the control fires before `action`, so a bound path already
+ * holds the pick when the action leaves. There is no row `action` prop and no children. `inline` is not wire-exposed.
+ */
+export const optionCompareFactory: WidgetFactory = accessorFactory('ui-option-compare', [{ prop: 'value', event: 'select' }])
+
 /** The wire `totalLabel` and `totalPath` each element has received so far, composed into the control's `total`. */
 const confirmReceiptTotals = new WeakMap<HTMLElement, { label?: unknown; path?: unknown }>()
 
@@ -1702,6 +1716,7 @@ export const defaultFactories: Record<string, WidgetFactory> = {
   ResultCard: resultCardFactory,
   AmountPicker: amountPickerFactory,
   OptionDeck: optionDeckFactory,
+  OptionCompare: optionCompareFactory,
   ConfirmReceipt: confirmReceiptFactory,
   StepFlow: stepFlowFactory,
 }

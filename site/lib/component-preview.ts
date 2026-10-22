@@ -382,6 +382,8 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   ConfirmReceipt: { title: 'Your order', status: 'pending', refPath: 'ref' },
   // StepFlow (T-0198): the finish label here; `steps`, `finishAction` and the scenes ride SAMPLE_TREES rootRef.
   StepFlow: { finishLabel: 'Book' },
+  // OptionCompare (T-0393): the string knobs here; the `rows` and `options` arrays ride SAMPLE_TREES rootRef.
+  OptionCompare: { heading: 'Lisbon to Porto', best: 'train', actionName: 'choose' },
 }
 
 /** A sensible default-slot label for a component-mode control — its title-cased tag stem (`ui-button` → `Button`). */
@@ -982,6 +984,24 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_sf_confirm', component: 'Column', children: ['s_sf_c1'] },
       { id: 's_sf_c1', component: 'Text', variant: 'body', text: 'Harbour View Suite, 2 nights, $624.' },
     ],
+  }),
+  // OptionCompare (T-0393): the Lisbon to Porto legs of catalog-frontier.ts's frontier-option-compare-legs, three
+  // options over four rows; an explicit empty extras list because the compare has no children.
+  OptionCompare: () => ({
+    rootRef: {
+      rows: [
+        { key: 'duration', label: 'Duration' },
+        { key: 'price', label: 'Price' },
+        { key: 'departs', label: 'Departs' },
+        { key: 'changes', label: 'Changes' },
+      ],
+      options: [
+        { value: 'train', title: 'Train', subtitle: 'Alfa Pendular', values: { duration: '2h 50m', price: 'EUR 32', departs: '09:09', changes: 'None' } },
+        { value: 'bus', title: 'Bus', subtitle: 'Rede Expressos', values: { duration: '3h 30m', price: 'EUR 19', departs: '08:30', changes: 'None' } },
+        { value: 'flight', title: 'Flight', subtitle: 'TP 1940', values: { duration: '55m', price: 'EUR 89', departs: '11:15', changes: 'None' } },
+      ],
+    },
+    extras: [],
   }),
   // Breadcrumb (GH #1515): a realistic 4-level path (the site doc/demo pages' own reference shape) — three
   // linked crumbs (Text.href, ADR-0114) + a plain current-page leaf (no href) — the real job, not the

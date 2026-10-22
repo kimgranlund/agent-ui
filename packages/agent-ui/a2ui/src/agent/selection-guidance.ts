@@ -361,6 +361,9 @@ export function renderSelectionClause(entry: SelectionEntry | undefined, catalog
  *  RE-MEASURED 2026-10-20 (T-0195, merged over T-0196 and T-0193): 10 029 chars over 87 types with the
  *  `ConfirmReceipt`, `AmountPicker` and `OptionDeck` rows and their reciprocal edges; budget 10 400 by the same
  *  formula, still under the ceiling (10 485 chars without clauses before the two T-0196 and T-0193 rows).
+ *  RE-MEASURED 2026-10-21 (T-0393 step 2): 10 528 chars over 89 types after the `OptionCompare` row and its
+ *  reciprocal `OptionDeck` edge (and the T-0198 `StepFlow` row before it); budget 10 900 by the same formula, still
+ *  under the ceiling (the `## Available components` section is 11 158 chars without clauses).
  *  This budgets one clause family; the whole composed prompt has its own budget in `prompt-budget.ts`
  *  (ADR-0234). */
-export const SELECTION_GUIDANCE_CHAR_BUDGET = 10_400
+export const SELECTION_GUIDANCE_CHAR_BUDGET = 10_900

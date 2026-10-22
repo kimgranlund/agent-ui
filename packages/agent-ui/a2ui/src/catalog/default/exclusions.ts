@@ -103,7 +103,4 @@ export const EXCLUSION_ALLOWLIST: ReadonlyMap<string, string> = new Map<string, 
     'ADR-0245 cl.2 and cl.4 (T-0093): ui-glyph is a functional-mark atom that controls render inside their own ' +
     'slots; the A2UI wire stays catalog-invisible to the foundations overhaul (no row gains a property), and an ' +
     'agent asks for a mark through Icon or a control prop, never a Glyph node.'],
-  ['OptionCompare',
-    'T-0393 step 1: ui-option-compare ships ahead of its catalog row (the ADR-0224 service-card S1 shape); ' +
-    'step 2 lands the agentic OptionCompare row + factory and DRAINS this seed (the residue guard fails if it stays).'],
 ])

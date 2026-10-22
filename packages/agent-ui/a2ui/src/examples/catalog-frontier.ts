@@ -1801,4 +1801,49 @@ export const stepFlowBookingSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, stepFlowBookingSeed]
+const OPTION_COMPARE_LEGS_ID = 'frontier-option-compare-legs'
+/** Frontier 36 (T-0393): `OptionCompare`, three ways from Lisbon to Porto compared on the same four rows. One node
+ *  holds the Train, Bus and Flight columns over Duration, Price, Departs and Changes, with `best` on Train; the
+ *  whole column is the pick, `value` binds `/trip/leg`, and `actionName` sends `choose` with the picked value. It
+ *  replaces a Table with a Button per row or a ProductCard Grid. Corpus admission is a SEPARATE judged wave
+ *  (disposition-allowlist.ts). */
+export const optionCompareLegsSeed: ExampleSeed = {
+  name: OPTION_COMPARE_LEGS_ID,
+  description: 'Three ways from Lisbon to Porto side by side: one OptionCompare with Train, Bus and Flight columns over Duration, Price, Departs and Changes rows, Train marked best, the pick bound to /trip/leg and sent as a choose action.',
+  promptText: 'What is the best way to get from Lisbon to Porto on Friday morning? Let me pick.',
+  surfaceId: OPTION_COMPARE_LEGS_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: OPTION_COMPARE_LEGS_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: OPTION_COMPARE_LEGS_ID, value: { trip: { leg: '' } } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: OPTION_COMPARE_LEGS_ID,
+        components: [
+          {
+            id: 'root', component: 'OptionCompare',
+            heading: 'Lisbon to Porto',
+            rows: [
+              { key: 'duration', label: 'Duration' },
+              { key: 'price', label: 'Price' },
+              { key: 'departs', label: 'Departs' },
+              { key: 'changes', label: 'Changes' },
+            ],
+            options: [
+              { value: 'train', title: 'Train', subtitle: 'Alfa Pendular', values: { duration: '2h 50m', price: 'EUR 32', departs: '09:09', changes: 'None' } },
+              { value: 'bus', title: 'Bus', subtitle: 'Rede Expressos', values: { duration: '3h 30m', price: 'EUR 19', departs: '08:30', changes: 'None' } },
+              { value: 'flight', title: 'Flight', subtitle: 'TP 1940', values: { duration: '55m', price: 'EUR 89', departs: '11:15', changes: 'None' } },
+            ],
+            best: 'train',
+            value: { path: '/trip/leg' },
+            actionName: 'choose',
+          },
+        ],
+      },
+    },
+  ],
+}
+
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, stepFlowBookingSeed, optionCompareLegsSeed]

@@ -23,7 +23,7 @@
 // browser-side page, with no catalog-loading machinery riding along).
 
 /**
- * The 38 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
+ * The 40 catalog types a feed ask MAY host (ADR-0097 §3): choice controls, value inputs, one commit
  * affordance, and light structure — nothing that overlays, paginates, or dashboards. Widened by the
  * report/content/feed catalog wave (ADR-0111/0113/0112): `Badge` (light ask furniture, the `Text`/`Icon`
  * class), `Code` (verbatim inline content, no overlay/dashboard shape), `Avatar` (a non-interactive
@@ -44,6 +44,7 @@
  * (multi-select-field.lld.md, ADR-0175): `MultiSelect` is the Select/ComboBox parity argument — a choice
  * control binding an array, one commit affordance (`select`), no overlay/pagination/dashboard shape (in
  * fact LESS overlay surface than `Select`, which already carries a top-layer trigger+panel and is IN).
+ * Widened by T-0193 (`OptionDeck`) and T-0393 (`OptionCompare`), each one pick committed by its own press.
  */
 // The 2026-08-19 nine-ADR campaign's disposition wave — six new-type dispositions, all decided against
 // the SAME parity arguments this file already states (no new reasoning class):
@@ -125,6 +126,11 @@ export const FEED_SURFACE_TYPES = [
   // choices ride the ask field as `greet-1` (greeting-card.md), so an OUT disposition would fail every
   // OptionDeck greet with `FEED_SCOPE`. No children, so no composite-closure entry.
   'OptionDeck',
+  // T-0393 - `OptionCompare` is IN on the same `OptionDeck` pick argument: one press on a column is its own commit,
+  // forwarded as one action, with no commit Button, no overlay, no pagination and no dashboard shape (its aligned
+  // rows are the options' own attributes, read to make the pick, not report content). No children, so no
+  // composite-closure entry.
+  'OptionCompare',
 ] as const
 
 /** The closed union of every IN type — the runtime-checkable companion to the `as const` array above. */

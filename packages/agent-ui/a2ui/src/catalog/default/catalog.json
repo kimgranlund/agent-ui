@@ -1231,6 +1231,45 @@
       },
       "value": { "prop": "step", "event": "change" },
       "children": "ChildList"
+    },
+
+    "OptionCompare": {
+      "properties": {
+        "options": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "value": { "type": "string" },
+                "title": { "type": "string" },
+                "subtitle": { "type": "string" },
+                "values": { "type": "object" }
+              },
+              "required": ["value", "title", "values"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "options"
+        },
+        "rows": {
+          "type": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "key": { "type": "string" }, "label": { "type": "string" } },
+              "required": ["key", "label"]
+            }
+          },
+          "bindable": true,
+          "mapsTo": "rows"
+        },
+        "best": { "type": { "type": "string" }, "bindable": true, "mapsTo": "best" },
+        "value": { "type": { "type": "string" }, "bindable": true, "mapsTo": "value" },
+        "heading": { "type": { "type": "string" }, "mapsTo": "heading" },
+        "actionName": { "type": { "type": "string" }, "mapsTo": "actionName", "actionEvent": "action" }
+      },
+      "value": [{ "prop": "value", "event": "select" }]
     }
   },
 

@@ -92,8 +92,9 @@ export const SELECTION_PROJECTION: SelectionProjection = {
       "ResultCard": {"intents":["a settled game, deal or booking outcome and its next action"],"notFor":[{"type":"GameHud","why":"the live score while play goes on"},{"type":"Toast","why":"a passing round result"},{"type":"ConfirmReceipt","why":"a booking or order the user still has to confirm"}]},
       "ConfirmReceipt": {"intents":["a booking or order read back to confirm, then its receipt"],"notFor":[{"type":"ResultCard","why":"a game or deal outcome with no confirm step"},{"type":"DescriptionList","why":"label and value pairs with no confirm step"},{"type":"StepFlow","why":"collecting the draft one scene at a time"}]},
       "AmountPicker": {"intents":["pick a quantity or amount with plus and minus","a bounded number with presets and one commit"],"notFor":[{"type":"Slider","why":"a free drag with no presets or commit"},{"type":"TextField","why":"a typed number or free-form amount"}]},
-      "OptionDeck": {"intents":["pick one of a few things to start","a game, experience, plan or onboarding path to begin"],"notFor":[{"type":"ChoiceGroup","why":"a value picked inside a form"}]},
+      "OptionDeck": {"intents":["pick one of a few things to start","a game, experience, plan or onboarding path to begin"],"notFor":[{"type":"ChoiceGroup","why":"a value picked inside a form"},{"type":"OptionCompare","why":"options compared on the same attributes"}]},
       "StepFlow": {"intents":["a multi-step flow with Back and Next, building one draft"],"notFor":[{"type":"Drill","why":"stepping into nested levels"},{"type":"ConfirmReceipt","why":"reading a finished draft back to confirm"}]},
+      "OptionCompare": {"intents":["pick one of two to four options compared on the same rows","legs, rooms, plans or products side by side"],"notFor":[{"type":"OptionDeck","why":"one pick that starts something"}]},
     },
     "a2ui-basic": {
       "Text": {"intents":["headings, body text or captions","a label beside a control"],"notFor":[{"type":"Button","why":"a click that runs an action"},{"type":"TextField","why":"typed input from the user"}]},

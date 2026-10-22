@@ -182,9 +182,9 @@ Every one of the 84 default types and every persona fragment type, by CA-R1.
 - Form controls: Button, TextField, Textarea, Field, FormProvider, Checkbox, Switch, Toggle, Select, Option, RadioGroup, Radio, ChoiceGroup, ChoiceCard, SegmentedControl, Segment, Slider, SliderMulti, Rating, Calendar, ComboBox, MultiSelect, FileDrop, ColorPicker.
 - Data viz: Sparkline, BarChart, LineChart, PieChart, ColumnChart, Gauge, Table, Stat, Progress.
 
-### 5.2 Agentic (6 default types)
+### 5.2 Agentic (7 default types)
 
-SourceList, Suggestions, ResultCard, OptionDeck (T-0193, the pick of one of a few things to start), ConfirmReceipt (T-0195, the read-back, confirm and receipt moment), StepFlow (T-0198, the multi-step flow walked with Back and Next into one draft).
+SourceList, Suggestions, ResultCard, OptionDeck (T-0193, the pick of one of a few things to start), ConfirmReceipt (T-0195, the read-back, confirm and receipt moment), StepFlow (T-0198, the multi-step flow walked with Back and Next into one draft), OptionCompare (T-0393, the pick of one of two to four options compared on the same rows).
 
 ### 5.3 Domain (6 default types)
 
@@ -281,7 +281,7 @@ Evidence names a preset skill, a playbook, a trace or a corpus record name (`pac
 | OptionDeck | pick one of a few options to start; the card is the target | Croupier greeting Buttons in Cards (ruled defect), `greeting-card` mini-skill | P2 | T-0193 |
 | Confirm and receipt | read back, confirm, then a settled receipt | concierge `booking-flow`, restaurant `table-reservation`, shopkeeper `cart-summary`; corpus `receipt-order-summary`, `confirmation-view` and `frontier-booking-receipt` (both settled; their booking read-backs were replaced in T-0335 and T-0318) | P2 | T-0195 (absorbs BookingConfirmation) |
 | Step flow | step n of m with Back and Next over one draft | concierge `booking-flow` (about 2,000 chars of prose); corpus `backable-wizard` (a time-off request since T-0335), `pattern-wizard` | P3 | T-0198 |
-| Compare | options as columns by attribute rows, one pick per column | travel `trip-plan`, `comparison-table` mini-skill, shopkeeper `product-grid`; corpus `comparison-pricing-table` | P3 | T-0199 (compare half) |
+| Compare | options as columns by attribute rows, one pick per column | travel `trip-plan`, `comparison-table` mini-skill, shopkeeper `product-grid`; corpus `comparison-pricing-table` | P3 | T-0393 |
 | Clarify | one structured question before acting | corpus `frontier-card-anatomy-ask`; no trace yet | P2 | new |
 | Approval gate | approve, edit or deny a pending action | corpus `plan-and-execute-approve-ask` | P2 | new |
 | Plan / task list | live step status for a multi-step job | corpus `plan-and-execute-plan`, `agent-task-status` | P2 | new |

@@ -1271,6 +1271,10 @@
         {
           "type": "ChoiceGroup",
           "why": "a value picked inside a form"
+        },
+        {
+          "type": "OptionCompare",
+          "why": "options compared on the same attributes"
         }
       ]
     },
@@ -1286,6 +1290,18 @@
         {
           "type": "ConfirmReceipt",
           "why": "reading a finished draft back to confirm"
+        }
+      ]
+    },
+    "OptionCompare": {
+      "intents": [
+        "pick one of two to four options compared on the same rows",
+        "legs, rooms, plans or products side by side"
+      ],
+      "notFor": [
+        {
+          "type": "OptionDeck",
+          "why": "one pick that starts something"
         }
       ]
     }

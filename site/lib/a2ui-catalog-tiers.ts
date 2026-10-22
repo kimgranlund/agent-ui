@@ -180,6 +180,9 @@ export const TIER_OF: Readonly<Record<string, Tier>> = {
   // StepFlow (T-0198): `tier: pattern`, a multi-part construct (the header, the bar, the scene children and the
   // control-owned Back, Next and Finish row), not a WIDGET leaf.
   StepFlow: 'COMPOUND',
+  // OptionCompare (T-0393): `tier: pattern`, a multi-part construct (the heading, the pinned label column and one
+  // option column per pick with its pill, title, subtitle and cells), not a WIDGET leaf.
+  OptionCompare: 'COMPOUND',
   Split: 'COMPOUND',
   SplitPane: 'COMPOUND',
   Swiper: 'COMPOUND',

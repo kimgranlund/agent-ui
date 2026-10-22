@@ -41,6 +41,9 @@ export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.free
   ConfirmReceipt: agentic,
   // T-0198: a client-side wizard over scene children building one draft; no prop names a domain, so agentic.
   StepFlow: agentic,
+  // T-0393: a pick of one of two to four options compared on the same rows; no prop names a domain (the rows are
+  // the producer's own keys), so agentic.
+  OptionCompare: agentic,
   // §5.3 domain types still homed in the default catalog (W2 moves each to its domain)
   BoardGrid: domain('games', 'default'),
   GameHud: domain('games', 'default'),

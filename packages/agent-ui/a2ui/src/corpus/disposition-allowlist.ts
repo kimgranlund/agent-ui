@@ -278,6 +278,12 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
     'T-0198 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
     '`StepFlow` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
     'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
+  // T-0393 (2026-10-21): `frontier-option-compare-legs`, the same pending-state shape for the new `OptionCompare`
+  // default row. DELETE it when the judged pipeline lands.
+  ['frontier-option-compare-legs',
+    'T-0393 - NO VERDICT SOUGHT YET, not a refusal. Closes the GH #729 catalog-coverage gap for the new ' +
+    '`OptionCompare` type; corpus admission is a separate, later judged import wave (ADR-0068\'s never-' +
+    'self-judged discipline - this authoring session assigns no rubric score to its own seed).'],
   // T-0199 (2026-10-21): `domain-hospitality-itinerary-trip`, the same pending-state shape for the new hospitality
   // `Itinerary` domain type. DELETE it when the judged pipeline lands.
   ['domain-hospitality-itinerary-trip',

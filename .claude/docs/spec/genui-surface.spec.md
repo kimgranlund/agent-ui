@@ -1,6 +1,10 @@
 # SPEC — GenUI surface (sandboxed free-form generative UI): wire · frame · bridge · producer
 
-> Status: proposed · v0.17 · 2026-10-21 · Layer: SPEC (execution contract)
+> Status: proposed · v0.18 · 2026-10-21 · Layer: SPEC (execution contract)
+> **v0.18 amendment (T-0393, 2026-10-21):** SPEC-R13(b)'s inventory budget is revised ≤ 32 500 → ≤ 33 000 chars
+> (measured 32 612 after the `ui-option-compare` row and the `OptionCompare` clause) and its clause budget
+> ≤ 10 700 → ≤ 11 200 chars (measured 10 829 with the `StepFlow` and `OptionCompare` clauses), by the same
+> measured-plus-headroom formula. No requirement or AC changes. Full text: §13.
 > **v0.17 amendment (T-0198, 2026-10-21):** SPEC-R13(b)'s inventory budget is revised ≤ 30 800 → ≤ 32 500 chars
 > (measured 32 133 after the `ui-step-flow` row and the `StepFlow` clause; the T-0196, T-0193 and T-0195 merges had
 > already moved the code to 31 300 and then 32 000) and its clause budget ≤ 10 200 → ≤ 10 700 chars (measured 10 307
@@ -801,14 +805,16 @@ byte-identical to its v0.10 form.
 - **Source.** `selectionGuidanceForId('agent-ui')` reads the guidance and `renderSelectionClauseWith`
   formats it, the same formatter the catalog inventory uses (`src/agent/selection-guidance.ts`). Base
   guidance only: persona sidecars stay out, and family siblings get no clause of their own.
-- **Budgets.** The whole inventory is held at ≤ 32 500 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
-  from ≤ 30 800 by the v0.17 amendment, measured 32 133 on 2026-10-21 after the `ui-step-flow` row and the
+- **Budgets.** The whole inventory is held at ≤ 33 000 chars (`DOGFOOD_INVENTORY_CHAR_BUDGET`, revised
+  from ≤ 32 500 by the v0.18 amendment, measured 32 612 on 2026-10-21 after the `ui-option-compare` row and the
+  `OptionCompare` clause, T-0393; ≤ 32 500 was revised from ≤ 30 800 by the v0.17 amendment, measured 32 133 on 2026-10-21 after the `ui-step-flow` row and the
   `StepFlow` clause, T-0198; ≤ 30 800 was revised from ≤ 30 100 by the v0.16 amendment, measured 30 469 on 2026-10-20 after the `ui-confirm-receipt` row and the
   `ConfirmReceipt` clause, T-0195; ≤ 30 100 was revised from ≤ 29 600 by v0.15, measured 29 767 on 2026-10-12 after
   the `ui-result-card` row and the `ResultCard` clause, T-0089; ≤ 29 600 was revised from ≤ 28 700 by v0.14, measured 29 227 after the
   `ProductCard`, `BoardGrid` and `GameHud` clauses, T-0072; ≤ 28 700 was revised from ≤ 28 200 by v0.13, measured 28 359 after the
   `ui-product-card` row, T-0070; ≤ 28 200 itself was revised from ≤ 19 600, measured 27 820 on 2026-10-05).
-  The summed clause length is held at ≤ 10 700 chars (`DOGFOOD_GUIDANCE_CHAR_BUDGET`, revised from ≤ 10 200 by
+  The summed clause length is held at ≤ 11 200 chars (`DOGFOOD_GUIDANCE_CHAR_BUDGET`, revised from ≤ 10 700 by
+  v0.18, measured 10 829 on 2026-10-21 after the T-0198 and T-0393 clauses; ≤ 10 700 was revised from ≤ 10 200 by
   v0.17, measured 10 307 on 2026-10-20 after the T-0195, T-0196 and T-0193 clauses; ≤ 10 200 was revised from ≤ 9 500 by
   v0.16, measured 9 847 on 2026-10-20; ≤ 9 500 was revised from ≤ 8 800 by v0.14, measured 9 189 on 2026-10-12; 8 479 over 72 rows, 144 edges on 2026-10-05). Both are enforced by
   `prompt-drift.test.ts`, never by runtime truncation; an over-budget sidecar is re-authored tersely. The
