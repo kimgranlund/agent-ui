@@ -1,14 +1,15 @@
-<!-- sdlc-lite:managed:start v1 sha256:ae6fb4aa7b84 -->
+<!-- sdlc-lite:managed:start v1 sha256:11397298ee65 -->
 # Tickets
 
 One folder per ticket: `<slug>/` or `NNNN-<slug>/` while open, `.NNNN-<slug>/` once closed. Stage counts and the open tickets are in `../AGENTS.md`. `tickets.py roadmap` generates this block: do not edit inside it.
 
 - `<plugin-root>` is the installed sdlc-lite plugin folder, the one holding `scripts/tickets.py`: `${CLAUDE_PLUGIN_ROOT}` in Claude Code; in Codex, the folder two levels above the `sdlc-lite` skill.
+- No plugin installed: follow `.sdlc/by-hand.md` to create, claim, release or close a ticket with git alone.
 
 ## Procedures
 
 Folder layout:
-- The top of `.sdlc` holds only `AGENTS.md`, `CLAUDE.md`, `config`, `layout.md`, `board.md`, `tickets/`, `work/`, `notes/`, `messages/`, `runtime/`, `supervisor/`, `evals/`, `proposals/`, `dogfood/`, and `_`- or `.`-prefixed entries; ticket folders go in `tickets/`, task folders in `work/`. A `top_level_allow:` line only keeps `tidy` from moving a name; `check` still reports it.
+- The top of `.sdlc` holds only `AGENTS.md`, `CLAUDE.md`, `by-hand.md`, `config`, `layout.md`, `board.md`, `tickets/`, `work/`, `notes/`, `messages/`, `runtime/`, `supervisor/`, `evals/`, `proposals/`, `dogfood/`, and `_`- or `.`-prefixed entries; ticket folders go in `tickets/`, task folders in `work/`. A `top_level_allow:` line only keeps `tidy` from moving a name; `check` still reports it.
 - Run records (role results, attempts, `runs.jsonl`, `skips.md`) go in the git-ignored records dir `.sdlc/runtime/tasks/<folder>/` (`<plugin-root>/scripts/order.py records-dir .sdlc/tickets/<folder>` prints it). Notes go to `.sdlc/notes/notes.md`, an answer to another agent goes by `messages.py send`, anything else into `work/archive/`.
 - `python3 <plugin-root>/scripts/tickets.py --root .sdlc check` warns on any other top-level entry; `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy` lists its move into `work/archive/` and `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy --apply` makes it. Move nothing under `.sdlc` while a `*.running` marker exists: a role is using it.
 
@@ -35,9 +36,9 @@ Open a lane:
 
 Close a ticket:
 1. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --dry-run`. It checks the verifier verdict, lists each verifier `## Notes` line as `<i>. <tag>: <title>`, and ends with `expect <digest>`.
-2. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --changed "<one line>"`. It appends `## Outcome` to the handoff. To file the one `decide:` follow-up worth a ticket, add `--ticket <i> --expect <digest>`. `note:` items and the other `decide:` items go to `.sdlc/notes/notes.md`; `fix-now:` items are finished before the close. When it refuses because files cite the folder, add `--rewrite-refs` to rewrite them to the closed `.<folder>` path.
+2. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --changed "<one line>"`. It appends `## Outcome` to the handoff; add `--lessons "<lesson>"` (repeatable) for a reusable lesson, one `- Lessons:` line each: route it to a named repo skill or NOTES.md. To file the one `decide:` follow-up worth a ticket, add `--ticket <i> --expect <digest>`. `note:` items and the other `decide:` items go to `.sdlc/notes/notes.md`, where adding ` -> T-NNNN` to an item's line marks it routed (the roadmap lists the rest under Open follow-ups); `fix-now:` items are finished before the close. When it refuses because files cite the folder, add `--rewrite-refs` to rewrite them to the closed `.<folder>` path.
 3. Only when a filer draft was asked for (`/file`): `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --filer`.
-4. Work already done by another ticket: `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --reason "<why>"`.
+4. Work already done by another ticket: `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --reason "<why>"`. It skips the verdict gate but files follow-ups as step 2 does: the verifier `## Notes` lines and the handoff `## Follow-ups` bullets go to `.sdlc/notes/notes.md`, and `--dry-run` and `--ticket <i> --expect <digest>` work the same.
 
 Ticket lifecycle:
 1. Pick and claim: `python3 <plugin-root>/scripts/tickets.py --root .sdlc claim <id> --by <agent>`.

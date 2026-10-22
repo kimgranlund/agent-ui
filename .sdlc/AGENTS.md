@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:7014a5a9188d -->
+<!-- sdlc-lite:managed:start v1 sha256:2bb56b920322 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -6,6 +6,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 - Ticket folders: `tickets/`; the same procedures are in `tickets/AGENTS.md`.
 - Mailbox: `messages/` is a git-ignored mailbox, not a record; follow `messages/AGENTS.md` to send, read, reply, ack, or expire a message with `<plugin-root>/scripts/messages.py`.
 - `<plugin-root>` is the installed sdlc-lite plugin folder, the one holding `scripts/tickets.py`: `${CLAUDE_PLUGIN_ROOT}` in Claude Code; in Codex, the folder two levels above the `sdlc-lite` skill.
+- No plugin installed: follow `.sdlc/by-hand.md` to create, claim, release or close a ticket with git alone.
 
 ## Stages
 
@@ -21,7 +22,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 ## Procedures
 
 Folder layout:
-- The top of `.sdlc` holds only `AGENTS.md`, `CLAUDE.md`, `config`, `layout.md`, `board.md`, `tickets/`, `work/`, `notes/`, `messages/`, `runtime/`, `supervisor/`, `evals/`, `proposals/`, `dogfood/`, and `_`- or `.`-prefixed entries; ticket folders go in `tickets/`, task folders in `work/`. A `top_level_allow:` line only keeps `tidy` from moving a name; `check` still reports it.
+- The top of `.sdlc` holds only `AGENTS.md`, `CLAUDE.md`, `by-hand.md`, `config`, `layout.md`, `board.md`, `tickets/`, `work/`, `notes/`, `messages/`, `runtime/`, `supervisor/`, `evals/`, `proposals/`, `dogfood/`, and `_`- or `.`-prefixed entries; ticket folders go in `tickets/`, task folders in `work/`. A `top_level_allow:` line only keeps `tidy` from moving a name; `check` still reports it.
 - Run records (role results, attempts, `runs.jsonl`, `skips.md`) go in the git-ignored records dir `.sdlc/runtime/tasks/<folder>/` (`<plugin-root>/scripts/order.py records-dir .sdlc/tickets/<folder>` prints it). Notes go to `.sdlc/notes/notes.md`, an answer to another agent goes by `messages.py send`, anything else into `work/archive/`.
 - `python3 <plugin-root>/scripts/tickets.py --root .sdlc check` warns on any other top-level entry; `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy` lists its move into `work/archive/` and `python3 <plugin-root>/scripts/tickets.py --root .sdlc tidy --apply` makes it. Move nothing under `.sdlc` while a `*.running` marker exists: a role is using it.
 
@@ -48,9 +49,9 @@ Open a lane:
 
 Close a ticket:
 1. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --dry-run`. It checks the verifier verdict, lists each verifier `## Notes` line as `<i>. <tag>: <title>`, and ends with `expect <digest>`.
-2. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --changed "<one line>"`. It appends `## Outcome` to the handoff. To file the one `decide:` follow-up worth a ticket, add `--ticket <i> --expect <digest>`. `note:` items and the other `decide:` items go to `.sdlc/notes/notes.md`; `fix-now:` items are finished before the close. When it refuses because files cite the folder, add `--rewrite-refs` to rewrite them to the closed `.<folder>` path.
+2. Run `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --changed "<one line>"`. It appends `## Outcome` to the handoff; add `--lessons "<lesson>"` (repeatable) for a reusable lesson, one `- Lessons:` line each: route it to a named repo skill or NOTES.md. To file the one `decide:` follow-up worth a ticket, add `--ticket <i> --expect <digest>`. `note:` items and the other `decide:` items go to `.sdlc/notes/notes.md`, where adding ` -> T-NNNN` to an item's line marks it routed (the roadmap lists the rest under Open follow-ups); `fix-now:` items are finished before the close. When it refuses because files cite the folder, add `--rewrite-refs` to rewrite them to the closed `.<folder>` path.
 3. Only when a filer draft was asked for (`/file`): `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --filer`.
-4. Work already done by another ticket: `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --reason "<why>"`.
+4. Work already done by another ticket: `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --reason "<why>"`. It skips the verdict gate but files follow-ups as step 2 does: the verifier `## Notes` lines and the handoff `## Follow-ups` bullets go to `.sdlc/notes/notes.md`, and `--dry-run` and `--ticket <i> --expect <digest>` work the same.
 
 Ticket lifecycle:
 1. Pick and claim: `python3 <plugin-root>/scripts/tickets.py --root .sdlc claim <id> --by <agent>`.
@@ -60,7 +61,3 @@ Ticket lifecycle:
 5. Land: `python3 <plugin-root>/scripts/fanout.py land <branch>` for a lane branch, else merge the branch.
 6. Close: `python3 <plugin-root>/scripts/tickets.py --root .sdlc close <folder> --changed "<one line>"`, as in Close a ticket above.
 <!-- sdlc-lite:managed:end -->
-
-## Topics layout (T-0242, 2026-10-15)
-
-Tickets live in `.sdlc/tickets/<NNNN-slug>/` (`.NNNN-<slug>/` once closed and archived), other task dirs in `.sdlc/work/`, notes in `.sdlc/notes/notes.md`, and the generated roadmap in `.sdlc/tickets/roadmap.md` (`ticket_root: tickets`, `layout: topics` in `.sdlc/config`). `.sdlc/evals/` (live round archives, T-0241) holds no handoff and stays at the top. Cite a ticket by its `.sdlc/tickets/` path.
