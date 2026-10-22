@@ -2,7 +2,7 @@
 id: T-0397
 title: "grammar.md and the confirm-receipt mini-skill teach the booking settle in place; concierge probe scenarios expect ConfirmReceipt"
 type: chore           # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: [T-0395]         # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -47,3 +47,20 @@ verifier: L3
 - `env -u NODE_OPTIONS npx vitest run --project scripts scripts/e2e-admin/probe` exit 0
 - `env -u NODE_OPTIONS npx vitest run site/pages/agent-admin-seed-digests.test.ts` exit 0
 - `env -u NODE_OPTIONS npx vitest run` exit 0 (whole jsdom suite, once)
+- Conductor: verify the spans landed exactly as debated, the recapture moved only the expected keys, the budget re-measure follows the rule, the archive transforms keep .sdlc/evals byte-identical, and the pins bite. Run npm run check, the a2ui and probe tests and the whole jsdom suite once.
+
+## Outcome
+
+2026-10-22 · lane: solo L2 · verdict: pass · verifier: verifier-L3 (fable) · base: 2b2103365eff
+- Changed: grammar.md and the confirm-receipt mini-skill settle a BookingForm booking in place with a literal confirmed ConfirmReceipt; concierge probes expect ConfirmReceipt (debated)
+- Commits: 1484e9d T-0397: grammar and the confirm-receipt mini-skill settle a BookingForm booking in place; concierge probes expect ConfirmReceipt (debated)
+- Check: 1 grammar.md carries G1, G2a and G2b and mini-skills/confirm-receipt.md:6 carries M exactly as arch...: pass
+- Check: 2 concierge.ts confirm turns and expectComponents expect ConfirmReceipt; `asArchivedBookingConfirma...: pass
+- Check: 3 New pins in system-prompt-grammar.test.ts (B2) and mini-skills.test.ts (confirm-receipt); prompt-...: pass
+- Check: 4 `env -u NODE_OPTIONS npm run check` exit 0: pass
+- Check: 5 `env -u NODE_OPTIONS npx vitest run --project packages packages/agent-ui/a2ui` exit 0: pass
+- Check: 6 `env -u NODE_OPTIONS npx vitest run --project scripts scripts/e2e-admin/probe` exit 0: pass
+- Check: 7 `env -u NODE_OPTIONS npx vitest run site/pages/agent-admin-seed-digests.test.ts` exit 0: pass
+- Check: 8 `env -u NODE_OPTIONS npx vitest run` exit 0 (whole jsdom suite, once): pass
+- Check: 9 Conductor: verify the spans landed exactly as debated, the recapture moved only the expected keys...: pass
+- Follow-up: note: scripts/e2e-admin/probe/scenarios/routing.ts:78-92... -> notes.md
