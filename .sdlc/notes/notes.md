@@ -196,7 +196,7 @@
 ## T-0336: Site demos align captioned figures to a shared top edge (figure-parity allowlist debt) (2026-10-17)
 
 - note: shots/after/button-chromium.png: captions are bottom-aligned (`margin-block-start:auto`), so when a caption wraps to two lines ("size=\"md\" (default)") the first lines are not level. Only the caption bottoms line up.
-- decide: scripts/dogfood-render-allowlist.json:3: the icon-demo figure-parity entry is still owned by T-0336, which is closing. Re-own it to a standing ruling or a ticket so the owner reference does not go stale.
+- decide: scripts/dogfood-render-allowlist.json:3: the icon-demo figure-parity entry is still owned by T-0336, which is closing. Re-own it to a standing ruling or a ticket so the owner reference does not go stale. -> re-owned to a standing ruling 2026-10-22 overnight
 - 2026-10-17 Kim close-out rulings: round 10 is a targeted run (round 9 failures plus the runs each fix touches, 3 samples on unstable ones, about $10 cap), next full matrix after it; T-0340 darkens dark primary (around 600 to 650) with the same on-primary ink, before/after screenshots for Kim's approval; T-0338 product-card exhibit icon header is pictorial media, exempt at 48px with a reason; next wave: content-files chain (T-0160 to T-0163), T-0315 debate, eval framework re-scope (T-0176 to T-0179), T-0169.
 - 2026-10-17 Kim ruling T-0315: scope retrieval by the persona's declared /secret hidden-state keys parsed from the persona text, with a coupling pin; a structured preset field is a later follow-up; exclusion only (no ranking boost).
 - 2026-10-17 Kim ruling (round 10 cluster A): a PARSE failure on a string `messages` gets a repair that asks for `messages` as an array of objects; the producer never edits model output (no bracket repair).
@@ -213,7 +213,7 @@
 
 ## T-0169: Remove dead lint plumbing: adr_ratify, docs-grammar S8, census lane code, ADR wording in gates, [scale]/[density] bridge (2026-10-17)
 
-- decide: site/lib/docs-grammar.test.ts:201 note: the describe title still reads `S5-S9 (S5-S8 promoted at Phase 5 ...)` while S8 is now RETIRED in the header.
+- decide: site/lib/docs-grammar.test.ts:201 note: the describe title still reads `S5-S9 (S5-S8 promoted at Phase 5 ...)` while S8 is now RETIRED in the header. -> fixed 2026-10-22 overnight
 - decide: scripts/lib/foundations-rules.mjs:204 note: `ALIAS_MARKER` and the marker exemption at :214 keep working code for a `foundations-alias` marker nothing in packages or site carries any more (only the census selftests use it); the solo report flags the same.
 - decide: scripts/lib/foundations-rules.mjs:31 decide: `DERIVED` stays a hand list guarded by a drift test in foundations.test.ts rather than derived from the generator's emitted tokens as Do item 3 asked; the builder's reason (foundations-rules.mjs must stay browser-safe) is sound, and the test makes drift red.
 - decide: packages/agent-ui/components/src/controls/sizing-gates.test.ts:133 decide: `WHOLE_SHAPE_FLOORS` is still a hand table ("if practical" in Do item 4; the builder judged it needs a new descriptor field).
