@@ -262,7 +262,7 @@
 
 ## T-0340: Dark primary under on-primary is 3.25:1: buttons, calendar day, segmented control and checkbox text fail AA (2026-10-17)
 
-- decide: packages/agent-ui/components/src/controls/radio/radio.browser.test.ts:274 the "default: one solid circle" test runs in the light scheme, where primary and primary-fill are both 550, so it would also pass against a ring-on-primary build; carried from verifier-L3.md.
+- decide: packages/agent-ui/components/src/controls/radio/radio.browser.test.ts:274 the "default: one solid circle" test runs in the light scheme, where primary and primary-fill are both 550, so it would also pass against a ring-on-primary build; carried from verifier-L3.md. -> T-0411
 - decide: packages/agent-ui/components/src/controls/switch/switch.css:72-75 and packages/agent-ui/components/src/controls/playing-card/playing-card.css:65-66 still put on-primary ink on plain `primary` (dark 450); builder's exemption, Kim to confirm; carried from verifier-L3.md.
 - decide: ui-button light pressed 650 -> 750 not built (packages/agent-ui/components/src/controls/button/button.css:32-34 keeps the light hover/pressed collapse); carried from verifier-L3.md.
 - note: before-themes.png was shot at 10:46, between the round 1 and round 2 commits; verifier-L3.md read it as the 450 legs for all ten packs, and its md5 differs from after-themes.png.
