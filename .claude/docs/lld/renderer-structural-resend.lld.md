@@ -1,6 +1,6 @@
 # LLD — Renderer structural-resend reconciliation
 
-> Status: proposed · v0.2 · 2026-07-12 · Layer: LLD (implementation plan)
+> Status: proposed · v0.3 · 2026-10-22 (v0.2 2026-07-12; v0.3 records the T-0172 root upsert and the §4 retype re-mount, T-0405) · Layer: LLD (implementation plan)
 > Implements: [`../spec/renderer-structural-resend.spec.md`](../spec/renderer-structural-resend.spec.md)
 > (SPEC-R1…R5, SPEC-N1…N3).
 > Composes on: [`./a2ui-renderer.lld.md`](./a2ui-renderer.lld.md) LLD-C4 (`tree.ts`, SPEC-R3/R4), LLD-C6
@@ -189,13 +189,42 @@ child diff and skips SPEC-R2's prop rewire, and vice versa.
 
 ```ts
 #reconcileNode(id: string, previous: A2uiComponent, next: A2uiComponent): void {
-  if (id === 'root') return                                  // SPEC-R4 — never reconciled
+  if (previous.component !== next.component) { this.#remountNode(id, previous); return }   // T-0405, below
   const oldRefs = childRefs(previous)
   const newRefs = childRefs(next)
   if (!sameOrder(oldRefs, newRefs)) this.#reconcileChildren(id, oldRefs, newRefs)         // SPEC-R1
   if (!samePropsDeep(previous, next)) this.#reconcileProps(id, previous, next)            // SPEC-R2
 }
 ```
+
+**`"root"` reconciles like any id (T-0172).** `apply()` drops a `root` resend of a DIFFERENT type as an
+`IDGRAPH` and keeps the existing root (runtime SPEC-R3 AC2); a same-type `root` resend is an upsert and reaches
+`#reconcileNode` onto the element the host attached. So only a non-root id ever arrives here with a new type.
+
+**A changed `component` re-mounts, never rewires (T-0405).** A2UI v1.0 `updateComponents` adds or updates by
+id, so a resend that gives a mounted non-root id another type is a replacement: the old element cannot become a
+widget of the new type, and rewiring it with the new record (the pre-T-0405 path, since `samePropsDeep` ignores
+`component`) silently mis-rendered with no finding. `#remountNode(id, previous)` (`tree.ts`):
+
+1. Reads the OLD child list from `previous`: `surface.components` already holds the new record, which is why
+   `#disposeSubtree(id)` is not called on `id` itself (it would walk the new children and delete the buffered
+   record of every child the new record still references).
+2. Children follow the §5 id-diff: an old mounted child the new record drops goes through `#disposeSubtree`; an
+   old child that never arrived loses the `#pendingParents` anchor the old element held (the §6 purge), so a
+   later delivery never patches into the discarded element.
+3. Disposes the node's own `propsScope`, `childrenScope` (which tears down a dynamic-list TEMPLATE rooted in the
+   old element, SPEC-N1 AC1) and `ac`; deletes its `#nodeScopes`/`widgets` entries and its reveal-order
+   bookkeeping.
+4. Mints the new type through the ordinary `#mountNode(id)` (RSR-C2's create path): a surviving child's element
+   is MOVED into the new element, never re-minted, because `#mountNode` reuses an existing widget; a newly
+   referenced id mounts fresh or holds a pending anchor (runtime SPEC-R4); a TEMPLATE on the new record mounts
+   a fresh list.
+5. Swaps the new element into the old one's physical slot (`oldEl.parentNode.replaceChild`, the actual parent,
+   which a child-relocating container may have changed, TKT-0031).
+
+A retyped list-item TEMPLATE id (`componentId`) is out of reach at this layer: list instances are never in
+`surface.widgets`, so the resend only re-buffers the record, and items appended afterwards mint the new type
+while existing items keep theirs (§8, unchanged list-item boundary).
 
 **`samePropsDeep`, not a shallow `Object.is` compare (a real bug the first draft had).** Server messages arrive
 as freshly `JSON.parse`'d objects, so an OBJECT-valued prop — a `{path}` binding, a `{call}` FunctionCall, an
@@ -394,7 +423,8 @@ transient inconsistent read.
 
 | Case | Handling |
 |---|---|
-| Resend of `"root"` | No reconciliation (SPEC-R4); existing IDGRAPH guard on a literal 2nd delivery is unaffected |
+| Resend of `"root"` | Same type: reconciles onto the attached root element (T-0172). Different type: `IDGRAPH`, the existing root stays (runtime SPEC-R3 AC2) |
+| Resend of a non-root id with a different `component` | Re-mounts in its slot (§4, T-0405): old element and scopes disposed, dropped children disposed, surviving children moved into the new element |
 | Resend with no actual delta | `samePropsDeep`/`sameOrder` both true → `#reconcileNode` is a no-op (SPEC-R3) |
 | Resend removing a child that itself hosts a dynamic list | `#disposeSubtree` recurses into the list's own template-driven items via the shared `parentScope` teardown-carrier (SPEC-N1 AC1) |
 | Resend removing a child that itself was waiting on a not-yet-arrived grandchild | `#disposeSubtree` purges the corresponding `#pendingParents` anchor (§6) — no orphaned mint on a later, unrelated delivery |
@@ -483,7 +513,12 @@ No changes to `binding.ts`, `functions.ts`, `input.ts`, `list.ts`, `protocol.ts`
   prop is asserted to KEEP LINGERING (the documented, narrower limitation, proven rather than assumed).
 - **No-op resend** (SPEC-R3): a byte-identical resend of an already-mounted id disposes nothing (assert the
   node scope's `Scope` object reference is unchanged — no dispose/recreate cycle fired).
-- **Root carve-out** (SPEC-R4): resending `"root"` still emits `IDGRAPH` and reconciliation never runs against
-  it (existing test extended, not replaced).
+- **Root carve-out** (SPEC-R4, revised by T-0172): resending `"root"` with another type still emits `IDGRAPH`
+  and keeps the existing root; a same-type `root` resend reconciles onto the SAME element.
+- **Retype re-mount** (T-0405, `tree.test.ts`): a retyped leaf mounts the new type in the same slot with its old
+  binding disposed and siblings untouched; a retyped container moves a surviving child's element, disposes a
+  dropped one and mounts a new one; a retyped container drops a stale pending anchor and patches a kept pending
+  child into the new element; a retyped TEMPLATE container tears its list down and a new TEMPLATE mounts live;
+  a same-type resend still reconciles onto the SAME element.
 - **Cross-engine**: the focus-survival leg specifically runs under `test:browser` (Chromium + WebKit), per this
   repo's standing "test the whole shape" discipline for anything focus/identity-sensitive.
