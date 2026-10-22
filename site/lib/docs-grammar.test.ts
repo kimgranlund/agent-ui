@@ -198,7 +198,7 @@ describe('STRUCTURAL — S4 hook liveness, both directions', () => {
   })
 })
 
-describe('STRUCTURAL — S5-S9 (S5-S8 promoted at Phase 5, manifest M7-M10; S9 minted 2026-07-30)', () => {
+describe('STRUCTURAL: S5-S9 (S5-S7 promoted at Phase 5, manifest M7-M10; S8 retired by T-0169; S9 minted 2026-07-30)', () => {
   const activeDocs = () => walkMd(DOCS, (p: string) => p.includes('/archive/') || p.includes('/reports/'))
   it('S5: every archive/ cite in an active doc sits on a line that names it archived', () => {
     const bad: string[] = []
