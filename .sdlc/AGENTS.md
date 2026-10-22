@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:b77fbc6d55c8 -->
+<!-- sdlc-lite:managed:start v1 sha256:63b4bcfe43aa -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -10,15 +10,12 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 ## Stages
 
 - proposed: 0
-- ready: 1
-  - T-0399 A settled ConfirmReceipt counts as a settled signal; concierge checks accept it as the confirm surface (0399-settled-receipt-signal)
-- claimed: 2
-  - T-0397 grammar.md and the confirm-receipt mini-skill teach the booking settle in place; concierge probe scenarios expect ConfirmReceipt (0397-booking-confirm-grammar), claimed by claude:a8ce3b21 2026-10-22
-  - T-0398 Finish the T-0197 concierge-to-hospitality rename: probe routing expectations, spec and rubric references, seed-history row (0398-hospitality-rename-leftovers), claimed by claude:a8ce3b21 2026-10-22
+- ready: 0
+- claimed: 0
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 390
+- done: 391
 - dropped: 4
 
 ## Procedures

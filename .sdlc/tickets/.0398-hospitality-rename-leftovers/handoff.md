@@ -2,7 +2,7 @@
 id: T-0398
 title: "Finish the T-0197 concierge-to-hospitality rename: probe routing expectations, spec and rubric references, seed-history row"
 type: chore           # feature | bug | chore | spike | idea
-status: claimed        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done        # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -37,3 +37,17 @@ No record still names the retired `concierge` domain or catalog where T-0197 ren
 ## Constraints
 - ADRs are frozen; no em dashes; never hand-edit generated files.
 - Lane: solo because size L2 (steps.py lane); overnight goal 2026-10-21
+- Conductor: confirm no file under .sdlc/evals changed (finished round archives are never rewritten; the solo first relabelled 8 live-commands.sh and reverted them after the conductor flagged it), and judge the asArchivedConciergeDomain transform.
+
+## Outcome
+
+2026-10-22 · lane: solo L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: b01f2133ca6d
+- Changed: Probe routing expects the hospitality domain (archives byte-identical via asArchivedConciergeDomain); spec and rubric references repaired; concierge seed-history row
+- Commits: f582369 T-0398: probe routing expects the hospitality domain (archives kept byte-identical); spec and rubric references; concierge seed-history row
+- Check: 1 `! git grep -n "agent-ui--concierge\|domains: \['concierge'\]"` with the three exclusions: pass
+- Check: 2 `env -u NODE_OPTIONS npx vitest run scripts/e2e-admin/probe site/agent-content site/pages/agent-a...: pass
+- Check: 3 `env -u NODE_OPTIONS node --experimental-strip-types scripts/e2e-admin/probe/selftest.ts`: pass
+- Check: 4 `env -u NODE_OPTIONS node scripts/generate-agent-content.mjs --check`: pass
+- Check: 5 `npm run check`: pass
+- Follow-up: note: the agent-admin-presets.test.ts seed-history cases read the digests... -> notes.md
+- Follow-up: note: .claude/docs/rubrics/a2ui-skill-pattern.md:38 now cites... -> notes.md
