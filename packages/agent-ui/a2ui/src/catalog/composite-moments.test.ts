@@ -547,6 +547,21 @@ describe('composite moment checks (T-0208)', () => {
     ).not.toContain('GAME_HUD_MISSING')
   })
 
+  // T-0426: the GameHud row's CardTable `lacks` is what keeps that CardTable surface quiet; without it the surface fires.
+  it('T-0426: the CardTable zone score Badges fire GAME_HUD_MISSING with CardTable out of lacks', () => {
+    const table: A2uiComponent[] = [
+      { id: 'root', component: 'Column', children: ['table', 'round', 'you', 'dealer'] },
+      { id: 'table', component: 'CardTable', phase: 'player-turn', title: 'Blackjack' },
+      { id: 'round', component: 'Badge', label: 'Round 2' },
+      { id: 'you', component: 'Badge', label: 'Your score 17' },
+      { id: 'dealer', component: 'Badge', label: 'Dealer score 10' },
+    ]
+    const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'GameHud')!
+    const fires = (m: CompositeMoment): string[] => runSemanticChecks([compositeMomentCheck(m)], { surfaces: [view(table)] }).findings.map((f) => f.code)
+    expect(fires(row)).toEqual([])
+    expect(fires({ ...row, lacks: row.lacks.filter((t) => t !== 'CardTable') })).toEqual(['GAME_HUD_MISSING'])
+  })
+
   it('T-0358 negative control: one game-stat Badge, a KPI strip and inventory Badges yield none', () => {
     expect(codes([{ id: 'gold', component: 'Badge', label: 'Gold 0' }])).toEqual([])
     expect(
