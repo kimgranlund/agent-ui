@@ -66,6 +66,22 @@ describe('the artifact feed — the whole rendered shape (both engines)', () => 
     expect(tops.size).toBeGreaterThan(1)
   })
 
+  it('an artifact bubble spans the timeline up to its cap, a prose bubble keeps hugging', async () => {
+    const timeline = document.querySelector('.feed-timeline') as HTMLElement
+    const tw = timeline.getBoundingClientRect().width
+    const cap = Math.min(46 * parseFloat(getComputedStyle(document.documentElement).fontSize), tw * 0.92)
+    const w = msgAt(1).getBoundingClientRect().width
+    expect(msgAt(1).querySelector('.feed-artifact-stage')).not.toBeNull()
+    // the width resolves to the cap (the bubble was ~217px, hugging its text, before)
+    expect(w).toBeGreaterThan(cap - 2)
+    expect(w).toBeLessThan(tw + 1)
+    const prose = [...document.querySelectorAll<HTMLElement>('.feed-timeline > .msg')].find(
+      (m) => !m.hidden && !m.querySelector('.feed-artifact-stage'),
+    )
+    expect(prose, 'no visible prose-only bubble').toBeTruthy()
+    expect(prose!.getBoundingClientRect().width).toBeLessThan(w)
+  })
+
   it('the artifact stage is CAPPED (max-block-size enforced, never grows unbounded)', async () => {
     const stage = msgAt(1).querySelector('.feed-artifact-stage') as HTMLElement
     const style = getComputedStyle(stage)

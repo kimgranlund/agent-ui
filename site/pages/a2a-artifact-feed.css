@@ -54,6 +54,12 @@
   align-self: flex-start;
   background: var(--md-sys-color-neutral-surface-high);
 }
+/* A bubble that carries a live artifact spans the timeline (up to the cap above): a flex item otherwise
+ * shrinks to its content, and the fill-by-default surface inside would collapse to its text width. Prose
+ * bubbles keep hugging. */
+.msg:has(.feed-artifact-stage) {
+  inline-size: 100%;
+}
 .msg-who {
   font-size: 0.66rem;
   font-weight: 650;
