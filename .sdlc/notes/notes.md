@@ -130,7 +130,7 @@
 
 ## T-0209: One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (2026-10-17)
 
-- decide: `packages/agent-ui/a2ui/src/agent/mini-skills.ts:94-98,113-121` note: the four `calibration:` rejection paths (non-positive, non-agent-ui catalog, domain entry, duplicate) have no vitest coverage; they fire only at module load from a planted asset, confirmed here by planted runs. -> T-0414
+- decide: `packages/agent-ui/a2ui/src/agent/mini-skills.ts:94-98,113-121` note: the four `calibration:` rejection paths (non-positive, non-agent-ui catalog, domain entry, duplicate) have no vitest coverage; they fire only at module load from a planted asset, confirmed here by planted runs.
 - decide: `packages/agent-ui/a2ui/src/catalog/layers.test.ts:56-71` note: `CLASSIFIED_CORE` is a 75-name hand list kept test-side as the classification record (the review asked for a new default type to red); runtime core stays derived, so the ticket's one-source goal holds for production code.
 - decide: `.claude/docs/lld/a2ui-live-agent.lld.md:98,475,692-696` and `.claude/docs/spec/a2ui-live-agent.spec.md:255-257` note: history and changelog passages still name `NEGOTIATE_BLUE_SKY`, `calibrationExampleBullet`, `BLUE_SKY_CALIBRATION_IDS` and `miniSkillsFor` with old line numbers; the current-mode passages (LLD-C4 row, SPEC-R13 and the function comment) were repaired.
 - decide: `packages/agent-ui/a2ui/tools/agent/worker/index.ts:50,54` note: the worker still imports the two base `catalog.json` files without an import attribute; the bundle loads (`worker-bundle.test.ts` green), so this is a consistency point, not a defect. -> decided 2026-10-22 overnight: no change; every worker JSON import (providers, both catalogs, the shards) uses the same plain form and worker-bundle.test.ts loads them
@@ -294,7 +294,7 @@
 - decide: `.sdlc/tickets/0351-glyph-marks/handoff.md:19` note: the Done-when `grep -rn clip-path badge.css` is a relative path that exits 2 from the repo root; criterion #1 is its runnable form (conductor-ruled, no plan-defect verdict).
 - decide: `.sdlc/runtime/tasks/0351-glyph-marks/shots/after/text-field.png` decide: the clear x and the stepper minus/plus (and the tabs and breadcrumb `more` dots) now draw at the glyph box with the token stroke, visibly smaller and bolder than the old 2n Phosphor icons; the derived geometry the Goal asks for, but nobody has ruled on that look.
 - decide: `packages/agent-ui/components/src/controls/styling-gates.test.ts` note: styling-gates, sizing-gates and naming-gates run green (3 files, 94 tests, exit 0); `node scripts/foundations-census.mjs --gate` exit 0, green with 0 allowlisted findings.
-- decide: `.sdlc/runtime/tasks/0351-glyph-marks/solo-report.md:45` decide: select (which still sets a host `aria-hidden` on its caret), calendar, combo-box, disclosure, form-popover, status-stream and swiper-paddles build ui-glyph by hand; a follow-up could adopt `createGlyph`. -> T-0416: already fixed by T-0356
+- decide: `.sdlc/runtime/tasks/0351-glyph-marks/solo-report.md:45` decide: select (which still sets a host `aria-hidden` on its caret), calendar, combo-box, disclosure, form-popover, status-stream and swiper-paddles build ui-glyph by hand; a follow-up could adopt `createGlyph`.
 - decide: `packages/agent-ui/components/src/controls/tabs/tabs.ts` note: tabs, breadcrumb and text-field define `props` by hand and ship no `*.props.gen.ts`; my regen probe created three untracked files, which I removed, and the tree is clean (`git status --short` empty).
 - decide: `/var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0351-verifier-L3` note: the scratch log folder stays (the rm was denied by the permission system); the throwaway worktree was removed. `redck.py deviations` printed no `process deviation:` lines (no `(red)` criteria in this handoff).
 
@@ -458,7 +458,7 @@
 
 ## T-0366: A board-less game turn answered in prose alone passes the producer (2026-10-18)
 
-- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:508: decide: greetings outside the SMALL_TALK list fire at an open game target with no update: "Good morning, shopkeeper.", "Greetings, merchant.", "Good evening, Dungeon Master.", and so do "Let me think about it.", "Hmm.", "Describe the room." and "Good game so far." (probe run; the classifier defaults to move). The repair then asks for a surface update the turn has no move for.
+- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:508: decide: greetings outside the SMALL_TALK list fire at an open game target with no update: "Good morning, shopkeeper.", "Greetings, merchant.", "Good evening, Dungeon Master.", and so do "Let me think about it.", "Hmm.", "Describe the room." and "Good game so far." (probe run; the classifier defaults to move). The repair then asks for a surface update the turn has no move for. -> T-0415
 - decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:542: decide: a non-game surface whose text carries a GAME_WORDS word is gated in: a storefront with "Board games and puzzles, 20% off" and a settings page with "Game settings" both get ACTION_NOT_APPLIED on "Add that one to the cart." / "Turn it on." with a declared target and no update (the heuristic is shared with T-0358 and T-0364). -> T-0409
 - decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:536: note: a greet card declared as target (`greet-1`, text "The dungeon awaits") on a turn that creates `quest-log` without retiring the greet card fires ACTION_NOT_APPLIED; retiring it in the same turn passes. Recorded smoke turn 0 declares no target, so the replays are unaffected.
 - decide: scripts/e2e-admin/probe/replays/smoke-negotiator-first-offer-haiku.test.mjs:22: note: the replay still asserts two red probe checks but no longer carries an `// expectedFail:` comment (README "Fixtures and regressions" pairs a pinned-red list with one); seven other replays already do the same and no script reads the comment.
@@ -705,6 +705,6 @@
 
 - note: the live-model leg is unmeasured by design (no live spend without Kim); the e2e flow proves the OptionDeck renders and its press reads back as the pick, not that Sonnet now chooses an OptionDeck for the temperament question.
 
-## T-0414: The four mini-skill calibration rejection paths get vitest coverage (2026-10-22)
+## T-0415: ACTION_NOT_APPLIED stops reading greetings and thinking-aloud at an open game as a move (2026-10-22)
 
-- note: packages/agent-ui/a2ui/src/agent/mini-skills.ts:111 catalogId and domain share one guard, so removing it reds two cases together; acceptable.
+- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:511: a salutation outside the old SMALL_TALK list followed by up to three words with no MOVE_WORD ("Hail the king.") now reads as a greeting and stays quiet (the "Hey, stab him." case the builder names was already quiet at base through SMALL_TALK); no recorded intent hits it.

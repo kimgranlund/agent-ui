@@ -454,6 +454,18 @@ describe('T-0366: boardless-move-applied', () => {
     expect(atQuest('Haha, I love this.')).toEqual([])
   })
 
+  // T-0415 (the T-0366 verifier probe): a greeting, thinking aloud and a request for narration play no move.
+  it('a greeting, a hesitation, praise or a describe request stays quiet', () => {
+    for (const intent of ['Good morning, shopkeeper.', 'Greetings, merchant.', 'Hello there!', 'Let me think about it.', 'Hmm.', 'Good game so far.']) expect(atDeal(intent), intent).toEqual([])
+    for (const intent of ['Good evening, Dungeon Master.', 'Hmm, let me see.', 'Give me a moment.', 'Describe the room.', 'Narrate what happens next.']) expect(atQuest(intent), intent).toEqual([])
+  })
+
+  it('a move after a greeting or a hesitation, or a short command, is still a move', () => {
+    for (const intent of ['Buy the sword.', 'Good morning, I offer 20 gold.', 'Hello, I accept.', 'Hmm, I take it.', 'Let me think. Okay, deal.']) expect(atDeal(intent), intent).toEqual(['ACTION_NOT_APPLIED'])
+    for (const intent of ['I attack the goblin.', 'Hit.', 'Guess E.', 'Greetings, guard. I draw my sword and attack.', 'Hmm, I search the chest.', 'Describe the room as I enter it.'])
+      expect(atQuest(intent), intent).toEqual(['ACTION_NOT_APPLIED'])
+  })
+
   it('an imperative that opens with help, do, tell me, is or when is a move', () => {
     for (const intent of ['Help the prisoner out.', 'Do a backflip over the pit.', 'Tell me the password, guard, or I draw my dagger.', 'Is that the exit? I run for it.', 'When the goblin swings, I dodge left.'])
       expect(atQuest(intent), intent).toEqual(['ACTION_NOT_APPLIED'])
