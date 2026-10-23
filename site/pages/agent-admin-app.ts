@@ -53,7 +53,7 @@ import './agent-admin-app.css' // page-local: full-viewport layout + the preset 
 import type { AgentRosterEntry, GenerateSeed, UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 // ADR-0198 (GH #1101) — the shared end-of-flow page-chrome affordance (the #1065 shared-seam lift).
 import { createFlowChrome } from '../lib/flow-chrome.ts'
-import type { AdminAgentSurfaceTurn, TeamDeclaration } from '@agent-ui/app/agent-admin-schema'
+import type { AdminAgentSurfaceTurn, AdminAgentTurn, TeamDeclaration } from '@agent-ui/app/agent-admin-schema'
 // GH #1196 (ADR-0203 clause 4) — the team record this page's team-shaped mint path persists; ADR-0227
 // wave 2 (GH #1545): the records now reach this page as a DataSource — the read is ONE `resource()`
 // and `handleTeamDeclared` writes through a `mutation()` (same keys, same validation-closed law).
@@ -99,6 +99,9 @@ import {
 // stamp and every live turn's bundle digest and resolution.
 import { contentManifestFor, turnStamp, type TurnContent } from '../lib/agent-compile.ts'
 import type { AdminSurfaceRunner } from '../lib/admin-live-runner.ts'
+// T-0413: the new agent's suggested name and tagline (the trigger, the reply rules and the side call).
+import { createAutoNameTrigger, fieldsToApply, requestNameSuggestion, type AgentIdentity, type NameSuggestion } from '../lib/agent-auto-name.ts'
+import { writeFrom } from '@agent-ui/app/agent-admin-overlay'
 import { duplicatePersonaFrom, exportPersonaFile, importedPersonaFrom, mintBlankPersona, personaFileName, personaFileText, readPersonaFile } from './agent-admin-persona-file.ts'
 import { buildDebugBundle, debugBundleFileName } from './agent-admin-debug-export.ts'
 import { buildZip } from '../lib/zip-writer.ts'
@@ -495,6 +498,52 @@ function withFlowChrome(inner: AdminAgentSurfaceTurn): AdminAgentSurfaceTurn {
   }
 }
 
+// T-0413: a new agent's suggested name and tagline. `createGeneratedAgent` arms the agent with its minted
+// identity, and its first Builder message fires one Haiku side call beside the turn, never awaited by it.
+// Only the live runners carry the tee, so the keyless build makes no call.
+const autoName = createAutoNameTrigger()
+
+/** Fire the naming call for the active agent's first Builder message, once. The agent is read here, at
+ *  send time, and looked up again by id when the reply lands. */
+function maybeAutoName(text: string): void {
+  const persona = activeAgent()
+  const minted = autoName.take(persona.id, { name: personaStore(persona).get('name'), tagline: persona.tagline })
+  if (minted === undefined) return
+  void requestNameSuggestion(text).then((suggestion) => {
+    if (suggestion !== undefined) applyAutoName(persona.id, minted, suggestion)
+  })
+}
+
+/** Write a landed suggestion into the fields the person has not touched. A reply for an agent that is gone
+ *  or no longer active is dropped. The name takes the Builder personaPatch's own store write (provenance,
+ *  dirty state and the GH #1537 label rename follow from it); the tagline is a roster-record field, so it
+ *  takes the Agent fold's Tagline write. */
+function applyAutoName(personaId: string, minted: AgentIdentity, suggestion: NameSuggestion): void {
+  const persona = currentRoster().find((p) => p.id === personaId)
+  if (persona === undefined || activeAgent().id !== personaId) return
+  const store = personaStore(persona)
+  const taken = new Set(currentRoster().filter((p) => p.id !== personaId).map((p) => p.label))
+  const fields = fieldsToApply(minted, { name: store.get('name'), tagline: persona.tagline }, suggestion, taken)
+  if (fields.name !== undefined) writeFrom(store, 'name', fields.name, 'builder')
+  if (fields.tagline !== undefined) void updateAgentMetaMutation.run({ id: personaId, patch: { tagline: fields.tagline } })
+}
+
+/** T-0413: pass every surface turn through unchanged; a Builder `intent` turn may fire the naming call. */
+function withAutoName(inner: AdminAgentSurfaceTurn): AdminAgentSurfaceTurn {
+  return (req) => {
+    if (req.session === 'authoring' && req.turn.kind === 'intent') maybeAutoName(req.turn.text)
+    return inner(req)
+  }
+}
+
+/** T-0413: the text runner's twin of `withAutoName`, for a Builder running with A2UI off. */
+function withAutoNameText(inner: AdminAgentTurn): AdminAgentTurn {
+  return (req) => {
+    if (req.session === 'authoring') maybeAutoName(req.text)
+    return inner(req)
+  }
+}
+
 // GH #686's Amendment (admin-three-pane-ia.lld.md §16.3/§16.5, S7-d) — the canvas-header (title/tagline,
 // the agentMenu switcher, the "…" overflow) is RETIRED entirely: this page renders NO header of its own
 // any more — `ui-agent-admin`'s own S7-c unified header bar is the only header, and every prior overflow
@@ -842,8 +891,9 @@ function createGeneratedAgent(pick?: GenerateSeed): void {
   const persona = mintBlankPersona(seed, [...personaRoster(), ...currentRoster()])
   void saveAgentMutation.run(persona) // persists the library record in this tick; the view gains the row
   applyPersona(persona) // the setActive commit stages the header's own roster row via the derivation effect
+  autoName.arm(persona.id, { name: persona.label, tagline: persona.tagline }) // T-0413: the first Builder message may name it
   admin.authoringStore = builderStore(pick?.model) // a FRESH interviewer per flow entry (no persistKey, no cache)
-  notify(`Created “${persona.label}” — describe what you want and the Builder will fill it in.`)
+  notify(`Created “${persona.label}”. Describe what you want and the Builder will name it and fill it in.`)
 }
 
 // GH #1196 (ADR-0203 clause 4) — the Builder's team-shaped generation path: mint N member personas +
@@ -1786,7 +1836,7 @@ export const bootProbeSettled: Promise<void> = (async () => {
     const overlay = await import('../lib/admin-live-runner.ts')
     const probe = await overlay.probeLive()
     if (probe.available) {
-      admin.agentTurn = overlay.createAdminAgentTurn(turnContentFor)
+      admin.agentTurn = withAutoNameText(overlay.createAdminAgentTurn(turnContentFor)) // T-0413: the naming tee
       // The SURFACE arm (TKT-0076/ADR-0138) — takes precedence over the text runner above: turns run
       // through the a2ui producer (persona riding the ADR-0138 seam) and stream REAL surfaces into the
       // conversation. A fresh runner per persona switch = a fresh producer session per persona.
@@ -1794,7 +1844,7 @@ export const bootProbeSettled: Promise<void> = (async () => {
         // ADR-0198 — every armed runner rides the page's flow-chrome wrapper (flowEnd → the shared
         // end-of-flow affordance; the event is filtered before the component sees it).
         surfaceRunner = overlay.createAdminSurfaceTurn(turnContentFor)
-        admin.agentSurfaceTurn = withFlowChrome(surfaceRunner)
+        admin.agentSurfaceTurn = withAutoName(withFlowChrome(surfaceRunner)) // T-0413: the naming tee
       }
       armSurfaceTurn()
       console.info(`[agent-admin-app] live model connected (${probe.providers} provider(s)) — surface turns armed`)

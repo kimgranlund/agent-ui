@@ -398,6 +398,15 @@ export class AdminPage {
     )
   }
 
+  /** T-0413: the Agent fold's Tagline field value (a roster-record field beside the generated settings), or
+   *  `undefined` while the field is not rendered. */
+  readAgentTagline(): Promise<string | undefined> {
+    return this.page.evaluate((selector) => {
+      const field = document.querySelector(selector) as (Element & { value?: unknown }) | null
+      return typeof field?.value === 'string' ? field.value : undefined
+    }, `[data-part="settings-item"][data-item="agent"] ui-field[data-field="tagline"] ui-text-field`)
+  }
+
   /** A capability kind's master switch state (`kind-enabled` on the kind's settings fold), or `undefined`. */
   kindEnabled(kind: string): Promise<boolean | undefined> {
     return this.page.evaluate((selector) => {
@@ -481,6 +490,14 @@ export class AdminPage {
       if (send === null) throw new Error(`no ${selector} on the page`)
       return send.disabled !== true
     }, `${paneSelector(pane)} ${ADMIN_SELECTORS.composerSend}`)
+  }
+
+  /** T-0413: the header roster's label for one persona id (its agent-select option text), or `undefined`. */
+  rosterLabel(id: string): Promise<string | undefined> {
+    return this.page.evaluate(
+      ({ s, v }) => [...document.querySelectorAll(s)].find((o) => o.getAttribute('value') === v)?.textContent?.trim(),
+      { s: `${ADMIN_SELECTORS.agentSelect} [role="option"]`, v: id },
+    )
   }
 
   /** The agent select's option values: the header roster's persona ids. */

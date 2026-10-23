@@ -49,6 +49,11 @@ describe('resolveChatDispatch (ALM-C6 — the /chat route validation spine)', ()
     })
   })
 
+  it('resolves the Haiku 5.5 row the new-agent naming call names (T-0413)', () => {
+    const out = resolveChatDispatch(config, { ANTHROPIC_API_KEY: 'sk-test-value' }, 'claude-haiku-5-5')
+    expect(out.ok).toBe(true)
+  })
+
   it('never returns a key value on a degrade path (only the ok arm carries apiKey)', () => {
     const degrade = resolveChatDispatch(config, { ANTHROPIC_API_KEY: 'sk-secret' }, 'gpt-4.1')
     expect(JSON.stringify(degrade)).not.toContain('sk-secret')
@@ -151,14 +156,14 @@ afterAll(() => {
   else process.env['ANTHROPIC_API_KEY'] = previousKey
 })
 
-/** POST one body at the mounted `/chat` sub-path and resolve with the route's own JSON response plus the
- *  request object `provider.stream` actually received. */
-async function postChat(body: unknown): Promise<{ status: number; json: Record<string, unknown>; streamRequest: Record<string, unknown> | undefined }> {
+/** POST one body at the mounted `/chat` sub-path (or `url`, mount-relative) and resolve with the route's own
+ *  JSON response plus the request object `provider.stream` actually received. */
+async function postChat(body: unknown, url = '/chat'): Promise<{ status: number; json: Record<string, unknown>; streamRequest: Record<string, unknown> | undefined }> {
   const before = captured.requests.length
   const listeners: Record<string, Array<(arg?: unknown) => void>> = {}
   const req = {
     method: 'POST',
-    url: '/chat',
+    url,
     on(event: string, cb: (arg?: unknown) => void) {
       ;(listeners[event] ??= []).push(cb)
       // readBody registers data → end → error; emitting once `end` is armed keeps this independent of
@@ -221,6 +226,27 @@ describe('the /chat route builds the SHARED tool dispatch (SPEC-R19 AC1 — GH #
     const executeTool = out.streamRequest!['executeTool'] as (name: string, input: unknown) => Promise<unknown>
     await expect(executeTool('not-a-tool', {})).rejects.toThrow(/unknown tool/)
     await expect(executeTool('weather', {})).rejects.toThrow(/weather: invalid input/)
+  })
+})
+
+describe('the new-agent naming call rides the /chat arm (T-0413)', () => {
+  it('a `?purpose=name` URL reaches the chat arm, and the body\'s model and settings reach provider.stream', async () => {
+    const out = await postChat(
+      {
+        system: 'You name AI agents.',
+        model: 'claude-haiku-5-5',
+        messages: [{ role: 'user', content: 'make a toothbrushing coach agent' }],
+        effort: 'low',
+        modelSettings: { thinking: 'disabled', maxTokens: 200 },
+      },
+      '/chat?purpose=name',
+    )
+    expect(out.status).toBe(200)
+    expect(out.json['text']).toBe('stubbed reply')
+    const request = out.streamRequest!
+    expect(request['model']).toBe('claude-haiku-5-5')
+    expect(request['effort']).toBe('low')
+    expect(request['modelSettings']).toMatchObject({ thinking: 'disabled', maxTokens: 200 })
   })
 })
 

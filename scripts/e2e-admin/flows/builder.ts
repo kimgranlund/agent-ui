@@ -308,3 +308,34 @@ export const builderChoiceDeck: AdminFlow = {
     )
   },
 }
+
+const AUTO_NAME = 'Brush Buddy'
+const AUTO_TAGLINE = 'Coaches you through two minutes of brushing, morning and night.'
+
+/** T-0413: the first Builder message on a new agent fires one naming call on the Haiku row, and its scripted
+ *  reply lands in the Name and Tagline fields, the persisted name and the header roster label. With
+ *  `E2E_ADMIN_SHOT_DIR` set, the renamed agent is written there as `after-auto-name.png`. */
+export const builderAutoName: AdminFlow = {
+  name: 'builder-auto-name',
+  fixture: 'builder-auto-name.json',
+  async run({ page, wire, scenario, base }) {
+    const admin = await openAdmin(page, base, scenario)
+    const draft = await armBuilder(admin)
+    await admin.openSettingsTab('agent-content')
+    await builderTurn(admin, 'make a toothbrushing coach agent')
+
+    await pollUntil(() => admin.readAgentName(), (name) => name === AUTO_NAME, `the Agent name field to read "${AUTO_NAME}"`)
+    await pollUntil(() => admin.readAgentTagline(), (tagline) => tagline === AUTO_TAGLINE, `the Agent tagline field to read "${AUTO_TAGLINE}"`)
+    await pollUntil(() => admin.rosterLabel(draft), (label) => label === AUTO_NAME, `the header roster to label "${draft}" "${AUTO_NAME}"`)
+    const nameKey = `agent-admin-app.${draft}.name`
+    const stored = await admin.readStorage(nameKey)
+    assertFlow(stored === JSON.stringify(AUTO_NAME), `${nameKey} holds ${JSON.stringify(stored)}, expected the JSON string "${AUTO_NAME}"`)
+
+    const named = wire.entries.filter((e) => e.endpoint === 'name')
+    assertFlow(named.length === 1, `wire log holds ${named.length} naming calls, expected 1`)
+    const model = (named[0]?.request as { model?: unknown } | undefined)?.model
+    assertFlow(model === 'claude-haiku-5-5', `the naming call model is ${JSON.stringify(model)}, expected "claude-haiku-5-5"`)
+    const shotDir = process.env.E2E_ADMIN_SHOT_DIR
+    if (shotDir !== undefined && shotDir !== '') await page.screenshot({ path: `${shotDir}/after-auto-name.png` })
+  },
+}
