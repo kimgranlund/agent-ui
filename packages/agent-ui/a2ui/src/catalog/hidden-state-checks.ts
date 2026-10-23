@@ -504,16 +504,27 @@ const MOVE_QUESTION = /\d|\b(?:how about|what about|would you (?:take|accept|sel
 /** T-0366: a question in form: a question mark, or a wh-opener ("What is your lowest price"); is, do, when, help and
  *  tell me also open imperatives ("When the goblin swings, I dodge left"), so they make no question. */
 const QUESTION = /\?\s*$|^\s*(?:what|how|why|who|where|which)\b/i
-/** T-0366: small talk: thanks, a laugh or a greeting with no move word after it ("Thanks, I appreciate it."); "Okay,
- *  deal." and "Ok, 20 gold then." are moves. */
-const SMALL_TALK = /^\s*(?:thanks|thank you|cheers|haha|ha|lol|wow|nice|cool|great|hi|hello|hey)\b/i
+/** T-0366: small talk: thanks, a laugh, praise (T-0415, "Good game so far.") or a greeting with no move word after it
+ *  ("Thanks, I appreciate it."); "Okay, deal." and "Ok, 20 gold then." are moves. */
+const SMALL_TALK = /^\s*(?:thanks|thank you|cheers|haha|ha|lol|wow|nice|cool|great|hi|hello|hey|good (?:game|one|move|job|show)|well played|gg)\b/i
+/** T-0415: a greeting: a salutation and at most three words of address, nothing more ("Good morning, shopkeeper.",
+ *  "Good evening, Dungeon Master."); "Hello, I accept." goes on to a move. */
+const GREETING = /^\s*(?:good (?:morning|afternoon|evening|day|night)|greetings|salutations|well met|hail|howdy|hiya|hi|hello|hey)(?:[\s,]+(?!i\b|i'|we\b|let\b)[a-z]+(?:\s+[a-z]+){0,2})?\s*[.!]*\s*$/i
+/** T-0415: thinking aloud, all of the turn and from a closed set, so a move word in it ("Give me a moment.") is no move:
+ *  a filler ("Hmm.") or a pause ("Let me think about it."). */
+const HESITATION = /^\s*(?:(?:hmm+|mm+|um+|uh+|erm?|well)\b[\s,.!?…]*)*(?:(?:let me|i(?:'ll| will| need to| have to)?) (?:think|see|consider|ponder)(?: (?:about |on |over )?(?:it|that|this)(?: over)?)?|i(?:'m| am) (?:thinking|not sure)|not sure(?: yet)?|give me a (?:moment|minute|sec(?:ond)?)|one (?:moment|minute|sec(?:ond)?))?[\s,.!?…]*$/i
+/** T-0415: a request for narration, which the reply answers in prose ("Describe the room.", "Narrate what happens."). */
+const NARRATION_ASK = /^\s*(?:(?:please|can you|could you|would you)\s+)?(?:describe|narrate|recap|summari[sz]e)\b/i
 const MOVE_WORD = /\d|\b(?:deal|offer|accept|pay|take|give|sell|buy|counter|open|go|walk|step|enter|attack|fight|run|climb|search|grab|pick|use|cast|drink|read|light|help|dodge|hide|talk)\b/i
 
-/** T-0366: whether a say turn plays a move rather than asking about the game or chatting. */
+/** T-0366: whether a say turn plays a move rather than asking about the game or chatting. T-0415: thinking aloud is no
+ *  move, nor with no move word a greeting or a request for narration. */
 function playsMove(intent: string): boolean {
   if (RULES_ASK.test(intent)) return false
   if (QUESTION.test(intent)) return MOVE_QUESTION.test(intent)
-  return !(SMALL_TALK.test(intent) && !MOVE_WORD.test(intent))
+  if (HESITATION.test(intent)) return false
+  if (MOVE_WORD.test(intent)) return true
+  return ![SMALL_TALK, GREETING, NARRATION_ASK].some((form) => form.test(intent))
 }
 
 /** T-0409: the model's own names for a surface's job: its id, its component ids and its action names, split into words
