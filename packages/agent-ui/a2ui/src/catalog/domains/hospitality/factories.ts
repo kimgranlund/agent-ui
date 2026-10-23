@@ -462,6 +462,10 @@ export const bookingFormFactory: WidgetFactory = {
     ;(titleEl as unknown as { as: string; variant: string; size: string }).variant = 'title'
     ;(titleEl as unknown as { as: string; variant: string; size: string }).size = 'md'
     titleEl.setAttribute('data-part', 'title')
+    // The surface title role (T-0418): the form's title reads like a CardHeader title, not the canvas section title
+    titleEl.style.setProperty('--ui-text-size', 'var(--md-sys-type-subhead)')
+    titleEl.style.setProperty('--ui-text-weight', '600')
+    titleEl.style.setProperty('--ui-text-line-height', '1.3')
     const fieldsEl = document.createElement('div')
     fieldsEl.setAttribute('data-part', 'fields')
     fieldsEl.style.display = 'flex'

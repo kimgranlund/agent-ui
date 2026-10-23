@@ -25,7 +25,9 @@
   --ui-option-deck-ink: var(--md-sys-color-neutral-on-surface);
   --ui-option-deck-muted-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-option-deck-type-body: var(--md-sys-type-body);
-  --ui-option-deck-heading-size: var(--md-sys-type-heading);
+  --ui-option-deck-heading-size: var(--md-sys-type-subhead); /* the surface title role (T-0418) */
+  --ui-option-deck-heading-weight: 600;
+  --ui-option-deck-heading-line-height: 1.3;
   --ui-option-deck-stack-gap: var(--md-sys-widget-gutter);
   --ui-option-deck-grid-offset: var(--md-sys-c);
   --ui-option-deck-gap: var(--md-sys-widget-margin);
@@ -56,7 +58,9 @@
   --ui-option-deck-icon-size: calc(var(--md-sys-inset) * 5);
 
   /* Text */
-  --ui-option-deck-title-size: var(--md-sys-type-subhead);
+  --ui-option-deck-title-size: var(--md-sys-type-title); /* the section title role (T-0418) */
+  --ui-option-deck-title-weight: 600;
+  --ui-option-deck-title-line-height: 1.4;
 
   /* Meta chips and the Your pick pill: full pills at the small control type */
   --ui-option-deck-chip-size: var(--md-sys-type-small-control);
@@ -134,8 +138,8 @@
   :scope > [data-part='heading'] {
     margin: 0;
     font-size: var(--ui-option-deck-heading-size);
-    font-weight: 700;
-    letter-spacing: -0.01em;
+    font-weight: var(--ui-option-deck-heading-weight);
+    line-height: var(--ui-option-deck-heading-line-height);
     overflow-wrap: anywhere;
   }
   :scope > [data-part='subheading'] {
@@ -245,7 +249,8 @@
   }
   :scope [data-part='title'] {
     font-size: var(--ui-option-deck-title-size);
-    font-weight: 700;
+    font-weight: var(--ui-option-deck-title-weight);
+    line-height: var(--ui-option-deck-title-line-height);
     overflow-wrap: anywhere;
   }
   :scope [data-part='description'] {

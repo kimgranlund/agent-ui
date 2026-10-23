@@ -6,6 +6,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
+| T-0420 | [0420-packages-agent-ui-components-src](0420-packages-agent-ui-components-src/handoff.md) | packages/agent-ui/components/src/controls/card/card.css:426 the... | idea | L2 | P2 | none | ⏳ proposed |
 
 Closed: 409 done, 4 dropped (git log or .NNNN-* folders)
 
@@ -119,3 +120,4 @@ Closed: 409 done, 4 dropped (git log or .NNNN-* folders)
 - decide: .sdlc/tickets/0395-own-commit-ask-wording/handoff.md:20 note: cites `grammar.md:47`; the edited span sits at grammar.md:48 (:47 is unchanged context), as architect-L1.md states. (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
 - decide: .sdlc/notes/notes.md:671 note: the T-0393 `decide:` line about OptionCompare's second intent is settled by this ticket and still open in notes; resolve on land (architect-L1.md Carry forward). (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
 - decide: site/agent-content/game-hud-placement.test.ts:28 note: pins exactly one Button on a game ask; a future deck-based game skill reds it until the check gains an own-commit branch (architect-L1.md Risks), no change needed now. (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
+- decide: `packages/agent-ui/a2ui/src/catalog/domains/hospitality/factories.ts:793` the Itinerary title (h4, title, lg, emphasis) is a surface title outside the audited set and is pinned to neither approved role. Its golden renders through the real renderer at widget md (`itinerary.visual.browser.test.ts:11`), and by source order the `text.css:231` widget h4 rule (specificity 0, after the `[size='lg']` override at `text.css:147`) should reach it; the golden moved 1px; the title's computed size was not measured this run, and the builder's "kept its look" is a claim, not a measurement. (from T-0418: One heading scale for surface titles: OptionDeck, OptionCompare, Card, ask and list titles read at the same role (2026-10-22))

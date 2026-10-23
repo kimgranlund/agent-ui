@@ -221,8 +221,10 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     // frame — is density-INVARIANT.
     // ADR-0245 cl.10e: today's fixed 12/6 now holds under the legacy opt-out (outside it the region padding derives
     // from n, containers-foundations.browser.test.ts), and a data-scale inside the opt-out moves nothing.
+    // No header: a header above the content drops the content's start padding (T-0418), so the block padding is
+    // read on a content region that leads its card.
     const card = mount(
-      '<div data-foundations="legacy"><ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card></div>',
+      '<div data-foundations="legacy"><ui-card><ui-card-content>C</ui-card-content><ui-card-footer>F</ui-card-footer></ui-card></div>',
     ).querySelector('ui-card') as HTMLElement
     const content = card.querySelector('ui-card-content') as HTMLElement
 
@@ -274,7 +276,6 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
 
     for (const [label, gap] of [
       ['frame→header', frameToHeader],
-      ['header→content', headerToContent],
       ['content→footer', contentToFooter],
       ['footer→frame', footerToFrame],
       ['frame→header (inline)', frameToHeaderInline],
@@ -283,7 +284,14 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     }
     // anti-vacuous: the BETWEEN-region gutter is genuinely not double the edge gutter (the doubling that
     // margin-collapse in this block-flow shell prevents for free).
-    expect(headerToContent, 'between-region gap doubled (12px) instead of reconciling to one inset (6px)').toBeLessThan(frameToHeader * 1.5)
+    expect(contentToFooter, 'between-region gap doubled (12px) instead of reconciling to one inset (6px)').toBeLessThan(frameToHeader * 1.5)
+    // T-0418 (Kim 2026-10-22): a plain header sits one card gutter above its content with no facing padding, so the
+    // header box to the content box is the gutter (--ui-card-content-gap, the card gutter 2n), not the inset n.
+    const gutter = px(getComputedStyle(header).marginBlockEnd)
+    expect(gutter, 'the header end margin is the card gutter 2n').toBeCloseTo(2 * DERIVED.n, 0)
+    expect(headerToContent, 'header→content is one card gutter').toBeCloseTo(gutter, 0)
+    expect(px(getComputedStyle(header).paddingBottom), 'the header drops its end padding').toBe(0)
+    expect(px(getComputedStyle(content).paddingTop), 'the content drops its start padding').toBe(0)
   })
 
   it('NESTED card-content padding stays FLAT (2n on both axes, derived) at every depth, no stepping law at all (REVISED 2026-07-04)', () => {

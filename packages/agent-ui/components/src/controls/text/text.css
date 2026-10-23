@@ -224,6 +224,16 @@
   --ui-text-tracking: var(--md-sys-typescale-body-large-tracking);
 }
 
+/* ── The section title (T-0418): on the widget register (the A2UI canvas) a Text stamped h3 or h4 is a section
+   title, the title step at weight 600. Declared after the size overrides so it wins their tie and before
+   [emphasis] so emphasis still bolds it; a heading inside ui-card-header is the surface title instead (card.css,
+   which outranks this specificity-0 block). ── */
+:where([data-tier='widget'] ui-text:is([as='h3'], [as='h4'])) {
+  --ui-text-size: var(--md-sys-type-title);
+  --ui-text-weight: 600;
+  --ui-text-line-height: 1.4;
+}
+
 /* ── [emphasis] (ADR-0109, the fifth orthogonal axis) — declared LAST: :where() keeps every repoint at
    specificity 0, so source order is what lets this one beat every role/size-override block above on a tie.
    700 is the platform's bold register (the CSS `bold` keyword) — a platform constant, not a new fleet

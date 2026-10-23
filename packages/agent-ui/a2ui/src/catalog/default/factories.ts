@@ -273,9 +273,10 @@ export const buttonFactory: WidgetFactory = {
 // compact card/dashboard/quiz tile, not a document — a 36px h1 towers over a small card. This table is
 // the catalog's OWN mapping choice, isolated from `ui-text`'s component contract: shifted exactly one
 // M3 tier down from the original row (display→headline, headline→title), preserving the SAME
-// nearest-row-per-level shape and keeping all 5 heading sizes strictly distinct and monotonically
-// decreasing (28/24/22/16/14px — verified against dimensions.css's `--md-sys-typescale-*-size`
-// values), every one at or above `body`'s own 14px so a heading never reads smaller than prose.
+// nearest-row-per-level shape, with heading sizes non-increasing from h1 to h5 and every one at or above
+// `body`'s own size, so a heading never reads smaller than prose.
+// T-0418 (Kim 2026-10-22) folds h3 into h4: on the canvas both are the one section title (title md at weight
+// 600, text.css), and a heading inside CardHeader is the surface title by position (card.css).
 //
 // GH #808 S1 (`a2ui-container-vocabulary.spec.md` SPEC-R4): the `label` row is a straight pass-through
 // — the wire register name IS the `ui-text` M3 role name, no translation, unlike every heading row
@@ -293,7 +294,7 @@ export const buttonFactory: WidgetFactory = {
 const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: string }> = {
   h1: { as: 'h1', variant: 'headline', size: 'md' },
   h2: { as: 'h2', variant: 'headline', size: 'sm' },
-  h3: { as: 'h3', variant: 'title', size: 'lg' },
+  h3: { as: 'h3', variant: 'title', size: 'md' }, // T-0418: h3 and h4 share the section title step on the canvas
   h4: { as: 'h4', variant: 'title', size: 'md' },
   h5: { as: 'h5', variant: 'title', size: 'sm' },
   body: { as: 'none', variant: 'body', size: 'md' },
