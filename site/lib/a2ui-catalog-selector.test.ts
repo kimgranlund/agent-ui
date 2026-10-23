@@ -3,15 +3,24 @@
 // previews has an example seed or a documented exemption: the page-side mirror of the every-catalog coverage
 // gate (`packages/agent-ui/a2ui/src/examples/every-catalog-coverage.test.ts`).
 import { describe, it, expect } from 'vitest'
-import { createRenderer, A2UI_BASIC_CANONICAL_URI, isDerivedCatalogId } from '@agent-ui/a2ui'
+import { createRenderer, A2UI_BASIC_CANONICAL_URI, SHIPPED_DOMAIN_CATALOGS, domainCatalogIdsFor, isDerivedCatalogId } from '@agent-ui/a2ui'
 import { REGISTRY, catalogIds } from './capability-registry.ts'
-import { CATALOG_OPTIONS, catalogFromSearch, exampleSeedFor, exemptionFor, typesFor } from './a2ui-catalog-selector.ts'
+import { CATALOG_OPTIONS, catalogFromSearch, domainFor, exampleSeedFor, exemptionFor, typesFor } from './a2ui-catalog-selector.ts'
 
 describe('a2ui-catalog-selector', () => {
-  it('the selector options are the capability registry catalog ids, agent-ui first', () => {
-    expect(CATALOG_OPTIONS).toEqual(catalogIds(REGISTRY))
+  it('the selector options are the capability registry catalog ids, agent-ui first, then the shipped domain ids', () => {
+    const domainIds = [...domainCatalogIdsFor(SHIPPED_DOMAIN_CATALOGS)].sort()
+    expect(CATALOG_OPTIONS).toEqual([...catalogIds(REGISTRY), ...domainIds])
     expect(CATALOG_OPTIONS[0]).toBe('agent-ui')
     expect(CATALOG_OPTIONS).toContain('a2ui-basic')
+    expect(CATALOG_OPTIONS, 'anti-vacuous: the hospitality domain is offered (T-0432)').toContain('agent-ui--hospitality')
+  })
+
+  it('a domain option previews its fragment types; a persona option is no domain (T-0432)', () => {
+    const hospitality = SHIPPED_DOMAIN_CATALOGS.find((d) => d.domainId === 'hospitality')!
+    expect(typesFor('agent-ui--hospitality')).toEqual(Object.keys(hospitality.fragment.components).sort((a, b) => a.localeCompare(b)))
+    expect(domainFor('agent-ui--croupier')).toBeUndefined()
+    expect(domainFor('agent-ui')).toBeUndefined()
   })
 
   it('every option is a catalog id the renderer records, and the canonical-URI alias is never one', async () => {
