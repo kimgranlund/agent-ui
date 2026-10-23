@@ -6,6 +6,7 @@
 # and the frontmatter schema (validateComponentDescriptor) both target this fence. Field set per
 # .claude/docs/plan.md §10 / ADR-0004; form participation per ADR-0013; base behaviour per ADR-0042 / ADR-0041.
 tag: ui-checkbox
+description: A form checkbox with a checked, unchecked or indeterminate value and an optional label.
 tier: indicator        # geometry size-class (Indicator band — widget box, not full control height; geometry.md)
 extends: UIIndicatorElement  # the Indicator base (ADR-0042); UICheckboxElement → UIIndicatorElement → UIFormElement
 uses: []

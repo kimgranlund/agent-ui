@@ -8,6 +8,7 @@
 # .claude/docs/plan.md §10 / ADR-0004; form participation per ADR-0013; geometry per ADR-0042 / ADR-0041;
 # Range-class base per range-element.lld.md (GH #1141 amendment: label/layout).
 tag: ui-slider
+description: A form slider that picks one number within a range, snapped to a step.
 tier: indicator        # geometry size-class (Indicator band — widget box, same ramp as checkbox/switch; geometry.md)
 extends: UIRangeElement  # the Range base (range-element.lld.md); UISliderElement → UIRangeElement → UIFormElement
 uses: []

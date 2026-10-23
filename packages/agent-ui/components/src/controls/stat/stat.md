@@ -13,6 +13,7 @@
 # identical reason — see stat-model.ts's header note on why a non-null-defaulting number codec would
 # misclassify instead.
 tag: ui-stat
+description: A metric tile with a label, a value, an optional change and an optional caption.
 tier: display          # geometry size-class (Display band — NO control frame/height; SPEC-R17/ADR-0111 cl.5)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R7)
 uses: []

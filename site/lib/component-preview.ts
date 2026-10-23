@@ -377,8 +377,9 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   ResultCard: { outcome: 'win', title: 'Blackjack, hand 12', summary: 'You beat the dealer 20 to 18. Your stack is up for the night.' },
   // AmountPicker (T-0196): the currency bet with the slider; `presets` rides SAMPLE_TREES (an array has no knob).
   AmountPicker: { label: 'Bet', min: '5', max: '250', step: '5', value: '50', currency: 'USD', slider: 'true', actionName: 'place_bet', actionLabel: 'Place bet' },
-  // OptionDeck (T-0193): the string knobs here; the `options` array and `allowRandom` ride SAMPLE_TREES rootRef.
-  OptionDeck: { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.', actionName: 'start' },
+  // OptionDeck (T-0193): the string and boolean knobs here (allowRandom too, so its knob shows the sample's Surprise
+  // me and drives it, T-0433); the `options` array rides SAMPLE_TREES rootRef.
+  OptionDeck: { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.', actionName: 'start', allowRandom: 'true' },
   // ConfirmReceipt (T-0195): the string and enum knobs here; rows, items, data and the two actions ride SAMPLE_TREES
   // rootRef (T-0432: without them the card showed a bare title and a lone Confirm).
   ConfirmReceipt: { title: 'Your order', status: 'pending', refPath: 'ref', totalLabel: 'Total', totalPath: 'total' },
@@ -958,11 +959,11 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
       { id: 's_rc_again', component: 'Button', variant: 'solid', label: 'Play again', action: { action: 'new_game', context: { newGame: true } } },
     ],
   }),
-  // OptionDeck (T-0193): the game picker of the approved mockup (catalog-frontier.ts's frontier-option-deck-picker),
-  // with Surprise me; an explicit empty extras list because the deck has no children.
+  // OptionDeck (T-0193): the game picker of the approved mockup (catalog-frontier.ts's frontier-option-deck-picker);
+  // Surprise me is the allowRandom knob's A2UI_INITIAL seed, never a rootRef prop that would override the knob
+  // (T-0433); an explicit empty extras list because the deck has no children.
   OptionDeck: () => ({
     rootRef: {
-      allowRandom: true,
       options: [
         { value: 'play blackjack', title: 'Blackjack', description: 'Beat the dealer to 21 without going bust.', icon: 'star', tone: 'primary', index: 'A', meta: ['1 to 6 players', '5 min'] },
         { value: "play texas hold'em", title: "Texas Hold'em", description: 'Two hole cards, five on the board.', icon: 'heart', tone: 'accent', index: 'K', meta: ['2 to 9 players', '15 min'] },

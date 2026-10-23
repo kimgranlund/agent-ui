@@ -4,6 +4,7 @@
 # (type) — the contract↔props trip-wire (swiper-pagination-descriptor.test.ts) targets this fence. Prose
 # below documents only this element (the primary /site prose lives on swiper.md, the one-folder precedent).
 tag: ui-swiper-pagination
+description: The dots or count a swiper carousel fills in to show and pick the current slide.
 tier: pattern            # geometry size-class — an author-placed anchor the coordinator fills (LLD-C9)
 extends: UIElement       # NOT form-associated — a pure render-target anchor, no value of its own
 uses: []

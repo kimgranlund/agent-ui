@@ -4,6 +4,7 @@
 # doc. The `attributes[]` block MUST mirror icon.ts `static props` (symbol/label); the contract↔props
 # trip-wire (icon-descriptor.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-icon
+description: A decorative or labeled icon drawn from the installed icon pack by name.
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md lists "icon" as a Display example)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (face below), NOT a UIContainerElement surface
 uses: []

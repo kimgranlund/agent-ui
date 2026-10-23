@@ -6,6 +6,7 @@
 # the frontmatter schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the native-dialog
 # modal per ADR-0017; the bindable `open` two-way per ADR-0019.
 tag: ui-modal
+description: A modal dialog that blocks the page behind it until it is dismissed or its action completes.
 tier: pattern             # geometry size-class — geometry.md lists `dialog` under the Pattern band (the shell uses the --md-sys-space scale, NO control height)
 extends: UIContainerElement  # the FACE surface base — NOT form-associated (no value/validity); reuses the inherited ElementInternals for nothing here (the dialog carries its own ARIA)
 uses: []

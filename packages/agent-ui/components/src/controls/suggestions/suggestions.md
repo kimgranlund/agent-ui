@@ -9,6 +9,7 @@
 # (suggestions.ts), never a `static props` entry, so it carries no row here (the bijection trip-wire would
 # flag it as DRIFT_EXTRA otherwise).
 tag: ui-suggestions
+description: A set of follow-up chips the user taps once to send the next prompt.
 tier: pattern          # geometry size-class — geometry.md's Pattern band ("container + control-height
                         # rows"), the segmented-control/toolbar/menu company this leaf keeps: a container
                         # of multiple independently-interactive rows. The INTERIOR chip geometry itself

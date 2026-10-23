@@ -6,6 +6,7 @@
 # and the frontmatter schema (validateComponentDescriptor) both target this fence. Field set per
 # .claude/docs/plan.md §10 / ADR-0004; form participation per ADR-0013; overlay per ADR-0043.
 tag: ui-combo-box
+description: A form text input with a filtered dropdown list of options to pick from or type.
 tier: pattern          # geometry size-class — the editor is Control-class; the panel is Container/surface; the options are item-pad rows (the Geometry-by-part three-class pattern from the decomp)
 extends: UIFormElement # form-associated: value + validity participate via ElementInternals (ADR-0013)
 uses:

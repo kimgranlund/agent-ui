@@ -7,6 +7,7 @@
 # notes; the surface axes per ADR-0015, the one-level nested radius per ADR-0018, the host-as-grid per anatomy.md,
 # the region-less humane default (a bare card gets region-equivalent padding) per ADR-0056.
 tag: ui-card
+description: A surface container with its own plane, padding and radius that groups related content as one card.
 tier: container         # geometry size-class (Container/layout band — spacing off --md-sys-space × density, NO control height; geometry.md)
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated; ADR-0015 / ADR-0016)
 uses: []

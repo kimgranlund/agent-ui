@@ -6,6 +6,7 @@
 # and the frontmatter schema both target this fence. Field set per .claude/docs/plan.md §10 / ADR-0004; the
 # native-dialog drawer per ADR-0017 (re-applied) / ADR-0188; the bindable `open` two-way per ADR-0019.
 tag: ui-drawer
+description: A modal panel that slides in from one edge of the screen and holds its own content.
 tier: container          # geometry size-class — container-class sizing via [data-box]; NO control height (geometry.md)
 extends: UIContainerElement  # the FACE surface base — NOT form-associated (no value/validity); a <dialog> submits nothing
 uses: []

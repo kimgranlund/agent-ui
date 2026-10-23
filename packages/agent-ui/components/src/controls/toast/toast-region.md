@@ -7,6 +7,7 @@
 # (toast-region-descriptor.test.ts) targets the empty bijection. Field set per .claude/docs/plan.md §10
 # / ADR-0004. NOT catalogued — ADR-0112 cl.6's second reasoned EXCLUSION_ALLOWLIST entry.
 tag: ui-toast-region
+description: The on-screen area where toast notifications stack and leave.
 tier: layout             # geometry size-class — inset/gap only, no surface paint of its own (LLD-C8)
 extends: UIElement       # NOT form-associated — a pure layout/coordination host, no value
 uses:

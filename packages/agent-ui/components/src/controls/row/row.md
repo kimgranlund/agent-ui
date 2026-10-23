@@ -9,6 +9,7 @@
 # BAD_EXTENDS, which row-descriptor.test.ts filters as the one deferred code (the contract↔props bijection
 # is unaffected).
 tag: ui-row
+description: A layout container that lays its children out in a horizontal row with a gap, alignment and justification.
 tier: layout           # geometry size-class (Container/layout band — NO control height; spacing off --md-sys-space × density; geometry.md §"five size-classes")
 extends: UIContainerElement   # structural surface container, NOT form-associated (face below)
 uses: []

@@ -8,6 +8,7 @@
 # overlay-controller LLD-C1..C4; bindable `open` two-way per ADR-0019; form-value
 # per UIFormElement / ADR-0013; ADR-0043 = the overlay + listbox select gate (S4).
 tag: ui-select
+description: A form dropdown that picks one option from a list.
 tier: pattern           # geometry composite: trigger = Control class; panel = Container/surface; rows = legacy item-pad
 extends: UIFormElement  # form-associated: formValue() = selected key; formValidity() = valueMissing
 uses:

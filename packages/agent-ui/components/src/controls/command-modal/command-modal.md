@@ -4,6 +4,7 @@
 # the fence is the /site doc. The `attributes[]` block MUST mirror command-modal.ts `static props` 1:1 — the
 # contract↔props trip-wire (command-modal-descriptor.test.ts) and the frontmatter schema both target this fence.
 tag: ui-command-modal
+description: A command palette in a modal, with a search field that filters a grouped list of commands to run.
 tier: pattern            # a composed control with internal parts, no §1 control-height row of its own (the ui-combo-box precedent)
 extends: UIElement       # the coordinator base (the ui-theme-provider/ui-form-provider precedent) — paints no surface of its own
 uses:

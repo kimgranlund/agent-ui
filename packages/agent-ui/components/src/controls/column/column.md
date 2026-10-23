@@ -8,6 +8,7 @@
 # the s12 packaging slice. Until then the schema flags only `extends` (BAD_EXTENDS); every other rule is clean
 # (asserted in column-descriptor.test.ts by filtering that one transient code).
 tag: ui-column
+description: A layout container that stacks its children vertically with a gap, alignment and justification.
 tier: layout           # geometry size-class (Container/layout band — NO control height; geometry.md "size-classes")
 extends: UIContainerElement  # the surface base (ADR-0015/0016) — a structural container, NOT form-associated (face below)
 uses: []

@@ -7,6 +7,7 @@
 # fence. Field set per .claude/docs/plan.md §10 / ADR-0004; overlay mechanism per the overlay-controller
 # LLD-C1..C4; bindable `open` two-way per ADR-0019; ADR-0043 = the overlay controller gate.
 tag: ui-popover
+description: A trigger that opens a floating panel of content anchored to it, dismissed by an outside click or Escape.
 tier: pattern           # geometry size-class — the panel uses --md-sys-space padding (Container/surface, NOT a control height)
 extends: UIElement      # NOT form-associated — the popover carries no value/validity; it is a disclosure surface
 uses: []

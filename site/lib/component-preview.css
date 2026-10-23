@@ -286,4 +286,21 @@ component-preview {
     border-inline-end: none;
     border-block-end: 1px solid var(--md-sys-color-neutral-outline-variant);
   }
+  /* The artboard's 16rem floor left the side-by-side code view a sliver past the card edge, clipped by the card's
+   * `overflow: hidden` (T-0433): stack the code view under the artboard, each with its own definite height. */
+  .preview-canvas {
+    flex-direction: column;
+    block-size: auto;
+  }
+  .preview-canvas > .canvas-stage {
+    flex: 0 0 auto;
+    block-size: 20rem;
+    min-inline-size: 0;
+  }
+  .preview-code {
+    flex: 0 0 auto;
+    block-size: 16rem;
+    border-inline-start: none;
+    border-block-start: 1px solid var(--md-sys-color-neutral-outline-variant);
+  }
 }

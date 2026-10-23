@@ -5,6 +5,7 @@
 # only this element (the primary /site prose lives on swiper.md, the one-folder precedent — ui-tab/ui-tab-panel
 # mirror this split against tabs.md).
 tag: ui-swiper-item
+description: One slide of a swiper carousel, wrapping any content.
 tier: layout             # geometry size-class — sized entirely by the track; no geometry of its own (SPEC-R9)
 extends: UIElement       # NOT form-associated — a slide wrapper carries no value
 uses: []

@@ -6,6 +6,7 @@
 # Field set per .claude/docs/plan.md §10 / ADR-0004; form participation per ADR-0013; base per ADR-0042/0041
 # (GH #1141 amendment: label/layout land on the shared UIRangeElement base — range-element.lld.md).
 tag: ui-slider-multi
+description: A form slider with two thumbs that picks a low and a high value within a range.
 tier: range           # geometry size-class (Range band — widget box + fill + dual thumbs; geometry.md)
 extends: UIRangeElement   # the Range base (ADR-0042); UISliderMultiElement → UIRangeElement → UIFormElement
 uses: []

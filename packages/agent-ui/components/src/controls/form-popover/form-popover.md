@@ -9,6 +9,7 @@
 # ADR-0019; bindable `label` (one-way) per SPEC-R9/LLD-C6 — the catalog conformance validator
 # rejects a `{path}` binding on a non-bindable prop.
 tag: ui-form-popover
+description: A trigger button that opens a small form in a popover and applies it on submit.
 tier: pattern      # geometry composite: trigger = Control class; panel = Container/surface (select's trigger + popover's panel, by part)
 extends: UIElement # NOT form-associated — the panel's children each own their own value/validity; live-apply (F2) leaves no aggregate draft value on the host
 uses:

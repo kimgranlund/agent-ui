@@ -6,6 +6,7 @@
 # by BEHAVIOUR (component-descriptor.ts `kindOf`) as `json`: its codec's `from(null)` is `[]` (an array),
 # the tableRowsProp shape verbatim.
 tag: ui-description-list
+description: A read-only list of label and value rows for a record, such as a booking or an order summary.
 tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; the ui-stat/ui-table posture, ADR-0201 cl.1) — the levers are the type matrix + the space ladder
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (no events, no keyboard, no focus)
 uses: []

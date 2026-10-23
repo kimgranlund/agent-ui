@@ -8,6 +8,7 @@
 # `--md-sys-widget-inset` (2px) so thumb = box − 4px (LLD-C4 / ADR-0041 cl.3 — proven by switch.browser.test.ts,
 # which RATIFIES ADR-0041 as the S2 green gate).
 tag: ui-switch
+description: A form on and off switch for one setting that applies at once.
 tier: indicator          # geometry size-class (Indicator widget box — compact ramp, not full control height; geometry.md "five size-classes")
 extends: UIIndicatorElement   # the Indicator base (ADR-0042); UISwitchElement → UIIndicatorElement → UIFormElement
 uses: []
