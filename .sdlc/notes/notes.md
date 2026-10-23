@@ -730,3 +730,7 @@
 ## T-0428: A note-only say reply that claims a change on an open surface keeps the full repair (2026-10-23)
 
 - note: produce.ts:1245 `CHANGE_CLAIM_IN_REPLY` is a keyword regex gated on `turnIntent !== undefined`; a claim phrased outside it (for example "Kim's table it is") still takes the reply-only repair. The builder already reports this as open.
+
+## T-0431: A2A Artifact Feed bubbles carrying an artifact use the column width (2026-10-23)
+
+- note: site/pages/a2a-artifact-feed.css:57 fix is page-local `.msg:has(.feed-artifact-stage) { inline-size: 100% }`, no ui-* restyle, no literal geometry.
