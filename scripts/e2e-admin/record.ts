@@ -67,7 +67,7 @@ export function createRecorderState(origin: string): RecorderState {
 
 /** The recorded turn for one observed response. Reads only `builderMission` and `input.kind` from the
  *  request; the body itself is never kept. */
-export function teeTurn(endpoint: 'produce' | 'chat', requestBody: unknown, status: number, text: string): ScriptedTurn {
+export function teeTurn(endpoint: ScriptedTurn['endpoint'], requestBody: unknown, status: number, text: string): ScriptedTurn {
   const b = (requestBody ?? {}) as { builderMission?: unknown; input?: { kind?: unknown } }
   const match: NonNullable<ScriptedTurn['match']> = {}
   if (typeof b.builderMission === 'boolean') match.mission = b.builderMission

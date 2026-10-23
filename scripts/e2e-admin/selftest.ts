@@ -5,7 +5,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { NEGATIVE_CONTROLS, FLOWS } from './flows/index.ts'
-import { createInterceptState, handleRoute, unconsumedTurns, type FulfillLike, type WireLog } from './intercept.ts'
+import { classifyRequest, createInterceptState, handleRoute, unconsumedTurns, type FulfillLike, type WireLog } from './intercept.ts'
 import { createRecorderState, teeRoute, type RecordRouteLike, type ResponseLike } from './record.ts'
 import { assertWireClean, FIXTURES_DIR, guardFlow, negativeVerdict } from './runner.ts'
 import { FlowAssertion, parseScenario, ScenarioError, scrubScenario, ScrubRefusal, type AdminScenario } from './scenario.ts'
@@ -222,6 +222,42 @@ export async function runSelftest(): Promise<number> {
       state.wire.entries.length === requests.length &&
       endpoints === 'status,integrations,produce,chat,produce,produce,other-a2ui,other-a2ui' &&
       statusBodies[0] === JSON.stringify({ available: true, providers: 1 })
+    )
+  })
+
+  await attempt('intercept classifies the naming call and default-answers an unscripted one (T-0413)', async () => {
+    const nameUrl = `${ORIGIN}/__a2ui/agent/chat?purpose=name`
+    const body = { model: 'claude-haiku-5-5', messages: [{ role: 'user', content: 'make a toothbrushing coach agent' }] }
+    const idle = createInterceptState(scenarioOf([]), ORIGIN)
+    const unscripted = fakeRoute('POST', nameUrl, body)
+    await handleRoute(idle, unscripted.route)
+    const idleEntry = idle.wire.entries.at(-1)
+    let idleClean = true
+    try {
+      assertWireClean(wireOf(idle))
+    } catch {
+      idleClean = false
+    }
+    const reply = '{"name":"Brush Buddy","tagline":"Coaches your brushing."}'
+    const scripted = createInterceptState(
+      parseScenario(JSON.stringify(scenarioOf([{ endpoint: 'name', match: { textIncludes: 'toothbrushing' }, respond: { text: reply } }]))),
+      ORIGIN,
+    )
+    const hit = fakeRoute('POST', nameUrl, body)
+    await handleRoute(scripted, hit.route)
+    const hitEntry = scripted.wire.entries.at(-1)
+    return (
+      classifyRequest(ORIGIN, 'POST', nameUrl) === 'name' &&
+      classifyRequest(ORIGIN, 'POST', `${ORIGIN}/__a2ui/agent/chat`) === 'chat' &&
+      idleEntry?.endpoint === 'name' &&
+      idleEntry.outcome === 'fulfilled' &&
+      unscripted.calls.fulfilled[0]?.status === 503 &&
+      idleClean &&
+      hitEntry?.endpoint === 'name' &&
+      hitEntry.outcome === 'fulfilled' &&
+      hitEntry.turnIndex === 0 &&
+      hit.calls.fulfilled[0]?.body === JSON.stringify({ text: reply }) &&
+      unconsumedTurns(wireOf(scripted)).length === 0
     )
   })
 

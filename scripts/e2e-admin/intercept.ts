@@ -2,8 +2,9 @@
 //
 // The keyless guarantee lives here. Every request that leaves the vite origin is aborted, and every
 // same-origin `/__a2ui/` request is answered by this route and never continued to vite, so the dev proxy
-// never sees a request even when `.env` holds a key. The page's three model URLs and the DEV-only
-// integrations GET are answered from the scenario; the wire log records what crossed the edge.
+// never sees a request even when `.env` holds a key. The page's four model URLs (status, produce, chat and
+// the T-0413 naming call) and the DEV-only integrations GET are answered from the scenario; the wire log
+// records what crossed the edge.
 //
 // The handler is written over a narrow structural route type so the selftest can drive it with fakes and
 // no browser; a Playwright `BrowserContext` satisfies `RoutableContext` as-is.
@@ -33,7 +34,7 @@ export interface RoutableContext {
   route(url: string, handler: (route: RouteLike) => unknown): Promise<unknown>
 }
 
-export type WireEndpoint = 'status' | 'integrations' | 'produce' | 'chat' | 'other-a2ui' | 'external'
+export type WireEndpoint = 'status' | 'integrations' | 'produce' | 'chat' | 'name' | 'other-a2ui' | 'external'
 export type WireOutcome = 'fulfilled' | 'aborted' | 'unmatched' | 'exhausted' | 'drifted'
 
 export interface WireEntry {
@@ -77,6 +78,8 @@ export function classifyRequest(origin: string, method: string, rawUrl: string):
   if (method === 'GET' && url.pathname === '/__a2ui/agent/status') return 'status'
   if (method === 'GET' && url.pathname === '/__a2ui/agent/integrations') return 'integrations'
   if (method === 'POST' && url.pathname === '/__a2ui/agent') return 'produce'
+  // T-0413: the new-agent naming call rides the chat arm, labelled `?purpose=name` for this edge only.
+  if (method === 'POST' && url.pathname === '/__a2ui/agent/chat' && url.searchParams.get('purpose') === 'name') return 'name'
   if (method === 'POST' && url.pathname === '/__a2ui/agent/chat') return 'chat'
   return 'other-a2ui'
 }
@@ -92,8 +95,8 @@ export function parseBody(request: RequestLike): unknown {
   }
 }
 
-/** The text a `match.textIncludes` searches: the intent text on produce, the last message on chat. */
-function requestText(endpoint: 'produce' | 'chat', body: unknown): string {
+/** The text a `match.textIncludes` searches: the intent text on produce, the last message on chat and name. */
+function requestText(endpoint: ScriptedTurn['endpoint'], body: unknown): string {
   const b = (body ?? {}) as { input?: { kind?: unknown; text?: unknown }; messages?: { content?: unknown }[] }
   if (endpoint === 'produce') return b.input?.kind === 'intent' && typeof b.input.text === 'string' ? b.input.text : ''
   const last = Array.isArray(b.messages) ? b.messages.at(-1) : undefined
@@ -184,9 +187,17 @@ export async function handleRoute(state: InterceptState, route: RouteLike): Prom
       await route.fulfill(json(404, { error: `e2e-admin: no scripted answer for ${method} ${new URL(url).pathname}` }))
       return
     case 'produce':
-    case 'chat': {
+    case 'chat':
+    case 'name': {
       const turns = state.scenario.turns
       const index = turns.findIndex((turn, i) => !state.wire.consumed[i] && turn.endpoint === endpoint)
+      if (index === -1 && endpoint === 'name') {
+        // T-0413: every Builder flow's first message fires the naming call. A flow that scripts none gets
+        // the failure the page keeps the minted name on, the way `integrations` is answered.
+        log('fulfilled')
+        await route.fulfill(json(503, { error: 'e2e-admin: naming not scripted' }))
+        return
+      }
       if (index === -1) {
         log('exhausted')
         await route.fulfill(json(500, { error: `e2e-admin: no scripted ${endpoint} turn left` }))

@@ -17,7 +17,8 @@ export interface AdminScenario {
 export type ScriptedRespond = { lines: string[] } | { text: string } | { status: number; error: string } | { abort: true }
 
 export interface ScriptedTurn {
-  endpoint: 'produce' | 'chat'
+  /** `name` (T-0413) is the new-agent naming call, `POST /__a2ui/agent/chat?purpose=name`. */
+  endpoint: 'produce' | 'chat' | 'name'
   /** `agent` (T-0163) pins the agent content the turn must run with, `<id>@sha256:<hex>`: a request whose
    *  `bundleDigest` differs is reported as drifted, never silently answered. */
   match?: { mission?: boolean; inputKind?: 'intent' | 'client'; textIncludes?: string; agent?: string }
@@ -95,8 +96,8 @@ function parseRespond(value: unknown, path: string): ScriptedRespond {
 function parseTurn(value: unknown, path: string): ScriptedTurn {
   if (!isObject(value)) throw new ScenarioError(path, 'must be an object')
   onlyKeys(value, ['endpoint', 'match', 'respond', 'delayMs'], path)
-  if (value.endpoint !== 'produce' && value.endpoint !== 'chat') {
-    throw new ScenarioError(`${path}.endpoint`, 'must be "produce" or "chat"')
+  if (value.endpoint !== 'produce' && value.endpoint !== 'chat' && value.endpoint !== 'name') {
+    throw new ScenarioError(`${path}.endpoint`, 'must be "produce", "chat" or "name"')
   }
   const turn: ScriptedTurn = { endpoint: value.endpoint, respond: { abort: true } }
   if (value.match !== undefined) {
