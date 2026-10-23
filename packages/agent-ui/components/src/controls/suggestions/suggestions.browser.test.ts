@@ -60,6 +60,27 @@ describe('ui-suggestions — compact-realm chip geometry (whole-shape gestalt)',
     }
   })
 
+  it('chip corners follow the data-radius cascade: sharp is square, crisp is a quarter-box, balanced and pill are the full pill (T-0427)', async () => {
+    const el = mount()
+    el.suggestions = SET
+    await whenFlushed()
+    const chip = el.querySelector('[data-part="chip"]') as HTMLElement
+    const wrap = el.parentElement as HTMLElement
+    const radiusAt = (radius: string | null): { r: number; h: number } => {
+      if (radius === null) wrap.removeAttribute('data-radius')
+      else wrap.setAttribute('data-radius', radius)
+      return { r: px(getComputedStyle(chip).borderTopLeftRadius), h: chip.getBoundingClientRect().height }
+    }
+    const balanced = radiusAt(null)
+    expect(balanced.r, 'anti-vacuous: the default radius is the full pill').toBeCloseTo(balanced.h / 2, 0)
+    const sharp = radiusAt('sharp')
+    expect(sharp.r).toBe(0)
+    const crisp = radiusAt('crisp')
+    expect(crisp.r).toBeCloseTo(crisp.h / 4, 0)
+    const pill = radiusAt('pill')
+    expect(pill.r).toBeGreaterThanOrEqual(pill.h / 2 - 0.5)
+  })
+
   it('chips sit on one row at the column-gap token when they fit; the row wraps at the row-gap token otherwise', async () => {
     const el = mount()
     el.suggestions = SET
