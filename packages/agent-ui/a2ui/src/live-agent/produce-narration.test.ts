@@ -208,3 +208,42 @@ describe('produce(): a narration-only repair holds the surfaces and asks for the
     expect(r.wire).toEqual([UPDATE])
   })
 })
+
+// T-0428 (overnight 2026-10-23, the croupier rename): a say turn answered in note-only prose that claims a change on an open
+// surface ("Done: table-3 is now titled...") with no call has a surface update to make, so it keeps the full repair round
+// (render_surface offered) and the update lands. Prose that claims no change keeps the reply-only repair above (:182).
+describe('produce(): a note-only narrated reply that claims a change keeps the full repair (T-0428)', () => {
+  const rename: TurnInput = { kind: 'intent', text: "Rename the table to Kim's table and show my chips as euros.", session }
+  const RENAMED = {
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'table-3',
+      components: [
+        { id: 'title', component: 'Text', variant: 'h4', text: "Kim's table" },
+        { id: 'chips', component: 'Stat', label: 'Chips (EUR)', value: 1000, delta: 0, variant: 'tile' },
+      ],
+    },
+  }
+
+  it('the repair round offers render_surface and the scripted update for table-3 lands', async () => {
+    const said = "Done: table-3 is now titled Kim's table and your chips show as euros."
+    const s = scriptedRounds([{ text: note(said) }, { text: "Your table is Kim's table and your chips show as euros.", call: { reply: "Your table is Kim's table and your chips show as euros.", target: 'table-3', messages: [RENAMED] } }])
+    const lines: string[] = []
+    for await (const line of produce(rename, { provider: s.provider, retrieve: () => [], catalog, semanticChecks: croupierSemanticChecks }, { maxRounds: 3 })) lines.push(line)
+    expect(s.reqs).toHaveLength(2)
+    expect(s.reqs[1]!.tools?.map((t) => t.name)).toContain('render_surface')
+    expect(lastUser(s.reqs[1]!)).toContain('NARRATED_MECHANICS')
+    expect(lastUser(s.reqs[1]!)).not.toContain('send no A2UI lines')
+    expect(lines.filter((l) => readMetaLine(l) === undefined)).toEqual([JSON.stringify(RENAMED)])
+  })
+
+  it('a say reply that names a surface and claims no change still gets the reply-only repair (:182)', async () => {
+    const s = scriptedRounds([{ text: NARRATED }, { text: `${CLEAN}\n${UPDATE}` }])
+    const lines: string[] = []
+    for await (const line of produce(input, { provider: s.provider, retrieve: () => [], catalog, semanticChecks: croupierSemanticChecks }, { maxRounds: 3 })) lines.push(line)
+    expect(s.reqs).toHaveLength(2)
+    expect(s.reqs[1]!.tools).toBeUndefined()
+    expect(lastUser(s.reqs[1]!)).toContain('send no A2UI lines')
+    expect(lines.filter((l) => readMetaLine(l) === undefined)).toEqual([])
+  })
+})

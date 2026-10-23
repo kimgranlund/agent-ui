@@ -17,7 +17,8 @@ Source of truth: `produce` in `packages/agent-ui/a2ui/src/agent/produce.ts` (wit
    `FLOW_END_INFERRED`, with no repair round (T-0309); a semantic or narration repair still runs first.
    T-0332: a narration repair (`NARRATED_MECHANICS` as the round's only failure, here or on a valid payload) is not a loop
    round: `produce()` makes one more call with no tool offered, asks for the reply alone, and ships the round's own
-   surfaces with the new reply.
+   surfaces with the new reply. T-0428: a note-only say reply here that claims a change ("Done: table-3 is now titled
+   ...") keeps the full repair round instead, with `render_surface` forced, so the claimed update can land.
 4. `assembleFromRaw`: `stripOuterFence`, per-line `heal`. Any unparseable line fails the round as
    `PARSE`.
 5. `stampCreateSurfaceCatalogId`.

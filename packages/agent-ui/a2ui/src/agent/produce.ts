@@ -1237,6 +1237,13 @@ function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<strin
   return m === null ? undefined : { code: 'NARRATED_MECHANICS', path: m[0] }
 }
 
+/** T-0428: a reply claiming it changed an open surface ("Done: table-3 is now titled Kim's table", "I renamed the
+ *  table"), as the overnight croupier rename recorded it. A narrated note-only say reply that claims one has an update
+ *  to make, so it keeps the full repair; one that claims nothing ("the round on table-3 is settled") takes the reply-only
+ *  repair, which cannot open a surface (T-0332). */
+const CHANGE_CLAIM_IN_REPLY =
+  /(?:\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b)/i
+
 /** T-0299: `findings` plus every missing-composite finding an earlier round of this turn got (`bound`, by code) that
  *  `views` still leave unanswered, worded as still binding; then each new missing-composite finding is bound. A round
  *  cannot drop the composite its moment asks for by building something no row detects (round 6 :161, a Card holding a
@@ -1953,9 +1960,17 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       }
       // T-0234: a reply that narrates the surfaces gets one targeted round, then ships tallied.
       // T-0332: no surface message to hold fixed, so the repair asks for the reply alone and a surface cannot be opened.
+      // T-0428: unless a say reply claims a change, which the full repair round can still make.
       let narrated = narratedMechanics(note, sessionKnownSurfaceIds(input.session))
       if (narrated !== undefined && !narrationFedBack && round < opts.maxRounds - 1) {
         narrationFedBack = true
+        // T-0428: a say reply that claims a change it never sent keeps the full repair, so the update can still land.
+        if (turnIntent !== undefined && CHANGE_CLAIM_IN_REPLY.test(note!)) {
+          failures = [narrated]
+          lastCaptureRound = offeredTools !== undefined
+          forceSurfaceRound = offeredTools !== undefined // as T-0298: prose stood in for the payload
+          continue
+        }
         const firstNarrated = narrated
         const reply = yield* narrationReplyRound(round, firstNarrated)
         failuresFedBack = [...(failuresFedBack ?? []), firstNarrated]
