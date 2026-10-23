@@ -174,8 +174,14 @@
     font-variant-numeric: tabular-nums;
     overflow-wrap: anywhere;
   }
+  /* A line item's amount never breaks: in a narrow column the label wraps instead (T-0432). */
   :scope [data-part='item'] [data-part='label'] {
+    flex: 1 1 0;
     color: inherit;
+  }
+  :scope [data-part='item'] [data-part='value'] {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
   :scope [data-part='quantity'] {
     flex: none;

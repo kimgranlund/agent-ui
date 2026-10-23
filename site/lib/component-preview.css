@@ -52,6 +52,11 @@ component-preview {
   font-size: 0.72rem;
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
+.preview-description {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--md-sys-color-neutral-on-surface);
+}
 
 .preview-section-label {
   font-size: 0.66rem;
@@ -233,8 +238,9 @@ component-preview {
 }
 /* Empty-specimen affordance: a component that renders nothing visible in its current state (e.g. a closed Modal,
  * whose `<dialog>` is display:none and IS a surface child, so `.canvas-surface:empty` never fires) would leave a
- * blank checkered box. The element toggles `.is-empty-specimen` (measured post-frame) and this names the way out. */
-.preview-canvas.is-empty-specimen::after {
+ * blank checkered box. The element toggles `.is-empty-specimen` (measured post-frame) and this names the way out,
+ * centered on the artboard alone: on the whole column it ran across the code view beside it (T-0432). */
+.preview-canvas.is-empty-specimen > .canvas-stage::after {
   content: 'Nothing visible in this state — toggle a knob (e.g. open) to reveal this component.';
   position: absolute;
   inset: 0;

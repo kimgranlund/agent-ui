@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest'
 // Side-effect import: the page module builds the whole A2UI Catalog page into document.body (mountPage appends
 // to `#app ?? document.body`) and self-imports the foundation cascade + self-defining ui-* controls (_page.ts).
 import './a2ui-catalog.ts'
 import { CATALOG_OPTIONS, exemptionFor, typesFor } from '../lib/a2ui-catalog-selector.ts'
+import { defaultCatalog } from '@agent-ui/a2ui'
+import { TIERS } from '../lib/a2ui-catalog-tiers.ts'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
 // so its duration is set by the browser's scheduling, which stretches under concurrent host load.
@@ -83,13 +85,52 @@ async function waitUntil(predicate: () => boolean, timeoutMs = 20_000): Promise<
   }
 }
 
-/** Pick one catalog option through the page's own `change` listener (the capability-registry page precedent). */
-function selectCatalog(id: string): void {
+/** Pick one catalog option the way a reader does: open the ui-select from its trigger, click the option (T-0432:
+ *  a synthetic `change` passed while a real pick, which commits with `select`, changed nothing). */
+async function selectCatalog(id: string): Promise<void> {
   const select = document.querySelector('ui-select.catalog-select') as (HTMLElement & { value: string }) | null
   expect(select, 'no catalog selector on the page').not.toBeNull()
-  select!.value = id
-  select!.dispatchEvent(new Event('change'))
+  select!.querySelector<HTMLElement>('[data-part="trigger"]')!.click()
+  await raf()
+  const option = select!.querySelector<HTMLElement>(`[role="option"][value="${id}"]`)
+  expect(option, `no ${id} option in the catalog selector`).not.toBeNull()
+  option!.click()
+  await raf()
+  expect(select!.value, `the pick did not commit ${id}`).toBe(id)
 }
+
+/** True when the rendered root, or any element under it, lays out a box with both sides non-zero (a closed
+ *  overlay's host is 0x0 while its trigger is visible, component-preview's own empty-hint rule). */
+function rendersBox(root: Element | null | undefined): boolean {
+  if (!root) return false
+  return [root, ...root.querySelectorAll('*')].some((el) => {
+    const r = el.getBoundingClientRect()
+    return r.width > 0 && r.height > 0
+  })
+}
+
+/** The generic kind label component-preview shows for every a2ui target; never a type's description (T-0432). */
+const KIND_PLACEHOLDER = /^A2UI catalog component/
+
+// T-0432: console errors and uncaught errors over every test in this file (catalog switches, the tier walk). The
+// page module loads before this hook, so its build is covered by the walk's no-`.preview-error` check instead.
+const consoleErrors: string[] = []
+const onWindowError = (event: ErrorEvent): void => {
+  consoleErrors.push(`window error: ${event.message}`)
+}
+let consoleSpy: { mockRestore(): void } | undefined
+beforeAll(() => {
+  const original = console.error.bind(console)
+  consoleSpy = vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
+    consoleErrors.push(args.map(String).join(' '))
+    original(...args)
+  })
+  window.addEventListener('error', onWindowError)
+})
+afterAll(() => {
+  consoleSpy?.mockRestore()
+  window.removeEventListener('error', onWindowError)
+})
 
 function rectOf(el: HTMLElement): string {
   const r = el.getBoundingClientRect()
@@ -250,7 +291,7 @@ describe('a2ui-catalog — the tab-strip shape (five tier tabs, one visible pane
 describe('a2ui-catalog: the catalog selector (T-0064)', () => {
   for (const id of CATALOG_OPTIONS.filter((option) => option !== 'agent-ui')) {
     it(`T-0064: every non-default catalog option renders one card per type, each non-exempt card with a mounted root: ${id}`, async () => {
-      selectCatalog(id)
+      await selectCatalog(id)
       const view = document.querySelector<HTMLElement>(`div.catalog-alt[data-catalog="${id}"]`)
       expect(view, `no alternate view for ${id}`).not.toBeNull()
       const types = typesFor(id)
@@ -268,17 +309,23 @@ describe('a2ui-catalog: the catalog selector (T-0064)', () => {
           expect(section.querySelector('.canvas-surface'), `${id} ${type}: an exempt card renders no canvas`).toBeNull()
         } else {
           expect(section.querySelector('.canvas-surface')!.childElementCount, `${id} ${type}: no mounted root`).toBeGreaterThan(0)
+          expect(rendersBox(section.querySelector('.canvas-surface')!.firstElementChild), `${id} ${type}: the preview lays out no box`).toBe(true)
         }
+        // T-0432: every type carries its own description from its catalog's selection sidecar.
+        const about = section.querySelector('p.catalog-alt-description')?.textContent?.trim() ?? ''
+        expect(about.length, `${id} ${type}: no type description`).toBeGreaterThan(0)
+        expect(about, `${id} ${type}: a placeholder description`).not.toMatch(KIND_PLACEHOLDER)
       }
       const tabs = document.querySelector<HTMLElement>('ui-tabs.catalog-tabs')!
       expect(tabs.hidden, 'the tier tabs stay visible on a non-default catalog').toBe(true)
       expect(getComputedStyle(tabs).display, 'the tier tabs still lay out on a non-default catalog').toBe('none')
       expect(new URLSearchParams(location.search).get('catalog'), 'the query parameter does not name the catalog').toBe(id)
+      expect(consoleErrors, `${id}: console errors`).toEqual([])
     })
   }
 
   it('T-0064: switching back to agent-ui restores the tier tabs and hides the alternate view', async () => {
-    selectCatalog('agent-ui')
+    await selectCatalog('agent-ui')
     await raf()
     const tabs = document.querySelector<HTMLElement>('ui-tabs.catalog-tabs')!
     expect(tabs.hidden, 'the tier tabs stay hidden on agent-ui').toBe(false)
@@ -289,4 +336,81 @@ describe('a2ui-catalog: the catalog selector (T-0064)', () => {
     for (const view of views) expect(view.hidden, `${view.dataset.catalog} stays shown on agent-ui`).toBe(true)
     expect(new URLSearchParams(location.search).has('catalog'), 'agent-ui keeps a catalog query parameter').toBe(false)
   })
+})
+
+// T-0432: the walk. Every tier tab of the default catalog and every card in it: a real description, knobs equal to
+// the catalog schema's props, a preview that lays out a box, and a knob edit that re-renders it. The non-default
+// catalogs are walked by the T-0064 tests above (description plus a laid-out preview; those cards are seed renders
+// with no knob rail by design). Console errors are counted over the walk and the catalog switches; the page build
+// itself is covered by the no-`.preview-error` check, since the page module loads before any spy can install.
+describe('a2ui-catalog: every card of every tier is accurate and live (T-0432)', () => {
+  it('the default catalog view is showing with no filter, and no card failed to build', async () => {
+    await selectCatalog('agent-ui')
+    const filterEditor = document.querySelector('.catalog-filter-input [data-part="editor"]') as HTMLElement | null
+    if (filterEditor && filterEditor.textContent !== '') {
+      filterEditor.textContent = ''
+      filterEditor.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+    await raf()
+    expect(document.querySelectorAll('.catalog-item .preview-error').length, 'a card failed to resolve its target').toBe(0)
+    expect(document.querySelectorAll('.catalog-item').length, 'anti-vacuous: the page lists cards').toBeGreaterThan(50)
+  })
+
+  for (const tier of TIERS) {
+    it(`${tier}: each card has a real description, schema knobs, a laid-out preview that re-renders on a knob edit`, async () => {
+      clickTierTab(tier)
+      await raf()
+      const panel = [...document.querySelectorAll<HTMLElement>('ui-tabs.catalog-tabs > ui-tab-panel')].find((p) => !p.hidden)!
+      const cards = [...panel.querySelectorAll<HTMLElement>(':scope > section.catalog-item')]
+      expect(cards.length, `${tier}: no cards`).toBeGreaterThan(0)
+      let edited = 0
+      for (const card of cards) {
+        const name = card.querySelector('.catalog-item-title')!.textContent!
+        const preview = card.querySelector('component-preview')!
+        const def = defaultCatalog.components[name]
+        expect(def, `${name}: not a default catalog type`).toBeDefined()
+
+        const about = preview.querySelector('.preview-description')?.textContent?.trim() ?? ''
+        expect(about.length, `${name}: no description`).toBeGreaterThan(0)
+        expect(about, `${name}: the description is the generic kind label`).not.toMatch(KIND_PLACEHOLDER)
+
+        const knobNames = [...preview.querySelectorAll('.preview-knobs > .knob > .knob-label')].map((l) => l.textContent)
+        expect(knobNames, `${name}: knobs differ from the catalog schema's props`).toEqual(Object.keys(def!.properties))
+
+        const surface = preview.querySelector('.canvas-surface')!
+        card.scrollIntoView({ block: 'center' })
+        await raf()
+        if (!rendersBox(surface.firstElementChild)) {
+          // A closed overlay (Modal, Drawer) shows nothing until its `open` knob is on: turn it on, measure, turn it off.
+          const open = [...preview.querySelectorAll<HTMLElement>('.preview-knobs > .knob')]
+            .find((k) => k.querySelector('.knob-label')?.textContent === 'open')
+            ?.querySelector<HTMLElement & { checked: boolean }>('ui-switch')
+          expect(open, `${name}: the preview lays out no box and has no open knob to reveal it`).toBeTruthy()
+          open!.click()
+          await raf()
+          expect(open!.checked, `${name}: the open knob did not turn on`).toBe(true)
+          expect(rendersBox(surface.firstElementChild), `${name}: the preview lays out no box with open on`).toBe(true)
+          open!.click()
+          await raf()
+        }
+
+        // A knob edit rebuilds the surface through a fresh renderer: the root is a new element afterwards.
+        const field = preview.querySelector<HTMLElement & { value: string }>('.preview-knobs > .knob > ui-text-field[type="text"]')
+        if (field === null) continue
+        const before = surface.firstElementChild
+        const original = field.value
+        field.value = original === 'T-0432 probe' ? 'T-0432 probe 2' : 'T-0432 probe'
+        field.dispatchEvent(new Event('input', { bubbles: true }))
+        await raf()
+        expect(surface.firstElementChild, `${name}: a knob edit did not re-render the preview`).not.toBe(before)
+        expect(surface.firstElementChild, `${name}: a knob edit left no root`).not.toBeNull()
+        field.value = original
+        field.dispatchEvent(new Event('input', { bubbles: true }))
+        await raf()
+        edited++
+      }
+      expect(edited, `anti-vacuous: ${tier} edited at least one knob`).toBeGreaterThan(0)
+      expect(consoleErrors, `${tier}: console errors`).toEqual([])
+    })
+  }
 })

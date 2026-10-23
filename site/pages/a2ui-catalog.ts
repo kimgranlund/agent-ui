@@ -23,8 +23,9 @@ import type { Tier } from '../lib/a2ui-catalog-tiers.ts'
 import type { UISelectElement } from '@agent-ui/components/controls/select'
 import { createRenderer, splitCatalogId } from '@agent-ui/a2ui'
 import { FLEET_CATALOG_ID } from '@agent-ui/a2ui/registry'
-import { CATALOG_OPTIONS, catalogFromSearch, exampleSeedFor, exemptionFor, typesFor } from '../lib/a2ui-catalog-selector.ts'
+import { CATALOG_OPTIONS, catalogFromSearch, domainFor, exampleSeedFor, exemptionFor, typesFor } from '../lib/a2ui-catalog-selector.ts'
 import { createCanvasSurface, applyRootStretch } from '../lib/canvas-surface.ts'
+import { typeDescription } from '../lib/a2ui-type-description.ts'
 import '../lib/warm-catalog.ts' // ADR-0241 (T-0040): the default catalog body is in before the first <component-preview mode="a2ui"> builds its renderer, which that element reads synchronously
 
 // The browsable name list is the ONE derivation in `../lib/a2ui-catalog-tiers.ts` (`browsableNames()` — catalog
@@ -228,8 +229,9 @@ async function fillAltView(view: HTMLElement, catalogId: string): Promise<void> 
   if (tail === undefined) {
     lead.textContent = `Every type the ${catalogId} catalog declares (${types.length}), each rendered from the first example seed that uses it.`
   } else {
+    const kind = domainFor(catalogId) === undefined ? 'persona' : 'domain'
     lead.textContent =
-      `The ${tail} persona on the ${base} base: the ${types.length} types its fragment adds, each ` +
+      `The ${tail} ${kind} on the ${base} base: the ${types.length} types its fragment adds, each ` +
       `rendered from the first example seed that uses it. The ${base} types are under the ${base} option.`
   }
   view.append(lead)
@@ -254,6 +256,14 @@ async function fillAltView(view: HTMLElement, catalogId: string): Promise<void> 
     heading.className = 'catalog-alt-title'
     heading.textContent = type
     section.append(heading)
+    // T-0432: the type's own description from its catalog's selection sidecar, above the seed that renders it.
+    const description = typeDescription(catalogId, type)
+    if (description !== undefined) {
+      const typeAbout = document.createElement('p')
+      typeAbout.className = 'catalog-alt-description'
+      typeAbout.textContent = description
+      section.append(typeAbout)
+    }
     view.append(section)
 
     const exemption = exemptionFor(catalogId, type)
@@ -294,7 +304,8 @@ function showCatalog(catalogId: string): void {
   for (const [id, view] of altViews) view.hidden = id !== catalogId
 }
 
-catalogSelect.addEventListener('change', () => {
+// ui-select commits a pick with `select` (select.md events), never `change` (T-0432: a real pick changed nothing).
+catalogSelect.addEventListener('select', () => {
   const catalogId = catalogSelect.value
   const url = new URL(location.href)
   if (catalogId === FLEET_CATALOG_ID) url.searchParams.delete('catalog')

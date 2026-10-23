@@ -17,6 +17,7 @@ import './component-preview.css'
 import { createRenderer, defaultCatalog, valueSlots } from '@agent-ui/a2ui'
 import type { RendererHost, ComponentDef, PropDef, JsonSchema } from '@agent-ui/a2ui'
 import { loadDescriptorByTag } from './frontmatter.ts'
+import { typeDescription } from './a2ui-type-description.ts'
 import type { ParsedAttribute } from '@agent-ui/components/descriptor'
 import type { UISelectElement } from '@agent-ui/components/controls/select'
 import type { UISwitchElement } from '@agent-ui/components/controls/switch'
@@ -378,8 +379,9 @@ export const A2UI_INITIAL: Record<string, Record<string, string>> = {
   AmountPicker: { label: 'Bet', min: '5', max: '250', step: '5', value: '50', currency: 'USD', slider: 'true', actionName: 'place_bet', actionLabel: 'Place bet' },
   // OptionDeck (T-0193): the string knobs here; the `options` array and `allowRandom` ride SAMPLE_TREES rootRef.
   OptionDeck: { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.', actionName: 'start' },
-  // ConfirmReceipt (T-0195): the string and enum knobs here; rows, items, totalLabel/totalPath, data and the two actions have no preview sample (the preview gate does not require one).
-  ConfirmReceipt: { title: 'Your order', status: 'pending', refPath: 'ref' },
+  // ConfirmReceipt (T-0195): the string and enum knobs here; rows, items, data and the two actions ride SAMPLE_TREES
+  // rootRef (T-0432: without them the card showed a bare title and a lone Confirm).
+  ConfirmReceipt: { title: 'Your order', status: 'pending', refPath: 'ref', totalLabel: 'Total', totalPath: 'total' },
   // StepFlow (T-0198): the finish label here; `steps`, `finishAction` and the scenes ride SAMPLE_TREES rootRef.
   StepFlow: { finishLabel: 'Book' },
   // OptionCompare (T-0393): the string knobs here; the `rows` and `options` arrays ride SAMPLE_TREES rootRef.
@@ -966,6 +968,21 @@ const SAMPLE_TREES: Record<string, () => Sample> = {
         { value: "play texas hold'em", title: "Texas Hold'em", description: 'Two hole cards, five on the board.', icon: 'heart', tone: 'accent', index: 'K', meta: ['2 to 9 players', '15 min'] },
         { value: 'play five-card draw', title: 'Five-card draw', description: 'Swap up to three cards once, then show down.', icon: 'sparkle', tone: 'info', index: '5', meta: ['2 to 6 players', '10 min'] },
       ],
+    },
+    extras: [],
+  }),
+  // ConfirmReceipt (T-0432): the Shopkeeper order of catalog-frontier.ts's frontier-confirm-receipt-order, with its
+  // values literal rather than bound; an explicit empty extras list because the receipt has no children.
+  ConfirmReceipt: () => ({
+    rootRef: {
+      items: [
+        { label: 'Linen tea towel', quantity: 2, amount: '$24.00' },
+        { label: 'Oak serving board', quantity: 1, amount: '$58.00' },
+      ],
+      data: { subtotal: '$82.00', delivery: '$6.50', total: '$88.50', ref: 'Order SK-4417' },
+      rows: [{ label: 'Subtotal', path: 'subtotal' }, { label: 'Delivery', path: 'delivery' }],
+      confirmAction: { action: 'place_order', context: { order: 'SK-4417' } },
+      backAction: { action: 'edit_order' },
     },
     extras: [],
   }),
@@ -1988,7 +2005,7 @@ class ComponentPreview extends HTMLElement {
     root.className = 'preview'
     const controls = document.createElement('div')
     controls.className = 'preview-controls'
-    controls.append(this.#buildDetails(meta.kindLabel), this.#buildKnobs())
+    controls.append(this.#buildDetails(meta.kindLabel, meta.description), this.#buildKnobs())
 
     const canvasCol = document.createElement('div')
     canvasCol.className = 'preview-canvas'
@@ -2007,13 +2024,15 @@ class ComponentPreview extends HTMLElement {
     this.#render()
   }
 
-  /** Resolve the target's knobs + a human kind label + (a2ui) its catalog def, or undefined when unknown. */
-  #resolveMeta(): { knobs: Knob[]; kindLabel: string; def?: ComponentDef } | undefined {
+  /** Resolve the target's knobs + a human kind label + (a2ui) its catalog def and description, or undefined when unknown. */
+  #resolveMeta(): { knobs: Knob[]; kindLabel: string; description?: string; def?: ComponentDef } | undefined {
     if (this.#mode === 'a2ui') {
       const def = defaultCatalog.components[this.#target]
       if (!def) return undefined
       const child = def.children ? ` · children: ${def.children}` : ''
-      return { knobs: a2uiKnobs(def), kindLabel: `A2UI catalog component${child}`, def }
+      // T-0432: the type's real description (descriptor or selection intents), never a generic placeholder.
+      const description = typeDescription(defaultCatalog.catalogId, this.#target)
+      return { knobs: a2uiKnobs(def), kindLabel: `A2UI catalog component${child}`, description, def }
     }
     const doc = loadDescriptorByTag(this.#target)
     if (!doc) return undefined
@@ -2041,7 +2060,7 @@ class ComponentPreview extends HTMLElement {
   }
 
   // ── left column builders ───────────────────────────────────────────────────────────────────────────────────
-  #buildDetails(kindLabel: string): HTMLElement {
+  #buildDetails(kindLabel: string, description?: string): HTMLElement {
     const details = document.createElement('div')
     details.className = 'preview-details'
     const name = document.createElement('p')
@@ -2050,7 +2069,14 @@ class ComponentPreview extends HTMLElement {
     const kind = document.createElement('span')
     kind.className = 'preview-kind'
     kind.textContent = kindLabel
-    details.append(name, kind)
+    details.append(name)
+    if (description !== undefined) {
+      const about = document.createElement('p')
+      about.className = 'preview-description'
+      about.textContent = description
+      details.append(about)
+    }
+    details.append(kind)
     return details
   }
 

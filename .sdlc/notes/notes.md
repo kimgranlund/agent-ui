@@ -592,6 +592,7 @@
 - decide: `packages/agent-ui/a2ui/src/catalog/composite-moments.ts:364` `isSettledSignal` knows Badge, Card, CardHeader and heading Text only, so a settled ConfirmReceipt does not stand aside the way a Badge does; the Do does not name it. Candidate for the BookingConfirmation retirement follow-up. -> T-0399
 - note: em dashes kept in edited lines, all in pre-existing text: `packages/agent-ui/a2ui/src/agent/prompts/grammar.md:91`, `site/agent-content/workflows/booking-flow/WORKFLOW.md:4` and `:12`, `packages/agent-ui/a2ui/src/live-agent/system-prompt-grammar.test.ts:122` (the retitled `it`).
 - note: `site/agent-content/skills/cart-summary/SKILL.md:12` "on the same surface" and `site/agent-content/workflows/trip-plan/WORKFLOW.md:12` "on that surface" do not restate grammar's "a surface the turn's meta-line does not name as "ask""; the cart and itinerary surfaces are not asks, so they agree, but the link is unsaid.
+
 ## T-0196: Amount picker pattern (the missing Stepper): one bound number with chips, +/- or slider, bounds, step and one commit (2026-10-20)
 
 - note: `.sdlc/tickets/0196-amount-picker/mockup/widget-{light,dark,400}.png` capture the demo page (two of the mockup's six tiles: shopkeeper chips, negotiator currency slider); the unit, no-commit, at-min and at-max states are covered only by the visual goldens `amount-picker-states-{light,dark}`, not by a parity capture.
@@ -734,3 +735,7 @@
 ## T-0431: A2A Artifact Feed bubbles carrying an artifact use the column width (2026-10-23)
 
 - note: site/pages/a2a-artifact-feed.css:57 fix is page-local `.msg:has(.feed-artifact-stage) { inline-size: 100% }`, no ui-* restyle, no literal geometry.
+
+## T-0432: The A2UI catalog page shows every catalog's components accurately and its display works (2026-10-23)
+
+- note: builder-reported unfixed items (not criteria): about 30 descriptors without `description:`, capability-registry.ts:86 still listens for `change` on a ui-select, code panel clipped at 400px, OptionDeck allowRandom knob off while sample sets it on, images.example.com seed requests. Candidates for follow-up tickets.
