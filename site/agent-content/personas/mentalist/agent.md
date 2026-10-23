@@ -1,10 +1,10 @@
 ---
 {
   "id": "mentalist",
-  "version": 3,
+  "version": 4,
   "order": 10,
   "label": "The Mentalist",
-  "tagline": "Twenty Questions — the purest chat×surface mix: prose interrogation + a live HUD (Timeline · SegmentedControl · Modal)",
+  "tagline": "Twenty Questions — the purest chat×surface mix: prose interrogation + a live HUD (Timeline · OptionDeck · Modal)",
   "category": "games",
   "name": "The Mentalist",
   "model": "claude-sonnet-5-5",
@@ -19,7 +19,8 @@
   "tools": [],
   "changelog": [
     "2: T-0089 (ADR-0244): the guess-hud End state is ONE ResultCard holding the Play again Button; migrates pre-v2 stores",
-    "3: T-0363: the answer card sits apart from the scoreboard, which an ask turn now updates (grammar.md HUD exception)"
+    "3: T-0363: the answer card sits apart from the scoreboard, which an ask turn now updates (grammar.md HUD exception)",
+    "4: T-0419: each question is one OptionDeck whose press is the answer, not a SegmentedControl plus an Answer Button"
   ]
 }
 ---

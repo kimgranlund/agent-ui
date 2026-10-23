@@ -141,7 +141,7 @@ import {
 } from '../../src/examples/catalog-coverage.ts'
 import { kpiPanelLifecycleSeed } from '../../src/examples/message-lifecycle.ts'
 import { feedbackFormSeed, elevationScaleSeed, triviaRoundResumeSeed } from '../../src/examples/corpus-growth.ts'
-import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, stepFlowBookingSeed, optionCompareLegsSeed } from '../../src/examples/catalog-frontier.ts'
+import { tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, singlePickDeckSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, stepFlowBookingSeed, optionCompareLegsSeed } from '../../src/examples/catalog-frontier.ts'
 import { structuredContainerSeed } from '../../src/examples/structured-container.ts'
 import {
   supportTicketCloseThenNewSeed,
@@ -331,7 +331,8 @@ const SEEDS_BY_MODULE: ReadonlyArray<SeedGroup<'agent-ui'>> = [
       roundOutcomeToastSeed,
       bookingReceiptSeed, // GH #1185, re-admitted by T-0318 as a settled expense-claim receipt (2026-10-17t13-06-33z--t0318-booking-receipt-rejudge.json)
       heroListingCardSeed,
-      cardAnatomyAskSeed, // GH #1199 — the card-anatomy law exemplar; admission pending the judged wave (disposition-allowlist.ts)
+      cardAnatomyAskSeed, // GH #1199, the card-anatomy law exemplar; re-admitted by T-0419 as a pick inside a delivery-options form (corpus/verdicts/, t0419)
+      singlePickDeckSeed, // T-0419, the single pick asked on its own as one OptionDeck; judged and admitted by T-0419
       backableWizardSeed, // GH #1192, the backable-multi-step wizard exemplar; re-admitted by T-0335 as a time-off request (2026-10-17t14-17-58z--t0335-backable-wizard-dates.json)
       greetCardSeed, // GH #1201, the greet-bookend exemplar (reserved greet-1 id class); re-admitted by T-0318 as a Row of plain Buttons (2026-10-17t12-47-14z--t0318-greet-card.json)
       latencyLineChartSeed, // ADR-0205/GH #1207 — the LineChart coverage-gap seed; admission pending the judged wave (disposition-allowlist.ts)

@@ -35,8 +35,8 @@ export const CATALOG_LAYER_MAP: Readonly<Record<string, LayerRow>> = Object.free
   SourceList: agentic,
   Suggestions: agentic,
   ResultCard: agentic,
-  // T-0193: a pick of one of a few things to start (the greet's starter cards, Surprise me hands the pick to the
-  // agent); no prop names a field, so it is the Suggestions class, not core.
+  // T-0193, T-0419: a single pick asked on its own or of what to start (the greet's starter cards, Surprise me hands the
+  // pick to the agent); no prop names a field, so it is the Suggestions class, not core.
   OptionDeck: agentic,
   ConfirmReceipt: agentic,
   // T-0198: a client-side wizard over scene children building one draft; no prop names a domain, so agentic.

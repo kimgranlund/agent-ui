@@ -797,17 +797,17 @@ describe('buildSystemPrompt feed-ask archetype vocabulary — mode-scaled (ADR-0
     expect(prompt).not.toMatch(/Feed-ask archetypes, balanced:/)
   })
 
-  it('every mode teaches all five archetype recipes (RadioGroup/SegmentedControl, Checkboxes, typed-value, option cards, confirm/cancel)', () => {
+  it('every mode teaches all five archetype recipes (the single-pick OptionDeck, Checkboxes, typed-value, option cards, confirm/cancel)', () => {
     for (const mode of ['specific', 'blue-sky'] as const) {
       const prompt = buildSystemPrompt(defaultCatalog, [], mode)
-      expect(prompt).toMatch(/RadioGroup or\s+SegmentedControl/)
+      expect(prompt).toMatch(/closed single-choice \(ONE\s+OptionDeck/)
       expect(prompt).toMatch(/multi-select \(Checkboxes/)
       expect(prompt).toMatch(/typed-value/)
       expect(prompt).toMatch(/option cards/)
       expect(prompt).toMatch(/confirm\/cancel/)
     }
     const dflt = buildSystemPrompt(defaultCatalog, [])
-    expect(dflt).toMatch(/RadioGroup \(or SegmentedControl/)
+    expect(dflt).toMatch(/single\s+pick\s+among\s+two\s+to\s+eight\s+options\s+use\s+ONE\s+OptionDeck/)
     expect(dflt).toMatch(/wrap Checkboxes \(bound to distinct data-model paths\) in a Column/)
   })
 
@@ -979,6 +979,31 @@ describe('buildSystemPrompt personaPatch teaching — the authoring gate (SPEC-R
   })
 })
 
+// ── T-0419 (Kim 2026-10-22): every persona asks a single pick among two to eight options as ONE own-commit OptionDeck.
+// The default grammar owns the deck anatomy; specific and blue-sky carry it in their own ask-archetypes text. A
+// RadioGroup or SegmentedControl stays only as one field of a larger form. ──
+
+describe('single-pick OptionDeck archetype (T-0419)', () => {
+  it('default teaches the deck, its commit by press, its icons and the in-form RadioGroup', () => {
+    const prompt = buildSystemPrompt(defaultCatalog, [])
+    expect(prompt).toMatch(/ONE\s+OptionDeck\s+with\s+"actionName":"choose"/)
+    expect(prompt).toMatch(/no\s+Card\s+around\s+it\s+and\s+no\s+Button/)
+    expect(prompt).toMatch(/its\s+press\s+commits/)
+    expect(prompt).toMatch(/"icon"\s+naming\s+a\s+fitting\s+glyph/)
+    expect(prompt).toMatch(/belongs\s+inside\s+a\s+larger\s+form/)
+    expect(prompt).toMatch(/single-pick\s+OptionDeck\s+ask/)
+    expect(prompt).not.toMatch(/small closed set of options use a RadioGroup/)
+  })
+
+  it('specific and blue-sky teach the closed single-choice as ONE OptionDeck', () => {
+    for (const mode of ['specific', 'blue-sky'] as const) {
+      const prompt = buildSystemPrompt(defaultCatalog, [], mode)
+      expect(prompt).toMatch(/closed single-choice \(ONE\s+OptionDeck/)
+      expect(prompt).toMatch(/RadioGroup or\s+SegmentedControl only inside a\s+larger form/)
+    }
+  })
+})
+
 // ── T-0412: the Builder interview asks a single pick through an own-commit control. The whole prompt
 // already names OptionDeck (the inventory, grammar.md's own-commit exception), so the pin slices the
 // `mission` section alone by its offset in `buildSystemPromptSections().sections`. ──
@@ -994,17 +1019,15 @@ describe('builder-mission pick shape (T-0412)', () => {
     return undefined
   }
 
-  it('the mission section teaches OptionDeck and OptionCompare with no commit Button, over the RadioGroup archetype', () => {
+  // T-0419: grammar now owns the deck anatomy (no Button, no Card, the icon, the action context value), so the mission
+  // points at the archetype and keeps only its examples, OptionCompare for models and the patch.
+  it('the mission section routes the pick to the single-pick OptionDeck archetype, or OptionCompare, and patches the value', () => {
     const mission = missionOf(true)
     expect(mission, 'the mission section composes on a Builder turn').toBeDefined()
-    expect(mission).toMatch(/ONE\s+OptionDeck\s+with\s+actionName\s+"choose"/)
-    expect(mission).toMatch(/ONE\s+OptionCompare\s+with\s+actionName\s+"choose"/)
-    expect(mission).toMatch(/commits\s+by\s+its\s+own\s+press/)
-    expect(mission).toMatch(/add\s+no\s+Button/)
-    expect(mission).toMatch(/replaces\s+the\s+balanced\s+feed-ask\s+archetype's\s+RadioGroup/)
-    expect(mission).toMatch(/action\s+context\s+value/)
-    // Kim 2026-10-22: every option carries an icon, or its disc renders empty.
-    expect(mission).toMatch(/its\s+icon\s+names\s+a\s+fitting\s+glyph/)
+    expect(mission).toMatch(/single-pick\s+OptionDeck/)
+    expect(mission).toMatch(/ONE\s+OptionCompare/)
+    expect(mission).toMatch(/that\s+value\s+is\s+what\s+you\s+patch/)
+    expect(mission).not.toMatch(/RadioGroup/)
   })
 
   it('the mission section is absent when the turn is not the Builder interview', () => {

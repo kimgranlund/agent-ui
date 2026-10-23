@@ -333,7 +333,7 @@
             {
               "name": "render_surface",
               "input": {
-                "reply": "Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.",
+                "reply": "Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below.",
                 "messages": [
                   {
                     "version": "v1.0",
@@ -345,49 +345,15 @@
                   },
                   {
                     "version": "v1.0",
-                    "updateDataModel": {
-                      "surfaceId": "ask-1",
-                      "value": {
-                        "draft": {
-                          "answer": ""
-                        }
-                      }
-                    }
-                  },
-                  {
-                    "version": "v1.0",
                     "updateComponents": {
                       "surfaceId": "ask-1",
                       "components": [
                         {
                           "id": "root",
-                          "component": "Card",
-                          "children": [
-                            "hd",
-                            "ct",
-                            "ft"
-                          ]
-                        },
-                        {
-                          "id": "hd",
-                          "component": "CardHeader",
-                          "children": [
-                            "title"
-                          ]
-                        },
-                        {
-                          "id": "title",
-                          "component": "Text",
-                          "text": "Twenty Questions",
-                          "variant": "h4"
-                        },
-                        {
-                          "id": "ct",
-                          "component": "CardContent",
+                          "component": "Column",
                           "children": [
                             "hud",
-                            "q_text",
-                            "ans"
+                            "deck"
                           ]
                         },
                         {
@@ -408,61 +374,30 @@
                           }
                         },
                         {
-                          "id": "q_text",
-                          "component": "Text",
-                          "text": "Is it a living thing?",
-                          "variant": "h5"
-                        },
-                        {
-                          "id": "ans",
-                          "component": "RadioGroup",
-                          "value": {
-                            "path": "/draft/answer"
-                          },
-                          "name": "answer",
-                          "orientation": "horizontal",
-                          "children": [
-                            "r_yes",
-                            "r_no",
-                            "r_sort"
-                          ]
-                        },
-                        {
-                          "id": "r_yes",
-                          "component": "Radio",
-                          "value": "yes",
-                          "label": "Yes"
-                        },
-                        {
-                          "id": "r_no",
-                          "component": "Radio",
-                          "value": "no",
-                          "label": "No"
-                        },
-                        {
-                          "id": "r_sort",
-                          "component": "Radio",
-                          "value": "sort_of",
-                          "label": "Sort of"
-                        },
-                        {
-                          "id": "ft",
-                          "component": "CardFooter",
-                          "children": [
-                            "commit"
-                          ]
-                        },
-                        {
-                          "id": "commit",
-                          "component": "Button",
-                          "label": "Answer",
-                          "variant": "solid",
-                          "action": {
-                            "action": "answer_question",
-                            "context": {
-                              "questionId": 1
+                          "id": "deck",
+                          "component": "OptionDeck",
+                          "heading": "Is it a living thing?",
+                          "actionName": "choose",
+                          "options": [
+                            {
+                              "value": "yes",
+                              "title": "Yes",
+                              "description": "It fits what I am thinking of.",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "value": "no",
+                              "title": "No",
+                              "description": "It does not fit.",
+                              "icon": "x-circle"
+                            },
+                            {
+                              "value": "sort_of",
+                              "title": "Sort of",
+                              "description": "Partly, or it depends.",
+                              "icon": "circle-half"
                             }
-                          }
+                          ]
                         }
                       ]
                     }
@@ -676,7 +611,7 @@
             {
               "name": "render_surface",
               "input": {
-                "reply": "Living, so we're in the big biological pile now. Question 2 of 20: is it an animal? Pick Yes, No, or Sort of below and hit Answer.",
+                "reply": "Living, so we're in the big biological pile now. Question 2 of 20: is it an animal? Pick Yes, No, or Sort of below.",
                 "messages": [
                   {
                     "version": "v1.0",
@@ -688,49 +623,15 @@
                   },
                   {
                     "version": "v1.0",
-                    "updateDataModel": {
-                      "surfaceId": "ask-2",
-                      "value": {
-                        "draft": {
-                          "answer": ""
-                        }
-                      }
-                    }
-                  },
-                  {
-                    "version": "v1.0",
                     "updateComponents": {
                       "surfaceId": "ask-2",
                       "components": [
                         {
                           "id": "root",
-                          "component": "Card",
-                          "children": [
-                            "hd",
-                            "ct",
-                            "ft"
-                          ]
-                        },
-                        {
-                          "id": "hd",
-                          "component": "CardHeader",
-                          "children": [
-                            "title"
-                          ]
-                        },
-                        {
-                          "id": "title",
-                          "component": "Text",
-                          "text": "Twenty Questions",
-                          "variant": "h4"
-                        },
-                        {
-                          "id": "ct",
-                          "component": "CardContent",
+                          "component": "Column",
                           "children": [
                             "hud",
-                            "q_text",
-                            "ans"
+                            "deck"
                           ]
                         },
                         {
@@ -751,61 +652,30 @@
                           }
                         },
                         {
-                          "id": "q_text",
-                          "component": "Text",
-                          "text": "Is it an animal?",
-                          "variant": "h5"
-                        },
-                        {
-                          "id": "ans",
-                          "component": "RadioGroup",
-                          "value": {
-                            "path": "/draft/answer"
-                          },
-                          "name": "answer",
-                          "orientation": "horizontal",
-                          "children": [
-                            "r_yes",
-                            "r_no",
-                            "r_sort"
-                          ]
-                        },
-                        {
-                          "id": "r_yes",
-                          "component": "Radio",
-                          "value": "yes",
-                          "label": "Yes"
-                        },
-                        {
-                          "id": "r_no",
-                          "component": "Radio",
-                          "value": "no",
-                          "label": "No"
-                        },
-                        {
-                          "id": "r_sort",
-                          "component": "Radio",
-                          "value": "sort_of",
-                          "label": "Sort of"
-                        },
-                        {
-                          "id": "ft",
-                          "component": "CardFooter",
-                          "children": [
-                            "commit"
-                          ]
-                        },
-                        {
-                          "id": "commit",
-                          "component": "Button",
-                          "label": "Answer",
-                          "variant": "solid",
-                          "action": {
-                            "action": "answer_question",
-                            "context": {
-                              "questionId": 2
+                          "id": "deck",
+                          "component": "OptionDeck",
+                          "heading": "Is it an animal?",
+                          "actionName": "choose",
+                          "options": [
+                            {
+                              "value": "yes",
+                              "title": "Yes",
+                              "description": "It fits what I am thinking of.",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "value": "no",
+                              "title": "No",
+                              "description": "It does not fit.",
+                              "icon": "x-circle"
+                            },
+                            {
+                              "value": "sort_of",
+                              "title": "Sort of",
+                              "description": "Partly, or it depends.",
+                              "icon": "circle-half"
                             }
-                          }
+                          ]
                         }
                       ]
                     }

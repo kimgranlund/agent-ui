@@ -662,7 +662,7 @@ ask per turn; the note-standalone rule — the note MUST always carry the full q
 the ask's own ADR-0088 degrade path) plus a feed-allowed component-type list DERIVED from
 `FEED_SURFACE_TYPES` (`feed-catalog.ts`, SPEC-R15) at composition time, so drift between the two is
 impossible by construction; and a mode-SCALED archetype vocabulary teaching the five recipes (closed
-single-choice, multi-select, typed-value, boundary-negotiation option cards, confirm/cancel) — `'default'`
+single-choice as one own-commit OptionDeck (a RadioGroup only inside a larger form), multi-select, typed-value, boundary-negotiation option cards, confirm/cancel) — `'default'`
 carries ONLY a terse balanced one-liner (never the full per-mode teaching); `'specific'`/`'blue-sky'` each
 carry their OWN disposition prose (asks stay rare / prefer structured asks) plus the compact five-archetype
 recipes. NO mode may EVER widen the feed-allowed list beyond `FEED_SURFACE_TYPES`, and the mode-invariant

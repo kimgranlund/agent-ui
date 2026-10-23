@@ -25,7 +25,7 @@ import {
   settingsPersonaPicker,
   settingsResetAgent,
 } from './settings.ts'
-import { chatAskAnswer, chatClickTurn, chatFlowendChrome, chatGreetingNote, chatSurfaceRender } from './test-chat.ts'
+import { chatAskAnswer, chatClickTurn, chatFlowendChrome, chatGreetingNote, chatPickDeck, chatSurfaceRender } from './test-chat.ts'
 
 export const FLOWS: readonly AdminFlow[] = [
   infraNetworkBlocked,
@@ -33,6 +33,7 @@ export const FLOWS: readonly AdminFlow[] = [
   chatSurfaceRender,
   chatClickTurn,
   chatAskAnswer,
+  chatPickDeck,
   chatFlowendChrome,
   builderArmNewAgent,
   builderExitClears,

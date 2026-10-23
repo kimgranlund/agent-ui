@@ -2,7 +2,7 @@
 // own catalog (the default `agent-ui`, or the derived `<base>--<persona>` document `composePersonaCatalogDocs`
 // composes, which the `validate-payload` CLI cannot load), renders through a real renderer with an empty error
 // channel, and passes every semantic check its preset runs live: the persona's own checks, the hidden-state checks
-// the composite-moment checks and the framed-choice check (`semanticChecksDeps`), each gated on the catalog the seed targets.
+// the composite-moment checks, the framed-choice check, the option-deck count check and the single-pick check (`semanticChecksDeps`), each gated on the catalog the seed targets.
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import '@agent-ui/components/all' // ADR-0233: the catalog factories import no control; the test defines the fleet
@@ -20,6 +20,7 @@ import { HIDDEN_STATE_CHECKS } from '../catalog/hidden-state-checks.ts'
 import { compositeMomentChecks } from '../catalog/composite-moments.ts'
 import { framedChoiceCheck } from '../catalog/framed-choice-check.ts'
 import { optionDeckCountCheck } from '../catalog/option-deck-check.ts'
+import { singlePickCheck } from '../catalog/single-pick-check.ts'
 import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 
@@ -48,13 +49,13 @@ const CATALOGS: ReadonlyMap<string, Catalog> = new Map([
   ...composeDomainCatalogDocs(BASES, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
 ])
 
-/** The checks a live turn on `catalogId` runs: the persona's or each domain's own, then the hidden-state and composite-moment rows, the framed-choice check and the option-deck count check. */
+/** The checks a live turn on `catalogId` runs: the persona's or each domain's own, then the hidden-state and composite-moment rows, the framed-choice check, the option-deck count check and the single-pick check. */
 function liveChecks(catalogId: string, catalog: Catalog) {
   const own = [
     ...semanticChecksForCatalog(catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS),
     ...domainSemanticChecksForCatalog(catalogId, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
   ]
-  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck], catalog)
+  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck, singlePickCheck], catalog)
 }
 
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m

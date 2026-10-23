@@ -440,7 +440,7 @@ export const heroListingCardSeed: ExampleSeed = {
 const ASK_ID = 'ask-1'
 /** Frontier 8 — the CARD-ANATOMY law (GH #1199, req-a2ui-patterns.md R1): the canonical three-slot ask
  *  card, header/content/footer each doing exactly one job — CardHeader carries ONLY the identity title
- *  (a label Text, never a control), CardContent carries the Field-wrapped RadioGroup choice, and
+ *  (a label Text, never a control), CardContent carries the Field-wrapped fields, and
  *  CardFooter carries the ONE commit Button — never a Button loose in content alongside a populated
  *  footer, and never a control inside the header. This is the grammar.md card-anatomy clause's worked
  *  feed-ask sketch (R1), realized as a corpus exemplar so the law has a real, validated, renderable
@@ -448,11 +448,17 @@ const ASK_ID = 'ask-1'
  *  P7 reconciliation, Kim take-up 2026-08-18): the RadioGroup rides a Field wrap (a2ui-payload.md P7 —
  *  the catalog RadioGroup declares no label prop, and only the Field wrap wires a programmatic group
  *  name through the shipped ADR-0051 labelling seam; a CardHeader Text is adjacent, never associated),
- *  and the promptText is user-voiced (the judged wave's recorded D2 repair). */
+ *  and the promptText is user-voiced (the judged wave's recorded D2 repair). T-0419 (Kim 2026-10-22): a
+ *  single pick asked on its own is one OptionDeck with no Card (`singlePickDeckSeed` below), so this card
+ *  now asks a pick INSIDE a larger form, the one place a RadioGroup stays: delivery options at checkout, whose
+ *  RadioGroup (the recommended Standard preselected via the data model) sits in one Column with two Checkboxes,
+ *  saved by one Button. Every field is structured, so nothing here is the open-ended part grammar.md's bundled-question
+ *  split sends to prose, and it is not a booking, so no BookingForm row reads it. Re-admitted through the judged
+ *  `--replace` exit. */
 export const cardAnatomyAskSeed: ExampleSeed = {
   name: 'frontier-card-anatomy-ask',
-  description: 'A three-slot ask card demonstrating card-anatomy law (R1): CardHeader carries only the identity title, CardContent carries the Field-wrapped RadioGroup choice, CardFooter carries the single commit Button.',
-  promptText: 'I need to pick a room type for my stay — Standard (€180) or the Deluxe King (€240).',
+  description: 'A three-slot ask card demonstrating card-anatomy law (R1): CardHeader carries only the identity title, CardContent carries one Column of a Field-wrapped RadioGroup pick (recommended option preselected) and two Checkboxes, CardFooter carries the single commit Button.',
+  promptText: 'Before I pay, let me choose how my order gets delivered.',
   surfaceId: ASK_ID,
   protocolVersion: 'v1.0',
   catalogId: 'agent-ui',
@@ -465,18 +471,58 @@ export const cardAnatomyAskSeed: ExampleSeed = {
         components: [
           { id: 'root', component: 'Card', elevation: '1', children: ['hd', 'ct', 'ft'] },
           { id: 'hd', component: 'CardHeader', children: ['title'] },
-          { id: 'title', component: 'Text', variant: 'label', text: 'Pick a room' },
-          { id: 'ct', component: 'CardContent', children: ['f_room'] },
-          { id: 'f_room', component: 'Field', label: 'Room type', child: 'rooms' },
-          { id: 'rooms', component: 'RadioGroup', value: { path: '/room' }, children: ['r1', 'r2'] },
-          { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · €180' },
-          { id: 'r2', component: 'Radio', value: 'deluxe', label: 'Deluxe King · €240' },
+          { id: 'title', component: 'Text', variant: 'label', text: 'Delivery options' },
+          { id: 'ct', component: 'CardContent', children: ['fields'] },
+          { id: 'fields', component: 'Column', gap: 'md', children: ['f_speed', 'gift', 'door'] },
+          { id: 'f_speed', component: 'Field', label: 'Delivery speed', child: 'speed' },
+          { id: 'speed', component: 'RadioGroup', value: { path: '/delivery/speed' }, children: ['r1', 'r2', 'r3'] },
+          { id: 'r1', component: 'Radio', value: 'standard', label: 'Standard · free, 3 to 5 days' },
+          { id: 'r2', component: 'Radio', value: 'express', label: 'Express · €9, next day' },
+          { id: 'r3', component: 'Radio', value: 'pickup', label: 'Pick up in store' },
+          { id: 'gift', component: 'Checkbox', label: 'Gift wrap', checked: { path: '/delivery/giftWrap' } },
+          { id: 'door', component: 'Checkbox', label: 'Leave it at the door if no one answers', checked: { path: '/delivery/leaveAtDoor' } },
           { id: 'ft', component: 'CardFooter', children: ['go'] },
-          { id: 'go', component: 'Button', variant: 'solid', label: 'Continue', action: { action: 'pick_room' } },
+          { id: 'go', component: 'Button', variant: 'solid', label: 'Save delivery options', action: { action: 'save_delivery' } },
         ],
       },
     },
-    { version: 'v1.0', updateDataModel: { surfaceId: ASK_ID, value: { room: 'deluxe' } } },
+    { version: 'v1.0', updateDataModel: { surfaceId: ASK_ID, value: { delivery: { speed: 'standard', giftWrap: false, leaveAtDoor: true } } } },
+  ],
+}
+
+/** Frontier 8b (T-0419, Kim 2026-10-22): the SINGLE PICK asked on its own, the grammar.md feed-ask archetype. One
+ *  question with four answers is ONE OptionDeck at the ask surface's root, the question on its `heading`, each option a
+ *  value (the answer the next turn reads as the action context value), a title, a one-line description and a fitting
+ *  icon, `actionName: "choose"`. No Card around it and no commit Button: the press is the answer. It replaces the
+ *  RadioGroup plus Plan my week Button a runtime agent shipped for "Dinner style for the week". */
+export const singlePickDeckSeed: ExampleSeed = {
+  name: 'frontier-single-pick-deck',
+  description: 'A single pick asked on its own: one root OptionDeck on the ask surface, the question as its heading, four options each with a value, a title, a one-line description and an icon, actionName "choose", no Card and no Button.',
+  promptText: "Plan this week's dinners for my family of four.",
+  surfaceId: ASK_ID,
+  protocolVersion: 'v1.0',
+  catalogId: 'agent-ui',
+  messages: [
+    { version: 'v1.0', createSurface: { surfaceId: ASK_ID, catalogId: 'agent-ui', sendDataModel: true } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: ASK_ID,
+        components: [
+          {
+            id: 'root', component: 'OptionDeck',
+            heading: 'Which dinner style this week?',
+            options: [
+              { value: 'quick', title: 'Quick weeknights', description: 'Thirty-minute dinners for busy evenings.', icon: 'lightning' },
+              { value: 'plant', title: 'Plant-forward', description: 'Mostly vegetarian meals built on seasonal produce.', icon: 'tree' },
+              { value: 'comfort', title: 'Family comfort', description: 'Hearty classics everyone at the table will eat.', icon: 'heart' },
+              { value: 'explore', title: 'Something new', description: 'A different cuisine every night of the week.', icon: 'sparkle' },
+            ],
+            actionName: 'choose',
+          },
+        ],
+      },
+    },
   ],
 }
 
@@ -1849,4 +1895,4 @@ export const optionCompareLegsSeed: ExampleSeed = {
   ],
 }
 
-export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, stepFlowBookingSeed, optionCompareLegsSeed]
+export const catalogFrontierSeeds: readonly ExampleSeed[] = [tripCardSeed, inviteModalSeed, reviewSplitSeed, onboardingTourSeed, roundOutcomeToastSeed, bookingReceiptSeed, heroListingCardSeed, cardAnatomyAskSeed, singlePickDeckSeed, backableWizardSeed, greetCardSeed, latencyLineChartSeed, mediaTourSeed, drillSettingsSeed, paneSwitcherSeed, fileDropAttachSeed, suggestionsChipsSeed, sourceListCitationsSeed, ratingReviewSeed, pieChartBudgetSeed, choiceGroupRoomsSeed, disclosureSummarySwitchSeed, serviceGatewaySeed, breadcrumbTrailSeed, buttonIconActionsSeed, columnChartRevenueSeed, gaugeSystemLoadSeed, lineChartAxesWeeklySalesSeed, productCardRoomsSeed, gameHudQuestSeed, resultCardWinSeed, amountPickerBetSeed, optionDeckPickerSeed, confirmReceiptOrderSeed, stepFlowBookingSeed, optionCompareLegsSeed]

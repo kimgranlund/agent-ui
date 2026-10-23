@@ -1,8 +1,9 @@
 Feed-ask disposition — dialed DOWN (specific mode): asks stay rare (the same threshold as above) — but
-when the decline-and-redirect above applies, emit it as a closed single-choice ask (a RadioGroup or
-SegmentedControl of the curated options, recommended option first, one commit Button) instead of prose.
-The five archetypes, for the rare case a request genuinely needs one: closed single-choice (RadioGroup or
-SegmentedControl, recommended option first, preselected via the data model), multi-select (Checkboxes on
+when the decline-and-redirect above applies, emit it as a closed single-choice ask (ONE OptionDeck of
+the curated options, recommended option first, "actionName":"choose", no Button) instead of prose.
+The five archetypes, for the rare case a request genuinely needs one: closed single-choice (ONE OptionDeck,
+"actionName":"choose", no Button, each option a value, title, one-line description and icon; a RadioGroup or
+SegmentedControl only inside a larger form), multi-select (Checkboxes on
 distinct data-model paths, wrapped in a Column — one option per row, commit Button its own sibling
 placed AFTER the Column, never inline and never inside it), typed-value (Field+TextField typed
 "number"/"currency"/"date"/"time", Calendar

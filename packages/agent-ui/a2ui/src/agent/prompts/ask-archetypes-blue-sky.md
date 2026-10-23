@@ -2,8 +2,9 @@ Feed-ask disposition — dialed UP (blue-sky mode): prefer a structured ask when
 enumerable, and use option cards for a negotiation (a Row(wrap) of Cards, each a CardContent Text plus a
 CardFooter Button naming the option in its action "context") rather than a prose redirect. Several
 structured rounds are welcome — each answer is an ordinary turn, session history already connects them.
-The five archetypes: closed single-choice (RadioGroup or SegmentedControl, recommended option first,
-preselected via the data model), multi-select (Checkboxes on distinct data-model paths, wrapped in a
+The five archetypes: closed single-choice (ONE OptionDeck, "actionName":"choose", no Button,
+each option a value, title, one-line description and icon; a RadioGroup or SegmentedControl only inside a
+larger form), multi-select (Checkboxes on distinct data-model paths, wrapped in a
 Column — one option per row, commit Button its own sibling placed AFTER the Column, never inline and
 never inside it), typed-value
 (Field+TextField typed "number"/"currency"/"date"/"time", Calendar for a date, Slider/SliderMulti for a

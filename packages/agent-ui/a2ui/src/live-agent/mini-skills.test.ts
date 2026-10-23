@@ -887,3 +887,39 @@ describe('T-0375: a lone action Button carries no Row', () => {
     expect(prompt).toContain('CardFooter = one Button, no Row')
   })
 })
+
+// T-0419 (Kim 2026-10-22): a single pick asked on its own is ONE OptionDeck for every persona. Mini-skills are selected on
+// triggers alone, so the modules a pick intent retrieves (variant-picker first on "Dinner style for the week") must route
+// the lone pick to the deck in their bodies, or a retrieved module outvotes the grammar.
+describe('single-pick bodies (T-0419)', () => {
+  const body = (id: string): string => MINI_SKILLS.find((m) => m.id === id)!.body
+
+  it('variant-picker sends the lone pick to OptionDeck and keeps the in-form split', () => {
+    expect(body('variant-picker')).toMatch(/A pick asked on its own \(one question, 2–8 answers, no other field\) is not a variant: it is ONE OptionDeck with actionName and no Button/)
+    expect(body('variant-picker')).toMatch(/A variant is one field of a larger form/)
+    expect(body('variant-picker')).not.toMatch(/Picking one option from a closed set/)
+  })
+
+  it('option-deck covers any single pick asked on its own, not only starting choices', () => {
+    expect(body('option-deck')).toMatch(/A single pick asked on its own \(one question, 2–8 answers\)/)
+    expect(body('option-deck')).toMatch(/never a RadioGroup plus a commit Button, a Row of Buttons, a Card per choice or a Card around it/)
+    expect(body('option-deck')).toMatch(/"choose", or "start" for a starter/)
+    expect(body('option-deck')).not.toMatch(/Starting choices/)
+  })
+
+  it('comparison-table sends options with no shared rows to OptionDeck', () => {
+    expect(body('comparison-table')).toMatch(/Options that share no rows are an OptionDeck/)
+  })
+
+  it('T-0419: every module retrieved on a single-pick intent routes it to OptionDeck', () => {
+    const intents = ['Dinner style for the week', "Plan this week's dinners for my family of four.", 'Pick a workout style for me', 'Which coffee should I choose']
+    for (const intent of intents) {
+      const picked = selectMiniSkills(intent, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui')
+      expect(picked.length, intent).toBeGreaterThan(0)
+      for (const m of picked) {
+        expect(m.body, `${intent}: ${m.id}`).toMatch(/OptionDeck/)
+        expect(m.body, `${intent}: ${m.id}`).not.toMatch(/Picking one option from a closed set|Starting choices|Not for starting something/)
+      }
+    }
+  })
+})

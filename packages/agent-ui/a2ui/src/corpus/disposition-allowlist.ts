@@ -108,6 +108,11 @@ export const DISPOSITION_ALLOWLIST = new Map<string, string>([
   // the user-voiced promptText) and ADMITTED 2026-08-18 by the FRESH independent re-judge wave
   // (VerdictsFile `corpus/verdicts/2026-08-18t21-00-00z--gh1262-backscore-replace.json`, qualityScore
   // 4/PASS). Entry removed per this map's own instruction above.
+  // T-0419 (2026-10-23) re-admitted it via `import-seeds --replace` as a pick inside a larger form (delivery options:
+  // a Field-wrapped RadioGroup and two Checkboxes), since a single pick asked on its own is now one OptionDeck
+  // (`frontier-single-pick-deck`, admitted in the same wave). The first judge refused the repair E_QUALITY (D1: no
+  // Column under CardContent; VerdictsFile `corpus/verdicts/2026-10-23t06-35-39z--t0419-single-pick-wave.json`), and a
+  // fresh judge admitted the Column repair (`corpus/verdicts/2026-10-23t06-44-13z--t0419-card-anatomy-rejudge.json`, 4/PASS).
   //
   // GH #1192 (2026-08-18) — `backable-wizard`: refused twice (P7/P9 under 1.1, then SUSTAINED on new
   // ground under 1.2 — P7 alone after PR #1324's CardFooter repair), then REPAIRED (PR #1337: Field wraps

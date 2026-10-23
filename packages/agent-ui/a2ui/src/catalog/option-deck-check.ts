@@ -1,8 +1,8 @@
 // option-deck-check.ts: an OptionDeck sized outside its job (T-0193), run on every catalog that holds OptionDeck.
 //
-// An OptionDeck is a pick of one of a few things to start (a game, an experience, a plan, an onboarding path). The
-// control renders any number of cards, so the validator passes a deck of one (nothing to pick) or of twenty (a wall
-// no one scans). This check sends such a round back: a static `options` array with fewer than 2 or more than 8
+// An OptionDeck is a single pick of one of a few answers or things to start (T-0419: any single pick asked on its own;
+// a game, an experience, a plan, an onboarding path). The control renders any number of cards, so the validator passes
+// a deck of one (nothing to pick) or of twenty (a wall no one scans). This check sends such a round back: a static `options` array with fewer than 2 or more than 8
 // entries gets OPTION_DECK_COUNT. A bound `options` (`{path}`) is skipped: its length is the data model's, not the
 // payload's. The key `random` is reserved for the Surprise me card (`allowRandom`), and the control drops an authored
 // option that claims it, so a static option with value `random` gets OPTION_DECK_RANDOM_VALUE.
@@ -35,7 +35,7 @@ export const optionDeckCountCheck: SemanticCheck = {
             path,
             message:
               `OptionDeck ${deck.id} on ${view.surfaceId} holds ${n} option${n === 1 ? '' : 's'}, so there is nothing to pick. ` +
-              `Give it ${OPTION_DECK_MIN} to ${OPTION_DECK_MAX} options, each a concrete thing to start, or drop the deck and offer the one action as a Button.`,
+              `Give it ${OPTION_DECK_MIN} to ${OPTION_DECK_MAX} options, each a concrete answer or thing to start, or drop the deck and offer the one action as a Button.`,
           })
         } else if (n > OPTION_DECK_MAX) {
           findings.push({

@@ -282,7 +282,7 @@ Evidence names a preset skill, a playbook, a trace or a corpus record name (`pac
 | Confirm and receipt | read back or confirm on the form, then a settled receipt | concierge `booking-flow` and restaurant `table-reservation` (the BookingForm confirms, then settles in place; T-0385, T-0390), shopkeeper `cart-summary`; corpus `receipt-order-summary`, `confirmation-view` and `frontier-booking-receipt` (both settled; their booking read-backs were replaced in T-0335 and T-0318) | P2 | T-0195 (absorbs BookingConfirmation) |
 | Step flow | step n of m with Back and Next over one draft | concierge `booking-flow` (about 2,000 chars of prose); corpus `backable-wizard` (a time-off request since T-0335), `pattern-wizard` | P3 | T-0198 |
 | Compare | options as columns by attribute rows, one pick per column | travel `trip-plan`, `comparison-table` mini-skill, shopkeeper `product-grid`; corpus `comparison-pricing-table` | P3 | T-0393 |
-| Clarify | one structured question before acting | corpus `frontier-card-anatomy-ask`; no trace yet | P2 | new |
+| Clarify | one structured question before acting | corpus `frontier-single-pick-deck` (a single pick as one OptionDeck, T-0419) and `frontier-card-anatomy-ask` (a pick inside a larger form); no trace yet | P2 | new |
 | Approval gate | approve, edit or deny a pending action | corpus `plan-and-execute-approve-ask` | P2 | new |
 | Plan / task list | live step status for a multi-step job | corpus `plan-and-execute-plan`, `agent-task-status` | P2 | new |
 | Progress job | stages, ETA and cancel for long work | corpus `contact-import-progress-to-summary` | P3 | new |

@@ -176,3 +176,43 @@ export const chatFlowendChrome: AdminFlow = {
     await pollUntil(() => admin.hasFlowChrome(), (present) => present, 'the "Flow complete" chrome row in the Test Chat log', 3000)
   },
 }
+
+/** T-0419: a single pick asked on its own ships as ONE OptionDeck on the ask surface (the grammar.md archetype for every
+ *  persona): four cards titled with the dinner styles, no Button and no Card around the deck. Pressing a card is the
+ *  answer: the next produce request is a `client` turn whose action is `choose` with the card's value. With
+ *  `E2E_ADMIN_SHOT_DIR` set, the mounted deck is written there as `after-chat-pick-deck.png`. */
+export const chatPickDeck: AdminFlow = {
+  name: 'chat-pick-deck',
+  fixture: 'chat-pick-deck.json',
+  async run(ctx) {
+    const admin = await openAndSend(ctx, "Plan this week's dinners for my family of four.")
+
+    const titles = await pollUntil(
+      () => admin.surfaceOptionTitles('chat'),
+      (found) => found.length === 4,
+      'four OptionDeck cards in the chat pane surface host',
+    )
+    assertFlow(
+      JSON.stringify(titles) === JSON.stringify(['Quick weeknights', 'Plant-forward', 'Family comfort', 'Something new']),
+      `the chat pane OptionDeck cards read ${JSON.stringify(titles)}, expected the four dinner styles`,
+    )
+    const buttons = await admin.surfaceButtonLabels('chat')
+    assertFlow(buttons.length === 0, `the chat pane surface holds buttons ${JSON.stringify(buttons)}, expected none (own-commit)`)
+    const framed = await ctx.page.evaluate(() => [...document.querySelectorAll('ui-option-deck')].some((d) => d.closest('ui-card') !== null))
+    assertFlow(!framed, 'a ui-card frames the ui-option-deck, expected the deck directly in the surface flow')
+    const shotDir = process.env.E2E_ADMIN_SHOT_DIR
+    if (shotDir !== undefined && shotDir !== '') await ctx.page.screenshot({ path: `${shotDir}/after-chat-pick-deck.png` })
+
+    await admin.pickSurfaceOption('Plant-forward', 'chat')
+
+    const produce = ctx.wire.entries.filter((e) => e.endpoint === 'produce')
+    assertFlow(produce.length === 2, `wire log holds ${produce.length} produce entries, expected 2`)
+    const body = (produce[1]?.request ?? {}) as { input?: { kind?: unknown; message?: { action?: { name?: unknown; context?: { value?: unknown } } } } }
+    assertFlow(body.input?.kind === 'client', `the second produce input.kind is ${JSON.stringify(body.input?.kind)}, expected "client"`)
+    const action = body.input?.message?.action
+    assertFlow(
+      action?.name === 'choose' && action.context?.value === 'plant',
+      `the second produce action is ${JSON.stringify(action)}, expected "choose" with context value "plant"`,
+    )
+  },
+}
