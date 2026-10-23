@@ -111,11 +111,13 @@ margin (the margins *collapse* in the BFC to a clean 6px gutter). Presence is ha
 absent region simply contributes **no box** (no grid track to null out, no `:has()` row template). All three
 (and the card) are `UIContainerElement` subclasses that self-define on import.
 
-A plain header (not `format="structured"`, no fill, not in scroll mode) sits one card gutter
-(`--ui-card-content-gap`, 2n) above a following `ui-card-content`: the facing paddings drop and the header's
-end margin carries the gutter (T-0418). A heading-role `ui-text` (title, headline or display; h1 to h5 on the
-A2UI wire) anywhere inside a plain header is the surface title: `--md-sys-type-subhead` resolved on the header,
-weight 600, line height 1.3 (`--ui-card-header-title-*`).
+On the A2UI widget tier (inside `[data-tier="widget"]`), a plain header (not `format="structured"`, no fill,
+not in scroll mode) sits one card gutter (`--ui-card-content-gap`, 2n) above a following `ui-card-content`: the
+facing paddings drop and the header's end margin carries the gutter (T-0418). A heading-role `ui-text` (title,
+headline or display; h1 to h5 on the A2UI wire) anywhere inside such a header is the surface title:
+`--md-sys-type-subhead` resolved on the header, weight 600, line height 1.3 (`--ui-card-header-title-*`). An
+`emphasis` title still bolds to 700. Page-tier cards (site, app) take neither rule: the header keeps its inset
+and its Text keeps its own role (T-0420).
 
 > **Footer bottom-pin constraint (GH #1553, dormant — no code change today).** Nothing pins a footer to
 > the bottom of an equal-height card yet. Whoever adds that must NOT just add `margin-top: auto` to
