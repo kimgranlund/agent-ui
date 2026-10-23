@@ -21,8 +21,8 @@
 | **LLD-C7** | Match runner (disjoint-context composer) | SPEC-R10, R12 | `tools/arena/match.ts` | dev/CI |
 | **LLD-C8** | Recorder (runner events → transcript JSONL) | SPEC-R12 | `tools/arena/recording-tap.ts` *(as-built name; the draft said `record.ts`)* | dev/CI |
 | **LLD-C9** | Match fixtures (scripted · flagship · 2 contaminated controls) | SPEC-R12, R10 | `matches/{scripted,flagship,contaminated-control,contaminated-provider-control}.match.jsonl` | committed data |
-| **LLD-C10** | Arena dev proxy (live match, keys server-side) | SPEC-R13 | `tools/arena/dev-proxy-plugin.ts` (mount `/__a2a/arena`) | dev-only (`apply:'serve'`) |
-| **LLD-C11** | Demo page (replay · side-by-side inspector · verdict · dev live) | SPEC-R13 | `site/a2a-tic-tac-toe.html` + `site/pages/a2a-tic-tac-toe.{ts,css}` | site |
+| **LLD-C10** | Arena live proxy (live match, keys server-side) | SPEC-R13 | `tools/arena/live-match.ts` (the shared core, T-0430) + `tools/arena/dev-proxy-plugin.ts` (dev, `apply:'serve'`) + `a2ui/tools/agent/worker/arena-route.ts` (production Worker, T-0430); mount `/__a2a/arena` | dev and production |
+| **LLD-C11** | Demo page (replay · side-by-side inspector · verdict · live, dev and production since T-0430) | SPEC-R13 | `site/a2a-tic-tac-toe.html` + `site/pages/a2a-tic-tac-toe.{ts,css}` | site |
 
 **Split rule (SPEC-N1/N2):** `src/arena/*` is pure + zero-dep (board, referee reducer, transcript schema, isolation checker) so tests, tools, and the browser page consume ONE implementation. Everything that does I/O or touches a model/key lives under `tools/` or the site page.
 
@@ -97,7 +97,7 @@ JSONL: line 1 = header `{ matchId, protocolVersion (SPEC-R2 pin), seats: {X:{pro
 
 ## 6. Dev proxy + page (LLD-C10/C11)
 
-**Proxy** (`/__a2a/arena`, `apply:'serve'`): POST `{seats: {X:{provider,model}, O:{…}}}` → runs LLD-C7 with model seats server-side (keys via the same `loadEnv` + `providers.json` allowlist pattern as `a2ui/tools/agent/dev-proxy-plugin.ts`; the `{provider,model}` pair is allowlist-validated per seat — a crafted body cannot escape it), streams transcript events as they occur; `GET /status` = availability boolean. **Page**: static build fetches the committed flagship fixture (a plain asset — zero network beyond the site's own origin, zero keys); dev adds a "run live" control behind a `probeLive()`-style status check + `import.meta.env.DEV`-guarded dynamic import so `vite build` tree-shakes the live arm (the `live-proxy-transport.ts` pattern verbatim). Replay is a paced scrubber over transcript events; the board renders via `ui-*` controls; the three-column inspector + verdict per §2.
+**Proxy** (`/__a2a/arena`, `apply:'serve'`): POST `{seats: {X:{provider,model}, O:{…}}}` → runs LLD-C7 with model seats server-side (keys via the same `loadEnv` + `providers.json` allowlist pattern as `a2ui/tools/agent/dev-proxy-plugin.ts`; the `{provider,model}` pair is allowlist-validated per seat, so a crafted body cannot escape it), streams transcript events as they occur; `GET /status` = availability boolean. **Production** (T-0430): the Worker's `arena-route.ts` serves the same mount and wire through the same core (`tools/arena/live-match.ts`), gated same-origin, then a per-visitor `ARENA_RATE_LIMITER` binding it fails closed without, then a 64 KiB body cap, then the seat validation, which also narrows the pair to the arena seat models; each match is capped per seat (calls, reply size, output tokens) and in wall clock. **Page**: static build fetches the committed flagship fixture (a plain asset: zero network beyond the site's own origin, zero keys); a "run live" control appears behind a `probeLive()`-style status check and a dynamic import, attempted in every build since T-0430 (before it, an `import.meta.env.DEV` guard tree-shook the live arm). Replay is a paced scrubber over transcript events; the board renders via `ui-*` controls; the three-column inspector + verdict per §2.
 
 ## 7. Error & edge handling (enumerated per case)
 
@@ -129,6 +129,6 @@ The model seat reuses the a2ui live-agent **provider adapters** (`packages/agent
 4. **LLD-C4 isolation checker + LLD-C9 scripted/contaminated fixtures** — the gate + its in-transcript negative control. *(checkpoint: green on scripted, non-zero on contaminated — SPEC-R10 AC1)*
 5. **LLD-C6 model seat + the §2 recording boundary** — stub-provider tests (legal / illegal-correct / forfeit / abort), the byte-complete recording assertion (capturing stub), and the out-of-transcript negative control (`contaminated-provider-control` recorded + committed, standing test red-on-it). *(checkpoint: SPEC-R11 AC1 stubbed; recorded-context ≡ actual-request assertion green; shared-provider control non-zero — SPEC-R10)*
 6. **LLD-C10 proxy + LLD-C9 flagship fixture** — one real match recorded, gate-green, committed. *(checkpoint: SPEC-R12/R13; `dist/` grep clean — SPEC-N2)*
-7. **LLD-C11 page** — replay + inspector + in-page verdict + dev live. *(checkpoint: SPEC-R13 AC1; browser legs green; nav drift gates green)*
+7. **LLD-C11 page** — replay + inspector + in-page verdict + live (dev, and production since T-0430). *(checkpoint: SPEC-R13 AC1; browser legs green; nav drift gates green)*
 
 **Discovered-reality rule:** if the HV-5 lifecycle or HV-4 part shapes resolve differently than §2's sketch (e.g. no `input-required` arm), repair `a2a-foundations.spec.md` §4.3 first and re-derive this file — never patch the arena around a stale SPEC.

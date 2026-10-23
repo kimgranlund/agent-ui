@@ -6,6 +6,9 @@
 // `resolvePair`/`providerForModel`/`providerFor` PAIR-allowlist chain (SPEC-R12) reused verbatim.
 // T-0192: an org-level key also needs `env.ANTHROPIC_WORKSPACE_ID` (`wrangler secret put ANTHROPIC_WORKSPACE_ID`
 // or a `vars` entry), sent upstream as the `anthropic-workspace-id` header; absent ⇒ no header.
+// T-0430: a second mount, `/__a2a/arena`, serves the A2A arena's live match (`./arena-route.ts`, the twin of
+// `a2a/tools/arena/dev-proxy-plugin.ts`) with the same key projection, behind the `ARENA_RATE_LIMITER`
+// binding (wrangler.jsonc) it fails closed without.
 
 import { produce } from '../../../src/agent/produce.ts'
 import { withTurnDeadline, TURN_DEADLINE_MS } from '../../../src/agent/deadlines.ts'
@@ -24,7 +27,8 @@ import { loadCatalog } from '../../../src/catalog/catalog.ts'
 import type { Catalog } from '../../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../../src/agent/agent-transport.ts'
 import { buildToolDispatch, listIntegrations, resolveIntegrations } from '../integrations/index.ts'
-import { isSameOriginRequest, isMountedPath, isValidTurnInput } from './route-guards.ts'
+import { isSameOriginRequest, isMountedPath, isValidTurnInput, readBodyCapped } from './route-guards.ts'
+import { arenaLimiterFrom, handleArenaRequest } from './arena-route.ts'
 import { projectEnv } from './env-projection.ts'
 // GH #108 (review finding): validateMode/isChatBody/EFFORT_VALUES/resolveChatDispatch used to be
 // hand-duplicated here, byte-for-byte, from dev-proxy-plugin.ts's already-exported versions — this
@@ -66,6 +70,7 @@ interface Env {
 }
 
 const MOUNT = '/__a2ui/agent'
+const ARENA_MOUNT = '/__a2a/arena'
 const MAX_BODY = 1 << 20 // 1 MiB — matches dev-proxy-plugin.ts's cap
 // GH #101 (review finding): dev-proxy-plugin.ts never needed a CSRF guard — it's a Vite dev middleware,
 // reachable only from localhost. Ported unmodified to the public internet, the POST routes had none: a
@@ -117,40 +122,10 @@ function json(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 }
 
-// GH #111 (review finding): a Content-Length pre-check plus a post-hoc length check AFTER
-// `request.text()` had already fully buffered the body isn't an enforcement of MAX_BODY, it's a check
-// that runs too late — a request with no Content-Length (chunked transfer) or a garbled one (`Number(bad)`
-// is NaN, `NaN > MAX_BODY` is false) skips straight past both guards to a full buffer. Root cause: the cap
-// needs to be enforced WHILE reading, not after — dev-proxy-plugin.ts's Node reader does exactly this
-// (`req.on('data', ...)`, rejecting the instant the running total crosses MAX_BODY). This reads the
-// Workers `ReadableStream` the same way: chunk by chunk, aborting before any chunk pushes the total over.
-async function readBody(request: Request): Promise<string> {
-  const contentLength = request.headers.get('content-length')
-  if (contentLength !== null && Number(contentLength) > MAX_BODY) throw new Error('request body too large')
-  if (request.body === null) return ''
-
-  const reader = request.body.getReader()
-  const chunks: Uint8Array[] = []
-  let total = 0
-  try {
-    for (;;) {
-      const { done, value } = await reader.read()
-      if (done) break
-      total += value.byteLength
-      if (total > MAX_BODY) throw new Error('request body too large')
-      chunks.push(value)
-    }
-  } finally {
-    reader.releaseLock()
-  }
-
-  const merged = new Uint8Array(total)
-  let offset = 0
-  for (const chunk of chunks) {
-    merged.set(chunk, offset)
-    offset += chunk.byteLength
-  }
-  return new TextDecoder().decode(merged)
+// GH #111: the body cap is enforced WHILE reading (`readBodyCapped`, route-guards.ts, shared with the arena
+// mount since T-0430).
+function readBody(request: Request): Promise<string> {
+  return readBodyCapped(request, MAX_BODY)
 }
 
 // Ticket #1634: a present-but-revoked/invalid key used to read the same as a working one (a
@@ -402,6 +377,23 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url)
+    if (isMountedPath(url.pathname, ARENA_MOUNT)) {
+      try {
+        const env2 = envVars(env)
+        return await handleArenaRequest(request, url.pathname.slice(ARENA_MOUNT.length) || '/', {
+          config,
+          env: env2,
+          workspaceId: env2[ANTHROPIC_WORKSPACE_ENV],
+          limiter: arenaLimiterFrom(env),
+          allowedOrigin: ALLOWED_ORIGIN,
+          providerFor,
+          validateKey: validateProviderKeyCached,
+        })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'proxy error'
+        return json(500, { error: message })
+      }
+    }
     // GH #109 (review finding): a bare `startsWith(MOUNT)` has no path-segment boundary, so
     // `/__a2ui/agentXYZ` was wrongly claimed as "under the mount" (matching Connect's `.use(mount, ...)`
     // semantics, which this replaces, requires an exact match or a `/`-bounded prefix).

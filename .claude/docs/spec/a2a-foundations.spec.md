@@ -92,8 +92,8 @@ Normative per RFC 2119; each carries a PRD trace and acceptance criteria.
 **SPEC-R12 — Match transcript + deterministic CI backbone.** Every match MUST produce a schema'd transcript recording (a) every wire message in order and (b) each seat's complete private context (system prompt, every model message in/out, canary). A scripted-vs-scripted match MUST run under `npm test` — no network, no model — and be byte-stable across runs. The flagship fixture MUST be a recorded real-model match (provenance: models, date) committed to the repo. *(→ PRD-G2; constraint C4)*
 - **AC1** *Given* two runs of the scripted match, *when* transcripts are compared, *then* they are byte-identical; *given* the committed flagship fixture, *then* the transcript-schema validator and the isolation gate both pass it.
 
-**SPEC-R13 — Demo surface.** The site's match page MUST, in the static build, replay the committed fixture with zero network and zero keys; MUST present both seats' full contexts side-by-side beside the wire/board timeline; and MUST compute the isolation verdict **in-page from the transcript by running the same gate checker** (never a hardcoded badge). Live model-vs-model runs MUST be dev-only behind a proxy holding keys server-side (the a2ui ADR-0073 posture; `vite build` MUST carry no proxy path or key name). *(→ PRD-G2, G4)*
-- **AC1** *Given* the static build, *when* the page loads, *then* the match replays and the verdict badge derives from the transcript; *given* a grep of `dist/` for the proxy mount/key names, *then* it is clean.
+**SPEC-R13: Demo surface.** The site's match page MUST, in the static build, replay the committed fixture with zero network and zero keys; MUST present both seats' full contexts side-by-side beside the wire/board timeline; and MUST compute the isolation verdict **in-page from the transcript by running the same gate checker** (never a hardcoded badge). Live model-vs-model runs MUST run behind a proxy holding keys server-side (the a2ui ADR-0073 posture): the Vite dev proxy in dev and, amended by T-0430, the production Worker's `/__a2a/arena` route behind a per-visitor rate limit and per-match caps. The build MAY carry the probe-gated live overlay and the mount path; it MUST carry no key value or key env name. *(→ PRD-G2, G4)*
+- **AC1** *Given* the static build, *when* the page loads, *then* the match replays and the verdict badge derives from the transcript; *given* a grep of `dist/` for key values and key env names, *then* it is clean (the `/__a2a/arena` mount path may ship, amended by T-0430).
 
 ### 4.4 Corpus (PRD-G3; substrate per PRD-D5 — mirrored discipline, A2A-native schema)
 
@@ -111,7 +111,7 @@ Normative per RFC 2119; each carries a PRD trace and acceptance criteria.
 
 ### 4.6 Live real-time demo arms (B7 — WIDENING at intake, [ADR-0116](../adr/0116-a2a-live-realtime-examples.md); pending independent doc-review, the R14/R16-AC2 precedent)
 
-**SPEC-R17 — Real-time live match (dev-only).** The arena's dev-only live mode MUST deliver the match
+**SPEC-R17: Real-time live match (dev, and production per T-0430).** The arena's live mode MUST deliver the match
 incrementally — one transcript event at a time, in transcript order, in the SAME line shape the committed
 fixtures use, such that the concatenation of a completed live stream is itself a schema-valid transcript.
 The page MUST render arriving events as appended replay steps with the scrubber usable during and after
@@ -126,8 +126,10 @@ server-side match run; a cancelled or transport-faulted stream (any stream endin
 event) MUST be discarded — it MUST NOT enter the replay or verdict path (fail-closed; the recorded
 default stays untouched). A
 provider fault mid-match is NOT a transport fault: the referee's existing abort→forfeit arm completes the
-transcript, which streams and verifies normally. The whole live arm remains dev-only behind the
-server-side-key proxy (constraint C4 / ADR-0073); the static build carries none of it (SPEC-N2).
+transcript, which streams and verifies normally. The live arm runs behind a server-side-key proxy
+(constraint C4 / ADR-0073): the Vite dev proxy in dev and, amended by T-0430, the production Worker route
+on ui.nonoun.io behind a per-visitor rate limit, a seat-model allowlist and per-match caps; the static
+build carries the probe-gated overlay but never a key (SPEC-N2).
 *(→ PRD-G2, G4)*
 - **AC1** *(chunk-equivalence)* *Given* each committed match fixture, *when* its lines are fed one at a
   time through the incremental derivation (including adversarial chunk boundaries through the shared
@@ -182,7 +184,7 @@ carriage contract unchanged — SPEC-R16/HV-8 own the wire shapes, this requirem
 | ID | Requirement | Target |
 |---|---|---|
 | **SPEC-N1** | Zero-dep core | `@agent-ui/a2a` `src/` imports nothing third-party; transports/servers/proxies live under `tools/` (Node), never in a consumer bundle. *(→ PRD-G1; constraint C2)* |
-| **SPEC-N2** | Key/network hygiene | The static build carries no key, endpoint, or proxy path (manual `dist/` grep, the a2ui precedent); no standing test performs a live model call or network I/O. *(constraint C4)* |
+| **SPEC-N2** | Key/network hygiene | The static build carries no key value or key env name (manual `dist/` grep, the a2ui precedent). Amended by T-0430: it may carry the arena's probe-gated live overlay and its `/__a2a/arena` mount path, which the production Worker serves; the feed's live arm stays out of the build (SPEC-R18). No standing test performs a live model call or network I/O. *(constraint C4)* |
 | **SPEC-N3** | Determinism | `npm test` arena/corpus legs are fully offline and byte-stable (seeded/scripted); flaky-by-network is a defect. |
 | **SPEC-N4** | Validator parity | One validator (SPEC-R6) serves core, admission, gates, and pages — a local re-implementation fails a parity test. |
 | **SPEC-N5** | Ordering | No transport reorders or drops messages; a sequence test asserts order across loopback + HTTP. |

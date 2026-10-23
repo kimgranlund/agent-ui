@@ -74,6 +74,33 @@ console.log('CHAT_RESULT ' + JSON.stringify({ status: res.status, body: await re
 process.exit(0)
 `
 
+// T-0430: the arena mount fails closed in the bundle as deployed with no `ARENA_RATE_LIMITER` in env. A key is
+// present, and `fetch` throws if reached, so the leg proves `/status` answers before any upstream key check.
+const ARENA_RUNNER = `
+import { register } from 'node:module'
+import { pathToFileURL } from 'node:url'
+const hooks = \`
+import { readFile } from 'node:fs/promises'
+export async function load(url, ctx, next) {
+  if (/\\\\.(md|jsonl)$/.test(url)) return { format: 'module', shortCircuit: true, source: 'export default ' + JSON.stringify(await readFile(new URL(url), 'utf8')) }
+  return next(url, ctx)
+}\`
+register('data:text/javascript,' + encodeURIComponent(hooks))
+process.cwd = () => '/bundle'
+let fetched = 0
+globalThis.fetch = async () => { fetched += 1; throw new Error('network reached') }
+const mod = await import(pathToFileURL(process.argv[2]).href)
+const env = { ASSETS: { fetch: async () => new Response('') }, ANTHROPIC_API_KEY: 'sk-test-value' }
+const status = await mod.default.fetch(new Request('https://ui.nonoun.io/__a2a/arena/status'), env)
+const post = await mod.default.fetch(new Request('https://ui.nonoun.io/__a2a/arena', {
+  method: 'POST',
+  headers: { origin: 'https://ui.nonoun.io', 'content-type': 'application/json' },
+  body: JSON.stringify({ seats: { X: { provider: 'anthropic', model: 'claude-sonnet-5-5' }, O: { provider: 'anthropic', model: 'claude-haiku-5-5' } } }),
+}), env)
+console.log('ARENA_RESULT ' + JSON.stringify({ status: status.status, body: await status.json(), postStatus: post.status, fetched }))
+process.exit(0)
+`
+
 describe('the bundled Worker evaluates its top level (the deploy-time module load)', () => {
   let scratch: string
   let bundle: string
@@ -91,6 +118,7 @@ describe('the bundled Worker evaluates its top level (the deploy-time module loa
     bundle = join(outdir, 'index.js')
     writeFileSync(join(scratch, 'run-bundle.mjs'), RUNNER)
     writeFileSync(join(scratch, 'run-chat.mjs'), CHAT_RUNNER)
+    writeFileSync(join(scratch, 'run-arena.mjs'), ARENA_RUNNER)
   }, 120_000)
 
   afterAll(() => rmSync(scratch, { recursive: true, force: true }))
@@ -121,5 +149,12 @@ describe('the bundled Worker evaluates its top level (the deploy-time module loa
     expect(out.status).toBe(500)
     expect(out.body.error).toMatch(/taking longer than 300 seconds/)
     expect(out.body.error).not.toMatch(/\d ms\b/)
+  })
+
+  it('/__a2a/arena: with no rate limiter bound, /status reports unavailable and POST is a 503, with no upstream call (T-0430)', () => {
+    const run = spawnSync(process.execPath, [join(scratch, 'run-arena.mjs'), bundle], { cwd: scratch, encoding: 'utf8', timeout: 30_000 })
+    const line = run.stdout.split('\n').find((l) => l.startsWith('ARENA_RESULT '))
+    expect(line, `no ARENA_RESULT line; stderr: ${run.stderr}`).toBeDefined()
+    expect(JSON.parse(line!.slice('ARENA_RESULT '.length))).toEqual({ status: 200, body: { available: false, providers: 0 }, postStatus: 503, fetched: 0 })
   })
 })

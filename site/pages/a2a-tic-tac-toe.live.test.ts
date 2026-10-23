@@ -6,9 +6,13 @@
 // proof of SPEC-R17 AC2 (done gated on `isComplete()`, never stream end) and AC3 (cancel discards, the
 // previously selected recorded fixture returns) that the accumulator/match-runner unit legs can't reach on
 // their own, since they don't exercise the page's follow-tail rendering or its Cancel wiring.
-import { describe, it, expect, beforeAll, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime (fleet precedent)
 import { readFileSync } from 'node:fs'
+// T-0430: the production Worker's arena route, driven in-process by the Worker-backed leg below.
+import { handleArenaRequest } from '../../packages/agent-ui/a2ui/tools/agent/worker/arena-route.ts'
+import type { ProvidersConfig } from '../../packages/agent-ui/a2ui/tools/agent/providers-config.ts'
+import type { AgentProvider } from '../../packages/agent-ui/a2ui/src/agent/agent-transport.ts'
 
 declare const process: { cwd(): string }
 const scriptedRaw = readFileSync(`${process.cwd()}/packages/agent-ui/a2a/matches/scripted.match.jsonl`, 'utf8') as string
@@ -43,6 +47,8 @@ function createControllableStream(): ControllableStream {
 
 let root: ParentNode
 let latestPostStream: ControllableStream | undefined
+/** When set, a POST goes to this handler (the Worker-backed leg) instead of a hand-driven stream. */
+let postHandler: ((url: string, init: RequestInit | undefined) => Promise<Response>) | undefined
 
 beforeAll(async () => {
   vi.stubGlobal(
@@ -52,6 +58,7 @@ beforeAll(async () => {
       if (href.includes('/status')) {
         return new Response(JSON.stringify({ available: true, providers: 1 }), { status: 200, headers: { 'content-type': 'application/json' } })
       }
+      if (postHandler !== undefined) return postHandler(href, init)
       const ctrl = createControllableStream()
       latestPostStream = ctrl
       // Mirror the real proxy's client-disconnect posture: an aborted signal ends the stream with the
@@ -185,5 +192,66 @@ describe('the A2A tic-tac-toe page — cancel mid-match discards the partial str
     // discarded — the flagship fixture (pinned above) is restored, never the truncated live transcript.
     expect(fixtureBtn('flagship').getAttribute('variant')).toBe('solid')
     expect(verdict().dataset.verdict).toBe('clean')
+  })
+})
+
+describe('the A2A tic-tac-toe page: the live probe is not gated on the build (T-0430)', () => {
+  const source = readFileSync(`${process.cwd()}/site/pages/a2a-tic-tac-toe.ts`, 'utf8') as string
+
+  it('wireLiveOverlay attempts the live probe unconditionally (no import.meta.env.DEV gate before the dynamic import)', () => {
+    const fnStart = source.indexOf('function wireLiveOverlay')
+    expect(fnStart, 'wireLiveOverlay() was not found').toBeGreaterThan(-1)
+    const fnBody = source.slice(fnStart)
+    const dynImportIdx = fnBody.indexOf("import('../lib/arena-live-transport.ts')")
+    expect(dynImportIdx, 'the dynamic import was not found in wireLiveOverlay').toBeGreaterThan(-1)
+    const devGuardIdx = fnBody.indexOf('import.meta.env.DEV')
+    expect(devGuardIdx === -1 || devGuardIdx > dynImportIdx, 'import.meta.env.DEV must never gate the probe').toBe(true)
+  })
+
+  it('never statically imports arena-live-transport.ts at module scope', () => {
+    for (const line of source.split('\n').filter((l) => /^import /.test(l))) expect(line).not.toMatch(/arena-live-transport/)
+  })
+})
+
+describe('the A2A tic-tac-toe page: a match streamed by the production Worker route completes through the same loadTranscript path (T-0430)', () => {
+  const ORIGIN = 'https://ui.nonoun.io'
+  const config = JSON.parse(readFileSync(`${process.cwd()}/packages/agent-ui/a2ui/tools/agent/providers.json`, 'utf8') as string) as ProvidersConfig
+  /** Stateless scripted seat model: X plays 0,1,2 and O plays 3,4,5, first legal cell in order. */
+  const scripted: AgentProvider = {
+    async *stream(req) {
+      const mark = req.system.includes('as "X"') ? 'X' : 'O'
+      const board = JSON.parse(req.messages.at(-1)!.content) as { legalMoves: number[] }
+      const prefs = mark === 'X' ? [0, 1, 2, 6, 7, 8, 3, 4, 5] : [3, 4, 5, 6, 7, 8, 0, 1, 2]
+      yield JSON.stringify({ move: prefs.find((c) => board.legalMoves.includes(c)) })
+    },
+  }
+
+  beforeAll(() => {
+    postHandler = (url, init) => {
+      // The page's fetch carries a relative URL and no Origin under jsdom; a browser sends its own origin.
+      // The jsdom AbortSignal is not the Fetch API's, so it is left off the in-process Request.
+      const headers = { ...(init?.headers as Record<string, string> | undefined), origin: ORIGIN }
+      const request = new Request(new URL(url, ORIGIN), { method: init?.method, headers, body: init?.body as string })
+      return handleArenaRequest(request, '/', {
+        config,
+        env: { ANTHROPIC_API_KEY: 'sk-test' },
+        limiter: { limit: async () => ({ success: true }) },
+        allowedOrigin: ORIGIN,
+        providerFor: () => ({ ok: true, provider: scripted }),
+        validateKey: async () => true,
+      })
+    }
+  })
+  afterAll(() => {
+    postHandler = undefined
+  })
+
+  it('Run streams the Worker route\'s match, completes via isComplete(), and the page verdict over it is clean', async () => {
+    click(runBtn())
+    await waitUntil(() => cancelBtn().hidden && !runBtn().hasAttribute('disabled'))
+    expect(q('[data-live-status]').textContent).toContain('Live match complete')
+    expect(verdict().dataset.verdict).toBe('clean')
+    for (let i = 0; i < 30; i++) click(nextBtn())
+    expect(narration()).toContain('X wins')
   })
 })

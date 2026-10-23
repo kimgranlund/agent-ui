@@ -13,8 +13,8 @@
 |---|---|---|---|---|
 | **LLD-C1** | Shared NDJSON line reader | SPEC-R17/R18 carriage | `site/lib/ndjson-lines.ts` (+ `live-proxy-transport.ts` refactored onto it) | site (browser) |
 | **LLD-C2** | Incremental replay accumulator | SPEC-R17 AC1 | `site/lib/arena-replay.ts` (extends the shipped module) | site, no DOM |
-| **LLD-C3** | Streaming live-match client | SPEC-R17 | `site/lib/arena-live-transport.ts` (extends; batch `runLiveMatch` superseded) | site, dev-only reach |
-| **LLD-C4** | Runner abort seam | SPEC-R17 AC3 | `packages/agent-ui/a2a/tools/arena/match.ts` (`RunMatchOptions.signal`) + `dev-proxy-plugin.ts` (close→abort) | tools (Node) |
+| **LLD-C3** | Streaming live-match client | SPEC-R17 | `site/lib/arena-live-transport.ts` (extends; batch `runLiveMatch` superseded) | site, dev and production reach (T-0430) |
+| **LLD-C4** | Runner abort seam | SPEC-R17 AC3 | `packages/agent-ui/a2a/tools/arena/match.ts` (`RunMatchOptions.signal`) + `live-match.ts` (signal into each seat, T-0430) + `dev-proxy-plugin.ts` (close→abort) + the Worker's `arena-route.ts` | tools (Node, Worker) |
 | **LLD-C5** | Arena page live mode | SPEC-R17 | `site/pages/a2a-tic-tac-toe.ts` (live section rework) | site |
 | **LLD-C6** | Part-frame protocol | SPEC-R18 AC1 | `packages/agent-ui/a2a/tools/feed/frames.ts` | pure, browser-safe (§3 split note) |
 | **LLD-C7** | Feed-session derivation | SPEC-R18 (log-as-session) | `packages/agent-ui/a2a/tools/feed/feed-session.ts` | pure, Node+browser-safe |
@@ -101,7 +101,9 @@ channel endpoints (the loud-straggler guarantee holds). The proxy wires `res.on(
 scripted CI match with no signal is byte-identical (the seam is additive; a test asserts the transcript
 bytes). Deeper hardening — threading the signal into `createModelSeat` → `provider.stream(req.signal)` so
 the in-flight provider call itself cancels — is NAMED as optional follow-up; without it one dangling move
-call runs to the 30 s per-move timeout server-side, which is accepted (ADR-0116 Consequences).
+call runs to the 30 s per-move timeout server-side, which is accepted (ADR-0116 Consequences). Done in
+T-0430: the shared core (`live-match.ts`) passes the match signal into each `createModelSeat`, so a cancel
+now aborts the in-flight provider call too.
 
 **LLD-C5 — the page.** The live section reworks around three states (`idle → running → done|cancelled|faulted`):
 
@@ -267,7 +269,7 @@ the posture the seam named, WIDENED knowingly: the live arm adds a composer, whi
 | note-only turn (zero envelopes) | C8/C11 | valid: `wrapServerTurn([], {prose: note})` → one TextPart — a prose bubble, no artifact mount (empty ≠ invalid, ADR-0088) |
 | interaction clicked while a turn is in flight | C11 | busy-gated (the a2ui-live `busy` idiom) — one turn at a time |
 | reset mid-turn | C11 | in-flight signal aborted, hosts disposed, recorded fixture rebuilt |
-| `dist/` hygiene | C12 | grep covers BOTH mounts + key names; both live modules remain DEV-dynamic-import-only |
+| `dist/` hygiene | C12 | grep covers key names for both arms and the feed mount; the feed module remains DEV-dynamic-import-only, and the arena module ships probe-gated since T-0430 (the production Worker serves `/__a2a/arena`) |
 
 ## 5. Build sequence (fan-out-sliced; each step verifiable; one writer per file)
 

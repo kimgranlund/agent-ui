@@ -7,7 +7,8 @@ import { Features } from 'lightningcss'
 // server-side. `vite build` never runs it (SPEC-R3/N2) — the static site ships the recorded backbone alone.
 import { a2uiDevProxyPlugin } from './packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts'
 // The A2A arena dev proxy (LLD-C10, a2a-tic-tac-toe.lld.md): same DEV-ONLY posture, a separate mount
-// (`/__a2a/arena`) — runs a real tic-tac-toe match server-side instead of the A2UI produce() loop.
+// (`/__a2a/arena`): runs a real tic-tac-toe match server-side instead of the A2UI produce() loop. Production
+// serves the same mount from the Worker (`a2ui/tools/agent/worker/arena-route.ts`, T-0430).
 import { a2aDevProxyPlugin } from './packages/agent-ui/a2a/tools/arena/dev-proxy-plugin.ts'
 // The A2A artifact-feed dev proxy (LLD-C8, a2a-live-realtime.lld.md): same DEV-ONLY posture, a separate
 // mount (`/__a2a/feed`) — derives the produce() session from a posted A2A message log and streams ONE

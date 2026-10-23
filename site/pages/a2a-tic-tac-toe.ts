@@ -8,18 +8,20 @@
 //     shown side by side with the wire/board timeline, so "neither seat ever saw the other's reasoning" is
 //     inspectable, not merely asserted. The contaminated fixtures are one click away, so the gate can be
 //     seen FAILING loudly (the proof it bites — LLD §2/§9).
-//  3. THE DEV-ONLY LIVE SEAM (LLD-C5, SPEC-R17): the arena dev proxy (`/__a2a/arena`) runs a real match
-//     server-side and streams it incrementally; the "run a live match" control appears only once
-//     `probeArenaLive()` reports a key is configured (mirrors the a2ui-live `probeLive()` precedent) — a
-//     dynamic import behind `import.meta.env.DEV`, so `vite build` tree-shakes the whole live path out
-//     (SPEC-N2). Moves append into this SAME replay UI as stream lines arrive (via the incremental
-//     `ReplayAccumulator`, LLD-C2) — a follow-tail scrubber, a truthful "pending" isolation verdict while
+//  3. THE LIVE SEAM (LLD-C5, SPEC-R17; T-0430 took it to production): the arena's live mount (`/__a2a/arena`,
+//     the Vite dev proxy in dev, the Worker route on ui.nonoun.io) runs a real match server-side, keys held
+//     there, and streams it incrementally; the "run a live match" control appears only once
+//     `probeArenaLive()` reports the mount can run one (mirrors the a2ui-live `probeLive()` precedent). The
+//     transport is a dynamic import, attempted in every build: the recorded flagship has already loaded
+//     with zero network before the probe runs, and a host that cannot run a match keeps the section hidden.
+//     Moves append into this SAME replay UI as stream lines arrive (via the incremental
+//     `ReplayAccumulator`, LLD-C2): a follow-tail scrubber, a truthful "pending" isolation verdict while
 //     the match is in flight, and a Cancel control. The `done` state is GATED ON the accumulator's own
-//     `isComplete()` — never on stream end alone (a cleanly truncated transcript still validates, SPEC-R17
-//     AC2) — and only then does the completed raw text re-enter the EXISTING `loadTranscript` →
+//     `isComplete()`, never on stream end alone (a cleanly truncated transcript still validates, SPEC-R17
+//     AC2), and only then does the completed raw text re-enter the EXISTING `loadTranscript` ->
 //     `applyLoaded('live')` call sites the recorded fixtures use, so the finished replay/isolation
 //     panel/inspector are code-identical to the batch path. A cancelled or faulted stream (including one
-//     that ends without the terminal event) is DISCARDED — the previously selected recorded fixture is
+//     that ends without the terminal event) is DISCARDED: the previously selected recorded fixture is
 //     re-selected, never a partial live transcript.
 import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './a2a-tic-tac-toe.css'
@@ -284,7 +286,7 @@ nextBtn.addEventListener('click', () => {
 
 selectFixture('flagship') // recorded-default (SPEC-R13 AC1) — zero network, zero keys
 
-// ════════════════ the dev-only LIVE overlay (SPEC-N2: dynamic + DEV-guarded ⇒ tree-shaken from build) ════
+// ════════════════ the LIVE overlay (probe-gated dynamic import; T-0430: no DEV gate, the Worker serves it) ════
 const liveSection = document.createElement('div')
 liveSection.className = 'live-section'
 liveSection.dataset.live = ''
@@ -305,7 +307,6 @@ function appendLiveSteps(steps: readonly ReplayStep[]): void {
 }
 
 function wireLiveOverlay(): void {
-  if (!import.meta.env.DEV) return
   void (async () => {
     try {
       const overlay = await import('../lib/arena-live-transport.ts')
@@ -406,7 +407,7 @@ function wireLiveOverlay(): void {
 
       liveSection.append(liveStatus, liveControls)
     } catch {
-      /* no proxy (production build) or a network fault — the live section stays hidden */
+      /* no live mount reachable, or a network fault: the live section stays hidden */
     }
   })()
 }

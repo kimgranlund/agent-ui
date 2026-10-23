@@ -83,6 +83,31 @@ describe('createModelSeat (LLD-C6) — stub-provider replies', () => {
   })
 })
 
+describe('maxTokens (T-0430, the live arena per-call output cap)', () => {
+  function capturingProvider(seen: Record<string, unknown>[]): AgentProvider {
+    return {
+      async *stream(req) {
+        seen.push(req as unknown as Record<string, unknown>)
+        yield '{"move": 4}'
+      },
+    }
+  }
+
+  it('maxTokens 256 reaches stream() as modelSettings.maxTokens', async () => {
+    const seen: Record<string, unknown>[] = []
+    const seat = createModelSeat({ mark: 'X', canary: 'CANARY-1', provider: capturingProvider(seen), model: 'stub', maxTokens: 256 })
+    await seat.respond(boardMsg())
+    expect(seen[0]!['modelSettings']).toEqual({ maxTokens: 256 })
+  })
+
+  it('omitted, the request carries no modelSettings key at all (byte-identical to before the option)', async () => {
+    const seen: Record<string, unknown>[] = []
+    const seat = createModelSeat({ mark: 'X', canary: 'CANARY-1', provider: capturingProvider(seen), model: 'stub' })
+    await seat.respond(boardMsg())
+    expect('modelSettings' in seen[0]!).toBe(false)
+  })
+})
+
 describe('byte-complete recording (LLD §2) — the recorded context ≡ the actual request bytes', () => {
   it('a capturing stub proves the recorded user/assistant entries are byte-identical to what it actually received/sent', async () => {
     const captured: { system: string; messages: Turn[] }[] = []

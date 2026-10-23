@@ -1,8 +1,8 @@
-// site/lib/arena-live-transport.ts — LLD-C3/C4 (SPEC-R17): the DEV-ONLY live-match overlay. Browser →
-// the arena dev proxy (`/__a2a/arena`, a Vite middleware holding the provider key SERVER-side). Reached
-// ONLY via a dev-only dynamic import (`import.meta.env.DEV`, see the page module) so `vite build`
-// tree-shakes it out and no live-match/key path is ever baked into the static build (SPEC-N2) — this file
-// has no `import.meta.env.VITE_*` reference at all; the proxy holds the key.
+// site/lib/arena-live-transport.ts (LLD-C3/C4, SPEC-R17): the live-match overlay. Browser -> the arena's
+// live mount (`/__a2a/arena`): the Vite dev proxy under `vite dev`, the production Worker route on
+// ui.nonoun.io (T-0430), both holding the provider key SERVER-side and running the same match core. The
+// page reaches this file only through a probe-gated dynamic import; it has no `import.meta.env.VITE_*`
+// reference at all, and no key ever reaches it.
 //
 // GENUINELY STREAMING (LLD-C3 supersedes the old batch `runLiveMatch`, which read the whole response via
 // `res.text()` before returning — there was nothing mid-flight for it to render, hence the old banner).
@@ -23,8 +23,9 @@ export interface ArenaLiveStatus {
   providers: number
 }
 
-/** Ask the dev proxy whether a live key is configured. Any error (no proxy = production build, or a
- * network fault) ⇒ not available — the page's "run a live match" affordance stays hidden. */
+/** Ask the live mount whether it can run a match (a working key, and on the Worker a bound rate limiter).
+ * Any error (no mount reachable, or a network fault) means not available: the page's "run a live match"
+ * affordance stays hidden. */
 export async function probeArenaLive(): Promise<ArenaLiveStatus> {
   try {
     const res = await fetch(`${ENDPOINT}/status`)
@@ -69,6 +70,8 @@ export async function runLiveMatchStream(
     body: JSON.stringify({ seats }),
     signal: opts.signal,
   })
+  // T-0430: the Worker allows one live match a minute per visitor; say so in plain words.
+  if (res.status === 429) throw new Error('One live match a minute per visitor. Try again in a minute.')
   if (!res.ok) {
     let detail = `${res.status} ${res.statusText}`
     try {
