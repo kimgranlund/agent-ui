@@ -130,7 +130,7 @@
 
 ## T-0209: One source per concept: layer membership, calibration bullets, persona list; mini-skill ranking stability test (2026-10-17)
 
-- decide: `packages/agent-ui/a2ui/src/agent/mini-skills.ts:94-98,113-121` note: the four `calibration:` rejection paths (non-positive, non-agent-ui catalog, domain entry, duplicate) have no vitest coverage; they fire only at module load from a planted asset, confirmed here by planted runs.
+- decide: `packages/agent-ui/a2ui/src/agent/mini-skills.ts:94-98,113-121` note: the four `calibration:` rejection paths (non-positive, non-agent-ui catalog, domain entry, duplicate) have no vitest coverage; they fire only at module load from a planted asset, confirmed here by planted runs. -> T-0414
 - decide: `packages/agent-ui/a2ui/src/catalog/layers.test.ts:56-71` note: `CLASSIFIED_CORE` is a 75-name hand list kept test-side as the classification record (the review asked for a new default type to red); runtime core stays derived, so the ticket's one-source goal holds for production code.
 - decide: `.claude/docs/lld/a2ui-live-agent.lld.md:98,475,692-696` and `.claude/docs/spec/a2ui-live-agent.spec.md:255-257` note: history and changelog passages still name `NEGOTIATE_BLUE_SKY`, `calibrationExampleBullet`, `BLUE_SKY_CALIBRATION_IDS` and `miniSkillsFor` with old line numbers; the current-mode passages (LLD-C4 row, SPEC-R13 and the function comment) were repaired.
 - decide: `packages/agent-ui/a2ui/tools/agent/worker/index.ts:50,54` note: the worker still imports the two base `catalog.json` files without an import attribute; the bundle loads (`worker-bundle.test.ts` green), so this is a consistency point, not a defect. -> decided 2026-10-22 overnight: no change; every worker JSON import (providers, both catalogs, the shards) uses the same plain form and worker-bundle.test.ts loads them
@@ -294,7 +294,7 @@
 - decide: `.sdlc/tickets/0351-glyph-marks/handoff.md:19` note: the Done-when `grep -rn clip-path badge.css` is a relative path that exits 2 from the repo root; criterion #1 is its runnable form (conductor-ruled, no plan-defect verdict).
 - decide: `.sdlc/runtime/tasks/0351-glyph-marks/shots/after/text-field.png` decide: the clear x and the stepper minus/plus (and the tabs and breadcrumb `more` dots) now draw at the glyph box with the token stroke, visibly smaller and bolder than the old 2n Phosphor icons; the derived geometry the Goal asks for, but nobody has ruled on that look.
 - decide: `packages/agent-ui/components/src/controls/styling-gates.test.ts` note: styling-gates, sizing-gates and naming-gates run green (3 files, 94 tests, exit 0); `node scripts/foundations-census.mjs --gate` exit 0, green with 0 allowlisted findings.
-- decide: `.sdlc/runtime/tasks/0351-glyph-marks/solo-report.md:45` decide: select (which still sets a host `aria-hidden` on its caret), calendar, combo-box, disclosure, form-popover, status-stream and swiper-paddles build ui-glyph by hand; a follow-up could adopt `createGlyph`.
+- decide: `.sdlc/runtime/tasks/0351-glyph-marks/solo-report.md:45` decide: select (which still sets a host `aria-hidden` on its caret), calendar, combo-box, disclosure, form-popover, status-stream and swiper-paddles build ui-glyph by hand; a follow-up could adopt `createGlyph`. -> T-0416: already fixed by T-0356
 - decide: `packages/agent-ui/components/src/controls/tabs/tabs.ts` note: tabs, breadcrumb and text-field define `props` by hand and ship no `*.props.gen.ts`; my regen probe created three untracked files, which I removed, and the tree is clean (`git status --short` empty).
 - decide: `/var/folders/n0/b1pq09652mbd8kncmz8tgkvc0000gn/T/sdlc-lite/agent-ui-7439b17c/0351-verifier-L3` note: the scratch log folder stays (the rm was denied by the permission system); the throwaway worktree was removed. `redck.py deviations` printed no `process deviation:` lines (no `(red)` criteria in this handoff).
 
@@ -704,3 +704,7 @@
 ## T-0412: The agent builder interview chat offers choices with the new selection patterns (OptionDeck, OptionCompare, own-commit asks) instead of a RadioGroup plus Confirm (2026-10-22)
 
 - note: the live-model leg is unmeasured by design (no live spend without Kim); the e2e flow proves the OptionDeck renders and its press reads back as the pick, not that Sonnet now chooses an OptionDeck for the temperament question.
+
+## T-0414: The four mini-skill calibration rejection paths get vitest coverage (2026-10-22)
+
+- note: packages/agent-ui/a2ui/src/agent/mini-skills.ts:111 catalogId and domain share one guard, so removing it reds two cases together; acceptable.

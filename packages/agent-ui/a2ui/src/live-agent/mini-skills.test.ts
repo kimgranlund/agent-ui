@@ -5,7 +5,7 @@
 // exercise their `tools/agent/*.ts` subjects from here rather than co-located.
 
 import { describe, it, expect } from 'vitest'
-import { MINI_SKILLS, PER_MODULE_TOKEN_BUDGET, DEFAULT_MINI_SKILL_CAP, selectMiniSkills } from '../agent/mini-skills.ts'
+import { MINI_SKILLS, PER_MODULE_TOKEN_BUDGET, DEFAULT_MINI_SKILL_CAP, selectMiniSkills, parseMiniSkills } from '../agent/mini-skills.ts'
 import type { MiniSkill } from '../agent/mini-skills.ts'
 import { buildSystemPrompt } from '../agent/system-prompt.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
@@ -119,6 +119,45 @@ describe('MINI_SKILLS registry — the per-module token budget (ADR-0091 §3)', 
   it('SPEC-R6 AC1: every shipped module carries catalogId: \'agent-ui\' except the a2ui-basic dialect module', () => {
     expect(MINI_SKILLS).toHaveLength(24) // + option-deck (T-0193), + confirm-receipt (T-0195), + step-flow (T-0198)
     for (const skill of MINI_SKILLS) expect(skill.catalogId, skill.id).toBe(skill.id === 'basic-dialect' ? 'a2ui-basic' : 'agent-ui')
+  })
+})
+
+// T-0414: the four `calibration:` rejection paths, driven through the pure validator on planted assets.
+describe('parseMiniSkills: the calibration: frontmatter guards (T-0209, T-0414)', () => {
+  const asset = (name: string, front: Record<string, string>) => ({
+    name,
+    source: `---\n${Object.entries(front).map(([k, v]) => `${k}: ${v}`).join('\n')}\n---\nbody`,
+  })
+  const base = { id: 'x', triggers: 'x', catalogId: 'agent-ui' }
+
+  it('accepts a positive-integer calibration on an agent-ui entry with no domain', () => {
+    const [skill] = parseMiniSkills([asset('x.md', { ...base, calibration: '2' })])
+    expect(skill?.calibration).toBe(2)
+  })
+
+  it.each(['0', '-1', '1.5', 'abc'])('rejects a non-positive-integer calibration (%s)', (value) => {
+    expect(() => parseMiniSkills([asset('x.md', { ...base, calibration: value })])).toThrow(/calibration must be a positive integer/)
+  })
+
+  it('rejects a calibration entry whose catalogId is not agent-ui', () => {
+    expect(() => parseMiniSkills([asset('x.md', { ...base, catalogId: 'a2ui-basic', calibration: '1' })])).toThrow(
+      /calibration needs catalogId agent-ui and no domain/,
+    )
+  })
+
+  it('rejects a calibration entry that carries a domain', () => {
+    expect(() => parseMiniSkills([asset('x.md', { ...base, domain: 'games', calibration: '1' })])).toThrow(
+      /calibration needs catalogId agent-ui and no domain/,
+    )
+  })
+
+  it('rejects two entries sharing a calibration position', () => {
+    expect(() =>
+      parseMiniSkills([
+        asset('a.md', { ...base, id: 'a', calibration: '1' }),
+        asset('b.md', { ...base, id: 'b', calibration: '1' }),
+      ]),
+    ).toThrow(/a and b share calibration 1/)
   })
 })
 
