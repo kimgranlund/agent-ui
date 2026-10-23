@@ -90,8 +90,17 @@ function loadMiniSkills(): MiniSkill[] {
   const files = listAssets('agent/prompts/mini-skills')
     .filter((name) => name.endsWith('.md'))
     .sort()
-  return files.map((name) => {
-    const { data, body } = parseFrontmatter(readAsset('agent/prompts/mini-skills/' + name))
+  return parseMiniSkills(files.map((name) => ({ name, source: readAsset('agent/prompts/mini-skills/' + name) })))
+}
+
+/**
+ * T-0414: the pure validator behind `loadMiniSkills`, taking the asset list so a test can plant a bad
+ * `calibration:` entry and see the load-time throw. Throws on a malformed entry and on two entries sharing
+ * a `calibration` position.
+ */
+export function parseMiniSkills(files: readonly { name: string; source: string }[]): MiniSkill[] {
+  const skills = files.map(({ name, source }) => {
+    const { data, body } = parseFrontmatter(source)
     if (!data.id || !data.triggers) throw new Error(`mini-skills: ${name} is missing id/triggers frontmatter`)
     if (!data.catalogId) throw new Error(`mini-skills: ${name} is missing catalogId frontmatter (SPEC-R6)`)
     const calibration = data.calibration === undefined ? undefined : Number(data.calibration)
@@ -110,19 +119,17 @@ function loadMiniSkills(): MiniSkill[] {
       ...(calibration !== undefined ? { calibration } : {}),
     }
   })
-}
-
-export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
-
-{
   const seen = new Map<number, string>()
-  for (const m of MINI_SKILLS) {
+  for (const m of skills) {
     if (m.calibration === undefined) continue
     const prior = seen.get(m.calibration)
     if (prior !== undefined) throw new Error(`mini-skills: ${prior} and ${m.id} share calibration ${m.calibration}`)
     seen.set(m.calibration, m.id)
   }
+  return skills
 }
+
+export const MINI_SKILLS: MiniSkill[] = loadMiniSkills()
 
 /** T-0209: the blue-sky calibration entries, in `calibration` order (the flag is their one source). */
 export const CALIBRATION_SKILLS: readonly MiniSkill[] = MINI_SKILLS.filter((m) => m.calibration !== undefined).sort(
