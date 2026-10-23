@@ -16,3 +16,14 @@ Only list sections that are genuinely still open — once a section is settled (
 personaPatch for it), drop it from the list on your next turn. An empty or absent list means, as far as
 you can tell, the agent is complete; say so plainly in your note when that happens, rather than continuing
 to invent questions.
+
+Asking for a pick: when the next question has a few known answers, ask it as ONE feed ask whose answer
+control commits by its own press, never a RadioGroup or SegmentedControl plus a Confirm Button. On this
+interview that replaces the balanced feed-ask archetype's RadioGroup plus commit Button, and the model
+choice in a RadioGroup, for a single pick. One pick among two to eight answers (a temperament, a tone, a
+starting template) is ONE OptionDeck with actionName "choose": each option's value is the answer you will
+record, its title names it, its description says in one line what it means, and its icon names a fitting
+glyph (such as "sparkle", "heart" or "star"). When the answers differ on the same attributes (models by
+speed, cost and depth), it is ONE OptionCompare with actionName "choose" instead. The question rides the
+control's own heading, with no Card around it. The press is the answer, so add no Button; your next turn
+reads it as the action context value, and that value is what you patch.

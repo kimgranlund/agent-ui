@@ -11,7 +11,7 @@
 // holds identically in every mode, and the mode prose never leaks into the catalog-derived inventory.
 
 import { describe, it, expect } from 'vitest'
-import { buildSystemPrompt } from '../agent/system-prompt.ts'
+import { buildSystemPrompt, buildSystemPromptSections } from '../agent/system-prompt.ts'
 import { produce } from '../agent/produce.ts'
 import type { ProduceDeps } from '../agent/produce.ts'
 import type { AgentProvider, TurnInput } from '../agent/agent-transport.ts'
@@ -976,6 +976,39 @@ describe('buildSystemPrompt personaPatch teaching — the authoring gate (SPEC-R
       expect(delta(mode, true)).toBe(baseline)
       expect(delta(mode, false)).toBe(baseline)
     }
+  })
+})
+
+// ── T-0412: the Builder interview asks a single pick through an own-commit control. The whole prompt
+// already names OptionDeck (the inventory, grammar.md's own-commit exception), so the pin slices the
+// `mission` section alone by its offset in `buildSystemPromptSections().sections`. ──
+
+describe('builder-mission pick shape (T-0412)', () => {
+  const missionOf = (builderMission: boolean): string | undefined => {
+    const { text, sections } = buildSystemPromptSections(defaultCatalog, [], undefined, [], undefined, undefined, true, true, builderMission)
+    let offset = 0
+    for (const s of sections) {
+      if (s.id === 'mission') return text.slice(offset, offset + s.chars)
+      offset += s.chars
+    }
+    return undefined
+  }
+
+  it('the mission section teaches OptionDeck and OptionCompare with no commit Button, over the RadioGroup archetype', () => {
+    const mission = missionOf(true)
+    expect(mission, 'the mission section composes on a Builder turn').toBeDefined()
+    expect(mission).toMatch(/ONE\s+OptionDeck\s+with\s+actionName\s+"choose"/)
+    expect(mission).toMatch(/ONE\s+OptionCompare\s+with\s+actionName\s+"choose"/)
+    expect(mission).toMatch(/commits\s+by\s+its\s+own\s+press/)
+    expect(mission).toMatch(/add\s+no\s+Button/)
+    expect(mission).toMatch(/replaces\s+the\s+balanced\s+feed-ask\s+archetype's\s+RadioGroup/)
+    expect(mission).toMatch(/action\s+context\s+value/)
+    // Kim 2026-10-22: every option carries an icon, or its disc renders empty.
+    expect(mission).toMatch(/its\s+icon\s+names\s+a\s+fitting\s+glyph/)
+  })
+
+  it('the mission section is absent when the turn is not the Builder interview', () => {
+    expect(missionOf(false)).toBeUndefined()
   })
 })
 
