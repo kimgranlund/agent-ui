@@ -718,3 +718,7 @@
 ## T-0422: chat:probe --click presses an OptionDeck card when no surface button carries the label (2026-10-23)
 
 - note: scripts/e2e-admin/README.md:25 says `available` on a missing click lists visible buttons only; deck card titles are not listed, which matches the doc but may hide why a card label missed.
+
+## T-0426: Composite moments prove the mutation clause in tree and SMALL_TALK covers good morning and thinking-aloud forms (2026-10-23)
+
+- note: composite-moments.test.ts:550 pins only the `lacks` half of the clause; the builder reports the game gate alone does not change this surface because lacks short-circuits first.
