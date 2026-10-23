@@ -5,7 +5,8 @@
 // API pages derive from — one fact, one home) plus the root CHANGELOG. Deterministic by construction
 // (alphabetical by tag, byte-stable) so the standing drift gate (site/llms.test.ts) can diff a fresh
 // generation against the committed file — the gate imports `generateLlmsFull` below, the SAME
-// implementation this script runs, so the pair cannot drift. Regenerate: `node scripts/generate-llms-full.mjs`.
+// implementation this script runs, so the pair cannot drift. Regenerate: `node scripts/generate-llms-full.mjs`;
+// `--check` exits 1 on drift without writing.
 //
 // Deliberately NOT in the corpus: the guide pages (theming/sizing/forms/…) — their content is TS-authored
 // DOM construction with no markdown source; llms.txt marks them as live-demo surfaces. Adding them here
@@ -88,6 +89,21 @@ if (process.argv[1] && import.meta.url === new URL(`file://${process.argv[1]}`).
   const root = repoRootFromScript()
   const out = join(root, 'site/public/llms-full.txt')
   const corpus = generateLlmsFull(root)
-  writeFileSync(out, corpus)
-  console.log(`llms-full: wrote ${corpus.length} bytes to ${out}`)
+  if (process.argv.includes('--check')) {
+    // Drift check: compare against the committed file, never write.
+    let committed = null
+    try {
+      committed = readFileSync(out, 'utf8')
+    } catch {
+      // a missing file is drift too
+    }
+    if (committed !== corpus) {
+      console.error(`llms-full: ${out} is stale; run \`node scripts/generate-llms-full.mjs\``)
+      process.exit(1)
+    }
+    console.log('llms-full: up to date')
+  } else {
+    writeFileSync(out, corpus)
+    console.log(`llms-full: wrote ${corpus.length} bytes to ${out}`)
+  }
 }
