@@ -29,7 +29,8 @@
           },
           "bindable": true,
           "mapsTo": "progress"
-        }
+        },
+        "actionName": { "type": { "type": "string" }, "mapsTo": "actionName", "actionEvent": "action", "required": true }
       },
       "children": "ChildList",
       "value": { "prop": "value", "event": "change", "readProp": "a2uiQuestionValue" }

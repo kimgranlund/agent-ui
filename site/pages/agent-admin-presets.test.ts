@@ -361,7 +361,7 @@ describe('the Quizmaster seedVersion bump (T-0036, T-0355): an untouched saved m
     localStorage.setItem(`${PREFIX}.quizmaster.seedVersion`, String(persona.seedVersion))
     localStorage.setItem(`${PREFIX}.quizmaster.effort`, JSON.stringify('high'))
     localStorage.setItem(`${PREFIX}.quizmaster.model`, JSON.stringify('claude-sonnet-4-5'))
-    expect(persona.seedVersion).toBe(6) // T-0159: surfaceStyle says question card
+    expect(persona.seedVersion).toBe(7) // T-0429: a QuestionCard pick commits the answer
     const store = personaStore(persona)
     expect(store.get('effort')).toBe('high')
     expect(store.get('model')).toBe('claude-sonnet-4-5')

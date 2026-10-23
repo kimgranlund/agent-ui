@@ -33,6 +33,7 @@ export const ADMIN_SELECTORS = {
   surfaceButton: '[data-part="mounts"] ui-surface-host ui-button',
   surfaceHost: '[data-part="mounts"] ui-surface-host',
   surfaceOption: '[data-part="mounts"] ui-surface-host ui-option-deck [data-part="option"]', // T-0412: an OptionDeck card
+  surfaceQuestionOption: '[data-part="mounts"] ui-surface-host ui-radio[data-part="option"]', // T-0429: a QuestionCard row
   activityStep: '[data-part="narration"] ui-timeline-item[data-kind]', // T-0016: a step-mode activity row
   flowChrome: '[data-part="log"] [role="group"][aria-label="Flow complete"]',
   contextJson: '[data-part="context-json"]',
@@ -327,30 +328,31 @@ export class AdminPage {
     return this.waitForTurn(since)
   }
 
-  /** T-0412: the titles of every visible OptionDeck card inside a pane's A2UI surface hosts, in document order. */
+  /** T-0412: the titles of every visible OptionDeck card inside a pane's A2UI surface hosts, in document order;
+   *  T-0429: a QuestionCard option row counts too, read by its label (the pick is the answer there as well). */
   surfaceOptionTitles(pane: ConversationPane = 'chat'): Promise<string[]> {
     return this.page.evaluate(
       (selector) =>
         [...document.querySelectorAll<HTMLElement>(selector)]
           .filter((c) => c.checkVisibility())
-          .map((c) => c.querySelector('[data-part="title"]')?.textContent?.trim() ?? ''),
-      `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceOption}`,
+          .map((c) => (c.querySelector('[data-part="title"]') ?? c.querySelector('[data-part="label"]'))?.textContent?.trim() ?? ''),
+      optionSelector(pane),
     )
   }
 
-  /** Click the newest visible OptionDeck card titled `title` (a DOM click, the press is the answer). Resolves
-   *  whether the card sat in the pane's newest surface host, as `clickSurfaceButton` does (T-0271). */
+  /** Click the newest visible OptionDeck card or QuestionCard row titled `title` (a DOM click, the press is the
+   *  answer). Resolves whether the card sat in the pane's newest surface host, as `clickSurfaceButton` does (T-0271). */
   #pressOption(title: string, pane: ConversationPane): Promise<{ inNewestSurface: boolean }> {
     return this.page.evaluate(
       ({ s, h, t }) => {
         const card = [...document.querySelectorAll<HTMLElement>(s)]
-          .filter((c) => c.checkVisibility() && c.querySelector('[data-part="title"]')?.textContent?.trim() === t)
+          .filter((c) => c.checkVisibility() && (c.querySelector('[data-part="title"]') ?? c.querySelector('[data-part="label"]'))?.textContent?.trim() === t)
           .at(-1)
         card?.click()
         const newest = [...document.querySelectorAll(h)].at(-1)
         return { inNewestSurface: card !== undefined && newest !== undefined && newest.contains(card) }
       },
-      { s: `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceOption}`, h: `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceHost}`, t: title },
+      { s: optionSelector(pane), h: `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceHost}`, t: title },
     )
   }
 
@@ -532,6 +534,11 @@ export class AdminPage {
 
 function paneSelector(pane: ConversationPane): string {
   return pane === 'chat' ? ADMIN_SELECTORS.chatPane : ADMIN_SELECTORS.copilotPane
+}
+
+/** A pane's pickable options: OptionDeck cards and QuestionCard rows (T-0429), one selector list. */
+function optionSelector(pane: ConversationPane): string {
+  return `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceOption}, ${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceQuestionOption}`
 }
 
 function kindSwitchSelector(kind: string): string {

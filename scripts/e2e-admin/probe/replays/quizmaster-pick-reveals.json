@@ -1,0 +1,384 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "quizmaster-pick-reveals",
+  "agent": "quizmaster",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "authored (T-0429) from smoke-quizmaster-first-question-haiku turn 1 (catalog agent-ui--quizmaster)",
+  "steps": [
+    {
+      "say": "Start a quiz on world capitals.",
+      "expect": [
+        "QuestionCard"
+      ]
+    },
+    {
+      "click": "Canberra",
+      "expect": [
+        "QuestionCard"
+      ]
+    }
+  ],
+  "expect": {
+    "components": [
+      "QuestionCard"
+    ]
+  },
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Let's go. This is a five-round quiz on world capitals, and I'll keep a running score as we go. Round 1 is up.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Round 1: What is the capital of Australia? Pick an answer on the card.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Start a quiz on world capitals.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"CATALOG\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":150200,\"total\":51709,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22429},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1578}],\"over\":false},\"miniSkillIds\":[\"option-deck\",\"greeting-card\"],\"cacheBoundary\":50131}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"quiz-capitals\",\"catalogId\":\"agent-ui--quizmaster\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"quiz-capitals\",\"value\":{\"quiz\":{\"score\":0,\"round\":1,\"total\":5,\"selected\":\"\"}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quiz-capitals\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"qcard\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"World capitals\",\"status\":\"Round 1 of 5\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Score\",\"value\":0}],\"progress\":{\"value\":0,\"max\":5}},{\"id\":\"qcard\",\"component\":\"QuestionCard\",\"label\":\"Round 1\",\"meta\":\"World capitals\",\"question\":\"What is the capital of Australia?\",\"name\":\"answer\",\"options\":[{\"value\":\"sydney\",\"label\":\"Sydney\"},{\"value\":\"melbourne\",\"label\":\"Melbourne\"},{\"value\":\"canberra\",\"label\":\"Canberra\"},{\"value\":\"perth\",\"label\":\"Perth\"}],\"value\":{\"path\":\"/quiz/selected\"},\"answer\":\"canberra\",\"actionName\":\"answer\",\"explanation\":\"Canberra was purpose-built as the capital in 1908, a compromise between rivals Sydney and Melbourne.\",\"revealed\":false,\"progress\":{\"value\":1,\"max\":5}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Let's go. This is a five-round quiz on world capitals, and I'll keep a running score as we go. Round 1 is up.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 1: What is the capital of Australia? Pick an answer on the card.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quiz-capitals",
+                      "catalogId": "agent-ui--quizmaster",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "quiz-capitals",
+                      "value": {
+                        "quiz": {
+                          "score": 0,
+                          "round": 1,
+                          "total": 5,
+                          "selected": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quiz-capitals",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "qcard"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "World capitals",
+                          "status": "Round 1 of 5",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": 0
+                            }
+                          ],
+                          "progress": {
+                            "value": 0,
+                            "max": 5
+                          }
+                        },
+                        {
+                          "id": "qcard",
+                          "component": "QuestionCard",
+                          "label": "Round 1",
+                          "meta": "World capitals",
+                          "question": "What is the capital of Australia?",
+                          "name": "answer",
+                          "options": [
+                            {
+                              "value": "sydney",
+                              "label": "Sydney"
+                            },
+                            {
+                              "value": "melbourne",
+                              "label": "Melbourne"
+                            },
+                            {
+                              "value": "canberra",
+                              "label": "Canberra"
+                            },
+                            {
+                              "value": "perth",
+                              "label": "Perth"
+                            }
+                          ],
+                          "value": {
+                            "path": "/quiz/selected"
+                          },
+                          "answer": "canberra",
+                          "explanation": "Canberra was purpose-built as the capital in 1908, a compromise between rivals Sydney and Melbourne.",
+                          "revealed": false,
+                          "progress": {
+                            "value": 1,
+                            "max": 5
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 1: What is the capital of Australia? Pick an answer on the card.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quiz-capitals",
+                      "catalogId": "agent-ui--quizmaster",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "quiz-capitals",
+                      "value": {
+                        "quiz": {
+                          "score": 0,
+                          "round": 1,
+                          "total": 5,
+                          "selected": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quiz-capitals",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "qcard"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "World capitals",
+                          "status": "Round 1 of 5",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": 0
+                            }
+                          ],
+                          "progress": {
+                            "value": 0,
+                            "max": 5
+                          }
+                        },
+                        {
+                          "id": "qcard",
+                          "component": "QuestionCard",
+                          "label": "Round 1",
+                          "meta": "World capitals",
+                          "question": "What is the capital of Australia?",
+                          "name": "answer",
+                          "options": [
+                            {
+                              "value": "sydney",
+                              "label": "Sydney"
+                            },
+                            {
+                              "value": "melbourne",
+                              "label": "Melbourne"
+                            },
+                            {
+                              "value": "canberra",
+                              "label": "Canberra"
+                            },
+                            {
+                              "value": "perth",
+                              "label": "Perth"
+                            }
+                          ],
+                          "value": {
+                            "path": "/quiz/selected"
+                          },
+                          "answer": "canberra",
+                          "actionName": "answer",
+                          "explanation": "Canberra was purpose-built as the capital in 1908, a compromise between rivals Sydney and Melbourne.",
+                          "revealed": false,
+                          "progress": {
+                            "value": 1,
+                            "max": 5
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Start a quiz on world capitals."
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Canberra is right. One point on the board. Read the why, then tap Next question.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"answer\\\" action (from component qcard). Action context: {\\\"value\\\":\\\"canberra\\\"}. Current surface data model: {\\\"quiz\\\":{\\\"score\\\":0,\\\"round\\\":1,\\\"total\\\":5,\\\"selected\\\":\\\"canberra\\\"}}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":150200,\"total\":52335,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22429},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2204}],\"over\":false},\"miniSkillIds\":[\"game-hud\",\"table-toolbar-pagination\",\"comparison-table\"],\"cacheBoundary\":50131}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"quiz-capitals\",\"path\":\"/quiz/score\",\"value\":1}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quiz-capitals\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"World capitals\",\"status\":\"Round 1 of 5\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Score\",\"value\":1}],\"progress\":{\"value\":1,\"max\":5}},{\"id\":\"qcard\",\"component\":\"QuestionCard\",\"label\":\"Round 1\",\"meta\":\"World capitals\",\"question\":\"What is the capital of Australia?\",\"name\":\"answer\",\"options\":[{\"value\":\"sydney\",\"label\":\"Sydney\"},{\"value\":\"melbourne\",\"label\":\"Melbourne\"},{\"value\":\"canberra\",\"label\":\"Canberra\"},{\"value\":\"perth\",\"label\":\"Perth\"}],\"value\":{\"path\":\"/quiz/selected\"},\"answer\":\"canberra\",\"actionName\":\"answer\",\"explanation\":\"Canberra was purpose-built as the capital in 1908, a compromise between rivals Sydney and Melbourne.\",\"revealed\":true,\"progress\":{\"value\":1,\"max\":5},\"children\":[\"next\"]},{\"id\":\"next\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Next question\",\"action\":{\"action\":\"next_question\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Canberra is right. One point on the board. Read the why, then tap Next question.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "quiz-capitals",
+                      "path": "/quiz/score",
+                      "value": 1
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quiz-capitals",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "World capitals",
+                          "status": "Round 1 of 5",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": 1
+                            }
+                          ],
+                          "progress": {
+                            "value": 1,
+                            "max": 5
+                          }
+                        },
+                        {
+                          "id": "qcard",
+                          "component": "QuestionCard",
+                          "label": "Round 1",
+                          "meta": "World capitals",
+                          "question": "What is the capital of Australia?",
+                          "name": "answer",
+                          "options": [
+                            {
+                              "value": "sydney",
+                              "label": "Sydney"
+                            },
+                            {
+                              "value": "melbourne",
+                              "label": "Melbourne"
+                            },
+                            {
+                              "value": "canberra",
+                              "label": "Canberra"
+                            },
+                            {
+                              "value": "perth",
+                              "label": "Perth"
+                            }
+                          ],
+                          "value": {
+                            "path": "/quiz/selected"
+                          },
+                          "answer": "canberra",
+                          "actionName": "answer",
+                          "explanation": "Canberra was purpose-built as the capital in 1908, a compromise between rivals Sydney and Melbourne.",
+                          "revealed": true,
+                          "progress": {
+                            "value": 1,
+                            "max": 5
+                          },
+                          "children": [
+                            "next"
+                          ]
+                        },
+                        {
+                          "id": "next",
+                          "component": "Button",
+                          "variant": "solid",
+                          "label": "Next question",
+                          "action": {
+                            "action": "next_question"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "quiz-capitals",
+            "actionId": "a2ui-action-1",
+            "name": "answer",
+            "sourceComponentId": "qcard",
+            "timestamp": "2026-10-23T05:30:00.000Z",
+            "context": {
+              "value": "canberra"
+            },
+            "dataModel": {
+              "quiz": {
+                "score": 0,
+                "round": 1,
+                "total": 5,
+                "selected": "canberra"
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -139,9 +139,9 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     expect(host.right - options.right).toBeCloseTo(19, 0)
     expect(question.top - head.bottom).toBeCloseTo(8, 0)
     expect(options.top - question.bottom).toBeCloseTo(8, 0)
-    const button = rect(card.querySelector(':scope > ui-button') as HTMLElement)
-    expect(button.top - options.bottom).toBeCloseTo(8, 0)
-    expect(host.bottom - button.bottom).toBeCloseTo(13, 0)
+    // T-0429: a pick commits, so the open round holds no Button and the options are its last visible part.
+    expect(card.querySelector(':scope > ui-button')).toBeNull()
+    expect(host.bottom - options.bottom).toBeCloseTo(13, 0)
   })
 })
 

@@ -21,7 +21,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
   curator: 'sha256:81881cbdf3a5c96c88bf0ef47a874a020d8dc99d97520b3cd2f1763896fbcf49',
   stylist: 'sha256:5be5c45f741dd489178106991cf29bd19acc06721e592b446c7f3d95954a4226',
   shopkeeper: 'sha256:b7fc793c6387221e4bb13b225ed3caf4e084fceb7c8f445364be8803a455db9a',
-  quizmaster: 'sha256:03f652e96ca7b556fe3eedea06e544c011a4f47ab911c01aa91b7f6572ec84f8',
+  quizmaster: 'sha256:65f7e46dcc4e0a4a3d5ac1a627ca6b14320ea7e9895a6314906d76bc4d8a5766',
   mentalist: 'sha256:e110c13f0cb88f2894857b73cb49f5a464a40ea86adbbcda0bbbd055079d56ab',
   negotiator: 'sha256:7d64711cac5c40fa2468bb38cd1b3f88d7e86b5021d367cc62926a40c524cb38',
   lexicographer: 'sha256:b499f4485ad8fc7d067163ddd8c7a0de0f983766062f0c8b77b39dc1aa1a835c',
@@ -30,7 +30,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
   'dungeon-master': 'sha256:28338295337eb41790cef55fb3cec257ff2bf3d3bca165cc4fac072280add2c8',
 }
 const BUILDER_DIGEST = 'sha256:f68026d14f91395bf3f2861e45bb8ebdfb75a6fc9f4341074f83a983ec8d164a'
-const PRESETS_DIGEST = 'sha256:6c4a5eccdd9b8821287131017babb76f6fa8e83ccbeda116d64fe659c00b10b2'
+const PRESETS_DIGEST = 'sha256:cb27fdf957d405b509c0d68f184230344d87310aeb74376c1c97df5072a0f603'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
 const LIBRARIES_DIGEST = 'sha256:22c760b1f0c0cb0915abcd3a23a536e7ec16f1fc8023cf1cc8c488765b04894e'
 

@@ -739,3 +739,8 @@
 ## T-0432: The A2UI catalog page shows every catalog's components accurately and its display works (2026-10-23)
 
 - note: builder-reported unfixed items (not criteria): about 30 descriptors without `description:`, capability-registry.ts:86 still listens for `change` on a ui-select, code panel clipped at 400px, OptionDeck allowRandom knob off while sample sets it on, images.example.com seed requests. Candidates for follow-up tickets.
+
+## T-0429: A quiz answer commits on tap: QuestionCard drops Check answer (2026-10-23)
+
+- decide: site/pages/agent-admin-prompt-budget.test.ts:8 note: the MEASURED 2026-10-14 comment (worst case 130 097) was stale before this change; the builder measured the worst persona at 138 880 of 150 200 (croupier), left for its owner.
+- decide: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:308-312 decide: a re-tap before the reveal turn lands sends a second `answer` action (design-accepted, OptionDeck parity), and a live Haiku that keeps omitting `actionName` would exhaust rounds; the quizmaster `checks.ts` fallback is the design's named follow-up.

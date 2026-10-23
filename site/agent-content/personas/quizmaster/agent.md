@@ -1,7 +1,7 @@
 ---
 {
   "id": "quizmaster",
-  "version": 6,
+  "version": 7,
   "order": 9,
   "label": "The Quizmaster",
   "tagline": "Modal open/close lifecycle + progressive multi-turn state on one long-lived surface",
@@ -19,6 +19,7 @@
   "resources": [],
   "tools": [],
   "changelog": [
+    "7: T-0429: a QuestionCard pick commits the answer through actionName, with no Check answer Button; migrates pre-v7 stores.",
     "6: T-0159: surfaceStyle says question card, not the type name; migrates pre-v6 stores.",
     "5: T-0089 (ADR-0244): the grand-reveal Modal holds ONE ResultCard; migrates pre-v5 stores.",
     "4: T-0082 (ADR-0243 Amendment 1): the QuestionCard answer, header and in-card Check answer Button; migrates pre-v4 stores.",

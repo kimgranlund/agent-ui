@@ -1,5 +1,5 @@
 // action-row.ts: the persona composites' action row at the library's large control step (ADR-0243 Amendment 2,
-// T-0083). A composite's action Buttons (CardTable's Hit, Stand and Double; QuestionCard's Check answer) are the
+// T-0083). A composite's action Buttons (CardTable's Hit, Stand and Double; QuestionCard's Next question) are the
 // producer's own children, appended by the renderer after `create()`, and neither the default nor the a2ui-basic
 // `Button` row carries a size. So the composite watches its own subtree and stamps `size="lg"` (28px on the A2UI
 // canvas register, `data-tier="widget" data-scale="md"`: sm / md / lg = 20 / 24 / 28, ADR-0245 Amendments 2 and 3; the
