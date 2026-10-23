@@ -2,7 +2,7 @@
 // An ask surface hosts only the feed sub-catalog (`feed-catalog.ts`), which excludes GameHud, and grammar.md admits a
 // game's ONE HUD surface beside the ask (Kim 2026-10-18). Each skill body names what the ask surface holds and what it
 // never holds; each description (all an index-only skill shows the model) carries the same split. This test holds both
-// against the feed set and the one-commit-Button rule.
+// against the feed set and the one-commit rule: ONE Button, or (T-0419) none beside an own-commit OptionDeck.
 import { describe, expect, it } from 'vitest'
 import { FEED_EXCLUDED, FEED_SURFACE_TYPE_SET } from '../../packages/agent-ui/a2ui/src/agent/feed-catalog.ts'
 import { AGENT_CONTENT } from './registry.gen.ts'
@@ -22,16 +22,24 @@ function skill(id: string): { body: string; description: string } {
   return { body: record.body, description: record.frontmatter.description }
 }
 
+/** T-0419: an ask whose answer control commits by its own press (OptionDeck, OptionCompare) carries no Button. */
+const ownCommit = (phrase: string): boolean => /\b(?:OptionDeck|OptionCompare)\b/.test(phrase)
+
 /** The ask-side problems of one placement rule match: an empty list is a sound ask surface. */
 function askProblems(onAsk: string): string[] {
   const problems = types(onAsk).filter((t) => !FEED_SURFACE_TYPE_SET.has(t)).map((t) => `${t} is not a feed type`)
-  if (buttons(onAsk) !== 1 || oneButton(onAsk) !== 1) problems.push(`${buttons(onAsk)} Buttons, not ONE commit Button`)
+  if (ownCommit(onAsk)) {
+    if (buttons(onAsk) !== 0) problems.push(`${buttons(onAsk)} Buttons beside an own-commit control`)
+  } else if (buttons(onAsk) !== 1 || oneButton(onAsk) !== 1) problems.push(`${buttons(onAsk)} Buttons, not ONE commit Button`)
   return problems
 }
 
+/** The Buttons each skill's description names: the own-commit deck none, the deal sheet's form its one Send. */
+const DESCRIPTION_BUTTONS: Readonly<Record<string, number>> = { 'guess-hud': 0, 'deal-sheet': 1 }
+
 describe('T-0363: game skills place the GameHud on a HUD surface beside the ask', () => {
   for (const id of ['guess-hud', 'deal-sheet']) {
-    it(`${id}: the ask surface holds only feed types and ONE Button, and never the HUD types`, () => {
+    it(`${id}: the ask surface holds only feed types and its commit (ONE Button, or none beside an own-commit OptionDeck), and never the HUD types`, () => {
       const { body } = skill(id)
       const m = RULE.exec(body)
       expect(m, `${id} states the placement rule`).not.toBeNull()
@@ -42,11 +50,11 @@ describe('T-0363: game skills place the GameHud on a HUD surface beside the ask'
       for (const t of types(hudSentence).filter((t) => EXCLUDED.has(t))) expect(never, `${id} keeps ${t} off the ask`).toContain(t)
     })
 
-    it(`${id}: the description carries the split with ONE Button`, () => {
+    it(`${id}: the description carries the split and its commit`, () => {
       const { description } = skill(id)
       expect(description).toContain('GameHud')
       expect(description).toContain('never on the ask')
-      expect(buttons(description)).toBe(1)
+      expect(buttons(description)).toBe(DESCRIPTION_BUTTONS[id])
     })
   }
 
@@ -54,5 +62,6 @@ describe('T-0363: game skills place the GameHud on a HUD surface beside the ask'
     expect(askProblems('the question and the SegmentedControl')).toEqual(['0 Buttons, not ONE commit Button'])
     expect(askProblems('the Slider, ONE Offer Button, an Accept Button and a Walk away Button')).toEqual(['3 Buttons, not ONE commit Button'])
     expect(askProblems('the question, a Timeline and ONE Answer Button')).toEqual(['Timeline is not a feed type'])
+    expect(askProblems('ONE OptionDeck and ONE Answer Button')).toEqual(['1 Buttons beside an own-commit control'])
   })
 })

@@ -709,7 +709,8 @@
 
 - note: packages/agent-ui/a2ui/src/agent/mini-skills.ts:111 catalogId and domain share one guard, so removing it reds two cases together; acceptable.
 
-## T-0418: One heading scale for surface titles: OptionDeck, OptionCompare, Card, ask and list titles read at the same role (2026-10-22)
+## T-0419: Grammar teaches a single pick among two to eight options as one own-commit OptionDeck for every persona (2026-10-23)
 
-- decide: `packages/agent-ui/a2ui/src/catalog/domains/hospitality/factories.ts:793` the Itinerary title (h4, title, lg, emphasis) is a surface title outside the audited set and is pinned to neither approved role. Its golden renders through the real renderer at widget md (`itinerary.visual.browser.test.ts:11`), and by source order the `text.css:231` widget h4 rule (specificity 0, after the `[size='lg']` override at `text.css:147`) should reach it; the golden moved 1px; the title's computed size was not measured this run, and the builder's "kept its look" is a claim, not a measurement.
-- note: `packages/agent-ui/components/src/controls/text/text.md` carries no line for the new widget-tier h3/h4 section-title rule (`text.css:227-235`); card.md got its paragraph (`card.md:114-118`), text.md did not.
+- decide: packages/agent-ui/a2ui/src/examples/catalog-frontier.ts:453-478 the re-authored `frontier-card-anatomy-ask` is a delivery-options form (Field-wrapped RadioGroup plus two Checkboxes), not the design's "Report a problem" RadioGroup plus Textarea (architect-L1-2.md:63-67); judged 3 then 4/PASS on rejudge (the two corpus/verdicts t0419 files). The builder reports it as a deviation.
+- note: site/agent-content/skills/guess-hud/SKILL.md:4 the description dropped "its press is the answer" to fit the 200 B ambient per-entry budget; the body at :12 keeps it.
+- decide: scripts/e2e-admin/admin-page.ts:33 the probe `--click` reads `ui-button` labels only and cannot press a deck card (architect-L1-2.md:139 follow-up; the keyless replay uses the recorded input).

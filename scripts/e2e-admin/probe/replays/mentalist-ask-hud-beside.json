@@ -5,7 +5,7 @@
   "agent": "mentalist",
   "model": "claude-haiku-5-5",
   "effort": "medium",
-  "source": "T-0363 authored: turn 0 round 1 is smoke-mentalist-first-answer-haiku turn 0 round 0 (catalog agent-ui)",
+  "source": "T-0363 authored, T-0419 re-authored to the single-pick OptionDeck: turn 0 round 1 is smoke-mentalist-first-answer-haiku turn 0 round 0 (catalog agent-ui)",
   "steps": [
     {
       "say": "Let's play Twenty Questions. I'm thinking of something.",
@@ -14,7 +14,7 @@
       ]
     },
     {
-      "click": "answer_question",
+      "click": "Yes",
       "expect": [
         "GameHud"
       ]
@@ -174,7 +174,7 @@
           ]
         },
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below and hit Answer.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"draft\":{\"answer\":\"\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"q_text\",\"ans\",\"commit\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Is it a living thing?\",\"variant\":\"h5\"},{\"id\":\"ans\",\"component\":\"SegmentedControl\",\"value\":{\"path\":\"/draft/answer\"},\"name\":\"answer\",\"children\":[\"s_yes\",\"s_no\",\"s_sort\"]},{\"id\":\"s_yes\",\"component\":\"Segment\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"s_no\",\"component\":\"Segment\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"s_sort\",\"component\":\"Segment\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Answer\",\"variant\":\"solid\",\"action\":{\"action\":\"answer_question\",\"context\":{\"questionId\":1}}}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"hud\",\"log\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Question 1 of 20\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"low\"}],\"progress\":{\"value\":1,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"children\":[\"q1\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Is it a living thing?\"}]}}",
+          "text": "{\"a2uiMeta\":{\"note\":\"Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Is it a living thing?\",\"actionName\":\"choose\",\"options\":[{\"value\":\"yes\",\"title\":\"Yes\",\"description\":\"It fits what I am thinking of.\",\"icon\":\"check-circle\"},{\"value\":\"no\",\"title\":\"No\",\"description\":\"It does not fit.\",\"icon\":\"x-circle\"},{\"value\":\"sort_of\",\"title\":\"Sort of\",\"description\":\"Partly, or it depends.\",\"icon\":\"circle-half\"}]}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"hud\",\"log\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Question 1 of 20\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"low\"}],\"progress\":{\"value\":1,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"children\":[\"q1\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Is it a living thing?\"}]}}",
           "tools": []
         }
       ],
@@ -217,7 +217,7 @@
       "lines": [],
       "rounds": [
         {
-          "text": "{\"a2uiMeta\":{\"note\":\"A living thing, then. Question 2 of 20: is it an animal?\",\"ask\":{\"surfaceId\":\"ask-2\"},\"target\":{\"surfaceId\":\"hud-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-2\",\"value\":{\"draft\":{\"answer\":\"\"}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"q_text\",\"ans\",\"commit\"]},{\"id\":\"q_text\",\"component\":\"Text\",\"text\":\"Is it an animal?\",\"variant\":\"h5\"},{\"id\":\"ans\",\"component\":\"SegmentedControl\",\"value\":{\"path\":\"/draft/answer\"},\"name\":\"answer\",\"children\":[\"s_yes\",\"s_no\",\"s_sort\"]},{\"id\":\"s_yes\",\"component\":\"Segment\",\"value\":\"yes\",\"label\":\"Yes\"},{\"id\":\"s_no\",\"component\":\"Segment\",\"value\":\"no\",\"label\":\"No\"},{\"id\":\"s_sort\",\"component\":\"Segment\",\"value\":\"sort_of\",\"label\":\"Sort of\"},{\"id\":\"commit\",\"component\":\"Button\",\"label\":\"Answer\",\"variant\":\"solid\",\"action\":{\"action\":\"answer_question\",\"context\":{\"questionId\":2}}}]}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"hud\",\"log\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Question 2 of 20\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"medium\",\"delta\":\"+1\"}],\"progress\":{\"value\":2,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"children\":[\"q1\",\"q2\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"done\",\"label\":\"Is it a living thing? Yes\"},{\"id\":\"q2\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Is it an animal?\"}]}}",
+          "text": "{\"a2uiMeta\":{\"note\":\"A living thing, then. Question 2 of 20: is it an animal?\",\"ask\":{\"surfaceId\":\"ask-2\"},\"target\":{\"surfaceId\":\"hud-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Is it an animal?\",\"actionName\":\"choose\",\"options\":[{\"value\":\"yes\",\"title\":\"Yes\",\"description\":\"It fits what I am thinking of.\",\"icon\":\"check-circle\"},{\"value\":\"no\",\"title\":\"No\",\"description\":\"It does not fit.\",\"icon\":\"x-circle\"},{\"value\":\"sort_of\",\"title\":\"Sort of\",\"description\":\"Partly, or it depends.\",\"icon\":\"circle-half\"}]}]}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"hud\",\"log\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Question 2 of 20\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"medium\",\"delta\":\"+1\"}],\"progress\":{\"value\":2,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"children\":[\"q1\",\"q2\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"done\",\"label\":\"Is it a living thing? Yes\"},{\"id\":\"q2\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Is it an animal?\"}]}}",
           "tools": []
         }
       ],
@@ -228,16 +228,11 @@
           "action": {
             "surfaceId": "ask-1",
             "actionId": "a2ui-action-1",
-            "name": "answer_question",
-            "sourceComponentId": "commit",
+            "name": "choose",
+            "sourceComponentId": "root",
             "timestamp": "2026-10-18T09:00:00.000Z",
             "context": {
-              "questionId": 1
-            },
-            "dataModel": {
-              "draft": {
-                "answer": "yes"
-              }
+              "value": "yes"
             }
           }
         }

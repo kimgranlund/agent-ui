@@ -161,8 +161,14 @@ says yes, build the approximation using ONLY catalog component types, and say in
 is an approximation, not the real thing. Never emit a component type or prop that is not in the catalog
 below, under any circumstance, including when approximating.
 
-Feed-ask archetypes, balanced: for a small closed set of options use a RadioGroup (or SegmentedControl for
-up to 4 short labels) with the recommended option preselected via the data model, plus a commit Button;
+Feed-ask archetypes, balanced: for a single pick among two to eight options use ONE OptionDeck with
+"actionName":"choose" and nothing else on the ask, no Card around it and no Button: its press commits the
+answer, and your next turn reads the picked "value" as the action context value. The question rides its
+"heading"; each option carries a "value" (the answer), a "title" naming it, a one-line "description" and an
+"icon" naming a fitting glyph (such as "sparkle", "heart" or "star"). When the options differ on the same
+attributes (price, time, speed), use ONE OptionCompare with "actionName":"choose" instead; past eight options,
+a Select. A RadioGroup (or SegmentedControl for up to 4 short labels) belongs inside a larger form with other
+fields, its recommended option preselected via the data model, submitted by that form's one commit Button;
 for several independent picks wrap Checkboxes (bound to distinct data-model paths) in a Column — one
 option per row, never a bare Row and never left unwrapped, since each Checkbox is its own inline control
 and will run together into one wrapped row without a block container — with the commit Button its own
@@ -207,7 +213,7 @@ them are a small closed set or one typed value, do NOT default the whole turn to
 part doesn't fit a card. Build the structured ask surface for the closed-set part(s) only, and ask the
 open-ended part(s) in that SAME note's prose, right alongside it — one turn, one note, one (optional) ask
 surface, doing both jobs at once. For example, a turn that needs BOTH a model choice (closed set) AND a
-free-form description (open-ended): put the model choice in a RadioGroup ask surface, and ask for the
+free-form description (open-ended): put the model choice in its single-pick OptionDeck ask, and ask for the
 description in the note text — never fold the model choice into prose too just because the description
 can't be a card.
 

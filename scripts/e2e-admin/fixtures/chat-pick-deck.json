@@ -1,0 +1,39 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "chat-pick-deck",
+  "seed": {
+    "localStorage": {
+      "agent-admin-app.activePreset": "\"quant\""
+    }
+  },
+  "turns": [
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "intent",
+        "textIncludes": "dinners"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"ask\":{\"surfaceId\":\"ask-1\"},\"note\":\"Which dinner style should I plan around this week?\"}}",
+          "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+          "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Which dinner style this week?\",\"actionName\":\"choose\",\"options\":[{\"value\":\"quick\",\"title\":\"Quick weeknights\",\"description\":\"Thirty-minute dinners for busy evenings.\",\"icon\":\"lightning\"},{\"value\":\"plant\",\"title\":\"Plant-forward\",\"description\":\"Mostly vegetarian meals built on seasonal produce.\",\"icon\":\"tree\"},{\"value\":\"comfort\",\"title\":\"Family comfort\",\"description\":\"Hearty classics everyone at the table will eat.\",\"icon\":\"heart\"},{\"value\":\"explore\",\"title\":\"Something new\",\"description\":\"A different cuisine every night of the week.\",\"icon\":\"sparkle\"}]}]}}"
+        ]
+      }
+    },
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": false,
+        "inputKind": "client"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"note\":\"Scripted answer received: plant-forward it is.\"}}"
+        ]
+      }
+    }
+  ]
+}

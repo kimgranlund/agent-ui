@@ -470,6 +470,28 @@ const CONTRACTS: Record<string, Contract> = {
       ]),
     },
   },
+  // T-0419: a single pick asked on its own is one OptionDeck, not a RadioGroup plus a commit Button.
+  'single-pick': {
+    code: 'SINGLE_PICK_DECK',
+    pass: {
+      catalog: UI,
+      output: surface('ask-1', UI, [
+        { id: 'root', component: 'OptionDeck', heading: 'Which dinner style this week?', actionName: 'choose', options: deckOptions(3) },
+      ]),
+    },
+    fail: {
+      catalog: UI,
+      output: surface('ask-1', UI, [
+        { id: 'root', component: 'Column', children: ['q', 'pick', 'go'] },
+        { id: 'q', component: 'Text', text: 'Which dinner style this week?' },
+        { id: 'pick', component: 'RadioGroup', value: { path: '/style' }, children: ['r1', 'r2', 'r3'] },
+        { id: 'r1', component: 'Radio', value: 'quick', label: 'Quick' },
+        { id: 'r2', component: 'Radio', value: 'slow', label: 'Slow cooked' },
+        { id: 'r3', component: 'Radio', value: 'veg', label: 'Vegetarian' },
+        { id: 'go', component: 'Button', label: 'Plan my week', action: { event: { name: 'plan' } } },
+      ]),
+    },
+  },
   'word-secret': {
     code: 'WORD_SECRET_MISSING',
     pass: { catalog: UI, output: wordBoard(WORD_OPEN) },
@@ -749,6 +771,17 @@ const PROBES: Record<string, readonly Fixture[]> = {
   'option-deck-count': [
     { catalog: UI, output: surface('greet-1', UI, [{ id: 'root', component: 'OptionDeck', actionName: 'start', options: deckOptions(1) }]) },
     { catalog: UI, output: surface('greet-1', UI, [{ id: 'root', component: 'OptionDeck', actionName: 'start', options: [...deckOptions(2), { value: 'random', title: 'Anything' }] }]) },
+  ],
+  // T-0419: the OPTION_DECK_WRAPPED arm (an OptionDeck under a Card).
+  'single-pick': [
+    {
+      catalog: UI,
+      output: surface('ask-1', UI, [
+        { id: 'root', component: 'Card', children: ['body'] },
+        { id: 'body', component: 'CardContent', children: ['deck'] },
+        { id: 'deck', component: 'OptionDeck', heading: 'Which dinner style this week?', actionName: 'choose', options: deckOptions(3) },
+      ]),
+    },
   ],
   // T-0324: a deal that settles a two-card 20 (round 8 :9).
   'croupier-action-applied': [

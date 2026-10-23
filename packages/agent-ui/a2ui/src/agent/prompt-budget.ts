@@ -58,8 +58,12 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  formula.
  *  RE-MEASURED 2026-10-22 (T-0412): the worst case is 148 390 chars (`agent-ui`, mode default; 147 377 before), +1 013
  *  from builder-mission.md's pick-shape paragraph with its option icons (the matrix sets `builderMission`). Budget
- *  148 700 by the same formula. */
-export const PROMPT_CHAR_BUDGET_BASE = 148_700
+ *  148 700 by the same formula.
+ *  RE-MEASURED 2026-10-22 (T-0419): the worst case is 148 838 chars (`agent-ui`, mode default; 148 390 before), +448
+ *  from grammar.md's single-pick OptionDeck archetype, the builder-mission.md trim and the RadioGroup, SegmentedControl
+ *  and OptionDeck selection clauses, after the corpus step (the mini-skill bodies stay out of the matrix's top three).
+ *  Budget 149 200 by the same formula. */
+export const PROMPT_CHAR_BUDGET_BASE = 149_200
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -100,8 +104,10 @@ export const PROMPT_CHAR_BUDGET_BASE = 148_700
  *  RE-MEASURED 2026-10-22 (T-0397): the worst case is 148 361 chars (`agent-ui--croupier`, mode default; 147 880
  *  before), the same grammar.md clauses and mini-skill BASE pays. Budget 148 700 by the same formula.
  *  RE-MEASURED 2026-10-22 (T-0412): the worst case is 149 374 chars (`agent-ui--croupier`, mode default; 148 361
- *  before), the same builder-mission.md paragraph BASE pays. Budget 149 700 by the same formula. */
-export const PROMPT_CHAR_BUDGET_DERIVED = 149_700
+ *  before), the same builder-mission.md paragraph BASE pays. Budget 149 700 by the same formula.
+ *  RE-MEASURED 2026-10-22 (T-0419): the worst case is 149 822 chars (`agent-ui--croupier`, mode default; 149 374
+ *  before), the same single-pick grammar, mission and selection edits BASE pays. Budget 150 200 by the same formula. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 150_200
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

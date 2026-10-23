@@ -419,7 +419,7 @@
     },
     "RadioGroup": {
       "intents": [
-        "pick one of a few visible options"
+        "pick one option inside a form with other fields"
       ],
       "notFor": [
         {
@@ -431,12 +431,12 @@
           "why": "a long list"
         },
         {
-          "type": "SegmentedControl",
-          "why": "a compact mode switch"
-        },
-        {
           "type": "ChoiceGroup",
           "why": "options as rich cards"
+        },
+        {
+          "type": "OptionDeck",
+          "why": "a single pick asked on its own"
         }
       ]
     },
@@ -465,7 +465,7 @@
         },
         {
           "type": "OptionDeck",
-          "why": "one pick that starts something"
+          "why": "a single pick asked on its own, outside a form"
         }
       ]
     },
@@ -478,7 +478,7 @@
     "SegmentedControl": {
       "intents": [
         "switch a mode or view",
-        "a short one-of set as joined buttons"
+        "a short one-of field inside a form"
       ],
       "notFor": [
         {
@@ -486,8 +486,8 @@
           "why": "panels of content"
         },
         {
-          "type": "RadioGroup",
-          "why": "a form list of options"
+          "type": "OptionDeck",
+          "why": "a single pick asked on its own"
         }
       ]
     },
@@ -1264,6 +1264,7 @@
     },
     "OptionDeck": {
       "intents": [
+        "answer one question with one of two to eight options",
         "pick one of a few things to start",
         "a game, experience, plan or onboarding path to begin"
       ],
@@ -1275,6 +1276,14 @@
         {
           "type": "OptionCompare",
           "why": "options compared on the same attributes"
+        },
+        {
+          "type": "RadioGroup",
+          "why": "a pick inside a form with other fields"
+        },
+        {
+          "type": "SegmentedControl",
+          "why": "a mode switch or a short field in a form"
         }
       ]
     },
@@ -1301,7 +1310,7 @@
       "notFor": [
         {
           "type": "OptionDeck",
-          "why": "one pick that starts something"
+          "why": "one pick whose options share no attribute rows"
         }
       ]
     }

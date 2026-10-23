@@ -79,8 +79,9 @@ const PINS: readonly (readonly [preset: string, catalogId: string, turn: string,
   ['lexicographer', 'agent-ui', 'Show me the word.', ['domain-lexicographer-game-over', 'domain-lexicographer-word-board', 'frontier-product-card-rooms']],
   // Known poor (T-0396): ranks 2 and 3 are the StepFlow hotel booking and a room-booking card, off the fleet domain.
   ['admiral', 'agent-ui', 'Fire at B3', ['domain-admiral-battleship-board', 'frontier-step-flow-booking', 'frontier-product-card-rooms']],
-  // Known poor (T-0396): rank 2 is the ConfirmReceipt order read-back, off the mixing domain.
-  ['alchemist', 'agent-ui', 'Mix the two elements', ['media-file-grid', 'frontier-confirm-receipt-order', 'list-nested']],
+  // Known poor (T-0396, re-pinned by T-0419): rank 1 is the ConfirmReceipt order read-back and rank 3 the StepFlow hotel
+  // booking, off the mixing domain; T-0419's two base-shard records (one new, one replaced) moved the term weights (rank 3 was list-nested).
+  ['alchemist', 'agent-ui', 'Mix the two elements', ['frontier-confirm-receipt-order', 'media-file-grid', 'frontier-step-flow-booking']],
   // Known poor (T-0335, re-pinned by T-0396): rank 3 is the ConfirmReceipt order read-back, off the quest domain (it was
   // plan-and-execute-plan, before that the then hotel wizard); pinned so a shard change that moves it is a deliberate re-pin.
   ['dungeon-master', 'agent-ui', 'I open the door and look around', ['frontier-game-hud-quest', 'frontier-service-gateway', 'frontier-confirm-receipt-order']],

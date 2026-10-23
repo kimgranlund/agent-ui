@@ -1,8 +1,8 @@
 {
   "id": "mentalist",
   "preset": "mentalist",
-  "seedVersion": 3,
-  "seedDigest": "sha256:0175a300c2e3a6a1f0d50f9067ca8d6e0a696e9ae9c27edbbdb4dc6224c654f5",
+  "seedVersion": 4,
+  "seedDigest": "sha256:e110c13f0cb88f2894857b73cb49f5a464a40ea86adbbcda0bbbd055079d56ab",
   "fragment": null,
   "selection": null,
   "noFragment": {

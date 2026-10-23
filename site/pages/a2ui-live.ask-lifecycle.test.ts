@@ -130,7 +130,8 @@ function jsonTabText(): string {
 
 // A minimal, real, feed-in-scope ask surface: a Column of a question Text, a data-bound RadioGroup (two
 // Radio options, preselected via updateDataModel) and one commit Button (`wantResponse` omitted — the
-// ADR-0097 §4 mechanics spine) — the "closed single-choice" archetype (ADR-0097 Decision §4).
+// ADR-0097 §4 mechanics spine). T-0419: this is the in-form RadioGroup ask, not the closed single-choice archetype, which
+// is now one own-commit OptionDeck; the fixture exercises the one-commit-Button lifecycle.
 function askAskOneLines(surfaceId: string): string[] {
   return [
     `{"version":"v1.0","createSurface":{"surfaceId":"${surfaceId}","catalogId":"agent-ui","sendDataModel":true}}`,
