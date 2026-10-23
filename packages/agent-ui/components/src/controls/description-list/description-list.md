@@ -35,9 +35,9 @@ slots: []              # no light-DOM content model — every child is control-b
 
 parts:                  # data-part nodes the render effect builds (selected by description-list.css)
   - name: row
-    description: One `<div data-part="row">` per SURVIVING row — a flex row, value adjacent to label at a fixed pair gap, `align-items:baseline`; never opposite-edge flushing (no justify-content), never a two-column label/value grid (ADR-0201 cl.4).
+    description: One `<div data-part="row">` per SURVIVING row, a `subgrid` row on the host's one term | value grid (T-0417): every value starts one pair gap past the longest term, `align-items:baseline`, `justify-items:start`; never opposite-edge flushing. Under a 20rem ancestor query boundary the term stacks above its value and rows part by the pair gap.
   - name: label
-    description: The `<span data-part="label">` — the field's label text on the secondary plane (`--ui-description-list-label-ink`), label-medium register, `flex-shrink:0` (a long value wraps; the label never crushes).
+    description: The `<span data-part="label">`: the field's label text on the secondary plane (`--ui-description-list-label-ink`), label-medium register, in a term column as wide as the longest term (capped at half the host; a long value wraps, the term never crushes).
   - name: value
     description: The `<span data-part="value">` — the field's value text, body-medium register, VERBATIM for strings (humanization is the producer's job) / Intl-formatted for finite numbers; wraps under itself (`min-inline-size:0` + `overflow-wrap:anywhere`).
 
@@ -106,12 +106,20 @@ number prints via the shared default-locale `Intl.NumberFormat`.
 
 ## The receipt rhythm
 
-Each row is a flex row: label (label-medium register, `--ui-description-list-label-ink` — the secondary
-plane) then value (body-medium register) **adjacent at a fixed pair gap**, sharing a baseline — never
-`justify-content: space-between` (opposite-edge flushing), never two side-by-side label/value columns.
-Rows stack at `--ui-description-list-row-gap` (space-`xs`, density-responsive). A long value wraps under
-itself, not under the label. A consumer wanting aligned values sets
-`--ui-description-list-label-min-inline-size` (e.g. `8em`) — an opt-in column effect with no grid.
+The host is one grid of two columns, term then value, and each row is a `subgrid` row spanning both
+(T-0417, Kim 2026-10-22, amending ADR-0201 cl.4's no-columns rule): every term sits in one column as wide
+as the longest term (capped at half the host so one very long term wraps), and every value starts at the
+same edge, one pair gap past it. Label (label-medium register, `--ui-description-list-label-ink`, the
+secondary plane) and value (body-medium register) share a baseline; there is never `justify-content:
+space-between` opposite-edge flushing. Rows stack at `--ui-description-list-row-gap` (space-`xs`,
+density-responsive). A long value wraps under itself, never under the term.
+`--ui-description-list-label-min-inline-size` (e.g. `8em`) is a floor on the term column, for lining up
+several lists.
+
+Under a narrow boundary, `@container (inline-size < 20rem)`, the grid drops to one column, each term
+stacks above its value, and rows part by the pair gap (space-`sm`) instead of the row gap so each stacked
+pair reads as its own group. The 400px column stays side by side (Kim 2026-10-22). The list establishes no query container of its own (ADR-0100), so the query
+resolves against the nearest externally-sized ancestor, the `ui-row` reflow precedent.
 
 ## Accessibility
 

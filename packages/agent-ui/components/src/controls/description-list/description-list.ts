@@ -1,8 +1,8 @@
 // description-list.ts — UIDescriptionListElement, the Display-class key–value receipt primitive
 // (ADR-0201, GH #1185 — the primitive the GH #1174 grammar composition pattern was written to be
-// superseded by). Real, selectable DOM text — per surviving row a label (secondary plane) with its value
-// ADJACENT (never opposite-edge flushing, never a two-column label/value split; the receipt rhythm the
-// #1174 clause spelled as payload grammar is this component's CSS). Non-interactive, non-form-associated:
+// superseded by). Real, selectable DOM text: per surviving row a label (secondary plane) with its value
+// on one shared term | value grid (T-0417: every value starts at the same edge, never opposite-edge
+// flushing; the receipt rhythm the #1174 clause spelled as payload grammar is this component's CSS). Non-interactive, non-form-associated:
 // no events, no keyboard contract, no focus, no `size`/`scale` geometry row (Display class — the levers
 // are the type matrix + the space ladder). BEHAVIOUR + props + self-define ONLY; the pure hardening/
 // formatting/codec math lives in description-list-model.ts (DOM-free, unit-testable) and the rhythm/ink
@@ -46,7 +46,7 @@ export class UIDescriptionListElement extends UIElement {
   }
 
   /** One `<div data-part="row">` holding `<span data-part="label">` then `<span data-part="value">` —
-   *  the value sits ADJACENT to its label (flex row, baseline align, fixed pair gap — the CSS's job). */
+   *  the row is a subgrid row on the host's term | value grid (baseline align, pair gap: the CSS's job). */
   #row(label: string, value: string): HTMLElement {
     const row = document.createElement('div')
     row.setAttribute('data-part', 'row')

@@ -1998,12 +1998,20 @@ number prints via the shared default-locale `Intl.NumberFormat`.
 
 ## The receipt rhythm
 
-Each row is a flex row: label (label-medium register, `--ui-description-list-label-ink` — the secondary
-plane) then value (body-medium register) **adjacent at a fixed pair gap**, sharing a baseline — never
-`justify-content: space-between` (opposite-edge flushing), never two side-by-side label/value columns.
-Rows stack at `--ui-description-list-row-gap` (space-`xs`, density-responsive). A long value wraps under
-itself, not under the label. A consumer wanting aligned values sets
-`--ui-description-list-label-min-inline-size` (e.g. `8em`) — an opt-in column effect with no grid.
+The host is one grid of two columns, term then value, and each row is a `subgrid` row spanning both
+(T-0417, Kim 2026-10-22, amending ADR-0201 cl.4's no-columns rule): every term sits in one column as wide
+as the longest term (capped at half the host so one very long term wraps), and every value starts at the
+same edge, one pair gap past it. Label (label-medium register, `--ui-description-list-label-ink`, the
+secondary plane) and value (body-medium register) share a baseline; there is never `justify-content:
+space-between` opposite-edge flushing. Rows stack at `--ui-description-list-row-gap` (space-`xs`,
+density-responsive). A long value wraps under itself, never under the term.
+`--ui-description-list-label-min-inline-size` (e.g. `8em`) is a floor on the term column, for lining up
+several lists.
+
+Under a narrow boundary, `@container (inline-size < 20rem)`, the grid drops to one column, each term
+stacks above its value, and rows part by the pair gap (space-`sm`) instead of the row gap so each stacked
+pair reads as its own group. The 400px column stays side by side (Kim 2026-10-22). The list establishes no query container of its own (ADR-0100), so the query
+resolves against the nearest externally-sized ancestor, the `ui-row` reflow precedent.
 
 ## Accessibility
 
