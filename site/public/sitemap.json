@@ -400,7 +400,7 @@
       "name": "Option Deck",
       "tag": "ui-option-deck",
       "url": "./option-deck-demo.html",
-      "description": "A deck of option cards for picking one of a few things to start; the whole card is the choice.",
+      "description": "A deck of option cards for any lone single pick among a few options; pressing a card is the commit.",
       "level": "L1",
       "section": "Components",
       "group": "Overlays & pickers"

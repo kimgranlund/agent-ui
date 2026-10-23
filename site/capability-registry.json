@@ -988,7 +988,7 @@
       ],
       "tag": "ui-option-deck",
       "tier": "pattern",
-      "description": "A deck of option cards for picking one of a few things to start; the whole card is the choice.",
+      "description": "A deck of option cards for any lone single pick among a few options; pressing a card is the commit.",
       "uses": [
         "ui-icon"
       ],
