@@ -726,3 +726,7 @@
 
 ## T-0427: Suggestions chips honor data-radius and the Worker bundle digest header has a test (2026-10-23)
 - note: packages/agent-ui/a2ui/src/live-agent/chat-route.test.ts:274 the structural gates match exact source strings, so a harmless reformat of worker/index.ts reds them (same style as the existing parity gate).
+
+## T-0428: A note-only say reply that claims a change on an open surface keeps the full repair (2026-10-23)
+
+- note: produce.ts:1245 `CHANGE_CLAIM_IN_REPLY` is a keyword regex gated on `turnIntent !== undefined`; a claim phrased outside it (for example "Kim's table it is") still takes the reply-only repair. The builder already reports this as open.
