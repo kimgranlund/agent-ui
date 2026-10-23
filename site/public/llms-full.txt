@@ -3799,7 +3799,7 @@ columns.
 
 # ui-option-deck
 
-`ui-option-deck` is a deck of option cards for picking one of a few things to start, where the whole card is the choice.
+`ui-option-deck` is a deck of option cards for any lone single pick among a few options, where pressing a card is the commit.
 
 ```html
 <ui-option-deck heading="Pick your table" allow-random action-name="pick_game"

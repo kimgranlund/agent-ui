@@ -4,7 +4,7 @@
 # prose below the fence is the /site doc. `attributes[]` is the generation source for option-deck.props.gen.ts
 # (ADR-0173). The contract<->props trip-wire (option-deck-descriptor.test.ts) targets this fence.
 tag: ui-option-deck
-description: A deck of option cards for picking one of a few things to start; the whole card is the choice.
+description: A deck of option cards for any lone single pick among a few options; pressing a card is the commit.
 tier: pattern           # geometry size-class: container spacing, no control-height row (the ResultCard tier precedent)
 extends: UIElement      # an interactive pattern from hardened data props: not form-associated, no commit button
 uses:
@@ -143,7 +143,7 @@ forcedColors: Every card keeps a CanvasText border, the selected card gains a Hi
 
 # ui-option-deck
 
-`ui-option-deck` is a deck of option cards for picking one of a few things to start, where the whole card is the choice.
+`ui-option-deck` is a deck of option cards for any lone single pick among a few options, where pressing a card is the commit.
 
 ```html
 <ui-option-deck heading="Pick your table" allow-random action-name="pick_game"

@@ -69,7 +69,7 @@ describe('option-deck.md descriptor: structural validity', () => {
   it('the first body paragraph is the one inventory sentence (the dogfood budget pin)', () => {
     const afterHeading = body.slice(body.indexOf('# ui-option-deck') + '# ui-option-deck'.length).trim()
     expect(afterHeading.split(/\n\s*\n/)[0]).toBe(
-      '`ui-option-deck` is a deck of option cards for picking one of a few things to start, where the whole card is the choice.',
+      '`ui-option-deck` is a deck of option cards for any lone single pick among a few options, where pressing a card is the commit.',
     )
   })
 })

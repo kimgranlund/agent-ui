@@ -11,8 +11,8 @@ const { descriptor, body } = loadOptionDeckDoc()
 const { content } = mountPage({
   title: 'ui-option-deck: API',
   intro:
-    'The option deck (T-0193): a deck of option cards for picking one of a few things to start, where the ' +
-    'whole card is the choice. A pick fires select with the key and, with actionName set, one action. ' +
+    'The option deck (T-0193): a deck of option cards for any lone single pick among a few options, where ' +
+    'pressing a card is the commit. A pick fires select with the key and, with actionName set, one action. ' +
     'Generated from option-deck.md: the attribute and parts tables are descriptor-derived; the specimen below is live.',
 })
 
