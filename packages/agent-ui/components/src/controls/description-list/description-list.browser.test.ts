@@ -49,6 +49,8 @@ describe('ui-description-list — the receipt rhythm paints (whole-shape gestalt
     expect(hostBox.width, 'the host painted zero width').toBeGreaterThan(0)
     expect(hostBox.height, 'the host painted zero height').toBeGreaterThan(0)
 
+    // the shared term column ends at the longest label (T-0417: one grid, not a flex row per row)
+    const termColumnRight = Math.max(...rows.map((r) => r.querySelector('[data-part="label"]')!.getBoundingClientRect().right))
     for (const row of rows) {
       const label = row.querySelector('[data-part="label"]') as HTMLElement
       const value = row.querySelector('[data-part="value"]') as HTMLElement
@@ -57,12 +59,13 @@ describe('ui-description-list — the receipt rhythm paints (whole-shape gestalt
       expect(lb.width, 'label painted zero width').toBeGreaterThan(0)
       expect(vb.width, 'value painted zero width').toBeGreaterThan(0)
 
-      // ADJACENCY (the load-bearing law): the value starts at the label's end + the pair gap — NOT
+      // ADJACENCY (the load-bearing law): the value starts at the term column's end + the pair gap, NOT
       // flushed to the row's far edge (the rejected justify:"between" wash). The row is 480px wide;
       // an opposite-edge value would start hundreds of px away.
       const pairGap = px(getComputedStyle(row).columnGap || getComputedStyle(row).gap)
       expect(pairGap, 'anti-vacuous: the pair gap resolves to a real px value').toBeGreaterThan(0)
-      expect(Math.abs(vb.left - (lb.right + pairGap)), 'the value is not ADJACENT to its label').toBeLessThanOrEqual(1)
+      expect(lb.right).toBeLessThanOrEqual(termColumnRight)
+      expect(Math.abs(vb.left - (termColumnRight + pairGap)), 'the value is not ADJACENT to the term column').toBeLessThanOrEqual(1)
       expect(vb.right, 'the value was flushed to the opposite edge').toBeLessThan(row.getBoundingClientRect().right - 40)
 
       // same line: the boxes vertically overlap (baseline share, no stacking)
@@ -149,5 +152,104 @@ describe('ui-description-list — the receipt rhythm paints (whole-shape gestalt
     const el = mount()
     await whenFlushed()
     expect(el.getBoundingClientRect().height).toBe(0)
+  })
+})
+
+// T-0417: the rows share ONE grid (the term column is as wide as the longest term, every value starts at
+// the same x) and under a narrow query boundary the term stacks above its value. The boundary is an
+// EXTERNALLY-sized ancestor (`container-type: inline-size`), the ui-row precedent (ADR-0100: an
+// intrinsically-sized control never establishes its own query container).
+const WEEK = [
+  { label: 'Monday', value: "Mung dal kitchari with steamed zucchini. Kid twist: serve it in a bowl with a ghee 'sun' in the middle." },
+  { label: 'Wednesday', value: 'Coconut rice with sauteed peas and sweet corn. Kid twist: build a rice-and-veggie face.' },
+  { label: 'Fri', value: 'Paneer and spinach with basmati rice.' },
+]
+const mountIn = (width: number): UIDescriptionListElement => {
+  const el = mount(width)
+  el.parentElement!.style.containerType = 'inline-size'
+  return el
+}
+const parts = (el: HTMLElement, part: string): DOMRect[] =>
+  ([...el.querySelectorAll(`[data-part="${part}"]`)] as HTMLElement[]).map((p) => p.getBoundingClientRect())
+
+describe('ui-description-list: one shared term column (T-0417)', () => {
+  it('terms of different lengths share one value x in a wide container, one pair gap past the longest term', async () => {
+    const el = mountIn(640)
+    el.rows = WEEK
+    await whenFlushed()
+
+    const labels = parts(el, 'label')
+    const values = parts(el, 'value')
+    expect(values.length).toBe(3)
+    const longestLabelRight = Math.max(...labels.map((b) => b.right))
+    const gap = px(getComputedStyle(el.querySelector('[data-part="row"]')!).columnGap)
+    expect(gap, 'anti-vacuous: the pair gap resolves').toBeGreaterThan(0)
+    // anti-vacuous: the labels really differ in width (Fri vs Wednesday), else a shared x proves nothing
+    expect(Math.max(...labels.map((b) => b.width)) - Math.min(...labels.map((b) => b.width))).toBeGreaterThan(20)
+    for (const [i, v] of values.entries()) {
+      expect(Math.abs(v.left - values[0]!.left), `value ${i} starts at a different x`).toBeLessThanOrEqual(1)
+      expect(Math.abs(v.left - (longestLabelRight + gap)), `value ${i} is not one pair gap past the longest term`).toBeLessThanOrEqual(1)
+      expect(Math.abs(labels[i]!.left - labels[0]!.left), `term ${i} starts at a different x`).toBeLessThanOrEqual(1)
+      expect(v.top, `value ${i} stacked under its term in a wide container`).toBeLessThan(labels[i]!.bottom)
+    }
+  })
+
+  it('a wrapped value keeps every line on the value edge, never under the term', async () => {
+    const el = mountIn(480)
+    el.rows = WEEK
+    await whenFlushed()
+
+    const values = [...el.querySelectorAll('[data-part="value"]')] as HTMLElement[]
+    const valueEdge = values[0]!.getBoundingClientRect().left
+    const longestLabelRight = Math.max(...parts(el, 'label').map((b) => b.right))
+    const value = values[1]! // Wednesday, the longest term and a long value
+    const range = document.createRange()
+    range.selectNodeContents(value)
+    const lines = [...range.getClientRects()].filter((r) => r.width > 0)
+    const lineTops = new Set(lines.map((r) => Math.round(r.top)))
+    expect(lineTops.size, 'anti-vacuous: the value wraps to more than one line').toBeGreaterThan(1)
+    for (const line of lines) {
+      expect(Math.abs(line.left - valueEdge), 'a wrapped line left the shared value edge').toBeLessThanOrEqual(1)
+      expect(line.left, 'a wrapped line hangs under the term').toBeGreaterThan(longestLabelRight)
+    }
+  })
+
+  it('under the narrow threshold (20rem) the term stacks above its value on one start edge', async () => {
+    const el = mountIn(300)
+    el.rows = WEEK
+    await whenFlushed()
+
+    const labels = parts(el, 'label')
+    const values = parts(el, 'value')
+    for (const [i, v] of values.entries()) {
+      expect(v.top, `value ${i} is not below its term`).toBeGreaterThanOrEqual(labels[i]!.bottom - 1)
+      expect(Math.abs(v.left - labels[i]!.left), `value ${i} does not share its term's start edge`).toBeLessThanOrEqual(1)
+      expect(v.right, `value ${i} overflows the host`).toBeLessThanOrEqual(el.getBoundingClientRect().right + 1)
+    }
+  })
+
+  it('stacked pairs separate: each row sits one pair gap below the last, wider than the side-by-side row gap', async () => {
+    const el = mountIn(300)
+    el.rows = WEEK
+    await whenFlushed()
+
+    const rows = [...el.querySelectorAll('[data-part="row"]')] as HTMLElement[]
+    const pairGap = px(getComputedStyle(rows[0]!).columnGap)
+    const wideRowGap = px(getComputedStyle(mount(), null).rowGap) // no query boundary: the side-by-side row gap
+    expect(pairGap, 'anti-vacuous: the pair gap resolves').toBeGreaterThan(0)
+    expect(pairGap, 'the stacked gap must be wider than the side-by-side row gap').toBeGreaterThan(wideRowGap)
+    for (let i = 1; i < rows.length; i++) {
+      const gap = rows[i]!.getBoundingClientRect().top - rows[i - 1]!.getBoundingClientRect().bottom
+      expect(Math.abs(gap - pairGap), `stacked pair ${i} is not one pair gap below its predecessor`).toBeLessThanOrEqual(1)
+    }
+  })
+
+  it('the same list at the 400px column (a 368px boundary) does NOT stack (the narrow rule is threshold-gated)', async () => {
+    const el = mountIn(368)
+    el.rows = WEEK
+    await whenFlushed()
+    const labels = parts(el, 'label')
+    const values = parts(el, 'value')
+    for (const [i, v] of values.entries()) expect(v.left, `value ${i} stacked at 368px`).toBeGreaterThan(labels[i]!.right)
   })
 })

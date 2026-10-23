@@ -9,11 +9,20 @@
  *       `--md-sys-height-*`, no `h/2` law — the levers are the type matrix + the space ladder.
  *   [2] STYLES BLOCK — `@scope (ui-description-list)` consumes ONLY `--ui-description-list-*`.
  *
- * The receipt rhythm (ADR-0201 cl.4, the #1174 LOOK as CSS): each row is a flex ROW, the value
- * ADJACENT to its label at a fixed pair gap, `align-items: baseline` — never `justify-content:
- * space-between` (the opposite-edge flushing the grammar law forbids), never a two-column
- * label/value grid. Long values wrap under themselves, not under the label (`flex: 1` + `min-inline-
- * size` release on the value span).
+ * The receipt rhythm (ADR-0201 cl.4 as amended by T-0417, Kim 2026-10-22): the host is ONE grid of two
+ * columns (term | value) and each row is a `subgrid` row spanning both, so every term sits in one column as
+ * wide as the longest term and every value starts at the same edge, one pair gap past it. The value stays
+ * ADJACENT to the term column (`justify-items: start`, never `justify-content: space-between` opposite-edge
+ * flushing), rows share a baseline, and a long value wraps under itself, never under the term (`minmax(0,
+ * 1fr)` + `min-inline-size` release on the value span). The term column is capped at half the host
+ * (`fit-content(50%)`) so one very long term wraps instead of crushing every value.
+ *
+ * Narrow stacking: `@container (inline-size < 20rem)` collapses the grid to one column, so each term
+ * stacks above its value, and the rows part by the pair gap (space-sm) instead of the row gap so stacked
+ * pairs read as separate groups (Kim 2026-10-22: side by side at the 400px column). The list establishes NO query container of its own (ADR-0100: an
+ * intrinsically-sized control can never safely be one), so the rule resolves against the nearest
+ * externally-sized ancestor boundary, the ui-row precedent (an `@container` condition cannot read
+ * `var()`, css-structural-laws section 3, so 20rem is a literal: 320px at the default root size).
  *
  * Forced colors: no dedicated block needed — every part is real text (the stat lesson: only a
  * background-drawn shape needs a forced-colors repoint); the label's secondary ink is forced to
@@ -29,24 +38,26 @@
   --ui-description-list-row-gap: var(--md-sys-space-xs); /* between rows — the #1174 Column gap "xs"; rides [density] free */
   --ui-description-list-pair-gap: var(--md-sys-space-sm); /* label → value — the #1174 Row gap "sm" */
   --ui-description-list-label-ink: var(--md-sys-color-neutral-on-surface-variant); /* the secondary plane (stat label-ink precedent) */
-  --ui-description-list-label-min-inline-size: 0; /* opt-in label column alignment: a consumer sets e.g. 8em to align values without a grid */
+  --ui-description-list-label-min-inline-size: 0; /* a floor on the shared term column: a consumer sets e.g. 8em to align several lists' values */
 }
 
 /* ═══════ [2] STYLES BLOCK — @scope (ui-description-list) consumes ONLY --ui-description-list-* ═══════ */
 
 @scope (ui-description-list) {
   :scope {
-    display: flex;
-    flex-direction: column; /* the receipt is a vertical stack of rows */
-    gap: var(--ui-description-list-row-gap); /* the density-bearing quantity */
+    display: grid;
+    grid-template-columns: fit-content(50%) minmax(0, 1fr); /* term column = the longest term (capped), value column = the rest */
+    row-gap: var(--ui-description-list-row-gap); /* the density-bearing quantity */
+    column-gap: var(--ui-description-list-pair-gap);
   }
 
   :scope [data-part='row'] {
-    display: flex;
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: subgrid; /* every row rides the host's ONE term | value column pair */
     align-items: baseline; /* label and value share a baseline (the #1174 Row align "baseline") */
-    gap: var(--ui-description-list-pair-gap);
-    /* NO justify-content: the value sits ADJACENT to its label — the grammar law's rejected
-       "between" (opposite-edge flushing) is structurally absent here */
+    column-gap: var(--ui-description-list-pair-gap);
+    justify-items: start; /* term and value hug their content: the value sits by the term column, never stretched or flushed to the far edge */
   }
 
   :scope [data-part='label'] {
@@ -54,13 +65,21 @@
     font-size: var(--md-sys-typescale-label-medium-size);
     line-height: var(--md-sys-typescale-label-medium-line-height);
     min-inline-size: var(--ui-description-list-label-min-inline-size);
-    flex-shrink: 0; /* the label never crushes — a long value wraps instead */
   }
 
   :scope [data-part='value'] {
     font-size: var(--md-sys-typescale-body-medium-size);
     line-height: var(--md-sys-typescale-body-medium-line-height);
-    min-inline-size: 0; /* release the flex min-content floor so a long value wraps under itself */
+    min-inline-size: 0; /* release the grid item min-content floor so a long value wraps under itself */
     overflow-wrap: anywhere; /* an unbroken token (a reference id) still wraps instead of overflowing */
+  }
+
+  /* Narrow stacking (T-0417): under a narrow ancestor boundary the grid drops to one column, so each term
+     stacks above its value on one start edge, and pairs part by the pair gap (see the banner). */
+  @container (inline-size < 20rem) {
+    :scope {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: var(--ui-description-list-pair-gap);
+    }
   }
 }
