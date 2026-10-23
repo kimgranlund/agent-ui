@@ -249,7 +249,7 @@ type ClickReach = Partial<Pick<ClickMissing, 'clicked' | 'inNewestSurface' | 're
 async function playStep(admin: AdminPage, step: ProbeStep, seen: () => Exchange[], inFlight: () => number, quietMs: number, reach: ClickReach = {}): Promise<void> {
   const since = await admin.liveTurnCount()
   if ('say' in step) await admin.sendTestChat(step.say)
-  else if ('click' in step) Object.assign(reach, { clicked: true }, await admin.clickSurfaceButton(step.click))
+  else if ('click' in step) Object.assign(reach, { clicked: true }, await admin.clickSurfaceTarget(step.click))
   await pollUntil(async () => seen(), (s) => ownExchange(step, s.map((x) => x.request)) >= 0, "the step's own produce exchange")
   reach.requested = true
   await admin.waitForTurn(since)

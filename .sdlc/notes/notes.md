@@ -711,6 +711,10 @@
 
 ## T-0419: Grammar teaches a single pick among two to eight options as one own-commit OptionDeck for every persona (2026-10-23)
 
-- decide: packages/agent-ui/a2ui/src/examples/catalog-frontier.ts:453-478 the re-authored `frontier-card-anatomy-ask` is a delivery-options form (Field-wrapped RadioGroup plus two Checkboxes), not the design's "Report a problem" RadioGroup plus Textarea (architect-L1-2.md:63-67); judged 3 then 4/PASS on rejudge (the two corpus/verdicts t0419 files). The builder reports it as a deviation.
+- decide: packages/agent-ui/a2ui/src/examples/catalog-frontier.ts:453-478 the re-authored `frontier-card-anatomy-ask` is a delivery-options form (Field-wrapped RadioGroup plus two Checkboxes), not the design's "Report a problem" RadioGroup plus Textarea (architect-L1-2.md:63-67); judged 3 then 4/PASS on rejudge (the two corpus/verdicts t0419 files). The builder reports it as a deviation. -> accepted 2026-10-23 (rejudged 4/PASS)
 - note: site/agent-content/skills/guess-hud/SKILL.md:4 the description dropped "its press is the answer" to fit the 200 B ambient per-entry budget; the body at :12 keeps it.
-- decide: scripts/e2e-admin/admin-page.ts:33 the probe `--click` reads `ui-button` labels only and cannot press a deck card (architect-L1-2.md:139 follow-up; the keyless replay uses the recorded input).
+- decide: scripts/e2e-admin/admin-page.ts:33 the probe `--click` reads `ui-button` labels only and cannot press a deck card (architect-L1-2.md:139 follow-up; the keyless replay uses the recorded input). -> T-0422
+
+## T-0422: chat:probe --click presses an OptionDeck card when no surface button carries the label (2026-10-23)
+
+- note: scripts/e2e-admin/README.md:25 says `available` on a missing click lists visible buttons only; deck card titles are not listed, which matches the doc but may hide why a card label missed.

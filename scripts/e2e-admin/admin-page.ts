@@ -338,20 +338,41 @@ export class AdminPage {
     )
   }
 
+  /** Click the newest visible OptionDeck card titled `title` (a DOM click, the press is the answer). Resolves
+   *  whether the card sat in the pane's newest surface host, as `clickSurfaceButton` does (T-0271). */
+  #pressOption(title: string, pane: ConversationPane): Promise<{ inNewestSurface: boolean }> {
+    return this.page.evaluate(
+      ({ s, h, t }) => {
+        const card = [...document.querySelectorAll<HTMLElement>(s)]
+          .filter((c) => c.checkVisibility() && c.querySelector('[data-part="title"]')?.textContent?.trim() === t)
+          .at(-1)
+        card?.click()
+        const newest = [...document.querySelectorAll(h)].at(-1)
+        return { inNewestSurface: card !== undefined && newest !== undefined && newest.contains(card) }
+      },
+      { s: `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceOption}`, h: `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceHost}`, t: title },
+    )
+  }
+
   /** T-0412: answer an own-commit ask by clicking the newest visible OptionDeck card titled `title` (the press
    *  is the answer, no commit Button), then wait for the answered round's turn to land. */
   async pickSurfaceOption(title: string, pane: ConversationPane = 'chat'): Promise<number> {
     await pollUntil(() => this.surfaceOptionTitles(pane), (titles) => titles.includes(title), `a visible OptionDeck card titled "${title}" in the ${pane} pane`)
     const since = await this.liveTurnCount()
-    await this.page.evaluate(
-      ({ s, t }) =>
-        [...document.querySelectorAll<HTMLElement>(s)]
-          .filter((c) => c.checkVisibility() && c.querySelector('[data-part="title"]')?.textContent?.trim() === t)
-          .at(-1)
-          ?.click(),
-      { s: `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceOption}`, t: title },
-    )
+    await this.#pressOption(title, pane)
     return this.waitForTurn(since)
+  }
+
+  /** T-0422: the probe's `--click`. Wait once for a visible surface button or OptionDeck card reading `label`,
+   *  then press it; a button wins when both read it. A label on neither times out as one poll, so click-target
+   *  reports it without a second wait. */
+  async clickSurfaceTarget(label: string, pane: ConversationPane = 'chat'): Promise<{ inNewestSurface: boolean }> {
+    const found = await pollUntil(
+      async () => ({ button: (await this.surfaceButtonLabels(pane)).includes(label), card: (await this.surfaceOptionTitles(pane)).includes(label) }),
+      (f) => f.button || f.card,
+      `a visible surface button or OptionDeck card reading "${label}" in the ${pane} pane`,
+    )
+    return found.button ? this.clickSurfaceButton(label, pane) : this.#pressOption(label, pane)
   }
 
   /** Whether the page's end-of-flow chrome row sits in the Test Chat log. */
