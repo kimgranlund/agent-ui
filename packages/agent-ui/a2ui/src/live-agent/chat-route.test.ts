@@ -9,6 +9,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { a2uiDevProxyPlugin, resolveChatDispatch, isChatBody } from '../../tools/agent/dev-proxy-plugin.ts'
 import type { ProvidersConfig } from '../../tools/agent/providers-config.ts'
+import { BUNDLE_DIGEST_HEADER } from '../agent/agent-bundle.ts'
 
 declare const process: { cwd(): string; env: Record<string, string | undefined> }
 
@@ -267,5 +268,30 @@ describe('worker handleChat carries the same dispatch (structural parity gate â€
 
   it('reads integrations BEFORE isChatBody narrows the body (the field is no part of the 400 contract)', () => {
     expect(handleChat.indexOf('const chatIntegrations')).toBeLessThan(handleChat.indexOf('if (!isChatBody(body))'))
+  })
+
+  it('stamps the 200 reply with the shared bundle digest header, over the same wire fields the browser digests (T-0163, T-0427)', () => {
+    expect(handleChat).toContain(
+      'res.headers.set(BUNDLE_DIGEST_HEADER, await bundleDigest(bundleFromWire({ system, model, modelSettings: chatModelSettings, integrations: chatIntegrations })))',
+    )
+  })
+})
+
+// The produce arm answers the same header, but only for a turn that names a persona (a bare produce call has
+// no bundle to digest). Same structural stand-in as above: the Worker is not importable under vitest.
+describe('worker handleProduce stamps the bundle digest header for a persona turn (structural parity gate, T-0427)', () => {
+  const source = readFileSync(`${process.cwd()}/packages/agent-ui/a2ui/tools/agent/worker/index.ts`, 'utf8') as string
+  const handleProduce = source.slice(source.indexOf('async function handleProduce('))
+
+  it('digests the persona bundle through the shared pair, behind a persona-system guard, into the stream response headers', () => {
+    expect(handleProduce).toContain("typeof personaSystem === 'string'")
+    expect(handleProduce).toContain(
+      '{ [BUNDLE_DIGEST_HEADER]: await bundleDigest(bundleFromWire({ system: personaSystem, model, modelSettings, integrations })) }',
+    )
+    expect(handleProduce).toContain("headers: { 'content-type': 'application/x-ndjson', ...digestHeader }")
+  })
+
+  it('shares the header name with the browser stamp (one constant, lowercase wire name)', () => {
+    expect(BUNDLE_DIGEST_HEADER).toBe('x-agent-bundle-digest')
   })
 })

@@ -35,7 +35,7 @@
   --ui-suggestions-chip-font: var(--md-sys-type-field-label, var(--md-sys-font-sm));
   --ui-suggestions-chip-pad: var(--ui-suggestions-chip-pad-derived, calc(1px + 1px + var(--ui-suggestions-chip-height) * 0.375 * var(--md-sys-density, 1)));
   --ui-suggestions-chip-pad-derived: calc(2 * var(--md-sys-c)); /* the badge row: padding 2c; undefined outside a data-tier region, so today's pad wins */
-  --ui-suggestions-chip-radius: calc(var(--ui-suggestions-chip-height) / 2); /* full pill */
+  --ui-suggestions-chip-radius: calc(var(--ui-suggestions-chip-height) / 2 * var(--md-sys-control-radius-amount, 0.5) * 2); /* h/2 at the balanced default (0.5) and under the legacy opt-out, so today's pill holds; data-radius moves it (sharp 0, crisp h/4, round and pill past h/2, which border-radius clamps to the pill) */
 
   /* Row rhythm — the set wraps as a flex row; both axes ride the same density-responsive gap token. */
   --ui-suggestions-row-gap: var(--md-sys-inset, var(--md-sys-gap-sm));
