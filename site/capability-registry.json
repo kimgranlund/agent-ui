@@ -234,6 +234,7 @@
       ],
       "tag": "ui-button",
       "tier": "control",
+      "description": "A pressable button that runs one action, with an optional icon and a label; it carries no form value.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -279,6 +280,7 @@
       ],
       "tag": "ui-card",
       "tier": "container",
+      "description": "A surface container with its own plane, padding and radius that groups related content as one card.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -300,6 +302,7 @@
       ],
       "tag": "ui-checkbox",
       "tier": "indicator",
+      "description": "A form checkbox with a checked, unchecked or indeterminate value and an optional label.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -416,6 +419,7 @@
       ],
       "tag": "ui-column",
       "tier": "layout",
+      "description": "A layout container that stacks its children vertically with a gap, alignment and justification.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -459,6 +463,7 @@
       ],
       "tag": "ui-combo-box",
       "tier": "pattern",
+      "description": "A form text input with a filtered dropdown list of options to pick from or type.",
       "uses": [
         "ui-glyph"
       ],
@@ -481,6 +486,7 @@
       ],
       "tag": "ui-command-modal",
       "tier": "pattern",
+      "description": "A command palette in a modal, with a search field that filters a grouped list of commands to run.",
       "uses": [
         "ui-modal"
       ],
@@ -526,6 +532,7 @@
       ],
       "tag": "ui-description-list",
       "tier": "display",
+      "description": "A read-only list of label and value rows for a record, such as a booking or an order summary.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -571,6 +578,7 @@
       ],
       "tag": "ui-drawer",
       "tier": "container",
+      "description": "A modal panel that slides in from one edge of the screen and holds its own content.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -614,6 +622,7 @@
       ],
       "tag": "ui-field",
       "tier": "container",
+      "description": "A wrapper that gives one form control a visible label, a description and an error message.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -635,6 +644,7 @@
       ],
       "tag": "ui-file-drop",
       "tier": "pattern",
+      "description": "A form file input with a drop zone, a picker button, paste support and a chip per chosen file.",
       "uses": [
         "ui-attachment",
         "ui-button",
@@ -660,6 +670,7 @@
       ],
       "tag": "ui-form-popover",
       "tier": "pattern",
+      "description": "A trigger button that opens a small form in a popover and applies it on submit.",
       "uses": [
         "ui-glyph"
       ],
@@ -683,6 +694,7 @@
       ],
       "tag": "ui-form-provider",
       "tier": "container",
+      "description": "A wrapper that coordinates the form controls inside it, collecting their values and validity as one form.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -792,6 +804,7 @@
       ],
       "tag": "ui-icon",
       "tier": "display",
+      "description": "A decorative or labeled icon drawn from the installed icon pack by name.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -879,6 +892,7 @@
       ],
       "tag": "ui-list",
       "tier": "layout",
+      "description": "A vertical stack of items with list semantics, for a run of rows or entries.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -924,6 +938,7 @@
       ],
       "tag": "ui-modal",
       "tier": "pattern",
+      "description": "A modal dialog that blocks the page behind it until it is dismissed or its action completes.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -945,6 +960,7 @@
       ],
       "tag": "ui-multi-select",
       "tier": "pattern",
+      "description": "A form list that is always open and lets the user check several options at once.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1099,6 +1115,7 @@
       ],
       "tag": "ui-popover",
       "tier": "pattern",
+      "description": "A trigger that opens a floating panel of content anchored to it, dismissed by an outside click or Escape.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1146,6 +1163,7 @@
       ],
       "tag": "ui-progress",
       "tier": "display",
+      "description": "A thin progress bar showing how far a task has gone, or an indeterminate busy state.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1235,6 +1253,7 @@
       ],
       "tag": "ui-rating",
       "tier": "indicator",
+      "description": "A form star rating that shows or picks a value from zero up to a maximum.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1280,6 +1299,7 @@
       ],
       "tag": "ui-row",
       "tier": "layout",
+      "description": "A layout container that lays its children out in a horizontal row with a gap, alignment and justification.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1370,6 +1390,7 @@
       ],
       "tag": "ui-select",
       "tier": "pattern",
+      "description": "A form dropdown that picks one option from a list.",
       "uses": [
         "ui-glyph"
       ],
@@ -1415,6 +1436,7 @@
       ],
       "tag": "ui-slider",
       "tier": "indicator",
+      "description": "A form slider that picks one number within a range, snapped to a step.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1436,6 +1458,7 @@
       ],
       "tag": "ui-slider-multi",
       "tier": "range",
+      "description": "A form slider with two thumbs that picks a low and a high value within a range.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1547,6 +1570,7 @@
       ],
       "tag": "ui-stat",
       "tier": "display",
+      "description": "A metric tile with a label, a value, an optional change and an optional caption.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1616,6 +1640,7 @@
       ],
       "tag": "ui-suggestions",
       "tier": "pattern",
+      "description": "A set of follow-up chips the user taps once to send the next prompt.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1659,6 +1684,7 @@
       ],
       "tag": "ui-swiper",
       "tier": "pattern",
+      "description": "A carousel of slides that scroll and snap one at a time, with optional arrows and pagination.",
       "uses": [
         "ui-swiper-item",
         "ui-swiper-label",
@@ -1685,6 +1711,7 @@
       ],
       "tag": "ui-swiper-item",
       "tier": "layout",
+      "description": "One slide of a swiper carousel, wrapping any content.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1705,6 +1732,7 @@
       ],
       "tag": "ui-swiper-label",
       "tier": "display",
+      "description": "Text that names its swiper carousel for assistive technology.",
       "uses": [],
       "catalogs": []
     },
@@ -1744,6 +1772,7 @@
       ],
       "tag": "ui-swiper-pagination",
       "tier": "pattern",
+      "description": "The dots or count a swiper carousel fills in to show and pick the current slide.",
       "uses": [],
       "catalogs": []
     },
@@ -1763,6 +1792,7 @@
       ],
       "tag": "ui-switch",
       "tier": "indicator",
+      "description": "A form on and off switch for one setting that applies at once.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1836,6 +1866,7 @@
       ],
       "tag": "ui-text",
       "tier": "display",
+      "description": "Text set on the type scale, from a body line to a heading, optionally a link or truncated to one line.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -1997,6 +2028,7 @@
       ],
       "tag": "ui-toast-region",
       "tier": "layout",
+      "description": "The on-screen area where toast notifications stack and leave.",
       "uses": [
         "ui-toast"
       ],
@@ -2018,6 +2050,7 @@
       ],
       "tag": "ui-toggle",
       "tier": "control",
+      "description": "A pill button that stays pressed or unpressed, with an icon and a label.",
       "uses": [],
       "catalogs": [
         "agent-ui"
@@ -2061,6 +2094,7 @@
       ],
       "tag": "ui-tooltip",
       "tier": "pattern",
+      "description": "A short label that appears beside a control on hover or focus.",
       "uses": [],
       "catalogs": [
         "agent-ui"

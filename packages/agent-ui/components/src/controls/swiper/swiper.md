@@ -9,6 +9,7 @@
 # .claude/docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015; the bindable `active` per ADR-0019
 # (the ui-tabs `selected`/`select` pattern, LLD-C7).
 tag: ui-swiper
+description: A carousel of slides that scroll and snap one at a time, with optional arrows and pagination.
 tier: pattern            # geometry size-class — geometry.md "Pattern" (container + control-height rows); the fleet's FIRST scroll-snap surface
 extends: UIContainerElement  # the ui-tabs base — surface axes + reused internals (ARIA); NOT form-associated (face below)
 uses:

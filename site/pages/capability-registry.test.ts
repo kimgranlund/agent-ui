@@ -1,7 +1,8 @@
 // capability-registry.test.ts: the Capability Registry page really mounts and its picker really works (GH #1807).
 // `site/lib/capability-registry.test.ts` holds the page MODEL; this file proves the page module defines and
 // wires `ui-select` (a shell import, `_page.ts`, defines the fleet since ADR-0233) and re-renders the table when
-// the catalog id changes, so a dead picker cannot hide behind a green model test.
+// the catalog id changes, so a dead picker cannot hide behind a green model test. It fires `select` by hand; the
+// real pick (trigger and option clicks) is proven in capability-registry.browser.test.ts (T-0433).
 //
 // DOM reads happen inside `beforeAll`, never at describe-body top level (the agent-schema.test.ts precedent).
 import { describe, it, expect, beforeAll } from 'vitest'
@@ -38,7 +39,7 @@ describe('capability-registry page', () => {
 
   it('selecting a derived id re-renders: the croupier view adds PlayingCard, marked persona-only', () => {
     select.value = 'agent-ui--croupier'
-    select.dispatchEvent(new Event('change', { bubbles: true }))
+    select.dispatchEvent(new Event('select', { bubbles: true }))
     const types = rowTypes()
     expect(types).toContain('PlayingCard')
     const card = document.querySelector('#registry-types-table tr[data-type=PlayingCard]') as HTMLElement
@@ -49,7 +50,7 @@ describe('capability-registry page', () => {
 
   it('selecting the base id again drops the persona-only type (no stale rows)', () => {
     select.value = 'agent-ui'
-    select.dispatchEvent(new Event('change', { bubbles: true }))
+    select.dispatchEvent(new Event('select', { bubbles: true }))
     expect(rowTypes()).not.toContain('PlayingCard')
   })
 })

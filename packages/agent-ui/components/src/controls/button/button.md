@@ -7,6 +7,7 @@
 # (descriptor/props-gen-driftwire.test.ts) keeps the two byte-identical. Field set per .claude/docs/plan.md
 # §10 / ADR-0004, widened by ADR-0173 cl.2/OF1/OF2 (`attribute`/`tsType`/`const`/`codec`/`description`).
 tag: ui-button
+description: A pressable button that runs one action, with an optional icon and a label; it carries no form value.
 tier: control          # geometry size-class (Control band — full control height; geometry.md §"five size-classes")
 extends: UIElement     # reactive display control, NOT form-associated (face below)
 uses: []

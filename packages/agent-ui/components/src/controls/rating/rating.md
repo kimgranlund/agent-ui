@@ -9,6 +9,7 @@
 # Range-class base per range-element.lld.md; the star-value codec + owned-mark craft + readonly write-path
 # gate per ADR-0216.
 tag: ui-rating
+description: A form star rating that shows or picks a value from zero up to a maximum.
 tier: indicator        # geometry size-class (Indicator band — widget box, the checkbox/switch/slider ramp; geometry.md)
 extends: UIRangeElement  # the Range base (range-element.lld.md); UIRatingElement → UIRangeElement → UIFormElement
 uses: []

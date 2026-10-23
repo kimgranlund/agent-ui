@@ -16,10 +16,15 @@ describe('typeDescription', () => {
     expect(typeDescription('agent-ui', 'Attachment')).toBe(descriptorText('Attachment'))
   })
 
-  it('an agent-ui control type whose descriptor has no description falls back to its selection intents', () => {
-    expect(descriptorText('Button'), 'anti-vacuous: ui-button carries no description yet').toBe('')
-    const intents = selectionProjectionFor('agent-ui').Button!.intents
-    expect(typeDescription('agent-ui', 'Button')!.toLowerCase().startsWith(intents[0]!.toLowerCase())).toBe(true)
+  it('every descriptor-backed agent-ui type reads its own descriptor description, never the intents fallback (T-0433)', () => {
+    // T-0433 gave every descriptor a description (descriptor-description.test.ts), so no descriptor-backed card falls
+    // back to selection intents; Button was the T-0432 fallback anchor. A sub-part type with no descriptor of its own
+    // (Tab, CardHeader, an Option row) keeps reading its intents.
+    const backed = Object.keys(defaultCatalog.components).filter((type) => loadDescriptorByTag(defaultFactories[type]!.tag) !== undefined)
+    expect(backed.length, 'anti-vacuous: most default types are descriptor-backed').toBeGreaterThanOrEqual(70)
+    const fallback = backed.filter((type) => descriptorText(type) === '' || typeDescription('agent-ui', type) !== descriptorText(type))
+    expect(fallback).toEqual([])
+    expect(typeDescription('agent-ui', 'Button')).not.toContain(selectionProjectionFor('agent-ui').Button!.intents[0])
   })
 
   it('a base other than agent-ui and a persona type read the intents, never an agent-ui descriptor', () => {

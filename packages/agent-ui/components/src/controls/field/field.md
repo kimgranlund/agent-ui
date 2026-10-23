@@ -6,6 +6,7 @@
 # .claude/docs/plan.md §10 / ADR-0004; the labelling seam + association model per ADR-0051 and
 # .claude/docs/llds/field-form-provider.lld.md LLD-C4/LLD-C9.
 tag: ui-field
+description: A wrapper that gives one form control a visible label, a description and an error message.
 tier: container        # geometry size-class (the radio-group precedent — not a sized control): NO control height, the label rides the font/type tokens, spacing off --md-sys-space
 extends: UIElement     # a structural label/description/error wrapper — NOT form-associated (carries no value of its own) and NOT UIContainerElement (no elevation/brightness surface paint)
 uses: []

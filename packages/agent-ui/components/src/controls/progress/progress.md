@@ -6,6 +6,7 @@
 # `prop.*()` majority case, no enum at all. progress.ts imports the generated module — never hand-edit it.
 # The fleet drift gate (descriptor/props-gen-driftwire.test.ts) keeps the two byte-identical.
 tag: ui-progress
+description: A thin progress bar showing how far a task has gone, or an indeterminate busy state.
 tier: display          # geometry size-class (Display band — a bar is a rail, not a widget box; SPEC-R20)
 extends: UIElement     # a non-interactive, non-form-associated display LEAF (SPEC-R1)
 uses: []

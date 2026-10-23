@@ -83,6 +83,7 @@ function render(catalogId: string): void {
   out.replaceChildren(exampleSection(`Types of ${catalogId}`, summary, table))
 }
 
-select.addEventListener('change', () => render(select.value))
+// ui-select commits with `select`, never `change` (T-0433: the page listened for `change` and never switched).
+select.addEventListener('select', () => render(select.value))
 select.value = IDS[0]!
 render(IDS[0]!)

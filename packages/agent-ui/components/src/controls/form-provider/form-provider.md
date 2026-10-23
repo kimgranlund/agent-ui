@@ -7,6 +7,7 @@
 # confirm). Field set per .claude/docs/plan.md §10 / ADR-0004; the aggregation/coordination layer over
 # UIFormElement descendants per ADR-0050 / .claude/docs/llds/field-form-provider.lld.md LLD-C7/C8.
 tag: ui-form-provider
+description: A wrapper that coordinates the form controls inside it, collecting their values and validity as one form.
 tier: container          # geometry size-class (comment: pure coordination, no geometry — no control height, no surface paint)
 extends: UIElement       # NOT UIFormElement — the provider carries no value/validity of its own; wrapping it formAssociated would double-submit (ADR-0050 "alternatives considered"). NOT UIContainerElement either — no surface paint.
 uses: []

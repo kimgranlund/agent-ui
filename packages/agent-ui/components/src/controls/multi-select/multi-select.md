@@ -6,6 +6,7 @@
 # the frontmatter schema (validateComponentDescriptor) both target this fence. Field set per
 # .claude/docs/plan.md §10 / ADR-0004; form-value per UIFormElement / ADR-0013; geometry per LLD-C5.
 tag: ui-multi-select
+description: A form list that is always open and lets the user check several options at once.
 tier: pattern           # geometry composite: no trigger — a virtual row-height lever; listbox = Container/surface; rows = legacy item-pad (LLD-C5)
 extends: UIFormElement  # form-associated: formValue() = a FormData, one entry per selected value; formValidity() = valueMissing
 uses: []

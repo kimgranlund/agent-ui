@@ -5,6 +5,7 @@
 # href/truncate/emphasis, in that order) — the contract↔props trip-wire (text-descriptor.test.ts) targets
 # this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-text
+description: Text set on the type scale, from a body line to a heading, optionally a link or truncated to one line.
 tier: display          # geometry size-class (Display band — NO control frame/height; geometry.md "size-classes" + ADR-0025 cl.1: the typographic ramp is the lever, not --md-sys-height-*)
 extends: UIElement     # a non-interactive display LEAF — NOT form-associated (face below), NOT a UIContainerElement surface
 uses: []

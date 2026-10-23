@@ -12,6 +12,7 @@
 # ui-toggle — mint it" paragraph). Downstream consumer (the agent-admin unified header's three pane pills,
 # S7-c) is OUT of this slice's scope — this ships only the standalone control.
 tag: ui-toggle
+description: A pill button that stays pressed or unpressed, with an icon and a label.
 tier: control       # Control-band geometry (full control height, the button.css ramp) — a "pressed pill
                      # BUTTON" per the amendment's own words, NOT the Indicator compact/widget-box ramp
                      # ui-switch/ui-checkbox use (ADR-0041); ui-toggle carries no form value at all.

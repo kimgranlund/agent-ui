@@ -5,6 +5,7 @@
 # contract↔props trip-wire (swiper-label-descriptor.test.ts) targets the empty bijection. Prose below
 # documents only this element (the primary /site prose lives on swiper.md, the one-folder precedent).
 tag: ui-swiper-label
+description: Text that names its swiper carousel for assistive technology.
 tier: display            # geometry size-class — author text, no interactive/structural surface of its own
 extends: UIElement       # NOT form-associated — carries no value
 uses: []

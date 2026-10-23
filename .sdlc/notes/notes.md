@@ -744,3 +744,8 @@
 
 - decide: site/pages/agent-admin-prompt-budget.test.ts:8 note: the MEASURED 2026-10-14 comment (worst case 130 097) was stale before this change; the builder measured the worst persona at 138 880 of 150 200 (croupier), left for its owner.
 - decide: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:308-312 decide: a re-tap before the reveal turn lands sends a second `answer` action (design-accepted, OptionDeck parity), and a live Haiku that keeps omitting `actionName` would exhaust rounds; the quizmaster `checks.ts` fallback is the design's named follow-up.
+
+## T-0433: Catalog page follow-ups: capability-registry picker, missing descriptor descriptions, 400px code panel, OptionDeck allowRandom knob (2026-10-23)
+
+- note: site/lib/component-preview.ts (builder Open): component mode `ui-option-deck` may apply boolean knobs as `setAttribute('allowRandom')` rather than `allow-random`; unverified, candidate ticket.
+- note: 17 app, code and router descriptors still lack `description:` (out of catalog scope per the builder).

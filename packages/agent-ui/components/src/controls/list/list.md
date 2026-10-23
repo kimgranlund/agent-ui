@@ -6,6 +6,7 @@
 # trip-wire (list-descriptor.test.ts) and the frontmatter schema both target this fence. Field set per
 # .claude/docs/plan.md §10 / ADR-0004; the surface axes per ADR-0015, the flex layout grammar per ADR-0016.
 tag: ui-list
+description: A vertical stack of items with list semantics, for a run of rows or entries.
 tier: layout            # geometry size-class (Container/layout band — gaps/padding off --md-sys-space × density; NO control height; geometry.md "five size-classes")
 extends: UIContainerElement  # the FACE container surface base (NOT form-associated — no value/validity; ADR-0015). NOTE: UIContainerElement joins the descriptor schema's BASE_CLASSES in s12 (the integration barrel slice)
 uses: []

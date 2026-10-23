@@ -9,6 +9,7 @@
 # (callbacks cannot ride HTML attributes) — see file-drop.ts's own header for why they exist and their
 # provisional status pending this control's own SPEC/LLD leg (ADR-0210 cl.7).
 tag: ui-file-drop
+description: A form file input with a drop zone, a picker button, paste support and a chip per chosen file.
 tier: pattern          # geometry composite (geometry.md "Pattern" — container + control-height rows): the
                        # browse/remove buttons ride Control-band height via their OWN <ui-button> geometry;
                        # the shell (gap/padding) rides the --space-* ramp. No [size] attribute (ADR-0210
