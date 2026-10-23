@@ -276,6 +276,7 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
 
     for (const [label, gap] of [
       ['frame→header', frameToHeader],
+      ['header→content', headerToContent],
       ['content→footer', contentToFooter],
       ['footer→frame', footerToFrame],
       ['frame→header (inline)', frameToHeaderInline],
@@ -284,14 +285,70 @@ describe('ui-card cross-engine smoke (s7, both engines)', () => {
     }
     // anti-vacuous: the BETWEEN-region gutter is genuinely not double the edge gutter (the doubling that
     // margin-collapse in this block-flow shell prevents for free).
-    expect(contentToFooter, 'between-region gap doubled (12px) instead of reconciling to one inset (6px)').toBeLessThan(frameToHeader * 1.5)
+    expect(headerToContent, 'between-region gap doubled (12px) instead of reconciling to one inset (6px)').toBeLessThan(frameToHeader * 1.5)
+    // T-0420: the T-0418 header gutter is widget-tier only, so a page-tier header keeps its end padding.
+    expect(px(getComputedStyle(header).paddingBottom), 'a page-tier header keeps its end padding').toBeGreaterThan(0)
+  })
+
+  it('T-0418 header gutter: on the widget tier a plain header sits one card gutter above its content (T-0420 scope)', () => {
     // T-0418 (Kim 2026-10-22): a plain header sits one card gutter above its content with no facing padding, so the
     // header box to the content box is the gutter (--ui-card-content-gap, the card gutter 2n), not the inset n.
+    const card = mount(
+      '<div data-tier="widget" data-scale="md"><ui-card><ui-card-header>H</ui-card-header><ui-card-content>C</ui-card-content></ui-card></div>',
+    ).querySelector('ui-card') as HTMLElement
+    const header = card.querySelector('ui-card-header') as HTMLElement
+    const content = card.querySelector('ui-card-content') as HTMLElement
+    const inset = header.getBoundingClientRect().top - card.getBoundingClientRect().top - px(getComputedStyle(card).borderTopWidth)
     const gutter = px(getComputedStyle(header).marginBlockEnd)
-    expect(gutter, 'the header end margin is the card gutter 2n').toBeCloseTo(2 * DERIVED.n, 0)
-    expect(headerToContent, 'header→content is one card gutter').toBeCloseTo(gutter, 0)
+    expect(inset, 'anti-vacuous: the widget inset n is positive').toBeGreaterThan(0)
+    expect(gutter, 'the header end margin is the card gutter 2n').toBeCloseTo(2 * inset, 0)
+    expect(content.getBoundingClientRect().top - header.getBoundingClientRect().bottom, 'header→content is one card gutter').toBeCloseTo(gutter, 0)
     expect(px(getComputedStyle(header).paddingBottom), 'the header drops its end padding').toBe(0)
     expect(px(getComputedStyle(content).paddingTop), 'the content drops its start padding').toBe(0)
+  })
+
+  it('T-0420: the CardHeader surface title is widget-tier only, and emphasis bolds it to 700 on both tiers', () => {
+    const tiers = mount(
+      `<div>
+        <div data-tier="widget" data-scale="md">
+          <ui-card><ui-card-header><ui-text variant="title" as="h2" data-t="plain">T</ui-text></ui-card-header><ui-card-content>C</ui-card-content></ui-card>
+          <ui-card><ui-card-header><ui-text variant="title" as="h2" emphasis data-t="em">T</ui-text></ui-card-header><ui-card-content>C</ui-card-content></ui-card>
+        </div>
+        <div>
+          <ui-text variant="title" as="h2" data-t="ref">T</ui-text>
+          <ui-card><ui-card-header><ui-text variant="title" as="h2" data-t="plain">T</ui-text></ui-card-header><ui-card-content>C</ui-card-content></ui-card>
+          <ui-card><ui-card-header><ui-text variant="title" as="h2" emphasis data-t="em">T</ui-text></ui-card-header><ui-card-content>C</ui-card-content></ui-card>
+        </div>
+      </div>`,
+    )
+    const [widget, page] = Array.from(tiers.children) as HTMLElement[]
+    const cs = (at: HTMLElement, t: string): CSSStyleDeclaration => {
+      const el = at.querySelector(`[data-t='${t}']`)
+      expect(el, `anti-vacuous: ${t} rendered`).not.toBeNull()
+      return getComputedStyle(el!)
+    }
+    // Widget tier: the surface title, --md-sys-type-subhead resolved on the header, weight 600, line height 1.3.
+    const header = widget.querySelector('ui-card-header') as HTMLElement
+    const probe = document.createElement('div')
+    probe.style.cssText = 'position:absolute;inline-size:var(--md-sys-type-subhead)'
+    header.append(probe)
+    const subhead = probe.getBoundingClientRect().width
+    probe.remove()
+    expect(subhead, 'anti-vacuous: the subhead token resolves').toBeGreaterThan(0)
+    const wPlain = cs(widget, 'plain')
+    expect(px(wPlain.fontSize), 'widget header title size = subhead').toBeCloseTo(subhead, 1)
+    expect(wPlain.fontWeight, 'widget header title weight').toBe('600')
+    expect(px(wPlain.lineHeight), 'widget header title line height').toBeCloseTo(subhead * 1.3, 1)
+    expect(cs(widget, 'em').fontWeight, 'emphasis bolds the widget header title').toBe('700')
+    // Page tier: the rule does not touch the title, so it computes exactly like the same Text outside any card.
+    const ref = cs(page, 'ref')
+    const pPlain = cs(page, 'plain')
+    for (const prop of ['fontSize', 'fontWeight', 'lineHeight'] as const) {
+      expect(pPlain[prop], `page header title ${prop} is the Text's own role`).toBe(ref[prop])
+    }
+    // anti-vacuous: the page role differs from the surface title, so the equality above can detect the rule.
+    expect([ref.fontSize, ref.fontWeight, ref.lineHeight]).not.toEqual([wPlain.fontSize, wPlain.fontWeight, wPlain.lineHeight])
+    expect(cs(page, 'em').fontWeight, 'emphasis bolds the page header title').toBe('700')
   })
 
   it('NESTED card-content padding stays FLAT (2n on both axes, derived) at every depth, no stepping law at all (REVISED 2026-07-04)', () => {

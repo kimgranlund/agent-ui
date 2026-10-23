@@ -194,17 +194,19 @@
     margin: var(--ui-card-region-margin);
   }
 
-  /* Header to content (T-0418, Kim 2026-10-22): a plain header sits one card gutter (2n, --ui-card-content-gap)
-     above its content, the rhythm between content children, instead of the stacked pad 2n + inset n + pad 2n.
-     The facing paddings drop and the header's end margin carries the gutter (it collapses over the content's
-     inset in this block flow). Scroll mode overlays the header, a structured header draws a divider and a filled
-     header needs its own padding, so all three keep the region inset. */
-  :scope:not([scrollable], :has(> ui-card-content[scrollable]))
+  /* Header to content (T-0418, Kim 2026-10-22): on the A2UI widget tier a plain header sits one card gutter (2n,
+     --ui-card-content-gap) above its content, the rhythm between content children, instead of the stacked pad 2n +
+     inset n + pad 2n. The facing paddings drop and the header's end margin carries the gutter (it collapses over
+     the content's inset in this block flow). Scroll mode overlays the header, a structured header draws a divider
+     and a filled header needs its own padding, so all three keep the region inset. Page-tier cards keep the inset
+     (T-0420, Kim 2026-10-22). The tier sits on the card itself when it is an A2UI surface root; the :where() keeps
+     it out of the specificity. */
+  :scope:where([data-tier='widget'], [data-tier='widget'] *):not([scrollable], :has(> ui-card-content[scrollable]))
     > ui-card-header:not([format='structured'], [elevation], [brightness]):has(+ ui-card-content) {
     padding-block-end: 0;
     margin-block-end: var(--ui-card-content-gap);
   }
-  :scope:not([scrollable], :has(> ui-card-content[scrollable]))
+  :scope:where([data-tier='widget'], [data-tier='widget'] *):not([scrollable], :has(> ui-card-content[scrollable]))
     > ui-card-header:not([format='structured'], [elevation], [brightness]) + ui-card-content {
     padding-block-start: 0;
   }
@@ -421,12 +423,16 @@
   padding-block: var(--ui-card-region-pad-block);
 }
 
-/* The surface title, by position (T-0418): any heading-role Text inside a plain header (h1 to h5 on the wire). The
-   element selector outranks text.css's specificity-0 role blocks; a structured header keeps its kicker title. */
-:where(ui-card-header:not([format='structured'])) ui-text:is([variant='title'], [variant='headline'], [variant='display']) {
+/* The surface title, by position (T-0418): any heading-role Text inside a plain header (h1 to h5 on the wire) on the
+   A2UI widget tier; a page-tier header keeps its Text's own role (T-0420). The element selector outranks text.css's
+   specificity-0 role blocks; a structured header keeps its kicker title. The weight leg skips [emphasis], so
+   text.css's emphasis block still bolds the title to 700. */
+:where([data-tier='widget'] ui-card-header:not([format='structured'])) ui-text:is([variant='title'], [variant='headline'], [variant='display']) {
   --ui-text-size: var(--ui-card-header-title-size);
-  --ui-text-weight: var(--ui-card-header-title-weight);
   --ui-text-line-height: var(--ui-card-header-title-line-height);
+}
+:where([data-tier='widget'] ui-card-header:not([format='structured'])) ui-text:is([variant='title'], [variant='headline'], [variant='display']):not([emphasis]) {
+  --ui-text-weight: var(--ui-card-header-title-weight);
 }
 
 /* [leading | label] — auto 1fr */
