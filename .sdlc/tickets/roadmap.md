@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 416 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 417 done, 4 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -119,5 +119,4 @@ Closed: 416 done, 4 dropped (git log or .NNNN-* folders)
 - decide: .sdlc/tickets/0395-own-commit-ask-wording/handoff.md:20 note: cites `grammar.md:47`; the edited span sits at grammar.md:48 (:47 is unchanged context), as architect-L1.md states. (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
 - decide: .sdlc/notes/notes.md:671 note: the T-0393 `decide:` line about OptionCompare's second intent is settled by this ticket and still open in notes; resolve on land (architect-L1.md Carry forward). (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
 - decide: site/agent-content/game-hud-placement.test.ts:28 note: pins exactly one Button on a game ask; a future deck-based game skill reds it until the check gains an own-commit branch (architect-L1.md Risks), no change needed now. (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
-- decide: packages/agent-ui/a2ui/src/examples/catalog-frontier.ts:453-478 the re-authored `frontier-card-anatomy-ask` is a delivery-options form (Field-wrapped RadioGroup plus two Checkboxes), not the design's "Report a problem" RadioGroup plus Textarea (architect-L1-2.md:63-67); judged 3 then 4/PASS on rejudge (the two corpus/verdicts t0419 files). The builder reports it as a deviation. (from T-0419: Grammar teaches a single pick among two to eight options as one own-commit OptionDeck for every persona (2026-10-23))
-- decide: scripts/e2e-admin/admin-page.ts:33 the probe `--click` reads `ui-button` labels only and cannot press a deck card (architect-L1-2.md:139 follow-up; the keyless replay uses the recorded input). (from T-0419: Grammar teaches a single pick among two to eight options as one own-commit OptionDeck for every persona (2026-10-23))
+- decide: packages/agent-ui/a2ui/src/examples/catalog-frontier.ts:453-478 the re-authored `frontier-card-anatomy-ask` is a delivery-options form (Field-wrapped RadioGroup plus two Checkboxes), not the design's "Report a problem" RadioGroup plus Textarea (architect-L1-2.md:63-67); judged 3 then 4/PASS on rejudge (the two corpus/verdicts t0419 files). The builder reports it as a deviation. -> accepted 2026-10-23 (rejudged 4/PASS) (from T-0419: Grammar teaches a single pick among two to eight options as one own-commit OptionDeck for every persona (2026-10-23))
