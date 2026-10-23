@@ -1,8 +1,8 @@
 {
   "id": "quizmaster",
   "preset": "quizmaster",
-  "seedVersion": 6,
-  "seedDigest": "sha256:03f652e96ca7b556fe3eedea06e544c011a4f47ab911c01aa91b7f6572ec84f8",
+  "seedVersion": 7,
+  "seedDigest": "sha256:65f7e46dcc4e0a4a3d5ac1a627ca6b14320ea7e9895a6314906d76bc4d8a5766",
   "fragment": {
     "personaId": "quizmaster",
     "types": [
@@ -12,7 +12,7 @@
       "agent-ui",
       "a2ui-basic"
     ],
-    "digest": "sha256:1d62b12f2ca534c9459a8fa9e36f450913df8ee468a2191292cda12d68a07be3"
+    "digest": "sha256:07f9a3b8c9f82fb88a5b10e2f9c701d158112d3546202da32e580768f9697d90"
   },
   "selection": {
     "digest": "sha256:6e4d9cf4b89c6399f0e0f6b82ec180591b55b35414f5a76ece207645961461ce"

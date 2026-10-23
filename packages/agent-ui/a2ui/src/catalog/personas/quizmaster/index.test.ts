@@ -15,11 +15,13 @@ describe('quizmaster persona: QuestionCard fragment', () => {
     expect(quizmasterPersona.personaId).toBe(QUIZMASTER_PERSONA_ID)
   })
 
-  it('QuestionCard: the fragment loads through the structural gate with exactly the one type, its ten props and a ChildList', () => {
+  it('QuestionCard: the fragment loads through the structural gate with exactly the one type, its eleven props and a ChildList', () => {
     expect(Object.keys(quizmasterFragment.components)).toEqual(['QuestionCard'])
     const props = quizmasterFragment.components.QuestionCard!.properties
-    expect(Object.keys(props).sort()).toEqual(['answer', 'explanation', 'label', 'meta', 'name', 'options', 'progress', 'question', 'revealed', 'value'])
-    // ADR-0243 Amendment 1 (T-0082): the producer's action Buttons sit inside the card, the CardTable slot.
+    expect(Object.keys(props).sort()).toEqual(['actionName', 'answer', 'explanation', 'label', 'meta', 'name', 'options', 'progress', 'question', 'revealed', 'value'])
+    // T-0429: a pick commits through the required `actionName`, the host's own `action` event.
+    expect(props.actionName).toEqual({ type: { type: 'string' }, mapsTo: 'actionName', actionEvent: 'action', required: true })
+    // ADR-0243 Amendment 1 (T-0082): the producer's post-reveal Next question Button sits inside the card, the CardTable slot.
     expect(quizmasterFragment.components.QuestionCard!.children).toBe('ChildList')
     expect(quizmasterFragment.functions).toEqual({})
   })

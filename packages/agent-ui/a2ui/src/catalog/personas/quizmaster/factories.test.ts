@@ -40,7 +40,7 @@ describe('QuestionCard factory table', () => {
     expect(quizmasterFragment.components.QuestionCard?.value).toEqual(questionCardFactory.value)
   })
 
-  it('QuestionCard: the catalog row takes answer, label, meta and a children list for the action Buttons', () => {
+  it('QuestionCard: the catalog row takes answer, label, meta and a children list for the Next question Button', () => {
     const row = quizmasterFragment.components.QuestionCard!
     for (const prop of ['answer', 'label', 'meta']) expect(row.properties[prop]?.mapsTo).toBe(prop)
     expect(row.children).toBe('ChildList')

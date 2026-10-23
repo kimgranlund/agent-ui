@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 423 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 425 done, 4 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -112,3 +112,5 @@ Closed: 423 done, 4 dropped (git log or .NNNN-* folders)
 - decide: .sdlc/notes/notes.md:671 note: the T-0393 `decide:` line about OptionCompare's second intent is settled by this ticket and still open in notes; resolve on land (architect-L1.md Carry forward). -> stale, resolved by later work (triage 2026-10-23) (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
 - decide: site/agent-content/game-hud-placement.test.ts:28 note: pins exactly one Button on a game ask; a future deck-based game skill reds it until the check gains an own-commit branch (architect-L1.md Risks), no change needed now. -> accepted (triage 2026-10-23) (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
 - decide: packages/agent-ui/a2ui/src/examples/catalog-frontier.ts:453-478 the re-authored `frontier-card-anatomy-ask` is a delivery-options form (Field-wrapped RadioGroup plus two Checkboxes), not the design's "Report a problem" RadioGroup plus Textarea (architect-L1-2.md:63-67); judged 3 then 4/PASS on rejudge (the two corpus/verdicts t0419 files). The builder reports it as a deviation. -> accepted 2026-10-23 (rejudged 4/PASS) (from T-0419: Grammar teaches a single pick among two to eight options as one own-commit OptionDeck for every persona (2026-10-23))
+- decide: site/pages/agent-admin-prompt-budget.test.ts:8 note: the MEASURED 2026-10-14 comment (worst case 130 097) was stale before this change; the builder measured the worst persona at 138 880 of 150 200 (croupier), left for its owner. (from T-0429: A quiz answer commits on tap: QuestionCard drops Check answer (2026-10-23))
+- decide: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:308-312 decide: a re-tap before the reveal turn lands sends a second `answer` action (design-accepted, OptionDeck parity), and a live Haiku that keeps omitting `actionName` would exhaust rounds; the quizmaster `checks.ts` fallback is the design's named follow-up. (from T-0429: A quiz answer commits on tap: QuestionCard drops Check answer (2026-10-23))

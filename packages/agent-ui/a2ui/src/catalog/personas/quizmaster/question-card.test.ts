@@ -43,10 +43,24 @@ interface RadioEl extends HTMLElement {
 const line = (msg: unknown): string => JSON.stringify(msg)
 const write = (path: string, value: unknown): string => line({ version: 'v1.0', updateDataModel: { surfaceId: SID, path, value } })
 
+interface SentAction {
+  name: string
+  sourceComponentId: string
+  context: Record<string, unknown>
+  dataModel?: Record<string, unknown>
+}
+
 async function render(
   card: Record<string, unknown>,
   extra: Record<string, unknown>[] = [],
-): Promise<{ mount: HTMLElement; ingest: (l: string) => void; errors: () => A2uiClientMessage[]; cleanup: () => void }> {
+  opts: { sendDataModel?: boolean } = {},
+): Promise<{
+  mount: HTMLElement
+  ingest: (l: string) => void
+  errors: () => A2uiClientMessage[]
+  actions: () => SentAction[]
+  cleanup: () => void
+}> {
   const sent: A2uiClientMessage[] = []
   const r = createRenderer()
   await r.preload(CATALOG)
@@ -54,7 +68,8 @@ async function render(
   const mount = document.createElement('div')
   document.body.appendChild(mount)
   r.mount(mount)
-  r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: SID, catalogId: CATALOG } }))
+  const create = opts.sendDataModel === true ? { surfaceId: SID, catalogId: CATALOG, sendDataModel: true } : { surfaceId: SID, catalogId: CATALOG }
+  r.ingest(line({ version: 'v1.0', createSurface: create }))
   r.ingest(write('/answer', ''))
   r.ingest(write('/revealed', false))
   r.ingest(
@@ -76,6 +91,7 @@ async function render(
     mount,
     ingest: (l) => r.ingest(l),
     errors: () => sent.filter(isError),
+    actions: () => sent.flatMap((m) => ('action' in m ? [m.action as unknown as SentAction] : [])),
     cleanup: () => {
       r.dispose()
       mount.remove()
@@ -99,6 +115,12 @@ const radiosIn = (mount: HTMLElement): RadioEl[] => [...mount.querySelectorAll('
 const states = (mount: HTMLElement): (string | null)[] => radiosIn(mount).map((r) => r.getAttribute('data-state'))
 const partText = (row: HTMLElement, name: string): string => row.querySelector(`[data-part="${name}"]`)?.textContent ?? ''
 const click = (el: HTMLElement): void => void el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+const key = (el: HTMLElement, k: string): void => {
+  el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
+  el.dispatchEvent(new KeyboardEvent('keyup', { key: k, bubbles: true, cancelable: true }))
+}
+/** The tap-commit card (T-0429): a pick sends the `answer` action. */
+const COMMIT = { ...BOUND, actionName: 'answer' }
 
 describe('QuestionCard through the real renderer', () => {
   it('QuestionCard renders one lettered row per option, in order, labelled in its label span', async () => {
@@ -202,34 +224,82 @@ describe('QuestionCard through the real renderer', () => {
     cleanup()
   })
 
-  it('QuestionCard: the producer children sit after the explanation, and a required check holds the Button disabled until a pick', async () => {
-    const button = {
-      id: 'checkBtn',
-      component: 'Button',
-      variant: 'solid',
-      label: 'Check answer',
-      action: { action: 'checkAnswer', context: { answer: { path: '/answer' } } },
-      checks: [{ call: 'required', args: { value: { path: '/answer' } }, message: 'Pick an answer first' }],
-    }
-    const { mount, errors, cleanup } = await render({ ...BOUND, children: ['checkBtn'] }, [button])
-    expect(errors()).toEqual([])
-    const card = mount.querySelector('ui-card') as HTMLElement
-    const kids = [...card.children]
-    const btn = kids.at(-1) as HTMLElement & { disabled: boolean }
-    expect(btn.tagName.toLowerCase()).toBe('ui-button')
-    expect(kids.at(-2)?.getAttribute('data-part')).toBe('explanation')
-    expect(btn.disabled).toBe(true)
-    click(radiosIn(mount)[0]!)
+  it('QuestionCard: a fresh pick sends exactly one answer action carrying the picked value, after the bound write', async () => {
+    const { mount, actions, errors, cleanup } = await render(COMMIT, [], { sendDataModel: true })
+    click(radiosIn(mount)[1]!)
     await whenFlushed()
-    expect(btn.disabled).toBe(false)
+    expect(errors()).toEqual([])
+    const sent = actions()
+    expect(sent.map((a) => [a.name, a.context, a.sourceComponentId])).toEqual([['answer', { value: 'venus' }, 'card']])
+    expect(sent[0]!.dataModel?.answer).toBe('venus')
     cleanup()
   })
 
-  it('QuestionCard: the producer Check answer Button sits at the button lg step, 32px on the canvas register (ADR-0243 Amendment 2, ADR-0245 Amendment 2)', async () => {
-    const button = { id: 'checkBtn', component: 'Button', variant: 'solid', label: 'Check answer', action: { action: 'checkAnswer' } }
-    const { mount, errors, cleanup } = await render({ ...BOUND, children: ['checkBtn'] }, [button])
+  it('QuestionCard: a click on a row label commits once, and a re-press of the picked row commits once more', async () => {
+    const { mount, actions, cleanup } = await render(COMMIT)
+    click(radiosIn(mount)[2]!.querySelector('[data-part="label"]') as HTMLElement)
+    await whenFlushed()
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'earth' }])
+    click(radiosIn(mount)[2]!)
+    await whenFlushed()
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'earth' }, { value: 'earth' }])
+    cleanup()
+  })
+
+  it('QuestionCard: Space commits on an unpicked row and on the picked row, once each; Enter on an unpicked row commits nothing', async () => {
+    const { mount, actions, cleanup } = await render(COMMIT)
+    key(radiosIn(mount)[3]!, 'Enter')
+    await whenFlushed()
+    expect(actions()).toEqual([])
+    key(radiosIn(mount)[0]!, ' ')
+    await whenFlushed()
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'mercury' }])
+    key(radiosIn(mount)[0]!, ' ')
+    await whenFlushed()
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'mercury' }, { value: 'mercury' }])
+    cleanup()
+  })
+
+  it('QuestionCard: an arrow key moves the pick and commits nothing (selection follows focus)', async () => {
+    const { mount, actions, cleanup } = await render(COMMIT)
+    click(radiosIn(mount)[0]!)
+    await whenFlushed()
+    key(radiosIn(mount)[0]!, 'ArrowDown')
+    await whenFlushed()
+    expect((mount.querySelector('[data-part="options"]') as unknown as { value: string }).value).toBe('venus')
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'mercury' }])
+    cleanup()
+  })
+
+  it('QuestionCard: a revealed card commits nothing, and a card with no actionName commits nothing', async () => {
+    const revealed = await render(COMMIT)
+    revealed.ingest(write('/answer', 'venus'))
+    revealed.ingest(write('/revealed', true))
+    await whenFlushed()
+    click(radiosIn(revealed.mount)[1]!)
+    click(radiosIn(revealed.mount)[3]!)
+    await whenFlushed()
+    expect(revealed.actions()).toEqual([])
+    revealed.cleanup()
+
+    const unnamed = await render(BOUND)
+    click(radiosIn(unnamed.mount)[1]!)
+    await whenFlushed()
+    expect(unnamed.actions()).toEqual([])
+    unnamed.cleanup()
+  })
+
+  it('QuestionCard: the revealed card holds the producer Next question Button after the explanation, at the button lg step (ADR-0243 Amendment 2)', async () => {
+    const button = { id: 'next', component: 'Button', variant: 'solid', label: 'Next question', action: { action: 'next_question' } }
+    const { mount, ingest, errors, cleanup } = await render({ ...COMMIT, children: ['next'] }, [button])
+    ingest(write('/answer', 'venus'))
+    ingest(write('/revealed', true))
+    await whenFlushed()
     expect(errors()).toEqual([])
-    const btn = mount.querySelector('ui-card > ui-button') as HTMLElement & { size: string }
+    const kids = [...(mount.querySelector('ui-card') as HTMLElement).children]
+    const btn = kids.at(-1) as HTMLElement & { size: string }
+    expect(btn.tagName.toLowerCase()).toBe('ui-button')
+    expect(kids.at(-2)?.getAttribute('data-part')).toBe('explanation')
     expect(btn.getAttribute('size')).toBe('lg')
     expect(btn.size).toBe('lg')
     cleanup()

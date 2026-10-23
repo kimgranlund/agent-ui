@@ -9,8 +9,13 @@ import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
 import { offlineReplay } from '../trace.ts'
 
-it('smoke-quizmaster-first-question-haiku: the recorded turns replay with every probe check green', async () => {
+// T-0429: a QuestionCard pick commits the answer through the required `actionName`. The recorded round omits it, so
+// it is sent back with CATALOG at qcard.actionName; round 2 is AUTHORED to that repair: the recorded round byte for
+// byte with "actionName":"answer" on qcard, and no Check answer Button.
+it('smoke-quizmaster-first-question-haiku: the recorded round repairs CATALOG qcard.actionName and ships the QuestionCard', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-quizmaster-first-question-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed).toEqual([])
+  const trace = (i) => report.records[i].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
+  expect(trace(0)).toMatchObject({ rounds: 2, failureCodes: ['CATALOG'] })
 })

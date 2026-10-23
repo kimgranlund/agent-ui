@@ -133,6 +133,112 @@
               }
             }
           ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 1: What is the capital of Australia? Pick an answer on the card.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quiz-capitals",
+                      "catalogId": "agent-ui--quizmaster",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "quiz-capitals",
+                      "value": {
+                        "quiz": {
+                          "score": 0,
+                          "round": 1,
+                          "total": 5,
+                          "selected": ""
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quiz-capitals",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "qcard"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "World capitals",
+                          "status": "Round 1 of 5",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Score",
+                              "value": 0
+                            }
+                          ],
+                          "progress": {
+                            "value": 0,
+                            "max": 5
+                          }
+                        },
+                        {
+                          "id": "qcard",
+                          "component": "QuestionCard",
+                          "label": "Round 1",
+                          "meta": "World capitals",
+                          "question": "What is the capital of Australia?",
+                          "name": "answer",
+                          "options": [
+                            {
+                              "value": "sydney",
+                              "label": "Sydney"
+                            },
+                            {
+                              "value": "melbourne",
+                              "label": "Melbourne"
+                            },
+                            {
+                              "value": "canberra",
+                              "label": "Canberra"
+                            },
+                            {
+                              "value": "perth",
+                              "label": "Perth"
+                            }
+                          ],
+                          "value": {
+                            "path": "/quiz/selected"
+                          },
+                          "answer": "canberra",
+                          "actionName": "answer",
+                          "explanation": "Canberra was purpose-built as the capital in 1908, a compromise between rivals Sydney and Melbourne.",
+                          "revealed": false,
+                          "progress": {
+                            "value": 1,
+                            "max": 5
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         }
       ],
       "input": {

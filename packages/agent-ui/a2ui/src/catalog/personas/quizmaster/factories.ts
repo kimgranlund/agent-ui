@@ -8,9 +8,11 @@
 //
 // `revealed` true disables the group and opens the explanation in place; with `answer` naming an option it also
 // marks the correct row (a check glyph and "Correct") and a wrong pick (a cross glyph and "Your answer"), so no
-// state rests on color alone. The producer's own children (the Check answer Button) are appended by the renderer
-// after the explanation, sized at the button's `lg` step by `actionRowButtons` (ADR-0243 Amendment 2; 32px on the A2UI canvas
-// register, ADR-0245 Amendment 2). Styling
+// state rests on color alone. A pick commits the answer (T-0429): a click or Space on an option fires the host's own
+// `action` event named by `actionName`, with the picked value as the context `value`, which the renderer forwards as
+// the A2UI action. There is no Check answer Button. The producer's own children (the post-reveal Next question
+// Button) are appended by the renderer after the explanation, sized at the button's `lg` step by `actionRowButtons`
+// (ADR-0243 Amendment 2; 28px on the A2UI canvas register, ADR-0245 Amendment 2). Styling
 // goes through `el.style` only, with no border-left anywhere; no host ARIA. The card is one region on the ADR-0046
 // box model (`boxRegionCard`, ADR-0046 Amendment 7): ink the box inset plus the region padding in from the border,
 // and one 8px gap between parts.
@@ -84,6 +86,8 @@ interface QuestionCardParts {
   revealed: boolean
   label: string
   progress: { value: number; max: number } | undefined
+  /** The action a pick commits (T-0429); empty sends nothing. */
+  actionName: string
 }
 
 const questionCardParts = new WeakMap<HTMLElement, QuestionCardParts>()
@@ -283,7 +287,7 @@ export const questionCardFactory: WidgetFactory = {
     const explanationTextEl = text('p', 'body', 'md')
     explanationEl.appendChild(explanationTextEl)
 
-    // The card's own parts span its width; the producer's children (the action Buttons) keep their content width.
+    // The card's own parts span its width; the producer's children (the Next question Button) keep their content width.
     s.alignItems = 'flex-start'
     for (const part of [headEl, questionEl, groupEl, explanationEl]) part.style.alignSelf = 'stretch'
     el.append(headEl, questionEl, groupEl, explanationEl)
@@ -301,6 +305,7 @@ export const questionCardFactory: WidgetFactory = {
       revealed: false,
       label: '',
       progress: undefined,
+      actionName: '',
     }
     questionCardParts.set(el, parts)
     // A user commit (click, Space, arrow keys) repaints the rows; the event keeps bubbling to the input binding.
@@ -310,6 +315,22 @@ export const questionCardFactory: WidgetFactory = {
       configurable: true,
       get: () => groupEl.value,
     })
+    // A pick commits the answer as the host's own `action` event (T-0429), which the renderer forwards only when it
+    // is dispatched ON the host. Nothing commits while revealed, disabled or with no pick.
+    const commit = (): void => {
+      const picked = groupEl.value
+      if (parts.actionName === '' || parts.revealed || groupEl.disabled || picked === null || picked === '') return
+      el.dispatchEvent(new CustomEvent('action', { detail: { action: parts.actionName, context: { value: picked } } }))
+    }
+    const rowOf = (event: Event): (RadioLike & { checked: boolean }) | null =>
+      event.target instanceof Element ? (event.target.closest('ui-radio') as (RadioLike & { checked: boolean }) | null) : null
+    // The commit rides `click`, never `change`: arrow keys move the pick with a `change` and no click (selection
+    // follows focus), so a keyboard user reaches option C without answering B. Space clicks the row on keyup.
+    // Capture: a re-press of the picked row, whose own capture guard swallows its click before it bubbles.
+    groupEl.addEventListener('click', (event) => { if (rowOf(event)?.checked === true) commit() }, { capture: true })
+    // Bubble: a fresh pick, after the row's toggle fired the `change` the input binding writes, so the action's
+    // data model already holds the pick.
+    groupEl.addEventListener('click', (event) => { if (rowOf(event) !== null) commit() })
     return el
   },
   applyProp: (el, prop, value) => {
@@ -355,6 +376,9 @@ export const questionCardFactory: WidgetFactory = {
       case 'progress':
         parts.progress = readProgress(value)
         paintHeader(parts)
+        break
+      case 'actionName':
+        parts.actionName = str(value)
         break
       default:
         break // an unknown prop is a no-op

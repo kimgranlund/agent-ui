@@ -762,7 +762,8 @@ const QUIZ_OPTIONS = [
 ]
 
 /** The QuestionCard both quizmaster seeds share: round 3 of 10, its pick bound to `/answer`, its reveal to
- *  `/revealed`, the correct option named by `answer` so the reveal can mark the right and wrong rows. */
+ *  `/revealed`, the correct option named by `answer` so the reveal can mark the right and wrong rows. A pick
+ *  commits: it sends the card's `answer` action (T-0429), so the open round carries no children. */
 const QUIZ_CARD = {
   id: 'card',
   component: 'QuestionCard',
@@ -775,20 +776,20 @@ const QUIZ_CARD = {
   answer: 'mercury',
   revealed: { path: '/revealed' },
   explanation: 'Mercury orbits closest to the Sun, at about 58 million km.',
-  children: ['checkBtn'],
+  actionName: 'answer',
 }
 
 /** The round's data: nothing picked, not yet revealed. */
 const QUIZ_DATA = { answer: '', revealed: false }
 
-/** The quizmaster persona over agent-ui: one QuestionCard round holding its Check answer Button. */
+/** The quizmaster persona over agent-ui: one QuestionCard round whose pick sends the answer. */
 export const personaQuizmasterQuestionSeed: PersonaExampleSeed = {
   name: 'persona-quizmaster-question',
   description:
     'The quizmaster persona over the agent-ui base: a QuestionCard headed Question 3 of 10 with Science \u00b7 easy ' +
     'beside it, asking which planet is closest to the Sun, four lettered planet choices whose pick is bound to ' +
-    '/answer, mercury named as the answer and the reveal bound to /revealed; inside the card a Check answer ' +
-    'Button, disabled by a required check until a choice is picked, sends the pick.',
+    '/answer, mercury named as the answer and the reveal bound to /revealed; picking a choice sends it as the ' +
+    'QuestionCard answer action, with no Check answer Button.',
   promptText: 'Quiz me on the solar system, one question at a time.',
   surfaceId: QUIZ_SID,
   protocolVersion: 'v1.0',
@@ -803,28 +804,19 @@ export const personaQuizmasterQuestionSeed: PersonaExampleSeed = {
         components: [
           { id: 'root', component: 'Column', gap: 'md', children: ['card'] },
           QUIZ_CARD,
-          {
-            id: 'checkBtn',
-            component: 'Button',
-            variant: 'solid',
-            label: 'Check answer',
-            action: { action: 'checkAnswer', context: { answer: { path: '/answer' } } },
-            checks: [{ call: 'required', args: { value: { path: '/answer' } }, message: 'Pick an answer first' }],
-          },
         ],
       },
     },
   ],
 }
 
-/** The quizmaster persona over a2ui-basic: the same round, the Check answer Button as a Basic event Button. */
+/** The quizmaster persona over a2ui-basic: the same round, its pick sending the answer on the Basic base. */
 export const personaBasicQuizmasterQuestionSeed: PersonaExampleSeed = {
   name: 'persona-basic-quizmaster-question',
   description:
     'The quizmaster persona over the a2ui-basic base: the same QuestionCard round inside a Basic Column, its pick ' +
-    'bound to /answer and its reveal to /revealed; inside the card a Basic Button whose child Text label reads ' +
-    'Check answer, held disabled by a required check until a choice is picked, sends the pick as its ' +
-    'check_answer event.',
+    'bound to /answer and its reveal to /revealed; picking a choice sends it as the QuestionCard answer ' +
+    'action, with no Check answer Button.',
   promptText: 'Quiz me on the solar system, one question at a time.',
   surfaceId: QUIZ_SID,
   protocolVersion: 'v1.0',
@@ -839,15 +831,6 @@ export const personaBasicQuizmasterQuestionSeed: PersonaExampleSeed = {
         components: [
           { id: 'root', component: 'Column', justify: 'start', align: 'stretch', children: ['card'] },
           QUIZ_CARD,
-          { id: 'checkLabel', component: 'Text', text: 'Check answer' },
-          {
-            id: 'checkBtn',
-            component: 'Button',
-            variant: 'primary',
-            child: 'checkLabel',
-            action: { event: { name: 'check_answer', context: { answer: { path: '/answer' } } } },
-            checks: [{ condition: { call: 'required', args: { value: { path: '/answer' } } }, message: 'Pick an answer first' }],
-          },
         ],
       },
     },

@@ -47,7 +47,7 @@ export const SEED_HISTORY: SeedHistory = {
   },
   quizmaster: {
     // v1 (TKT-0074, 2026-07-16) seeded the dated Haiku 4.5 id; T-0030 (2026-10-07) moved it to Haiku 5.5
-    // without a bump. Versions 2 to 6 moved entry lists only (and T-0185 retired `temperature`).
+    // without a bump. Versions 2 to 7 moved entry lists only (and T-0185 retired `temperature`).
     '1': {
       model: {
         seeded: ['claude-haiku-4-5-20251001', 'claude-haiku-5-5'],
