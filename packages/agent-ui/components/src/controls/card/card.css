@@ -194,6 +194,21 @@
     margin: var(--ui-card-region-margin);
   }
 
+  /* Header to content (T-0418, Kim 2026-10-22): a plain header sits one card gutter (2n, --ui-card-content-gap)
+     above its content, the rhythm between content children, instead of the stacked pad 2n + inset n + pad 2n.
+     The facing paddings drop and the header's end margin carries the gutter (it collapses over the content's
+     inset in this block flow). Scroll mode overlays the header, a structured header draws a divider and a filled
+     header needs its own padding, so all three keep the region inset. */
+  :scope:not([scrollable], :has(> ui-card-content[scrollable]))
+    > ui-card-header:not([format='structured'], [elevation], [brightness]):has(+ ui-card-content) {
+    padding-block-end: 0;
+    margin-block-end: var(--ui-card-content-gap);
+  }
+  :scope:not([scrollable], :has(> ui-card-content[scrollable]))
+    > ui-card-header:not([format='structured'], [elevation], [brightness]) + ui-card-content {
+    padding-block-start: 0;
+  }
+
   /* FOOTER BOTTOM-PIN CONSTRAINT — dormant today, discoverable via GH#1553 (no code change there, a
      documented gotcha for whoever implements this next; found via cross-repo comparison against
      gen-ui-kit's Card, which already hit this as gen-ui-kit GH#1098). The default shell above is block
@@ -386,6 +401,12 @@
      fence, deliberately unamended by this fork). */
   --ui-card-header-title-font: inherit;
 
+  /* The surface title role (T-0418): a heading Text in the header reads at the subhead step, resolved here on the
+     header so the Text's own size axis cannot shift the register under it. */
+  --ui-card-header-title-size: var(--md-sys-type-subhead);
+  --ui-card-header-title-weight: 600;
+  --ui-card-header-title-line-height: 1.3;
+
   display: grid;
   grid-template-columns: 1fr; /* [label] — slotless */
   align-items: center;
@@ -398,6 +419,14 @@
      inset, separate from its one-inset positional margin set in @scope above. */
   padding-inline: var(--ui-card-region-pad-inline);
   padding-block: var(--ui-card-region-pad-block);
+}
+
+/* The surface title, by position (T-0418): any heading-role Text inside a plain header (h1 to h5 on the wire). The
+   element selector outranks text.css's specificity-0 role blocks; a structured header keeps its kicker title. */
+:where(ui-card-header:not([format='structured'])) ui-text:is([variant='title'], [variant='headline'], [variant='display']) {
+  --ui-text-size: var(--ui-card-header-title-size);
+  --ui-text-weight: var(--ui-card-header-title-weight);
+  --ui-text-line-height: var(--ui-card-header-title-line-height);
 }
 
 /* [leading | label] — auto 1fr */

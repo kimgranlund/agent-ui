@@ -138,7 +138,7 @@ describe('default catalog factories — Text (ADR-0078, catalog LLD-C5)', () => 
   it.each([
     ['h1', { as: 'h1', variant: 'headline', size: 'md' }],
     ['h2', { as: 'h2', variant: 'headline', size: 'sm' }],
-    ['h3', { as: 'h3', variant: 'title', size: 'lg' }],
+    ['h3', { as: 'h3', variant: 'title', size: 'md' }],
     ['h4', { as: 'h4', variant: 'title', size: 'md' }],
     ['h5', { as: 'h5', variant: 'title', size: 'sm' }],
     ['body', { as: 'none', variant: 'body', size: 'md' }],
