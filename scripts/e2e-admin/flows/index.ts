@@ -6,6 +6,7 @@
 import type { AdminFlow, NegativeControl } from '../runner.ts'
 import {
   builderArmNewAgent,
+  builderChoiceDeck,
   builderExitClears,
   builderPatchApplies,
   builderPlanRenders,
@@ -39,6 +40,7 @@ export const FLOWS: readonly AdminFlow[] = [
   builderTeamDeclared,
   builderSectionRouting,
   builderSessionIsolation,
+  builderChoiceDeck,
   settingsEditPersists,
   settingsKindToggle,
   settingsEntryAddRemove,

@@ -700,3 +700,7 @@
 - note: composite-moments.ts:182 a board-less score strip under an h4 "Game night" no longer fires GAME_HUD_MISSING ("Trivia night" still does).
 - note: composite-moments.ts:298 an "Adventure log" of scenes with no quest word no longer fires TIMELINE_MISSING.
 - note: hidden-state-checks.ts:551 display text "Game on! Your move." alone no longer opens the ACTION_NOT_APPLIED gate; a game id, component id or action name still does.
+
+## T-0412: The agent builder interview chat offers choices with the new selection patterns (OptionDeck, OptionCompare, own-commit asks) instead of a RadioGroup plus Confirm (2026-10-22)
+
+- note: the live-model leg is unmeasured by design (no live spend without Kim); the e2e flow proves the OptionDeck renders and its press reads back as the pick, not that Sonnet now chooses an OptionDeck for the temperament question.

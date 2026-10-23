@@ -32,6 +32,7 @@ export const ADMIN_SELECTORS = {
   composerSend: 'ui-conversation-composer [data-part="send"]',
   surfaceButton: '[data-part="mounts"] ui-surface-host ui-button',
   surfaceHost: '[data-part="mounts"] ui-surface-host',
+  surfaceOption: '[data-part="mounts"] ui-surface-host ui-option-deck [data-part="option"]', // T-0412: an OptionDeck card
   activityStep: '[data-part="narration"] ui-timeline-item[data-kind]', // T-0016: a step-mode activity row
   flowChrome: '[data-part="log"] [role="group"][aria-label="Flow complete"]',
   contextJson: '[data-part="context-json"]',
@@ -323,6 +324,33 @@ export class AdminPage {
   async answerAsk(label: string, pane: ConversationPane = 'chat'): Promise<number> {
     const since = await this.liveTurnCount()
     await this.clickSurfaceButton(label, pane)
+    return this.waitForTurn(since)
+  }
+
+  /** T-0412: the titles of every visible OptionDeck card inside a pane's A2UI surface hosts, in document order. */
+  surfaceOptionTitles(pane: ConversationPane = 'chat'): Promise<string[]> {
+    return this.page.evaluate(
+      (selector) =>
+        [...document.querySelectorAll<HTMLElement>(selector)]
+          .filter((c) => c.checkVisibility())
+          .map((c) => c.querySelector('[data-part="title"]')?.textContent?.trim() ?? ''),
+      `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceOption}`,
+    )
+  }
+
+  /** T-0412: answer an own-commit ask by clicking the newest visible OptionDeck card titled `title` (the press
+   *  is the answer, no commit Button), then wait for the answered round's turn to land. */
+  async pickSurfaceOption(title: string, pane: ConversationPane = 'chat'): Promise<number> {
+    await pollUntil(() => this.surfaceOptionTitles(pane), (titles) => titles.includes(title), `a visible OptionDeck card titled "${title}" in the ${pane} pane`)
+    const since = await this.liveTurnCount()
+    await this.page.evaluate(
+      ({ s, t }) =>
+        [...document.querySelectorAll<HTMLElement>(s)]
+          .filter((c) => c.checkVisibility() && c.querySelector('[data-part="title"]')?.textContent?.trim() === t)
+          .at(-1)
+          ?.click(),
+      { s: `${paneSelector(pane)} ${ADMIN_SELECTORS.surfaceOption}`, t: title },
+    )
     return this.waitForTurn(since)
   }
 

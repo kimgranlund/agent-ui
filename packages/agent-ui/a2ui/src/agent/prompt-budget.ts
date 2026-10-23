@@ -55,8 +55,11 @@ import { isDerivedCatalogId } from '../catalog/catalog-id.ts'
  *  from grammar.md's game-ask own-commit exception and OptionCompare's pick intent. Budget 147 200 by the same formula.
  *  RE-MEASURED 2026-10-22 (T-0397): the worst case is 147 377 chars (`agent-ui`, mode default; 146 896 before), +481
  *  from grammar.md's BookingForm settle-in-place clauses and the confirm-receipt mini-skill. Budget 147 700 by the same
- *  formula. */
-export const PROMPT_CHAR_BUDGET_BASE = 147_700
+ *  formula.
+ *  RE-MEASURED 2026-10-22 (T-0412): the worst case is 148 390 chars (`agent-ui`, mode default; 147 377 before), +1 013
+ *  from builder-mission.md's pick-shape paragraph with its option icons (the matrix sets `builderMission`). Budget
+ *  148 700 by the same formula. */
+export const PROMPT_CHAR_BUDGET_BASE = 148_700
 
 /** The budget for a DERIVED `<base>--<persona>` catalog (`compose.ts` `derivedCatalogId`): the same matrix
  *  over every `SHIPPED_PERSONA_CATALOGS` entry composed onto each of its target bases (mini-skills scoped
@@ -95,8 +98,10 @@ export const PROMPT_CHAR_BUDGET_BASE = 147_700
  *  RE-MEASURED 2026-10-21 (T-0395): the worst case is 147 863 chars (`agent-ui--croupier`, mode default; 147 795
  *  before), the same grammar.md exception and OptionCompare intent BASE pays. Budget 148 200 by the same formula.
  *  RE-MEASURED 2026-10-22 (T-0397): the worst case is 148 361 chars (`agent-ui--croupier`, mode default; 147 880
- *  before), the same grammar.md clauses and mini-skill BASE pays. Budget 148 700 by the same formula. */
-export const PROMPT_CHAR_BUDGET_DERIVED = 148_700
+ *  before), the same grammar.md clauses and mini-skill BASE pays. Budget 148 700 by the same formula.
+ *  RE-MEASURED 2026-10-22 (T-0412): the worst case is 149 374 chars (`agent-ui--croupier`, mode default; 148 361
+ *  before), the same builder-mission.md paragraph BASE pays. Budget 149 700 by the same formula. */
+export const PROMPT_CHAR_BUDGET_DERIVED = 149_700
 
 /** The declared budget for `catalogId`: DERIVED for a `<base>--<persona>` id, else BASE. */
 export function promptBudgetFor(catalogId: string): number {

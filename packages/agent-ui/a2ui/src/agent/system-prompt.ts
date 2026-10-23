@@ -36,6 +36,8 @@
 //   (`prompts/builder-mission.md`), composed by `missionBlock` ONLY when this turn IS the Builder's own
 //   dedicated interview (`session === 'authoring'`, derived host-side) — a separate gate from
 //   `authoringSurface`, since a persona authoring patches is not the same fact as being the Builder itself.
+//   T-0412: the same block carries the interview's pick shape (one OptionDeck or OptionCompare, own-commit,
+//   no Button), which on this turn takes precedence over grammar.md's RadioGroup-plus-commit archetype.
 // · ADR-0126 (LLD-C1, TKT-0016) — the message-lifecycle decision-layer teaching (the four-type choice rule +
 //   deleteSurface wire shape + whole-record-upsert warning + root-immutability), appended inside the
 //   OUTPUT_RULES zone of `prompts/grammar.md`, so it rides `OUTPUT_RULES` into every mode.

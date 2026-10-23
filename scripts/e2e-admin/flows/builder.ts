@@ -259,3 +259,52 @@ export const builderSessionIsolation: AdminFlow = {
     )
   },
 }
+
+/** T-0412: a Builder ask shipped as one OptionDeck (own-commit, no Button) renders in the Co-pilot pane, and
+ *  pressing a card is the answer: the next produce request is a `client` turn over `builderMission: true`
+ *  whose action context carries the card's value. With `E2E_ADMIN_SHOT_DIR` set, the mounted deck is
+ *  written there as `after-builder-choice-deck.png`. */
+export const builderChoiceDeck: AdminFlow = {
+  name: 'builder-choice-deck',
+  fixture: 'builder-choice-deck.json',
+  async run({ page, wire, scenario, base }) {
+    const admin = await openAdmin(page, base, scenario)
+    await armBuilder(admin)
+    await builderTurn(admin, 'make a toothbrushing coach agent')
+
+    const titles = await pollUntil(
+      () => admin.surfaceOptionTitles('copilot'),
+      (found) => found.length === 4,
+      'four OptionDeck cards in the copilot pane surface host',
+    )
+    assertFlow(
+      JSON.stringify(titles) === JSON.stringify(['Playful', 'Calm', 'Cheerleader', 'Matter-of-fact']),
+      `the copilot pane OptionDeck cards read ${JSON.stringify(titles)}, expected the four temperaments`,
+    )
+    const buttons = await admin.surfaceButtonLabels('copilot')
+    assertFlow(buttons.length === 0, `the copilot pane surface holds buttons ${JSON.stringify(buttons)}, expected none (own-commit)`)
+    const shotDir = process.env.E2E_ADMIN_SHOT_DIR
+    if (shotDir !== undefined && shotDir !== '') await page.screenshot({ path: `${shotDir}/after-builder-choice-deck.png` })
+
+    await admin.pickSurfaceOption('Playful', 'copilot')
+
+    const produce = wire.entries.filter((e) => e.endpoint === 'produce')
+    assertFlow(produce.length === 2, `wire log holds ${produce.length} produce entries, expected 2`)
+    const body = (produce[1]?.request ?? {}) as {
+      builderMission?: unknown
+      input?: { kind?: unknown; message?: { action?: { name?: unknown; context?: { value?: unknown } } } }
+    }
+    assertFlow(body.builderMission === true, `the second produce builderMission is ${JSON.stringify(body.builderMission)}, expected true`)
+    assertFlow(body.input?.kind === 'client', `the second produce input.kind is ${JSON.stringify(body.input?.kind)}, expected "client"`)
+    const action = body.input?.message?.action
+    assertFlow(
+      action?.name === 'choose' && action.context?.value === 'playful',
+      `the second produce action is ${JSON.stringify(action)}, expected "choose" with context value "playful"`,
+    )
+    const interview = await admin.readBuilderTranscript()
+    assertFlow(
+      interview.at(-1)?.role === 'assistant' && interview.at(-1)!.content.includes('a playful coach it is'),
+      `the last interview entry is ${JSON.stringify(interview.at(-1))}, expected the scripted reply to the pick`,
+    )
+  },
+}
