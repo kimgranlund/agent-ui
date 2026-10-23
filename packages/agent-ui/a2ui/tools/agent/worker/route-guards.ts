@@ -30,3 +30,38 @@ export function isValidTurnInput(input: unknown): boolean {
   if (candidate.session === null || typeof candidate.session !== 'object') return false
   return Array.isArray((candidate.session as { turns?: unknown }).turns)
 }
+
+// GH #111: the request body cap enforced WHILE reading, not after: a Content-Length pre-check plus a
+// post-hoc length check after `request.text()` had already buffered the body was a check that ran too
+// late (a chunked request with no Content-Length, or a garbled one where `Number(bad)` is NaN, skipped
+// both). This reads the `ReadableStream` chunk by chunk and throws before any chunk pushes the total over
+// `maxBytes`, the way dev-proxy-plugin.ts's Node reader rejects on `data`. Shared by both Worker mounts
+// (T-0430: moved here from index.ts so the arena route reads under its own, smaller cap).
+export async function readBodyCapped(request: Request, maxBytes: number): Promise<string> {
+  const contentLength = request.headers.get('content-length')
+  if (contentLength !== null && Number(contentLength) > maxBytes) throw new Error('request body too large')
+  if (request.body === null) return ''
+
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      total += value.byteLength
+      if (total > maxBytes) throw new Error('request body too large')
+      chunks.push(value)
+    }
+  } finally {
+    reader.releaseLock()
+  }
+
+  const merged = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) {
+    merged.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(merged)
+}

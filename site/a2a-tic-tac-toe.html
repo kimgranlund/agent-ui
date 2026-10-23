@@ -10,7 +10,8 @@
          the ONLY thing either seat ever talks to. Replays a committed real match with zero network/model
          calls by default, runs the isolation gate IN-PAGE over the loaded transcript (never a hardcoded
          verdict), and shows both seats' full recorded contexts side by side with the wire/board timeline.
-         A dev-only "run a live match" control appears once the arena proxy reports a key is configured. An
+         A "run a live match" control appears once the arena's live mount (the dev proxy, or the production
+         Worker since T-0430) reports it can run one. An
          MPA entry auto-discovered by vite.config.ts's site/**/*.html glob — no config edit. The page module
          imports pages/_page.ts FIRST for the foundation CSS cascade + self-defining ui-* controls. -->
     <div id="app"></div>

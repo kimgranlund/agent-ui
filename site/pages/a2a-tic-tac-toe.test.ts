@@ -116,8 +116,8 @@ describe('the A2A tic-tac-toe page — the isolation panel is the SAME checker, 
   })
 })
 
-describe('the A2A tic-tac-toe page — the dev-only live section stays hidden without a configured proxy/key', () => {
-  it('the live section is hidden (no dev proxy reachable under jsdom/vitest)', async () => {
+describe('the A2A tic-tac-toe page: the live section stays hidden when no live mount answers', () => {
+  it('the live section is hidden (no live mount reachable under jsdom/vitest)', async () => {
     // wireLiveOverlay()'s probe is fire-and-forget on import; give its microtask/fetch-rejection chain a
     // turn to settle before asserting the negative (mirrors the a2ui-live precedent's async settle pattern).
     await new Promise((r) => setTimeout(r, 50))

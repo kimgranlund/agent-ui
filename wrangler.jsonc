@@ -26,5 +26,10 @@
 		"binding": "ASSETS"
 	},
 	// Lets the Worker bundle statically `import` the corpus JSONL shard (worker/index.ts) as plain text.
-	"rules": [{ "type": "Text", "globs": ["**/*.jsonl"] }]
+	"rules": [{ "type": "Text", "globs": ["**/*.jsonl"] }],
+	// T-0430: the A2A arena's live match (`/__a2a/arena`, worker/arena-route.ts) starts at most one match per
+	// visitor IP per minute (counted per Cloudflare location). The route FAILS CLOSED without this binding:
+	// `/status` reports unavailable and POST answers 503. The ADR-0152 zone Rate Limiting Rule covers only
+	// `/__a2ui/agent`, so until it is extended in the dashboard this binding is the arena's only throttle.
+	"ratelimits": [{ "name": "ARENA_RATE_LIMITER", "namespace_id": "4300", "simple": { "limit": 1, "period": 60 } }]
 }

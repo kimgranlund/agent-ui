@@ -69,6 +69,10 @@ export interface ModelSeatOptions {
   /** Override the composed prompt (test seam only) — normal callers omit this. */
   systemPrompt?: string
   signal?: AbortSignal
+  /** T-0430: a per-call output-token cap (the live arena's per-match budget), sent as
+   * `modelSettings.maxTokens`. Omitted, the request carries no `modelSettings` key at all, byte-identical
+   * to before this option existed (run-flagship and the fixtures are unaffected). */
+  maxTokens?: number
 }
 
 export function createModelSeat(opts: ModelSeatOptions): Seat {
@@ -94,7 +98,8 @@ export function createModelSeat(opts: ModelSeatOptions): Seat {
         // divergence check below diffs against and hiding the mutation from every comparison, not just
         // this one. The clone keeps `turns` the untouched original.
         const requestMessages = turns.map((turn) => ({ ...turn }))
-        for await (const frag of tapped.stream({ model: opts.model, system, messages: requestMessages, signal: opts.signal })) {
+        const settings = opts.maxTokens !== undefined ? { modelSettings: { maxTokens: opts.maxTokens } } : {}
+        for await (const frag of tapped.stream({ model: opts.model, system, messages: requestMessages, ...settings, signal: opts.signal })) {
           raw += frag
         }
       } catch (e) {
