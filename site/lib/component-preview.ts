@@ -1482,8 +1482,8 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-field': { label: 'Email' },
   'ui-stat': { label: 'Revenue', figure: '48200', delta: '12' },
   // ui-game-hud (ADR-0243): only `status` is seeded as a knob; title, statusIntent, stats and progress are set
-  // as properties in COMPONENT_SAMPLE_INIT (knob names are applied with setAttribute, and `title`/`statusIntent`
-  // would write the wrong attribute).
+  // as properties in COMPONENT_SAMPLE_INIT (they predate T-0437, when a knob wrote its own name as the attribute;
+  // knobs now write the descriptor's attribute, and these stay properties).
   'ui-game-hud': { status: 'Your turn' },
   // ui-result-card (ADR-0244): only `summary` is seeded as a knob; outcome, title and stats are set as properties
   // in COMPONENT_SAMPLE_INIT (`title` would write the global attribute, not `result-title`).
