@@ -165,6 +165,8 @@ interface Knob {
   readonly kind: KnobKind
   readonly values?: readonly string[]
   readonly note?: string
+  /** Component mode: the descriptor's `attribute:` field (a kebab name, or `false` for property-only); absent ⇒ the prop name. */
+  readonly attribute?: string | false
 }
 
 /** The sentinel knob name for the component-mode default-slot text (edits `element.textContent`). */
@@ -209,15 +211,16 @@ const a2uiKnobs = (def: ComponentDef): Knob[] =>
 /** Map one descriptor attribute (its codec `type`) to a knob; `json`/unknown types are read-only skips. */
 function knobFromAttribute(attr: ParsedAttribute): Knob {
   const name = attr.name as string // callers filter nameless attrs first
+  const attribute = attr.attribute === undefined ? {} : { attribute: attr.attribute }
   switch (attr.type) {
     case 'enum':
-      return { name, kind: 'enum', values: attr.values ?? [] }
+      return { name, kind: 'enum', values: attr.values ?? [], ...attribute }
     case 'boolean':
-      return { name, kind: 'boolean' }
+      return { name, kind: 'boolean', ...attribute }
     case 'number':
-      return { name, kind: 'number' }
+      return { name, kind: 'number', ...attribute }
     case 'string':
-      return { name, kind: 'string' }
+      return { name, kind: 'string', ...attribute }
     default:
       return { name, kind: 'skip', note: `${attr.type ?? 'complex'} value — edit in code` }
   }
@@ -1479,8 +1482,8 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   'ui-field': { label: 'Email' },
   'ui-stat': { label: 'Revenue', figure: '48200', delta: '12' },
   // ui-game-hud (ADR-0243): only `status` is seeded as a knob; title, statusIntent, stats and progress are set
-  // as properties in COMPONENT_SAMPLE_INIT (knob names are applied with setAttribute, and `title`/`statusIntent`
-  // would write the wrong attribute).
+  // as properties in COMPONENT_SAMPLE_INIT (they predate T-0437, when a knob wrote its own name as the attribute;
+  // knobs now write the descriptor's attribute, and these stay properties).
   'ui-game-hud': { status: 'Your turn' },
   // ui-result-card (ADR-0244): only `summary` is seeded as a knob; outcome, title and stats are set as properties
   // in COMPONENT_SAMPLE_INIT (`title` would write the global attribute, not `result-title`).
@@ -1488,9 +1491,9 @@ const COMPONENT_INITIAL: Record<string, Record<string, string>> = {
   // ui-amount-picker (T-0196): a cart quantity; `presets` is seeded in COMPONENT_SAMPLE_ATTRS (a JSON attribute has
   // no knob) and `actionName` in COMPONENT_SAMPLE_INIT (the knob path never reaches `action-name`).
   'ui-amount-picker': { label: 'Quantity', min: '1', max: '20', value: '4' },
-  // ui-option-deck (T-0193): `heading` and `subheading` are the string knobs; `options` is set as a property in
-  // COMPONENT_SAMPLE_INIT (a JSON array, not a knob value).
-  'ui-option-deck': { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.' },
+  // ui-option-deck (T-0193): `heading`, `subheading` and `allowRandom` are the knobs (allowRandom seeded on to match the
+  // sample's Surprise me card, T-0437); `options` is set as a property in COMPONENT_SAMPLE_INIT (a JSON array, not a knob value).
+  'ui-option-deck': { heading: 'Pick your table', subheading: 'Every table starts you with 1,000 chips.', allowRandom: 'true' },
   // ui-option-compare (T-0393): `heading` and `best` are the string knobs; `rows` and `options` are set as
   // properties in COMPONENT_SAMPLE_INIT (JSON arrays, not knob values).
   'ui-option-compare': { heading: 'Lisbon to Porto', best: 'train' },
@@ -2578,7 +2581,8 @@ class ComponentPreview extends HTMLElement {
     this.#updateEmptyHint()
   }
 
-  /** Apply one knob to the live element: slot-text → textContent · boolean → attribute presence · else → attribute value. */
+  /** Apply one knob to the live element: slot-text → textContent · boolean → attribute presence · else → attribute value.
+   *  The attribute is the descriptor's `attribute:` field (allowRandom → allow-random); a property-only prop (`false`) is set as a property. */
   #applyKnob(el: HTMLElement, knob: Knob): void {
     const raw = this.#state.get(knob.name)
     if (knob.name === SLOT_TEXT) {
@@ -2591,13 +2595,23 @@ class ComponentPreview extends HTMLElement {
       return
     }
     if (knob.kind === 'skip') return
-    if (knob.kind === 'boolean') {
-      if (raw === 'true') el.setAttribute(knob.name, '')
-      else el.removeAttribute(knob.name)
+    if (knob.attribute === false) {
+      const live = el as unknown as Record<string, unknown>
+      if (knob.kind === 'boolean') live[knob.name] = raw === 'true'
+      else if (knob.kind === 'number') {
+        if (raw !== undefined && raw !== '') live[knob.name] = Number(raw)
+      }
+      else live[knob.name] = raw ?? ''
       return
     }
-    if (raw === undefined || raw === '') el.removeAttribute(knob.name)
-    else el.setAttribute(knob.name, raw)
+    const attr = knob.attribute ?? knob.name
+    if (knob.kind === 'boolean') {
+      if (raw === 'true') el.setAttribute(attr, '')
+      else el.removeAttribute(attr)
+      return
+    }
+    if (raw === undefined || raw === '') el.removeAttribute(attr)
+    else el.setAttribute(attr, raw)
   }
 
   /** Canvas→knob: read every knob's live property off the specimen back into #state, then reflect it in the knobs. */
