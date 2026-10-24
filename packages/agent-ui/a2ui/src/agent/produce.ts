@@ -758,6 +758,7 @@ function messagesFor(
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT + droppedNote : '') + // T-0281: resend a dropped surface; T-0330: fixed
       (failures.some((f) => f.code === 'SURFACE_NOT_CREATED') ? SURFACE_NOT_CREATED_HINT : '') + // T-0305: create before update
       (failures.some((f) => f.code === 'SURFACE_CLAIMED') ? SURFACE_CLAIMED_HINT : '') + // T-0442: create the surface the reply names
+      (failures.some((f) => f.code === 'CHANGE_CLAIMED') ? CHANGE_CLAIMED_HINT : '') + // T-0448: send the update the reply claims
       (failures.some((f) => f.code === 'FEED_SCOPE') ? (hudOnAsk(failures) ? FEED_SCOPE_HUD_HINT : FEED_SCOPE_HINT) : '') + // T-0290: keep the surface, drop the ask; T-0363: a game moves its HUD beside the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(keep) // T-0172: never lose a surface the failed round created
@@ -905,7 +906,8 @@ function toolTargetOf(value: unknown): string | undefined {
  * `target` (GH #1259 / ADR-0206 cl.5) is peeled on the SAME plan/personaPatch/team terms — no integrity
  * check, no verification that the named surface exists or is actually mutated later this turn, passed
  * through unchanged, gate-blind: an unknown surfaceId passes through — the CONSUMER validates
- * (registry-membership at `beginAgentTurn`'s seam), never this layer.
+ * (registry-membership at `beginAgentTurn`'s seam), never this layer. T-0448: the peel stays blind, but a tool-mode
+ * note-only reply whose target names a surface nothing created is sent back by `produce()` (SURFACE_CLAIMED).
  */
 function peelMetaLine(raw: string): {
   note: string | undefined
@@ -1181,10 +1183,17 @@ const SURFACE_NOT_CREATED_HINT =
 
 /** T-0442: the self-correct sentence for a SURFACE_CLAIMED round (a note-only reply whose ask names a surface it never
  *  creates). Round `2026-10-24-t0440-sweep` pick-mentalist-answer-deck-haiku-1 said "Answer Yes, No, or Sort of below" and
- *  declared ask-1 with no call, so the user saw prose about a card that was not there. */
+ *  declared ask-1 with no call, so the user saw prose about a card that was not there. T-0448: or whose target names one
+ *  (round 13 :149, "Here is your Saturday" targeting trip-saturday). */
 const SURFACE_CLAIMED_HINT =
-  ' SURFACE_CLAIMED means your reply declares a surface (your meta-line "ask") that this answer never creates, so the ' +
-  'user would read about a surface that is not there. Create it in this answer, with its components and data.'
+  ' SURFACE_CLAIMED means your reply declares a surface (your meta-line "ask" or "target") that this answer never creates, ' +
+  'so the user would read about a surface that is not there. Create it in this answer, with its components and data.'
+
+/** T-0448: the self-correct sentence for a CHANGE_CLAIMED round (a note-only say reply that targets an open surface and
+ *  claims a change it never sent). Round 13 :155 said "Done, the table is now Kim's table" targeting table-1 with no call. */
+const CHANGE_CLAIMED_HINT =
+  ' CHANGE_CLAIMED means your reply says a change is made on the surface it targets, but this answer sends no update ' +
+  'to it, so the user would read about a change that is not there. Send that update in this answer.'
 
 /** T-0290: the self-correct sentence for a FEED_SCOPE round. The recorded Haiku 5.5 booking turn built its BookingForm
  *  as the ask surface; the generic re-emit wording sent it back with no way out, the next rounds dropped the form, and
@@ -1480,6 +1489,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // ADR-0234 (proposed): the opt-in hard stop: an over-budget prompt halts before ANY provider call.
   if (opts.promptBudget?.mode === 'halt' && promptReport.over) throw new ProduceHalt([{ code: 'PROMPT_OVER_BUDGET', path: '' }])
   let narrationFedBack = false // T-0234: the ONE correction round a reply that narrates the surfaces gets; on refusal it ships tallied NARRATION_UNCORRECTED
+  let changeClaimFedBack = false // T-0448: the ONE full repair round a targeted say reply claiming a change it never sent gets
 
   // RTS-R6: the effective override. The intent's own words win as the latest instruction, else the request's
   // `responsePreference` ('auto' means none). The persona hint `prefers` never reaches the offer.
@@ -1972,8 +1982,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // surface it never sent (mentalist on Haiku: "Answer Yes, No, or Sort of below" with ask-1 and no call). It keeps the
       // full repair while a round is left, render_surface forced as T-0298; on the last round it is refused like a dropped
       // surface: an earlier valid round ships (T-0302), else a halt. A semantic finding above takes its round first.
-      if (offeredTools !== undefined && ask !== undefined && genuiLine === undefined && !sessionKnownSurfaceIds(input.session).has(ask.surfaceId)) {
-        failures = [{ code: 'SURFACE_CLAIMED', path: ask.surfaceId }]
+      // T-0448: a meta-line target the session never created claims one the same way (round 13 :149, trip-saturday).
+      const claimedId = [ask?.surfaceId, declaredTarget].find((sid) => sid !== undefined && !sessionKnownSurfaceIds(input.session).has(sid))
+      if (offeredTools !== undefined && claimedId !== undefined && genuiLine === undefined) {
+        failures = [{ code: 'SURFACE_CLAIMED', path: claimedId }]
         if (round < opts.maxRounds - 1) {
           lastCaptureRound = true
           forceSurfaceRound = true
@@ -1987,6 +1999,18 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // T-0332: no surface message to hold fixed, so the repair asks for the reply alone and a surface cannot be opened.
       // T-0428: unless a say reply claims a change, which the full repair round can still make.
       let narrated = narratedMechanics(note, sessionKnownSurfaceIds(input.session))
+      // T-0448: a say reply that targets an open surface and claims a change (CHANGE_CLAIM_IN_REPLY) while naming no surface
+      // id never reaches the T-0428 test below, so it is sent back here: once, with the full repair (round 13 :155 "Done,
+      // the table is now Kim's table", :43 "Your total is now $189"). The regex is a heuristic, so a claim still standing on
+      // the last round ships tallied CHANGE_CLAIM_UNCORRECTED rather than halting.
+      const changeClaim = narrated === undefined && turnIntent !== undefined && roundTarget !== undefined && genuiLine === undefined && note !== undefined && CHANGE_CLAIM_IN_REPLY.test(note)
+      if (changeClaim && !changeClaimFedBack && round < opts.maxRounds - 1) {
+        changeClaimFedBack = true
+        failures = [{ code: 'CHANGE_CLAIMED', path: roundTarget }]
+        lastCaptureRound = offeredTools !== undefined
+        forceSurfaceRound = offeredTools !== undefined // as T-0298: prose stood in for the payload
+        continue
+      }
       if (narrated !== undefined && !narrationFedBack && round < opts.maxRounds - 1) {
         narrationFedBack = true
         // T-0428: a say reply that claims a change it never sent keeps the full repair, so the update can still land.
@@ -2006,6 +2030,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       const failureCodes = (failuresFedBack ?? []).map((f) => f.code)
       failureCodes.push(...actionSemanticTally)
       if (narrated !== undefined) failureCodes.push('NARRATION_UNCORRECTED') // T-0234: a factual tally, never a halt
+      if (changeClaim) failureCodes.push('CHANGE_CLAIM_UNCORRECTED') // T-0448: a factual tally, never a halt
       if (genuiMultiplicityHit) failureCodes.push('GENUI_MULTIPLICITY') // SPEC-R1 — a factual tally, never a retry trigger
       if (closeInferable && !actionSemanticTally.includes('SEMANTIC_UNCORRECTED') && narrated === undefined) {
         flowEnd = true // T-0309: the producer closes the flow; the model's own flag was missing
