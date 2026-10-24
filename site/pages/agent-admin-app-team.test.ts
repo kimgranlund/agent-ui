@@ -63,6 +63,8 @@ beforeAll(async () => {
 })
 
 afterAll(() => {
+  // T-0435: disconnect the page so an in-flight async content stamp cannot render after the environment is gone.
+  document.querySelector('ui-agent-admin')?.remove()
   HTMLElement.prototype.attachInternals = realAttachInternals
 })
 
