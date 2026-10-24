@@ -821,3 +821,9 @@
 ## T-0450: Haiku invalid-JSON-string payloads recover instead of degrading (2026-10-24)
 
 - note: scripts/e2e-admin/probe/replays/unclosed-array.mjs:12 the recovery legs (`closedLine`) pass at the base sha too; they prove each fixture degrades on the one missing `]` alone and do not discriminate the code change, which the pinpoint and assistant-turn assertions carry, as the criterion states.
+
+## T-0452: The shopkeeper order summary is a ConfirmReceipt with AmountPicker lines (2026-10-24)
+
+- decide: scripts/e2e-admin/probe/scenarios/shopkeeper.ts:2-3,15-16 decide: the smoke oracle still expects `ProductCard` on the add step and its header says `cart-summary` "keeps the order on THAT SAME surface"; round 13 cluster U proposed the add step expect `ConfirmReceipt`, and the builder left it as an open item.
+- decide: site/pages/agent-admin-presets.ts:29 note: the header still says library skills are "projected wholesale into the live" prompt, stale since SPEC-R14 made a `context` skill index-only (the cause this ticket worked around); the same line carries a pre-existing em dash.
+- decide: .sdlc/runtime/tasks/0452-shopkeeper-cart-receipt/live/run-3.log note: sample 3 built the right surface in round 1 but shipped `messages` as a JSON string (`PARSE`), the T-0450 cluster S shape; 2 of 3 samples pass against round 13's 0 of 3.
