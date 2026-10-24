@@ -797,3 +797,7 @@
 ## T-0445: Live quality round 13: measure the pattern wave against the round 12 baseline (2026-10-24)
 
 - note: report.md Process notes say the lane worktree `.env` was linked to the main checkout; the link is git-ignored and outside the round archive, no action needed.
+
+## T-0449: A BookingForm bound to a data path the model never writes is sent back (2026-10-24)
+
+- note: checks.ts:82 flags unbound only when the data model is non-empty; a form bound to an empty model stays a legitimate blank form, by design.
