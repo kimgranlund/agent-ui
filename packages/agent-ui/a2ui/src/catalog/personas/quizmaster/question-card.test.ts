@@ -235,18 +235,18 @@ describe('QuestionCard through the real renderer', () => {
     cleanup()
   })
 
-  it('QuestionCard: a click on a row label commits once, and a re-press of the picked row commits once more', async () => {
+  it('QuestionCard: a click on a row label commits once, and a re-press of the picked row sends nothing more (T-0439)', async () => {
     const { mount, actions, cleanup } = await render(COMMIT)
     click(radiosIn(mount)[2]!.querySelector('[data-part="label"]') as HTMLElement)
     await whenFlushed()
     expect(actions().map((a) => a.context)).toEqual([{ value: 'earth' }])
     click(radiosIn(mount)[2]!)
     await whenFlushed()
-    expect(actions().map((a) => a.context)).toEqual([{ value: 'earth' }, { value: 'earth' }])
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'earth' }])
     cleanup()
   })
 
-  it('QuestionCard: Space commits on an unpicked row and on the picked row, once each; Enter on an unpicked row commits nothing', async () => {
+  it('QuestionCard: Space commits on an unpicked row; Space again on the picked row and Enter commit nothing more', async () => {
     const { mount, actions, cleanup } = await render(COMMIT)
     key(radiosIn(mount)[3]!, 'Enter')
     await whenFlushed()
@@ -256,18 +256,48 @@ describe('QuestionCard through the real renderer', () => {
     expect(actions().map((a) => a.context)).toEqual([{ value: 'mercury' }])
     key(radiosIn(mount)[0]!, ' ')
     await whenFlushed()
-    expect(actions().map((a) => a.context)).toEqual([{ value: 'mercury' }, { value: 'mercury' }])
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'mercury' }])
+    cleanup()
+  })
+
+  it('QuestionCard: two quick taps send one answer, the pick reads pending, and a reveal re-arms the next round (T-0439)', async () => {
+    const { mount, ingest, actions, cleanup } = await render(COMMIT)
+    const group = mount.querySelector('[data-part="options"]') as unknown as { value: string; disabled: boolean }
+    click(radiosIn(mount)[1]!)
+    click(radiosIn(mount)[1]!)
+    click(radiosIn(mount)[3]!)
+    key(radiosIn(mount)[1]!, ' ')
+    await whenFlushed()
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'venus' }])
+    expect(group.value).toBe('venus')
+    expect(radiosIn(mount).map((r) => r.hasAttribute('data-pending'))).toEqual([false, true, false, false])
+    expect(radiosIn(mount).every((r) => r.disabled)).toBe(true)
+    // the reveal lands: the card stays inert and drops the pending mark
+    ingest(write('/revealed', true))
+    await whenFlushed()
+    expect(radiosIn(mount).some((r) => r.hasAttribute('data-pending'))).toBe(false)
+    click(radiosIn(mount)[2]!)
+    await whenFlushed()
+    expect(actions()).toHaveLength(1)
+    // the next round un-reveals: the card commits again, once
+    ingest(write('/revealed', false))
+    await whenFlushed()
+    expect(group.disabled).toBe(false)
+    click(radiosIn(mount)[2]!)
+    click(radiosIn(mount)[2]!)
+    await whenFlushed()
+    expect(actions().map((a) => a.context)).toEqual([{ value: 'venus' }, { value: 'earth' }])
     cleanup()
   })
 
   it('QuestionCard: an arrow key moves the pick and commits nothing (selection follows focus)', async () => {
-    const { mount, actions, cleanup } = await render(COMMIT)
-    click(radiosIn(mount)[0]!)
+    const { mount, ingest, actions, cleanup } = await render(COMMIT)
+    ingest(write('/answer', 'mercury')) // a pick the card holds without having committed it
     await whenFlushed()
     key(radiosIn(mount)[0]!, 'ArrowDown')
     await whenFlushed()
     expect((mount.querySelector('[data-part="options"]') as unknown as { value: string }).value).toBe('venus')
-    expect(actions().map((a) => a.context)).toEqual([{ value: 'mercury' }])
+    expect(actions()).toEqual([])
     cleanup()
   })
 
