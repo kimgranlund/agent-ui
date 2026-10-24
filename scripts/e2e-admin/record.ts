@@ -108,9 +108,16 @@ export async function teeRoute(state: RecorderState, route: RecordRouteLike): Pr
     return
   }
   const body = parseBody(request)
-  const b = (body ?? {}) as { builderMission?: unknown; input?: { kind?: unknown } }
+  const b = (body ?? {}) as { builderMission?: unknown; input?: { kind?: unknown; message?: { action?: unknown } } }
+  // T-0446: a client turn also keeps its `message.action` (the pressed control's name and context), so a flow
+  // can assert the pick in record mode as in replay; the persona and the rest of the body stay out.
   const projected =
-    endpoint === 'produce' ? { builderMission: b.builderMission, input: { kind: b.input?.kind } } : undefined
+    endpoint === 'produce'
+      ? {
+          builderMission: b.builderMission,
+          input: { kind: b.input?.kind, ...(b.input?.message?.action !== undefined ? { message: { action: b.input.message.action } } : {}) },
+        }
+      : undefined
   const log = (outcome: WireOutcome, turnIndex?: number): void => {
     state.seq += 1
     state.entries.push({
