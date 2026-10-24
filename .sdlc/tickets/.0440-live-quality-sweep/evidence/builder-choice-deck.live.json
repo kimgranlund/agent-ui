@@ -1,0 +1,62 @@
+{
+  "kind": "agent-ui-admin-scenario",
+  "version": 1,
+  "name": "builder-choice-deck",
+  "turns": [
+    {
+      "endpoint": "name",
+      "respond": {
+        "text": "{\"name\": \"Brush Coach\", \"tagline\": \"Guides you through a thorough two-minute toothbrushing routine and tracks your habits.\"}"
+      }
+    },
+    {
+      "endpoint": "produce",
+      "match": {
+        "mission": true,
+        "inputKind": "intent"
+      },
+      "respond": {
+        "lines": [
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Purpose is set\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a toothbrushing\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" coach, but I\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" still\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" don't know\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the name or temperament,\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I shouldn't invent\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" those. I'\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll ask about\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tem\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"perament next,\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" perhaps as a pick\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of options,\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since that fe\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"els like the nat\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ural next single\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" question to p\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose.\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+          "{\"a2uiMeta\":{\"textDelta\":\"I\"}}",
+          "{\"a2uiMeta\":{\"textDelta\":\"'ve written\"}}",
+          "{\"a2uiMeta\":{\"textDelta\":\" the coach's pur\"}}",
+          "{\"a2uiMeta\":{\"textDelta\":\"pose into its\"}}",
+          "{\"a2uiMeta\":{\"textDelta\":\" Foundation section. Next\"}}",
+          "{\"a2uiMeta\":{\"textDelta\":\" question\"}}",
+          "{\"a2uiMeta\":{\"textDelta\":\": what temperament should it have\"}}",
+          "{\"a2uiMeta\":{\"textDelta\":\"?\"}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionDeck\\\",\\\"heading\\\":\\\"Pick a temperament for the coach\\\",\\\"actionName\\\":\\\"choose\\\",\\\"options\\\":[{\\\"value\\\":\\\"encouraging\\\",\\\"title\\\":\\\"Encouraging\\\",\\\"description\\\":\\\"Celebrates small wins and keeps motivation up.\\\",\\\"icon\\\":\\\"heart\\\"},{\\\"value\\\":\\\"strict\\\",\\\"title\\\":\\\"Strict\\\",\\\"description\\\":\\\"Firm drill-sergeant about technique and timing.\\\",\\\"icon\\\":\\\"star\\\"},{\\\"value\\\":\\\"playful\\\",\\\"title\\\":\\\"Playful\\\",\\\"description\\\":\\\"Light, funny, and game-like, great for kids.\\\",\\\"icon\\\":\\\"sparkle\\\"},{\\\"value\\\":\\\"calm\\\",\\\"title\\\":\\\"Calm and matter-of-fact\\\",\\\"description\\\":\\\"Clear, neutral guidance with no fuss.\\\",\\\"icon\\\":\\\"check\\\"}]}]}}\"}}}",
+          "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+          "{\"a2uiMeta\":{\"note\":\"I've written the coach's purpose into its Foundation section. Next question: what temperament should it have?\",\"ask\":{\"surfaceId\":\"ask-1\"},\"plan\":{\"steps\":[{\"id\":\"temperament\",\"description\":\"Choose a temperament\"},{\"id\":\"name\",\"description\":\"Name the agent\"},{\"id\":\"audience\",\"description\":\"Who it coaches (kids, adults, or both)\"},{\"id\":\"skills\",\"description\":\"Pick capabilities, such as a routine timer or habit tracking\"},{\"id\":\"output\",\"description\":\"Decide how replies are presented\"}]},\"personaPatch\":{\"entries\":{\"entries:prompt-section\":[{\"id\":\"foundation\",\"content\":\"You are a toothbrushing coach. You help people brush their teeth well: correct technique, timing, the right tools, a steady routine, and sticking with the habit. You give practical guidance and say plainly when something needs a dentist.\"}]}},\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"make a toothbrushing coach agent\",\"k\":3},\"exemplarIds\":[\"frontier-service-gateway\",\"agent-task-status\",\"pattern-schedule-picker\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":71993,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4502},{\"id\":\"authoring\",\"chars\":8696},{\"id\":\"mission\",\"chars\":1620},{\"id\":\"persona\",\"chars\":7554}],\"over\":false},\"usage\":{\"inputTokens\":8002,\"outputTokens\":1200,\"cacheReadInputTokens\":18609,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":49621}}}",
+          "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+          "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Pick a temperament for the coach\",\"actionName\":\"choose\",\"options\":[{\"value\":\"encouraging\",\"title\":\"Encouraging\",\"description\":\"Celebrates small wins and keeps motivation up.\",\"icon\":\"heart\"},{\"value\":\"strict\",\"title\":\"Strict\",\"description\":\"Firm drill-sergeant about technique and timing.\",\"icon\":\"star\"},{\"value\":\"playful\",\"title\":\"Playful\",\"description\":\"Light, funny, and game-like, great for kids.\",\"icon\":\"sparkle\"},{\"value\":\"calm\",\"title\":\"Calm and matter-of-fact\",\"description\":\"Clear, neutral guidance with no fuss.\",\"icon\":\"check\"}]}]}}"
+        ]
+      }
+    }
+  ]
+}
