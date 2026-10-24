@@ -1,0 +1,206 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "mentalist-haiku-note-claim",
+  "agent": "mentalist",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "T-0442: turn 0 round 1 is pick-mentalist-answer-deck-haiku-1 turn 0 round 0 verbatim (round .sdlc/evals/rounds/2026-10-24-t0440-sweep/, 2026-10-24.jsonl:13); round 2 and turn 1 are authored, from mentalist-ask-hud-beside (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "Let's play Twenty Questions. I'm thinking of something.",
+      "expect": [
+        "OptionDeck"
+      ]
+    },
+    {
+      "click": "Yes",
+      "expect": [
+        "GameHud"
+      ]
+    }
+  ],
+  "expect": {
+    "components": [
+      "OptionDeck"
+    ]
+  },
+  "turns": [
+    {
+      "input": {
+        "kind": "intent",
+        "text": "## Referenced for this message\n### twenty-questions (workflow)\nGuessing-game domain — the 20-questions loop: one question per turn, HUD-tracked, honest reveal by 20.\n\nThink of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when confidence is high; always reveal by question 20 via the Modal.\n\nLet's play Twenty Questions. I'm thinking of something."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "trivia-round-resume",
+          "frontier-result-card-win",
+          "five-day-weather"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "guess-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "full"
+          }
+        ]
+      },
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Alright, I'm ready. Question 1 of 20: is it a living thing?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nAlright, I'm ready. Question 1 of 20: is it a living thing? Answer Yes, No, or Sort of below.",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Alright, I'm listening. Question 1 of 20: is it a living thing? Pick Yes, No, or Sort of below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionDeck",
+                          "heading": "Is it a living thing?",
+                          "actionName": "choose",
+                          "options": [
+                            {
+                              "value": "yes",
+                              "title": "Yes",
+                              "description": "It fits what I am thinking of.",
+                              "icon": "check-circle"
+                            },
+                            {
+                              "value": "no",
+                              "title": "No",
+                              "description": "It does not fit.",
+                              "icon": "x-circle"
+                            },
+                            {
+                              "value": "sort_of",
+                              "title": "Sort of",
+                              "description": "Partly, or it depends.",
+                              "icon": "circle-half"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "hud",
+                            "log"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Twenty Questions",
+                          "status": "Question 1 of 20",
+                          "stats": [
+                            {
+                              "label": "Confidence",
+                              "value": "low"
+                            }
+                          ],
+                          "progress": {
+                            "value": 1,
+                            "max": 20,
+                            "label": "Questions spent"
+                          }
+                        },
+                        {
+                          "id": "log",
+                          "component": "Timeline",
+                          "children": [
+                            "q1"
+                          ]
+                        },
+                        {
+                          "id": "q1",
+                          "component": "TimelineItem",
+                          "status": "active",
+                          "label": "Is it a living thing?"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "lines": []
+    },
+    {
+      "lines": [],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"A living thing, then. Question 2 of 20: is it an animal?\",\"ask\":{\"surfaceId\":\"ask-2\"},\"target\":{\"surfaceId\":\"hud-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Is it an animal?\",\"actionName\":\"choose\",\"options\":[{\"value\":\"yes\",\"title\":\"Yes\",\"description\":\"It fits what I am thinking of.\",\"icon\":\"check-circle\"},{\"value\":\"no\",\"title\":\"No\",\"description\":\"It does not fit.\",\"icon\":\"x-circle\"},{\"value\":\"sort_of\",\"title\":\"Sort of\",\"description\":\"Partly, or it depends.\",\"icon\":\"circle-half\"}]}]}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"hud\",\"log\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":\"Question 2 of 20\",\"stats\":[{\"label\":\"Confidence\",\"value\":\"medium\",\"delta\":\"+1\"}],\"progress\":{\"value\":2,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"children\":[\"q1\",\"q2\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"done\",\"label\":\"Is it a living thing? Yes\"},{\"id\":\"q2\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Is it an animal?\"}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "ask-1",
+            "actionId": "a2ui-action-1",
+            "name": "choose",
+            "sourceComponentId": "root",
+            "timestamp": "2026-10-18T09:00:00.000Z",
+            "context": {
+              "value": "yes"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

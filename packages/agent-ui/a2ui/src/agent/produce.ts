@@ -757,6 +757,7 @@ function messagesFor(
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT + droppedNote : '') + // T-0281: resend a dropped surface; T-0330: fixed
       (failures.some((f) => f.code === 'SURFACE_NOT_CREATED') ? SURFACE_NOT_CREATED_HINT : '') + // T-0305: create before update
+      (failures.some((f) => f.code === 'SURFACE_CLAIMED') ? SURFACE_CLAIMED_HINT : '') + // T-0442: create the surface the reply names
       (failures.some((f) => f.code === 'FEED_SCOPE') ? (hudOnAsk(failures) ? FEED_SCOPE_HUD_HINT : FEED_SCOPE_HINT) : '') + // T-0290: keep the surface, drop the ask; T-0363: a game moves its HUD beside the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(keep) // T-0172: never lose a surface the failed round created
@@ -1177,6 +1178,13 @@ const SURFACE_DROPPED_HINT =
 const SURFACE_NOT_CREATED_HINT =
   ' SURFACE_NOT_CREATED means this answer updates a surface that was never created, so the user would never see it. ' +
   'Send a createSurface for it first, then its components and data, in the same answer.'
+
+/** T-0442: the self-correct sentence for a SURFACE_CLAIMED round (a note-only reply whose ask names a surface it never
+ *  creates). Round `2026-10-24-t0440-sweep` pick-mentalist-answer-deck-haiku-1 said "Answer Yes, No, or Sort of below" and
+ *  declared ask-1 with no call, so the user saw prose about a card that was not there. */
+const SURFACE_CLAIMED_HINT =
+  ' SURFACE_CLAIMED means your reply declares a surface (your meta-line "ask") that this answer never creates, so the ' +
+  'user would read about a surface that is not there. Create it in this answer, with its components and data.'
 
 /** T-0290: the self-correct sentence for a FEED_SCOPE round. The recorded Haiku 5.5 booking turn built its BookingForm
  *  as the ask surface; the generic re-emit wording sent it back with no way out, the next rounds dropped the form, and
@@ -1886,6 +1894,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     // note AND/OR a valid genui line to ship — nothing to validate, so nothing to self-correct. Must NOT
     // halt-and-report (empty ≠ invalid). ADR-0097 §1: a declared `ask` here is trivially integrity-invalid
     // too (no payload creates ANYTHING) — dropped, never even reaching `askIntegrityHolds`.
+    // T-0442: on a tool-mode turn an ask naming a surface the session never created is instead sent back (SURFACE_CLAIMED, below).
     // RTS-R8: a `render_surface` call that carried nothing renderable is a failed payload (PARSE below), not a
     // text turn; a genui-only payload still ships here.
     if (restLines.length === 0 && (note !== undefined || genuiLine !== undefined) && (captured === undefined || genuiLine !== undefined)) {
@@ -1940,7 +1949,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // a click narrated in prose that never reached the surface. A finding spends a repair round while one is
       // left (worded for render_surface when the tool is offered); on the last round it ships tallied. T-0214: a say
       // turn that targets an open surface is judged the same way, so a typed move narrated in prose is repaired. T-0265:
-      // every say turn is, so a game opening or a booking answered in prose alone is repaired too.
+      // every say turn is, so a game opening or a booking answered in prose alone is repaired too. T-0442: a reply that
+      // also claims an ask it never creates does not ship on the last round (SURFACE_CLAIMED, below).
       const actionSemanticTally: string[] = []
       if ((turnAction !== undefined || turnIntent !== undefined) && deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 && genuiLine === undefined) {
         const semantic = runSemanticChecks(
@@ -1957,6 +1967,21 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         }
         if (findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
         if (semantic.errored.length > 0) actionSemanticTally.push('SEMANTIC_CHECK_ERROR')
+      }
+      // T-0442: a tool-mode reply whose ask names a surface that neither this answer nor the session creates claims a
+      // surface it never sent (mentalist on Haiku: "Answer Yes, No, or Sort of below" with ask-1 and no call). It keeps the
+      // full repair while a round is left, render_surface forced as T-0298; on the last round it is refused like a dropped
+      // surface: an earlier valid round ships (T-0302), else a halt. A semantic finding above takes its round first.
+      if (offeredTools !== undefined && ask !== undefined && genuiLine === undefined && !sessionKnownSurfaceIds(input.session).has(ask.surfaceId)) {
+        failures = [{ code: 'SURFACE_CLAIMED', path: ask.surfaceId }]
+        if (round < opts.maxRounds - 1) {
+          lastCaptureRound = true
+          forceSurfaceRound = true
+          continue
+        }
+        shipping = shippableFallback()
+        if (shipping === undefined) throw new ProduceHalt(failures)
+        break // T-0302: the earlier valid round ships below
       }
       // T-0234: a reply that narrates the surfaces gets one targeted round, then ships tallied.
       // T-0332: no surface message to hold fixed, so the repair asks for the reply alone and a surface cannot be opened.

@@ -9,13 +9,17 @@ import { offlineReplay } from '../trace.ts'
 // T-0322 C1 (round 8 :101, Haiku 5.5). "New word game, please." is answered with a meta-line that names ask-1 and no
 // render_surface call, so the game exists only in prose. The word-game opening check now sends it back with
 // SURFACE_MISSING. The fixture records no repaired round, so the turn ships uncorrected and still has no board here.
+// T-0442: the recorded round's ask names ask-1 and nothing creates it (SURFACE_CLAIMED), so with no repaired round
+// recorded the last round refuses it: the turn halts and ships no prose (live, the repair round is forced to
+// render_surface). The halt leaves no trace line, so SURFACE_MISSING is no longer read here.
 const trace = (record) => record.lines.map((l) => JSON.parse(l)).map((l) => l.a2uiMeta?.trace).find((t) => t !== undefined)
 const surfaceLines = (record) => record.lines.map((l) => JSON.parse(l)).filter((m) => m.createSurface ?? m.updateComponents ?? m.updateDataModel)
 
-it('lexicographer-haiku-opening-prose: a word game opened in prose gets SURFACE_MISSING', async () => {
+it('lexicographer-haiku-opening-prose: a word game opened in prose with an ask it never creates halts SURFACE_CLAIMED', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-opening-prose.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([])
-  expect(trace(report.records[0]).failureCodes).toEqual(['SURFACE_MISSING', 'SEMANTIC_UNCORRECTED'])
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['no-halt', 0]])
+  expect(report.failed[0].detail).toContain('SURFACE_CLAIMED')
+  expect(trace(report.records[0])).toBeUndefined()
   expect(surfaceLines(report.records[0])).toEqual([])
 })
