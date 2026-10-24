@@ -770,3 +770,7 @@
 ## T-0437: Component-mode boolean knobs set the kebab attribute (OptionDeck allowRandom) (2026-10-24)
 
 - note: site/lib/component-preview.ts COMPONENT_SAMPLE_INIT comment still says knob names are applied with setAttribute (builder flagged, now stale wording).
+
+## T-0443: The restaurant smoke probe expects BookingForm, the persona's shipped booking surface (2026-10-24)
+
+- note: scripts/e2e-admin/probe/replays/smoke-restaurant-reserve-table-haiku.json still records the old Field expectation; builder left it as a finished run record.
