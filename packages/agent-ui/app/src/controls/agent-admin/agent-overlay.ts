@@ -588,6 +588,16 @@ export function writeFrom(store: SettingsStore, key: string, value: unknown, sou
   else store.set(key, value)
 }
 
+/** T-0447: one key's ops as they stood, for an exact restore (an edit session's Undo). An absent member
+ *  means the overlay held no op of that kind at the key. */
+export interface OverlaySlice {
+  value?: ValueOp
+  list?: ListOp
+}
+
+/** Store key → its `OverlaySlice`. */
+export type OverlaySlices = Record<string, OverlaySlice>
+
 /** A `SettingsStore` over seed plus overlay: `get` resolves, `set` diffs against the seed as a `user` op,
  *  `setFrom` as the named source's. */
 export interface OverlayStore extends SourcedStore, ProvenanceReader {
@@ -596,6 +606,11 @@ export interface OverlayStore extends SourcedStore, ProvenanceReader {
   modified(): OverlayPath[]
   reset(address: OverlayAddress): void
   seedValue(key: string): unknown
+  /** T-0447: a deep copy of each key's ops, absent kept as absent. */
+  snapshotKeys(keys: readonly string[]): OverlaySlices
+  /** T-0447: write each key's ops back exactly (its `source` and `seedChanged` included), dropping a kind
+   *  the slice lacks, then persist once and notify per key, the `reset` shape. */
+  restoreKeys(slices: OverlaySlices): void
 }
 
 export function createOverlayStore(options: OverlayStoreOptions): OverlayStore {
@@ -643,6 +658,32 @@ export function createOverlayStore(options: OverlayStoreOptions): OverlayStore {
       resolved.set(address.key, value)
       persist?.(overlay)
       notify(address.key, value)
+    },
+    snapshotKeys(keys) {
+      const slices: OverlaySlices = {}
+      for (const key of keys) {
+        const slice: OverlaySlice = {}
+        if (overlay.values[key] !== undefined) slice.value = clone(overlay.values[key])
+        if (overlay.lists[key] !== undefined) slice.list = clone(overlay.lists[key])
+        slices[key] = slice
+      }
+      return slices
+    },
+    restoreKeys(slices) {
+      const values = { ...overlay.values }
+      const lists = { ...overlay.lists }
+      const keys = Object.keys(slices)
+      for (const key of keys) {
+        const slice = slices[key]!
+        if (slice.value === undefined) delete values[key]
+        else values[key] = clone(slice.value)
+        if (slice.list === undefined) delete lists[key]
+        else lists[key] = clone(slice.list)
+      }
+      overlay = { ...overlay, values, lists }
+      for (const key of keys) resolved.set(key, resolveOverlayKey(seed, overlay, key))
+      persist?.(overlay)
+      for (const key of keys) notify(key, resolved.get(key))
     },
   }
 }

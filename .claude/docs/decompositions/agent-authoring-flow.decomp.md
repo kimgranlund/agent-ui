@@ -41,7 +41,7 @@
 | S2 `personaPatch` producer arm | **SPEC amendment** to `a2ui-live-agent.spec.md` (new SPEC-R rows: arm shape + merge law + GRAMMAR teaching + gate degrade) + build | The wire contract is genuinely ambiguous pre-build (OF1: patch granularity/merge semantics) and every consumer builds against it — the exact SPEC-R14/SPEC-R20 lineage. NOT a new SPEC: the arm extends the producer SPEC the same way `ask` and `plan` did. Authored at S2 dispatch, AFTER ADR-0178 ratifies. |
 | S3 Guided authoring flow (admin side) | **full LLD** + build | Real component/interface decomposition: draft lifecycle × apply gate (three-filter chain) × Builder persona × runner event widening × live-hydrating panes × try-it anatomy (OF2 lands here) × IA entry. The one slice that earns the full seat. |
 | S4 Try-it toggle | **plain GH sub-issue** (builds against S3's LLD — the toggle anatomy is DESIGNED in S3-a, built here) | No separate doc: its contract is ADR-0178 cl.5 + the S3 LLD's anatomy section; a second doc would duplicate one fact. |
-| S5 NL-edit everywhere | **deferred — future intake issue only** | ADR-0178 cl.6: mechanism generalizes by construction; the slice waits for the pilot. Filing its own SPEC/LLD now would be manufacturing process for an unconfirmed scope (OQ4 is Kim's confirm). |
+| S5 NL-edit everywhere | **shipped by T-0447** (2026-10-24; was deferred, future intake issue only) | ADR-0178 cl.6: mechanism generalizes by construction. Kim's 2026-10-24 ruling on the T-0447 intake: the Co-pilot edit session over the active agent, fence unchanged; repair lines in the LLD §10, §14, §15. |
 
 No PRD anywhere in this family: the why/what is fully carried by GH #633 + `agent-app-surfaces.prd.md`
 (the admin surface's own PRD) — writing one would duplicate an established record.
@@ -68,9 +68,9 @@ Agent-authoring flow family (GH #633)
 │   ├── S4-a  build: authoring ⇄ test flip per ADR-0178 cl.5 + S3-a's anatomy — both transcripts survive,
 │   │         one draft store, no identity swap
 │   └── S4-b  GH sub-issue
-└── S5  NL-edit everywhere (capability 4) — DEFERRED
-    └── S5-a  future intake issue (filed after S2–S4 ship): gate-on-existing-persona entry point + edit
-              safety; opens with Kim's in/out confirm (OQ4)
+└── S5  NL-edit everywhere (capability 4), SHIPPED by T-0447 (Kim's 2026-10-24 ruling)
+    └── S5-a  T-0447: the Co-pilot edit session over the active agent (entry point) + live apply with
+              session-scoped Undo (edit safety); was the deferred future intake issue (OQ4)
 ```
 
 Pure-structure nodes with no directly-hosted action (`justify` per the two-plane method): X1
@@ -90,7 +90,7 @@ Pure-structure nodes with no directly-hosted action (`justify` per the two-plane
 | a6 | Flip to TESTING the drafted agent live in the chat | S4-a |
 | a7 | Flip back to authoring — neither side's state lost | S4-a (ADR-0178 cl.5's no-store-swap contract) |
 | a8 | Keep/export the authored agent | shipped substrate (per-persona persisted store + persona-file export, GH #406 — reuse, no new node) |
-| a9 | Modify an EXISTING agent by describing the change in natural language | S5 (deferred; mechanism-ready per ADR-0178 cl.6) |
+| a9 | Modify an EXISTING agent by describing the change in natural language | S5 (shipped by T-0447 per Kim's 2026-10-24 ruling; was deferred) |
 
 **Coverage verdict:** every action a1–a9 maps to a structure node or an explicitly-cited shipped
 host — no `UNHOSTED` action. Every leaf hosts an action or carries a `justify` — no

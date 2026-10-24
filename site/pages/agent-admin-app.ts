@@ -655,6 +655,9 @@ admin.onAgentMetaRequest((id, patch) => void updateAgentMetaMutation.run({ id, p
 // straight through to the mint so the new interviewer store is SEEDED with it (never corrected afterwards).
 admin.onGenerateRequest((seed) => createGeneratedAgent(seed))
 
+// T-0447, the edit-session arm: the component asks for the Builder over the agent it already has.
+admin.onEditRequest((seed) => editActiveAgent(seed))
+
 // GH #1196 (ADR-0203 clause 4) — the Builder's team-shaped generation path's own registration seam.
 // Fires from INSIDE the authoring turn loop's fenced `team` consumption arm (agent-admin.ts); this
 // page owns everything it fans out to (persona minting, roster registration, `AgentTeam` validation +
@@ -891,9 +894,17 @@ function createGeneratedAgent(pick?: GenerateSeed): void {
   const persona = mintBlankPersona(seed, [...personaRoster(), ...currentRoster()])
   void saveAgentMutation.run(persona) // persists the library record in this tick; the view gains the row
   applyPersona(persona) // the setActive commit stages the header's own roster row via the derivation effect
+  admin.authoringMode = 'generate' // T-0447: a mint is never an edit session
   autoName.arm(persona.id, { name: persona.label, tagline: persona.tagline }) // T-0413: the first Builder message may name it
   admin.authoringStore = builderStore(pick?.model) // a FRESH interviewer per flow entry (no persistKey, no cache)
   notify(`Created “${persona.label}”. Describe what you want and the Builder will name it and fill it in.`)
+}
+
+/** T-0447, arm the Builder over the ACTIVE agent as an edit session: no mint, no `applyPersona`, no
+ *  auto-name. The mode is set first so the session's first turn already reads as an edit. */
+function editActiveAgent(pick?: GenerateSeed): void {
+  admin.authoringMode = 'edit'
+  admin.authoringStore = builderStore(pick?.model, 'edit') // a FRESH interviewer per edit session
 }
 
 // GH #1196 (ADR-0203 clause 4) — the Builder's team-shaped generation path: mint N member personas +

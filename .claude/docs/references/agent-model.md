@@ -256,7 +256,8 @@ header pointing here.
   an adapter reads). ADR-0159 amendment (T-0016, ratified). `reasoning` is the model's thinking text, a collapsed
   panel on the Reasoned row (ADR-0240).
 - **Co-pilot**: the builder-interview place (`[Chat | Settings | Co-pilot]`, ADR-0179 as amended by
-  GH #686); "Author" is its retired name.
+  GH #686); "Author" is its retired name. Its unarmed first message opens an edit session over the
+  active agent; New agent mints (T-0447, Kim's 2026-10-24 ruling).
 - **content kind**: one of `persona · skill · workflow · resource · tool · pack · team`, the seven kinds of seed
   content ([spec/agent-content.spec.md](../spec/agent-content.spec.md) ACS-R1, planned T-0160). Not an entry kind:
   `prompt-section`, `pattern-source` and `catalog` stay `ENTRY_KINDS` values that a persona file carries as body
