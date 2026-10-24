@@ -1,0 +1,102 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "reach-shopkeeper-compare-haiku-1",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-24T16:19:45.728Z, traces 2026-10-24.jsonl:123",
+  "steps": [
+    {
+      "say": "Compare your two cheapest lamps.",
+      "expect": [
+        "OptionCompare"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I don't actually have a l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amp catalog or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inventory in this conversation\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so fabricating specific\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" products\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and prices would be d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ishonest. I should be up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"front about not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" having that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and ask the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" user which l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amps they m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ean or offer another\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" way to help.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"I don't have our\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" lamp pr\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ices in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" front\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" of me, so I can't t\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ell which\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" two are\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" cheapest without\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" gu\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"essing. Which\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" two lamps are you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" considering? Tell me their\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" names and I'll set\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" them side\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" by side on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" price, material, size and stock\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". If you'\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"d rather see\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the whole l\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"amp range first, I can show\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" that\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" too.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I don't have our lamp prices in front of me, so I can't tell which two are cheapest without guessing. Which two lamps are you considering? Tell me their names and I'll set them side by side on price, material, size and stock. If you'd rather see the whole lamp range first, I can show that too.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare your two cheapest lamps.\",\"k\":3},\"exemplarIds\":[\"list-nested\",\"media-file-grid\",\"frontier-step-flow-booking\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57112,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3501},{\"id\":\"mini-skills\",\"chars\":1521},{\"id\":\"persona\",\"chars\":2469}],\"over\":false},\"usage\":{\"inputTokens\":3039,\"outputTokens\":431,\"cacheReadInputTokens\":18609,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":49621}}}"
+      ],
+      "rounds": [
+        {
+          "text": "I don't have our lamp prices in front of me, so I can't tell which two are cheapest without guessing. Which two lamps are you considering? Tell me their names and I'll set them side by side on price, material, size and stock. If you'd rather see the whole lamp range first, I can show that too.",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "list-nested",
+          "media-file-grid",
+          "frontier-step-flow-booking"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
