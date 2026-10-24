@@ -3,6 +3,7 @@
 # ADR-0131/ADR-0132). The `attributes[]` block MUST mirror agent-admin.ts `agentAdminProps` — the
 # contract↔props trip-wire (agent-admin.test.ts) targets this fence.
 tag: ui-agent-admin
+description: An agent admin workspace for editing an agent config and its instructions beside a live test chat.
 tier: layout            # geometry size-class (Container/layout band — a composition over ui-split/ui-settings/ui-conversation, the master-detail.md/settings.md precedent; no control height of its own)
 extends: UIElement      # a plain structural base — composes ui-split/ui-settings/ui-conversation rather than extending any of them (ADR-0131)
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs), after this build

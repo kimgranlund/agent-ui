@@ -3,6 +3,7 @@
 # app-surfaces-m4.lld.md LLD-C10). The `attributes[]` block MUST mirror master-detail-pane.ts
 # `masterDetailPaneProps` — the contract↔props trip-wire (master-detail.test.ts) targets this fence.
 tag: ui-master-detail-pane
+description: A docking region that marks the list or detail pane inside a master-detail layout.
 tier: container         # geometry size-class (Container band — a passive docking region, no control height, no flex/grid distribution of its own children)
 extends: UIContainerElement   # the ui-split-pane/generic-region family base — NOT form-associated
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs)

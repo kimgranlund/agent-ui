@@ -3,6 +3,7 @@
 # app-surfaces-m4.lld.md LLD-C10, SPEC-R7). The `attributes[]` block MUST mirror master-detail.ts
 # `masterDetailProps` — the contract↔props trip-wire (master-detail.test.ts) targets this fence.
 tag: ui-master-detail
+description: A list and detail layout with a resizable split that drills in to the detail on narrow screens.
 tier: layout            # geometry size-class (Container/layout band — a composition over the shipped layout family, no control height of its own; the shell-family shape ui-super-shell also carries)
 extends: UIElement      # a plain structural base — composes ui-split rather than extending it (LLD-C10)
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs, LLD-C9/C16)

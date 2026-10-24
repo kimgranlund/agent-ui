@@ -7,6 +7,7 @@
 # targets the empty bijection. Field set per .claude/docs/plan.md §10 / ADR-0004. NOT catalogued — app-tier
 # chrome, outside the catalog gate's scan scope (SPEC-R10, ADR-0180 §5's "no allowlist row").
 tag: ui-conversation-dialog
+description: The scrolling message thread of a conversation, which follows the newest turn as it streams in.
 tier: layout             # geometry size-class — a flex-scroll band with no control height of its own (the ui-conversation precedent, conversation.md:10)
 extends: UIElement       # a plain structural base — no value, no form role; the engine (ui-conversation) drives its content
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs), folded into ui-conversation's own family total (the TKT-0056 composer-extraction precedent — no new package)

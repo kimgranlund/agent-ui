@@ -5,6 +5,7 @@
 # This is the PRIMARY descriptor for the family folder (naming.md §9 "one folder per family, sub-elements
 # nest"); nav-rail-group.md / nav-rail-item.md are the two sibling sub-element descriptors.
 tag: ui-nav-rail
+description: A vertical navigation rail of grouped items that can collapse to icons.
 tier: pattern           # geometry size-class (Pattern — interactive rows take the control height, the ui-tabs precedent)
 extends: UIElement      # structural — NOT form-associated; the rail carries no value, only its items commit selections upward as events
 # marginal: measured at the @agent-ui/app integration slice (Phase 3, LLD-C12; scripts/measure-size.mjs)

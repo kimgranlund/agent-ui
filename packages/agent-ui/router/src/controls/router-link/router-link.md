@@ -5,6 +5,7 @@
 # attribute — a Router instance is never attribute-serializable), documented under `properties:` instead.
 # Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-router-link
+description: A link that navigates within the app through the router without a page load.
 tier: display           # geometry size-class (Display band — text-bearing, wraps an inline <a>; NO control frame/height, the ui-text link-leg precedent; geometry.md)
 extends: UIElement      # a light-DOM navigation stamp — NOT form-associated (face below), NOT a UIContainerElement surface
 # marginal: measured at LLD-C9 (the size line-item slice, out of this component's own scope)

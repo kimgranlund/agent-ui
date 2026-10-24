@@ -7,6 +7,7 @@
 # targets the empty bijection. Field set per .claude/docs/plan.md §10 / ADR-0004. NOT catalogued —
 # app-tier chrome, outside the catalog gate's scan scope (SPEC-R10, ADR-0180 §5's "no allowlist row").
 tag: ui-conversation-header
+description: An author-composed header band pinned above a conversation's message thread.
 tier: layout             # geometry size-class — a band distributing author content; no control height of its own (the ui-conversation precedent, conversation.md:10)
 extends: UIElement       # a plain structural base — no value, no form role; the family's ONE fully author-composed member
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs), folded into ui-conversation's own family total (the TKT-0056 composer-extraction precedent — no new package)

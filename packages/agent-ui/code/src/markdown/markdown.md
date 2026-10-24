@@ -6,6 +6,7 @@
 # via the shared parser imported from `@agent-ui/components/descriptor` (SPEC-C9/C10 — no components-side
 # allowlist entry is owed; the package-bound-gate interpretation).
 tag: ui-markdown
+description: Renders Markdown text as styled rich content with highlighted code blocks.
 tier: display          # geometry size-class (Display band — NO control frame/height/size/data-scale; SPEC-C6)
 extends: UIElement     # a non-interactive, non-form-associated block-flow CONTAINER, defined in the ./markdown pack (ADR-0119 fork F4)
 # marginal: measured at the build wave (`npm run size`, manual discipline, ADR-0080/SPEC-C9) — the

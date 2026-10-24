@@ -4,6 +4,7 @@
 # The `attributes[]` block MUST mirror conversation.ts `props` — the contract↔props trip-wire
 # (conversation.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-conversation
+description: A chat conversation that stacks user and agent turns, streams replies, and hosts the composer.
 # geometry size-class: the schema's SIZE_CLASSES has no literal "structural" member (the LLD's own informal
 # label) — `layout` is the closest real class: a CSS-flex distributor of its OWN thread/composer bands, no
 # control height of its own (the ui-master-detail precedent).

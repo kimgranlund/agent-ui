@@ -4,6 +4,7 @@
 # nav-rail-group.ts `static props` — the contract↔props trip-wire (nav-rail.test.ts) targets this fence.
 # Nests in the `ui-nav-rail` family folder (naming.md §9).
 tag: ui-nav-rail-group
+description: A labeled cluster of items inside a navigation rail.
 tier: pattern           # geometry size-class — a sub-element of the Pattern-class family; contributes no control height of its own
 extends: UIElement      # a generic sub-element (the ui-tabs sub-element precedent, ADR-0130 clause 3) — docking is composition, not a data-prop
 # marginal: measured at the @agent-ui/app integration slice (Phase 3, LLD-C12; scripts/measure-size.mjs)
