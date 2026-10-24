@@ -3,6 +3,7 @@
 # shell-archetypes-m5.lld.md LLD-C6). No attributes of its own — see chat-shell.ts's own header comment
 # for why (a thin `ui-super-shell` preset, zero new API surface beyond the composed element's).
 tag: ui-chat-shell
+description: A chat app shell preset with a header, a session list pane and the active thread.
 tier: layout            # geometry size-class (Container/layout band — a composition over the shipped layout family, no control height of its own; the ui-workspace-shell/ui-master-detail precedent)
 extends: UIElement      # a plain structural base — composes ui-super-shell rather than extending it (LLD-C6)
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs), same slice as ui-workspace-shell/ui-master-detail/ui-app-shell

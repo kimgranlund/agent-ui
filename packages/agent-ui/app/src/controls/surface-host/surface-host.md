@@ -4,6 +4,7 @@
 # The `attributes[]` block MUST mirror surface-host.ts `props` — the contract↔props trip-wire
 # (surface-host.test.ts) targets this fence. Field set per .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-surface-host
+description: A mount point that renders a streamed A2UI surface on a checkered artboard.
 # geometry size-class: the schema's SIZE_CLASSES has no literal "structural" member (the LLD's own informal
 # label) — `container` is the closest real class: a passive artboard/mount region contributing no control
 # height and no flex/grid distribution of AUTHORED children (it builds its own subtree; nothing is ever

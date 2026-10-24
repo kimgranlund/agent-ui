@@ -3,6 +3,7 @@
 # (ADR-0004, TKT-0056 · TKT-0058 v2). The `attributes[]` block MUST mirror conversation-composer.ts
 # `props` — the contract↔props trip-wire (conversation-composer.test.ts) targets this fence.
 tag: ui-conversation-composer
+description: The message composer for a conversation: a growing text field with context chips, model pickers, and send and mic buttons.
 tier: pattern            # a composed control with internal parts, no §1 control-height row of its own (the ui-command-modal precedent); the editor region rides ADR-0134's growable multi-line law instead
 extends: UIElement       # the coordinator base — NOT form-associated (nobody submits this in a form; ui-conversation drives it imperatively, SPEC-R4), even though since TKT-0058 the host paints the field frame itself
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs), folded into ui-conversation's own family total (TKT-0056 extraction — no new package)

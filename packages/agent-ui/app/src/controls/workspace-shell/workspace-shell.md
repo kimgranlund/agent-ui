@@ -3,6 +3,7 @@
 # shell-archetypes-m5.lld.md LLD-C5). No attributes of its own — see workspace-shell.ts's own header
 # comment for why (a thin `ui-super-shell` preset, zero new API surface beyond the composed element's).
 tag: ui-workspace-shell
+description: A workspace app shell preset with a header, navigation panes, content and options panes, and narrow-screen collapse.
 tier: layout            # geometry size-class (Container/layout band — a composition over the shipped layout family, no control height of its own; the ui-master-detail precedent)
 extends: UIElement      # a plain structural base — composes ui-super-shell rather than extending it (LLD-C5)
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs), same slice as ui-master-detail/ui-app-shell

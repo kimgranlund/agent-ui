@@ -355,7 +355,7 @@
       "name": "Markdown",
       "tag": "ui-markdown",
       "url": "./markdown-doc.html",
-      "description": "ui-markdown is the Display-class, flagship element of the code+prose family (ADR-0119, M1) — it renders the agent-common markdown subset into real fleet DOM, s…",
+      "description": "Renders Markdown text as styled rich content with highlighted code blocks.",
       "level": "L1",
       "section": "Components",
       "group": "Content & code"

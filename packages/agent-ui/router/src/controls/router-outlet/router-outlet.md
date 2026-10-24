@@ -4,6 +4,7 @@
 # never attribute-serializable), so `attributes: []`; `properties:` records it instead. Field set per
 # .claude/docs/plan.md §10 / ADR-0004.
 tag: ui-router-outlet
+description: The area where the router renders the component for the matched route.
 tier: layout           # geometry size-class (Container/layout band — a transparent container, NO control height; geometry.md)
 extends: UIElement     # a plain structural base — NOT UIContainerElement (no surfaceProps/flexProps; the outlet owns no elevation/flex grammar)
 # marginal: measured at LLD-C9 (the size line-item slice, out of this component's own scope)

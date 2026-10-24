@@ -774,3 +774,7 @@
 ## T-0443: The restaurant smoke probe expects BookingForm, the persona's shipped booking surface (2026-10-24)
 
 - note: scripts/e2e-admin/probe/replays/smoke-restaurant-reserve-table-haiku.json still records the old Field expectation; builder left it as a finished run record.
+
+## T-0436: App, code and router descriptors each carry a description (2026-10-24)
+
+- note: the ticket said 17 descriptors, the diff fills 18 (all app, code and router descriptors with a ui-* tag).

@@ -5,6 +5,7 @@
 # toggle affordance law · SPEC-R10 scrollbar seam, LLD-C1/C2, ADR-0154/ADR-0155).
 
 name: ui-super-shell
+description: A three-region app shell with collapsible start and end panes around a main pane, adapting to narrow screens.
 
 attributes:
   - name: viewTransitions

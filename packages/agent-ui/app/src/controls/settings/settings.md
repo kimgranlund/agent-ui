@@ -3,6 +3,7 @@
 # app-surfaces-m4.lld.md LLD-C12). The `attributes[]` block MUST mirror settings.ts `settingsProps` — the
 # contract↔props trip-wire (settings.test.ts) targets this fence.
 tag: ui-settings
+description: A settings surface with a sections rail and a form panel per section, generated from a schema.
 tier: layout            # geometry size-class (Container/layout band — a composition over ui-master-detail, the master-detail.md precedent; no control height of its own)
 extends: UIElement      # a plain structural base — composes ui-master-detail rather than extending it (LLD-C12, LLD F8)
 # marginal: measured at the @agent-ui/app integration slice (scripts/measure-size.mjs, LLD-C9/C16)

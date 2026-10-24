@@ -4,6 +4,7 @@
 # nav-rail-item.ts `static props` — the contract↔props trip-wire (nav-rail.test.ts) targets this fence.
 # Nests in the `ui-nav-rail` family folder (naming.md §9).
 tag: ui-nav-rail-item
+description: One navigation rail entry with an icon and a label, rendered as a link or a button.
 tier: pattern           # geometry size-class — Pattern (the interactive row IS the control-height unit the family's Pattern tier describes)
 extends: UIElement      # NOT form-associated (face below) — carries no value; href present renders a real <a>, absent a real <button> (SPEC-R3)
 
