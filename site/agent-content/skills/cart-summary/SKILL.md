@@ -1,7 +1,7 @@
 ---
 {
   "name": "cart-summary",
-  "description": "cart, basket, order summary, quantity, checkout, total",
+  "description": "cart, order, quantity, total: the first add opens ONE ConfirmReceipt bound to the cart lines plus one AmountPicker per line bound to its quantity; never a hand-built Card",
   "id": "cart-summary",
   "version": 1,
   "kind": "skill",
