@@ -766,3 +766,7 @@
 
 - note: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:14 the reworded header comment line exceeds the surrounding wrap width.
 - note: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:351 a re-arm on a question text change while pending is untested.
+
+## T-0437: Component-mode boolean knobs set the kebab attribute (OptionDeck allowRandom) (2026-10-24)
+
+- note: site/lib/component-preview.ts COMPONENT_SAMPLE_INIT comment still says knob names are applied with setAttribute (builder flagged, now stale wording).

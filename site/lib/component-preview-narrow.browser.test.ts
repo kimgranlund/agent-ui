@@ -82,3 +82,29 @@ describe('component-preview a2ui OptionDeck: the allowRandom knob reflects and d
     expect(preview.querySelector('.canvas-surface ui-option-deck'), 'the deck is gone after the knob edit').not.toBeNull()
   })
 })
+
+describe('component-preview component mode: a camelCase boolean knob sets the descriptor kebab attribute (T-0437)', () => {
+  it('the allowRandom knob adds and removes the ui-option-deck Surprise me card', async () => {
+    await page.viewport(1280, 800)
+    const preview = await mountPreview('component', 'ui-option-deck')
+    const toggle = preview.querySelector<HTMLElement & { checked: boolean }>('ui-switch[aria-label="allowRandom"]')
+    expect(toggle, 'no allowRandom knob').not.toBeNull()
+    const deck = preview.querySelector<HTMLElement>('.canvas-surface ui-option-deck')
+    expect(deck, 'no live deck').not.toBeNull()
+    const randomCard = (): Element | null => deck!.querySelector('[data-random]')
+    expect(toggle!.checked, 'the allowRandom knob is off while the sample shows Surprise me').toBe(true)
+    expect(randomCard(), 'the sample deck shows no Surprise me card').not.toBeNull()
+
+    toggle!.click()
+    await raf()
+    await raf()
+    expect(deck!.hasAttribute('allow-random'), 'the knob left allow-random set').toBe(false)
+    expect(randomCard(), 'switching allowRandom off left the Surprise me card').toBeNull()
+
+    toggle!.click()
+    await raf()
+    await raf()
+    expect(deck!.hasAttribute('allow-random'), 'the knob did not set allow-random').toBe(true)
+    expect(randomCard(), 'switching allowRandom on added no Surprise me card').not.toBeNull()
+  })
+})
