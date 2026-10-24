@@ -1159,6 +1159,8 @@ export class UIAgentAdminElement extends UIElement {
     this.#provenanceStore = undefined
     this.#provenanceObserver?.disconnect()
     this.#provenanceObserver = undefined
+    // T-0435: a stamp still in flight must not re-render a torn-down page; its `.then` bails on the cleared key.
+    this.#contentStampPending = undefined
   }
 
   /** GH #646, now feeding the pane-nav and settings-nav `ui-tabs` strips' `link()` calls (the
@@ -4979,7 +4981,7 @@ export class UIAgentAdminElement extends UIElement {
       this.#contentStampPending = key
       Promise.all([bundleDigest(bundle), resolution(manifest, store, bundle, modified)]).then(
         ([digest, rows]) => {
-          if (this.#contentStampPending !== key) return
+          if (this.#contentStampPending !== key || !this.isConnected) return
           this.#contentStampPending = undefined
           this.#contentStamp = { key, stamp: { digest, resolution: rows } }
           this.#renderContextSystem()

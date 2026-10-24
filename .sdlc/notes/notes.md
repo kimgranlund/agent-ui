@@ -757,3 +757,7 @@
 ## T-0434: The A2A concept corpus says the arena plays live on the production site (2026-10-24)
 
 - note: packages/agent-ui/a2a/tools/corpus/seeds.ts:254 new body text keeps the existing em dash style of the record.
+
+## T-0435: agent-admin-app-team.test.ts leaves no unhandled rejection after teardown (2026-10-24)
+
+- note: the 20-run criterion cannot bite locally since the CI race never reproduced; confidence rests on the traced code path, not a red-then-green.
