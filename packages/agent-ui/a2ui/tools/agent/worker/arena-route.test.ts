@@ -214,4 +214,30 @@ describe('cancel reaches the in-flight provider call', () => {
     await h.sawAbort
     expect(h.calls()).toBe(2)
   })
+
+  it('writes a blank-line heartbeat while a seat call is in flight, so workerd can notice a dropped client (T-0438)', async () => {
+    const h = hangingOnO()
+    const client = new AbortController()
+    const res = await handleArenaRequest(post(undefined, undefined, client.signal), '/', deps({ heartbeatMs: 5 }, h.provider))
+    const reader = res.body!.getReader()
+    const decoder = new TextDecoder()
+    let text = ''
+    while (h.calls() < 2) {
+      const { value, done } = await reader.read()
+      if (done) break
+      text += decoder.decode(value)
+    }
+    // The O seat's call hangs until abort, so nothing but the heartbeat can write from here on.
+    let beat = false
+    for (let i = 0; i < 50 && !beat; i++) {
+      const { value, done } = await reader.read()
+      if (done) break
+      beat = decoder.decode(value) === '\n'
+    }
+    expect(beat).toBe(true)
+    expect(h.calls()).toBe(2)
+    expect(text).not.toContain('"kind":"end"')
+    client.abort()
+    await h.sawAbort
+  })
 })

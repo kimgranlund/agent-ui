@@ -12,7 +12,14 @@
 	// file directly without invoking the Worker at all (default `run_worker_first: false`).
 	"name": "agent-ui-docs",
 	"compatibility_date": "2026-07-19",
-	"compatibility_flags": ["nodejs_compat"],
+	// T-0438: `enable_request_signal` makes an incoming request's `signal` fire when the client disconnects
+	// (developers.cloudflare.com/workers/configuration/compatibility-flags/, "Enable Request.signal for
+	// incoming requests"; the Request API page's `signal` property). The flag has NO default-on date, so no
+	// `compatibility_date` bump turns it on: without it a visitor's Cancel never reaches the in-flight, paid
+	// model call of `/__a2ui/agent` or `/__a2a/arena`. workerd notices the disconnect on the next body write,
+	// so both streaming routes keep writing during a model call (deltas, the arena's blank-line heartbeat).
+	// Proven against the real bundle in workerd by worker/request-signal.test.ts.
+	"compatibility_flags": ["nodejs_compat", "enable_request_signal"],
 	// GH #102 (review finding): omitting this defaults to `true`, which put the Custom Domain's zone-scoped
 	// rate-limit rule on ui.nonoun.io behind a second, completely unthrottled front door at
 	// agent-ui-docs.<account>.workers.dev — verified live (25/25 requests succeeded there with no limit).

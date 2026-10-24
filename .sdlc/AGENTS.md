@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:7fc959deaf8a -->
+<!-- sdlc-lite:managed:start v1 sha256:ddeef41bc910 -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -10,7 +10,8 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 
 ## Stages
 
-- proposed: 0
+- proposed: 1
+  - T-0444 /__a2ui/agent/chat buffers the whole reply and writes nothing... (0444-a2ui-agent-chat-buffers-the)
 - ready: 0
 - claimed: 0
 - paused: 0
