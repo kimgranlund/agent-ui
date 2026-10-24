@@ -275,6 +275,75 @@ describe('a BookingForm whose field paths miss its bound value (T-0293)', () => 
   })
 })
 
+// T-0449: round 13 :75-:76 (2026-10-24-r13-pattern, Haiku 5.5, smoke-concierge-booking). :75 wrote the booking at the
+// data model's root while the form bound /booking, so every field rendered blank; :76 confirmed it note-only with flowEnd.
+const R13_75: A2uiOutput = [
+  { version: 'v1.0', createSurface: { surfaceId: 'spa-booking', catalogId: 'agent-ui--hospitality', sendDataModel: true } },
+  { version: 'v1.0', updateDataModel: { surfaceId: 'spa-booking', value: { treatment: 'swedish-60', date: '2026-11-19', time: '15:00', name: 'Alex Moreau' } } },
+  {
+    version: 'v1.0',
+    updateComponents: {
+      surfaceId: 'spa-booking',
+      components: [
+        { id: 'root', component: 'Column', children: ['form'] },
+        {
+          id: 'form',
+          component: 'BookingForm',
+          title: 'Spa booking: Swedish massage',
+          value: { path: '/booking' },
+          fields: [
+            { kind: 'select', label: 'Treatment', path: 'treatment', required: true, options: [{ label: 'Swedish massage, 60 min, €120', value: 'swedish-60' }] },
+            { kind: 'dateSingle', label: 'Date', path: 'date', required: true },
+            { kind: 'select', label: 'Time', path: 'time', required: true, options: [{ label: '15:00', value: '15:00' }] },
+            { kind: 'text', label: 'Guest name', path: 'name', required: true },
+          ],
+          child: 'bookBtn',
+        },
+        { id: 'bookBtn', component: 'Button', label: 'Book now', variant: 'solid', action: { action: 'confirm_booking', context: { booking: { path: '/booking' } }, submit: true } },
+      ],
+    },
+  },
+] as A2uiOutput
+const r13Bound = (): A2uiOutput =>
+  R13_75.map((m) => ('updateDataModel' in m ? { version: 'v1.0', updateDataModel: { surfaceId: 'spa-booking', path: '/booking', value: (m as { updateDataModel: { value: unknown } }).updateDataModel.value } } : m)) as A2uiOutput
+
+describe('a BookingForm bound to a path no updateDataModel writes (T-0449)', () => {
+  const paths = (out: A2uiOutput) => conciergeBookingFieldPaths.check({ surfaces: semanticSurfaceViews({ turns: [] }, out) })
+  const open75 = openAfter(R13_75.map((m) => JSON.stringify(m)).join('\n'))
+  const confirm76 = { surfaces: [], intent: CONFIRM_ASK, open: open75 }
+
+  it(':75 is BOOKING_VALUE_UNBOUND, naming the bound path and the root keys', () => {
+    const findings = paths(R13_75)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['BOOKING_VALUE_UNBOUND', 'spa-booking:form']])
+    expect(findings[0]!.message).toContain('binds its value to /booking')
+    expect(findings[0]!.message).toContain('treatment, date, time, name')
+  })
+
+  it('negative control: the same booking written at /booking, or a form with no data model at all, raises none', () => {
+    expect(paths(r13Bound())).toEqual([])
+    expect(paths(R13_75.filter((m) => !('updateDataModel' in m)))).toEqual([])
+  })
+
+  it(':76 note-only "booked" with flowEnd is not held open: SURFACE_MISSING asks for the settle in place', () => {
+    expect(blankRequiredField(open75)).toBeUndefined()
+    expect(conciergeSurfaceRequired.holdsFlowOpen!(confirm76)).toBe(false)
+    const [finding] = conciergeSurfaceRequired.check(confirm76)
+    expect(finding!.code).toBe('SURFACE_MISSING')
+    expect(finding!.message).toContain('ConfirmReceipt')
+  })
+
+  it('negative control: the bound form with a blank required field still holds a confirm open', () => {
+    const blank = openAfter(
+      r13Bound()
+        .map((m) => ('updateDataModel' in m ? { ...m, updateDataModel: { ...m.updateDataModel, value: { treatment: '', date: '2026-11-19', time: '15:00', name: 'Alex' } } } : m))
+        .map((m) => JSON.stringify(m))
+        .join('\n'),
+    )
+    expect(blankRequiredField(blank)).toBe('Treatment')
+    expect(conciergeSurfaceRequired.holdsFlowOpen!({ surfaces: [], intent: CONFIRM_ASK, open: blank })).toBe(true)
+  })
+})
+
 // T-0322 C2 (live round 8 :166, Haiku 5.5, long-concierge-booking): "Make it 16:00 instead, same day." was answered with
 // a meta-line targeting spa-booking and no update, so the form kept 15:00 and no check fired. The form is turn 0's, as recorded.
 const SPA_BOOKING: A2uiOutput = [

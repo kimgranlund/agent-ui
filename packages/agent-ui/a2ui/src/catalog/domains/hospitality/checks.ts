@@ -27,6 +27,11 @@
 // root); a2ui-basic--hospitality keeps this read-back through `concierge-basic-surface-required`, gated `unless`
 // ConfirmReceipt.
 //
+// T-0449 (round 13 :75-:76, the Haiku spa booking): the data model was written at the root while the form bound /booking, so
+// every field rendered blank (BOOKING_VALUE_UNBOUND, from the same check) and the T-0278 hold then read them as blank and
+// let a note-only "booked" with flowEnd pass. A form bound to a path the surface never wrote holds nothing open, so that
+// confirm is SURFACE_MISSING and asks for the ConfirmReceipt.
+//
 // T-0197: a `dateRange` field holds two dates, its start at `path` and its end at a string `endPath`; both checks read
 // the end path as a second path of the field (`fieldPaths`).
 //
@@ -62,15 +67,20 @@ function askedMoment(intent: string): { moment: string; surface: string } | unde
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isBlank = (v: unknown): boolean => v === undefined || v === null || (typeof v === 'string' && v.trim() === '') || (Array.isArray(v) && v.length === 0)
 
-/** Every BookingForm on these surfaces, with the booking object its value resolves to. */
-function* bookingForms(views: readonly SurfaceView[]): Generator<{ view: SurfaceView; node: Record<string, unknown>; fields: unknown[]; booking: unknown }> {
+/** Every BookingForm on these surfaces, with the booking object its value resolves to. `unbound` (T-0449): its value is
+ *  a path that reads nothing although the surface's data model holds other keys, so the booking was written somewhere the
+ *  form does not look and every field renders blank. */
+function* bookingForms(
+  views: readonly SurfaceView[],
+): Generator<{ view: SurfaceView; node: Record<string, unknown>; fields: unknown[]; booking: unknown; unbound: boolean }> {
   for (const view of views) {
     for (const node of view.components.values()) {
       const n = node as Record<string, unknown>
       if (n['component'] !== 'BookingForm' || !Array.isArray(n['fields'])) continue
       const value = n['value']
       const booking = isRecord(value) && typeof value['path'] === 'string' ? readPointer(view.dataModel, value['path']) : value
-      yield { view, node: n, fields: n['fields'], booking }
+      const unbound = isRecord(value) && typeof value['path'] === 'string' && booking === undefined && isRecord(view.dataModel) && Object.keys(view.dataModel).length > 0
+      yield { view, node: n, fields: n['fields'], booking, unbound }
     }
   }
 }
@@ -97,9 +107,11 @@ function fieldPaths(field: Record<string, unknown>): { path: string; label: stri
 }
 
 /** T-0278: the label (or path) of the first required BookingForm field an open surface leaves blank, or undefined. A
- *  mis-pathed field (T-0293) renders blank only because of its path; its value is there, so it holds nothing open. */
+ *  mis-pathed field (T-0293) renders blank only because of its path; its value is there, so it holds nothing open. T-0449:
+ *  neither does a form bound to a path the surface never wrote; the guest did not leave it blank. */
 export function blankRequiredField(open: readonly SurfaceView[]): string | undefined {
-  for (const { fields, booking } of bookingForms(open)) {
+  for (const { fields, booking, unbound } of bookingForms(open)) {
+    if (unbound) continue
     for (const field of fields) {
       if (!isRecord(field) || field['required'] !== true) continue
       for (const { path, label } of fieldPaths(field)) {
@@ -117,7 +129,19 @@ export const conciergeBookingFieldPaths: SemanticCheck = {
   requires: ['BookingForm'],
   check({ surfaces }): SemanticFinding[] {
     const findings: SemanticFinding[] = []
-    for (const { view, node, fields, booking } of bookingForms(surfaces)) {
+    for (const { view, node, fields, booking, unbound } of bookingForms(surfaces)) {
+      if (unbound) {
+        const bound = (node['value'] as { path: string }).path
+        const written = Object.keys(view.dataModel as Record<string, unknown>).join(', ')
+        findings.push({
+          code: 'BOOKING_VALUE_UNBOUND',
+          path: `${view.surfaceId}:${String(node['id'])}`,
+          message:
+            `${view.surfaceId}'s BookingForm binds its value to ${bound}, and no updateDataModel writes anything there (the data model holds ${written}), ` +
+            `so every field renders blank. Write the booking object at ${bound} (an updateDataModel with path "${bound}" and the booking as its value) and keep everything else.`,
+        })
+        continue
+      }
       const fixes = fields.flatMap((field) =>
         (isRecord(field) ? fieldPaths(field) : []).flatMap(({ path }) => {
           const key = misPathedKey(booking, path)
