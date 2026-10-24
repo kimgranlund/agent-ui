@@ -247,3 +247,44 @@ describe('produce(): a note-only narrated reply that claims a change keeps the f
     expect(lines.filter((l) => readMetaLine(l) === undefined)).toEqual([])
   })
 })
+
+// T-0442 (round 2026-10-24-t0440-sweep, pick-mentalist-answer-deck-haiku-1, the keyless replay in
+// scripts/e2e-admin/probe/replays/mentalist-haiku-note-claim.test.mjs): a note-only reply whose ask names a surface that
+// neither the answer nor the session creates ("Answer Yes, No, or Sort of below", ask-1, no call) keeps the full repair
+// (SURFACE_CLAIMED, render_surface offered and forced), and the last round refuses it: an earlier valid round ships, else a
+// halt. An ask on a surface the session already holds claims nothing new.
+describe('produce(): a note-only reply whose ask names a surface it never creates keeps the full repair (T-0442)', () => {
+  const ASKED = JSON.stringify({ a2uiMeta: { note: 'Hit or stand? Pick one below.', ask: { surfaceId: 'ask-9' } } })
+  const ASK_SURFACE = [
+    { version: 'v1.0', createSurface: { surfaceId: 'ask-9', catalogId: 'agent-ui--croupier' } },
+    { version: 'v1.0', updateComponents: { surfaceId: 'ask-9', components: [{ id: 'root', component: 'Text', variant: 'body', text: 'Hit or stand?' }] } },
+  ]
+
+  it('the repair round offers and forces render_surface, and the scripted ask surface lands', async () => {
+    const r = await runRounds([{ text: ASKED }, { text: ASKED, call: { reply: 'Hit or stand? Pick one below.', messages: ASK_SURFACE } }])
+    expect(r.reqs).toHaveLength(2)
+    expect(r.reqs[1]!.tools?.map((t) => t.name)).toContain('render_surface')
+    expect(r.reqs[1]!.toolChoice).toEqual({ name: 'render_surface' })
+    expect(lastUser(r.reqs[1]!)).toContain('SURFACE_CLAIMED at ask-9')
+    expect(lastUser(r.reqs[1]!)).not.toContain('send no A2UI lines')
+    expect(r.wire).toEqual(ASK_SURFACE.map((m) => JSON.stringify(m)))
+    expect(r.trace).toMatchObject({ rounds: 2, failureCodes: ['SURFACE_CLAIMED'] })
+  })
+
+  it('the last round refuses a note-only reply that still claims it: a halt when no earlier round is valid', async () => {
+    await expect(runRounds([{ text: ASKED }], 2)).rejects.toMatchObject({ name: 'ProduceHalt', failures: [{ code: 'SURFACE_CLAIMED', path: 'ask-9' }] })
+  })
+
+  it('the last round refuses it in favour of an earlier valid round, which ships', async () => {
+    const r = await runRounds([{ text: `${CLEAN}\n${UPDATE}\n${NETNOOP}` }, { text: ASKED }], 2)
+    expect(r.reqs).toHaveLength(2)
+    expect(r.wire).toEqual([UPDATE])
+    expect(r.trace).toMatchObject({ rounds: 2, failureCodes: ['SURFACE_CLAIMED', 'NET_NOOP_STRIPPED', 'EARLIER_ROUND_SHIPPED'] })
+  })
+
+  it('an ask on a surface the session already holds claims nothing new: it ships on round 1 as before', async () => {
+    const r = await runRounds([{ text: JSON.stringify({ a2uiMeta: { note: 'Check, or bet up to the pot.', ask: { surfaceId: 'table-3' } } }) }])
+    expect(r.reqs).toHaveLength(1)
+    expect(r.trace.failureCodes).toEqual([])
+  })
+})

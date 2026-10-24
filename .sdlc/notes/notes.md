@@ -789,3 +789,7 @@
 
 - note: .claude/docs/roadmap.md section 4 Later still carries the stale Linear/ADR-0145 line and moved-to-section-3 breadcrumbs (the builder named this as out of scope).
 - note: the builder reports `verify_scope.py` exit 1 from a pre-existing broken link in `.claude/docs/archive/changelog-to-2026-10-15.md`; not touched by this diff and not a listed criterion.
+
+## T-0442: A note-only reply that names a surface it never creates gets the full repair (mentalist on Haiku) (2026-10-24)
+
+- note: the four edited replays now assert a no-halt failure (SURFACE_CLAIMED) in place of green, because their recorded single rounds have no repaired round; the assertion is explicit and tied to the new rule, so it is not vacuous, but the fixtures no longer exercise a clean path for those turns.

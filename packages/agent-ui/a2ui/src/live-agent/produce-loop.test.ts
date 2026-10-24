@@ -1296,13 +1296,14 @@ describe('produce() feed-embedded ask — peel/compose (ADR-0097 §1)', () => {
     expect(meta!.a2uiMeta.ask).toEqual({ surfaceId: 'ask-1' })
   })
 
+  // T-0442: on a turn that offers render_surface such an ask is sent back instead (SURFACE_CLAIMED, produce-narration.test.ts).
   it('a note-only round declaring an ask drops it too — nothing exists yet for it to integrity-check against', async () => {
     const { provider } = stubProvider(['{"a2uiMeta":{"note":"just a question","ask":{"surfaceId":"ask-1"}}}'])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
     let halted: unknown
     try {
-      for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+      for await (const line of produce(intent, deps, { maxRounds: 3, responsePreference: 'text' })) lines.push(line)
     } catch (e) {
       halted = e
     }
@@ -2071,7 +2072,9 @@ describe('produce() flowEnd pass-through + inference on a closing turn (GH #1168
   it('N1: a turn that declares an ask gets no inferred flowEnd and no FLOW_END_INFERRED', async () => {
     const ASK_NOTE = '{"a2uiMeta":{"note":"Before you go, would you rate your stay?","ask":{"surfaceId":"ask-1"}}}'
     const { provider } = stubProvider([ASK_NOTE])
-    const lines = await run(provider, 'we are done')
+    // T-0442: text-only, since a turn offering render_surface sends an ask it never creates back (SURFACE_CLAIMED).
+    const lines: string[] = []
+    for await (const line of produce(closeInput('we are done'), mkDeps(provider), { maxRounds: 3, responsePreference: 'text' })) lines.push(line)
     const meta = readMetaLine(lines.find((l) => readMetaLine(l)?.a2uiMeta.trace !== undefined)!)!
     expect(meta.a2uiMeta.flowEnd).toBeUndefined()
     expect(meta.a2uiMeta.trace!.failureCodes).not.toContain('FLOW_END_INFERRED')

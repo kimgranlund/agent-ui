@@ -18,10 +18,13 @@ import { offlineReplay } from '../trace.ts'
 // FLEET_SECRET_MISSING: the halt carries only the drop. T-0328 (Kim 2026-10-17, amends T-0317): a surface rebuilt under
 // a new id within the same turn is not a drop, and only flagged rounds built ask-1, so the third round's ask-2 board
 // (with the GameHud round 2's GAME_HUD_MISSING asked for) ships, and still no FLEET_SECRET_MISSING.
+// T-0442: turn 0's one recorded round is note-only with an ask it never creates (SURFACE_CLAIMED), so with no repaired
+// round recorded that turn halts (live, the repair round is forced to render_surface); turn 1 is unchanged.
 it('lexicographer-haiku-fleet-check: a word board gets no Battleship fleet check', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-fleet-check.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([])
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['no-halt', 0]])
+  expect(report.failed[0].detail).toContain('SURFACE_CLAIMED')
   const shipped = report.records[1].lines.map((l) => JSON.parse(l))
   const trace = shipped.find((m) => m.a2uiMeta?.trace !== undefined).a2uiMeta.trace
   expect(trace.rounds).toBe(3)

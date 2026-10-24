@@ -9,8 +9,11 @@ import { offlineReplay } from '../trace.ts'
 // Pins the trace only: T-0231 and T-0214. Haiku 5.5 reviews a spa booking in prose with no surface, then says nothing
 // was reserved. T-0265: the concierge's surface-required check now sends turns 0 to 2 back with SURFACE_MISSING; the
 // fixture records no repaired round, so they ship tallied and every probe check stays green.
-it('concierge-haiku-spa-prose: the recorded turns replay with every probe check green', async () => {
+// T-0442: turn 1's recorded round declares an ask it never creates (SURFACE_CLAIMED), so with no repaired round recorded
+// the last round refuses it and that turn halts (live, the repair round is forced to render_surface); every other check stays green.
+it('concierge-haiku-spa-prose: the recorded turns replay green but for the claimed-ask halt on turn 1', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-spa-prose.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed).toEqual([])
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['no-halt', 1]])
+  expect(report.failed[0].detail).toContain('SURFACE_CLAIMED')
 })
