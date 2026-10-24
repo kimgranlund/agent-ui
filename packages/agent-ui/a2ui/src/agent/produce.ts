@@ -120,7 +120,7 @@ import type { SemanticCheckInput } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
 import type { SemanticFinding, SurfaceView } from '../catalog/semantic-check.ts'
 import { compositeAnswered, missingCompositeMoment } from '../catalog/composite-moments.ts'
-import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool, stringifiedMessages, messagesParseNote } from './response-type.ts'
+import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool, stringifiedMessages, messagesParseNote, wireLineParseNote } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
 
 const PROTOCOL_VERSION = 'v1.0'
@@ -751,7 +751,7 @@ function messagesFor(
       .map((f) => `${f.code}${f.path ? ` at ${f.path}` : ''}${expectedTypeNote(f, catalog, lastOutput)}${misplacedSurfaceIdNote(f, lastOutput)}${f.detail ? `: ${f.detail}` : ''}`)
       .join('; ')
     const hint =
-      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? (stringRounds > 0 ? stringParseHint(stringRounds > 1, parseNote) : TOOL_PARSE_HINT) : PARSE_HINT) : '') + // T-0304, T-0344: ask for the array, then where the string broke
+      (failures.some((f) => f.code === 'PARSE') ? (toolRound ? (stringRounds > 0 ? stringParseHint(stringRounds > 1, parseNote) : `${TOOL_PARSE_HINT}${parseNote !== undefined ? ` ${parseNote}` : ''}`) : PARSE_HINT) : '') + // T-0304, T-0344: ask for the array, then where the string broke
       idgraphHint(failures) +
       (failures.some((f) => f.code === 'NET_NOOP') ? NET_NOOP_HINT : '') + // GH #1142 — the net-no-op correction round's guidance
       (failures.some((f) => f.code === 'NARRATED_MECHANICS') ? NARRATION_HINT : '') + // T-0234: a narrated reply's guidance
@@ -1704,10 +1704,10 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     // RTS-R1: on a turn that offers `render_surface`, this round's executor captures its input and answers
     // `received`; every other name goes to the caller's executor. Reset every round.
-    let capture = undefined as { jsonl: string; reply: string; target: string | undefined; parseNote: string | undefined; stringSent: boolean } | undefined
+    let capture = undefined as { jsonl: string; reply: string; target: string | undefined; parseNote: string | undefined; stringSent: boolean; sentString: string | undefined } | undefined
     const captureTool: ExecuteTool = async (name, toolInput, signal) => {
       if (name === RENDER_SURFACE_TOOL_NAME) {
-        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: toolTargetOf(toolInput['target']), parseNote: messagesParseNote(toolInput), stringSent: typeof toolInput['messages'] === 'string' }
+        capture = { jsonl: renderSurfaceJsonl(toolInput), reply: renderSurfaceReply(toolInput), target: toolTargetOf(toolInput['target']), parseNote: messagesParseNote(toolInput), stringSent: typeof toolInput['messages'] === 'string', sentString: typeof toolInput['messages'] === 'string' ? toolInput['messages'] : undefined }
         if (stringifiedMessages(toolInput) !== undefined) messagesStringDecoded = true
         return 'received'
       }
@@ -1813,6 +1813,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       textRound && offeredTools !== undefined ? afterMeta.split('\n').filter((l) => isRoutable(l.trim())) : []
     const routed = routedLines.length > 0 ? routedLines.join('\n') : undefined
     if (routed !== undefined) textJsonlRouted = true
+    if (routed !== undefined) parseNote = routedLines.map((l) => wireLineParseNote(l.trim())).find((n) => n !== undefined) // T-0450: name the array a text line left open
     if (captured !== undefined || textRound) {
       let reply = afterMeta
       if (routed !== undefined) {
@@ -1860,8 +1861,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           team ??= fromReply.team
           target ??= fromReply.target
         }
-        // The repair round shows the model its own attempt: the reply text, then the payload it sent.
-        lastRaw = [raw.trim() || captured.reply, captured.jsonl.trim()].filter((s) => s !== '').join('\n')
+        // The repair round shows the model its own attempt: the reply text, then the payload it sent. T-0450: a
+        // `messages` string that did not parse is shown as sent, so the repair's pinpoint names text the model can see.
+        lastRaw = [raw.trim() || captured.reply, captured.jsonl.trim() || (captured.sentString ?? '').trim()].filter((s) => s !== '').join('\n')
       }
       reply = reply.trim()
       if (reply !== '') note = reply

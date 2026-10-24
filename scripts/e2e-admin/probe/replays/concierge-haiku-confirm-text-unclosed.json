@@ -1,0 +1,614 @@
+{
+ "kind": "agent-ui-chat-probe",
+ "version": 1,
+ "name": "concierge-haiku-confirm-text-unclosed",
+ "agent": "concierge",
+ "model": "claude-haiku-5-5",
+ "effort": "medium",
+ "source": "T-0450: every turn is regress-concierge-spa-booking-haiku-1 verbatim (round .sdlc/evals/rounds/2026-10-24-r13-pattern/, 2026-10-24.jsonl:11 to :13) (catalog agent-ui--hospitality)",
+ "steps": [
+  {
+   "say": "What spa services can I book during my stay?"
+  },
+  {
+   "say": "Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau."
+  },
+  {
+   "say": "Those details are right, please confirm the booking.",
+   "expect": [
+    "ConfirmReceipt"
+   ]
+  }
+ ],
+ "turns": [
+  {
+   "lines": [
+    "{\"a2uiMeta\":{\"textDelta\":\"The Grand Meridian spa (open 09:00 to 20:00) offers six treatments. In season, book at least a day ahead. I've laid them out below with durations and prices.\"}}",
+    "{\"a2uiMeta\":{\"note\":\"The Grand Meridian spa (open 09:00 to 20:00) offers six treatments. In season, book at least a day ahead. I've laid them out below with durations and prices.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What spa services can I book during my stay?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":150200,\"total\":52060,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1494}],\"over\":false},\"miniSkillIds\":[\"greeting-card\",\"product-presentation\"],\"cacheBoundary\":50566}}}",
+    "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-treatments\",\"catalogId\":\"agent-ui--hospitality\"}}",
+    "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-treatments\",\"value\":{\"treatments\":[{\"id\":\"swedish-massage\",\"title\":\"Swedish massage\",\"subtitle\":\"60 min\",\"price\":\"€120\",\"priceNote\":\"per session\"},{\"id\":\"deep-tissue-massage\",\"title\":\"Deep-tissue massage\",\"subtitle\":\"60 min\",\"price\":\"€135\",\"priceNote\":\"per session\"},{\"id\":\"hot-stone-massage\",\"title\":\"Hot-stone massage\",\"subtitle\":\"90 min\",\"price\":\"€170\",\"priceNote\":\"per session\"},{\"id\":\"sea-salt-lemon-scrub\",\"title\":\"Sea-salt and lemon body scrub\",\"subtitle\":\"45 min\",\"price\":\"€95\",\"priceNote\":\"per session\"},{\"id\":\"hydrating-facial\",\"title\":\"Hydrating facial\",\"subtitle\":\"50 min\",\"price\":\"€110\",\"priceNote\":\"per session\"},{\"id\":\"couples-massage\",\"title\":\"Couples massage\",\"subtitle\":\"60 min\",\"price\":\"€230\",\"priceNote\":\"for two\"}]}}}",
+    "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-treatments\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"grid\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Spa treatments\",\"variant\":\"h4\"},{\"id\":\"grid\",\"component\":\"Grid\",\"min\":\"16rem\",\"gap\":\"md\",\"children\":{\"path\":\"/treatments\",\"componentId\":\"tmpl\"}},{\"id\":\"tmpl\",\"component\":\"ProductCard\",\"title\":{\"path\":\"title\"},\"subtitle\":{\"path\":\"subtitle\"},\"price\":{\"path\":\"price\"},\"priceNote\":{\"path\":\"priceNote\"},\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa_treatment\",\"context\":{\"treatmentId\":{\"path\":\"id\"},\"treatment\":{\"path\":\"title\"},\"price\":{\"path\":\"price\"}}}}]}}"
+   ],
+   "rounds": [
+    {
+     "text": "The Grand Meridian spa (open 09:00 to 20:00) offers six treatments. In season, book at least a day ahead. I've laid them out below with durations and prices.",
+     "tools": [
+      {
+       "name": "render_surface",
+       "input": {
+        "reply": "Here are the spa treatments you can book. Tap Book on any of them to start a reservation.",
+        "messages": [
+         {
+          "version": "v1.0",
+          "createSurface": {
+           "surfaceId": "spa-treatments",
+           "catalogId": "agent-ui--hospitality"
+          }
+         },
+         {
+          "version": "v1.0",
+          "updateDataModel": {
+           "surfaceId": "spa-treatments",
+           "value": {
+            "treatments": [
+             {
+              "id": "swedish-massage",
+              "title": "Swedish massage",
+              "subtitle": "60 min",
+              "price": "€120",
+              "priceNote": "per session"
+             },
+             {
+              "id": "deep-tissue-massage",
+              "title": "Deep-tissue massage",
+              "subtitle": "60 min",
+              "price": "€135",
+              "priceNote": "per session"
+             },
+             {
+              "id": "hot-stone-massage",
+              "title": "Hot-stone massage",
+              "subtitle": "90 min",
+              "price": "€170",
+              "priceNote": "per session"
+             },
+             {
+              "id": "sea-salt-lemon-scrub",
+              "title": "Sea-salt and lemon body scrub",
+              "subtitle": "45 min",
+              "price": "€95",
+              "priceNote": "per session"
+             },
+             {
+              "id": "hydrating-facial",
+              "title": "Hydrating facial",
+              "subtitle": "50 min",
+              "price": "€110",
+              "priceNote": "per session"
+             },
+             {
+              "id": "couples-massage",
+              "title": "Couples massage",
+              "subtitle": "60 min",
+              "price": "€230",
+              "priceNote": "for two"
+             }
+            ]
+           }
+          }
+         },
+         {
+          "version": "v1.0",
+          "updateComponents": {
+           "surfaceId": "spa-treatments",
+           "components": [
+            {
+             "id": "root",
+             "component": "Column",
+             "gap": "md",
+             "children": [
+              "heading",
+              "grid"
+             ]
+            },
+            {
+             "id": "heading",
+             "component": "Text",
+             "text": "Spa treatments",
+             "variant": "h4"
+            },
+            {
+             "id": "grid",
+             "component": "Grid",
+             "min": "16rem",
+             "gap": "md",
+             "children": {
+              "path": "/treatments",
+              "componentId": "tmpl"
+             }
+            },
+            {
+             "id": "tmpl",
+             "component": "ProductCard",
+             "title": {
+              "path": "title"
+             },
+             "subtitle": {
+              "path": "subtitle"
+             },
+             "price": {
+              "path": "price"
+             },
+             "priceNote": {
+              "path": "priceNote"
+             },
+             "actionLabel": "Book",
+             "action": {
+              "action": "book_spa_treatment",
+              "context": {
+               "treatmentId": {
+                "path": "id"
+               },
+               "treatment": {
+                "path": "title"
+               },
+               "price": {
+                "path": "price"
+               }
+              }
+             }
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "input": {
+    "kind": "intent",
+    "text": "What spa services can I book during my stay?"
+   },
+   "routing": {
+    "domains": [
+     "hospitality"
+    ],
+    "exemplars": [
+     "domain-concierge-booking-request",
+     "domain-hospitality-itinerary-trip",
+     "frontier-service-gateway"
+    ],
+    "sections": [
+     "grammar",
+     "components",
+     "functions",
+     "few-shot",
+     "mini-skills",
+     "persona"
+    ],
+    "references": [
+     {
+      "name": "gallery-swiper",
+      "load": "index-only"
+     },
+     {
+      "name": "itinerary-timeline",
+      "load": "index-only"
+     },
+     {
+      "name": "menu-card",
+      "load": "index-only"
+     },
+     {
+      "name": "facility-info-card",
+      "load": "index-only"
+     },
+     {
+      "name": "amenity-service-card",
+      "load": "index-only"
+     },
+     {
+      "name": "booking-flow",
+      "load": "index-only"
+     },
+     {
+      "name": "table-reservation",
+      "load": "index-only"
+     },
+     {
+      "name": "property-knowledge-base",
+      "load": "index-only"
+     },
+     {
+      "name": "curated-local-guides",
+      "load": "index-only"
+     },
+     {
+      "name": "Weather (Open-Meteo)",
+      "load": "index-only"
+     },
+     {
+      "name": "Wikipedia search",
+      "load": "index-only"
+     },
+     {
+      "name": "Currency rates (Frankfurter)",
+      "load": "index-only"
+     }
+    ]
+   }
+  },
+  {
+   "lines": [
+    "{\"a2uiMeta\":{\"textDelta\":\"I've pre-filled the booking form with your details: Swedish massage, 60 minutes, €120, Thursday 19 November 2026 at 15:00, one guest, Alex Moreau. Please check it and press Book, or reply \\\"please confirm the booking\\\" here.\\n\\n\"}}",
+    "{\"a2uiMeta\":{\"note\":\"I've pre-filled your spa booking below: Swedish massage (60 minutes, €120) on Thursday 19 November 2026 at 15:00, for one guest, Alex Moreau. Check the details and press Book now to submit.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"PARSE\",\"TEXT_JSONL_ROUTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":150200,\"total\":50566,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":50566}}}",
+    "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking-2\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
+    "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-booking-2\",\"path\":\"/booking\",\"value\":{\"treatment\":\"swedish-massage\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":\"1\",\"guestName\":\"Alex Moreau\"}}}",
+    "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"form\"]},{\"id\":\"form\",\"component\":\"BookingForm\",\"title\":\"Spa booking: Swedish massage\",\"value\":{\"path\":\"/booking\"},\"fields\":[{\"kind\":\"select\",\"label\":\"Treatment\",\"path\":\"treatment\",\"required\":true,\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"swedish-massage\"},{\"label\":\"Deep-tissue massage, 60 min, €135\",\"value\":\"deep-tissue-massage\"},{\"label\":\"Hot-stone massage, 90 min, €170\",\"value\":\"hot-stone-massage\"},{\"label\":\"Sea-salt and lemon body scrub, 45 min, €95\",\"value\":\"sea-salt-lemon-scrub\"},{\"label\":\"Hydrating facial, 50 min, €110\",\"value\":\"hydrating-facial\"},{\"label\":\"Couples massage, 60 min, €230 for two\",\"value\":\"couples-massage\"}]},{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Time\",\"path\":\"time\",\"required\":true,\"options\":[{\"label\":\"09:00\",\"value\":\"09:00\"},{\"label\":\"10:00\",\"value\":\"10:00\"},{\"label\":\"11:00\",\"value\":\"11:00\"},{\"label\":\"12:00\",\"value\":\"12:00\"},{\"label\":\"13:00\",\"value\":\"13:00\"},{\"label\":\"14:00\",\"value\":\"14:00\"},{\"label\":\"15:00\",\"value\":\"15:00\"},{\"label\":\"16:00\",\"value\":\"16:00\"},{\"label\":\"17:00\",\"value\":\"17:00\"},{\"label\":\"18:00\",\"value\":\"18:00\"},{\"label\":\"19:00\",\"value\":\"19:00\"}]},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"}]},{\"kind\":\"text\",\"label\":\"Guest name\",\"path\":\"guestName\",\"required\":true}],\"child\":\"bookBtn\"},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book now\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"context\":{\"booking\":{\"path\":\"/booking\"}},\"submit\":true}}]}}"
+   ],
+   "rounds": [
+    {
+     "text": "I've pre-filled the booking form with your details: Swedish massage, 60 minutes, €120, Thursday 19 November 2026 at 15:00, one guest, Alex Moreau. Please check it and press Book, or reply \"please confirm the booking\" here.\n\n{\"a2uiMeta\":{\"note\":\"I've pre-filled your spa booking: Swedish massage, 60 minutes, €120, Thursday 19 November 2026 at 15:00, for one guest, Alex Moreau. Check the details and press Book, or reply 'please confirm the booking' to submit.\",\"target\":{\"surfaceId\":\"spa-treatments\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-treatments\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\"]}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"spa-booking-1\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"spa-booking-1\",\"path\":\"/booking\",\"value\":{\"treatment\":\"swedish-massage\",\"date\":\"2026-11-19\",\"time\":\"15:00\",\"guests\":\"1\",\"guestName\":\"Alex Moreau\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"form\"]},{\"id\":\"form\",\"component\":\"BookingForm\",\"title\":\"Spa booking: Swedish massage\",\"value\":{\"path\":\"/booking\"},\"fields\":[{\"kind\":\"select\",\"label\":\"Treatment\",\"path\":\"treatment\",\"required\":true,\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"swedish-massage\"},{\"label\":\"Deep-tissue massage, 60 min, €135\",\"value\":\"deep-tissue-massage\"},{\"label\":\"Hot-stone massage, 90 min, €170\",\"value\":\"hot-stone-massage\"},{\"label\":\"Sea-salt and lemon body scrub, 45 min, €95\",\"value\":\"sea-salt-lemon-scrub\"},{\"label\":\"Hydrating facial, 50 min, €110\",\"value\":\"hydrating-facial\"},{\"label\":\"Couples massage, 60 min, €230 for two\",\"value\":\"couples-massage\"}]},{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"time\",\"label\":\"Time\",\"path\":\"time\",\"required\":true},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"}]},{\"kind\":\"text\",\"label\":\"Guest name\",\"path\":\"guestName\",\"required\":true}]}}]}}",
+     "tools": []
+    },
+    {
+     "text": "I've pre-filled your spa booking below: Swedish massage (60 minutes, €120) on Thursday 19 November 2026 at 15:00, for one guest, Alex Moreau. Check the details and press Book now to submit.",
+     "tools": [
+      {
+       "name": "render_surface",
+       "input": {
+        "reply": "Your spa booking is pre-filled below: Swedish massage, 60 minutes, €120, Thursday 19 November 2026 at 15:00, for one guest, Alex Moreau. Press Book now to submit, or reply \"please confirm the booking\" here.",
+        "messages": [
+         {
+          "version": "v1.0",
+          "createSurface": {
+           "surfaceId": "spa-booking-2",
+           "catalogId": "agent-ui--hospitality",
+           "sendDataModel": true
+          }
+         },
+         {
+          "version": "v1.0",
+          "updateDataModel": {
+           "surfaceId": "spa-booking-2",
+           "path": "/booking",
+           "value": {
+            "treatment": "swedish-massage",
+            "date": "2026-11-19",
+            "time": "15:00",
+            "guests": "1",
+            "guestName": "Alex Moreau"
+           }
+          }
+         },
+         {
+          "version": "v1.0",
+          "updateComponents": {
+           "surfaceId": "spa-booking-2",
+           "components": [
+            {
+             "id": "root",
+             "component": "Column",
+             "children": [
+              "form"
+             ]
+            },
+            {
+             "id": "form",
+             "component": "BookingForm",
+             "title": "Spa booking: Swedish massage",
+             "value": {
+              "path": "/booking"
+             },
+             "fields": [
+              {
+               "kind": "select",
+               "label": "Treatment",
+               "path": "treatment",
+               "required": true,
+               "options": [
+                {
+                 "label": "Swedish massage, 60 min, €120",
+                 "value": "swedish-massage"
+                },
+                {
+                 "label": "Deep-tissue massage, 60 min, €135",
+                 "value": "deep-tissue-massage"
+                },
+                {
+                 "label": "Hot-stone massage, 90 min, €170",
+                 "value": "hot-stone-massage"
+                },
+                {
+                 "label": "Sea-salt and lemon body scrub, 45 min, €95",
+                 "value": "sea-salt-lemon-scrub"
+                },
+                {
+                 "label": "Hydrating facial, 50 min, €110",
+                 "value": "hydrating-facial"
+                },
+                {
+                 "label": "Couples massage, 60 min, €230 for two",
+                 "value": "couples-massage"
+                }
+               ]
+              },
+              {
+               "kind": "dateSingle",
+               "label": "Date",
+               "path": "date",
+               "required": true
+              },
+              {
+               "kind": "select",
+               "label": "Time",
+               "path": "time",
+               "required": true,
+               "options": [
+                {
+                 "label": "09:00",
+                 "value": "09:00"
+                },
+                {
+                 "label": "10:00",
+                 "value": "10:00"
+                },
+                {
+                 "label": "11:00",
+                 "value": "11:00"
+                },
+                {
+                 "label": "12:00",
+                 "value": "12:00"
+                },
+                {
+                 "label": "13:00",
+                 "value": "13:00"
+                },
+                {
+                 "label": "14:00",
+                 "value": "14:00"
+                },
+                {
+                 "label": "15:00",
+                 "value": "15:00"
+                },
+                {
+                 "label": "16:00",
+                 "value": "16:00"
+                },
+                {
+                 "label": "17:00",
+                 "value": "17:00"
+                },
+                {
+                 "label": "18:00",
+                 "value": "18:00"
+                },
+                {
+                 "label": "19:00",
+                 "value": "19:00"
+                }
+               ]
+              },
+              {
+               "kind": "select",
+               "label": "Guests",
+               "path": "guests",
+               "required": true,
+               "options": [
+                {
+                 "label": "1 guest",
+                 "value": "1"
+                }
+               ]
+              },
+              {
+               "kind": "text",
+               "label": "Guest name",
+               "path": "guestName",
+               "required": true
+              }
+             ],
+             "child": "bookBtn"
+            },
+            {
+             "id": "bookBtn",
+             "component": "Button",
+             "label": "Book now",
+             "variant": "solid",
+             "action": {
+              "action": "confirm_booking",
+              "context": {
+               "booking": {
+                "path": "/booking"
+               }
+              },
+              "submit": true
+             }
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "input": {
+    "kind": "intent",
+    "text": "Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau."
+   },
+   "routing": {
+    "domains": [
+     "hospitality"
+    ],
+    "exemplars": [
+     "domain-concierge-booking-request",
+     "domain-hospitality-itinerary-trip",
+     "frontier-service-gateway"
+    ],
+    "sections": [
+     "grammar",
+     "components",
+     "functions",
+     "few-shot",
+     "persona"
+    ],
+    "references": [
+     {
+      "name": "gallery-swiper",
+      "load": "index-only"
+     },
+     {
+      "name": "itinerary-timeline",
+      "load": "index-only"
+     },
+     {
+      "name": "menu-card",
+      "load": "index-only"
+     },
+     {
+      "name": "facility-info-card",
+      "load": "index-only"
+     },
+     {
+      "name": "amenity-service-card",
+      "load": "index-only"
+     },
+     {
+      "name": "booking-flow",
+      "load": "index-only"
+     },
+     {
+      "name": "table-reservation",
+      "load": "index-only"
+     },
+     {
+      "name": "property-knowledge-base",
+      "load": "index-only"
+     },
+     {
+      "name": "curated-local-guides",
+      "load": "index-only"
+     },
+     {
+      "name": "Weather (Open-Meteo)",
+      "load": "index-only"
+     },
+     {
+      "name": "Wikipedia search",
+      "load": "index-only"
+     },
+     {
+      "name": "Currency rates (Frankfurter)",
+      "load": "index-only"
+     }
+    ]
+   }
+  },
+  {
+   "lines": [
+    "{\"a2uiMeta\":{\"note\":\"Your Swedish massage is confirmed for Thursday 19 November 2026 at 15:00, for Alex Moreau.\",\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Those details are right, please confirm the booking.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"PARSE\",\"TEXT_JSONL_ROUTED\",\"SURFACE_DEGRADED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":150200,\"total\":52828,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2262}],\"over\":false},\"miniSkillIds\":[\"confirm-receipt\",\"feature-collection\",\"greeting-card\"],\"cacheBoundary\":50566}}}"
+   ],
+   "rounds": [
+    {
+     "text": "{\"a2uiMeta\":{\"note\":\"Your Swedish massage is booked: Thursday 19 November 2026 at 15:00, 60 minutes, for Alex Moreau. The spa has received it and the slot is held. Thank you for booking with the Grand Meridian. Is there anything else I can arrange for your stay?\",\"flowEnd\":true,\"target\":{\"surfaceId\":\"spa-booking-2\"}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"receipt\"]},{\"id\":\"receipt\",\"component\":\"ConfirmReceipt\",\"title\":\"Spa booking confirmed\",\"data\":{\"path\":\"/booking\"},\"status\":\"confirmed\",\"rows\":[{\"label\":\"Treatment\",\"path\":\"treatment\",\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"swedish-massage\"}]},{\"label\":\"Date\",\"path\":\"date\",\"options\":[{\"label\":\"Thursday 19 November 2026\",\"value\":\"2026-11-19\"}]},{\"label\":\"Time\",\"path\":\"time\"},{\"label\":\"Guests\",\"path\":\"guests\",\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"}]},{\"label\":\"Guest name\",\"path\":\"guestName\"}]}}}",
+     "tools": []
+    },
+    {
+     "text": "{\"a2uiMeta\":{\"note\":\"Your Swedish massage is booked for Thursday 19 November 2026 at 15:00, 60 minutes, for Alex Moreau. You confirmed it, and the spa has received it. Thank you for booking with the Grand Meridian. Is there anything else I can arrange for your stay?\",\"flowEnd\":true,\"target\":{\"surfaceId\":\"spa-booking-2\"}}}",
+     "tools": []
+    },
+    {
+     "text": "",
+     "tools": [
+      {
+       "name": "render_surface",
+       "input": {
+        "reply": "Your Swedish massage is confirmed for Thursday 19 November 2026 at 15:00, for Alex Moreau.",
+        "target": "spa-booking-2",
+        "messages": "[{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"spa-booking-2\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"receipt\"]},{\"id\":\"receipt\",\"component\":\"ConfirmReceipt\",\"title\":\"Spa booking: Swedish massage\",\"data\":{\"path\":\"/booking\"},\"status\":\"confirmed\",\"rows\":[{\"label\":\"Treatment\",\"path\":\"treatment\",\"options\":[{\"label\":\"Swedish massage, 60 min, €120\",\"value\":\"swedish-massage\"},{\"label\":\"Deep-tissue massage, 60 min, €135\",\"value\":\"deep-tissue-massage\"},{\"label\":\"Hot-stone massage, 90 min, €170\",\"value\":\"hot-stone-massage\"},{\"label\":\"Sea-salt and lemon body scrub, 45 min, €95\",\"value\":\"sea-salt-lemon-scrub\"},{\"label\":\"Hydrating facial, 50 min, €110\",\"value\":\"hydrating-facial\"},{\"label\":\"Couples massage, 60 min, €230 for two\",\"value\":\"couples-massage\"}]},{\"label\":\"Date\",\"path\":\"date\"},{\"label\":\"Time\",\"path\":\"time\"},{\"label\":\"Guests\",\"path\":\"guests\"},{\"label\":\"Guest name\",\"path\":\"guestName\"}]}}}]"
+       }
+      }
+     ]
+    }
+   ],
+   "input": {
+    "kind": "intent",
+    "text": "Those details are right, please confirm the booking."
+   },
+   "routing": {
+    "domains": [
+     "hospitality"
+    ],
+    "exemplars": [
+     "frontier-service-gateway",
+     "domain-concierge-booking-request",
+     "domain-hospitality-itinerary-trip"
+    ],
+    "sections": [
+     "grammar",
+     "components",
+     "functions",
+     "few-shot",
+     "mini-skills",
+     "persona"
+    ],
+    "references": [
+     {
+      "name": "gallery-swiper",
+      "load": "index-only"
+     },
+     {
+      "name": "itinerary-timeline",
+      "load": "index-only"
+     },
+     {
+      "name": "menu-card",
+      "load": "index-only"
+     },
+     {
+      "name": "facility-info-card",
+      "load": "index-only"
+     },
+     {
+      "name": "amenity-service-card",
+      "load": "index-only"
+     },
+     {
+      "name": "booking-flow",
+      "load": "index-only"
+     },
+     {
+      "name": "table-reservation",
+      "load": "index-only"
+     },
+     {
+      "name": "property-knowledge-base",
+      "load": "index-only"
+     },
+     {
+      "name": "curated-local-guides",
+      "load": "index-only"
+     },
+     {
+      "name": "Weather (Open-Meteo)",
+      "load": "index-only"
+     },
+     {
+      "name": "Wikipedia search",
+      "load": "index-only"
+     },
+     {
+      "name": "Currency rates (Frankfurter)",
+      "load": "index-only"
+     }
+    ]
+   }
+  }
+ ]
+}
