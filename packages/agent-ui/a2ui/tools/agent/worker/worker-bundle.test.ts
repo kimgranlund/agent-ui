@@ -46,7 +46,8 @@ try {
 // same emitted bundle. The child stubs `fetch` with a response whose body never emits and shortens ONE of the two
 // real timers (`argv[3]`: the adapter's 60000 ms stall timer, or the whole-turn 300000 ms deadline) to 5 ms, so
 // the real adapter and the real `withTurnDeadline` throw the real error classes, and the Worker's own catch
-// answers. It prints one `CHAT_RESULT` line and exits (the longer timer is still armed).
+// answers. It prints one `CHAT_RESULT` line and exits (the longer timer is still armed). Since T-0444 the route
+// commits its 200 before the call (the disconnect heartbeat), so a failure is `{error}` inside that 200 body.
 const CHAT_RUNNER = `
 import { register } from 'node:module'
 import { pathToFileURL } from 'node:url'
@@ -137,16 +138,16 @@ describe('the bundled Worker evaluates its top level (the deploy-time module loa
     return { ...(JSON.parse(line!.slice('CHAT_RESULT '.length)) as { status: number; body: { error?: string } }), stdout: run.stdout }
   }
 
-  it('/chat: a stalled stream answers 500 with the plain-words stall line, not the adapter log line (T-0024)', () => {
+  it('/chat: a stalled stream answers 200 {error} with the plain-words stall line, not the adapter log line (T-0024, T-0444)', () => {
     const out = chatTurn('stall')
-    expect(out.status).toBe(500)
+    expect(out.status).toBe(200)
     expect(out.body.error).toMatch(/stopped sending its reply/)
     expect(out.body.error).not.toMatch(/anthropicProvider|\d ms\b/)
   })
 
-  it('/chat: the whole-turn deadline answers 500 with the plain-words deadline line (T-0024)', () => {
+  it('/chat: the whole-turn deadline answers 200 {error} with the plain-words deadline line (T-0024, T-0444)', () => {
     const out = chatTurn('deadline')
-    expect(out.status).toBe(500)
+    expect(out.status).toBe(200)
     expect(out.body.error).toMatch(/taking longer than 300 seconds/)
     expect(out.body.error).not.toMatch(/\d ms\b/)
   })
