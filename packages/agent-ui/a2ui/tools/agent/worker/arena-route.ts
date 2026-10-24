@@ -21,6 +21,12 @@
 // going away (`writer.closed` rejects the moment the readable side is cancelled, so a visitor who leaves
 // during an in-flight model call aborts it at once, not on the next write), and by a failed write. The core
 // threads that signal into `runMatch` and each model seat, so the in-flight paid call cancels.
+//
+// Heartbeat (T-0438): workerd notices a dropped client only when it next writes the response body, and a
+// seat's model call writes nothing until its move lands, so a visitor who leaves mid-call would keep that
+// call billing to its end. A blank line every `heartbeatMs` (1 s by default) is that write: with
+// wrangler.jsonc's `enable_request_signal` flag, `request.signal` then fires and the match aborts. The page's
+// NDJSON reader skips blank lines, so the transcript is unchanged.
 import type { ProvidersConfig } from '../providers-config.ts'
 import type { providerFor, validateProviderKeyCached } from '../providers/index.ts'
 import { ARENA_LIVE_MODELS, parseArenaRequest, resolveArenaSeat, startLiveMatch } from '../../../../a2a/tools/arena/live-match.ts'
@@ -49,10 +55,13 @@ export interface ArenaRouteDeps {
   providerFor: typeof providerFor
   validateKey: typeof validateProviderKeyCached
   caps?: ArenaCaps
+  /** The blank-line heartbeat interval (see the header); a test passes a short one. */
+  heartbeatMs?: number
 }
 
 const MAX_BODY = 1 << 16 // 64 KiB: a {seats:{X,O}} body is tiny
 const RATE_WINDOW_S = 60 // wrangler.jsonc's `simple.period`
+const HEARTBEAT_MS = 1000
 
 function json(status: number, body: unknown, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } })
@@ -116,6 +125,7 @@ async function handleMatch(request: Request, deps: ArenaRouteDeps): Promise<Resp
       .then(() => (controller.signal.aborted ? undefined : writer.write(encoder.encode(line))))
       .catch(abort)
   }
+  const heartbeat = setInterval(() => write('\n'), deps.heartbeatMs ?? HEARTBEAT_MS)
 
   void (async () => {
     try {
@@ -130,6 +140,7 @@ async function handleMatch(request: Request, deps: ArenaRouteDeps): Promise<Resp
       // fault. Either way the stream just ends without `game end`, which the page discards.
       if (!controller.signal.aborted) console.error('arena match failed:', err)
     } finally {
+      clearInterval(heartbeat)
       await chain
       request.signal.removeEventListener('abort', abort)
       try {

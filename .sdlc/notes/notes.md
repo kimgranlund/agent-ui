@@ -778,3 +778,9 @@
 ## T-0436: App, code and router descriptors each carry a description (2026-10-24)
 
 - note: the ticket said 17 descriptors, the diff fills 18 (all app, code and router descriptors with a ui-* tag).
+
+## T-0438: Worker request.signal fires on client disconnect so arena and chat cancels abort paid calls (2026-10-24)
+
+- note: `redck.py deviations` printed no `process deviation:` lines, and the ticket has no `(red)` criterion.
+- note: packages/agent-ui/a2ui/tools/agent/worker/request-signal.test.ts: the `/__a2ui/agent` leg has no negative control (the builder records that without the flag it is a race), so only the arena leg is proven flag-dependent. The `/__a2ui/agent` positive leg itself went red with the flag removed in this run.
+- note: request-signal.test.ts imports `miniflare` as wrangler's hoisted dependency, not a direct devDependency.
