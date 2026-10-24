@@ -753,3 +753,7 @@
 ## T-0430: The A2A tic-tac-toe arena plays live matches on ui.nonoun.io (2026-10-23)
 
 - decide: packages/agent-ui/a2ui/tools/agent/worker/arena-route.ts:108 decide: cancel relies on `request.signal` firing in workerd (the `enable_request_signal` compat flag the builder named as open); the `writer.closed` rejection path (:109) covers a visitor leaving even without it.
+
+## T-0434: The A2A concept corpus says the arena plays live on the production site (2026-10-24)
+
+- note: packages/agent-ui/a2a/tools/corpus/seeds.ts:254 new body text keeps the existing em dash style of the record.

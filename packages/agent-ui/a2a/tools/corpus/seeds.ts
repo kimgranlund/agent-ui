@@ -254,11 +254,14 @@ export const conceptSeeds: A2aCorpusRecord[] = [
     body:
       'The site\'s match page replays a COMMITTED transcript in the static build — zero network calls, ' +
       'zero API keys, byte-stable across every build (the a2ui ADR-0073 posture carried over). A live ' +
-      'model-vs-model run is dev-only, gated behind a server-side-key proxy; `vite build` output carries no ' +
-      'proxy path or key name (SPEC-N2, manually grepped).',
+      'model-vs-model run is a probe-gated overlay on that page, served by a server-side-key proxy: the Vite ' +
+      'dev proxy in dev and, since T-0430, the production Worker route `/__a2a/arena` on ui.nonoun.io, behind ' +
+      'a per-visitor rate limit and per-match caps. `vite build` output carries no key value or key name ' +
+      '(SPEC-N2, manually grepped).',
     citations: [
       { kind: 'repo', path: 'site/pages/a2a-tic-tac-toe.ts' },
       { kind: 'repo', path: 'packages/agent-ui/a2a/tools/arena/dev-proxy-plugin.ts' },
+      { kind: 'repo', path: 'packages/agent-ui/a2ui/tools/agent/worker/arena-route.ts' },
     ],
     wire: [transcriptRef('packages/agent-ui/a2a/matches/scripted.match.jsonl', 'clean')],
     meta: { facet: 'concept', protocolVersion: '0.3.0', provenance: { source: 'authored', origin: ORIGIN }, status: 'valid' },
