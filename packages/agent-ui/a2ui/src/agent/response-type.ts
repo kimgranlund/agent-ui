@@ -99,14 +99,47 @@ export function messagesParseNote(input: Record<string, unknown>): string | unde
     const kind = scan.kind === undefined ? '' : ` (its ${scan.kind})`
     return `Your \`messages\` was not valid JSON: ${missing} in message ${scan.message}${kind}, so it is still open where message ${scan.message + 1} begins.`
   }
+  const unclosed = unclosedArray(messages, pos, scan)
+  if (unclosed !== undefined && scan.message > 0) {
+    const kind = scan.kind === undefined ? '' : ` (its ${scan.kind})`
+    return `Your \`messages\` was not valid JSON: a closing ] is missing in message ${scan.message}${kind}: its \`${unclosed}\` array is still open at character ${pos}, where a } comes instead.`
+  }
   const near = messages.slice(Math.max(0, pos - 40), pos + 20)
   return `Your \`messages\` was not valid JSON at character ${pos}${scan.message > 0 ? ` (message ${scan.message})` : ''}, here: \`${near}\`.`
 }
 
-/** The brackets still open at `pos` (outside strings), the 1-based number of the last message opened in the top-level
- *  array, and that message's kind (the key of the first object inside it). */
-function openAt(text: string, pos: number): { open: string[]; message: number; kind: string | undefined } {
+/** T-0450: the key of the array still open where JSON.parse stopped on a `}`, or undefined. Haiku 5.5 dropped the `]`
+ *  that closes `components` after a last component ending in its own array (round 13 :13, :50, :145, every string and
+ *  text round), and the quoted text at the break never named it. */
+function unclosedArray(text: string, pos: number, scan: { open: string[]; keys: (string | undefined)[] }): string | undefined {
+  if (text[pos] !== '}' || scan.open.length < 2 || scan.open.at(-1) !== '[') return undefined
+  return scan.keys.at(-1)
+}
+
+/** T-0450: one model-facing sentence for a text-channel A2UI line that does not parse because an array inside it is
+ *  never closed, or undefined (any other break keeps the plain PARSE reminder). */
+export function wireLineParseNote(line: string): string | undefined {
+  let pos: number | undefined
+  try {
+    JSON.parse(line)
+    return undefined
+  } catch (err) {
+    const m = /position (\d+)/.exec(err instanceof Error ? err.message : '')
+    pos = m === null ? undefined : Number(m[1])
+  }
+  if (pos === undefined || pos > line.length) return undefined
+  const scan = openAt(line, pos)
+  const unclosed = unclosedArray(line, pos, scan)
+  if (unclosed === undefined) return undefined
+  const kind = /^\s*\{\s*"version"\s*:\s*"[^"]*"\s*,\s*"([^"\\]+)"\s*:/.exec(line)?.[1]
+  return `Your A2UI line was not valid JSON: a closing ] is missing${kind === undefined ? '' : ` in its ${kind}`}: its \`${unclosed}\` array is still open at character ${pos}, where a } comes instead.`
+}
+
+/** The brackets still open at `pos` (outside strings) with the key each one is the value of, the 1-based number of the
+ *  last message opened in the top-level array, and that message's kind (the key of the first object inside it). */
+function openAt(text: string, pos: number): { open: string[]; keys: (string | undefined)[]; message: number; kind: string | undefined } {
   const open: string[] = []
+  const keys: (string | undefined)[] = []
   let message = 0
   let kind: string | undefined
   let inString = false
@@ -122,9 +155,13 @@ function openAt(text: string, pos: number): { open: string[]; message: number; k
         kind = undefined
       } else if (open.length === 2 && ch === '{' && kind === undefined) kind = /"([^"\\]*)"\s*:\s*$/.exec(text.slice(0, i))?.[1]
       open.push(ch)
-    } else if (ch === '}' || ch === ']') open.pop()
+      keys.push(/"([^"\\]*)"\s*:\s*$/.exec(text.slice(Math.max(0, i - 200), i))?.[1])
+    } else if (ch === '}' || ch === ']') {
+      open.pop()
+      keys.pop()
+    }
   }
-  return { open, message, kind }
+  return { open, keys, message, kind }
 }
 
 /** T-0194: the trimmed `reply` line a `render_surface` call carries, or '' (a recording made before the field). */

@@ -979,6 +979,13 @@ describe('T-0344: a PARSE repair on a string `messages` asks for an array first'
     expect(finalMeta(lines).trace?.failureCodes).toEqual(['PARSE'])
   })
 
+  it('T-0450: the repair turn shows the model the string it sent, as an array round shows its payload', async () => {
+    const { provider, reqs } = scripted([stringCall(R10_193), arrayCall])
+    await run(NEUTRAL, provider)
+    const turns = reqs()[1]!.messages
+    expect(turns.at(-2)).toEqual({ role: 'assistant', content: `Showdown.\n${R10_193}` })
+  })
+
   it('a string that parses to something other than an array (one object, a double-encoded array) gets the ask with no note', async () => {
     for (const messages of [JSON.stringify(objects(VALID)[0]), JSON.stringify(JSON.stringify(objects(VALID)))]) {
       const { provider, calls, reqs } = scripted([stringCall(messages), arrayCall])

@@ -14,6 +14,7 @@ import {
   renderSurfaceTool,
   messagesParseNote,
   stringifiedMessages,
+  wireLineParseNote,
 } from './response-type.ts'
 
 const intent = (text: string): TurnInput => ({ kind: 'intent', text, session: { turns: [] } }) as TurnInput
@@ -75,6 +76,23 @@ describe('renderSurfaceTool', () => {
     expect(messagesParseNote({ messages: whole.slice(0, -3) })).toMatch(/^Your `messages` was not valid JSON at character \d+ \(message 3\), here: `[^`]*`\.$/)
     expect(messagesParseNote({ messages: whole })).toBeUndefined()
     expect(messagesParseNote({ messages: [update] })).toBeUndefined()
+  })
+  it('T-0450: a `]` missing where a `}` closes the message names the array left open (round 13 :145, :50, :13)', () => {
+    const deck =
+      '[{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui--croupier"}},{"version":"v1.0","updateComponents":{"surfaceId":"ask-1","components":[{"id":"root","component":"OptionDeck","actionName":"pick_game","options":[{"value":"blackjack","title":"Blackjack"}]}]}}]'
+    const short = deck.replace('}]}]}}]', '}]}}}]')
+    expect(short).not.toBe(deck)
+    expect(messagesParseNote({ messages: short })).toBe(
+      `Your \`messages\` was not valid JSON: a closing ] is missing in message 2 (its updateComponents): its \`components\` array is still open at character ${short.length - 3}, where a } comes instead.`,
+    )
+    expect(messagesParseNote({ messages: deck })).toBeUndefined()
+    const line = JSON.stringify(JSON.parse(deck)[1])
+    const shortLine = line.replace('}]}]}}', '}]}}}')
+    expect(wireLineParseNote(shortLine)).toBe(
+      `Your A2UI line was not valid JSON: a closing ] is missing in its updateComponents: its \`components\` array is still open at character ${shortLine.length - 2}, where a } comes instead.`,
+    )
+    expect(wireLineParseNote(line)).toBeUndefined()
+    expect(wireLineParseNote(line.slice(0, -2))).toBeUndefined() // any other break keeps the plain reminder
   })
   it('T-0206: the note names every open surface; the stable description gates on a structure and prefers an update', () => {
     expect(openSurfacesNote(['main', 'quiz-7'])).toBe('[Open surfaces: main, quiz-7.]')

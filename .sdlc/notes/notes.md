@@ -817,3 +817,7 @@
 - note: packages/agent-ui/a2ui/tools/agent/chat-validation.ts:48 still says `failureMessageFor` text is "the `error` field of the 500 JSON body on the prose `/chat` route"; the Worker now answers it in a 200 body (the dev proxy still answers 500). One-line comment staleness.
 - note: the builder wrote the `## Acceptance criteria` section into handoff.md itself (the ticket had none); the criteria are runnable and were checked as written.
 - note: wire asymmetry between the Worker (200 `{error}`) and the dev proxy (500 `{error}`) is documented in the builder report and the admin-live-runner.ts header; both readers handle both.
+
+## T-0450: Haiku invalid-JSON-string payloads recover instead of degrading (2026-10-24)
+
+- note: scripts/e2e-admin/probe/replays/unclosed-array.mjs:12 the recovery legs (`closedLine`) pass at the base sha too; they prove each fixture degrades on the one missing `]` alone and do not discriminate the code change, which the pinpoint and assistant-turn assertions carry, as the criterion states.
