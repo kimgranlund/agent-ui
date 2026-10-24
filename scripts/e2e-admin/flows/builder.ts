@@ -260,10 +260,11 @@ export const builderSessionIsolation: AdminFlow = {
   },
 }
 
-/** T-0412: a Builder ask shipped as one OptionDeck (own-commit, no Button) renders in the Co-pilot pane, and
- *  pressing a card is the answer: the next produce request is a `client` turn over `builderMission: true`
- *  whose action context carries the card's value. With `E2E_ADMIN_SHOT_DIR` set, the mounted deck is
- *  written there as `after-builder-choice-deck.png`. */
+/** T-0412 and T-0446: a Builder ask shipped as one OptionDeck (own-commit, no Button) renders in the Co-pilot pane,
+ *  and pressing the first card, whatever its title, is the answer: the next produce request is a `client` turn
+ *  over `builderMission: true` whose action context carries that card's value, and the Builder answers it. The
+ *  flow reads no title, count or value from the scripted fixture, so a live recording replays through it. With
+ *  `E2E_ADMIN_SHOT_DIR` set, the mounted deck is written there as `after-builder-choice-deck.png`. */
 export const builderChoiceDeck: AdminFlow = {
   name: 'builder-choice-deck',
   fixture: 'builder-choice-deck.json',
@@ -274,19 +275,19 @@ export const builderChoiceDeck: AdminFlow = {
 
     const titles = await pollUntil(
       () => admin.surfaceOptionTitles('copilot'),
-      (found) => found.length === 4,
-      'four OptionDeck cards in the copilot pane surface host',
+      (found) => found.length >= 2,
+      'at least two OptionDeck cards in the copilot pane surface host',
     )
-    assertFlow(
-      JSON.stringify(titles) === JSON.stringify(['Playful', 'Calm', 'Cheerleader', 'Matter-of-fact']),
-      `the copilot pane OptionDeck cards read ${JSON.stringify(titles)}, expected the four temperaments`,
-    )
+    const keys = await admin.surfaceOptionKeys('copilot')
+    const first = titles[0] ?? ''
+    const firstKey = keys[0] ?? ''
+    assertFlow(first !== '' && firstKey !== '', `the first copilot pane OptionDeck card reads title ${JSON.stringify(first)} and value ${JSON.stringify(firstKey)}, expected both non-empty`)
     const buttons = await admin.surfaceButtonLabels('copilot')
     assertFlow(buttons.length === 0, `the copilot pane surface holds buttons ${JSON.stringify(buttons)}, expected none (own-commit)`)
     const shotDir = process.env.E2E_ADMIN_SHOT_DIR
     if (shotDir !== undefined && shotDir !== '') await page.screenshot({ path: `${shotDir}/after-builder-choice-deck.png` })
 
-    await admin.pickSurfaceOption('Playful', 'copilot')
+    await admin.pickSurfaceOption(first, 'copilot')
 
     const produce = wire.entries.filter((e) => e.endpoint === 'produce')
     assertFlow(produce.length === 2, `wire log holds ${produce.length} produce entries, expected 2`)
@@ -298,13 +299,13 @@ export const builderChoiceDeck: AdminFlow = {
     assertFlow(body.input?.kind === 'client', `the second produce input.kind is ${JSON.stringify(body.input?.kind)}, expected "client"`)
     const action = body.input?.message?.action
     assertFlow(
-      action?.name === 'choose' && action.context?.value === 'playful',
-      `the second produce action is ${JSON.stringify(action)}, expected "choose" with context value "playful"`,
+      typeof action?.name === 'string' && action.name !== '' && action.context?.value === firstKey,
+      `the second produce action is ${JSON.stringify(action)}, expected a named action with context value ${JSON.stringify(firstKey)} (the first card "${first}")`,
     )
     const interview = await admin.readBuilderTranscript()
     assertFlow(
-      interview.at(-1)?.role === 'assistant' && interview.at(-1)!.content.includes('a playful coach it is'),
-      `the last interview entry is ${JSON.stringify(interview.at(-1))}, expected the scripted reply to the pick`,
+      interview.at(-1)?.role === 'assistant' && interview.at(-1)!.content.trim() !== '',
+      `the last interview entry is ${JSON.stringify(interview.at(-1))}, expected a non-empty assistant reply to the pick`,
     )
   },
 }

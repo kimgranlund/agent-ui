@@ -806,3 +806,8 @@
 
 - note: packages/agent-ui/a2ui/src/agent/produce.ts:2011 the CHANGE_CLAIM_IN_REPLY heuristic now also fires on `say` replies in a non-tool turn only via the same gate (`roundTarget` and `turnIntent`); the two existing replays had to be updated to the new tally, which is expected but means a shipped claim now always carries CHANGE_CLAIM_UNCORRECTED.
 - note: redck.py deviations printed no `process deviation:` lines; no `(red)` criteria in the handoff.
+
+## T-0446: Live Builder probe that presses an OptionDeck card (2026-10-24)
+
+- note: scripts/e2e-admin/fixtures/builder-choice-deck.json stays the scripted fixture; the live trace sits only in the git-ignored runtime dir, so the conductor decides whether to commit it.
+- note: live spend for the record runs was not metered; the under-$2 claim is an estimate.

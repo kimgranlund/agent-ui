@@ -340,6 +340,16 @@ export class AdminPage {
     )
   }
 
+  /** T-0446: the committed value of every visible OptionDeck card in a pane (`data-key`, the option's `value`), in
+   *  document order and index-aligned with `surfaceOptionTitles`; a QuestionCard row has none and reads empty. */
+  surfaceOptionKeys(pane: ConversationPane = 'chat'): Promise<string[]> {
+    return this.page.evaluate(
+      (selector) =>
+        [...document.querySelectorAll<HTMLElement>(selector)].filter((c) => c.checkVisibility()).map((c) => c.dataset.key ?? ''),
+      optionSelector(pane),
+    )
+  }
+
   /** Click the newest visible OptionDeck card or QuestionCard row titled `title` (a DOM click, the press is the
    *  answer). Resolves whether the card sat in the pane's newest surface host, as `clickSurfaceButton` does (T-0271). */
   #pressOption(title: string, pane: ConversationPane): Promise<{ inNewestSurface: boolean }> {
