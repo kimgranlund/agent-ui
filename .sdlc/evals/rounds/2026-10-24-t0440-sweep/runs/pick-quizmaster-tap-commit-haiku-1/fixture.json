@@ -1,0 +1,346 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "pick-quizmaster-tap-commit-haiku-1",
+  "agent": "quizmaster",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-24T12:56:24.617Z, traces 2026-10-24.jsonl:14,2026-10-24.jsonl:15",
+  "steps": [
+    {
+      "say": "Start a world capitals quiz. Make the first question: What is the capital of France? with the options Paris, London, Berlin and Madrid.",
+      "expect": [
+        "QuestionCard"
+      ]
+    },
+    {
+      "click": "Paris",
+      "expect": [
+        "QuestionCard"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm thinking through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the Quizmaster pers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ona: each round\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a Q\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uestionCard sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face showing question, choices,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" progress, with an explanation\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" revealed after answering and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" running score displ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ayed alongside,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" poss\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ibly using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a GameHud for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" score t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"racking, with final results sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"own later\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a mod\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al over\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lay.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the round\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" count isn't specified, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll simplify the progress\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"racking to just a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Round 1\\\" label r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abricating a total. For score\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I'll use\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a Stat component b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" score field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in the data model, star\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting at 0. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m also consid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ering whether QuestionC\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard needs explicit \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face declar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ations like\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a commit button, since it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" may hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"le its own answ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"er selection differently than typ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ical feed-ask components.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"De\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ciding the layout now: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Column contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing a title and a Row with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the QuestionCard and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" score\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Stat side by side, na\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ming the surface \\\"quiz\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-capitals\\\". I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" defining the QuestionC\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard with its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" question\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", expl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"anation text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", options like\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Paris, and a name\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for tracking the pick,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" explanation hidden until rev\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ealed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Stat component to show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" score b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" init\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ial data of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" score \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"0, emp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ty pick, and revealed\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" false,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rapping it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a short prose note before r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endering the surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Round\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1 is up\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\": What is the capital of France\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"? P\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ick one of the four\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" options and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ll reveal the answer\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" ke\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ep score\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"quiz-capitals\\\",\\\"catalogId\\\":\\\"agent-ui--quizmaster\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"quiz-capitals\\\",\\\"value\\\":{\\\"score\\\":0,\\\"pick\\\":\\\"\\\",\\\"revealed\\\":false}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"quiz-capitals\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"title\\\",\\\"row\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"World capitals quiz\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"wrap\\\":true,\\\"align\\\":\\\"start\\\",\\\"children\\\":[\\\"q_card\\\",\\\"score\\\"]},{\\\"id\\\":\\\"q_card\\\",\\\"component\\\":\\\"QuestionCard\\\",\\\"label\\\":\\\"World capitals\\\",\\\"meta\\\":\\\"Round 1\\\",\\\"question\\\":\\\"What is the capital of France?\\\",\\\"explanation\\\":\\\"Paris has been the capital of France for centuries.\\\",\\\"name\\\":\\\"capital_pick\\\",\\\"options\\\":[{\\\"value\\\":\\\"paris\\\",\\\"label\\\":\\\"Paris\\\"},{\\\"value\\\":\\\"london\\\",\\\"label\\\":\\\"London\\\"},{\\\"value\\\":\\\"berlin\\\",\\\"label\\\":\\\"Berlin\\\"},{\\\"value\\\":\\\"madrid\\\",\\\"label\\\":\\\"Madrid\\\"}],\\\"value\\\":{\\\"path\\\":\\\"/pick\\\"},\\\"answer\\\":\\\"paris\\\",\\\"revealed\\\":{\\\"path\\\":\\\"/revealed\\\"},\\\"actionName\\\":\\\"answer\\\"},{\\\"id\\\":\\\"score\\\",\\\"component\\\":\\\"Stat\\\",\\\"label\\\":\\\"Score\\\",\\\"value\\\":{\\\"path\\\":\\\"/score\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Round 1 is up: What is the capital of France? Pick one of the four options and I'll reveal the answer and keep score.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Start a world capitals quiz. Make the first question: What is the capital of France? with the options Paris, London, Berlin and Madrid.\",\"k\":3},\"exemplarIds\":[\"trivia-round-resume\",\"five-day-weather\",\"plan-and-execute-approve-ask\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":61768,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22429},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":8191},{\"id\":\"mini-skills\",\"chars\":1786},{\"id\":\"persona\",\"chars\":1660}],\"over\":false},\"usage\":{\"inputTokens\":4994,\"outputTokens\":2079,\"cacheReadInputTokens\":18782,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"option-deck\",\"greeting-card\",\"settings-screen\"],\"cacheBoundary\":50131}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"quiz-capitals\",\"catalogId\":\"agent-ui--quizmaster\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"quiz-capitals\",\"value\":{\"score\":0,\"pick\":\"\",\"revealed\":false}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"quiz-capitals\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"title\",\"row\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"World capitals quiz\",\"variant\":\"h4\"},{\"id\":\"row\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"align\":\"start\",\"children\":[\"q_card\",\"score\"]},{\"id\":\"q_card\",\"component\":\"QuestionCard\",\"label\":\"World capitals\",\"meta\":\"Round 1\",\"question\":\"What is the capital of France?\",\"explanation\":\"Paris has been the capital of France for centuries.\",\"name\":\"capital_pick\",\"options\":[{\"value\":\"paris\",\"label\":\"Paris\"},{\"value\":\"london\",\"label\":\"London\"},{\"value\":\"berlin\",\"label\":\"Berlin\"},{\"value\":\"madrid\",\"label\":\"Madrid\"}],\"value\":{\"path\":\"/pick\"},\"answer\":\"paris\",\"revealed\":{\"path\":\"/revealed\"},\"actionName\":\"answer\"},{\"id\":\"score\",\"component\":\"Stat\",\"label\":\"Score\",\"value\":{\"path\":\"/score\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Round 1 is up: What is the capital of France? Pick one of the four options and I'll reveal the answer and keep score.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Round 1 is up. What is the capital of France? Pick one of the four answers.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "quiz-capitals",
+                      "catalogId": "agent-ui--quizmaster",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "quiz-capitals",
+                      "value": {
+                        "score": 0,
+                        "pick": "",
+                        "revealed": false
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "quiz-capitals",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "title",
+                            "row"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "World capitals quiz",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "row",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "align": "start",
+                          "children": [
+                            "q_card",
+                            "score"
+                          ]
+                        },
+                        {
+                          "id": "q_card",
+                          "component": "QuestionCard",
+                          "label": "World capitals",
+                          "meta": "Round 1",
+                          "question": "What is the capital of France?",
+                          "explanation": "Paris has been the capital of France for centuries.",
+                          "name": "capital_pick",
+                          "options": [
+                            {
+                              "value": "paris",
+                              "label": "Paris"
+                            },
+                            {
+                              "value": "london",
+                              "label": "London"
+                            },
+                            {
+                              "value": "berlin",
+                              "label": "Berlin"
+                            },
+                            {
+                              "value": "madrid",
+                              "label": "Madrid"
+                            }
+                          ],
+                          "value": {
+                            "path": "/pick"
+                          },
+                          "answer": "paris",
+                          "revealed": {
+                            "path": "/revealed"
+                          },
+                          "actionName": "answer"
+                        },
+                        {
+                          "id": "score",
+                          "component": "Stat",
+                          "label": "Score",
+                          "value": {
+                            "path": "/score"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "quizmaster"
+        ],
+        "exemplars": [
+          "trivia-round-resume",
+          "five-day-weather",
+          "plan-and-execute-approve-ask"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quiz-round",
+            "load": "index-only"
+          },
+          {
+            "name": "grand-reveal",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"quiz-capitals\\\",\\\"value\\\":{\\\"score\\\":1,\\\"pick\\\":\\\"paris\\\",\\\"revealed\\\":true}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Correct! Paris is the capital of France. Your score is now 1.\",\"target\":{\"surfaceId\":\"quiz-capitals\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"answer\\\" action (from component q_card). Action context: {\\\"value\\\":\\\"paris\\\"}. Current surface data model: {\\\"score\\\":0,\\\"pick\\\":\\\"paris\\\",\\\"revealed\\\":false}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"trivia-round-resume\",\"agent-roster-drawer\",\"frontier-review-split\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":60522,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22429},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":6660},{\"id\":\"mini-skills\",\"chars\":2071},{\"id\":\"persona\",\"chars\":1660}],\"over\":false},\"usage\":{\"inputTokens\":5024,\"outputTokens\":162,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":18781},\"miniSkillIds\":[\"card-game-sheet\",\"table-toolbar-pagination\",\"comparison-table\"],\"cacheBoundary\":50131}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"quiz-capitals\",\"value\":{\"score\":1,\"pick\":\"paris\",\"revealed\":true}}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Correct! Paris is the capital of France. Your score is now 1.",
+                "target": "quiz-capitals",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "quiz-capitals",
+                      "value": {
+                        "score": 1,
+                        "pick": "paris",
+                        "revealed": true
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "quizmaster"
+        ],
+        "exemplars": [
+          "trivia-round-resume",
+          "agent-roster-drawer",
+          "frontier-review-split"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "quiz-round",
+            "load": "index-only"
+          },
+          {
+            "name": "grand-reveal",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
