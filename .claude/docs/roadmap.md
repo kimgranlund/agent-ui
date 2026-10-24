@@ -10,8 +10,9 @@
 > `.sdlc/tickets/roadmap.md`), and before that in GitHub Issues ([ADR-0145](adr/0145-ticket-tier-github-issues-backend.md)):
 > **never here**. A ticket may cite a section of this doc; this doc names an arc and at most the ticket
 > that ruled it, never a list of open tickets, because that list goes stale the moment one closes.
-> Last synthesis pass: 2026-10-15 (T-0251: §2 gained the closed-loop and foundations state, §1 the
-> ticket and changelog moves; the 2026-08-23 pass text below the new §2 lead stays as it was written).
+> Last synthesis pass: 2026-10-24 (T-0441: the §2 and §3 leads rewritten for what shipped since
+> 2026-10-15, §3 ends with candidate next arcs for Kim's ruling, §4 gained the dated lines; the
+> 2026-08-23 pass text below each lead stays as it was written).
 
 ## 1 · Why a fourth doc
 
@@ -41,21 +42,45 @@ On 2026-10-15 Kim took the last step: the root `CHANGELOG.md` became a pointer t
 requests and release tags, and its old text moved, unedited, to the archive at
 `archive/changelog-to-2026-10-15.md`.
 
-## 2 · Now: current state (as of 2026-10-15)
+## 2 · Now: current state (as of 2026-10-24)
 
-> **Lead (2026-10-15).** Since the 2026-08-23 pass the center of gravity moved from building
-> surfaces to proving the agent that drives them.
+> **Lead (2026-10-24).** The agent closed loop is now the daily working loop, and the week after
+> 2026-10-15 spent it on two things: measuring the live agent round by round, and giving it the
+> selection and commit patterns the rounds showed it lacked.
 >
-> - **The agent closed loop.** A real agent turn is driven, checked, recorded and turned into a keyless
->   regression: `npm run chat:probe` drives the real Test Chat live or from a replay fixture with named
->   checks (T-0174); `npm run traces` reads the dev proxy's per-turn trace log, and `--from-trace last`
->   turns a live failure into a replay test; live rounds of many probes run under a spend cap and archive
->   to `.sdlc/evals/rounds/` (T-0225, T-0241). The contract is
->   [`spec/agent-closed-loop.spec.md`](./spec/agent-closed-loop.spec.md) (T-0181); the eval framework
->   it plans (scenario format, report page, judged checks, a live matrix with baselines) is the next arc.
+> - **The agent closed loop and its eval framework.** A real agent turn is driven, checked, recorded
+>   and turned into a keyless regression: `npm run chat:probe` drives the real Test Chat live or from a
+>   replay fixture with named checks (T-0174), `npm run traces` reads the per-turn trace log, and
+>   `--from-trace last` turns a live failure into a replay test. The contract is
+>   [`spec/agent-closed-loop.spec.md`](./spec/agent-closed-loop.spec.md) (T-0181). Its eval framework
+>   shipped in the 2026-10-17 re-scope: the round archive under `.sdlc/evals/rounds/` is the store,
+>   `eval:signals` reads it (T-0342), every preset has smoke scenarios planned from tags (T-0343), and
+>   judged checks run with a pinned judge, rubrics and calibration (T-0178). Live rounds 3 to 12 ran
+>   under the spend cap, and each round's failure clusters became tickets.
+> - **Agent content as files.** Seeds are files with a generated, drift-gated registry (T-0160), user
+>   edits are overlays stored as diffs over seeds (T-0161), the Settings pane forms come from content
+>   schemas with provenance (T-0162), and one agent compiler emits a resolution trace and a bundle
+>   digest (T-0163). The Agent tab gained open fields, drawers and a Danger zone (T-0391), the composer
+>   the model controls (thinking, reasoning, web tools, mid-conversation effort; T-0203), and a new
+>   agent gets a suggested name and tagline from its first Builder message (T-0413).
+> - **Selection and commit patterns.** The default catalog gained OptionDeck (pick one to start, as
+>   cards; T-0193), OptionCompare (pick one of two to four with aligned rows; T-0393), ConfirmReceipt
+>   (confirm and receipt as one control; T-0195), AmountPicker (T-0196), StepFlow (T-0198), Itinerary
+>   (T-0199) and the BookingForm field kinds with a shared hospitality domain (T-0197). The grammar
+>   teaches the rules behind them: a lone single pick is a root OptionDeck the press commits, for every
+>   persona (T-0419); asks commit on their own control rather than a separate Confirm (T-0384,
+>   T-0395); a booking settles in place (T-0385, T-0397, T-0403); a quiz answer commits on tap
+>   (T-0429).
 > - **Derived foundations (ADR-0245).** Every size derives from one integer per element over tier,
->   scale, size and density; the hand-tabled ramp and `[scale]` / `[density]` are retired, and the
->   foundations census gate keeps them out. Controls fill their container by default (ADR-0223).
+>   scale, size and density; the hand-tabled ramp is retired and the foundations census gate keeps it
+>   out. Controls fill their container by default (ADR-0223). The resolver is re-vendored from the
+>   mathematical-design-system skill (T-0372, T-0373), and its visible changes landed (T-0374): glyph
+>   marks, field labels, content and brand tiers, five densities that set control height, and
+>   curvature presets. Removing the deprecated `[scale]` / `[density]` axes and aliases waits on the
+>   next published release (T-0353).
+> - **A2A and the docs site.** The A2A tic-tac-toe arena plays live matches on ui.nonoun.io (T-0430),
+>   and the A2UI catalog page switches catalogs and shows each type's real description (T-0432,
+>   T-0433).
 > - **Ten packages.** `@agent-ui/devtools` (ADR-0200) joined `data` (ADR-0192) as an unpublished
 >   workspace package; the eight published ones are at `v0.1.0` as `@agent-ui-kit/*`, and `main` is
 >   unreleased work past it.
@@ -207,10 +232,37 @@ requests and release tags, and its old text moved, unedited, to the archive at
 
 ## 3 · Next — concrete, near-term
 
-> **Lead (2026-10-15).** Next is the agent eval framework the closed-loop SPEC plans (scenario
-> format and signal store, report page, judged checks, live matrix with baselines), then agent content
-> as files (seeds as manifests, user overlays, schema-generated settings, one agent compiler). Order and
-> status live in the generated `.sdlc/tickets/roadmap.md`. The bullets below are the 2026-08-23 pass.
+> **Lead (2026-10-24).** Both arcs the 2026-10-15 lead named shipped (§4's 2026-10-17 dated
+> lines). In flight: a live `chat:probe` sweep across personas after the 2026-10-22 changes and a
+> handful of small follow-ups from the arena and catalog-page work; order and status live in the
+> generated `.sdlc/tickets/roadmap.md`. No successor arc is ruled. The candidates below are for Kim's
+> ruling; each is checked against the merged log and the open tickets of 2026-10-24, so none names
+> scope that already shipped.
+>
+> 1. **Release 0.2.0, then the ADR-0245 W7 cleanup.** Why: the published packages are still the
+>    2026-08-26 `v0.1.0`, which predates ADR-0245, the agent content files and the whole selection
+>    and commit pattern wave, so a consumer installing from npm gets none of it. The 0.2.0 dry run
+>    packed all eight packages clean on 2026-10-23 and the publish is Kim's call; T-0353 (drop the
+>    `glyph` alias, the old-name bridge, `[scale]`, `[density]` and the legacy opt-out) unblocks on it.
+>    Size: L3 (the publish is a ruling plus a scripted run; T-0353 is L3).
+> 2. **Live quality round 13: measure the pattern wave.** Why: OptionDeck, OptionCompare,
+>    ConfirmReceipt, AmountPicker, StepFlow and Itinerary, and the grammar rules behind them, shipped
+>    after live round 12 (2026-10-19), so no live round has measured whether every persona reaches for
+>    them, and the in-flight sweep is a spot check, not the matrix with a baseline. A round 13 against
+>    the round 12 baseline, its failure clusters filed and fixed the way rounds 3 to 12 ran, closes the
+>    loop on the wave; known gaps it should probe include the `CHANGE_CLAIM_IN_REPLY` keyword regex
+>    (T-0428's open note). Size: L4 across the wave (one L2 round plus L1 and L2 cluster fixes), with
+>    live spend under the round cap.
+> 3. **Agent authoring S5: natural-language edit everywhere.** Why: S5 is parked-IN (§3's
+>    agent-authoring line) because the STORE-IDENTITY fence blocks patching from arbitrary chat with no
+>    ruled consumption path. Agent content overlays (T-0161) now store every edit as a diff over a seed,
+>    and the compiler (T-0163) traces each resolved value to its layer, which gives an edit from any
+>    chat a reviewable, revertible target. Size: L4 (a design intake to rule the consumption path, then
+>    the build).
+>
+> The bullets below are the 2026-08-23 pass, unedited; where they disagree with this lead, the lead
+> wins. Its genuinely open remnants are the planner-stage parallel-step design (leg 4), AC19's sheet set
+> and the identity family's S3-c layout cards.
 
 - **The 2026-07-28 intake ruled the next arc.** A six-system inventory wave (agent-admin · a2ui ·
   GenUI · components · shells · SaaS patterns) fed a dependency-spine synthesis and three
@@ -349,6 +401,27 @@ requests and release tags, and its old text moved, unedited, to the archive at
 ---
 
 *Closed items move here, one dated line each, rather than being deleted from §3 silently:*
+
+- **2026-10-17**: **the agent eval framework shipped, re-scoped** (the 2026-10-15 §3 lead's first
+  arc). The re-scope made the round archive the store and the run cap the cap, closed T-0176, T-0177
+  and T-0179 as covered, and built the rest: `eval:signals` over the archive (T-0342), smoke scenarios
+  for every preset planned from tags (T-0343) and judged checks with a pinned judge, rubrics and
+  calibration (T-0178). Live rounds 3 to 12 (2026-10-15 to 2026-10-19) ran on it.
+- **2026-10-17**: **agent content as files shipped** (the 2026-10-15 §3 lead's second arc): the
+  generated, drift-gated registry (T-0160), overlays as diffs over seeds (T-0161), schema-generated
+  Settings forms with provenance (T-0162) and one agent compiler with a resolution trace and bundle
+  digest (T-0163).
+- **2026-10-18/20**: **the ADR-0245 geometry re-vendor and its visible changes shipped**: the
+  resolver re-vendored from the mathematical-design-system skill and its structure adopted with no
+  rendered change (T-0372, T-0373), then glyph marks, field labels, tiers, five densities and
+  curvature presets (T-0374, eight steps). Kim's mockup approval of the step 3 side-by-side stays open
+  outside the ticket.
+- **2026-10-20/23**: **the selection and commit pattern wave shipped**: OptionDeck, OptionCompare,
+  ConfirmReceipt, AmountPicker, StepFlow, Itinerary and the BookingForm field kinds (T-0193, T-0195 to
+  T-0199, T-0393), the grammar's own-commit and settle-in-place rules (T-0384, T-0385, T-0395, T-0397, T-0419)
+  and the quiz commit on tap (T-0429).
+- **2026-10-23**: **the A2A arena plays live on ui.nonoun.io** (T-0430), and the A2UI catalog page
+  switches catalogs with real descriptions (T-0432, T-0433).
 
 - **2026-08-05** — **M-A "SaaS Data Workbench" closed — and with it the whole 2026-07-28
   three-milestone arc** (M-C 07-29 · M-B 08-04 · M-A 08-05). One day intake-to-done for the build:

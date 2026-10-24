@@ -784,3 +784,8 @@
 - note: `redck.py deviations` printed no `process deviation:` lines, and the ticket has no `(red)` criterion.
 - note: packages/agent-ui/a2ui/tools/agent/worker/request-signal.test.ts: the `/__a2ui/agent` leg has no negative control (the builder records that without the flag it is a race), so only the arena leg is proven flag-dependent. The `/__a2ui/agent` positive leg itself went red with the flag removed in this run.
 - note: request-signal.test.ts imports `miniflare` as wrangler's hoisted dependency, not a direct devDependency.
+
+## T-0441: roadmap.md Now and Next reflect what shipped since 2026-10-15 and propose the next arc (2026-10-24)
+
+- note: .claude/docs/roadmap.md section 4 Later still carries the stale Linear/ADR-0145 line and moved-to-section-3 breadcrumbs (the builder named this as out of scope).
+- note: the builder reports `verify_scope.py` exit 1 from a pre-existing broken link in `.claude/docs/archive/changelog-to-2026-10-15.md`; not touched by this diff and not a listed criterion.
