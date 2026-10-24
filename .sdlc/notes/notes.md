@@ -793,3 +793,7 @@
 ## T-0442: A note-only reply that names a surface it never creates gets the full repair (mentalist on Haiku) (2026-10-24)
 
 - note: the four edited replays now assert a no-halt failure (SURFACE_CLAIMED) in place of green, because their recorded single rounds have no repaired round; the assertion is explicit and tied to the new rule, so it is not vacuous, but the fixtures no longer exercise a clean path for those turns.
+
+## T-0445: Live quality round 13: measure the pattern wave against the round 12 baseline (2026-10-24)
+
+- note: report.md Process notes say the lane worktree `.env` was linked to the main checkout; the link is git-ignored and outside the round archive, no action needed.

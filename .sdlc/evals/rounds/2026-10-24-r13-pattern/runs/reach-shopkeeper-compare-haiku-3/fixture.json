@@ -1,0 +1,111 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "reach-shopkeeper-compare-haiku-3",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-24T16:28:45.876Z, traces 2026-10-24.jsonl:152",
+  "steps": [
+    {
+      "say": "Compare your two cheapest lamps.",
+      "expect": [
+        "OptionCompare"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I don't act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually have real product\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data for l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amps, so in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"venting specific items\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and prices would m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ean fabricating information. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead ask the user for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" clarification on which lamps\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" they're comparing r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than making something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" don't have our\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" current\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" price\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" list\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" in this conversation, so I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" can't say\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" which two\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" lamps are the c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"heapest without gu\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"essing. Could\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you name\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the two l\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"amps you have\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" in mind, or tell me\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" if you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'d like me to show\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" our\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" lamps first so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you can pick?\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Once I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" have the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" two\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\",\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I'll l\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ay out\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" their price\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", material, size and stock side\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" by side with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" my\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" honest recommendation.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Prices and stock are ill\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ustrative demo values.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I don't have our current price list in this conversation, so I can't say which two lamps are the cheapest without guessing. Could you name the two lamps you have in mind, or tell me if you'd like me to show our lamps first so you can pick? Once I have the two, I'll lay out their price, material, size and stock side by side with my honest recommendation. Prices and stock are illustrative demo values.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare your two cheapest lamps.\",\"k\":3},\"exemplarIds\":[\"list-nested\",\"media-file-grid\",\"frontier-step-flow-booking\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57112,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3501},{\"id\":\"mini-skills\",\"chars\":1521},{\"id\":\"persona\",\"chars\":2469}],\"over\":false},\"usage\":{\"inputTokens\":3039,\"outputTokens\":415,\"cacheReadInputTokens\":18609,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":49621}}}"
+      ],
+      "rounds": [
+        {
+          "text": "I don't have our current price list in this conversation, so I can't say which two lamps are the cheapest without guessing. Could you name the two lamps you have in mind, or tell me if you'd like me to show our lamps first so you can pick? Once I have the two, I'll lay out their price, material, size and stock side by side with my honest recommendation. Prices and stock are illustrative demo values.",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "list-nested",
+          "media-file-grid",
+          "frontier-step-flow-booking"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
