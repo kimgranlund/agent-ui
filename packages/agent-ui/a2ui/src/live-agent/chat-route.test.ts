@@ -262,7 +262,9 @@ describe('worker handleChat carries the same dispatch (structural parity gate â€
 
   it('resolves the body\'s integrations and spreads the built pair into provider.stream', () => {
     expect(handleChat).toContain('resolveIntegrations(chatIntegrations')
-    expect(handleChat).toContain('buildToolDispatch(active, hostEnv, request.signal)')
+    // T-0444: the turn's abort signal is a controller that `request.signal` (and a gone reader) feeds.
+    expect(handleChat).toContain('buildToolDispatch(active, hostEnv, controller.signal)')
+    expect(handleChat).toContain("request.signal.addEventListener('abort', abort)")
     expect(handleChat).toContain('...toolOpts')
   })
 
@@ -271,9 +273,11 @@ describe('worker handleChat carries the same dispatch (structural parity gate â€
   })
 
   it('stamps the 200 reply with the shared bundle digest header, over the same wire fields the browser digests (T-0163, T-0427)', () => {
+    // T-0444: the 200 is streamed (a heartbeat, then `{text}` or `{error}`), so the digest rides its headers.
     expect(handleChat).toContain(
-      'res.headers.set(BUNDLE_DIGEST_HEADER, await bundleDigest(bundleFromWire({ system, model, modelSettings: chatModelSettings, integrations: chatIntegrations })))',
+      'const digest = await bundleDigest(bundleFromWire({ system, model, modelSettings: chatModelSettings, integrations: chatIntegrations }))',
     )
+    expect(handleChat).toContain("new Response(readable, { status: 200, headers: { 'content-type': 'application/json', [BUNDLE_DIGEST_HEADER]: digest } })")
   })
 })
 
