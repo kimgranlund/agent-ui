@@ -95,7 +95,7 @@ feed-scoped ask dropped as `FEED_SCOPE_RESCOPED`, a throwing check tallied `SEMA
 the last round's codes plus `EARLIER_ROUND_SHIPPED`; it comes before the `SURFACE_DEGRADED` text. A round a check
 failed never ships this way (Kim 2026-10-16, round 8 :169 shipped a read-back the composite check had failed). With no such round, exhaustion throws `ProduceHalt` carrying the last failures; a
 transport that already committed a 200 turns that into the terminal error line below.
-`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_INFERRED`, `SURFACE_DROPPED`, `SURFACE_NOT_CREATED`, `SURFACE_CLAIMED` (T-0442: a note-only tool-mode reply whose `ask` names a surface no message or session creates; the full repair while a round is left, refused on the last), the genui codes and a semantic check's own codes
+`FEED_SCOPE`, `NET_NOOP`, `FLOW_END_INFERRED`, `SURFACE_DROPPED`, `SURFACE_NOT_CREATED`, `SURFACE_CLAIMED` (T-0442: a note-only tool-mode reply whose `ask`, or (T-0448) `target`, names a surface no message or session creates; the full repair while a round is left, refused on the last), `CHANGE_CLAIMED` (T-0448: a note-only say reply that targets an open surface and claims a change while naming no surface id; one full repair round, then shipped tallied `CHANGE_CLAIM_UNCORRECTED`), the genui codes and a semantic check's own codes
 (`HAND_TOTAL`, `HAND_COUNT`, `NATURAL_ACTIONS`, `SEMANTIC_UNCORRECTED`, `SEMANTIC_CHECK_ERROR`) are produce-layer-only and
 are not members of the protocol `ErrorCode` union.
 

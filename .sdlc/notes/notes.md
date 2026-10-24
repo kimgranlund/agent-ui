@@ -801,3 +801,8 @@
 ## T-0449: A BookingForm bound to a data path the model never writes is sent back (2026-10-24)
 
 - note: checks.ts:82 flags unbound only when the data model is non-empty; a form bound to an empty model stays a legitimate blank form, by design.
+
+## T-0448: A say reply claiming a change, or a note targeting a never-created surface, gets repaired (2026-10-24)
+
+- note: packages/agent-ui/a2ui/src/agent/produce.ts:2011 the CHANGE_CLAIM_IN_REPLY heuristic now also fires on `say` replies in a non-tool turn only via the same gate (`roundTarget` and `turnIntent`); the two existing replays had to be updated to the new tally, which is expected but means a shipped claim now always carries CHANGE_CLAIM_UNCORRECTED.
+- note: redck.py deviations printed no `process deviation:` lines; no `(red)` criteria in the handoff.

@@ -1,0 +1,298 @@
+{
+ "kind": "agent-ui-chat-probe",
+ "version": 1,
+ "name": "shopkeeper-haiku-add-claim-no-id",
+ "agent": "shopkeeper",
+ "model": "claude-haiku-5-5",
+ "effort": "medium",
+ "source": "T-0448: turns 0 and 1 round 1 are smoke-shopkeeper-browse-and-add-haiku-2 verbatim (round .sdlc/evals/rounds/2026-10-24-r13-pattern/, 2026-10-24.jsonl:42,2026-10-24.jsonl:43); turn 1 round 2 is authored, a data-only add as smoke-shopkeeper-browse-and-add-haiku-3 :80 sent it (catalog agent-ui)",
+ "steps": [
+  {
+   "say": "What lamps do you have?",
+   "expect": [
+    "ProductCard"
+   ]
+  },
+  {
+   "say": "Add the first one to my order.",
+   "expect": [
+    "ProductCard"
+   ]
+  }
+ ],
+ "turns": [
+  {
+   "lines": [
+    "{\"a2uiMeta\":{\"textDelta\":\"Here are four lamps in the shop right now. Prices are illustrative demo values.\"}}",
+    "{\"a2uiMeta\":{\"note\":\"Here are four lamps in the shop right now. Prices are illustrative demo values.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":50404,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":783}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49621}}}",
+    "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"storefront-lamps\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+    "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-lamps\",\"value\":{\"order\":{\"total\":\"$0\"}}}}",
+    "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-lamps\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"grid\",\"summary\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"grid\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"220px\",\"children\":[\"p_brass\",\"p_oak\",\"p_ceramic\",\"p_linen\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, linen shade, 165 cm\",\"price\":\"$189\",\"badge\":\"New\",\"badgeIntent\":\"success\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"add_to_order\",\"context\":{\"item\":\"Brass Arc Floor Lamp\",\"price\":189}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Column Table Lamp\",\"subtitle\":\"Oiled oak base, cotton shade, 58 cm\",\"price\":\"$98\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"add_to_order\",\"context\":{\"item\":\"Oak Column Table Lamp\",\"price\":98}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Speckled Ceramic Dome Lamp\",\"subtitle\":\"Hand-glazed stoneware, 40 cm\",\"price\":\"$64\",\"badge\":\"Last one\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"add_to_order\",\"context\":{\"item\":\"Speckled Ceramic Dome Lamp\",\"price\":64}}},{\"id\":\"p_linen\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Pendant\",\"subtitle\":\"Natural linen, cord hung, 35 cm\",\"price\":\"$75\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"add_to_order\",\"context\":{\"item\":\"Linen Drum Pendant\",\"price\":75}}},{\"id\":\"summary\",\"component\":\"Row\",\"justify\":\"between\",\"align\":\"center\",\"children\":[\"total_label\",\"total_value\"]},{\"id\":\"total_label\",\"component\":\"Text\",\"text\":\"Order total\",\"variant\":\"label\"},{\"id\":\"total_value\",\"component\":\"Text\",\"text\":{\"path\":\"/order/total\"},\"variant\":\"h5\",\"emphasis\":true}]}}"
+   ],
+   "rounds": [
+    {
+     "text": "Here are four lamps in the shop right now. Prices are illustrative demo values.",
+     "tools": [
+      {
+       "name": "render_surface",
+       "input": {
+        "reply": "Here are four lamps from the shop right now. Prices are illustrative demo values.",
+        "messages": [
+         {
+          "version": "v1.0",
+          "createSurface": {
+           "surfaceId": "storefront-lamps",
+           "catalogId": "agent-ui",
+           "sendDataModel": true
+          }
+         },
+         {
+          "version": "v1.0",
+          "updateDataModel": {
+           "surfaceId": "storefront-lamps",
+           "value": {
+            "order": {
+             "total": "$0"
+            }
+           }
+          }
+         },
+         {
+          "version": "v1.0",
+          "updateComponents": {
+           "surfaceId": "storefront-lamps",
+           "components": [
+            {
+             "id": "root",
+             "component": "Column",
+             "gap": "md",
+             "children": [
+              "heading",
+              "grid",
+              "summary"
+             ]
+            },
+            {
+             "id": "heading",
+             "component": "Text",
+             "text": "Lamps",
+             "variant": "h4"
+            },
+            {
+             "id": "grid",
+             "component": "Grid",
+             "gap": "md",
+             "min": "220px",
+             "children": [
+              "p_brass",
+              "p_oak",
+              "p_ceramic",
+              "p_linen"
+             ]
+            },
+            {
+             "id": "p_brass",
+             "component": "ProductCard",
+             "title": "Brass Arc Floor Lamp",
+             "subtitle": "Solid brass, linen shade, 165 cm",
+             "price": "$189",
+             "badge": "New",
+             "badgeIntent": "success",
+             "actionLabel": "Add to order",
+             "action": {
+              "action": "add_to_order",
+              "context": {
+               "item": "Brass Arc Floor Lamp",
+               "price": 189
+              }
+             }
+            },
+            {
+             "id": "p_oak",
+             "component": "ProductCard",
+             "title": "Oak Column Table Lamp",
+             "subtitle": "Oiled oak base, cotton shade, 58 cm",
+             "price": "$98",
+             "actionLabel": "Add to order",
+             "action": {
+              "action": "add_to_order",
+              "context": {
+               "item": "Oak Column Table Lamp",
+               "price": 98
+              }
+             }
+            },
+            {
+             "id": "p_ceramic",
+             "component": "ProductCard",
+             "title": "Speckled Ceramic Dome Lamp",
+             "subtitle": "Hand-glazed stoneware, 40 cm",
+             "price": "$64",
+             "badge": "Last one",
+             "badgeIntent": "warning",
+             "actionLabel": "Add to order",
+             "action": {
+              "action": "add_to_order",
+              "context": {
+               "item": "Speckled Ceramic Dome Lamp",
+               "price": 64
+              }
+             }
+            },
+            {
+             "id": "p_linen",
+             "component": "ProductCard",
+             "title": "Linen Drum Pendant",
+             "subtitle": "Natural linen, cord hung, 35 cm",
+             "price": "$75",
+             "actionLabel": "Add to order",
+             "action": {
+              "action": "add_to_order",
+              "context": {
+               "item": "Linen Drum Pendant",
+               "price": 75
+              }
+             }
+            },
+            {
+             "id": "summary",
+             "component": "Row",
+             "justify": "between",
+             "align": "center",
+             "children": [
+              "total_label",
+              "total_value"
+             ]
+            },
+            {
+             "id": "total_label",
+             "component": "Text",
+             "text": "Order total",
+             "variant": "label"
+            },
+            {
+             "id": "total_value",
+             "component": "Text",
+             "text": {
+              "path": "/order/total"
+             },
+             "variant": "h5",
+             "emphasis": true
+            }
+           ]
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "input": {
+    "kind": "intent",
+    "text": "What lamps do you have?"
+   },
+   "routing": {
+    "domains": [],
+    "exemplars": [
+     "frontier-greet-card",
+     "frontier-amount-picker-bet",
+     "travel-itinerary"
+    ],
+    "sections": [
+     "grammar",
+     "components",
+     "functions",
+     "few-shot",
+     "mini-skills",
+     "persona"
+    ],
+    "references": [
+     {
+      "name": "product-grid",
+      "load": "index-only"
+     },
+     {
+      "name": "cart-summary",
+      "load": "index-only"
+     },
+     {
+      "name": "shop-policies",
+      "load": "index-only"
+     }
+    ]
+   }
+  },
+  {
+   "lines": [
+    "{\"a2uiMeta\":{\"textDelta\":\"Added the Brass Arc Floor Lamp ($189) to your order. Your total is now $189.\"}}",
+    "{\"a2uiMeta\":{\"note\":\"The Brass Arc Floor Lamp () is in your order, and your total is .\",\"target\":{\"surfaceId\":\"storefront-lamps\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add the first one to my order.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"CHANGE_CLAIMED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":51995,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2374}],\"over\":false},\"miniSkillIds\":[\"confirm-receipt\",\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":49621}}}",
+    "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-lamps\",\"path\":\"/order\",\"value\":{\"total\":\"$189\"}}}"
+   ],
+   "rounds": [
+    {
+     "text": "{\"a2uiMeta\":{\"note\":\"Added the Brass Arc Floor Lamp ($189) to your order.\",\"target\":{\"surfaceId\":\"storefront-lamps\"}}}\nAdded the Brass Arc Floor Lamp ($189) to your order. Your total is now $189.",
+     "tools": []
+    },
+    {
+     "text": "{\"a2uiMeta\": {\"note\": \"The Brass Arc Floor Lamp () is in your order, and your total is .\", \"target\": {\"surfaceId\": \"storefront-lamps\"}}}",
+     "tools": [
+      {
+       "name": "render_surface",
+       "input": {
+        "reply": "The Brass Arc Floor Lamp () is in your order, and your total is .",
+        "target": "storefront-lamps",
+        "messages": [
+         {
+          "version": "v1.0",
+          "updateDataModel": {
+           "surfaceId": "storefront-lamps",
+           "path": "/order",
+           "value": {
+            "total": "$189"
+           }
+          }
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ],
+   "input": {
+    "kind": "intent",
+    "text": "Add the first one to my order."
+   },
+   "routing": {
+    "domains": [],
+    "exemplars": [
+     "wallet-summary-card",
+     "frontier-round-outcome",
+     "crud-entry-list-drawer"
+    ],
+    "sections": [
+     "grammar",
+     "components",
+     "functions",
+     "few-shot",
+     "mini-skills",
+     "persona"
+    ],
+    "references": [
+     {
+      "name": "product-grid",
+      "load": "index-only"
+     },
+     {
+      "name": "cart-summary",
+      "load": "index-only"
+     },
+     {
+      "name": "shop-policies",
+      "load": "index-only"
+     }
+    ]
+   }
+  }
+ ]
+}

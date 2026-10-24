@@ -2138,6 +2138,7 @@ describe('produce() target meta-line arm — passthrough (GH #1259 / ADR-0206 cl
     expect(readMetaLine(lines[0]!)!.a2uiMeta.target).toBeUndefined()
   })
 
+  // T-0448: with a payload; a tool-mode note-only reply whose target is unknown is sent back (SURFACE_CLAIMED).
   it('the target carries NO integrity check — an UNKNOWN surfaceId ships through, no self-correct round (the consumer validates)', async () => {
     const { provider, calls } = stubProvider([
       JSON.stringify({ a2uiMeta: { note: 'hi', target: { surfaceId: 'never-created-anywhere' } } }) + '\n' + VALID,
@@ -2166,7 +2167,8 @@ describe('produce() target meta-line arm — passthrough (GH #1259 / ADR-0206 cl
     const { provider } = stubProvider([JSON.stringify({ a2uiMeta: { note: 'Nothing to build.', target: TARGET } })])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
     const lines: string[] = []
-    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
+    // T-0448: text-only, since a turn offering render_surface sends a target it never creates back (SURFACE_CLAIMED).
+    for await (const line of produce(intent, deps, { maxRounds: 3, responsePreference: 'text' })) lines.push(line)
 
     expect(lines).toHaveLength(1)
     expect(readMetaLine(lines[0]!)!.a2uiMeta.target).toEqual(TARGET)

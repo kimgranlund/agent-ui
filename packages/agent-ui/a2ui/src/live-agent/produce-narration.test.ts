@@ -288,3 +288,45 @@ describe('produce(): a note-only reply whose ask names a surface it never create
     expect(r.trace.failureCodes).toEqual([])
   })
 })
+
+// T-0448 (round 2026-10-24-r13-pattern, the keyless replays croupier-haiku-rename-claim-no-id, shopkeeper-haiku-add-claim-no-id
+// and concierge-haiku-itinerary-target-claim): a note-only say reply that targets an open surface and claims a change while
+// naming no surface id ("Done, the table is now Kim's table", target table-3) gets CHANGE_CLAIMED and one full repair round
+// (render_surface offered and forced); a claim still standing on the last round ships tallied CHANGE_CLAIM_UNCORRECTED.
+// SURFACE_CLAIMED reads the meta-line target too, so a reply targeting a surface nothing created is sent back.
+describe('produce(): a targeted claim with no surface id, or a target never created, keeps the full repair (T-0448)', () => {
+  const targeted = (text: string, surfaceId: string): string => JSON.stringify({ a2uiMeta: { note: text, target: { surfaceId } } })
+  const CLAIM = targeted("Done, the table is now Kim's table.", 'table-3')
+
+  it('a targeted change claim naming no surface id offers and forces render_surface, and the scripted update lands', async () => {
+    const r = await runRounds([{ text: CLAIM }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }])
+    expect(r.reqs).toHaveLength(2)
+    expect(r.reqs[1]!.tools?.map((t) => t.name)).toContain('render_surface')
+    expect(r.reqs[1]!.toolChoice).toEqual({ name: 'render_surface' })
+    expect(lastUser(r.reqs[1]!)).toContain('CHANGE_CLAIMED at table-3')
+    expect(r.wire).toEqual([UPDATE])
+    expect(r.trace).toMatchObject({ rounds: 2, failureCodes: ['CHANGE_CLAIMED'] })
+  })
+
+  it('a claim still standing after the repair ships tallied, never a halt', async () => {
+    const r = await runRounds([{ text: CLAIM }])
+    expect(r.reqs).toHaveLength(2)
+    expect(r.trace).toMatchObject({ rounds: 2, failureCodes: ['CHANGE_CLAIMED', 'CHANGE_CLAIM_UNCORRECTED'] })
+  })
+
+  it('an untargeted claim, or a targeted reply that claims no change, ships on round 1 as before', async () => {
+    for (const text of [note("Done, the table is now Kim's table."), targeted('You have 10 and 5 for 15 against the dealer\'s 9.', 'table-3')]) {
+      const r = await runRounds([{ text }])
+      expect(r.reqs, text).toHaveLength(1)
+      expect(r.trace.failureCodes, text).toEqual([])
+    }
+  })
+
+  it('a reply whose target names a surface nothing created fails SURFACE_CLAIMED with the full repair', async () => {
+    const r = await runRounds([{ text: targeted('Here is your Saturday, in order.', 'trip-saturday') }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }])
+    expect(r.reqs).toHaveLength(2)
+    expect(r.reqs[1]!.toolChoice).toEqual({ name: 'render_surface' })
+    expect(lastUser(r.reqs[1]!)).toContain('SURFACE_CLAIMED at trip-saturday')
+    expect(r.trace).toMatchObject({ rounds: 2, failureCodes: ['SURFACE_CLAIMED'] })
+  })
+})
