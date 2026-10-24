@@ -923,3 +923,26 @@ describe('single-pick bodies (T-0419)', () => {
     }
   })
 })
+
+// T-0451 (round 13 cluster T, :119 :134 :148): a bare room-booking ask routed only product-presentation, so no
+// StepFlow teaching reached the concierge. The step-flow triggers carry `room`, never `book`: a spa or table ask that
+// names its details is the BookingForm alone and must not be taught a StepFlow.
+describe('step-flow: a bare room-booking ask routes the StepFlow teaching (T-0451)', () => {
+  const STEP_FLOW = MINI_SKILLS.find((m) => m.id === 'step-flow')!
+  const pick = (turn: string) => selectMiniSkills(turn, MINI_SKILLS, DEFAULT_MINI_SKILL_CAP, 'agent-ui--hospitality')
+
+  it('the composed prompt for "I\'d like to book a room." holds the step-flow body', () => {
+    const selected = pick("I'd like to book a room.")
+    expect(selected.map((m) => m.id)).toContain('step-flow')
+    expect(buildSystemPrompt(defaultCatalog, [], undefined, selected)).toContain(STEP_FLOW.body)
+  })
+
+  it('a spa or table booking that names its details never routes step-flow', () => {
+    for (const turn of [
+      'Book a 60-minute Swedish massage at the spa on Thursday 19 November 2026 at 15:00 for one guest, name Alex Moreau.',
+      'Book a table for two tonight at 20:30.',
+    ]) {
+      expect(pick(turn).map((m) => m.id), turn).not.toContain('step-flow')
+    }
+  })
+})
