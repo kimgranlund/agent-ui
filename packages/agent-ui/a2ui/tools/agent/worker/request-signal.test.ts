@@ -10,8 +10,8 @@
 // Anthropic SSE reply and logs when its request is aborted, which happens only when the bundle's provider
 // `fetch` is aborted. The client is a raw socket that is destroyed mid-turn (Node `fetch`'s abort does not
 // reach the runtime through Miniflare's proxy). The negative control drops the flag and expects no abort.
-// The arena legs also prove its heartbeat (arena-route.ts): with no write during a seat call, workerd never
-// notices the disconnect and the positive leg times out.
+// The arena and chat legs also prove their heartbeats (arena-route.ts, T-0444's `/chat` in index.ts): with no
+// write during the model call, workerd never notices the disconnect and the positive leg times out.
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import { execFileSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, readFileSync, rmSync } from 'node:fs'
@@ -62,6 +62,10 @@ const ROUTES = {
   agent: {
     path: '/__a2ui/agent',
     body: { input: { kind: 'intent', text: 'hi', session: { turns: [] } }, provider: 'anthropic', model: 'claude-sonnet-5-5' },
+  },
+  chat: {
+    path: '/__a2ui/agent/chat',
+    body: { system: 's', model: 'claude-sonnet-5-5', messages: [{ role: 'user', content: 'hi' }] },
   },
 } as const
 
@@ -149,12 +153,14 @@ describe('a client disconnect aborts the in-flight provider call in workerd (T-0
     }, 60_000)
   }
 
-  // The arena only: without the flag its seat call runs on every time. `/__a2ui/agent` without the flag is a
-  // race (workerd's teardown of the dropped request sometimes cancels the subrequest, sometimes not), so it
-  // has no stable negative; the flag is what makes its abort certain.
-  it(`/__a2a/arena: negative control, without ${FLAG} the provider call runs on`, async () => {
-    const out = await disconnectMidTurn('arena', wrangler.compatibility_flags.filter((f) => f !== FLAG), 3_000)
-    expect(out.started, out.head).toBe(true)
-    expect(out.aborted).toBe(false)
-  }, 60_000)
+  // The heartbeat routes only (the arena and `/chat`): without the flag their model call runs on every time.
+  // `/__a2ui/agent` without the flag is a race (workerd's teardown of the dropped request sometimes cancels the
+  // subrequest, sometimes not), so it has no stable negative; the flag is what makes its abort certain.
+  for (const route of ['arena', 'chat'] as const) {
+    it(`${ROUTES[route].path}: negative control, without ${FLAG} the provider call runs on`, async () => {
+      const out = await disconnectMidTurn(route, wrangler.compatibility_flags.filter((f) => f !== FLAG), 3_000)
+      expect(out.started, out.head).toBe(true)
+      expect(out.aborted).toBe(false)
+    }, 60_000)
+  }
 })

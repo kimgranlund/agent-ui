@@ -5,7 +5,9 @@
 // the model's full reply string out. Browser → the mounted proxy: in dev, `dev-proxy-plugin.ts`'s `/chat`
 // branch (holds the key SERVER-side, validates the {provider,model} pair against providers.json); in
 // production, the Cloudflare Worker port of the same proxy (`tools/agent/worker/index.ts`) at the same
-// mount → one JSON `{text}` back. This module SHIPS in the production build (both `agent-admin.ts` and
+// mount → one JSON `{text}` back. The Worker commits its 200 before the model call (T-0444: a whitespace
+// heartbeat lets it notice a disconnect), so an in-call failure there is `{error}` in a 200 body; the dev proxy
+// still answers it as a non-2xx. Both read the same way below. This module SHIPS in the production build (both `agent-admin.ts` and
 // `agent-admin-app.ts` reach it via a runtime `/status` probe, not a dev-only import guard). Plain fetch;
 // NO key lives here (the proxy holds it) — no `import.meta.env.VITE_*` reference at all. The `a2ui-live` →
 // `live-proxy-transport.ts` precedent, adapted to agent-admin's prose-reply (not A2UI-JSONL) shape.
@@ -88,7 +90,9 @@ export function createAdminAgentTurn(contentFor?: TurnContentFor): AdminAgentTur
       }
       throw new Error(`Live agent proxy error (${detail}).`)
     }
-    const body = (await res.json()) as { text?: unknown }
+    const body = (await res.json()) as { text?: unknown; error?: unknown }
+    // T-0444: the Worker's in-call failure, the same message the non-2xx path above shows.
+    if (typeof body.text !== 'string' && typeof body.error === 'string' && body.error.length > 0) throw new Error(`Live agent proxy error (${body.error}).`)
     // A malformed 200 body must never render as a silent empty "success" reply (the ticket's own
     // "never a silently-swallowed failure" acceptance criterion) — throw so it surfaces via fail().
     if (typeof body.text !== 'string') throw new Error('Live agent proxy error (malformed response body).')

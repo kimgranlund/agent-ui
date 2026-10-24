@@ -45,7 +45,8 @@ export const GENERIC_FAILURE_MESSAGE = "I couldn't put together a valid response
 
 /**
  * The text a host writes for a failed turn (GH #144, T-0023, T-0024): the terminal `error` meta-line on the
- * produce route, and the `error` field of the 500 JSON body on the prose `/chat` route.
+ * produce route, and the `error` field of the JSON body on the prose `/chat` route (a 500 from the dev proxy; the
+ * Worker's streamed 200 since T-0444).
  *   · `ProduceHalt`: its `userMessage`, which names only closed failure CODES (SCHEMA/PARSE/FEED_SCOPE/...), never raw
  *     upstream text and, since T-0290, never the model-authored surface id paths `message` keeps for logs (GH #307).
  *   · `AgentTimeoutError` (a stalled stream, a first-byte timeout, the whole-turn deadline): its

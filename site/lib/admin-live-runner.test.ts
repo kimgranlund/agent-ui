@@ -51,6 +51,19 @@ describe('createAdminAgentTurn', () => {
     await expect(turn(REQUEST)).rejects.toThrow(/malformed response body/)
   })
 
+  // T-0444: the Worker commits its 200 before the model call, so an in-call failure is `{error}` in that body,
+  // after the heartbeat's leading newlines.
+  it('throws the {error} detail of a heartbeat-led 200 body (the Worker\'s in-call failure)', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('\n\n' + JSON.stringify({ error: 'The model stopped sending its reply.' }), { status: 200 })))
+    const turn = createAdminAgentTurn()
+    await expect(turn(REQUEST)).rejects.toThrow('Live agent proxy error (The model stopped sending its reply.).')
+  })
+
+  it('returns the reply text of a heartbeat-led 200 body', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('\n\n\n' + JSON.stringify({ text: 'hello there' }), { status: 200 })))
+    await expect(createAdminAgentTurn()(REQUEST)).resolves.toBe('hello there')
+  })
+
   // ADR-0168 cl.5 / SPEC-R19 AC2 (GH #402) — the prose arm's enablement reaches the `/chat` POST body,
   // the same additive-optional-field discipline `effort` already proves on this exact call.
   it('forwards the enabled tool ids into the /chat POST body', async () => {

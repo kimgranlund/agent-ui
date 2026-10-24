@@ -72,6 +72,7 @@ interface Env {
 const MOUNT = '/__a2ui/agent'
 const ARENA_MOUNT = '/__a2a/arena'
 const MAX_BODY = 1 << 20 // 1 MiB — matches dev-proxy-plugin.ts's cap
+const CHAT_HEARTBEAT_MS = 1000 // the `/chat` heartbeat interval (T-0444, see handleChat)
 // GH #101 (review finding): dev-proxy-plugin.ts never needed a CSRF guard — it's a Vite dev middleware,
 // reachable only from localhost. Ported unmodified to the public internet, the POST routes had none: a
 // state-changing request with `content-type: text/plain` (a CORS-safelisted type) skips the browser's
@@ -166,42 +167,85 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
   })
   if (!dispatch.ok) return json(503, { error: dispatch.reason })
 
+  // T-0163: the answer's bundle digest, computed before the turn starts so nothing can fail after it.
+  const digest = await bundleDigest(bundleFromWire({ system, model, modelSettings: chatModelSettings, integrations: chatIntegrations }))
+
+  // T-0444: one AbortController per turn, the arena's cancel (arena-route.ts): fed by `request.signal`, by the
+  // response body's reader going away (`writer.closed` rejects once the readable side is cancelled) and by a
+  // failed write. It replaces `request.signal` everywhere below, so the model call and the tool fetches both
+  // cancel when the visitor leaves.
+  const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>()
+  const writer = writable.getWriter()
+  const encoder = new TextEncoder()
+  const controller = new AbortController()
+  const abort = (): void => controller.abort()
+  if (request.signal.aborted) abort()
+  request.signal.addEventListener('abort', abort)
+  writer.closed.then(undefined, abort)
+
   // ADR-0168 cl.5 (GH #402) — the prose arm's enablement, resolved + dispatched through the SAME shared
   // pair `handleProduce` below uses: `resolveIntegrations` intersects with the registry (non-array/unknown
   // ids ⇒ [], capped, fail-closed — never a 400), then `buildToolDispatch` builds the validate→key→execute
   // pair. Zero active manifests ⇒ `{}`, so the spread adds NOTHING and the stream request stays
-  // byte-identical for every caller that enables nothing. `request.signal` is this route's turn-level abort
-  // signal — sourced exactly as `handleProduce` sources its own, so the two routes in this file never grow
-  // two different cancellation conventions.
+  // byte-identical for every caller that enables nothing. The turn's abort signal is the controller above.
   const hostEnv = envVars(env)
   const active = resolveIntegrations(chatIntegrations, hostEnv)
-  const toolOpts = buildToolDispatch(active, hostEnv, request.signal)
-  let text = ''
-  // GH #106 (review finding): request.signal was never forwarded, so a client disconnect never cancelled
-  // the in-flight, paid upstream call — it ran to completion regardless. Threading it through is the whole
-  // fix; the seam already existed end-to-end (AgentProvider.stream() accepts `signal`).
-  // T-0023: this arm bypasses produce(), so it takes the whole-turn deadline here (the SAME `withTurnDeadline`
-  // produce() uses), composed over `request.signal`, which still propagates unchanged.
-  try {
-    for await (const fragment of withTurnDeadline(
-      (signal) => dispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, ...(chatModelSettings !== undefined ? { modelSettings: normalizeModelSettings(model, chatModelSettings, effort as Effort | undefined) } : {}), signal, ...toolOpts }),
-      request.signal,
-      TURN_DEADLINE_MS,
-    )) {
-      text += fragment
-    }
-  } catch (err) {
-    // T-0024: the status stays 500, but the body is the host's plain-words line, the produce arm's rule
-    // (`failureMessageFor`): a stall or the whole-turn deadline names itself, and an upstream fault (which
-    // embeds the provider's raw response body) never reaches the client's chat log. The raw error is
-    // server-only: `wrangler tail`/the Cloudflare dashboard, never the wire. A client disconnect has no
-    // reader left, so what this answers then is moot.
-    console.error('/chat turn failed:', err)
-    return json(500, { error: failureMessageFor(err) })
+  const toolOpts = buildToolDispatch(active, hostEnv, controller.signal)
+
+  // One chain serializes the writes; the first rejected write aborts the turn and every later rejection is
+  // swallowed (GH #107: nothing awaits a detached rejection).
+  let chain: Promise<void> = Promise.resolve()
+  const write = (chunk: string): void => {
+    chain = chain
+      .then(() => (controller.signal.aborted ? undefined : writer.write(encoder.encode(chunk))))
+      .catch(abort)
   }
-  const res = json(200, { text })
-  res.headers.set(BUNDLE_DIGEST_HEADER, await bundleDigest(bundleFromWire({ system, model, modelSettings: chatModelSettings, integrations: chatIntegrations })))
-  return res
+  // Heartbeat (T-0444, the T-0438 arena precedent): workerd notices a dropped client only when it next writes
+  // the response body, and a buffered reply writes nothing until the model call ends, so a visitor who left
+  // would keep that call billing to its end. A newline every second is that write; with wrangler.jsonc's
+  // `enable_request_signal` flag `request.signal` then fires. JSON allows leading whitespace, so the body
+  // still parses with `res.json()` as one object.
+  const heartbeat = setInterval(() => write('\n'), CHAT_HEARTBEAT_MS)
+
+  void (async () => {
+    let text = ''
+    let failure: string | undefined
+    // GH #106 (review finding): request.signal was never forwarded, so a client disconnect never cancelled
+    // the in-flight, paid upstream call: it ran to completion regardless. Threading it through is the whole
+    // fix; the seam already existed end-to-end (AgentProvider.stream() accepts `signal`).
+    // T-0023: this arm bypasses produce(), so it takes the whole-turn deadline here (the SAME `withTurnDeadline`
+    // produce() uses), composed over the turn's abort signal, which still propagates unchanged.
+    try {
+      for await (const fragment of withTurnDeadline(
+        (signal) => dispatch.provider.stream({ model, system, messages, effort: effort as Effort | undefined, ...(chatModelSettings !== undefined ? { modelSettings: normalizeModelSettings(model, chatModelSettings, effort as Effort | undefined) } : {}), signal, ...toolOpts }),
+        controller.signal,
+        TURN_DEADLINE_MS,
+      )) {
+        text += fragment
+      }
+    } catch (err) {
+      // T-0024: the body is the host's plain-words line, the produce arm's rule (`failureMessageFor`): a stall
+      // or the whole-turn deadline names itself, and an upstream fault (which embeds the provider's raw
+      // response body) never reaches the client's chat log. The raw error is server-only: `wrangler tail`/the
+      // Cloudflare dashboard, never the wire. T-0444: the 200 is already committed by the heartbeat, so a
+      // failure answers `{error}` in that 200 body (admin-live-runner.ts reads it); a client disconnect has
+      // no reader left, so nothing is written then.
+      if (!controller.signal.aborted) console.error('/chat turn failed:', err)
+      failure = failureMessageFor(err)
+    } finally {
+      clearInterval(heartbeat)
+      write(JSON.stringify(failure === undefined ? { text } : { error: failure }))
+      await chain
+      request.signal.removeEventListener('abort', abort)
+      try {
+        await writer.close()
+      } catch {
+        // the readable side is already cancelled or errored: nothing left to close (GH #107)
+      }
+    }
+  })()
+
+  return new Response(readable, { status: 200, headers: { 'content-type': 'application/json', [BUNDLE_DIGEST_HEADER]: digest } })
 }
 
 // GH #103 (review finding): produce()'s only statements capable of throwing BEFORE its first `yield` are
