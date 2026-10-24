@@ -761,3 +761,8 @@
 ## T-0435: agent-admin-app-team.test.ts leaves no unhandled rejection after teardown (2026-10-24)
 
 - note: the 20-run criterion cannot bite locally since the CI race never reproduced; confidence rests on the traced code path, not a red-then-green.
+
+## T-0439: A QuestionCard locks after a pick until the reveal arrives (2026-10-24)
+
+- note: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:14 the reworded header comment line exceeds the surrounding wrap width.
+- note: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:351 a re-arm on a question text change while pending is untested.

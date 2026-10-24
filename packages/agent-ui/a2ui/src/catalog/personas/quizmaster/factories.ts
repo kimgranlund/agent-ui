@@ -10,7 +10,8 @@
 // marks the correct row (a check glyph and "Correct") and a wrong pick (a cross glyph and "Your answer"), so no
 // state rests on color alone. A pick commits the answer (T-0429): a click or Space on an option fires the host's own
 // `action` event named by `actionName`, with the picked value as the context `value`, which the renderer forwards as
-// the A2UI action. There is no Check answer Button. The producer's own children (the post-reveal Next question
+// the A2UI action, once: the picked row then reads pending (`data-pending`), the rows lock and a second tap sends
+// nothing until `revealed` changes (T-0439). There is no Check answer Button. The producer's own children (the post-reveal Next question
 // Button) are appended by the renderer after the explanation, sized at the button's `lg` step by `actionRowButtons`
 // (ADR-0243 Amendment 2; 28px on the A2UI canvas register, ADR-0245 Amendment 2). Styling
 // goes through `el.style` only, with no border-left anywhere; no host ARIA. The card is one region on the ADR-0046
@@ -88,6 +89,8 @@ interface QuestionCardParts {
   progress: { value: number; max: number } | undefined
   /** The action a pick commits (T-0429); empty sends nothing. */
   actionName: string
+  /** A pick has committed and the reveal has not landed (T-0439): rows lock and no second answer is sent. */
+  pending: boolean
 }
 
 const questionCardParts = new WeakMap<HTMLElement, QuestionCardParts>()
@@ -179,7 +182,9 @@ function paintOptions(parts: QuestionCardParts): void {
     const look = OPTION_LOOK[state]
     radio.setAttribute('data-state', state)
     // Each radio too, not only the group: a disabled group swallows a click's change but the radio still checks.
-    radio.disabled = parts.revealed
+    radio.disabled = parts.revealed || parts.pending
+    if (parts.pending && state === 'selected') radio.setAttribute('data-pending', '')
+    else radio.removeAttribute('data-pending')
     radio.style.background = look.background
     radio.style.borderColor = look.border
     const key = radio.querySelector('[data-part="key"]')
@@ -306,6 +311,7 @@ export const questionCardFactory: WidgetFactory = {
       label: '',
       progress: undefined,
       actionName: '',
+      pending: false,
     }
     questionCardParts.set(el, parts)
     // A user commit (click, Space, arrow keys) repaints the rows; the event keeps bubbling to the input binding.
@@ -316,10 +322,13 @@ export const questionCardFactory: WidgetFactory = {
       get: () => groupEl.value,
     })
     // A pick commits the answer as the host's own `action` event (T-0429), which the renderer forwards only when it
-    // is dispatched ON the host. Nothing commits while revealed, disabled or with no pick.
+    // is dispatched ON the host. Nothing commits while revealed, disabled, pending (T-0439) or with no pick.
     const commit = (): void => {
       const picked = groupEl.value
-      if (parts.actionName === '' || parts.revealed || groupEl.disabled || picked === null || picked === '') return
+      if (parts.actionName === '' || parts.revealed || parts.pending || groupEl.disabled || picked === null || picked === '') return
+      parts.pending = true
+      groupEl.disabled = true
+      paintOptions(parts)
       el.dispatchEvent(new CustomEvent('action', { detail: { action: parts.actionName, context: { value: picked } } }))
     }
     const rowOf = (event: Event): (RadioLike & { checked: boolean }) | null =>
@@ -338,6 +347,12 @@ export const questionCardFactory: WidgetFactory = {
     if (parts === undefined) return
     switch (prop) {
       case 'question':
+        // A different question is a new round: re-arm a card the reveal never reached.
+        if (parts.pending && parts.questionEl.textContent !== str(value)) {
+          parts.pending = false
+          parts.groupEl.disabled = parts.revealed
+          paintOptions(parts)
+        }
         parts.questionEl.textContent = str(value)
         break
       case 'explanation':
@@ -360,8 +375,10 @@ export const questionCardFactory: WidgetFactory = {
         paintOptions(parts)
         break
       case 'revealed':
+        // Any change of `revealed` ends the wait: the reveal landed, or the next round re-armed the card.
+        if (parts.revealed !== (value === true)) parts.pending = false
         parts.revealed = value === true
-        parts.groupEl.disabled = parts.revealed
+        parts.groupEl.disabled = parts.revealed || parts.pending
         paintExplanation(parts)
         paintOptions(parts)
         break
