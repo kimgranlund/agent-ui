@@ -361,6 +361,54 @@ describe('ui-sandbox-frame: the dogfood frame renders at the widget register (T-
   })
 })
 
+describe('ui-sandbox-frame: plain model text in the dogfood frame reads in the fleet body font (T-0463, real engine)', () => {
+  it('the frame <body> computes the fleet sans family and the body-medium text step, not the UA serif default', async () => {
+    // The expected family, resolved on the HOST from the same token (foundation-styles.css is loaded above).
+    const ref = document.createElement('span')
+    ref.style.fontFamily = 'var(--md-sys-typeface-sans)'
+    document.body.append(ref)
+    const fleetFamily = getComputedStyle(ref).fontFamily
+    ref.remove()
+    expect(fleetFamily, 'the host must resolve the fleet sans token for this check to bite').not.toBe(getComputedStyle(document.documentElement).fontFamily)
+
+    const el = mount()
+    const actions = collectActions(el)
+    el.assets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
+
+    // A plain-HTML surface: no ui-* tag and no model styling, so the body rule alone decides the text.
+    const doc = `<!DOCTYPE html><html><body>
+      <p>Your order ships Tuesday.</p>
+      <script>
+        Promise.resolve().then(function () {
+          var probe = document.createElement('span');
+          probe.style.fontSize = 'var(--md-sys-typescale-body-medium-size)';
+          probe.style.lineHeight = 'var(--md-sys-typescale-body-medium-line-height)';
+          document.body.append(probe);
+          var ps = getComputedStyle(probe);
+          var bs = getComputedStyle(document.body);
+          window.genui.action('font-probe', {
+            family: bs.fontFamily,
+            size: bs.fontSize,
+            lineHeight: bs.lineHeight,
+            tokenSize: ps.fontSize,
+            tokenLineHeight: ps.lineHeight,
+          });
+        });
+      </` + `script></body></html>`
+
+    el.html = doc
+    await waitFor(() => actions.has('font-probe'))
+    const payload = actions.get('font-probe')?.payload as
+      | { family?: string; size?: string; lineHeight?: string; tokenSize?: string; tokenLineHeight?: string }
+      | undefined
+    expect(payload?.family, JSON.stringify(payload)).toBe(fleetFamily)
+    expect(payload?.size, JSON.stringify(payload)).toBe(payload?.tokenSize)
+    expect(payload?.lineHeight, JSON.stringify(payload)).toBe(payload?.tokenLineHeight)
+
+    el.remove()
+  })
+})
+
 describe('ui-sandbox-frame — SPEC-R12 AC2 containment re-proof: a dogfood-asset frame is contained IDENTICALLY (real engine)', () => {
   it('sandbox="allow-scripts" exactly, even with the asset pair injected', async () => {
     const el = mount()

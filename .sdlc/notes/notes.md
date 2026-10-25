@@ -868,3 +868,7 @@
 ## T-0462: A light-scheme solid button reads pressed at primary 750, one step past hover (2026-10-25)
 
 - note: packages/agent-ui/shared/src/tokens/tokens.css:145 the edited comment line now runs past the file's usual wrap width.
+
+## T-0463: The GenUI dogfood frame carries the base body font, so plain model text reads in the fleet font (2026-10-25)
+
+- note: base.css also sets body margin 0 and the surface background, so plain model HTML now sits flush to the frame edge (visible in the after shot); the builder named it as a possible future padding ticket.
