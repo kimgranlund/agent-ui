@@ -849,3 +849,8 @@
 
 - note: the dogfood GenUI frame sets no `data-tier`, so decks render at the product register (32px tile), not widget (24px); the builder flagged it as a possible follow-up ticket.
 - note: Kim's exact "welcome screen" HTML was not replayed (no trace or key in the lane); the verification rests on the rebuilt stretched-host case and the even-rows invariant test.
+
+## T-0459: Every open decide item in notes.md is sorted into ticket, drop or done for one ruling (2026-10-25)
+
+- note: `redck.py deviations` printed no `process deviation:` lines (no `(red)` criteria in this ticket).
+- note: `scripts/e2e-admin/probe/scenarios/shopkeeper.ts:2-3` still says "THAT SAME surface" (builder-flagged wording nit, unchanged).
