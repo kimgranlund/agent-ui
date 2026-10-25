@@ -3811,7 +3811,8 @@ columns.
 
 An optional heading and subheading, then a grid of cards. Each card has a tone header band with an optional
 corner index and an icon disc (or an image), a title, one line of description and up to three meta chips. The
-picked card shows a "Your pick" pill. With `allowRandom` set, a dashed Surprise me card comes last.
+picked card shows a "Your pick" pill. With `allowRandom` set, a dashed Surprise me card comes last. In a column
+narrower than 30rem each card is a compact row instead: a small tone tile with the icon, then the title and description.
 
 ## Picking
 

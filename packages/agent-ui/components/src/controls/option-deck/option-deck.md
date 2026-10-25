@@ -84,13 +84,13 @@ parts:
   - name: option
     description: One card per option, plus the Surprise me card when `allowRandom` is set. The whole card is the target, carrying `role="option"`, `aria-selected`, the roving `tabindex`, `data-tone` and, on the Surprise me card, `data-random`. Its accessible name is the title; the description and meta are its description.
   - name: hero
-    description: The card's tone header band, drawn as a token cross-hatch over the tone container color. At one column it turns into the card's leading column.
+    description: The card's tone header band, drawn as a token cross-hatch over the tone container color. At one column it turns into a flat tone tile at the register's control height, leading the text (T-0454).
   - name: index
     description: The optional corner index, shown at the band's top-start corner and repeated upside down at its bottom-end corner. `aria-hidden`; present only when the option has an `index`.
   - name: disc
-    description: The round surface disc centered in the band that holds the icon, or the shuffle glyph on the Surprise me card.
+    description: The round surface disc centered in the band that holds the icon, or the shuffle glyph on the Surprise me card. At one column it fills the tile with no ring.
   - name: icon
-    description: The `<ui-icon>` inside the disc, showing the option's `icon` from the active pack. Present only when the option has an icon.
+    description: The `<ui-icon>` inside the disc, showing the option's `icon` from the active pack. At one column it is the control icon box. Present only when the option has an icon.
   - name: shuffle
     description: The `aria-hidden` inline SVG shuffle glyph inside the Surprise me card's disc.
   - name: image
@@ -136,7 +136,7 @@ geometry:
   cardRadius: var(--ui-option-deck-radius)     # = --md-sys-card-radius
   cardPadding: var(--ui-option-deck-pad)       # = --md-sys-widget-margin, the body inset
   cardMin: var(--ui-option-deck-card-min)      # = 40n, the auto-fit track floor
-  note: Container spacing only, no control-height row of its own. The grid is `repeat(auto-fit, minmax(min(100%, 40n), 1fr))`, so a 400px column falls to one track and a card turns into a horizontal row (band leading, text trailing) under a 30rem container, the 400px column at every register. Block-level fill by default (ADR-0223); never horizontal scroll. Under `[inline]` the host hugs its content and drops its inline-size container, so it never turns into rows: the grid repeats one track, a column of cards as wide as the widest card.
+  note: Container spacing only, no control-height row of its own. The grid is `repeat(auto-fit, minmax(min(100%, 40n), 1fr))`, so a 400px column falls to one track and a card turns into a compact list row (a control-height tone tile leading, text trailing, every row the tallest text's height) under a 30rem container, the 400px column at every register. Neither the host nor the grid stretches its rows when a wrapper gives the deck a taller block size (T-0454). Block-level fill by default (ADR-0223); never horizontal scroll. Under `[inline]` the host hugs its content and drops its inline-size container, so it never turns into rows: the grid repeats one track, a column of cards as wide as the widest card.
 
 forcedColors: Every card keeps a CanvasText border, the selected card gains a Highlight outline, the band pattern and chip tint drop to Canvas, and the pick pill gains a CanvasText border so it reads without its fill.
 ---
@@ -155,7 +155,8 @@ forcedColors: Every card keeps a CanvasText border, the selected card gains a Hi
 
 An optional heading and subheading, then a grid of cards. Each card has a tone header band with an optional
 corner index and an icon disc (or an image), a title, one line of description and up to three meta chips. The
-picked card shows a "Your pick" pill. With `allowRandom` set, a dashed Surprise me card comes last.
+picked card shows a "Your pick" pill. With `allowRandom` set, a dashed Surprise me card comes last. In a column
+narrower than 30rem each card is a compact row instead: a small tone tile with the icon, then the title and description.
 
 ## Picking
 

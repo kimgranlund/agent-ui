@@ -844,3 +844,8 @@
 
 - decide: .agent-traces/2026-10-25.jsonl:2-3 decide: samples 2 and 3 sent the a2uiMeta JSON as prose in round 1 and healed through one SURFACE_CLAIMED retry each; the probe verdict is still pass, the builder calls it a producer-format issue and left it unfiled.
 - decide: scripts/e2e-admin/probe/scenarios/shopkeeper.ts:11 decide: the cold compare has no keyless regression guard (no `reach-shopkeeper-compare` round scenario and no replay fixture captured with `--from-trace`), so the fix is proven only by the paid run.
+
+## T-0454: The welcome surface's option cards render at 150 to 250px tall with a full-height media column and uneven heights (2026-10-25)
+
+- note: the dogfood GenUI frame sets no `data-tier`, so decks render at the product register (32px tile), not widget (24px); the builder flagged it as a possible follow-up ticket.
+- note: Kim's exact "welcome screen" HTML was not replayed (no trace or key in the lane); the verification rests on the rebuilt stretched-host case and the even-rows invariant test.
