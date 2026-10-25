@@ -142,11 +142,11 @@
   --md-sys-color-primary-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-350));
   --md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-250));
   /* T-0340: the FILL ladder under on-primary text (ui-button solid, checked checkbox/radio, badges). Dark legs clear
-     4.5:1 and darken rest -> hover -> pressed; light legs match primary / -dim / -high. `primary` stays the ink and
+     4.5:1 and darken rest -> hover -> pressed; light legs match primary / -dim / -active (550 / 650 / 750, T-0462). `primary` stays the ink and
      indicator role. Theme packs derive theirs (wrap-pack.ts repointFill). */
   --md-sys-color-primary-fill: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-600));
   --md-sys-color-primary-fill-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-700));
-  --md-sys-color-primary-fill-active: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-750));
+  --md-sys-color-primary-fill-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-750));
   --md-sys-color-primary-disabled: light-dark(var(--md-sys-color-primary-scrim-600), var(--md-sys-color-primary-scrim-600));
   --md-sys-color-primary-on-primary: light-dark(var(--md-sys-color-primary-050), var(--md-sys-color-primary-050));
   --md-sys-color-primary-on-primary-variant: light-dark(var(--md-sys-color-primary-200), var(--md-sys-color-primary-200));

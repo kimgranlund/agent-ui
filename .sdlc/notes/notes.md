@@ -864,3 +864,7 @@
 
 - note: the builder's two open items (no base body font in the dogfood bundle so fleet text reads in UA serif, visible in the screenshots; an out-of-pack option-deck icon name renders an empty tile) are unruled design questions, reported by the builder and not filed here.
 - note: Itinerary is not a frame-reachable ui-* tag; its screenshots are a hand-composed ui-text/ui-timeline equivalent, as the builder stated.
+
+## T-0462: A light-scheme solid button reads pressed at primary 750, one step past hover (2026-10-25)
+
+- note: packages/agent-ui/shared/src/tokens/tokens.css:145 the edited comment line now runs past the file's usual wrap width.

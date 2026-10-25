@@ -102,7 +102,7 @@ variants on the `primary` family:
 >
 > **T-0340 (2026-10-17, Kim):** a fill that carries on-primary text reads the primary FILL ladder,
 > `--md-sys-color-primary-fill` / `-fill-hover` / `-fill-active`: dark 600 / 700 / 750, each at 4.5:1 or better, and
-> light legs equal to `primary` / `-dim` / `-high`, so the light Amendment 2 ladder (and its collapse) is unchanged.
+> light legs `primary` / `-dim` / `-high`. **T-0462 (2026-10-25, Kim):** the light `-fill-active` leg is now `primary-750` (the `-active` light leg), one step past hover's 650, so the light hover==active collapse Amendment 2 reopened is closed for solid fills.
 > `ui-button` solid's row in the table above reads it, as do the checked checkbox and radio fill. `primary`, `-hover`
 > and `-active` stay the ink and indicator roles at their stock legs. Theme packs get the ladder from `wrap-pack.ts`'s
 > `repointFill`.

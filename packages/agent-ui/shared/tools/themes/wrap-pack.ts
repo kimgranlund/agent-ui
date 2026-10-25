@@ -61,7 +61,7 @@ export function extractRootBody(css: string): string {
 // T-0340 (Kim 2026-10-17): a stock UT export has no fill role for on-primary text, and its dark `primary` (450)
 // carries that text at about 3.2:1. `primary` stays the ink and indicator role; the wrap adds the FILL ladder
 // (`--md-sys-color-primary-fill`, `-fill-hover`, `-fill-active`) derived from the pack's OWN ramp. Light legs copy
-// the pack's `primary` / `-dim` / `-high` light legs (ui-button's light ladder). The dark rest is the first stop,
+// the pack's `primary` / `-dim` / `-active` light legs (ui-button's light ladder; T-0462: pressed is one stop past hover). The dark rest is the first stop,
 // walking away from the on-primary ink from DARK_FILL_START (darker for a light ink, lighter for a dark ink), that
 // clears 4.5:1; hover and pressed step 100 and 150 further the same way. Every leg, light and dark, is then checked
 // against its matching on-primary leg, and a miss (or a pack with only some fill roles) refuses. Nothing is tabled.
@@ -123,7 +123,7 @@ export function repointFill(body: string): string {
     return n
   }
   const dark = [rest, step(rest + sign * 100), step(rest + sign * 150)].map(pad)
-  const light = [legs('primary')[0], legs('primary-dim')[0], legs('primary-high')[0]]
+  const light = [legs('primary')[0], legs('primary-dim')[0], legs('primary-active')[0]]
   // every leg, light and dark, against its matching on-primary leg (rest, hover, pressed); refuse on any miss
   INK_ROLES.forEach((inkRole, i) => {
     const inkLegs = legs(inkRole)
