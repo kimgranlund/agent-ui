@@ -839,3 +839,8 @@
 - decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:3168 note: `#reflectCopilotKicker` runs only on a real `authoringStore` identity change, so a page must set `authoringMode` before `authoringStore` (the descriptor says so at agent-admin.md:62); the page step that registers `onEditRequest` should keep that order.
 - decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:2830 note: the architect's `edit: { reverted, skipped }` turn-log entry on Undo is not built; the step handoff rules Undo out of the chat turn and the host, so the skipped keys reach the user only through `receipt-undo-skipped`.
 - note: agent-admin.ts:2832-2834 adds one thing the Do did not call for: the armed branch skips `#handleSubmit` when `copilot.disabled` (it mirrors `#startFromFirstMessage`'s master-switch guard). Harmless, and the builder disclosed it.
+
+## T-0453: The shopkeeper answers a cold compare ask with an OptionCompare (2026-10-25)
+
+- decide: .agent-traces/2026-10-25.jsonl:2-3 decide: samples 2 and 3 sent the a2uiMeta JSON as prose in round 1 and healed through one SURFACE_CLAIMED retry each; the probe verdict is still pass, the builder calls it a producer-format issue and left it unfiled.
+- decide: scripts/e2e-admin/probe/scenarios/shopkeeper.ts:11 decide: the cold compare has no keyless regression guard (no `reach-shopkeeper-compare` round scenario and no replay fixture captured with `--from-trace`), so the fix is proven only by the paid run.

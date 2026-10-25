@@ -20,7 +20,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
   travel: 'sha256:6c278799c52a10627305adf37d415713076cbc6ce0d6ce431ef7195af9dd2a29',
   curator: 'sha256:81881cbdf3a5c96c88bf0ef47a874a020d8dc99d97520b3cd2f1763896fbcf49',
   stylist: 'sha256:5be5c45f741dd489178106991cf29bd19acc06721e592b446c7f3d95954a4226',
-  shopkeeper: 'sha256:1c4ae5986590797df17233647862d164439d8ffefb78202cb3cb8099a888ba03',
+  shopkeeper: 'sha256:9b7a913f834344373bdbc527bfcca807c82db2c6ee08db03df42e0b8032f42b8',
   quizmaster: 'sha256:65f7e46dcc4e0a4a3d5ac1a627ca6b14320ea7e9895a6314906d76bc4d8a5766',
   mentalist: 'sha256:e110c13f0cb88f2894857b73cb49f5a464a40ea86adbbcda0bbbd055079d56ab',
   negotiator: 'sha256:7d64711cac5c40fa2468bb38cd1b3f88d7e86b5021d367cc62926a40c524cb38',
@@ -31,7 +31,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
 }
 // T-0447: recaptured for the code-authored edit-session section (seeded disabled; no content file moved).
 const BUILDER_DIGEST = 'sha256:c0700a01a032eaea15ee806c26458c0d0a8b07259ea58db46349f69e5de8abe0'
-const PRESETS_DIGEST = 'sha256:93422439e45ec974ee012031754fff22d9ae48f60e39ce05d9b2d8ccd911fd9f'
+const PRESETS_DIGEST = 'sha256:b0afe30b1b5414860a633e6f049083cd8235258b06effebc428c4f5d0a9b0b73'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
 const LIBRARIES_DIGEST = 'sha256:06816be10277caa0dc42fe5fdce2a5357b002d30f1df7e747d3f2644937ae271' // T-0451: step-flow mini-skill trigger and body
 
