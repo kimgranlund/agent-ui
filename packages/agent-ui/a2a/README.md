@@ -3,7 +3,7 @@
 A2A (Agent2Agent) protocol support, pinned to spec v0.3.0: wire types for AgentCard / Message / Task / Artifact, JSON-RPC method shapes, and strict validation. Zero dependencies, isomorphic (browser + node).
 
 > Published on npm as `@agent-ui-kit/a2a`; inside this repository the workspace package is `@agent-ui/a2a`,
-> renamed at publish time. The latest release is 0.1.0 (tag `v0.1.0`); the source on `main` is unreleased
+> renamed at publish time. The latest release is 0.2.0 (tag `v0.2.0`); the source on `main` is unreleased
 > work past it.
 
 ## Install

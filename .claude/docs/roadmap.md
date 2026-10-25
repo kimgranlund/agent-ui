@@ -82,7 +82,7 @@ requests and release tags, and its old text moved, unedited, to the archive at
 >   and the A2UI catalog page switches catalogs and shows each type's real description (T-0432,
 >   T-0433).
 > - **Ten packages.** `@agent-ui/devtools` (ADR-0200) joined `data` (ADR-0192) as an unpublished
->   workspace package; the eight published ones are at `v0.1.0` as `@agent-ui-kit/*`, and `main` is
+>   workspace package; the eight published ones are at `v0.2.0` as `@agent-ui-kit/*`, and `main` is
 >   unreleased work past it.
 > - **Process.** ADRs are frozen (T-0164): a decision lives in its ticket and the owning reference doc
 >   or skill. Work items moved from GitHub Issues to SDLC Lite tickets in `.sdlc/tickets/`, run in

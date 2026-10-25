@@ -12,7 +12,7 @@ on `@agent-ui/code/editor` (ADR-0139) and pdfjs-dist on the `@agent-ui/app` inge
 
 The source on `main` is unreleased. Workspace packages are named `@agent-ui/*`, versioned `0.0.0` and
 marked private; at publish time `npm run publish:packages` renames them to `@agent-ui-kit/*` and
-releases them in lockstep. The latest release is `v0.1.0` (2026-08-26) of eight packages; `data` and
+releases them in lockstep. The latest release is `v0.2.0` (2026-10-25) of eight packages; `data` and
 `devtools` have never been published. Where releases and merged changes are listed:
 [CHANGELOG.md](CHANGELOG.md).
 

@@ -854,3 +854,8 @@
 
 - note: `redck.py deviations` printed no `process deviation:` lines (no `(red)` criteria in this ticket).
 - note: `scripts/e2e-admin/probe/scenarios/shopkeeper.ts:2-3` still says "THAT SAME surface" (builder-flagged wording nit, unchanged).
+
+## T-0460: Publish 0.2.0 of the eight packages (2026-10-25)
+
+- note: the publish and tag commands for Kim are in `0460-solo-L2.md` (`git tag v0.2.0 && git push origin v0.2.0`, then `npm run publish:packages -- 0.2.0`); the release date 2026-10-25 in README.md and CHANGELOG.md needs a fix plus both site regens if the publish slips.
+- note: `redck.py deviations` printed no deviation lines; the criteria carry no `(red)` tag.

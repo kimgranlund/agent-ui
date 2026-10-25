@@ -12,7 +12,7 @@ Every change lands as one pull request against `main`, titled `T-NNNN: <title>` 
 
 ## Releases
 
-Releases are git tags (`v0.0.2` through `v0.1.0`, the latest on 2026-08-26), published by
+Releases are git tags (`v0.0.2` through `v0.2.0`, the latest on 2026-10-25), published by
 `npm run publish:packages -- <version>` as the lockstep `@agent-ui-kit/*` npm set:
 [github.com/kimgranlund/agent-ui/tags](https://github.com/kimgranlund/agent-ui/tags). The source on
 `main` is unreleased work past the latest tag.

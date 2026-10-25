@@ -3,7 +3,7 @@
 A2UI (agent-generated UI) support for the agent-ui family: a zero-dependency renderer for the A2UI wire protocol, a strict message validator, and the default component catalog mapping protocol types onto `ui-*` elements.
 
 > Published on npm as `@agent-ui-kit/a2ui`; inside this repository the workspace package is `@agent-ui/a2ui`,
-> renamed at publish time. The latest release is 0.1.0 (tag `v0.1.0`); the source on `main` is unreleased
+> renamed at publish time. The latest release is 0.2.0 (tag `v0.2.0`); the source on `main` is unreleased
 > work past it.
 
 ## Install

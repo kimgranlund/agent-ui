@@ -3,7 +3,7 @@
 Design tokens and foundation stylesheets for the agent-ui family: the `--md-sys-*` color/dimension token system (an extension of Material Design 3), the typographic scale, and loadable theme packs. Zero dependencies, CSS-first.
 
 > Published on npm as `@agent-ui-kit/shared`; inside this repository the workspace package is `@agent-ui/shared`,
-> renamed at publish time. The latest release is 0.1.0 (tag `v0.1.0`); the source on `main` is unreleased
+> renamed at publish time. The latest release is 0.2.0 (tag `v0.2.0`); the source on `main` is unreleased
 > work past it.
 
 ## Install

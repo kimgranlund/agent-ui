@@ -2,7 +2,7 @@
   {
     "name": "Releases",
     "url": "./changelog.html#releases",
-    "description": "Releases are git tags (v0.0.2 through v0.1.0, the latest on 2026-08-26), published by npm run publish:packages -- <version> as the lockstep @agent-ui-kit/* npm…",
+    "description": "Releases are git tags (v0.0.2 through v0.2.0, the latest on 2026-10-25), published by npm run publish:packages -- <version> as the lockstep @agent-ui-kit/* npm…",
     "level": "L3",
     "section": "Records"
   },
