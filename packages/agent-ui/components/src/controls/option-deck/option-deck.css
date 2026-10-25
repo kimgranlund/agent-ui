@@ -9,7 +9,8 @@
  *       heading, subheading, then the auto-fit card grid; `[inline]` hugs instead (ADR-0223). Each card is a tone header band (a token cross-hatch, a
  *       corner index, an icon disc) over a text body (title, description, meta chips); the picked card adds the
  *       Your pick pill. Under a 30rem container (the 400px column, one track at every register) a card turns into a
- *       horizontal row, band leading.
+ *       compact list row: a flat tone tile at the register's control height leading the text, every row as tall
+ *       as the tallest text (T-0454). Neither the host nor the grid stretches its rows into a taller block size.
  *
  * The tone is a hue signifier only: the title is each card's identity, and the pick is also the pill and the
  * thicker edge, never color alone.
@@ -74,10 +75,10 @@
   --ui-option-deck-random-edge: var(--md-sys-c);
   --ui-option-deck-random-disc: var(--md-sys-color-neutral-container);
 
-  /* Horizontal row at one column */
-  --ui-option-deck-row-hero-size: calc(var(--md-sys-inset) * 14);
-  --ui-option-deck-row-disc-size: calc(var(--md-sys-inset) * 8);
-  --ui-option-deck-row-icon-size: calc(var(--md-sys-inset) * 4);
+  /* Compact row at one column (T-0454): the leading tile is a control on the library ramp, not a media column */
+  --ui-option-deck-row-tile-size: var(--md-sys-height);
+  --ui-option-deck-row-tile-radius: var(--md-sys-control-radius);
+  --ui-option-deck-row-icon-size: var(--md-sys-icon-box);
   --ui-option-deck-row-title-size: var(--md-sys-type-title);
   --ui-option-deck-row-body-gap: var(--md-sys-c);
 
@@ -117,6 +118,7 @@
      itself, the ui-column `[stretch]` fill-available cascade (the last valid declaration wins per engine). */
   :scope {
     display: grid;
+    align-content: start; /* a taller block size from a wrapper never stretches the heading or the card rows (T-0454) */
     gap: var(--ui-option-deck-stack-gap);
     box-sizing: border-box;
     min-inline-size: 0;
@@ -151,6 +153,7 @@
   :scope > [data-part='grid'] {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ui-option-deck-card-min)), 1fr));
+    align-content: start;
     gap: var(--ui-option-deck-gap);
     margin-block-start: var(--ui-option-deck-grid-offset);
   }
@@ -297,19 +300,30 @@
     box-shadow: none;
   }
 
-  /* One column: the card turns into a horizontal row, band leading, so a four-card picker stays short. */
+  /* One column: the card turns into a compact list row, a control-sized tone tile leading the text, so a
+     four-card picker stays short (T-0454). The rows share one height, the tallest text's. */
   @container option-deck (inline-size < 30rem) {
+    :scope > [data-part='grid'] {
+      grid-auto-rows: 1fr;
+    }
     :scope [data-part='option'] {
-      grid-template-columns: var(--ui-option-deck-row-hero-size) minmax(0, 1fr);
+      grid-template-columns: auto minmax(0, 1fr);
       grid-template-rows: auto;
+      align-items: center;
+      padding-inline-start: var(--ui-option-deck-pad);
     }
     :scope [data-part='hero'] {
-      block-size: auto;
-      min-block-size: 100%;
+      inline-size: var(--ui-option-deck-row-tile-size);
+      block-size: var(--ui-option-deck-row-tile-size);
+      overflow: hidden;
+      border-radius: var(--ui-option-deck-row-tile-radius);
+      background: var(--ui-option-deck-tone);
     }
     :scope [data-part='disc'] {
-      inline-size: var(--ui-option-deck-row-disc-size);
-      block-size: var(--ui-option-deck-row-disc-size);
+      inline-size: 100%;
+      block-size: 100%;
+      background: transparent;
+      box-shadow: none;
     }
     :scope [data-part='icon'],
     :scope [data-part='shuffle'] {

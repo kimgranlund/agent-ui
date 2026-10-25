@@ -100,11 +100,12 @@ describe('ui-option-deck: the 400px column', () => {
     expect(lefts.size).toBe(1)
     const tracks = getComputedStyle(grid).gridTemplateColumns.trim().split(/\s+/)
     expect(tracks).toHaveLength(1)
-    // The row form: the band leads and the body sits beside it, not under it.
+    // The row form: the tile leads and the body sits beside it, not under it (T-0454: the tile is centred in the row).
     const hero = list[0]!.querySelector<HTMLElement>('[data-part="hero"]')!.getBoundingClientRect()
     const body = list[0]!.querySelector<HTMLElement>('[data-part="body"]')!.getBoundingClientRect()
     expect(body.left).toBeGreaterThanOrEqual(hero.right - 1)
-    expect(Math.round(body.top)).toBe(Math.round(hero.top))
+    expect(hero.top).toBeGreaterThanOrEqual(body.top - 1)
+    expect(hero.bottom).toBeLessThanOrEqual(body.bottom + 1)
     expect(deck.scrollWidth).toBeLessThanOrEqual(deck.clientWidth)
     for (const card of list) expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth)
     expect(deck.getBoundingClientRect().width).toBeLessThanOrEqual(400)
@@ -166,4 +167,57 @@ describe('ui-option-deck: inline hugs its content', () => {
       expect(cards(deck)[0]!.getBoundingClientRect().width).toBeCloseTo(width, 0)
     })
   }
+})
+
+// T-0454: Kim's live "welcome screen" picker rendered each one-column row as a tall card with a full-height
+// cross-hatch column and a big circled icon, and the rows came out uneven. The one-column row is a compact list
+// row: an icon tile at the control height of the register beside the title and description, every row the same
+// height, and a wrapper that gives the deck a definite block size never inflates the rows.
+describe('ui-option-deck: the compact one-column row (T-0454)', () => {
+  const WELCOME = [
+    { value: 'explore', title: 'Explore', description: 'See what you can do here', icon: 'sparkle' },
+    { value: 'profile', title: 'Set up my profile', description: 'Personalize your experience', icon: 'star' },
+    { value: 'help', title: 'Get help', description: 'Ask a question or browse tips', icon: 'heart' },
+  ]
+
+  /** The register's control height and icon box, read off a probe inside the same wrapper. */
+  const ramp = (deck: Element): { height: number; icon: number } => {
+    const probe = document.createElement('div')
+    probe.style.cssText = 'position:absolute; inline-size:var(--md-sys-icon-box); block-size:var(--md-sys-height);'
+    deck.parentElement!.append(probe)
+    const rect = probe.getBoundingClientRect()
+    probe.remove()
+    return { height: rect.height, icon: rect.width }
+  }
+
+  it('the leading icon tile is the control height and the icon the control icon box, not a media column', async () => {
+    const { deck } = await mount('400px', { heading: 'What would you like to do?', options: WELCOME })
+    const { height, icon } = ramp(deck)
+    expect(height).toBe(24) // widget / md: the 24px control (the probe reads the real ramp, not a hand-tabled value)
+    for (const card of cards(deck)) {
+      const hero = card.querySelector<HTMLElement>('[data-part="hero"]')!.getBoundingClientRect()
+      expect(hero.width).toBeCloseTo(height, 0)
+      expect(hero.height).toBeCloseTo(height, 0)
+      const glyph = card.querySelector<HTMLElement>('[data-part="icon"]')!.getBoundingClientRect()
+      expect(glyph.width).toBeCloseTo(icon, 0)
+      // The row is its text plus the padding: the tile never sets the row height.
+      const body = card.querySelector<HTMLElement>('[data-part="body"]')!.getBoundingClientRect()
+      expect(card.getBoundingClientRect().height).toBeLessThanOrEqual(body.height + 2 + 0.5)
+    }
+  })
+
+  it('a definite block size on the deck does not stretch the rows', async () => {
+    const { deck } = await mount('400px', { heading: 'What would you like to do?', options: WELCOME })
+    const natural = cards(deck).map((card) => card.getBoundingClientRect().height)
+    deck.style.blockSize = '700px'
+    const stretched = cards(deck).map((card) => card.getBoundingClientRect().height)
+    stretched.forEach((h, i) => expect(h).toBeCloseTo(natural[i]!, 0))
+  })
+
+  it('every row is the same height when one description wraps', async () => {
+    const options = WELCOME.map((o, i) => (i === 1 ? { ...o, description: 'Personalize your experience with a name, a photo, your time zone and the topics you follow' } : o))
+    const { deck } = await mount('400px', { heading: 'What would you like to do?', options })
+    const heights = cards(deck).map((card) => Math.round(card.getBoundingClientRect().height))
+    expect(new Set(heights).size).toBe(1)
+  })
 })
