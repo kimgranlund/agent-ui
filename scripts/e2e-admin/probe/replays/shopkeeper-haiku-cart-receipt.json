@@ -1,0 +1,246 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "shopkeeper-haiku-cart-receipt",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-24.jsonl:3,2026-10-24.jsonl:4 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "What lamps do you have?",
+      "expect": [
+        "ProductCard"
+      ]
+    },
+    {
+      "say": "Add two of the first one to my order and show me my cart.",
+      "expect": [
+        "ConfirmReceipt"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are the lamps we have right now. Prices and stock are illustrative demo values.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are the lamps we have right now. Prices and stock are illustrative demo values.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":50404,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":783}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49621}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"shop-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"shop-1\",\"components\":[{\"id\":\"root\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"240px\",\"children\":[\"p_brass\",\"p_oak\",\"p_dome\",\"p_linen\",\"p_stone\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, linen shade\",\"price\":\"$189\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"brass-arc-floor\",\"name\":\"Brass Arc Floor Lamp\",\"price\":189}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Tripod Lamp\",\"subtitle\":\"Oiled oak base, cotton shade\",\"price\":\"$145\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"oak-tripod\",\"name\":\"Oak Tripod Lamp\",\"price\":145}}},{\"id\":\"p_dome\",\"component\":\"ProductCard\",\"title\":\"Sage Dome Table Lamp\",\"subtitle\":\"Hand-glazed ceramic\",\"price\":\"$68\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"disabled\":true,\"actionLabel\":\"Sold out\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"sage-dome-table\",\"name\":\"Sage Dome Table Lamp\",\"price\":68}}},{\"id\":\"p_linen\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Lamp\",\"subtitle\":\"Natural linen drum shade\",\"price\":\"$84\",\"priceOld\":\"$98\",\"badge\":\"Sale\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"linen-drum\",\"name\":\"Linen Drum Lamp\",\"price\":84}}},{\"id\":\"p_stone\",\"component\":\"ProductCard\",\"title\":\"Stoneware Bedside Lamp\",\"subtitle\":\"Speckled stoneware, small footprint\",\"price\":\"$72\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"stoneware-bedside\",\"name\":\"Stoneware Bedside Lamp\",\"price\":72}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here are the lamps we have right now. Prices and stock are illustrative demo values.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are the lamps in the shop. Prices and stock are illustrative demo values. Pick one to start an order.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "shop-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "shop-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Grid",
+                          "gap": "md",
+                          "min": "240px",
+                          "children": [
+                            "p_brass",
+                            "p_oak",
+                            "p_dome",
+                            "p_linen",
+                            "p_stone"
+                          ]
+                        },
+                        {
+                          "id": "p_brass",
+                          "component": "ProductCard",
+                          "title": "Brass Arc Floor Lamp",
+                          "subtitle": "Solid brass, linen shade",
+                          "price": "$189",
+                          "badge": "New",
+                          "badgeIntent": "info",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "brass-arc-floor",
+                              "name": "Brass Arc Floor Lamp",
+                              "price": 189
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak Tripod Lamp",
+                          "subtitle": "Oiled oak base, cotton shade",
+                          "price": "$145",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "oak-tripod",
+                              "name": "Oak Tripod Lamp",
+                              "price": 145
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_dome",
+                          "component": "ProductCard",
+                          "title": "Sage Dome Table Lamp",
+                          "subtitle": "Hand-glazed ceramic",
+                          "price": "$68",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "disabled": true,
+                          "actionLabel": "Sold out",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "sage-dome-table",
+                              "name": "Sage Dome Table Lamp",
+                              "price": 68
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_linen",
+                          "component": "ProductCard",
+                          "title": "Linen Drum Lamp",
+                          "subtitle": "Natural linen drum shade",
+                          "price": "$84",
+                          "priceOld": "$98",
+                          "badge": "Sale",
+                          "badgeIntent": "warning",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "linen-drum",
+                              "name": "Linen Drum Lamp",
+                              "price": 84
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_stone",
+                          "component": "ProductCard",
+                          "title": "Stoneware Bedside Lamp",
+                          "subtitle": "Speckled stoneware, small footprint",
+                          "price": "$72",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "stoneware-bedside",
+                              "name": "Stoneware Bedside Lamp",
+                              "price": 72
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "What lamps do you have?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "frontier-amount-picker-bet",
+          "travel-itinerary"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Added two Brass Arc Floor Lamps ($189 each, $378 total). Your order is below the lamps, and you can change the quantity there. Prices and stock are illustrative demo values.\",\"target\":{\"surfaceId\":\"shop-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add two of the first one to my order and show me my cart.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":51995,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2374}],\"over\":false},\"miniSkillIds\":[\"confirm-receipt\",\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":49621}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"shop-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"shop-1\",\"value\":{\"cart\":{\"status\":\"pending\",\"total\":\"$378\",\"lines\":[{\"name\":\"Brass Arc Floor Lamp\",\"qty\":2,\"price\":\"$189\"}]}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"shop-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"storefront\",\"order\",\"qty_brass\"]},{\"id\":\"storefront\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"240px\",\"children\":[\"p_brass\",\"p_oak\",\"p_dome\",\"p_linen\",\"p_stone\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, linen shade\",\"price\":\"$189\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"brass-arc-floor\",\"name\":\"Brass Arc Floor Lamp\",\"price\":189}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Tripod Lamp\",\"subtitle\":\"Oiled oak base, cotton shade\",\"price\":\"$145\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"oak-tripod\",\"name\":\"Oak Tripod Lamp\",\"price\":145}}},{\"id\":\"p_dome\",\"component\":\"ProductCard\",\"title\":\"Sage Dome Table Lamp\",\"subtitle\":\"Hand-glazed ceramic\",\"price\":\"$68\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"disabled\":true,\"actionLabel\":\"Sold out\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"sage-dome-table\",\"name\":\"Sage Dome Table Lamp\",\"price\":68}}},{\"id\":\"p_linen\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Lamp\",\"subtitle\":\"Natural linen drum shade\",\"price\":\"$84\",\"priceOld\":\"$98\",\"badge\":\"Sale\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"linen-drum\",\"name\":\"Linen Drum Lamp\",\"price\":84}}},{\"id\":\"p_stone\",\"component\":\"ProductCard\",\"title\":\"Stoneware Bedside Lamp\",\"subtitle\":\"Speckled stoneware, small footprint\",\"price\":\"$72\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"stoneware-bedside\",\"name\":\"Stoneware Bedside Lamp\",\"price\":72}}},{\"id\":\"order\",\"component\":\"ConfirmReceipt\",\"title\":\"Your order\",\"data\":{\"path\":\"/cart\"},\"items\":[{\"label\":\"Brass Arc Floor Lamp\",\"quantity\":2,\"amount\":\"$378\"}],\"totalLabel\":\"Total\",\"totalPath\":\"/cart/total\",\"status\":{\"path\":\"/cart/status\"},\"confirmAction\":{\"action\":\"confirm_order\",\"context\":{\"sku\":\"brass-arc-floor\"}},\"backAction\":{\"action\":\"back_to_shop\"}},{\"id\":\"qty_brass\",\"component\":\"AmountPicker\",\"label\":\"Brass Arc Floor Lamp quantity\",\"value\":{\"path\":\"/cart/lines/0/qty\"},\"min\":1,\"max\":10,\"step\":1,\"currency\":\"USD\",\"actionName\":\"set_quantity\",\"name\":\"qty_brass\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Added two Brass Arc Floor Lamps ($189 each, $378 total). Your order is below the lamps, and you can change the quantity there. Prices and stock are illustrative demo values.\",\"target\":{\"surfaceId\":\"shop-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"shop-1\",\"catalogId\":\"agent-ui\"}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"shop-1\",\"value\":{\"cart\":{\"status\":\"pending\",\"total\":\"$378\",\"lines\":[{\"name\":\"Brass Arc Floor Lamp\",\"qty\":2,\"price\":\"$189\"}]}}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"shop-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"storefront\",\"order\",\"qty_brass\"]},{\"id\":\"storefront\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"240px\",\"children\":[\"p_brass\",\"p_oak\",\"p_dome\",\"p_linen\",\"p_stone\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, linen shade\",\"price\":\"$189\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"brass-arc-floor\",\"name\":\"Brass Arc Floor Lamp\",\"price\":189}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Tripod Lamp\",\"subtitle\":\"Oiled oak base, cotton shade\",\"price\":\"$145\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"oak-tripod\",\"name\":\"Oak Tripod Lamp\",\"price\":145}}},{\"id\":\"p_dome\",\"component\":\"ProductCard\",\"title\":\"Sage Dome Table Lamp\",\"subtitle\":\"Hand-glazed ceramic\",\"price\":\"$68\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"disabled\":true,\"actionLabel\":\"Sold out\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"sage-dome-table\",\"name\":\"Sage Dome Table Lamp\",\"price\":68}}},{\"id\":\"p_linen\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Lamp\",\"subtitle\":\"Natural linen drum shade\",\"price\":\"$84\",\"priceOld\":\"$98\",\"badge\":\"Sale\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"linen-drum\",\"name\":\"Linen Drum Lamp\",\"price\":84}}},{\"id\":\"p_stone\",\"component\":\"ProductCard\",\"title\":\"Stoneware Bedside Lamp\",\"subtitle\":\"Speckled stoneware, small footprint\",\"price\":\"$72\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"stoneware-bedside\",\"name\":\"Stoneware Bedside Lamp\",\"price\":72}}},{\"id\":\"order\",\"component\":\"ConfirmReceipt\",\"title\":\"Your order\",\"data\":{\"path\":\"/cart\"},\"items\":[{\"label\":\"Brass Arc Floor Lamp\",\"quantity\":2,\"amount\":\"$378\"}],\"totalLabel\":\"Total\",\"totalPath\":\"/cart/total\",\"status\":{\"path\":\"/cart/status\"},\"confirmAction\":{\"action\":\"confirm_order\",\"context\":{\"sku\":\"brass-arc-floor\"}},\"backAction\":{\"action\":\"back_to_shop\"}},{\"id\":\"qty_brass\",\"component\":\"AmountPicker\",\"label\":\"Brass Arc Floor Lamp quantity\",\"value\":{\"path\":\"/cart/lines/0/qty\"},\"min\":1,\"max\":10,\"step\":1,\"currency\":\"USD\",\"actionName\":\"set_quantity\",\"name\":\"qty_brass\"}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Add two of the first one to my order and show me my cart."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "wallet-summary-card",
+          "crud-entry-list-drawer",
+          "frontier-round-outcome"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

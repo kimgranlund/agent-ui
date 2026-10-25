@@ -878,3 +878,9 @@
 - decide: site/agent-content/personas/concierge/agent.md:67 note: a pre-existing em dash sits in the Surface style ("integrations" then "surface the results"), untouched by this ticket; model-read text under the debate rule.
 - decide: .sdlc/runtime/tasks/0457-concierge-stepflow-pull/live/reach-concierge-room-stepflow-haiku-3/report.json decide: run 3's StepFlow ends in a Select scene with no BookingForm last step, against the added sentence's "that one booking form is its last step"; reach held 3 of 3, shape held 2 of 3.
 - decide: scripts/chat-probe.mjs decide: a live fixture and report carry no persona seedVersion or seed digest, so which seed a live run used is provable only through the trace's bundle digest and file mtimes.
+
+## T-0456: Round 13 fixes have keyless replay guards, and a strict tool use spike measures Haiku format failures (2026-10-25)
+
+- note: the T-0451 and T-0453 fixtures are the live runs' own probe fixture.json, not `--from-trace` output, because the lane traces were reaped (per the solo report). The fixture provenance comments in the tests say so.
+- note: the persona and routing legs pin exact sentences, so a deliberate rewording of the shopkeeper persona or the cart-summary line must update these tests too (the solo's own "Open" item).
+- note: the fix-revert recipe for T-0452 persona v4 is `git show 71b85c74d^:site/agent-content/personas/shopkeeper/agent.md`, not a reverse-apply, because T-0453 touched the same file afterwards.
