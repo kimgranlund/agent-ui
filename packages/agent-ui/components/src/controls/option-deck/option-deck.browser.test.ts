@@ -11,6 +11,7 @@ import { userEvent } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import './option-deck.css'
 import './option-deck.ts'
+import '@agent-ui/icons/phosphor' // registers the Phosphor pack so an icon name can fall outside it
 import type { UIOptionDeckElement } from './option-deck.ts'
 
 const OPTIONS = [
@@ -219,5 +220,22 @@ describe('ui-option-deck: the compact one-column row (T-0454)', () => {
     const { deck } = await mount('400px', { heading: 'What would you like to do?', options })
     const heights = cards(deck).map((card) => Math.round(card.getBoundingClientRect().height))
     expect(new Set(heights).size).toBe(1)
+  })
+})
+
+describe('ui-option-deck: an icon name outside the pack (T-0464)', () => {
+  it('paints the fallback glyph at the icon box size, not an empty tile', async () => {
+    const { deck } = await mount('400px', {
+      options: [
+        { value: 'known', title: 'Known', icon: 'star' },
+        { value: 'unknown', title: 'Unknown', icon: 'compass' },
+      ],
+    })
+    const [known, unknown] = cards(deck).map((c) => c.querySelector('[data-part="icon"] svg') as SVGSVGElement)
+    expect(unknown!.hasAttribute('data-icon-missing')).toBe(false)
+    const box = unknown!.getBoundingClientRect()
+    expect(box.width).toBeGreaterThan(0)
+    expect(box.width).toBe(known!.getBoundingClientRect().width)
+    expect(unknown!.querySelector('path')).not.toBeNull()
   })
 })

@@ -884,3 +884,7 @@
 - note: the T-0451 and T-0453 fixtures are the live runs' own probe fixture.json, not `--from-trace` output, because the lane traces were reaped (per the solo report). The fixture provenance comments in the tests say so.
 - note: the persona and routing legs pin exact sentences, so a deliberate rewording of the shopkeeper persona or the cart-summary line must update these tests too (the solo's own "Open" item).
 - note: the fix-revert recipe for T-0452 persona v4 is `git show 71b85c74d^:site/agent-content/personas/shopkeeper/agent.md`, not a reverse-apply, because T-0453 touched the same file afterwards.
+
+## T-0464: An OptionDeck icon name outside the icon pack shows a neutral fallback glyph, not an empty tile (2026-10-25)
+
+- note: packages/agent-ui/components/src/controls/option-deck/option-deck.ts:47 checks the active pack for the fallback only when the card renders. A card that rendered before a pack was registered keeps its own name and does not re-resolve, which is the intended pass-through.
