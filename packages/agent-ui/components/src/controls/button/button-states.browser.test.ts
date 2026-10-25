@@ -111,16 +111,13 @@ describe('ui-button states — per-variant :hover repaint (ADR-0008, both engine
 })
 
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
-//  [2] RISK-1 (RE-OPENED) — solid hover/active on the generic -dim/-high ladder (ADR-0008 Amendment 2)
+//  [2] RISK-1 (CLOSED, T-0462): solid hover/active on the primary FILL ladder
 // ════════════════════════════════════════════════════════════════════════════════════════════════════
 //
-// Amendment 2 (2026-08-22, directed by Kim) repointed the solid fill's `-bg-hover`/`-bg-active` off the
-// dedicated tok-states roles (`--md-sys-color-primary-hover`/`-active`) back onto the generic accent ladder
-// (`--md-sys-color-primary-dim`/`-high`) — the pre-amendment-1 pairing. That ladder is KNOWN to collapse in
-// LIGHT scheme: `-dim` and `-high` both resolve to `--md-sys-color-primary-650`, so a hovered solid button is
-// once again indistinguishable from a pressed one in light. This is a KNOWINGLY re-opened defect, not an
-// oversight — see ADR-0008 Amendment 2 for the record. The LIGHT case below asserts the collapse directly so
-// a future fix (or a further amendment) has a red-to-green signal instead of a silently-stale green.
+// ADR-0008 Amendment 2 put the solid fill's `-bg-hover`/`-bg-active` on a generic ladder whose light legs both
+// resolved to `--md-sys-color-primary-650`, so a hovered solid button was indistinguishable from a pressed one in
+// light. T-0340 moved the row onto the FILL ladder and T-0462 gave its light `-fill-active` leg primary-750, one
+// step past hover. The LIGHT case below asserts the two states differ, so a regression goes red.
 //
 // These reads are TRANSITION-IMMUNE by construction: `resolveToken` measures a throwaway probe span that is
 // not a `ui-button` and never enters `:state(ready)`, so its background is the statically-resolved token —
@@ -143,18 +140,17 @@ describe('ui-button states — RISK-1 solid idle→hover→active ladder per col
     expect(active, 'dark solid pressed still reads --md-sys-color-primary-high').not.toBe(resolveToken(btn, '--md-sys-color-primary-high', 'dark'))
   })
 
-  it('LIGHT: solid hover and active COLLAPSE onto the same step (ADR-0008 Amendment 2, KNOWN regression)', () => {
+  it('LIGHT: solid hover and active are two DISTINCT steps, 650 then 750 (T-0462, closes the ADR-0008 Amendment 2 collapse)', () => {
     const { btn } = mount('<ui-button variant="solid">Label</ui-button>')
     const idle = resolveToken(btn, '--ui-button-bg', 'light')
     const hover = resolveToken(btn, '--ui-button-bg-hover', 'light')
     const active = resolveToken(btn, '--ui-button-bg-active', 'light')
-    // both states still lift off idle (550 → 650) — the control still reacts in light, it just reacts to one
-    // step, not two: hover and active both land on --md-sys-color-primary-650.
+    // hover lifts off idle (550 → 650) and pressed goes one step further (750), the way dark's three states do.
     expect(hover, 'light idle did not lift on hover').not.toBe(idle)
     expect(active, 'light idle did not lift on active').not.toBe(idle)
-    // the re-opened RISK-1 collapse, asserted directly: if a future fix separates these again, this assertion
-    // goes red on purpose — flip it back to `.not.toBe(active)` alongside that fix, not before.
-    expect(hover, 'light solid hover no longer collapses onto active — Amendment 2 may have been superseded').toBe(active)
+    expect(hover, `light solid hover==active (ladder collapsed in light): ${hover}`).not.toBe(active)
+    expect(hover, 'light solid hover is not --md-sys-color-primary-fill-hover').toBe(resolveToken(btn, '--md-sys-color-primary-fill-hover', 'light'))
+    expect(active, 'light solid pressed is not --md-sys-color-primary-fill-active').toBe(resolveToken(btn, '--md-sys-color-primary-fill-active', 'light'))
   })
 })
 

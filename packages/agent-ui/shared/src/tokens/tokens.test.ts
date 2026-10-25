@@ -254,13 +254,21 @@ describe('tokens.css — the AA-guaranteed --md-sys-color-primary-selected fill 
     })
   }
 
-  it('the fill ladder keeps the light accent ladder (primary / -dim / -high) and darkens rest -> hover -> pressed in dark (T-0340)', () => {
+  it('the fill ladder steps primary / -dim / -active in light (T-0462) and darkens rest -> hover -> pressed in dark (T-0340)', () => {
     expect(legsOf('primary-fill')[0]).toBe(legsOf('primary')[0])
     expect(legsOf('primary-fill-hover')[0]).toBe(legsOf('primary-dim')[0])
-    expect(legsOf('primary-fill-active')[0]).toBe(legsOf('primary-high')[0])
+    expect(legsOf('primary-fill-active')[0]).toBe(legsOf('primary-active')[0])
     const [rest, hover, pressed] = FILL_PAIRS.map(([fill]) => Number(legsOf(fill)[1]))
     expect(hover, 'dark hover is not darker than rest').toBeGreaterThan(rest as number)
     expect(pressed, 'dark pressed is not darker than hover').toBeGreaterThan(hover as number)
+  })
+
+  // T-0462: light hover and pressed were both 650, so a hovered solid button read as a pressed one. Pressed is one
+  // stop past hover (650 -> 750), matching the dark scheme's distinct hover and pressed states.
+  it('light: -fill-hover is 650 and -fill-active is 750, two distinct stops (T-0462)', () => {
+    expect(legsOf('primary-fill-hover')[0]).toBe('650')
+    expect(legsOf('primary-fill-active')[0]).toBe('750')
+    expect(legsOf('primary-fill-active')[0]).not.toBe(legsOf('primary-fill-hover')[0])
   })
 
   it('NEGATIVE control: the plain-role dark legs the fill ladder replaced (450, 400, 350, 250) fail AA under on-primary', () => {

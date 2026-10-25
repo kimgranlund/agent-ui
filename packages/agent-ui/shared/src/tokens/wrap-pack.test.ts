@@ -78,11 +78,11 @@ describe('repointFill', () => {
   const STOPS = { '050': 1, '250': 0.82, '300': 0.78, '350': 0.74, '400': 0.69, '450': 0.65, '500': 0.6, '550': 0.56, '600': 0.52, '650': 0.47, '700': 0.43, '750': 0.38, '800': 0.33, '950': 0.15 }
   const fill = (out: string, role: string) => out.match(new RegExp(`--md-sys-color-${role}: light-dark\\(var\\(--md-sys-color-primary-(\\d+)\\), var\\(--md-sys-color-primary-(\\d+)\\)\\);`))?.slice(1)
 
-  it('adds the fill roles after -active: light legs from primary / -dim / -high, dark 600 / 700 / 750 for a light ink', () => {
+  it('adds the fill roles after -active: light legs from primary / -dim / -active, dark 600 / 700 / 750 for a light ink', () => {
     const out = repointFill(ramp(STOPS) + roles())
     expect(fill(out, 'primary-fill')).toEqual(['550', '600'])
     expect(fill(out, 'primary-fill-hover')).toEqual(['650', '700'])
-    expect(fill(out, 'primary-fill-active')).toEqual(['650', '750'])
+    expect(fill(out, 'primary-fill-active')).toEqual(['750', '750'])
     expect(out.indexOf('--md-sys-color-primary-fill:')).toBeGreaterThan(out.indexOf('--md-sys-color-primary-active:'))
     expect(out).toContain('--md-sys-color-primary: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-450));') // primary untouched
   })

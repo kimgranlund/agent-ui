@@ -25,10 +25,9 @@
 :where(ui-button) {
   /* Colour channel (default family = primary). solid = filled (accent bg, on-accent ink). Per-state bg from the
      primary FILL ladder (T-0340: --md-sys-color-primary-fill · -fill-hover · -fill-active), the role that carries
-     on-primary text: dark 600 -> 700 -> 750, each at 4.5:1 or better. Its light legs equal the generic accent ladder
-     ADR-0008 Amendment 2 restored (primary · -dim · -high), so light is unchanged, including the KNOWN regression:
-     hover and pressed both resolve to --md-sys-color-primary-650 in light, so a hovered solid button looks like a
-     pressed one there. */
+     on-primary text: dark 600 -> 700 -> 750, light 550 -> 650 -> 750, each at 4.5:1 or better. Light pressed is one
+     step past hover (T-0462): the -fill-active role carries primary-750, which closed the ADR-0008 Amendment 2
+     regression where hover and pressed both resolved to primary-650 and a hovered solid button looked pressed. */
   --ui-button-bg: var(--md-sys-color-primary-fill);
   --ui-button-bg-hover: var(--md-sys-color-primary-fill-hover);
   --ui-button-bg-active: var(--md-sys-color-primary-fill-active);
