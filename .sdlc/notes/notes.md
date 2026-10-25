@@ -872,3 +872,9 @@
 ## T-0463: The GenUI dogfood frame carries the base body font, so plain model text reads in the fleet font (2026-10-25)
 
 - note: base.css also sets body margin 0 and the surface background, so plain model HTML now sits flush to the frame edge (visible in the after shot); the builder named it as a possible future padding ticket.
+
+## T-0457: A room-booking ask reaches StepFlow in 3 of 3 live runs on the concierge (2026-10-25)
+
+- decide: site/agent-content/personas/concierge/agent.md:67 note: a pre-existing em dash sits in the Surface style ("integrations" then "surface the results"), untouched by this ticket; model-read text under the debate rule.
+- decide: .sdlc/runtime/tasks/0457-concierge-stepflow-pull/live/reach-concierge-room-stepflow-haiku-3/report.json decide: run 3's StepFlow ends in a Select scene with no BookingForm last step, against the added sentence's "that one booking form is its last step"; reach held 3 of 3, shape held 2 of 3.
+- decide: scripts/chat-probe.mjs decide: a live fixture and report carry no persona seedVersion or seed digest, so which seed a live run used is provable only through the trace's bundle digest and file mtimes.
