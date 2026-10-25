@@ -32,7 +32,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
 const BUILDER_DIGEST = 'sha256:f68026d14f91395bf3f2861e45bb8ebdfb75a6fc9f4341074f83a983ec8d164a'
 const PRESETS_DIGEST = 'sha256:93422439e45ec974ee012031754fff22d9ae48f60e39ce05d9b2d8ccd911fd9f'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
-const LIBRARIES_DIGEST = 'sha256:6e2c409fe4532e747872a19cf9df2077fc689b06c09274b1311d399282925db2'
+const LIBRARIES_DIGEST = 'sha256:06816be10277caa0dc42fe5fdce2a5357b002d30f1df7e747d3f2644937ae271' // T-0451: step-flow mini-skill trigger and body
 
 describe('agent-admin seeds: byte-identical across the T-0160 move to content files', () => {
   it('every roster preset assembles to its pinned digest', () => {
