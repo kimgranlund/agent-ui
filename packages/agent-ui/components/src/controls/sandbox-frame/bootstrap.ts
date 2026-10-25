@@ -133,5 +133,14 @@ export function buildSrcdoc(
   const modelFirstChild = head.firstChild
   for (const node of nodes) head.insertBefore(node, modelFirstChild)
 
+  // T-0455: mode-on, the frame is an A2UI canvas, so it takes the canvas register the renderer stamps on a
+  // surface root (widget at scale md, ADR-0245 Amendments 2 and 8) unless the model names its own. On
+  // <body>, not <html>: the bootstrap writes every bridged --md-sys-* token (the host's product ramp
+  // included) inline on <html>, which would outrank an attribute rule there.
+  if (assets?.css && doc.body !== null) {
+    if (!doc.body.hasAttribute('data-tier')) doc.body.setAttribute('data-tier', 'widget')
+    if (!doc.body.hasAttribute('data-scale')) doc.body.setAttribute('data-scale', 'md')
+  }
+
   return `<!DOCTYPE html>${doc.documentElement.outerHTML}`
 }

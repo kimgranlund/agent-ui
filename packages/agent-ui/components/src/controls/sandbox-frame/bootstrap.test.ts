@@ -114,6 +114,30 @@ describe('buildSrcdoc — SPEC-R12 dogfood asset injection (GH #316/ADR-0162, LL
   })
 })
 
+describe('buildSrcdoc: the dogfood frame renders at the A2UI canvas register (T-0455)', () => {
+  const tokens = { '--md-sys-color-primary': '#123456' }
+  const bodyOf = (srcdoc: string): HTMLElement => new DOMParser().parseFromString(srcdoc, 'text/html').body
+
+  it('with the asset css present, the body carries data-tier="widget" data-scale="md" (ADR-0245 Amendments 2 and 8)', () => {
+    const body = bodyOf(buildSrcdoc('<p>hi</p>', "default-src 'none'", tokens, 'light', { css: '.x{}', js: '' })!)
+    expect(body.getAttribute('data-tier')).toBe('widget')
+    expect(body.getAttribute('data-scale')).toBe('md')
+  })
+
+  it('a register the model document names on its own body is kept', () => {
+    const html = '<!DOCTYPE html><html><body data-tier="product" data-scale="lg">hi</body></html>'
+    const body = bodyOf(buildSrcdoc(html, "default-src 'none'", tokens, 'light', { css: '.x{}' })!)
+    expect(body.getAttribute('data-tier')).toBe('product')
+    expect(body.getAttribute('data-scale')).toBe('lg')
+  })
+
+  it('without the asset css (mode off), the body is left unstamped', () => {
+    const body = bodyOf(buildSrcdoc('<p>hi</p>', "default-src 'none'", tokens, 'light')!)
+    expect(body.hasAttribute('data-tier')).toBe(false)
+    expect(body.hasAttribute('data-scale')).toBe(false)
+  })
+})
+
 describe('BOOTSTRAP_SCRIPT — the frame-side bridge home (SPEC §2 Bootstrap)', () => {
   it('exposes the ONE model-facing API and posts the handshake/size/action members', () => {
     expect(BOOTSTRAP_SCRIPT).toContain('window.genui')

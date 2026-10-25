@@ -859,3 +859,8 @@
 
 - note: the publish and tag commands for Kim are in `0460-solo-L2.md` (`git tag v0.2.0 && git push origin v0.2.0`, then `npm run publish:packages -- 0.2.0`); the release date 2026-10-25 in README.md and CHANGELOG.md needs a fix plus both site regens if the publish slips.
 - note: `redck.py deviations` printed no deviation lines; the criteria carry no `(red)` tag.
+
+## T-0455: The GenUI demo frame renders at the widget register and every pattern control passes a screenshot check there (2026-10-25)
+
+- note: the builder's two open items (no base body font in the dogfood bundle so fleet text reads in UA serif, visible in the screenshots; an out-of-pack option-deck icon name renders an empty tile) are unruled design questions, reported by the builder and not filed here.
+- note: Itinerary is not a frame-reachable ui-* tag; its screenshots are a hand-composed ui-text/ui-timeline equivalent, as the builder stated.
