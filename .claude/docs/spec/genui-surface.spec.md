@@ -644,8 +644,9 @@ an asset-less consumer renders unstyled fleet markup — degraded fidelity, neve
   UNCHANGED.
 
 **SPEC-R12 — Frame assets: the docs-like pair, inline-only, posture-neutral, lockstep-pinned.** The
-dogfood frame asset MUST be a committed, GENERATED pair — (a) the flattened foundation + component
-CSS text and (b) ONE self-contained IIFE bundle of the `ui-*` component barrel + the default icon
+dogfood frame asset MUST be a committed, GENERATED pair — (a) the flattened foundation + document
+base (`base-styles.css`, so plain model text reads in the fleet body font; Kim's 2026-10-25 ruling via
+T-0463) + component CSS text and (b) ONE self-contained IIFE bundle of the `ui-*` component barrel + the default icon
 pack (the `_page.ts` cascade's members [1][2][3][3b]; `router`/`code`/app-chrome excluded by
 construction — catalog-invisibility's cousins, and CodeMirror's lazy load cannot ride the closed
 CSP) — exported from an opt-in subpath of `@agent-ui/components` (never a default barrel: the

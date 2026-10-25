@@ -47,7 +47,9 @@
   with a dedicated inline config, entry = a tiny in-script virtual entry importing
   `@agent-ui/components/foundation-styles.css`, the demo-only `@agent-ui/components/all.css` and
   `@agent-ui/components/all` (ADR-0233), `@agent-ui/icons/phosphor` (the `_page.ts` cascade members
-  [1][2][3][3b], verbatim, in that order), `build.lib` IIFE format, minified, `cssCodeSplit:false`,
+  [1][2][3][3b], verbatim, in that order; T-0463 adds `@agent-ui/components/base-styles.css` right
+  after the foundation so plain model text reads in the fleet body font, not the UA serif),
+  `build.lib` IIFE format, minified, `cssCodeSplit:false`,
   into a scratch outDir (the `build-css.ts` scratch discipline: never the real `dist/`). Emits the
   committed module from the two build artifacts:
 
