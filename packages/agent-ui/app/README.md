@@ -3,7 +3,7 @@
 App-surface compositions for the agent-ui family: application shells, a settings surface, a conversation (chat) surface with an inline generative-UI canvas, and the agent-admin workbench that ties them together.
 
 > Published on npm as `@agent-ui-kit/app`; inside this repository the workspace package is `@agent-ui/app`,
-> renamed at publish time. The latest release is 0.1.0 (tag `v0.1.0`); the source on `main` is unreleased
+> renamed at publish time. The latest release is 0.2.0 (tag `v0.2.0`); the source on `main` is unreleased
 > work past it.
 
 ## Install

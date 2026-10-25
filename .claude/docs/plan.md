@@ -409,7 +409,7 @@ what is next, and the work items are SDLC Lite tickets (`.sdlc/tickets/roadmap.m
   on the TS source; at first publish the targets flip to `dist/` + `.d.ts` via a `tsconfig.build.json` —
   mechanical, no API redesign. Revisit trigger: the first out-of-repo consumer, or a publish decision.
   **SINCE:** the publish decision came. `npm run publish:packages` builds through `tsconfig.build.json` and
-  releases eight packages in lockstep as `@agent-ui-kit/*` (tags `v0.0.2` to `v0.1.0`); `data` and
+  releases eight packages in lockstep as `@agent-ui-kit/*` (tags `v0.0.2` to `v0.2.0`); `data` and
   `devtools` are not in that set yet.
 - **Password exception**: **RESOLVED — the strict zero-native line HELD.** `ui-text-field type=password`
   shipped on the contenteditable surface with masking (ADR-0044); the rce allow-listed

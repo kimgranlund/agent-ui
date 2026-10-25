@@ -3,7 +3,7 @@
 A memory-first SPA router for the agent-ui family: navigation state lives in a signal store, with URL reflection as an opt-in — usable in embedded surfaces that must never touch the address bar.
 
 > Published on npm as `@agent-ui-kit/router`; inside this repository the workspace package is `@agent-ui/router`,
-> renamed at publish time. The latest release is 0.1.0 (tag `v0.1.0`); the source on `main` is unreleased
+> renamed at publish time. The latest release is 0.2.0 (tag `v0.2.0`); the source on `main` is unreleased
 > work past it.
 
 ## Install
