@@ -324,6 +324,43 @@ describe('ui-sandbox-frame — SPEC-R12 dogfood asset injection: the upgrade pro
   })
 })
 
+describe('ui-sandbox-frame: the dogfood frame renders at the widget register (T-0455, real engine)', () => {
+  it('a model-authored md <ui-button> is 24px tall (widget md), not the 32px product ramp, after the token handshake', async () => {
+    const el = mount()
+    const actions = collectActions(el)
+    el.assets = { css: DOGFOOD_CSS, js: DOGFOOD_JS }
+
+    // The probe waits for the host's `initialized` message: the bootstrap then writes every bridged
+    // --md-sys-* token (the host's product ramp included) inline on <html>, so the reading is taken after
+    // that write, the state a live GenUI surface settles in.
+    const doc = `<!DOCTYPE html><html><body>
+      <ui-button>Book</ui-button>
+      <script>
+        window.addEventListener('message', function (e) {
+          if (!e.data || e.data.type !== 'initialized') return;
+          setTimeout(function () {
+            requestAnimationFrame(function () {
+              var btn = document.querySelector('ui-button');
+              window.genui.action('register-probe', {
+                height: btn ? Math.round(btn.getBoundingClientRect().height) : null,
+                bridged: document.documentElement.style.getPropertyValue('--md-sys-tier-n0').trim(),
+              });
+            });
+          }, 50);
+        });
+      </` + `script></body></html>`
+
+    el.html = doc
+    await waitFor(() => actions.has('register-probe'))
+    const payload = actions.get('register-probe')?.payload as { height?: number; bridged?: string } | undefined
+    // The host page here sits at the product root, so the bridge really did carry its ramp into the frame.
+    expect(payload?.bridged, JSON.stringify(payload)).toBe('8')
+    expect(payload?.height, JSON.stringify(payload)).toBe(24)
+
+    el.remove()
+  })
+})
+
 describe('ui-sandbox-frame — SPEC-R12 AC2 containment re-proof: a dogfood-asset frame is contained IDENTICALLY (real engine)', () => {
   it('sandbox="allow-scripts" exactly, even with the asset pair injected', async () => {
     const el = mount()

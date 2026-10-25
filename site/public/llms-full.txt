@@ -4923,6 +4923,12 @@ verbatim; a consumer (the app layer, via `@agent-ui/components/dogfood-frame`, L
 what to pass. Property-only (`attribute: false`, the `csp` precedent) — asset text is host-vetted
 structured content, never HTML-attribute-fed.
 
+With the CSS present the frame is an A2UI canvas, so `buildSrcdoc` stamps the canvas register on the
+document's `<body>` (`data-tier="widget" data-scale="md"`, ADR-0245 Amendments 2 and 8, the same register the
+A2UI renderer stamps on a surface root; T-0455) unless the model document names its own. The stamp sits on
+`<body>` because the bootstrap writes the bridged host tokens, the host's product ramp included, inline on
+`<html>`.
+
 ## The bridge (SPEC-R7/R8)
 
 A CLOSED six-member vocabulary: `initialize · initialized · teardown · size-changed ·
