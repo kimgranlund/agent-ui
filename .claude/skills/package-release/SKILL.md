@@ -3,8 +3,8 @@ name: package-release
 description: >-
   THIS repo's npm release/versioning law for the 8 @agent-ui/* packages (published as @agent-ui-
   kit/*): lockstep versioning, the patch-only 0.0.1-0.0.99 phase, the judgment-gated 0.#.0 bump,
-  and the cut-a-release procedure (tag vX.Y.Z, then `npm run publish:packages` run locally; no GitHub
-  publish workflow since T-0255). Use for "release a package update", "cut a release", "bump the package version",
+  and the cut-a-release procedure (push a vX.Y.Z tag; .github/workflows/release.yml publishes and
+  creates the GitHub release, T-0465). Use for "release a package update", "cut a release", "bump the package version",
   "publish a new agent-ui version", "what version should this be", or before pushing any vX.Y.Z
   tag. NOT for the publish pipeline itself (already-built infra, edit directly) or general third-
   party dependency management.
@@ -52,13 +52,16 @@ never restate their internals here.
    minor bump?" before picking the number.
 2. **Confirm the standing gate is green on `main`** (`npm run check && npm test`) — nothing re-gates
    it for you now, so run it before publishing.
-3. **Tag, then publish locally**: `git tag vX.Y.Z`, then `npm run publish:packages -- <version>`
+3. **Write the notes, then tag and push the tag**: commit `.github/release-notes/vX.Y.Z.md` (optional;
+   without it the release gets GitHub's generated notes), then `git tag vX.Y.Z` on `main` and
+   `git push origin vX.Y.Z`. The tag push runs `.github/workflows/release.yml` (T-0465): it refuses a tag
+   that is not a strict `vX.Y.Z`, runs `npm run publish:packages -- X.Y.Z`
    (`scripts/publish/publish-packages.mjs`, which builds, transforms, and publishes all 8 packages in
-   lockstep at that version). Publishing is Kim's own local command; no GitHub workflow publishes
-   (T-0255).
-4. **Dry-run first when unsure**: `npm run publish:packages -- <version> --dry-run`.
-5. **A failed run mid-fleet is resumable, not stranded.** If a publish dies partway through the 8, just
-   re-run the same command at the SAME version;
+   lockstep) with the `NPM_TOKEN` secret and npm provenance, then creates the GitHub release for the tag.
+   A prerelease tag is refused (the script publishes without `--tag`, so it would become `latest`).
+4. **Dry-run first when unsure**: `npm run publish:packages -- <version> --dry-run` locally.
+5. **A failed run mid-fleet is resumable, not stranded.** If a publish dies partway through the 8, re-run
+   the failed workflow job (or the same command locally) at the SAME version;
    `publish-packages.mjs` skips any package already live at that version instead of erroring, so it
    picks up exactly where it left off rather than E403-failing on package 1.
 

@@ -75,6 +75,10 @@
 ## Site and ops
 
 - `npm run dev` / `npm run build`: the docs site (`site/`) is the app entry. `npm run deploy:docs`: ui.nonoun.io.
+- `npm run publish:packages -- <version> [--dry-run]`: builds and publishes the eight `@agent-ui-kit/*` packages in
+  lockstep (`scripts/publish/publish-packages.mjs`, resumable). Releases run it from `.github/workflows/release.yml`
+  on a pushed `vX.Y.Z` tag (T-0465): repo secret `NPM_TOKEN`, npm provenance on, then a GitHub release whose notes
+  are `.github/release-notes/<tag>.md` when present, else generated. Procedure: skill `package-release`.
 - `npm run ops:reap-worktrees` / `ops:reap-branches` / `ops:reap-scratch-clones`: gated, dry-run-by-default reap
   scripts (append `-- --execute` to apply) for `.claude/worktrees/` and `../<repo>.worktrees/` entries, local branches, and orphaned
   `dispatch_envelope.py` scratch-clone dirs, respectively.
