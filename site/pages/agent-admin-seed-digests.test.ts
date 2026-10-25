@@ -29,7 +29,8 @@ const PERSONA_DIGESTS: Record<string, string> = {
   alchemist: 'sha256:82635280f88abbbb9f9035e3193694d3ab47e619378192ad2b7bce3d17ece26c',
   'dungeon-master': 'sha256:28338295337eb41790cef55fb3cec257ff2bf3d3bca165cc4fac072280add2c8',
 }
-const BUILDER_DIGEST = 'sha256:f68026d14f91395bf3f2861e45bb8ebdfb75a6fc9f4341074f83a983ec8d164a'
+// T-0447: recaptured for the code-authored edit-session section (seeded disabled; no content file moved).
+const BUILDER_DIGEST = 'sha256:c0700a01a032eaea15ee806c26458c0d0a8b07259ea58db46349f69e5de8abe0'
 const PRESETS_DIGEST = 'sha256:93422439e45ec974ee012031754fff22d9ae48f60e39ce05d9b2d8ccd911fd9f'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
 const LIBRARIES_DIGEST = 'sha256:06816be10277caa0dc42fe5fdce2a5357b002d30f1df7e747d3f2644937ae271' // T-0451: step-flow mini-skill trigger and body

@@ -1300,6 +1300,14 @@
     padding-inline: var(--ui-agent-admin-receipt-gap);
     font: inherit; /* the note's own text register, not the button scale */
   }
+  /* T-0447, an edit session's receipt Undo and its kept-keys note, spaced like the receipt list above. */
+  [data-part='receipt-undo'] {
+    margin-block-start: var(--ui-agent-admin-receipt-gap);
+  }
+  [data-part='receipt-undo-skipped'] {
+    margin-block: var(--ui-agent-admin-receipt-gap) 0;
+    color: var(--ui-agent-admin-label-ink);
+  }
 
   /* GH #1277 — the Team pane pickers' 'From catalog' rows: the two-line row (label line + the preset's
      tagline as visible secondary text), the SAME GH #1172 library-menu pattern entry-list.css carries.

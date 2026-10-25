@@ -152,6 +152,10 @@ export function draftStateBlock(store: PersonaStateReader | undefined): string {
 export interface PatchDeps {
   models: readonly SupportedModel[]
   schema: SettingsSchema
+  /** T-0447: value keys refused before admission, each recorded in `report.dropped` and never written. An
+   *  edit session passes `[SURFACE_AUTHORING_KEY]` (Kim's ruling: edit sessions only); absent, every report
+   *  is byte-identical to before. */
+  deny?: readonly string[]
 }
 
 type Admit = (value: unknown, deps: PatchDeps) => boolean
@@ -349,6 +353,10 @@ export function applyPersonaPatch(
   const report: PatchReport = { applied: [], added: {}, updated: {}, dropped: [] }
 
   for (const [key, value] of Object.entries(patch.values ?? {})) {
+    if (deps.deny?.includes(key) === true) {
+      report.dropped.push(key)
+      continue
+    }
     const admit = ADMISSION.get(key)
     // Filter 1 and filter 2 collapse into one lookup: a key outside PERSONA_VALUE_KEYS has no admission
     // row (the table is built FROM the canonical set), so an unknown key and an entry-list key named in

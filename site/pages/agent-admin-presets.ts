@@ -623,10 +623,39 @@ function vocabularySection(): Entry {
   }
 }
 
+/** T-0447, the Builder's edit-session craft: how to change an agent that already exists. Code-authored
+ *  beside `vocabularySection()` (a persona body carries only `PERSONA_SECTIONS`), seeded DISABLED so the
+ *  generate interview composes byte-identically; `builderStore(model, 'edit')` turns it on. */
+export function editSessionSection(): Entry {
+  return {
+    id: 'edit-session',
+    kind: ENTRY_KINDS.promptSection,
+    label: 'Edit session',
+    description: 'How to change an agent that already exists. On only in an edit session.',
+    content:
+      'This session edits an agent that already exists. The configuration headed "The draft agent\'s current ' +
+      'configuration" is that agent as it stands now, not a new draft: nothing is missing from it, so do not ' +
+      'interview for more. Every change you send lands on it at once, and the user can undo each turn\'s ' +
+      'change from its receipt.\n\n' +
+      '- Change only what the user asked for in this message. Never re-send a value or a section the request ' +
+      'did not touch, even to restate it.\n' +
+      '- Read the current value before you change it, and keep the parts of it the request did not mention.\n' +
+      '- Before you replace the whole text of a built-in section or switch the model, say in one sentence what ' +
+      'you will change and ask the user to confirm. Send the change on the next turn, once they agree.\n' +
+      '- Never declare a team here. If the user wants a brand-new agent, tell them to use New agent in the ' +
+      'agent picker; this session cannot create one.\n' +
+      '- When the request is unclear, ask one short question instead of guessing.\n' +
+      '- After a change, say in one sentence what you changed.',
+    order: 98,
+    enabled: false,
+    builtin: false,
+  }
+}
+
 /** The Builder as a `Persona` — same shape the roster uses, just never IN the roster. */
 export function builderPersona(): Persona {
   const seed = presetSeed(BUILDER_PRESET)
-  const sections = [...(seed[entriesStoreKey(ENTRY_KINDS.promptSection)] as Entry[]), vocabularySection()]
+  const sections = [...(seed[entriesStoreKey(ENTRY_KINDS.promptSection)] as Entry[]), vocabularySection(), editSessionSection()]
   return {
     id: 'builder',
     label: BUILDER_PRESET.label,
@@ -649,8 +678,14 @@ export function builderPersona(): Persona {
  *  fact: the interview's own config read then finds the user's choice already committed, so the pick wins by
  *  construction and there is no overwrite step to lose a race with. Absent ⇒ the Builder preset's own
  *  Sonnet-class id stands (LLD §15: interview quality is the product). */
-export function builderStore(model?: string): SettingsStore {
-  const base = builderPersona().seed
+export function builderStore(model?: string, mode: 'generate' | 'edit' = 'generate'): SettingsStore {
+  const persona = builderPersona().seed
+  // T-0447, an edit session turns the seeded-off edit-session craft on; generate keeps the seed as is.
+  const sectionsKey = entriesStoreKey(ENTRY_KINDS.promptSection)
+  const base =
+    mode === 'edit'
+      ? { ...persona, [sectionsKey]: (persona[sectionsKey] as Entry[]).map((e) => (e.id === 'edit-session' ? { ...e, enabled: true } : e)) }
+      : persona
   const seed = model === undefined ? base : { ...base, model }
   // The same seed-plus-overlay read every persona store has (T-0161), with nothing persisted.
   return createOverlayStore({ seed, overlay: emptyOverlay('builder', 1, seed) })

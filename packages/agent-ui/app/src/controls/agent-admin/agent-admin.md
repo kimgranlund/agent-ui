@@ -37,6 +37,10 @@ attributes:              # attributes-as-API — mirrors agent-admin.ts `agentAd
     type: json             # a second SettingsStore — the `store` shape verbatim (attribute:false, the codec never runs)
     default: undefined     # undefined ⇒ the guided-authoring flow is INACTIVE and this element is byte-identically what it was before the prop existed; SET (ADR-0178 cl.5) ⇒ the flow arms — a second conversation mounts, its turns compose from THIS store, and a patch they declare applies to `store` (the draft)
     reflect: false
+  - name: authoringMode
+    type: json             # 'generate' | 'edit' (T-0447), attribute:false, the codec never runs
+    default: 'generate'    # generate ⇒ the interview builds a newly minted draft, as shipped; edit ⇒ an edit session over the agent the user already has (read only while `authoringStore` is set)
+    reflect: false
 
 properties:
   - name: schema
@@ -54,6 +58,8 @@ properties:
 
   - name: authoringStore
     description: OPTIONAL second `SettingsStore` (ADR-0178 cl.5, GH #633) arming the GUIDED-AUTHORING flow — the host-authored Builder persona's own config, from which the interview's turns compose. Set the flow arms: the `copilot-pane` conversation drives the next turn from its own composer, origin-keyed (GH #662's Amendment re-keyed `#contextFor` from pane identity to the SUBMITTING COMPOSER's origin — untouched by GH #686's Amendment, LLD §16.2: "with subsets, multiple visible composers are the norm and origin-keying is what already makes that sound"); arming also lands Co-pilot visible AND primary (`ensure copilot ∈ shown + primary = 'copilot'`), and clearing tears the context down WITHOUT forcing navigation (the always-present empty log paints instead). `store` is NEVER reassigned by arming, clearing, or flipping between the two — GH #145's conversation reset fires on a real persona switch and on nothing else, so both transcripts survive a flip over ONE draft. A `personaPatch` the interview declares applies to `store` (the DRAFT), and only when BOTH conjuncts of the ruled consumption condition hold: the turn's driving store IS this one, AND the driving store's `surfaceAuthoring` gate reads ON at receipt. Every other turn — a test chat's, an ordinary persona's, even a gate-ON one's — logs `patchIgnored` and writes nothing.
+  - name: authoringMode
+    description: T-0447 (agent authoring S5, Kim's F1/F3/F4/F5 rulings), what an armed `authoringStore` interview is for, `'generate'` (default) or `'edit'`; read only while `authoringStore` is set, and set by the page BEFORE it assigns `authoringStore`. `generate` is the shipped flow byte-for-byte. `edit` is an edit session over the agent the user already has (`store` is not reassigned and nothing is minted). The consumption condition is unchanged; inside it, edit mode drops `surfaceAuthoring` from admission (it lands in the log's `patch.dropped`), records each consumed patch (the key's before value and, on an overlay store, its exact overlay ops) and renders an Undo on that turn's receipt (`receipt-undo`). Undo restores a key only while it still holds that edit's value; a key changed since is kept and named (`receipt-undo-skipped`). The records are session-scoped and drop with the Co-pilot transcript on a real `authoringStore` identity change. A `team` declaration in an edit session is log-only (`teamIgnored: true`, never `onTeamDeclared`), and the Co-pilot kicker reads `Editing <name>` instead of `Builder interview`.
 
 events: []               # no DOM events of its own — the composed ui-settings/ui-conversation each emit their OWN events (unchanged, not re-emitted); this element adds no new event vocabulary
 
@@ -216,6 +222,10 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
     description: One logged turn — a context-item variant (`data-part="context-turn"`, the same GH #222 heading-row + one-card shape) whose JSON body is `{ arm: stub|live|surface, request, response }`; failures log too (`response.error`). The newest turn's fold defaults open. GH #866 — every turn's heading row carries the SAME `admin-help` icon (`data-help="context-turn"`): what needs explaining is the RECORD SHAPE and the retention bound, not one particular turn.
   - name: context-json
     description: The mono pretty-printed JSON preview — since GH #222 the section's ONE card of content (the shared card chrome recipe on the code-surface plane) — its OWN scroll container (overflow-x + a 20rem block cap), so a long systemPrompt line can never widen the pane.
+  - name: receipt-undo
+    description: T-0447, an edit-session receipt's Undo, `<ui-button variant="ghost" data-part="receipt-undo" data-edit="<id>">Undo</ui-button>`, the sibling right after the turn's `receipt-list`. `data-edit` is the per-turn edit id (never the receipt text, so two turns with byte-identical receipts each undo their own record). Activation reverts that turn's edit record with the receipt-link posture (`stopPropagation`; no chat turn, no client message, no host event), then reads `Undone`, disabled. Renders only on an `authoringMode: 'edit'` turn that changed something, so a generate-mode receipt has none.
+  - name: receipt-undo-skipped
+    description: T-0447, `<p data-part="receipt-undo-skipped">` after `receipt-undo` when an Undo kept keys changed since the edit, `Kept, changed since: ` plus each kept key's receipt location (`<section> › <fold>`), comma-joined.
 
 customStates: []          # no :state() hooks — no derived presentation state of this element's own (unlike ui-master-detail's data-view)
 
@@ -264,8 +274,9 @@ overflow) retired with it (S7-d).
   ALWAYS present, and it is always the interview's own conversation card — same treatment as Chat's
   (GH #666). Unarmed, that card's log is empty (GH #684 removed the "Describe the agent you want"
   headline + copy that used to occupy it), and the card's own composer is the flow's entry: the first
-  message arms (through the `onGenerateRequest(cb)` registration seam) and becomes the interview's opening
-  turn. The header's own New Agent button (`onNewAgentRequest`, S7-d) is the OTHER arming entry, for
+  message arms and becomes the interview's opening turn. With `onEditRequest(cb)` registered (T-0447, Kim's
+  F1 ruling) it arms an EDIT session over the active agent and mints nothing; a page that registers only
+  `onGenerateRequest(cb)` keeps the GH #666 entry, where the first message mints a new agent. The header's own New Agent button (`onNewAgentRequest`, S7-d) is the OTHER arming entry, for
   arming without typing anything — it invokes the SAME page-side mint path with no seed, since outside
   any specific card there is no pre-arm pick to carry. Generate is now the ONLY "new agent" verb (Kim's
   OQ-A ruling, LLD §16.6, GH #686 Findings 2026-08-11): the retired canvas-header's own two-choice
@@ -333,7 +344,8 @@ card): **Context: System** (the compiled agent-system JSON, incl. the `surface` 
 
 `onGenerateRequest(callback)` — register the page's "start the guided flow" path (ADR-0179 OQ4). Two
 affordances reach the SAME page-side mint path (`createGeneratedAgent`), by different seams: the card's
-own first message (this element, `#startFromFirstMessage`) invokes this callback, carrying a seed; the
+own first message (this element, `#startFromFirstMessage`) invokes this callback when no `onEditRequest` is
+registered, carrying a seed; the
 header's own New Agent button (`onNewAgentRequest`, S7-d — below) calls the page's own handler directly,
 with no seed — from outside any specific card it has no pre-arm pick to carry. (GH #637 S1's separate
 "New agent → Blank" interview-less mint front door, and the retired canvas-header's own "New agent →
@@ -353,6 +365,28 @@ Agent button, invoked from outside any specific card, has no pick to carry, so i
 the minted store's own default stands. Optional at both ends: a page that ignores the argument behaves exactly as before.
 Effort takes the same pre-arm-then-apply path but is not part of the seed — it has no store home by design (it
 is a per-conversation dial on the element, never persisted).
+
+`onEditRequest(callback)`, T-0447 (agent authoring S5, Kim's F1 ruling): register the page's "edit the
+active agent" path. Registered, the unarmed card's first message calls THIS instead of `onGenerateRequest`:
+the page sets `authoringMode = 'edit'`, then arms `authoringStore` with a Builder store over the agent it
+already has, minting nothing (`store` is not reassigned). New agents then come only from the roster's New
+agent item, which supersedes GH #666's first-message mint on a page that registers edit; a page that
+registers only `onGenerateRequest` is unchanged. Same shape as `onGenerateRequest`: a callback, never a
+CustomEvent (SPEC-R5), last registration wins, safe before or after connect, and registering either one
+opens the card. It receives the same `GenerateSeed` pre-arm pick. Each consumed patch in the session is
+undoable from its own receipt (`receipt-undo`); the records drop with the Co-pilot transcript.
+
+`` `/edit <text>` ``, T-0447 (Kim's F2 ruling): a host-side handoff from Chat to Co-pilot, not a seam of its
+own. A Chat submit whose text starts with `/edit ` (after leading whitespace) and carries a non-empty
+remainder runs no Chat turn (no model call, no history append, no turn log); its `/edit` bubble stays in the
+Chat transcript, and the remainder goes to Co-pilot by the same path as the card's own composer: unarmed, it
+arms through `onEditRequest` (else `onGenerateRequest`) and becomes the opening turn; armed, it submits into
+the open session without re-arming. Co-pilot becomes shown and primary. `@`/`/` references on that submit are
+dropped. With no Co-pilot path (unarmed and neither callback registered), and for an empty remainder, it is an
+ordinary Chat turn. Trap: the composer's `/` is a live typeahead trigger at token start when the `/` roster
+is non-empty, and Enter with that menu open commits a reference instead of sending, so `/edit <text>` reaches
+the submit only once whitespace ends the `/edit` token; an invocable whose name contains `edit` shows in that
+menu while the user types.
 
 ### S7-c — the unified header bar's six seams (admin-three-pane-ia.lld.md §16.3, frozen shapes)
 

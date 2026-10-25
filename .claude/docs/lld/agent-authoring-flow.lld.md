@@ -290,6 +290,8 @@ for free"); §12's panes-proof test EXERCISES it end-to-end rather than trusting
   ships (gate row + the apply machinery), the capability's UX does not — and consumption stays
   FENCED to the authoring context per Kim's §15 option-(b) ruling, so S5's intake also owns its
   own consumption-path ruling (§14).
+  > **Repair, 2026-10-24 (T-0447, Kim's 2026-10-24 ruling):** the NL-edit entry is no longer
+  > deferred. S5 shipped by T-0447 as the Co-pilot edit session (§14, §15 repair lines).
 - **A `RecordedTurn` patch analogue** — SPEC-R29 Scope fences it out (no consumer).
 - **Ask-arm peel/event** — asks ride A2UI surfaces via `ingestLine` already; the `ask` declaration
   field stays unconsumed in admin (as today).
@@ -383,6 +385,14 @@ intake inherits the question, not an assumption.
 > draft through — named, not built (zero consumption-path widening; this section's fence stands
 > unchanged, S5 still owns its own ruling).
 
+> **Repair, 2026-10-24 (T-0447, Kim's 2026-10-24 ruling):** S5's entry is the edit session, shipped
+> by T-0447. An unarmed Co-pilot's first message arms an edit session over the ACTIVE agent through
+> the page's `onEditRequest` arm: the component's `authoringMode` reads `'edit'` and `authoringStore`
+> takes a fresh `builderStore(model, 'edit')`, with no mint and no identity swap. New agents come only
+> from the roster's New agent item (`onGenerateRequest`, `authoringMode = 'generate'`), superseding
+> the GH #666 first-message-mints entry. A host-side `/edit <text>` prefix in Chat hands off to
+> Co-pilot the same way, the `/edit` bubble staying in the Chat transcript.
+
 ## 15 · Risks / open items (named; recommendation each; none blocks dispatch)
 
 - **OF4 — Builder roster visibility.** Designed hidden-until-invoked (the ADR's recommendation);
@@ -408,6 +418,13 @@ intake inherits the question, not an assumption.
   fence deliberately blocks patching a persona from an arbitrary chat, so capability 4 (S5, Kim's
   earlier IN pre-signal) requires its OWN consumption-path ruling at S5 intake — inherited via
   §14, not resolved here.
+  > **Repair, 2026-10-24 (T-0447, Kim's 2026-10-24 ruling):** this repair line replaces the "one-line
+  > amendment at S5 intake" (ADRs stay frozen). The store-identity fence stays byte-identical: an edit
+  > session IS the authoring context (`drivingStore === authoringStore`, gate ON), so S5 adds no new
+  > consumption path. In edit sessions only, `SURFACE_AUTHORING_KEY` is dropped from admission via
+  > `deps.deny` (a patch cannot arm or disarm the gate); generate mode stays as shipped. A team
+  > declaration in an edit session is log-only. Each consumed patch applies live and its receipt
+  > carries Undo, keyed per turn; undo records are session-scoped and drop with the Co-pilot transcript.
 - **Roster label vs patched `name`.** Shipped divergence (hand-edits have it today). If the
   interview's minted "New agent" row grates in practice, file a small follow-up (page subscribes
   to the draft's `name` key); not this slice.

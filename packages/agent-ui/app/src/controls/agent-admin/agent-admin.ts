@@ -282,6 +282,8 @@ import type { TeamMemberSnapshot, TeamPromptContext } from './agent-team-prompt.
 // ADR-0178 cl.2 — the three-filter apply gate + the canonical key set it enumerates (LLD-C1). A pure
 // module: store in, writes out, a report back — this element owns WHEN it may run, never HOW it filters.
 import { applyPersonaPatch, draftStateBlock, type PatchReport } from './persona-patch.ts'
+// T-0447 (agent authoring S5), the edit record an edit session's receipt Undo reverts (pure, no DOM).
+import { captureEdit, finishEdit, mergeEdit, revertEdit, type EditRecord } from './persona-edit.ts'
 // follow-the-change (GH #695/#721, ADR-0181 / SPEC-R2) — the field→location map the reaction engine and
 // the SPEC-R7 receipt line both consume; pure data, parity-gated in field-location.test.ts.
 import { locationFor, type FieldLocation } from './field-location.ts'
@@ -312,6 +314,9 @@ const PANE_IDENTITY: Record<Pane, { symbol: string; label: string }> = {
  */
 const AGENT_SELECT_NEW = 'agent-admin:new-agent'
 const AGENT_SELECT_EDIT = 'agent-admin:edit-agents'
+// T-0447 (agent authoring S5, Kim's F2 ruling): a Chat submit that starts with this prefix and carries a
+// non-empty remainder is a host-side handoff to Co-pilot, never a Chat turn (`#submitFromChat`).
+const EDIT_HANDOFF_PREFIX = '/edit '
 
 const agentAdminProps = {
   // Non-reflected properties — too structured for an attribute (the `ui-split` `sizes` / `ui-settings`
@@ -361,6 +366,12 @@ const agentAdminProps = {
   // store, never a replacement: `store` is never reassigned by entering, leaving, or flipping the flow
   // (GH #145's reset fires on a real persona switch and on nothing else).
   authoringStore: { ...prop.json<SettingsStore | undefined>(undefined), attribute: false as const },
+  // T-0447 (agent authoring S5, Kim's F1 ruling), what an armed `authoringStore` interview is for: `generate`
+  // (a newly minted draft, as shipped) or `edit` (the agent the user already has). Read only while
+  // `authoringStore` is set. Edit mode drops `SURFACE_AUTHORING_KEY` from admission, records each consumed
+  // patch for the receipt's Undo, logs a team declaration instead of forwarding it, and names the target in
+  // the Co-pilot kicker. The page sets it before it assigns `authoringStore`.
+  authoringMode: { ...prop.json<'generate' | 'edit'>('generate'), attribute: false as const },
 } satisfies PropsSchema
 
 /** The five ENTRY_KINDS instantiations, each paired with its display copy — the single source of truth
@@ -664,6 +675,8 @@ export class UIAgentAdminElement extends UIElement {
   // singleton nodes, zero duplication, zero reparenting after this one compose-time build (verified with
   // `isSameNode` probes across visibility-set flips, agent-admin.test.ts).
   #generateRequest: ((seed?: GenerateSeed) => void) | undefined
+  /** T-0447, the page's edit-session arm (`onEditRequest`), the `#generateRequest` shape verbatim. */
+  #editRequest: ((seed?: GenerateSeed) => void) | undefined
   // ── S7-c (LLD §16.3) — the unified header bar's six registration seams + the elements they drive ──────
   // Callback fields, the `#generateRequest` shape verbatim: registration, never a CustomEvent (SPEC-R5);
   // last registration wins (a bare reassignment); read at call/reflect time, so registering before OR
@@ -821,6 +834,17 @@ export class UIAgentAdminElement extends UIElement {
    *  by the session's own turn count); finalize()'s re-render of the same text re-resolves through the
    *  same entry, so the map is never one-shot. */
   #receiptBlocks: Map<string, readonly FieldLocation[]> = new Map()
+  /** T-0447 (F3/F4), the edit records an edit session's receipts can Undo, keyed by a per-turn id from
+   *  `#editSeq` (never the receipt text: two turns can mint byte-identical receipts). Session-scoped: cleared
+   *  with the Co-pilot transcript on a real `authoringStore` identity change. */
+  #editRecords: Map<number, EditRecord> = new Map()
+  #editSeq = 0
+  /** T-0447, the edit id of the turn whose note is rendering right now. `ui-conversation` calls the content
+   *  renderer synchronously inside `setNote`/`finalize`, so this field carries the turn's id into
+   *  `#renderContent` for exactly that span, and each bubble's Undo binds to its own record by closure. */
+  #renderingEditId: number | undefined
+  /** T-0447, the Co-pilot region's kicker, retitled on a real `authoringStore` identity change. */
+  #copilotKicker: HTMLElement | null = null
   #idSeq = 0
   /** The authoring context's own store identity, so the effect can tell a real reassignment from a bare
    *  re-run (the `#lastStore` precedent, applied to the second store). */
@@ -1230,7 +1254,7 @@ export class UIAgentAdminElement extends UIElement {
     // GH #849/SPEC-R4 — the callback's SECOND argument is this turn's committed `@`/`/` references
     // (`TurnReference[]`, structured, never bare text). They are resolved at send, against a fresh read of
     // THIS context's store (`#handleSubmit`), and nothing about them persists past the turn.
-    conversation.onSubmit((text, references) => this.#handleSubmit(text, 'chat', references))
+    conversation.onSubmit((text, references) => this.#submitFromChat(text, references))
     // Models picker → the SAME persisted `model` store key the settings pane's own generated field reads/
     // writes (one source of truth, TKT-0021's own external-store-write precedent) — `#syncConversationConfig`'s
     // subscription feeds the committed value back down into `conversation.model` (props down, callbacks up).
@@ -2648,7 +2672,8 @@ export class UIAgentAdminElement extends UIElement {
   #reflectAuthorEntry(): void {
     const conversation = this.#authoringConversation
     if (conversation === null || this.authoringStore !== undefined) return
-    conversation.disabled = this.#generateRequest === undefined
+    // T-0447, either entry opens the card: an edit session (`onEditRequest`) or a mint (`onGenerateRequest`).
+    conversation.disabled = this.#generateRequest === undefined && this.#editRequest === undefined
     this.#reflectPreArmPickers(conversation)
   }
 
@@ -2768,7 +2793,10 @@ export class UIAgentAdminElement extends UIElement {
       // create.
       const { model, effort } = this.#preArm
       if (effort !== undefined) this.#effort = effort
-      this.#generateRequest?.({ model })
+      // T-0447 (Kim's F1 ruling), the first message arms an edit session over the active agent when the
+      // page registered one; a page that registered only generate keeps the GH #666 mint entry unchanged.
+      if (this.#editRequest !== undefined) this.#editRequest({ model })
+      else this.#generateRequest?.({ model })
     }
     if (this.authoringStore !== undefined) await whenFlushed()
     const conversation = this.#authoringConversation
@@ -2776,6 +2804,38 @@ export class UIAgentAdminElement extends UIElement {
     conversation.addUserMessage(text)
     if (conversation.disabled) return // armed, but the Builder's own master switch is off — the turn is not owed
     this.#handleSubmit(text, 'copilot', references)
+  }
+
+  /**
+   * T-0447 (agent authoring S5, Kim's F2 ruling), the Chat composer's submit. `/edit <text>` hands the
+   * remainder to Co-pilot through the same path its own composer takes (`#startFromFirstMessage` unarmed,
+   * `addUserMessage` plus `#handleSubmit` armed) and runs no Chat turn: no model call, no `#history`
+   * append, no `#logTurn`. The `/edit` bubble stays in the Chat transcript (the composer painted it before
+   * this callback). References on an `/edit` submit are dropped; Co-pilot gets the remainder text only.
+   * With no Co-pilot path at all (unarmed, no edit and no generate callback) it is an ordinary Chat turn,
+   * so a host without the flow is unchanged; so is an `/edit` with an empty remainder.
+   *
+   * Trap: the composer's `/` is a live typeahead trigger at token start when the `/` roster is non-empty,
+   * and Enter with that menu open commits a reference instead of sending, so `/edit <text>` reaches here
+   * only once whitespace ends the `/edit` token. An invocable whose name contains `edit` shows in that
+   * menu while the user types.
+   */
+  #submitFromChat(text: string, references?: readonly TurnReference[]): void {
+    const trimmed = text.trimStart()
+    const remainder = trimmed.startsWith(EDIT_HANDOFF_PREFIX) ? trimmed.slice(EDIT_HANDOFF_PREFIX.length).trim() : ''
+    const armed = this.authoringStore !== undefined
+    const copilot = this.#authoringConversation
+    if (remainder === '' || copilot === null || (!armed && this.#editRequest === undefined && this.#generateRequest === undefined)) {
+      this.#handleSubmit(text, 'chat', references)
+      return
+    }
+    if (!armed) {
+      void this.#startFromFirstMessage(remainder)
+    } else {
+      copilot.addUserMessage(remainder)
+      if (!copilot.disabled) this.#handleSubmit(remainder, 'copilot')
+    }
+    this.#setPanePrimary('copilot')
   }
 
   /** One conversation's content-render seam, parameterized by the store whose Markdown modality governs
@@ -2793,8 +2853,40 @@ export class UIAgentAdminElement extends UIElement {
     const fragment = document.createDocumentFragment()
     if (receipt.before !== '') fragment.append(this.#renderProse(receipt.before, store))
     fragment.append(this.#buildReceiptList(receipt.locations))
+    const editId = this.#renderingEditId
+    if (editId !== undefined && this.#editRecords.has(editId)) fragment.append(this.#buildReceiptUndo(editId))
     if (receipt.after !== '') fragment.append(this.#renderProse(receipt.after, store))
     return fragment
+  }
+
+  /** T-0447 (F3), an edit-session receipt's Undo: revert this turn's edit record, never a later one's. A
+   *  user click with the receipt-link posture: `stopPropagation`, no chat turn, no client message, no host
+   *  event. A key changed since the edit is kept and named below the button, never overwritten. */
+  #buildReceiptUndo(editId: number): HTMLElement {
+    const undo = document.createElement('ui-button') as UIButtonElement
+    undo.setAttribute('variant', 'ghost')
+    undo.setAttribute('data-part', 'receipt-undo')
+    undo.setAttribute('data-edit', String(editId))
+    undo.textContent = 'Undo'
+    undo.addEventListener('click', (event) => {
+      event.stopPropagation()
+      const record = this.#editRecords.get(editId)
+      const target = this.store
+      if (record === undefined || target === undefined) return
+      const { skipped } = revertEdit(target, record)
+      this.#editRecords.delete(editId)
+      undo.setAttribute('disabled', '')
+      undo.textContent = 'Undone'
+      if (skipped.length === 0) return
+      const note = document.createElement('p')
+      note.setAttribute('data-part', 'receipt-undo-skipped')
+      note.textContent = `Kept, changed since: ${skipped.map((key) => {
+        const location = locationFor(key)
+        return location === undefined ? key : locationLabelFor(location)
+      }).join(', ')}`
+      undo.after(note)
+    })
+    return undo
   }
 
   /** The prose half of the seam — GH #468's lazy-`<ui-markdown>`/plain-text modality fork, verbatim. */
@@ -2924,7 +3016,8 @@ export class UIAgentAdminElement extends UIElement {
     conversation.setAttribute('data-part', 'copilot-pane') // LLD §16.1 — renamed from the retired author-pane wrapper
     // GH #665 — the interview's own kicker (the "Builder INTERVIEW" identity Kim's screenshot named),
     // matching the test conversation's `#makeRegionKicker` above.
-    conversation.prepend(this.#makeRegionKicker('Builder interview'))
+    this.#copilotKicker = this.#makeRegionKicker('Builder interview')
+    conversation.prepend(this.#copilotKicker)
     // Same two developer-surface opt-ins the test conversation takes (GH #238/ADR-0159 receipt, and
     // T-0016's step mode, which replaced GH #240's `sources` here too): the interview is watched by the
     // same person debugging the draft, and its turns run through the same runner and event loop.
@@ -3073,6 +3166,8 @@ export class UIAgentAdminElement extends UIElement {
         this.#authoringConversation?.reset()
         this.#authoringHistory = []
         this.#authoringTranscript = [] // GH #1154 — the export transcript leaves with the interview too
+        this.#editRecords.clear() // T-0447 (F4), undo records drop with the Co-pilot transcript
+        this.#reflectCopilotKicker()
       }
       this.#authoringUnsub?.()
       this.#authoringUnsub = undefined
@@ -3086,6 +3181,8 @@ export class UIAgentAdminElement extends UIElement {
       this.#authoringConversation?.reset() // a DIFFERENT interviewer starts a fresh interview
       this.#authoringHistory = [] // GH #644 — and a fresh interview carries no prior interviewer's memory
       this.#authoringTranscript = [] // GH #1154 — same lockstep for the export transcript
+      this.#editRecords.clear() // T-0447 (F4), and the undo records with it
+      this.#reflectCopilotKicker()
       // GH #670 — the pre-arm bridge's job ends exactly here: its model half is already SEEDED into the
       // store being wired in below, its effort half is already on `#effort`, and from this moment the store
       // is the truth. Emptying it is what stops a pick from re-applying to a LATER arm (leave the flow, come
@@ -3098,6 +3195,21 @@ export class UIAgentAdminElement extends UIElement {
     // entry both converge here through the page's `createGeneratedAgent`). Replaces the retired
     // `#setPane('author')` line verbatim.
     this.#setPanePrimary('copilot')
+  }
+
+  /** T-0447, the Co-pilot kicker names an edit session's target (`Editing <name>`, `Editing agent` when the
+   *  name is empty); a generate interview and the unarmed card read `Builder interview`. Runs on a real
+   *  `authoringStore` identity change only, inside the effect's `untracked` block. */
+  #reflectCopilotKicker(): void {
+    const kicker = this.#copilotKicker
+    if (kicker === null) return
+    if (this.authoringStore === undefined || this.authoringMode !== 'edit') {
+      kicker.textContent = 'Builder interview'
+      return
+    }
+    const name = this.store?.get('name')
+    const trimmed = typeof name === 'string' ? name.trim() : ''
+    kicker.textContent = trimmed === '' ? 'Editing agent' : `Editing ${trimmed}`
   }
 
   /** The authoring conversation's own model roster/selection + master-switch reflection, read from the
@@ -4396,6 +4508,9 @@ export class UIAgentAdminElement extends UIElement {
       // ADR-0178 cl.2 — what the patch arm did this turn, for the log (never an error surface).
       const patchReports: PatchReport[] = []
       let patchIgnored = false
+      // T-0447, an edit session's turn-local record (every consumed patch folded in) and its log-only team.
+      let editRecord: EditRecord | undefined
+      let teamIgnored = false
       // ADR-0182 cl.5 — the Builder-mission's own declared open-sections view, last-write-wins per turn
       // exactly like `note` (a turn carries at most one leading meta-line either way).
       let planChecklist: string | undefined
@@ -4484,7 +4599,14 @@ export class UIAgentAdminElement extends UIElement {
               // Applied MID-STREAM, so the panes hydrate while the turn is still streaming — the live
               // feedback the whole flow exists to give. Every write lands on a key class with a shipped
               // store subscription, so no re-render machinery is needed here (ADR-0178 cl.2).
-              const report = applyPersonaPatch(target, event.patch, { models: modelRoster(), schema: this.schema ?? defaultAgentConfigSchema })
+              // T-0447, an edit session records what the patch changes (the receipt's Undo) and drops
+              // `SURFACE_AUTHORING_KEY` from admission (Kim's ruling: edit sessions only). Generate mode passes
+              // no `deny` and captures nothing, so its report and log stay as shipped.
+              const editing = this.authoringMode === 'edit'
+              const snapshot = editing ? captureEdit(target, event.patch) : undefined
+              const deps = { models: modelRoster(), schema: this.schema ?? defaultAgentConfigSchema }
+              const report = applyPersonaPatch(target, event.patch, editing ? { ...deps, deny: [SURFACE_AUTHORING_KEY] } : deps)
+              if (snapshot !== undefined) editRecord = mergeEdit(editRecord, finishEdit(target, snapshot, report))
               patchReports.push(report)
               // follow-the-change (GH #695/#721, ADR-0181 cl.1 / SPEC-R1) — the reaction fires HERE, at
               // the one consumption site, on the just-returned report: commit-time, never propose-time
@@ -4506,7 +4628,9 @@ export class UIAgentAdminElement extends UIElement {
             // surface.
             const fenced = drivingStore !== undefined && drivingStore === this.authoringStore
             const gateOn = isAuthoringSurfaceEnabled(drivingStore?.get(SURFACE_AUTHORING_KEY))
-            if (fenced && gateOn) this.#teamDeclaredRequest?.(event.team)
+            // T-0447 (F5), an edit session never mints a team: the declaration is log-only.
+            if (fenced && gateOn && this.authoringMode !== 'edit') this.#teamDeclaredRequest?.(event.team)
+            else if (fenced && gateOn) teamIgnored = true
           } else if (event.kind === 'target') {
             // GH #1259 (ADR-0206 cl.4) — the model-declared mutation target: forwarded straight to the
             // conversation handle's `target()` seam. The meta-line is the one line ahead of the
@@ -4568,8 +4692,20 @@ export class UIAgentAdminElement extends UIElement {
         const outgoing = [note, patchReceipt, assetWarning, a2uiRefused ? A2UI_OFF_INGEST_NOTICE : undefined, planChecklist]
           .filter((text) => text !== undefined)
           .join('\n\n')
-        if (outgoing !== '') handle.setNote(outgoing)
-        handle.finalize()
+        // T-0447, an edit turn that changed something mints its per-turn undo id, stored before the note
+        // renders, and carries it through the synchronous render span below to this bubble's receipt.
+        let editId: number | undefined
+        if (editRecord !== undefined) {
+          editId = ++this.#editSeq
+          this.#editRecords.set(editId, editRecord)
+        }
+        this.#renderingEditId = editId
+        try {
+          if (outgoing !== '') handle.setNote(outgoing)
+          handle.finalize()
+        } finally {
+          this.#renderingEditId = undefined
+        }
         // GH #1154 — record the completed surface exchange into the export transcript (never into the
         // prose arms' model memory — see #recordSurfaceTranscript). A prose-less rendering turn is still
         // a turn: its wire-line count stands in so the transcript never silently drops it.
@@ -4605,6 +4741,7 @@ export class UIAgentAdminElement extends UIElement {
           // `PatchReport` rides as-is, which is what keeps this record honest as the report grows a verb.
           ...(patchReports.length === 0 ? {} : { patch: patchReports.length === 1 ? patchReports[0] : patchReports }),
           ...(patchIgnored ? { patchIgnored: true } : {}),
+          ...(teamIgnored ? { teamIgnored: true } : {}),
         })
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err)
@@ -5099,6 +5236,19 @@ export class UIAgentAdminElement extends UIElement {
    */
   onGenerateRequest(callback: (seed?: GenerateSeed) => void): void {
     this.#generateRequest = callback
+    this.#reflectAuthorEntry()
+  }
+
+  /**
+   * T-0447 (agent authoring S5, Kim's F1 ruling), register the page's "edit the active agent" path. With it
+   * registered, the unarmed Co-pilot card's first message calls THIS instead of `onGenerateRequest`: the page
+   * arms an edit session over the agent it already has (`authoringMode = 'edit'`, then `authoringStore`), and
+   * new agents come only from the roster's New agent item. The `onGenerateRequest` shape verbatim: a callback,
+   * never a CustomEvent (SPEC-R5); last registration wins; safe before or after connect (registering opens
+   * the card, `#reflectAuthorEntry`). Receives the same `GenerateSeed` pre-arm pick.
+   */
+  onEditRequest(callback: (seed?: GenerateSeed) => void): void {
+    this.#editRequest = callback
     this.#reflectAuthorEntry()
   }
 
@@ -5785,7 +5935,13 @@ function splitAdvancedFields(schema: SettingsSchema | undefined): [SettingsSchem
  *  (`#patchReceiptFor`) and the rendered list items (`#buildReceiptList`) so the two renderings can
  *  never drift (GH #1105). */
 function receiptLineFor(l: FieldLocation): string {
-  return l.sectionLabel === l.itemLabel ? `Updated ${l.sectionLabel}` : `Updated ${l.sectionLabel} › ${l.itemLabel}`
+  return `Updated ${locationLabelFor(l)}`
+}
+
+/** A location's wording without the verb (`<section> › <fold>`, or `<section>` when the two are equal): the
+ *  receipt line's own, and T-0447's Undo skipped-keys note. */
+function locationLabelFor(l: FieldLocation): string {
+  return l.sectionLabel === l.itemLabel ? l.sectionLabel : `${l.sectionLabel} › ${l.itemLabel}`
 }
 
 function clientMessageSurfaceId(message: unknown): string | undefined {

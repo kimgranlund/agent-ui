@@ -253,7 +253,7 @@ requests and release tags, and its old text moved, unedited, to the archive at
 >    loop on the wave; known gaps it should probe include the `CHANGE_CLAIM_IN_REPLY` keyword regex
 >    (T-0428's open note). Size: L4 across the wave (one L2 round plus L1 and L2 cluster fixes), with
 >    live spend under the round cap.
-> 3. **Agent authoring S5: natural-language edit everywhere.** Why: S5 is parked-IN (§3's
+> 3. **Agent authoring S5: natural-language edit everywhere.** Shipped by T-0447 (Kim's 2026-10-24 ruling: the Co-pilot edit session). Why it waited: S5 was parked-IN (§3's
 >    agent-authoring line) because the STORE-IDENTITY fence blocks patching from arbitrary chat with no
 >    ruled consumption path. Agent content overlays (T-0161) now store every edit as a diff over a seed,
 >    and the compiler (T-0163) traces each resolved value to its layer, which gives an edit from any
@@ -337,7 +337,7 @@ requests and release tags, and its old text moved, unedited, to the archive at
   debts resolved (PR #620, [GH #611](https://github.com/kimgranlund/agent-ui/issues/611)).
   Family-wide layout cards (S3-c class) remain unbuilt — the one deliberately-open remnant, needing
   its own intake if ever wanted.
-- **Agent-authoring flow family — COMPLETE, S1–S4 ALL SHIPPED (2026-08-09, same-day intake→ship).**
+- **Agent-authoring flow family, COMPLETE, S1–S4 ALL SHIPPED (2026-08-09, same-day intake→ship); S5 shipped by T-0447 (2026-10-24).**
   ([GH #633](https://github.com/kimgranlund/agent-ui/issues/633) ·
   [ADR-0178](adr/0178-agent-authoring-conversational-persona-hydration.md), ratified 2026-08-09 ·
   manifest [`decompositions/agent-authoring-flow.decomp.md`](decompositions/agent-authoring-flow.decomp.md) ·
@@ -346,9 +346,9 @@ requests and release tags, and its old text moved, unedited, to the archive at
   R29/R30 (PR #642) · **S3** the guided authoring flow — Builder persona, three-filter
   drop-never-coerce apply gate, dual-context anatomy, the Kim-ruled STORE-IDENTITY consumption
   fence (LLD PR #643, build PR #645) · **S4** the try-it toggle (PR #647). **S5 (NL-edit
-  everywhere) is parked-IN** (Kim's pre-signal) carrying its inherited question: the fence
-  deliberately blocks arbitrary-chat patching, so S5's intake rules its own consumption path
-  (LLD §15). Residue: [GH #644](https://github.com/kimgranlund/agent-ui/issues/644) (prose-arm
+  everywhere) shipped by T-0447** (Kim's 2026-10-24 ruling): the Co-pilot edit session over the
+  active agent, the store-identity fence unchanged, live apply with session-scoped Undo (LLD §14,
+  §15 repair lines). Residue: [GH #644](https://github.com/kimgranlund/agent-ui/issues/644) (prose-arm
   history isolation under the degrade config, in progress).
 
 - **Planner-stage pilot — only the concurrent/parallel-step upgrade remains.**

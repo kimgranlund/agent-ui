@@ -1855,7 +1855,7 @@ describe('UIAgentAdminElement — upgrade + defaults', () => {
     // `authoringStore` joined with ADR-0178 cl.5 (GH #633) — the guided-authoring flow's second
     // composition source; unset, it is inert (see the dual-context describe below). `contentManifest`
     // joined with T-0163: the Context view's content stamp; unset, it is inert.
-    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'contentManifest', 'libraries', 'authoringStore'])
+    expect(Object.keys(UIAgentAdminElement.props)).toEqual(['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'contentManifest', 'libraries', 'authoringStore', 'authoringMode'])
   })
 
   it('agentTurn starts undefined pre-connect and stays undefined after connect (the stub arm is the default)', () => {
@@ -3825,7 +3825,7 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
   const md = readFileSync(`${DIR}/agent-admin.md`, 'utf8') as string
   const { fence, body } = splitFrontmatter(md)
   const parsed = parseDescriptor(fence)
-  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'contentManifest', 'libraries', 'authoringStore']
+  const ATTR_NAMES = ['schema', 'store', 'agentTurn', 'agentSurfaceTurn', 'contentManifest', 'libraries', 'authoringStore', 'authoringMode']
 
   it('has a leading frontmatter fence and a /site prose body', () => {
     expect(fence.length).toBeGreaterThan(0)
