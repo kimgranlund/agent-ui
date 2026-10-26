@@ -60,7 +60,7 @@ describe('renderSurfaceTool', () => {
     expect(stringifiedMessages({ messages: JSON.stringify([create]) })).toEqual([create])
     expect(stringifiedMessages({ messages: [create] })).toBeUndefined()
   })
-  it('T-0304: a string that does not parse is never edited; the note names where it broke', () => {
+  it('T-0304: a string that does not parse, other than one unclosed array (T-0469), is never edited; the note names where it broke', () => {
     const data = { version: 'v1.0', updateDataModel: { surfaceId: 's', value: { hand: [{ rank: 'A' }], note: 'a ,{"version": in text' } } }
     const update = { version: 'v1.0', updateComponents: { surfaceId: 's', components: [{ id: 'root', component: 'Text', text: 'hi' }] } }
     const whole = JSON.stringify([update, data, update])
@@ -93,6 +93,23 @@ describe('renderSurfaceTool', () => {
     )
     expect(wireLineParseNote(line)).toBeUndefined()
     expect(wireLineParseNote(line.slice(0, -2))).toBeUndefined() // any other break keeps the plain reminder
+  })
+  it('T-0469: a string whose only defect is one named unclosed array is closed in place (round 14 :33, round 13 :145)', () => {
+    const deck =
+      '[{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui--croupier"}},{"version":"v1.0","updateComponents":{"surfaceId":"ask-1","components":[{"id":"root","component":"OptionDeck","actionName":"pick_game","options":[{"value":"blackjack","title":"Blackjack"}]}]}}]'
+    const missing = deck.replace('}]}]}}]', '}]}}}]') // round 13 :145: the `]` of `components` is missing
+    const surplus = deck.replace('}]}]}}]', '}]}}]}}]') // round 14 :33: one `}` too many where that `]` belongs
+    for (const s of [missing, surplus]) {
+      expect(messagesParseNote({ messages: s })).toMatch(/its `components` array is still open/)
+      expect(stringifiedMessages({ messages: s })).toEqual(JSON.parse(deck))
+      expect(renderSurfaceJsonl({ messages: s })).toBe(renderSurfaceJsonl({ messages: JSON.parse(deck) }))
+    }
+    // Any other break is never edited: a truncated string, a break before the closers, a `}` missing between messages.
+    expect(stringifiedMessages({ messages: deck.slice(0, -2) })).toBeUndefined()
+    const early = deck.replace('"actionName"', '"tags":["a"},"actionName"')
+    expect(messagesParseNote({ messages: early })).toMatch(/its `tags` array is still open/)
+    expect(stringifiedMessages({ messages: early })).toBeUndefined()
+    expect(stringifiedMessages({ messages: deck.replace('"agent-ui--croupier"}},', '"agent-ui--croupier"},') })).toBeUndefined()
   })
   it('T-0206: the note names every open surface; the stable description gates on a structure and prefers an update', () => {
     expect(openSurfacesNote(['main', 'quiz-7'])).toBe('[Open surfaces: main, quiz-7.]')

@@ -3,8 +3,9 @@
 // as a text line missing the `]` that closes `components` after the receipt's `rows` array. That round was PARSE with the
 // bare array reminder; round 2 answered in prose (SURFACE_MISSING) and round 3 sent a `messages` string with the same
 // missing `]`, so the turn shipped no receipt. The repair after round 1 now names the open array of the text line.
-// The fixture is the recorded run verbatim and still fails its expect; the recovery leg AUTHORS round 2 as round 1's line
-// with that one `]` put back, sent through render_surface. Live compliance waits for the next round.
+// T-0469: round 3's string, whose only defect is that one unclosed array, is now closed in place, so the recorded turn
+// ships the receipt in round 3. The recovery leg AUTHORS round 2 as round 1's line with that one `]` put back, sent
+// through render_surface.
 import { readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
@@ -13,10 +14,11 @@ import { closedLine, repairRequests, shipped, trace } from './unclosed-array.mjs
 
 const fixture = parseProbeFixture(readFileSync(new URL('./concierge-haiku-confirm-text-unclosed.json', import.meta.url), 'utf8'))
 
-it('concierge-haiku-confirm-text-unclosed: the recorded confirm turn ships no receipt; the repair names the open components array', async () => {
+it('concierge-haiku-confirm-text-unclosed: the repair names the open components array; the round 3 string is closed in place and ships the receipt', async () => {
   const report = await offlineReplay(fixture, process.cwd())
-  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['expect-component', 2]])
-  expect(trace(report.records[2])).toMatchObject({ rounds: 3, failureCodes: ['PARSE', 'TEXT_JSONL_ROUTED', 'SURFACE_DEGRADED'] })
+  expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([])
+  expect(trace(report.records[2])).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_MISSING', 'TEXT_JSONL_ROUTED', 'MESSAGES_STRING_DECODED'] })
+  expect(shipped(report.records[2])).toContain('ConfirmReceipt')
 
   const requests = await repairRequests(fixture, report, 2, 'agent-ui--hospitality')
   expect(requests).toHaveLength(3)

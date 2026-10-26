@@ -63,13 +63,42 @@ export function renderSurfaceJsonl(input: Record<string, unknown>): string {
 
 /** T-0304: the array a `messages` sent as one JSON string holds, or undefined. Haiku and Sonnet 5.5 sent the list as a
  *  string on every round of a turn despite the tool description (round 7 :16, :95, :96), so every round was PARSE and
- *  the turn shipped text. A string that does not parse as an array stays the empty payload (a PARSE round); the harness
- *  never edits it (Kim 2026-10-16), and `messagesParseNote` tells the model where it broke. */
+ *  the turn shipped text. T-0469: a string whose only defect is one named unclosed array (the `messagesParseNote` arm
+ *  that names it) is closed in place by `closedInPlace`. Any other string that does not parse as an array stays the
+ *  empty payload (a PARSE round), never edited, and `messagesParseNote` tells the model where it broke. */
 export function stringifiedMessages(input: Record<string, unknown>): unknown[] | undefined {
   const { messages } = input
   if (typeof messages !== 'string') return undefined
   try {
     const parsed: unknown = JSON.parse(messages)
+    return Array.isArray(parsed) ? parsed : undefined
+  } catch {
+    return closedInPlace(messages)
+  }
+}
+
+/** T-0469: the array a `messages` string holds once its closers are put right, or undefined. Only when JSON.parse
+ *  stopped on a `}` where an array is the innermost open bracket (the unclosed array `messagesParseNote` names) and
+ *  nothing but `]`, `}` and whitespace follows the last value: the closers after that value are then rewritten from the
+ *  brackets still open, the one order valid JSON allows. Round 14 :33 sent one `}` too many where the `]` of
+ *  `components` belongs, byte for byte on all three rounds after the T-0450 pinpoint; round 13 :145 left that `]` out. */
+function closedInPlace(text: string): unknown[] | undefined {
+  let pos: number | undefined
+  try {
+    JSON.parse(text)
+    return undefined
+  } catch (err) {
+    const m = /position (\d+)/.exec(err instanceof Error ? err.message : '')
+    pos = m === null ? undefined : Number(m[1])
+  }
+  if (pos === undefined || unclosedArray(text, pos, openAt(text, pos)) === undefined) return undefined
+  let start = text.length
+  while (start > 0 && /[\s\]}]/.test(text[start - 1]!)) start--
+  if (start > pos) return undefined
+  const open = openAt(text, start).open
+  const closers = open.map((b) => (b === '{' ? '}' : ']')).reverse().join('')
+  try {
+    const parsed: unknown = JSON.parse(text.slice(0, start) + closers)
     return Array.isArray(parsed) ? parsed : undefined
   } catch {
     return undefined
