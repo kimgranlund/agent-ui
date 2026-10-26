@@ -665,7 +665,9 @@ const TOOL_PARSE_HINT =
 
 /** T-0344: the PARSE ask when the round's `messages` was any string, in place of TOOL_PARSE_HINT and ahead of the
  *  `messagesParseNote` pinpoint when there is one. Round 10 :193 got the pinpoint then the reminder three times and
- *  resent a hand-edited string each time, one `}` short again; the harness never edits the string (Kim 2026-10-17).
+ *  resent a hand-edited string each time, one `}` short again; the harness never edits such a string (Kim 2026-10-17).
+ *  T-0469: the one exception, a string whose only defect is one named unclosed array, is closed in place
+ *  (`stringifiedMessages`) and never reaches this hint.
  *  When the round before also sent a string, the ask says so once. */
 const ARRAY_ASK = '`messages` as an array of A2UI message objects, one object per entry, not as a string or JSONL text.'
 const stringParseHint = (again: boolean, parseNote: string | undefined): string =>
@@ -1863,7 +1865,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           target ??= fromReply.target
         }
         // The repair round shows the model its own attempt: the reply text, then the payload it sent. T-0450: a
-        // `messages` string that did not parse is shown as sent, so the repair's pinpoint names text the model can see.
+        // `messages` string that did not parse is shown as sent, so the repair's pinpoint names text the model can see. T-0469:
+        // one closed in place is shown closed, so an identical resend is never sent back unchanged.
         lastRaw = [raw.trim() || captured.reply, captured.jsonl.trim() || (captured.sentString ?? '').trim()].filter((s) => s !== '').join('\n')
       }
       reply = reply.trim()

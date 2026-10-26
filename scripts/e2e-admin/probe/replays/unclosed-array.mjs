@@ -1,5 +1,5 @@
-// T-0450: the helpers the three round 13 unclosed-array replays share (croupier-haiku-deck-string-unclosed,
-// concierge-haiku-confirm-text-unclosed, concierge-haiku-confirm-string-unclosed).
+// T-0450: the helpers the round 13 and 14 unclosed-array replays share (croupier-haiku-deck-string-unclosed,
+// concierge-haiku-confirm-text-unclosed, concierge-haiku-confirm-string-unclosed, concierge-haiku-spa-string-unclosed).
 import { produce } from '../../../../packages/agent-ui/a2ui/src/agent/produce.ts'
 import { nodeCatalogResolver } from '../../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
 import { replaySemanticChecks } from '../trace.ts'
