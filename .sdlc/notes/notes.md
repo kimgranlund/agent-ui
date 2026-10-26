@@ -894,3 +894,8 @@
 - note: .sdlc/notes/notes.md:71 still says "GitHub runs only ci.yml" (parenthetical dated 2026-10-15, a historical record, not touched).
 - note: .github/workflows/deploy-docs.yml:2-3 the new header line runs long (over 100 columns) but is valid.
 - note: tagcheck.py hardcodes the absolute worktree path to release.yml, so it only runs from this lane tree.
+
+## T-0461: The prompt budget test comment, the presets header and roadmap section 3 match today's code (2026-10-25)
+
+- note: site/pages/agent-admin-presets.ts:27-28 still uses middle dots and a long single comment; wording only.
+- note: redck.py deviations printed no lines (no `(red)` criteria).

@@ -5,9 +5,10 @@
 // catalog the preset resolves to, in every mode, and held under `promptBudgetFor` of that catalog. A seeded
 // oversized preset shows the leg bites.
 //
-// MEASURED 2026-10-14 (T-0207): largest real persona 4 516 chars (croupier); worst case 130 097 chars
-// (`agent-ui--croupier`, mode default) against PROMPT_CHAR_BUDGET_DERIVED 142 000, headroom 11 903. Worst base
-// preset: travel, 126 792 against PROMPT_CHAR_BUDGET_BASE 141 100, headroom 14 308.
+// RE-MEASURED 2026-10-25 (T-0461): largest real persona 5 437 chars (croupier); worst case 138 880 chars
+// (`agent-ui--croupier`, mode default) against PROMPT_CHAR_BUDGET_DERIVED 150 200, headroom 11 320. The base budget
+// is PROMPT_CHAR_BUDGET_BASE 149 200. Both constants and their re-measure history live in `prompt-budget.ts`; the
+// test logs the current worst case each run.
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest'
 import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/app/agent-admin'

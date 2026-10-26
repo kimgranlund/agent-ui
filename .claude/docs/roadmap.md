@@ -349,7 +349,7 @@ requests and release tags, and its old text moved, unedited, to the archive at
   everywhere) shipped by T-0447** (Kim's 2026-10-24 ruling): the Co-pilot edit session over the
   active agent, the store-identity fence unchanged, live apply with session-scoped Undo (LLD §14,
   §15 repair lines). Residue: [GH #644](https://github.com/kimgranlund/agent-ui/issues/644) (prose-arm
-  history isolation under the degrade config, in progress).
+  history isolation under the degrade config) shipped in e67c9a668 (PR #649), closed 2026-08-09.
 
 - **Planner-stage pilot — only the concurrent/parallel-step upgrade remains.**
   ([ADR-0174](adr/0174-planner-stage-pilot-sequential-opt-in-loop.md), ratified 2026-08-06.) An

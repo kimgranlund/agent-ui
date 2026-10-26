@@ -24,10 +24,11 @@
 // (INTENT ONLY, modality-neutral — GH #412 rewrote all fourteen: naming a dialect or a component
 // vocabulary in persona prose broke the moment the admin flipped Surface Options, and dialect is the
 // a2ui producer grammar's job, ADR-0138), and its capability entries either intent-match the shipped
-// mini-skill registry (ADR-0091 — the game/dashboard showcases: card-layout · game-table-chrome ·
+// mini-skill registry (ADR-0091, the game/dashboard showcases: card-layout · game-table-chrome ·
 // game-hud · dashboard-kpi-grid) or carry AUTHORED
-// hospitality/travel skills seeded from the library packs (GH #46 — projected wholesale into the live
-// prompt via composeLiveSystemPrompt, stronger than registry intent-matching; form-rhythm/login-form
+// hospitality/travel skills seeded from the library packs (GH #46). A `context` skill reaches the live prompt
+// through composeLiveSystemPrompt as an index line only (label and one-line description, agent-model SPEC-R14);
+// its full content loads when the user names it. form-rhythm/login-form
 // left the roster with the old Concierge). The stub path still proves the plumbing: the stub reply
 // cites the composed prompt + enabled capabilities without emitting surfaces.
 import { createMemoryStore } from '@agent-ui/app/settings-memory-store'
