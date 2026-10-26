@@ -937,3 +937,8 @@
 ## T-0476: Notes routing, probe seed digest and prompt budget headroom (2026-10-26)
 
 - note: .sdlc/notes/notes.md: line 267 (ui-button pressed tone) stays unrouted by the builder's choice, per its report.
+
+## T-0472: Keyless replays guard the round 14 fixes proven only by paid runs (2026-10-26)
+
+- note: scripts/e2e-admin/probe/replays/mentalist-haiku-same-turn-ask-deck.json:2 holds two em dashes inside the recorded prompt text (twenty-questions skill prose); recorded trace content, not authored prose.
+- note: the solo report's T-0467 ordering dependency is moot; T-0467 is already on base 3bb64e01f.

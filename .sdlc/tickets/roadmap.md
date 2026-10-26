@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 465 done, 5 dropped (git log or .NNNN-* folders)
+Closed: 469 done, 5 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -111,3 +111,5 @@ Closed: 465 done, 5 dropped (git log or .NNNN-* folders)
 - decide: .sdlc/notes/notes.md:671 note: the T-0393 `decide:` line about OptionCompare's second intent is settled by this ticket and still open in notes; resolve on land (architect-L1.md Carry forward). -> stale, resolved by later work (triage 2026-10-23) (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
 - decide: site/agent-content/game-hud-placement.test.ts:28 note: pins exactly one Button on a game ask; a future deck-based game skill reds it until the check gains an own-commit branch (architect-L1.md Risks), no change needed now. -> accepted (triage 2026-10-23) (from T-0395: Game-ask 'ONE commit Button' wording and OptionCompare's pick intent match the own-commit rule (2026-10-21))
 - decide: packages/agent-ui/a2ui/src/examples/catalog-frontier.ts:453-478 the re-authored `frontier-card-anatomy-ask` is a delivery-options form (Field-wrapped RadioGroup plus two Checkboxes), not the design's "Report a problem" RadioGroup plus Textarea (architect-L1-2.md:63-67); judged 3 then 4/PASS on rejudge (the two corpus/verdicts t0419 files). The builder reports it as a deviation. -> accepted 2026-10-23 (rejudged 4/PASS) (from T-0419: Grammar teaches a single pick among two to eight options as one own-commit OptionDeck for every persona (2026-10-23))
+- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:461-480 note: `gameAskHudCheck` requires a GameHud for any `GAME_WORDS` say turn that opens a new OptionDeck surface, while grammar.md:44 allows "a game with no GameHud". The shipped personas agree with the check (mentalist opens its HUD beside the ask, quizmaster opens GameHud plus QuestionCard, every recorded replay green), so a future HUD-less game persona that asks through an OptionDeck would draw one repair round from this check. (from T-0468: A game turn repaired after SURFACE_CLAIMED keeps its GameHud: the repair asks for the HUD with the ask deck (2026-10-26))
+- decide: .sdlc/tickets/0477-concierge-emdash/handoff.md:22 Constraints say `Opus author`; runs.jsonl shows the solo L1 ran on `sonnet` (level routing), the Fable L3 review half held. (from T-0477: Remove the em dash in the concierge Surface style (2026-10-26))
