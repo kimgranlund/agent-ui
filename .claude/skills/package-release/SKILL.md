@@ -59,6 +59,15 @@ never restate their internals here.
    (`scripts/publish/publish-packages.mjs`, which builds, transforms, and publishes all 8 packages in
    lockstep) through npm trusted publishing (GitHub OIDC, no npm token anywhere; the trusted publisher fields are in the
    workflow header, T-0466), then creates the GitHub release for the tag.
+   **An ENEEDAUTH in the publish step means npm's OIDC exchange was refused** (T-0471, run 40341014351 on
+   v0.2.0). npm hides the reason at the default log level, so the step runs at `verbose`: read the line
+   `npm verbose oidc Failed token exchange request with body message: ...` in the job log, or the
+   `npm-logs` artifact. Then check each package's trusted publisher on npmjs.com against the workflow
+   header: owner `kimgranlund` (GitHub, not the npm user), repository `agent-ui`, workflow filename
+   `release.yml`, environment empty, and the "npm publish" allowed action ticked (entries made after
+   2026-09-03 allow only `npm stage publish` by default). Once fixed, re-run the failed job; a re-run uses
+   the workflow file as it was at the tagged commit, so a tag cut before T-0471 (v0.2.0) re-runs without
+   the `verbose` step and the `npm-logs` artifact.
    A prerelease tag is refused (the script publishes without `--tag`, so it would become `latest`).
 4. **Dry-run first when unsure**: `npm run publish:packages -- <version> --dry-run` locally.
 5. **A failed run mid-fleet is resumable, not stranded.** If a publish dies partway through the 8, re-run
