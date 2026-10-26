@@ -908,3 +908,7 @@
 ## T-0466: The release workflow publishes through npm trusted publishing, with no npm token (2026-10-26)
 
 - note: the npm floor step was only logic-tested by the builder; it first runs for real on the next tag push.
+
+## T-0470: CHANGE_CLAIM_IN_REPLY covers an add claim (added, comes to) (2026-10-26)
+
+- note: packages/agent-ui/a2ui/src/agent/produce.ts:1263 `(?:^|[.!:]\s*)added\b` also matches a sentence-initial "Added" in a non-claim such as "Added fees may apply."; acceptable per the ticket, flagged for the next round.

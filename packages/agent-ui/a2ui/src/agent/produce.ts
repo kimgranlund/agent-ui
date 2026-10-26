@@ -1257,9 +1257,10 @@ function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<strin
 /** T-0428: a reply claiming it changed an open surface ("Done: table-3 is now titled Kim's table", "I renamed the
  *  table"), as the overnight croupier rename recorded it. A narrated note-only say reply that claims one has an update
  *  to make, so it keeps the full repair; one that claims nothing ("the round on table-3 is settled") takes the reply-only
- *  repair, which cannot open a surface (T-0332). */
+ *  repair, which cannot open a surface (T-0332). T-0470: an add claim counts too, "Added two lamps" opening a sentence,
+ *  "I added", "comes to $378", while a question ("would you like added?") claims nothing. */
 const CHANGE_CLAIM_IN_REPLY =
-  /(?:\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b)/i
+  /(?:\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b|(?:^|[.!:]\s*)added\b|\bI(?:'ve| have)? added\b|\bcomes? to \$?\d)/i
 
 /** T-0299: `findings` plus every missing-composite finding an earlier round of this turn got (`bound`, by code) that
  *  `views` still leave unanswered, worded as still binding; then each new missing-composite finding is bound. A round
