@@ -904,3 +904,7 @@
 
 - note: `report.md:87-88` says "None filed by this round" and names the clusters W, X, P3, S2 and the single-run stats binding gap as "Proposed"; the Done-when line "each failure cluster is one proposed ticket" is not an acceptance criterion, so the conductor still needs to file them with the ticket skill.
 - note: the observed 64 of 69 passed (5 failed) against round 13's 52 pass; the zero-cost-risk cap check (0.65 vs 12) holds. Zero-trust runs reproduced no live spend (no reruns by the verifier).
+
+## T-0466: The release workflow publishes through npm trusted publishing, with no npm token (2026-10-26)
+
+- note: the npm floor step was only logic-tested by the builder; it first runs for real on the next tag push.
