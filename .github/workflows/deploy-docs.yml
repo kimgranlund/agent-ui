@@ -1,6 +1,6 @@
 # deploy-docs.yml — manual deploy of the docs site + live-agent Worker (`agent-ui-docs`, ui.nonoun.io)
-# from the Actions tab (workflow_dispatch only, T-0255, Kim 2026-10-15: GitHub runs only ci.yml
-# automatically). The push-to-main trigger of GH #177 is retired; the normal path is Kim's own
+# from the Actions tab (workflow_dispatch only, T-0255, Kim 2026-10-15; GitHub runs ci.yml on PRs and,
+# since T-0465, release.yml on a vX.Y.Z tag push, nothing else automatically). The push-to-main trigger of GH #177 is retired; the normal path is Kim's own
 # `npm run deploy:docs`, and this workflow stays as the remote fallback (e.g. after rotating the token).
 #
 # Deliberately THIN — checkout, install, build, `wrangler deploy` — no check/test gate here: every merge

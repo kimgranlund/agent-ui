@@ -19,11 +19,10 @@
 //
 // Usage:
 //   node scripts/publish/publish-packages.mjs <version> [--dry-run]
-//   <version>   the lockstep semver every package publishes as (e.g. 0.1.0) — run locally (T-0255 retired
-//               the publish workflow), the git tag vX.Y.Z names it; every internal @agent-ui/* dependency gets
-//               rewritten to the SAME version (all 8 packages release together, always in sync).
-//   --dry-run   passes --dry-run to `npm publish` (packs + validates, never uploads) — the safety-net path
-//               for the workflow's manual workflow_dispatch trigger and for local testing.
+//   <version>   the lockstep semver every package publishes as (e.g. 0.1.0); the git tag vX.Y.Z names it, and
+//               pushing that tag runs this script from .github/workflows/release.yml (T-0465); every internal
+//               @agent-ui/* dependency gets rewritten to the SAME version (all 8 packages release together).
+//   --dry-run   passes --dry-run to `npm publish` (packs and validates, never uploads), for local testing.
 //
 // CONSUMER-PROFILE — HISTORICAL, and now RELAXED (GH #283, 2026-07-27). `@agent-ui-kit/app` used to be
 // documented as targeting Vite/Rolldown-family bundlers only. The MECHANISM that forced it was

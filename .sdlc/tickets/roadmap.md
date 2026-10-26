@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 451 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 452 done, 4 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -123,6 +123,3 @@ Closed: 451 done, 4 dropped (git log or .NNNN-* folders)
 - decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:2830 note: the architect's `edit: { reverted, skipped }` turn-log entry on Undo is not built; the step handoff rules Undo out of the chat turn and the host, so the skipped keys reach the user only through `receipt-undo-skipped`. (from T-0447: Agent authoring S5: natural-language edit from any chat (2026-10-24))
 - decide: .agent-traces/2026-10-25.jsonl:2-3 decide: samples 2 and 3 sent the a2uiMeta JSON as prose in round 1 and healed through one SURFACE_CLAIMED retry each; the probe verdict is still pass, the builder calls it a producer-format issue and left it unfiled. (from T-0453: The shopkeeper answers a cold compare ask with an OptionCompare (2026-10-25))
 - decide: scripts/e2e-admin/probe/scenarios/shopkeeper.ts:11 decide: the cold compare has no keyless regression guard (no `reach-shopkeeper-compare` round scenario and no replay fixture captured with `--from-trace`), so the fix is proven only by the paid run. (from T-0453: The shopkeeper answers a cold compare ask with an OptionCompare (2026-10-25))
-- decide: site/agent-content/personas/concierge/agent.md:67 note: a pre-existing em dash sits in the Surface style ("integrations" then "surface the results"), untouched by this ticket; model-read text under the debate rule. (from T-0457: A room-booking ask reaches StepFlow in 3 of 3 live runs on the concierge (2026-10-25))
-- decide: .sdlc/runtime/tasks/0457-concierge-stepflow-pull/live/reach-concierge-room-stepflow-haiku-3/report.json decide: run 3's StepFlow ends in a Select scene with no BookingForm last step, against the added sentence's "that one booking form is its last step"; reach held 3 of 3, shape held 2 of 3. (from T-0457: A room-booking ask reaches StepFlow in 3 of 3 live runs on the concierge (2026-10-25))
-- decide: scripts/chat-probe.mjs decide: a live fixture and report carry no persona seedVersion or seed digest, so which seed a live run used is provable only through the trace's bundle digest and file mtimes. (from T-0457: A room-booking ask reaches StepFlow in 3 of 3 live runs on the concierge (2026-10-25))

@@ -1,0 +1,95 @@
+# release.yml: a pushed vX.Y.Z tag publishes the eight @agent-ui-kit/* packages to npm at X.Y.Z and
+# creates the GitHub release for the tag (T-0465, Kim 2026-10-25: "publish via git actions and tagging").
+# With ci.yml (PRs) this is the second workflow GitHub runs automatically; deploy-docs.yml stays manual.
+#
+# The publish step is the same command a local release runs, `npm run publish:packages -- <version>`
+# (scripts/publish/publish-packages.mjs): it builds, transforms and publishes all eight in lockstep and
+# skips any package already live at that version, so re-running a failed job resumes the fleet.
+#
+# Secrets: `NPM_TOKEN` (repo secret, an npm automation or granular publish token for the agent-ui-kit
+# org). npm provenance is on (`NPM_CONFIG_PROVENANCE`), which needs `id-token: write` on the publish job
+# and a public repo whose URL matches each package's `repository.url` (the script writes it).
+#
+# Release notes: `.github/release-notes/<tag>.md` when that file exists, else GitHub's generated notes.
+# The workflow never pushes commits.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+# Never cancel a publish mid-fleet; a second push of the same tag queues behind the first.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      # The tag glob `v*.*.*` also matches `v1.2.3-rc.1` or `v1.2.3.4`; only a strict vX.Y.Z passes.
+      # Prereleases are refused because the script publishes without `--tag`, so one would land as `latest`.
+      - name: Read version from tag
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" != "tag" ]]; then
+            echo "::error::not a tag push (ref type '$GITHUB_REF_TYPE')"
+            exit 1
+          fi
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::tag '$GITHUB_REF_NAME' is not a vX.Y.Z semver tag"
+            exit 1
+          fi
+          echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish the eight packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'
+        run: npm run publish:packages -- ${{ steps.version.outputs.version }}
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create the GitHub release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "release $TAG already exists; nothing to do"
+            exit 0
+          fi
+          notes=".github/release-notes/$TAG.md"
+          if [[ -f "$notes" ]]; then
+            gh release create "$TAG" --verify-tag --title "$TAG" --notes-file "$notes"
+          else
+            gh release create "$TAG" --verify-tag --title "$TAG" --generate-notes
+          fi

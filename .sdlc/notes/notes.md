@@ -888,3 +888,9 @@
 ## T-0464: An OptionDeck icon name outside the icon pack shows a neutral fallback glyph, not an empty tile (2026-10-25)
 
 - note: packages/agent-ui/components/src/controls/option-deck/option-deck.ts:47 checks the active pack for the fallback only when the card renders. A card that rendered before a pack was registered keeps its own name and does not re-resolve, which is the intended pass-through.
+
+## T-0465: Pushing a v* tag publishes the eight packages to npm and creates the GitHub release from GitHub Actions (2026-10-25)
+
+- note: .sdlc/notes/notes.md:71 still says "GitHub runs only ci.yml" (parenthetical dated 2026-10-15, a historical record, not touched).
+- note: .github/workflows/deploy-docs.yml:2-3 the new header line runs long (over 100 columns) but is valid.
+- note: tagcheck.py hardcodes the absolute worktree path to release.yml, so it only runs from this lane tree.
