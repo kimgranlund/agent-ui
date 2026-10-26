@@ -93,6 +93,9 @@ export interface ProbeFixture {
   effort?: string
   /** Where the fixture came from (trace ids), for the reader. */
   source?: string
+  /** T-0476: the persona seed a live run answered from (its `seedVersion` and `seedDigest` in the agent manifest), so a
+   *  fixture proves which seed it was recorded against. Absent for a trace-made fixture and an agent with no manifest. */
+  seed?: { version: number; digest: string }
   steps: ProbeStep[]
   turns: ProbeTurn[]
   expect?: { components?: string[] }
@@ -164,7 +167,7 @@ export function parseProbeFixture(text: string): ProbeFixture {
   }
   if (!isObject(raw)) throw new FixtureError('$ must be an object')
   for (const key of Object.keys(raw)) {
-    if (!['kind', 'version', 'name', 'agent', 'model', 'effort', 'source', 'steps', 'turns', 'expect'].includes(key)) throw new FixtureError(`${key}: unknown field`)
+    if (!['kind', 'version', 'name', 'agent', 'model', 'effort', 'source', 'seed', 'steps', 'turns', 'expect'].includes(key)) throw new FixtureError(`${key}: unknown field`)
   }
   if (raw.kind !== 'agent-ui-chat-probe') throw new FixtureError('kind must be "agent-ui-chat-probe"')
   if (raw.version !== 1) throw new FixtureError('version must be 1')
@@ -211,6 +214,11 @@ export function parseProbeFixture(text: string): ProbeFixture {
   if (typeof raw.model === 'string') fixture.model = raw.model
   if (typeof raw.effort === 'string') fixture.effort = raw.effort
   if (typeof raw.source === 'string') fixture.source = raw.source
+  if (raw.seed !== undefined) {
+    const seed = raw.seed
+    if (!isObject(seed) || typeof seed.version !== 'number' || typeof seed.digest !== 'string' || !/^sha256:[0-9a-f]{64}$/.test(seed.digest)) throw new FixtureError('seed must be {version: number, digest: "sha256:<hex>"}')
+    fixture.seed = { version: seed.version, digest: seed.digest }
+  }
   if (raw.expect !== undefined) {
     if (!isObject(raw.expect)) throw new FixtureError('expect must be an object')
     fixture.expect = raw.expect.components !== undefined ? { components: strings(raw.expect.components, 'expect.components') } : {}

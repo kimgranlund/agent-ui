@@ -7,7 +7,8 @@
  * the `.agent-traces/` line), opens the admin app on a preset, picks the model and effort through the
  * composer's pickers, plays `--say` and `--click` steps in order, and records per turn the request, the
  * wire lines, the trace line, the surfaces, the chat prose, the render lint and a full-page screenshot.
- * Writes `<out>/report.json`, the PNGs and `<out>/fixture.json` (the run as a keyless replay), prints a
+ * Writes `<out>/report.json`, the PNGs and `<out>/fixture.json` (the run as a keyless replay, with the persona
+ * seedVersion and seed digest it ran against), prints a
  * short table, and exits 1 when a named check fails.
  *
  * Replay (keyless): `--replay <fixture.json>` answers every model call from the fixture.
@@ -103,10 +104,11 @@ const plan = {
   ...(fixture !== undefined ? { fixture } : {}),
 }
 const { fixtureFromReport, runProbes, writeReport } = await import('./e2e-admin/probe/run.ts')
+const { personaSeedRecord } = await import('./e2e-admin/probe/seed.ts')
 const code = await runProbes([plan], KIT, ROOT, (report, p) => {
   writeReport(report, p.out)
   if (p.mode === 'live') {
-    writeFileSync(path.join(p.out, 'fixture.json'), `${JSON.stringify(scrubJson(fixtureFromReport(report), process.env), null, 2)}\n`)
+    writeFileSync(path.join(p.out, 'fixture.json'), `${JSON.stringify(scrubJson(fixtureFromReport(report, personaSeedRecord(report.agent, ROOT)), process.env), null, 2)}\n`)
     console.log(`[chat-probe] keyless replay of this run: npm run chat:probe -- --replay ${path.relative(process.cwd(), path.join(p.out, 'fixture.json'))}`)
   }
 })
