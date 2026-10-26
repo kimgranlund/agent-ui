@@ -322,6 +322,24 @@ describe('produce(): a targeted claim with no surface id, or a target never crea
     }
   })
 
+  // T-0470 (round 2026-10-26-r14-pattern :138): an add claim ("Added two lamps ... so your order comes to $378") is a change claim too.
+  it('a targeted add claim ("Added", "comes to $N") gets CHANGE_CLAIMED with render_surface offered', async () => {
+    for (const text of ['Added two Brass Arc Floor Lamps at $189 each, so your order comes to $378. Adjust the quantity below any time.', 'I added the oak lamp.', 'Your order comes to $98.']) {
+      const r = await runRounds([{ text: targeted(text, 'table-3') }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }])
+      expect(r.reqs, text).toHaveLength(2)
+      expect(r.reqs[1]!.toolChoice, text).toEqual({ name: 'render_surface' })
+      expect(r.trace, text).toMatchObject({ rounds: 2, failureCodes: ['CHANGE_CLAIMED'] })
+    }
+  })
+
+  it('a targeted reply that only mentions an earlier add, or a thing that comes to mind, claims nothing', async () => {
+    for (const text of ['Which lamp would you like added?', 'What comes to mind when you think of brass?', 'The Oak Column lamp is $98.']) {
+      const r = await runRounds([{ text: targeted(text, 'table-3') }])
+      expect(r.reqs, text).toHaveLength(1)
+      expect(r.trace.failureCodes, text).toEqual([])
+    }
+  })
+
   it('a reply whose target names a surface nothing created fails SURFACE_CLAIMED with the full repair', async () => {
     const r = await runRounds([{ text: targeted('Here is your Saturday, in order.', 'trip-saturday') }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }])
     expect(r.reqs).toHaveLength(2)
