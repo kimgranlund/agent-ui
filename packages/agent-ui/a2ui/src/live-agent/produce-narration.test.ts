@@ -333,7 +333,7 @@ describe('produce(): a targeted claim with no surface id, or a target never crea
   })
 
   it('a targeted reply that only mentions an earlier add, or a thing that comes to mind, claims nothing', async () => {
-    for (const text of ['Which lamp would you like added?', 'What comes to mind when you think of brass?', 'The Oak Column lamp is $98.']) {
+    for (const text of ['Which lamp would you like added?', 'What comes to mind when you think of brass?', 'The Oak Column lamp is $98.', 'Added fees may apply.', 'Added taxes will apply at checkout.']) {
       const r = await runRounds([{ text: targeted(text, 'table-3') }])
       expect(r.reqs, text).toHaveLength(1)
       expect(r.trace.failureCodes, text).toEqual([])
