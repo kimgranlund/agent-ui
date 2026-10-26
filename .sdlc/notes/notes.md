@@ -585,7 +585,7 @@
 - decide: `site/lib/component-preview.ts:377` fix-now: the comment says rows, items, total, data and the two actions "ride SAMPLE_TREES", but no SAMPLE_TREES entry for ConfirmReceipt exists (only lines 377-378 name it); the preview gate did not require one, so reword the comment or add the entry. -> T-0406 (already fixed on main)
 - decide: `packages/agent-ui/a2ui/src/agent/prompts/mini-skills/confirm-receipt.md:6` decide: the module teaches the right shape (totalLabel plus totalPath, status bound to a path holding pending, no Button), but `grammar.md:82-85` still teaches the confirm-step receipt as ONE DescriptionList inside an ORDINARY ask with a single commit Button (`grammar.md:76-78`), and `grammar.md:97-103` describes the closing-turn settle as strip Back/Confirm buttons and add a Badge; on a confirm turn the model holds both. ConfirmReceipt is also FEED_EXCLUDED, and the module does not say it lives on a canvas surface, never a feed ask. Grammar is byte-pinned, so reconciling it is a deliberate recapture edit. -> stale, resolved by later work (triage 2026-10-23)
 - decide: `packages/agent-ui/a2ui/src/agent/prompts/mini-skills/confirm-receipt.md:6` note: "rows [...] and totalPath (with totalLabel) name keys in data" reads as if totalLabel also names a data key; it is the displayed label. -> stale, resolved by later work (triage 2026-10-23)
-- decide: `packages/agent-ui/a2ui/src/catalog/default/selection.json:1222-1236` decide: the builder dropped the Card edge in both directions, where Kim's ruling kept ConfirmReceipt -> Card one-way. The deviation is forced: `selection-guidance.test.ts:105-107` holds every base edge reciprocal with an empty exemption set (negative control at `:208-213`), and the seeded games fixture at `:239-247` appends Card -> Dice onto the real base, so a fourth base Card edge composes to 5 and trips `selection-guidance.ts:231` (NOT_FOR_MAX 4 at `:67`). Kim confirms the no-Card outcome, or retires one of Card's Column, ServiceCard or ProductCard edges to make room for the pair.
+- decide: `packages/agent-ui/a2ui/src/catalog/default/selection.json:1222-1236` decide: the builder dropped the Card edge in both directions, where Kim's ruling kept ConfirmReceipt -> Card one-way. The deviation is forced: `selection-guidance.test.ts:105-107` holds every base edge reciprocal with an empty exemption set (negative control at `:208-213`), and the seeded games fixture at `:239-247` appends Card -> Dice onto the real base, so a fourth base Card edge composes to 5 and trips `selection-guidance.ts:231` (NOT_FOR_MAX 4 at `:67`). Kim confirms the no-Card outcome, or retires one of Card's Column, ServiceCard or ProductCard edges to make room for the pair. -> T-0459: dropped, no Card edge accepted (reciprocity test plus NOT_FOR_MAX 4)
 - decide: `.claude/docs/spec/a2ui-catalog.spec.md:263` note: "the games domain's appended one" is the seeded test fixture above; no shipped games domain sidecar exists (`catalog/domains/index.ts:4`, empty in W0). -> T-0406
 - decide: `packages/agent-ui/a2ui/src/catalog/default/selection.json:807` note: DescriptionList's intent "a receipt or record summary" still overlaps ConfirmReceipt's; the new reverse edge is what disambiguates them. -> accepted (triage 2026-10-23)
 - decide: `packages/agent-ui/a2ui/src/catalog/personas/concierge/checks.ts:149` keeps `['BookingForm', 'BookingConfirmation']` although the Do asks to add ConfirmReceipt. The builder's reason holds: `surfaceRequired(id, requires, moments)` at :125-128 passes that list as `requires`, and `semantic-check.ts:139-141` `gateChecksOnCatalog` drops a check whose types the catalog lacks; `grep ConfirmReceipt` on `catalog/a2ui-basic/catalog.json` and `personas/concierge/catalog.json` finds nothing, so the edit would silently stop `concierge-surface-required` on a2ui-basic--concierge. Any surface already satisfies the check (:131 `surfaces.length > 0`), so the Do's "accept ConfirmReceipt" intent is met with no edit. -> T-0401
@@ -742,8 +742,8 @@
 
 ## T-0429: A quiz answer commits on tap: QuestionCard drops Check answer (2026-10-23)
 
-- decide: site/pages/agent-admin-prompt-budget.test.ts:8 note: the MEASURED 2026-10-14 comment (worst case 130 097) was stale before this change; the builder measured the worst persona at 138 880 of 150 200 (croupier), left for its owner.
-- decide: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:308-312 decide: a re-tap before the reveal turn lands sends a second `answer` action (design-accepted, OptionDeck parity), and a live Haiku that keeps omitting `actionName` would exhaust rounds; the quizmaster `checks.ts` fallback is the design's named follow-up.
+- decide: site/pages/agent-admin-prompt-budget.test.ts:8 note: the MEASURED 2026-10-14 comment (worst case 130 097) was stale before this change; the builder measured the worst persona at 138 880 of 150 200 (croupier), left for its owner. -> T-0461: comment refreshed (headroom 11 320 re-measured 2026-10-26, T-0476)
+- decide: packages/agent-ui/a2ui/src/catalog/personas/quizmaster/factories.ts:308-312 decide: a re-tap before the reveal turn lands sends a second `answer` action (design-accepted, OptionDeck parity), and a live Haiku that keeps omitting `actionName` would exhaust rounds; the quizmaster `checks.ts` fallback is the design's named follow-up. -> T-0459: re-tap done in 433bf7e67 (T-0439); actionName omission dropped, a required key gets the CATALOG repair, round 15 measures it
 
 ## T-0433: Catalog page follow-ups: capability-registry picker, missing descriptor descriptions, 400px code panel, OptionDeck allowRandom knob (2026-10-23)
 
@@ -752,7 +752,7 @@
 
 ## T-0430: The A2A tic-tac-toe arena plays live matches on ui.nonoun.io (2026-10-23)
 
-- decide: packages/agent-ui/a2ui/tools/agent/worker/arena-route.ts:108 decide: cancel relies on `request.signal` firing in workerd (the `enable_request_signal` compat flag the builder named as open); the `writer.closed` rejection path (:109) covers a visitor leaving even without it.
+- decide: packages/agent-ui/a2ui/tools/agent/worker/arena-route.ts:108 decide: cancel relies on `request.signal` firing in workerd (the `enable_request_signal` compat flag the builder named as open); the `writer.closed` rejection path (:109) covers a visitor leaving even without it. -> T-0459: done in f0b7e2461 (T-0438)
 
 ## T-0434: The A2A concept corpus says the arena plays live on the production site (2026-10-24)
 
@@ -824,26 +824,26 @@
 
 ## T-0452: The shopkeeper order summary is a ConfirmReceipt with AmountPicker lines (2026-10-24)
 
-- decide: scripts/e2e-admin/probe/scenarios/shopkeeper.ts:2-3,15-16 decide: the smoke oracle still expects `ProductCard` on the add step and its header says `cart-summary` "keeps the order on THAT SAME surface"; round 13 cluster U proposed the add step expect `ConfirmReceipt`, and the builder left it as an open item.
-- decide: site/pages/agent-admin-presets.ts:29 note: the header still says library skills are "projected wholesale into the live" prompt, stale since SPEC-R14 made a `context` skill index-only (the cause this ticket worked around); the same line carries a pre-existing em dash.
-- decide: .sdlc/runtime/tasks/0452-shopkeeper-cart-receipt/live/run-3.log note: sample 3 built the right surface in round 1 but shipped `messages` as a JSON string (`PARSE`), the T-0450 cluster S shape; 2 of 3 samples pass against round 13's 0 of 3.
+- decide: scripts/e2e-admin/probe/scenarios/shopkeeper.ts:2-3,15-16 decide: the smoke oracle still expects `ProductCard` on the add step and its header says `cart-summary` "keeps the order on THAT SAME surface"; round 13 cluster U proposed the add step expect `ConfirmReceipt`, and the builder left it as an open item. -> T-0459: done in 2bd29f7f6 (T-0453)
+- decide: site/pages/agent-admin-presets.ts:29 note: the header still says library skills are "projected wholesale into the live" prompt, stale since SPEC-R14 made a `context` skill index-only (the cause this ticket worked around); the same line carries a pre-existing em dash. -> T-0461: header refreshed (SPEC-R14 index-only)
+- decide: .sdlc/runtime/tasks/0452-shopkeeper-cart-receipt/live/run-3.log note: sample 3 built the right surface in round 1 but shipped `messages` as a JSON string (`PARSE`), the T-0450 cluster S shape; 2 of 3 samples pass against round 13's 0 of 3. -> T-0459: dropped, covered by T-0456 and T-0458
 
 ## T-0451: A bare room-booking ask opens a StepFlow (2026-10-24)
 
-- decide: .sdlc/runtime/tasks/0451-stepflow-not-routed/live/run-1.log, run-2.log, run-3.log: the Done-when live check ran (3 Haiku samples; `fixture.json` records `miniSkillIds: ["step-flow","product-presentation"]` in all 3, so routing is 3 of 3, and per-run usage of about 4.2k input plus 19.3k cache tokens supports the under-$1 bound) but the Goal's outcome holds in 1 of 3: run-1 opens `Column,StepFlow,Calendar,TextField,Checkbox,Textarea`, run-2 and run-3 open `Column,BookingForm,Button` and fail `expect-turn StepFlow`. The acceptance criteria stop at routing, so this is not a fail here; the builder names the next lever (a StepFlow row in `catalog/composite-moments.ts`) and suggests a follow-up ticket.
+- decide: .sdlc/runtime/tasks/0451-stepflow-not-routed/live/run-1.log, run-2.log, run-3.log: the Done-when live check ran (3 Haiku samples; `fixture.json` records `miniSkillIds: ["step-flow","product-presentation"]` in all 3, so routing is 3 of 3, and per-run usage of about 4.2k input plus 19.3k cache tokens supports the under-$1 bound) but the Goal's outcome holds in 1 of 3: run-1 opens `Column,StepFlow,Calendar,TextField,Checkbox,Textarea`, run-2 and run-3 open `Column,BookingForm,Button` and fail `expect-turn StepFlow`. The acceptance criteria stop at routing, so this is not a fail here; the builder names the next lever (a StepFlow row in `catalog/composite-moments.ts`) and suggests a follow-up ticket. -> T-0457: StepFlow outcome routed there (T-0459 triage)
 - note: site/agent-content/personas/concierge/agent.md:66 (fable review of the one added model-read sentence, per the Constraints debate rule): "A room booking that lacks its dates or guests is a StepFlow." is clean prose, no em dash, under budget, and consistent with the body's BookingForm-last-scene finish. It does pull against the persona Surface style line "a booking is ONE booking form holding the dates, the choices to make, ..." on the same turn, which is the likely reason runs 2 and 3 stayed BookingForm.
 - note: packages/agent-ui/a2ui/src/agent/prompts/mini-skills/step-flow.md:6: body is 791 chars, about 198 tokens by the `chars / 4` estimate against `PER_MODULE_TOKEN_BUDGET = 200` (mini-skills.ts:79); a further sentence in this entry reds the budget test.
 
 ## T-0447: Agent authoring S5: natural-language edit from any chat (2026-10-24)
 
-- decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:3168 note: `#reflectCopilotKicker` runs only on a real `authoringStore` identity change, so a page must set `authoringMode` before `authoringStore` (the descriptor says so at agent-admin.md:62); the page step that registers `onEditRequest` should keep that order.
-- decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:2830 note: the architect's `edit: { reverted, skipped }` turn-log entry on Undo is not built; the step handoff rules Undo out of the chat turn and the host, so the skipped keys reach the user only through `receipt-undo-skipped`.
+- decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:3168 note: `#reflectCopilotKicker` runs only on a real `authoringStore` identity change, so a page must set `authoringMode` before `authoringStore` (the descriptor says so at agent-admin.md:62); the page step that registers `onEditRequest` should keep that order. -> T-0459: done in aeb08930c (T-0447)
+- decide: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:2830 note: the architect's `edit: { reverted, skipped }` turn-log entry on Undo is not built; the step handoff rules Undo out of the chat turn and the host, so the skipped keys reach the user only through `receipt-undo-skipped`. -> T-0459: dropped by design, skipped keys reach the user through receipt-undo-skipped
 - note: agent-admin.ts:2832-2834 adds one thing the Do did not call for: the armed branch skips `#handleSubmit` when `copilot.disabled` (it mirrors `#startFromFirstMessage`'s master-switch guard). Harmless, and the builder disclosed it.
 
 ## T-0453: The shopkeeper answers a cold compare ask with an OptionCompare (2026-10-25)
 
-- decide: .agent-traces/2026-10-25.jsonl:2-3 decide: samples 2 and 3 sent the a2uiMeta JSON as prose in round 1 and healed through one SURFACE_CLAIMED retry each; the probe verdict is still pass, the builder calls it a producer-format issue and left it unfiled.
-- decide: scripts/e2e-admin/probe/scenarios/shopkeeper.ts:11 decide: the cold compare has no keyless regression guard (no `reach-shopkeeper-compare` round scenario and no replay fixture captured with `--from-trace`), so the fix is proven only by the paid run.
+- decide: .agent-traces/2026-10-25.jsonl:2-3 decide: samples 2 and 3 sent the a2uiMeta JSON as prose in round 1 and healed through one SURFACE_CLAIMED retry each; the probe verdict is still pass, the builder calls it a producer-format issue and left it unfiled. -> T-0459: dropped, covered by T-0456
+- decide: scripts/e2e-admin/probe/scenarios/shopkeeper.ts:11 decide: the cold compare has no keyless regression guard (no `reach-shopkeeper-compare` round scenario and no replay fixture captured with `--from-trace`), so the fix is proven only by the paid run. -> T-0459: dropped, routed to T-0456 (one replay per fix, cold compare first)
 
 ## T-0454: The welcome surface's option cards render at 150 to 250px tall with a full-height media column and uneven heights (2026-10-25)
 
@@ -875,9 +875,9 @@
 
 ## T-0457: A room-booking ask reaches StepFlow in 3 of 3 live runs on the concierge (2026-10-25)
 
-- decide: site/agent-content/personas/concierge/agent.md:67 note: a pre-existing em dash sits in the Surface style ("integrations" then "surface the results"), untouched by this ticket; model-read text under the debate rule.
-- decide: .sdlc/runtime/tasks/0457-concierge-stepflow-pull/live/reach-concierge-room-stepflow-haiku-3/report.json decide: run 3's StepFlow ends in a Select scene with no BookingForm last step, against the added sentence's "that one booking form is its last step"; reach held 3 of 3, shape held 2 of 3.
-- decide: scripts/chat-probe.mjs decide: a live fixture and report carry no persona seedVersion or seed digest, so which seed a live run used is provable only through the trace's bundle digest and file mtimes.
+- decide: site/agent-content/personas/concierge/agent.md:67 note: a pre-existing em dash sits in the Surface style ("integrations" then "surface the results"), untouched by this ticket; model-read text under the debate rule. -> T-0477
+- decide: .sdlc/runtime/tasks/0457-concierge-stepflow-pull/live/reach-concierge-room-stepflow-haiku-3/report.json decide: run 3's StepFlow ends in a Select scene with no BookingForm last step, against the added sentence's "that one booking form is its last step"; reach held 3 of 3, shape held 2 of 3. -> T-0473 dropped: run 3 ends in a BookingForm, so this note is wrong
+- decide: scripts/chat-probe.mjs decide: a live fixture and report carry no persona seedVersion or seed digest, so which seed a live run used is provable only through the trace's bundle digest and file mtimes. -> T-0476: live fixture records seedVersion and digest
 
 ## T-0456: Round 13 fixes have keyless replay guards, and a strict tool use spike measures Haiku format failures (2026-10-25)
 
@@ -933,3 +933,7 @@
 - decide: .sdlc/tickets/0477-concierge-emdash/handoff.md:22 Constraints say `Opus author`; runs.jsonl shows the solo L1 ran on `sonnet` (level routing), the Fable L3 review half held.
 - note: site/agent-content/personas/concierge/agent.md:4 keeps `"version": 25` and :35 adds no changelog line while the seed prose changed; site/agent-content/AGENTS.md:65 allows this (the overlay merge runs bumped or not, a bump is for a new seed release) and every prior prose seed edit on this manifest bumped (24 to 25 at T-0457, 23 to 24 at T-0403).
 - note: site/agent-content/personas/concierge/agent.md:63 `...unless the guest names somewhere else (a day-trip destination, say), and call your integrations with "Sorrento" by default...` splices a declarative clause onto an imperative with `, and`; the base text had the same splice across the dash, meaning kept, wording only.
+
+## T-0476: Notes routing, probe seed digest and prompt budget headroom (2026-10-26)
+
+- note: .sdlc/notes/notes.md: line 267 (ui-button pressed tone) stays unrouted by the builder's choice, per its report.

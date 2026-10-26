@@ -472,8 +472,9 @@ export async function runProbes(
   return code
 }
 
-/** The fixture a live run leaves behind, so the run itself replays keyless with `--replay`. */
-export function fixtureFromReport(report: ProbeReport): ProbeFixture {
+/** The fixture a live run leaves behind, so the run itself replays keyless with `--replay`. `seed` is the persona seed
+ *  the run used (`personaSeedRecord`), recorded so the fixture says which seed it was measured against. */
+export function fixtureFromReport(report: ProbeReport, seed?: ProbeFixture['seed']): ProbeFixture {
   return {
     kind: 'agent-ui-chat-probe',
     version: 1,
@@ -482,6 +483,7 @@ export function fixtureFromReport(report: ProbeReport): ProbeFixture {
     ...(report.model !== undefined ? { model: report.model } : {}),
     ...(report.effort !== undefined ? { effort: report.effort } : {}),
     source: `probe ${report.mode} run ${report.at}${report.turns.some((t) => t.trace) ? `, traces ${report.turns.map((t) => t.trace?.id ?? '-').join(',')}` : ''}`,
+    ...(seed !== undefined ? { seed } : {}),
     steps: report.turns.map((t) => t.step),
     turns: report.turns.map((t) => ({ lines: t.lines, ...(t.rounds !== undefined ? { rounds: t.rounds } : {}), ...(t.routing !== undefined ? { routing: t.routing } : {}) })),
   }
