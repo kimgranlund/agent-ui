@@ -9,12 +9,22 @@
 # Auth: npm trusted publishing (GitHub OIDC, T-0466; the NPM_TOKEN route failed with a 404 on the scope at the
 # first v0.2.0 publish). No token exists anywhere in this workflow: the publish job asks GitHub for an OIDC
 # identity (`id-token: write`) and npm exchanges it for a short-lived publish credential, so a set NODE_AUTH_TOKEN
-# would only get in its way (the Set up Node step passes no `registry-url` for the same reason: it writes a
-# token placeholder into .npmrc). Requirements: npm CLI 11.5.1 or newer (the "Require an npm CLI that can
-# publish with OIDC" step enforces it), a GitHub-hosted runner, and a trusted publisher registered on npmjs.com
-# for each of the eight packages with these fields: user or org `kimgranlund`, repository `agent-ui`, workflow
-# filename `release.yml`, environment left empty (the job names none). Provenance is automatic under trusted
+# would only get in its way. The Set up Node step passes no `registry-url`: npm already defaults to
+# https://registry.npmjs.org/, which is the OIDC audience it asks for (`npm:registry.npmjs.org`). Requirements:
+# npm CLI 11.5.1 or newer (the "Require an npm CLI that can publish with OIDC" step enforces it), a GitHub-hosted
+# runner, and a trusted publisher registered on npmjs.com for each of the eight packages (package Settings,
+# Trusted Publisher, GitHub Actions) with these fields, all case-sensitive and exact: organization or user
+# `kimgranlund` (the GitHub owner, not the npm user `kimgish`), repository `agent-ui`, workflow filename
+# `release.yml` (the bare filename, no `.github/workflows/` path), environment left empty (the job names none),
+# and the allowed action "npm publish" ticked (npm's docs: an entry made after 2026-09-03 allows only
+# `npm stage publish` by default, and the script runs a direct publish). Provenance is automatic under trusted
 # publishing and needs a public repo whose URL matches each package's `repository.url` (the script writes it).
+#
+# When the exchange fails, npm does not say why: it logs the registry's reason at `verbose`, then stops with
+# ENEEDAUTH (T-0471: run 40341014351 on v0.2.0 reached the exchange request, then hit ENEEDAUTH with the reason
+# discarded at the default log level). So the publish step runs npm at `verbose`, where the reason prints as
+# `npm verbose oidc Failed token exchange request with body message: ...`, and a failed publish uploads npm's
+# full debug logs as the `npm-logs` artifact.
 #
 # Release notes: `.github/release-notes/<tag>.md` when that file exists, else GitHub's generated notes.
 # The workflow never pushes commits.
@@ -85,9 +95,22 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # No env block on purpose: no token reaches npm, which authenticates through the job's OIDC identity.
+      # No token reaches npm, which authenticates through the job's OIDC identity. `verbose` makes a refused OIDC
+      # exchange print the registry's reason instead of a bare ENEEDAUTH (see the header).
       - name: Publish the eight packages
+        env:
+          NPM_CONFIG_LOGLEVEL: verbose
         run: npm run publish:packages -- ${{ steps.version.outputs.version }}
+
+      # npm's debug logs hold every level (npm redacts tokens); the runner and its files are gone after the job.
+      - name: Keep the npm debug logs of a failed publish
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-logs
+          path: ~/.npm/_logs/
+          retention-days: 14
+          if-no-files-found: ignore
 
   release:
     needs: publish

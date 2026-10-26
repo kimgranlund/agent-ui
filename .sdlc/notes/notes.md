@@ -912,3 +912,9 @@
 ## T-0470: CHANGE_CLAIM_IN_REPLY covers an add claim (added, comes to) (2026-10-26)
 
 - note: packages/agent-ui/a2ui/src/agent/produce.ts:1263 `(?:^|[.!:]\s*)added\b` also matches a sentence-initial "Added" in a non-claim such as "Added fees may apply."; acceptable per the ticket, flagged for the next round.
+
+## T-0471: The release workflow gets an npm credential through trusted publishing (2026-10-26)
+
+- note: no em dashes in added lines of release.yml and SKILL.md (grep count 0).
+- note: redck deviations printed no `process deviation:` line; no `(red)` criteria exist.
+- note: the diagnosis rests on the builder's reading of npm's source and the run log, not an observed OIDC exchange; the change only makes the next run print the reason (no tag was pushed, per the constraints).
