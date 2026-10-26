@@ -899,3 +899,8 @@
 
 - note: site/pages/agent-admin-presets.ts:27-28 still uses middle dots and a long single comment; wording only.
 - note: redck.py deviations printed no lines (no `(red)` criteria).
+
+## T-0458: Live quality round 14 measures the round 13 fixes against the round 13 baseline (2026-10-25)
+
+- note: `report.md:87-88` says "None filed by this round" and names the clusters W, X, P3, S2 and the single-run stats binding gap as "Proposed"; the Done-when line "each failure cluster is one proposed ticket" is not an acceptance criterion, so the conductor still needs to file them with the ticket skill.
+- note: the observed 64 of 69 passed (5 failed) against round 13's 52 pass; the zero-cost-risk cap check (0.65 vs 12) holds. Zero-trust runs reproduced no live spend (no reruns by the verifier).
