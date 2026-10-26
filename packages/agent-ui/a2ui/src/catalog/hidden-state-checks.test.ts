@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiComponent, A2uiOutput, A2uiServerMessage } from '../protocol.ts'
-import { boardlessMoveAppliedCheck, fleetConcedeCheck, fleetSecretCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
+import { boardlessMoveAppliedCheck, fleetConcedeCheck, fleetSecretCheck, gameAskHudCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
 import { semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
@@ -332,6 +332,41 @@ describe('T-0284: fleet-hud', () => {
     expect(codes(fleetHudCheck, [assistant(opening)], [data('battleship-1', { sea: { cells: [shot(0, 0, '✕')] } })])).toEqual([])
     expect(codes(fleetHudCheck, [], [...board('word-forge'), data('word-forge', { secret: { word: 'lodge' }, cells: [] })])).toEqual([])
     expect(codes(fleetHudCheck, [], [...mine('home', []), data('home', { secret: { fleet, playerFleet } })])).toEqual([])
+  })
+})
+
+// T-0468 (live round 14 :7): the SURFACE_CLAIMED repair of a Twenty Questions opening built ask-1 alone, one OptionDeck.
+describe('T-0468: game-ask-hud', () => {
+  const deck = (sid: string): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui' } } as A2uiServerMessage,
+    { version: 'v1.0', updateComponents: { surfaceId: sid, components: [{ id: 'root', component: 'OptionDeck', heading: 'Question 1 of 20: Is it a living thing?', actionName: 'choose', options: [] }] } } as A2uiServerMessage,
+  ]
+  const hud: A2uiOutput = [
+    { version: 'v1.0', createSurface: { surfaceId: 'hud-1', catalogId: 'agent-ui' } } as A2uiServerMessage,
+    { version: 'v1.0', updateComponents: { surfaceId: 'hud-1', components: [{ id: 'root', component: 'GameHud', title: 'Twenty Questions' }] } } as A2uiServerMessage,
+  ]
+  const said = (intent: string, out: A2uiOutput, prior: Turn[] = [], reply?: string) => {
+    const session = { turns: prior } as SemanticTurnLog
+    return gameAskHudCheck
+      .check({ surfaces: semanticSurfaceViews(session, out), intent, open: sessionSurfaceViews(session), ...(reply !== undefined ? { reply } : {}) })
+      .map((f) => `${f.code} ${f.path}`)
+  }
+  const opening = "Let's play Twenty Questions. I'm thinking of something."
+
+  it('rides every catalog before the boardless move check', () => {
+    expect(HIDDEN_STATE_CHECKS.map((c) => c.id).slice(-2)).toEqual(['game-ask-hud', 'boardless-move-applied'])
+  })
+
+  it('a game opening whose new deck has no GameHud is GAME_HUD_MISSING', () => {
+    expect(said(opening, deck('ask-1'))).toEqual(['GAME_HUD_MISSING ask-1:hud'])
+    expect(said('Ask me a question.', deck('ask-1'), [], 'Twenty questions it is.')).toEqual(['GAME_HUD_MISSING ask-1:hud'])
+  })
+
+  it('stays silent with a GameHud in this answer or the session, outside a game, and on a client turn', () => {
+    expect(said(opening, [...hud, ...deck('ask-1')])).toEqual([])
+    expect(said('Yes.', deck('ask-2'), [{ role: 'assistant', content: hud.map((m) => JSON.stringify(m)).join('\n') }], 'Question 2 of 20: twenty questions.')).toEqual([])
+    expect(said('Which plan suits me?', deck('ask-1'))).toEqual([])
+    expect(gameAskHudCheck.check({ surfaces: semanticSurfaceViews({ turns: [] }, deck('ask-1')), action: { name: 'choose', surfaceId: 'ask-0', context: {}, dataModel: undefined } })).toEqual([])
   })
 })
 

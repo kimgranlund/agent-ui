@@ -1186,10 +1186,13 @@ const SURFACE_NOT_CREATED_HINT =
 /** T-0442: the self-correct sentence for a SURFACE_CLAIMED round (a note-only reply whose ask names a surface it never
  *  creates). Round `2026-10-24-t0440-sweep` pick-mentalist-answer-deck-haiku-1 said "Answer Yes, No, or Sort of below" and
  *  declared ask-1 with no call, so the user saw prose about a card that was not there. T-0448: or whose target names one
- *  (round 13 :149, "Here is your Saturday" targeting trip-saturday). */
+ *  (round 13 :149, "Here is your Saturday" targeting trip-saturday). T-0468: the repair named only that surface, so a
+ *  Twenty Questions opening came back as its ask deck alone with no GameHud (round 14 :7, :8); a game is now asked for its
+ *  HUD beside the deck. */
 const SURFACE_CLAIMED_HINT =
   ' SURFACE_CLAIMED means your reply declares a surface (your meta-line "ask" or "target") that this answer never creates, ' +
-  'so the user would read about a surface that is not there. Create it in this answer, with its components and data.'
+  'so the user would read about a surface that is not there. Create it in this answer, with its components and data. ' +
+  "In a game, also send the game's HUD surface beside the ask deck in this answer: create it with ONE GameHud if the game has none yet, else update the open one."
 
 /** T-0448: the self-correct sentence for a CHANGE_CLAIMED round (a note-only say reply that targets an open surface and
  *  claims a change it never sent). Round 13 :155 said "Done, the table is now Kim's table" targeting table-1 with no call. */

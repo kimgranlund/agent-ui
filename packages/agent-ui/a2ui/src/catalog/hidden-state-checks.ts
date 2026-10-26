@@ -21,6 +21,7 @@
 // with no board. T-0284: a
 // Battleship board opened with no GameHud. T-0296: a Battleship surrender answered with no ResultCard. T-0366: a move
 // typed at an open board-less game (the Negotiator's deal sheet, the Dungeon Master's quest log) answered in prose alone.
+// T-0468: a game's new question deck (an OptionDeck) opened with no GameHud anywhere in the game.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
 // and a committed fleet with no word cue is never judged for a word.
@@ -451,6 +452,34 @@ export const fleetHudCheck: SemanticCheck = {
   },
 }
 
+/**
+ * T-0468 (live round 14 cluster W, traces 2026-10-26.jsonl:7 and :8): Haiku 5.5 opened Twenty Questions note-only with an
+ * ask on ask-1, and the SURFACE_CLAIMED repair built ask-1 alone (one OptionDeck), so the game never had a GameHud.
+ * GAME_HUD_MISSING: a say turn whose words name a game (`GAME_WORDS`, in the player's message or the reply) opens a new
+ * surface holding an OptionDeck while no GameHud is on this round's surfaces, on an open surface, or anywhere the session
+ * showed one. A game that already has its HUD, or a choice deck outside a game, is never judged.
+ */
+export const gameAskHudCheck: SemanticCheck = {
+  id: 'game-ask-hud',
+  requires: ['GameHud', 'OptionDeck'],
+  check({ surfaces, action, intent, open, shownTypes, reply }) {
+    if (action !== undefined || intent === undefined || !GAME_WORDS.test(`${intent} ${reply ?? ''}`)) return []
+    const holds = (view: SurfaceView, type: string): boolean => [...view.components.values()].some((c) => c.component === type)
+    if (shownTypes?.has('GameHud') || [...surfaces, ...(open ?? [])].some((v) => holds(v, 'GameHud'))) return []
+    const deck = surfaces.find((v) => v.priorComponents === undefined && holds(v, 'OptionDeck'))
+    if (deck === undefined) return []
+    return [
+      {
+        code: 'GAME_HUD_MISSING',
+        path: `${deck.surfaceId}:hud`,
+        message:
+          `${deck.surfaceId} opens the game's question deck with no GameHud anywhere, so the game's progress and status have no strip. ` +
+          `Keep ${deck.surfaceId} as it is and, in this same answer, create the game's HUD surface beside it (for example hud-1) holding ONE GameHud with its title, status and stats bound to the data model.`,
+      },
+    ]
+  },
+}
+
 /** T-0296: the player concedes a Battleship game ("I surrender. Reveal your fleet.", "I concede", "I give up"). */
 const CONCEDE = /\b(?:surrender(?:s|ed)?|concede[sd]?|forfeit|i resign|give up|gave up|i quit)\b/i
 
@@ -573,4 +602,4 @@ export const boardlessMoveAppliedCheck: SemanticCheck = {
 }
 
 /** Every hidden-state check, in the order the hosts run them. */
-export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck, fleetConcedeCheck, boardlessMoveAppliedCheck]
+export const HIDDEN_STATE_CHECKS: readonly SemanticCheck[] = [wordSecretCheck, fleetSecretCheck, fleetShotAppliedCheck, wordMoveAppliedCheck, fleetHudCheck, fleetConcedeCheck, gameAskHudCheck, boardlessMoveAppliedCheck]

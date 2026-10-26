@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 463 done, 4 dropped (git log or .NNNN-* folders)
+Closed: 461 done, 4 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -126,3 +126,4 @@ Closed: 463 done, 4 dropped (git log or .NNNN-* folders)
 - decide: site/agent-content/personas/concierge/agent.md:67 note: a pre-existing em dash sits in the Surface style ("integrations" then "surface the results"), untouched by this ticket; model-read text under the debate rule. (from T-0457: A room-booking ask reaches StepFlow in 3 of 3 live runs on the concierge (2026-10-25))
 - decide: .sdlc/runtime/tasks/0457-concierge-stepflow-pull/live/reach-concierge-room-stepflow-haiku-3/report.json decide: run 3's StepFlow ends in a Select scene with no BookingForm last step, against the added sentence's "that one booking form is its last step"; reach held 3 of 3, shape held 2 of 3. (from T-0457: A room-booking ask reaches StepFlow in 3 of 3 live runs on the concierge (2026-10-25))
 - decide: scripts/chat-probe.mjs decide: a live fixture and report carry no persona seedVersion or seed digest, so which seed a live run used is provable only through the trace's bundle digest and file mtimes. (from T-0457: A room-booking ask reaches StepFlow in 3 of 3 live runs on the concierge (2026-10-25))
+- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:461-480 note: `gameAskHudCheck` requires a GameHud for any `GAME_WORDS` say turn that opens a new OptionDeck surface, while grammar.md:44 allows "a game with no GameHud". The shipped personas agree with the check (mentalist opens its HUD beside the ask, quizmaster opens GameHud plus QuestionCard, every recorded replay green), so a future HUD-less game persona that asks through an OptionDeck would draw one repair round from this check. (from T-0468: A game turn repaired after SURFACE_CLAIMED keeps its GameHud: the repair asks for the HUD with the ask deck (2026-10-26))

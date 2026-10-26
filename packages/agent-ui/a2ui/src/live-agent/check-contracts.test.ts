@@ -534,6 +534,23 @@ const CONTRACTS: Record<string, Contract> = {
       output: [data('waters-1', { ...FLEET_OPEN, cells: FLEET.map((c) => ({ ...c, mark: '■' })), status: 'You conceded' })],
     },
   },
+  // T-0468: a Twenty Questions opening whose ask deck ships with no GameHud anywhere (round 14 :7).
+  'game-ask-hud': {
+    code: 'GAME_HUD_MISSING',
+    pass: {
+      catalog: UI,
+      intent: "Let's play Twenty Questions. I'm thinking of something.",
+      output: [
+        ...surface('hud-1', UI, [{ id: 'root', component: 'GameHud', title: 'Twenty Questions', status: 'Question 1 of 20', stats: [{ label: 'Asked', value: { path: '/asked' } }] }], { asked: '1 of 20' }),
+        ...surface('ask-1', UI, [{ id: 'root', component: 'OptionDeck', heading: 'Is it a living thing?', actionName: 'choose', options: deckOptions(3) }]),
+      ],
+    },
+    fail: {
+      catalog: UI,
+      intent: "Let's play Twenty Questions. I'm thinking of something.",
+      output: surface('ask-1', UI, [{ id: 'root', component: 'OptionDeck', heading: 'Is it a living thing?', actionName: 'choose', options: deckOptions(3) }]),
+    },
+  },
   'boardless-move-applied': {
     code: 'ACTION_NOT_APPLIED',
     pass: { catalog: UI, session: dealSession, intent: 'I offer 20.', target: 'deal-1', output: [data('deal-1', { deal: { ...DEAL_OPEN.deal, onTable: '20 gold', asking: '230 gold' } })] },

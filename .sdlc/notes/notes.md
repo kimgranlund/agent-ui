@@ -923,3 +923,7 @@
 
 - note: the old same-turn jsdom case was replaced rather than kept, and the landed guard is that jsdom case (no `probe/replays/` file), as the builder's report says; consistent with criterion 1.
 - note: packages/agent-ui/app/src/controls/conversation/conversation.ts:1083-1085 the reflowed GH #1164 comment leaves a short orphan line ("as" / "Fully" wrapping), cosmetic only.
+
+## T-0468: A game turn repaired after SURFACE_CLAIMED keeps its GameHud: the repair asks for the HUD with the ask deck (2026-10-26)
+
+- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:461-480 note: `gameAskHudCheck` requires a GameHud for any `GAME_WORDS` say turn that opens a new OptionDeck surface, while grammar.md:44 allows "a game with no GameHud". The shipped personas agree with the check (mentalist opens its HUD beside the ask, quizmaster opens GameHud plus QuestionCard, every recorded replay green), so a future HUD-less game persona that asks through an OptionDeck would draw one repair round from this check.
