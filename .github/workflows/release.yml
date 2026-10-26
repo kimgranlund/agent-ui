@@ -6,9 +6,15 @@
 # (scripts/publish/publish-packages.mjs): it builds, transforms and publishes all eight in lockstep and
 # skips any package already live at that version, so re-running a failed job resumes the fleet.
 #
-# Secrets: `NPM_TOKEN` (repo secret, an npm automation or granular publish token for the agent-ui-kit
-# org). npm provenance is on (`NPM_CONFIG_PROVENANCE`), which needs `id-token: write` on the publish job
-# and a public repo whose URL matches each package's `repository.url` (the script writes it).
+# Auth: npm trusted publishing (GitHub OIDC, T-0466; the NPM_TOKEN route failed with a 404 on the scope at the
+# first v0.2.0 publish). No token exists anywhere in this workflow: the publish job asks GitHub for an OIDC
+# identity (`id-token: write`) and npm exchanges it for a short-lived publish credential, so a set NODE_AUTH_TOKEN
+# would only get in its way (the Set up Node step passes no `registry-url` for the same reason: it writes a
+# token placeholder into .npmrc). Requirements: npm CLI 11.5.1 or newer (the "Require an npm CLI that can
+# publish with OIDC" step enforces it), a GitHub-hosted runner, and a trusted publisher registered on npmjs.com
+# for each of the eight packages with these fields: user or org `kimgranlund`, repository `agent-ui`, workflow
+# filename `release.yml`, environment left empty (the job names none). Provenance is automatic under trusted
+# publishing and needs a public repo whose URL matches each package's `repository.url` (the script writes it).
 #
 # Release notes: `.github/release-notes/<tag>.md` when that file exists, else GitHub's generated notes.
 # The workflow never pushes commits.
@@ -57,15 +63,30 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          registry-url: https://registry.npmjs.org
+
+      # Trusted publishing needs npm 11.5.1 or newer. Node 24 ships npm 11, but the floor is checked, not assumed:
+      # an older npm is upgraded, and the step fails if the result is still below the floor.
+      - name: Require an npm CLI that can publish with OIDC
+        shell: bash
+        run: |
+          floor="11.5.1"
+          have="$(npm --version)"
+          if [[ "$(printf '%s\n%s\n' "$floor" "$have" | sort -V | head -n1)" != "$floor" ]]; then
+            echo "npm $have is older than $floor; upgrading"
+            npm install --global "npm@^$floor"
+            have="$(npm --version)"
+          fi
+          if [[ "$(printf '%s\n%s\n' "$floor" "$have" | sort -V | head -n1)" != "$floor" ]]; then
+            echo "::error::npm $have cannot publish with OIDC (needs $floor or newer)"
+            exit 1
+          fi
+          echo "npm $have meets the trusted publishing floor ($floor)"
 
       - name: Install dependencies
         run: npm ci
 
+      # No env block on purpose: no token reaches npm, which authenticates through the job's OIDC identity.
       - name: Publish the eight packages
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
         run: npm run publish:packages -- ${{ steps.version.outputs.version }}
 
   release:

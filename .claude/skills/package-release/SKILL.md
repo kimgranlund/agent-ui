@@ -57,7 +57,8 @@ never restate their internals here.
    `git push origin vX.Y.Z`. The tag push runs `.github/workflows/release.yml` (T-0465): it refuses a tag
    that is not a strict `vX.Y.Z`, runs `npm run publish:packages -- X.Y.Z`
    (`scripts/publish/publish-packages.mjs`, which builds, transforms, and publishes all 8 packages in
-   lockstep) with the `NPM_TOKEN` secret and npm provenance, then creates the GitHub release for the tag.
+   lockstep) through npm trusted publishing (GitHub OIDC, no npm token anywhere; the trusted publisher fields are in the
+   workflow header, T-0466), then creates the GitHub release for the tag.
    A prerelease tag is refused (the script publishes without `--tag`, so it would become `latest`).
 4. **Dry-run first when unsure**: `npm run publish:packages -- <version> --dry-run` locally.
 5. **A failed run mid-fleet is resumable, not stranded.** If a publish dies partway through the 8, re-run
