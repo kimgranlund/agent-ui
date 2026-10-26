@@ -927,3 +927,9 @@
 ## T-0468: A game turn repaired after SURFACE_CLAIMED keeps its GameHud: the repair asks for the HUD with the ask deck (2026-10-26)
 
 - decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:461-480 note: `gameAskHudCheck` requires a GameHud for any `GAME_WORDS` say turn that opens a new OptionDeck surface, while grammar.md:44 allows "a game with no GameHud". The shipped personas agree with the check (mentalist opens its HUD beside the ask, quizmaster opens GameHud plus QuestionCard, every recorded replay green), so a future HUD-less game persona that asks through an OptionDeck would draw one repair round from this check.
+
+## T-0477: Remove the em dash in the concierge Surface style (2026-10-26)
+
+- decide: .sdlc/tickets/0477-concierge-emdash/handoff.md:22 Constraints say `Opus author`; runs.jsonl shows the solo L1 ran on `sonnet` (level routing), the Fable L3 review half held.
+- note: site/agent-content/personas/concierge/agent.md:4 keeps `"version": 25` and :35 adds no changelog line while the seed prose changed; site/agent-content/AGENTS.md:65 allows this (the overlay merge runs bumped or not, a bump is for a new seed release) and every prior prose seed edit on this manifest bumped (24 to 25 at T-0457, 23 to 24 at T-0403).
+- note: site/agent-content/personas/concierge/agent.md:63 `...unless the guest names somewhere else (a day-trip destination, say), and call your integrations with "Sorrento" by default...` splices a declarative clause onto an imperative with `, and`; the base text had the same splice across the dash, meaning kept, wording only.
