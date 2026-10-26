@@ -1,0 +1,214 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "shopkeeper-haiku-cold-compare",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-25T10:59:01.295Z, traces 2026-10-25.jsonl:1",
+  "steps": [
+    {
+      "say": "Compare your two cheapest lamps.",
+      "expect": [
+        "OptionCompare"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"As the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" shopkeeper of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Lantern & Loom,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to pull\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" two cheapest lamps\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" from my catalog,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" inventing cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent details on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" name\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", price, material, and stock\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" noting the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prices are illustrative.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm settling on a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Ceramic Dome\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Lamp at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" $29 (glazed st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oneware, 6\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in stock) versus a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Brass Reading L\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amp at $34 (sol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id brass, only 2 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"left), and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll rec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ommend the ceramic one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as the better value while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" noting the brass option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s sturdi\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ness. I'm building this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as an OptionCompare\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface with rows for price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", material, size, and stock\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", marking the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceramic lamp as \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"best.\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since this u\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ses act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ionName,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s an ask surface with me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"faceId \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1\\\", created\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sendDataModel en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abled \u2014\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no commit button required\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since OptionCompare hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"les the sel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ection it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self. I'm writing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line first, then compos\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the OptionCompare\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component with its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" heading and com\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"parison rows.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are our two cheapest\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" lamps side by side. I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'d go with the Ce\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ramic Dome:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it's the lower price and has\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" more stock, though the Br\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ass Reading Lamp\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is the sturdier, he\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"avier piece. Tap\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a column to choose one and I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ll start your order summary.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionCompare\\\",\\\"heading\\\":\\\"Your two cheapest lamps\\\",\\\"rows\\\":[{\\\"key\\\":\\\"price\\\",\\\"label\\\":\\\"Price\\\"},{\\\"key\\\":\\\"material\\\",\\\"label\\\":\\\"Material\\\"},{\\\"key\\\":\\\"size\\\",\\\"label\\\":\\\"Size\\\"},{\\\"key\\\":\\\"stock\\\",\\\"label\\\":\\\"In stock\\\"}],\\\"options\\\":[{\\\"value\\\":\\\"ceramic-dome\\\",\\\"title\\\":\\\"Ceramic Dome Lamp\\\",\\\"subtitle\\\":\\\"Glazed stoneware\\\",\\\"values\\\":{\\\"price\\\":\\\"$29\\\",\\\"material\\\":\\\"Glazed stoneware\\\",\\\"size\\\":\\\"28 cm tall\\\",\\\"stock\\\":\\\"6 left\\\"}},{\\\"value\\\":\\\"brass-reading\\\",\\\"title\\\":\\\"Brass Reading Lamp\\\",\\\"subtitle\\\":\\\"Solid brass\\\",\\\"values\\\":{\\\"price\\\":\\\"$34\\\",\\\"material\\\":\\\"Solid brass\\\",\\\"size\\\":\\\"40 cm tall\\\",\\\"stock\\\":\\\"2 left\\\"}}],\\\"best\\\":\\\"ceramic-dome\\\",\\\"actionName\\\":\\\"choose\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are our two cheapest lamps side by side. I'd go with the Ceramic Dome: it's the lower price and has more stock, though the Brass Reading Lamp is the sturdier, heavier piece. Tap a column to choose one and I'll start your order summary.\",\"ask\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare your two cheapest lamps.\",\"k\":3},\"exemplarIds\":[\"list-nested\",\"media-file-grid\",\"frontier-step-flow-booking\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57788,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3501},{\"id\":\"mini-skills\",\"chars\":1521},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":3254,\"outputTokens\":1971,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":18609},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":49621}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionCompare\",\"heading\":\"Your two cheapest lamps\",\"rows\":[{\"key\":\"price\",\"label\":\"Price\"},{\"key\":\"material\",\"label\":\"Material\"},{\"key\":\"size\",\"label\":\"Size\"},{\"key\":\"stock\",\"label\":\"In stock\"}],\"options\":[{\"value\":\"ceramic-dome\",\"title\":\"Ceramic Dome Lamp\",\"subtitle\":\"Glazed stoneware\",\"values\":{\"price\":\"$29\",\"material\":\"Glazed stoneware\",\"size\":\"28 cm tall\",\"stock\":\"6 left\"}},{\"value\":\"brass-reading\",\"title\":\"Brass Reading Lamp\",\"subtitle\":\"Solid brass\",\"values\":{\"price\":\"$34\",\"material\":\"Solid brass\",\"size\":\"40 cm tall\",\"stock\":\"2 left\"}}],\"best\":\"ceramic-dome\",\"actionName\":\"choose\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here are our two cheapest lamps side by side. I'd go with the Ceramic Dome: it's the lower price and has more stock, though the Brass Reading Lamp is the sturdier, heavier piece. Tap a column to choose one and I'll start your order summary.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nHere are our two cheapest lamps side by side. I'd go with the Ceramic Dome: it's the lower price and has more stock, though the Brass Reading Lamp is the sturdier, heavier piece. Tap a column to choose one and I'll start your order summary.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are our two cheapest lamps side by side. Tap a column to choose one.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionCompare",
+                          "heading": "Your two cheapest lamps",
+                          "rows": [
+                            {
+                              "key": "price",
+                              "label": "Price"
+                            },
+                            {
+                              "key": "material",
+                              "label": "Material"
+                            },
+                            {
+                              "key": "size",
+                              "label": "Size"
+                            },
+                            {
+                              "key": "stock",
+                              "label": "In stock"
+                            }
+                          ],
+                          "options": [
+                            {
+                              "value": "ceramic-dome",
+                              "title": "Ceramic Dome Lamp",
+                              "subtitle": "Glazed stoneware",
+                              "values": {
+                                "price": "$29",
+                                "material": "Glazed stoneware",
+                                "size": "28 cm tall",
+                                "stock": "6 left"
+                              }
+                            },
+                            {
+                              "value": "brass-reading",
+                              "title": "Brass Reading Lamp",
+                              "subtitle": "Solid brass",
+                              "values": {
+                                "price": "$34",
+                                "material": "Solid brass",
+                                "size": "40 cm tall",
+                                "stock": "2 left"
+                              }
+                            }
+                          ],
+                          "best": "ceramic-dome",
+                          "actionName": "choose"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "list-nested",
+          "media-file-grid",
+          "frontier-step-flow-booking"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
