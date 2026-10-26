@@ -918,3 +918,8 @@
 - note: no em dashes in added lines of release.yml and SKILL.md (grep count 0).
 - note: redck deviations printed no `process deviation:` line; no `(red)` criteria exist.
 - note: the diagnosis rests on the builder's reading of npm's source and the run log, not an observed OIDC exchange; the change only makes the next run print the reason (no tag was pushed, per the constraints).
+
+## T-0467: A surface created earlier in the same turn is not superseded, so an ask deck sent before its HUD stays answerable (2026-10-26)
+
+- note: the old same-turn jsdom case was replaced rather than kept, and the landed guard is that jsdom case (no `probe/replays/` file), as the builder's report says; consistent with criterion 1.
+- note: packages/agent-ui/app/src/controls/conversation/conversation.ts:1083-1085 the reflowed GH #1164 comment leaves a short orphan line ("as" / "Fully" wrapping), cosmetic only.

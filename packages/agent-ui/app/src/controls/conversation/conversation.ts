@@ -914,6 +914,9 @@ export class UIConversationElement extends UIElement {
     const categoriesSeen: Category[] = []
     const seenCats = new Set<Category>()
     let freshHostThisTurn: UISurfaceHostElement | undefined
+    // T-0467: every surfaceId this turn minted. The GH #1164 superseded sweep skips them, so a turn that
+    // sends an ask deck before its HUD keeps both live (the sweep settles EARLIER turns' surfaces only).
+    const mintedThisTurn = new Set<string>()
     const heldNoIdLines: string[] = []
     // ADR-0146 F1/F8 progress state — the keys this turn has already narrated, and the current active
     // progress entry (settled to `done` as the next stage begins, so lifecycle stages check off in order).
@@ -1077,14 +1080,18 @@ export class UIConversationElement extends UIElement {
         this.#onClientMessageCb?.(m) // bubble up (LLD-C4)
       })
       this.#registry.set(id, { host, bubble, state: 'open' })
-      // GH #1164 — a NEW surface takes over the conversation's live focus: every OTHER open surface is
-      // now SUPERSEDED — visually settled (surface-host.css's :state(superseded) dim) and interactively
-      // inert (the host's own real disable sweep), so at most ONE surface ever reads as live. Fully
+      // GH #1164: a NEW surface takes over the conversation's live focus. Every open surface from an
+      // EARLIER turn is now SUPERSEDED: visually settled (surface-host.css's :state(superseded) dim) and
+      // interactively inert (the host's own real disable sweep), so only the newest turn's surfaces read
+      // as live. Fully
       // reversible: the known-surface branch above un-supersedes any of them a LATER turn updates again
       // (the reuse case), and `#pendingDisabledSurfaceIds`/`working` bookkeeping is untouched — the
       // superseded sweep composes with (never reverts) the GH #805 action sweep by construction.
+      // T-0467: a sibling minted earlier in THIS turn is not superseded; the turn's surfaces are one
+      // live set (the round 14 ask deck created before its HUD lost its press otherwise).
+      mintedThisTurn.add(id)
       for (const [otherId, other] of this.#registry) {
-        if (otherId !== id && other.state === 'open') other.host.superseded = true
+        if (!mintedThisTurn.has(otherId) && other.state === 'open') other.host.superseded = true
       }
       host.working = true // ADR-0199 — a fresh surface is live from its first line too; cleared by endTurn
       host.ingest(line)

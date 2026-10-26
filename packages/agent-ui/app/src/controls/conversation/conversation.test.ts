@@ -1993,15 +1993,20 @@ describe('ui-conversation — GH #1164: a newer surface supersedes earlier ones;
     t3.finalize()
   })
 
-  it('two surfaces minted in the SAME turn — only the newest reads live at the end of the burst', () => {
+  it('T-0467: two surfaces minted in the SAME turn both stay live (an ask deck sent before its HUD)', () => {
     const el = mount(document.createElement('ui-conversation') as UIConversationElement)
+    const t0 = el.beginAgentTurn()
+    t0.ingestLine(CREATE_X('older'))
+    t0.finalize()
     const t = el.beginAgentTurn()
-    t.ingestLine(CREATE_X('one'))
-    t.ingestLine(CREATE_X('two'))
+    t.ingestLine(CREATE_X('ask-1'))
+    t.ingestLine(CREATE_X('hud-1'))
     t.finalize()
     const hosts = Array.from(log(el).querySelectorAll('ui-surface-host')) as UISurfaceHostElement[]
-    expect(hosts[0]!.superseded, 'superseded the moment its sibling mounted').toBe(true)
-    expect(hosts[1]!.superseded).toBe(false)
+    expect(hosts.length).toBe(3)
+    expect(hosts[0]!.superseded, 'an earlier turn surface still settles').toBe(true)
+    expect(hosts[1]!.superseded, 'the deck minted first this turn stays answerable').toBe(false)
+    expect(hosts[2]!.superseded).toBe(false)
   })
 
   it('a closed record is never flipped — torn down is not stale (the deleteSurface path stays as-is)', () => {
