@@ -1,6 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { UIOptionDeckElement } from './option-deck.ts'
 import { cleanOptions, MAX_META, optionsProp, toneOf } from './option-deck-model.ts'
+import { ICON_NAMES, iconRegistry, type IconName, type IconPack } from '@agent-ui/icons'
 
 // option-deck.test.ts: jsdom probes for ui-option-deck (T-0193, the OptionDeck fork sheet). jsdom cannot prove
 // paint, focus order or geometry (option-deck.browser.test.ts owns those); this pins the declared behaviour: the
@@ -250,5 +251,29 @@ describe('UIOptionDeckElement: disabled', () => {
     const log = record(el)
     card(el, 'draw').click()
     expect(log.map((e) => e.detail)).toEqual(['draw'])
+  })
+})
+
+describe('ui-option-deck: an icon name outside the pack (T-0464)', () => {
+  const bodies = Object.fromEntries(ICON_NAMES.map((n) => [n, `<path data-icon="${n}"/>`])) as Record<IconName, string>
+  const PACK: IconPack = { id: 'option-deck-test-pack', viewBox: '0 0 16 16', icons: bodies }
+  const glyphOf = (el: Element, key: string): Element | null => card(el, key).querySelector('[data-part="icon"] svg')
+
+  it('shows the fallback glyph in the tile, never an empty one', async () => {
+    iconRegistry.registerPack(PACK)
+    iconRegistry.setActivePack(PACK.id)
+    const el = make((d) => {
+      d.options = [
+        { value: 'known', title: 'Known', icon: 'star' },
+        { value: 'unknown', title: 'Unknown', icon: 'compass' },
+      ]
+    })
+    await tick()
+    const known = glyphOf(el, 'known')!
+    const unknown = glyphOf(el, 'unknown')!
+    expect(known.querySelector('[data-icon="star"]')).not.toBeNull() // a name in the pack is untouched
+    expect(unknown.hasAttribute('data-icon-missing')).toBe(false)
+    expect(unknown.querySelector('path')).not.toBeNull()
+    expect(unknown.querySelector('[data-icon="sparkle"]')).not.toBeNull()
   })
 })

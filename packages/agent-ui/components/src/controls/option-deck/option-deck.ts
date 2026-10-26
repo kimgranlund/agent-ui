@@ -28,6 +28,7 @@ import { rovingFocus } from '../../traits/roving-focus.ts'
 import { selectionCommit } from '../../traits/selection-commit.ts'
 import type { UIIconElement } from '../icon/icon.ts'
 import '../icon/icon.ts'
+import { iconRegistry, type IconName } from '@agent-ui/icons'
 import { cleanOptions, RANDOM_KEY, type CleanOption } from './option-deck-model.ts'
 // Generated from option-deck.md's `attributes[]` (ADR-0173): `node scripts/generate-props.mjs option-deck`.
 import { props } from './option-deck.props.gen.ts'
@@ -36,6 +37,14 @@ const SVG_NS = 'http://www.w3.org/2000/svg'
 
 /** The shuffle glyph of the approved mockup's Surprise me card, on a 24-unit box, stroked. */
 const SHUFFLE_D = 'M3 7h3.5c4 0 6.5 10 11 10H21M18 14l3 3-3 3M3 17h3.5c1.6 0 2.8-1.4 3.8-3M21 7h-3.5c-1.6 0-2.8 1.4-3.8 3M18 4l3 3-3 3'
+
+/** The neutral glyph a card shows when its icon names nothing in the active pack (T-0464): a tile is never empty. */
+const FALLBACK_ICON: IconName = 'sparkle'
+
+/** `name` if the active pack (or an override) draws it, else the fallback. With no pack active yet the name passes
+ *  through untouched, so a pack registered after first paint still resolves the card's own icon. */
+const resolvable = (name: string): string =>
+  name === '' || iconRegistry.activePack() === null || iconRegistry.body(name as IconName) !== null ? name : FALLBACK_ICON
 
 interface CardParts {
   root: HTMLElement
@@ -265,7 +274,7 @@ export class UIOptionDeckElement extends UIElement {
     }
     place(hero, disc, image === '', [parts.indexEnd])
 
-    const icon = option.icon ?? ''
+    const icon = resolvable(option.icon ?? '')
     if (icon !== '' && parts.icon === undefined) parts.icon = part<UIIconElement>('ui-icon', 'icon')
     if (parts.icon) {
       if (parts.icon.symbol !== icon && icon !== '') parts.icon.symbol = icon

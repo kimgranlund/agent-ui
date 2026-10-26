@@ -90,7 +90,7 @@ parts:
   - name: disc
     description: The round surface disc centered in the band that holds the icon, or the shuffle glyph on the Surprise me card. At one column it fills the tile with no ring.
   - name: icon
-    description: The `<ui-icon>` inside the disc, showing the option's `icon` from the active pack. At one column it is the control icon box. Present only when the option has an icon.
+    description: The `<ui-icon>` inside the disc, showing the option's `icon` from the active pack. At one column it is the control icon box. Present only when the option has an icon. An icon name the active pack does not draw shows the neutral `sparkle` glyph instead of an empty tile.
   - name: shuffle
     description: The `aria-hidden` inline SVG shuffle glyph inside the Surprise me card's disc.
   - name: image
