@@ -1260,9 +1260,10 @@ function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<strin
  *  table"), as the overnight croupier rename recorded it. A narrated note-only say reply that claims one has an update
  *  to make, so it keeps the full repair; one that claims nothing ("the round on table-3 is settled") takes the reply-only
  *  repair, which cannot open a surface (T-0332). T-0470: an add claim counts too, "Added two lamps" opening a sentence,
- *  "I added", "comes to $378", while a question ("would you like added?") claims nothing. */
+ *  "I added", "comes to $378", while a question ("would you like added?") claims nothing. T-0474: a sentence-initial
+ *  "Added" that is a noun phrase with a modal ("Added fees may apply.") claims nothing. */
 const CHANGE_CLAIM_IN_REPLY =
-  /(?:\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b|(?:^|[.!:]\s*)added\b|\bI(?:'ve| have)? added\b|\bcomes? to \$?\d)/i
+  /(?:\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b|(?:^|[.!:]\s*)added\b(?!(?:\s+[\w-]+){1,2}\s+(?:may|might|can|could|will|would|shall|should|apply|applies)\b)|\bI(?:'ve| have)? added\b|\bcomes? to \$?\d)/i
 
 /** T-0299: `findings` plus every missing-composite finding an earlier round of this turn got (`bound`, by code) that
  *  `views` still leave unanswered, worded as still binding; then each new missing-composite finding is bound. A round
