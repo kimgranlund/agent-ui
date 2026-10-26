@@ -15,7 +15,7 @@ import { canonicalDigest } from '../lib/agent-manifest/agent-manifest.ts'
 const PERSONA_DIGESTS: Record<string, string> = {
   croupier: 'sha256:af63636ced529226d3394519bb7d36883ef77dbcc3f897ac618b02a040ddb9b5',
   quant: 'sha256:2f361b72b293456b7b83ddde5da2594d2e0d6c6719cac70ae9024329e9cd16ea',
-  concierge: 'sha256:4361d792dd1ab28752000c051392e5813afc4d5ec9d13c34b159582518fc4cec',
+  concierge: 'sha256:9e1844aa144c21b6b704eb4c60d3f77062e4405065f3bb6ea6ef53f3ede110ca',
   restaurant: 'sha256:6628561bbf3c9d1e4e218dd3fc6060a28ede6c6ed289386d2db101487c0b83f3',
   travel: 'sha256:6c278799c52a10627305adf37d415713076cbc6ce0d6ce431ef7195af9dd2a29',
   curator: 'sha256:81881cbdf3a5c96c88bf0ef47a874a020d8dc99d97520b3cd2f1763896fbcf49',
@@ -31,7 +31,7 @@ const PERSONA_DIGESTS: Record<string, string> = {
 }
 // T-0447: recaptured for the code-authored edit-session section (seeded disabled; no content file moved).
 const BUILDER_DIGEST = 'sha256:c0700a01a032eaea15ee806c26458c0d0a8b07259ea58db46349f69e5de8abe0'
-const PRESETS_DIGEST = 'sha256:d79d04d37c157f00c6d78504d0317572ebd31a3c5478b0978ebec7972cc6b52a'
+const PRESETS_DIGEST = 'sha256:e26cf503f4e921dd624fe1182a739a62506add11bea3f5e5bef1c4c2b0c82e62'
 const ROSTER_DIGEST = 'sha256:641964d00b25540818a572324026901465e3ffd4316d829dcbcf06aeeecb6203'
 const LIBRARIES_DIGEST = 'sha256:06816be10277caa0dc42fe5fdce2a5357b002d30f1df7e747d3f2644937ae271' // T-0451: step-flow mini-skill trigger and body
 
