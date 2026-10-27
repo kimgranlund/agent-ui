@@ -290,7 +290,7 @@ describe('produce(): a note-only reply whose ask names a surface it never create
 })
 
 // T-0448 (round 2026-10-24-r13-pattern, the keyless replays croupier-haiku-rename-claim-no-id, shopkeeper-haiku-add-claim-no-id
-// and concierge-haiku-itinerary-target-claim): a note-only say reply that targets an open surface and claims a change while
+// and concierge-haiku-itinerary-target-claim, whose day plan T-0480's ITINERARY_MISSING now sends back first): a note-only say reply that targets an open surface and claims a change while
 // naming no surface id ("Done, the table is now Kim's table", target table-3) gets CHANGE_CLAIMED and one full repair round
 // (render_surface offered and forced); a claim still standing on the last round ships tallied CHANGE_CLAIM_UNCORRECTED.
 // SURFACE_CLAIMED reads the meta-line target too, so a reply targeting a surface nothing created is sent back.

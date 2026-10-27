@@ -5,7 +5,7 @@
 // generator turns every row into a `SemanticCheck` (ADR-0238) whose finding sends the model back to make the
 // surface ONE composite. A row's `notInside` also sends back a composite wrapped in a card of its own (T-0262,
 // `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
-// keeps a row on exactly the catalogs that can emit it: the booking rows ride `<base>--concierge`, the games rows
+// keeps a row on exactly the catalogs that can emit it: the booking and Itinerary rows ride `<base>--hospitality`, the games rows
 // ride `agent-ui` until the games types move to a domain, the ProductCard, ConfirmReceipt and Swatch rows ride `agent-ui`, the
 // ContrastPair row (T-0377) rides `agent-ui--stylist`, and `a2ui-basic` gets none.
 //
@@ -76,6 +76,12 @@
 // T-0478 (round 15 cluster P4): the ConfirmReceipt row reads an order or cart built by hand: an AmountPicker quantity line
 // (its label, name or bound path names a quantity, "each" or a price) on a surface whose words name an order, a cart or a
 // total, with no ConfirmReceipt on it, the shape a shopkeeper add turn shipped after its CHANGE_CLAIMED repair.
+// T-0480: "total" no longer opens that gate (a bill's tip AmountPicker beside a "Total" Text is no order).
+//
+// T-0480 (round 15 cluster Y): the Itinerary row reads the guest's words, not a surface: a say turn that plans a day of
+// two or more timed stops ("Plan my Saturday: breakfast at 08:00 ... dinner at 20:00") while no surface of the turn holds
+// an Itinerary is ITINERARY_MISSING, judged on a prose round too, since the recorded answer (a party-size ask deck) left
+// no hand-built plan on any surface to find.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -158,6 +164,9 @@ export interface CompositeMoment {
     readonly surface: string
     readonly rank: number
   }
+  /** T-0480: on a say turn whose words plan (`cue`) at least `min` distinct timed stops (`stop`, a global pattern), a turn
+   *  none of whose surfaces holds the composite (or a `lacks` type) is `<COMPOSITE>_MISSING`, with or without a surface. */
+  readonly planned?: { readonly cue: RegExp; readonly stop: RegExp; readonly min: number }
   /** T-0359: the moment written out in the reply prose instead of shown: `listed` reads the reply, `types` answer it (a
    *  catalog must hold them all for the check to ride it), and `surface` is what the repair asks for. */
   readonly prose?: { readonly moment: string; readonly types: readonly string[]; readonly listed: (reply: string) => number; readonly surface: string }
@@ -240,6 +249,24 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
         'ONE ConfirmReceipt, "data" bound to the draft the form\'s value is bound to and "status" the literal "confirmed" (never ' +
         "bound: nothing writes it; the guest's confirm in chat is their submission, so nothing waits on the form button; add no " +
         'reference number)',
+    },
+  },
+  {
+    // T-0480 (round 15 cluster Y, reach-concierge-day-itinerary-haiku-3): "Plan my Saturday 21 November 2026: breakfast at
+    // 08:00, the half-day coastal boat tour at 10:00 and dinner at Vela at 20:00." was answered with the plan in prose and
+    // then a party-size ask deck alone, so the plan never reached a surface.
+    composite: 'Itinerary',
+    moment: 'a trip or day plan as days of timed stops',
+    repair:
+      'on a surface of its own (a fresh id, never an "ask-<n>" one) with its title and days bound to the plan in the data ' +
+      'model: one day per date with its label and stops, one stop per timed item in the order given, with its time, its label ' +
+      'and status "pending" while it is still to be confirmed. The guest asked for the plan, so it is this turn\'s one surface ' +
+      'and the turn declares no ask: what a booking still needs (the party size) waits until the guest books.',
+    lacks: [],
+    planned: {
+      cue: /\b(plan|planning|itinerary|schedule)\b/i,
+      stop: /\b(?:[01]?\d|2[0-3]):[0-5]\d\b|\b(?:1[0-2]|0?[1-9])(?::[0-5]\d)?\s?(?:am|pm)\b/gi,
+      min: 2,
     },
   },
   {
@@ -329,7 +356,8 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       'the path its AmountPicker binds, totalLabel and totalPath, status "pending", and confirmAction and backAction (it draws ' +
       'its own Confirm and Back, so add no Button); keep each AmountPicker, and drop the hand-built order title and total.',
     lacks: ['BookingForm', 'BookingConfirmation', 'StepFlow', 'GameHud'],
-    inputCue: { types: ['AmountPicker'], cue: /qty|quantity|\beach\b|\$/i, words: /\b(order|cart|basket|total)\b/i },
+    // T-0480: no "total": a bill's tip AmountPicker beside a "Total" Text is no order.
+    inputCue: { types: ['AmountPicker'], cue: /qty|quantity|\beach\b|\$/i, words: /\b(order|cart|basket)\b/i },
   },
   {
     // T-0359: a palette is shown, never listed: hex values written in Text are the hand-built moment, and (on the Stylist)
@@ -657,6 +685,14 @@ function wrappers(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
   return [...found.values()]
 }
 
+/** T-0480: the distinct timed stops a say turn's words plan for `m` (its `planned` row), or 0 below its `min`. */
+function plannedStops(m: CompositeMoment, intent: string | undefined): number {
+  const planned = m.planned
+  if (planned === undefined || intent === undefined || !planned.cue.test(intent)) return 0
+  const stops = new Set([...intent.matchAll(planned.stop)].map((s) => s[0].toLowerCase().replace(/\s+/g, '')))
+  return stops.size >= planned.min ? stops.size : 0
+}
+
 /** The one generator: a row of `COMPOSITE_MOMENTS` as a semantic check. */
 export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
   const code = `${upperSnake(m.composite)}_MISSING`
@@ -664,8 +700,22 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
   return {
     id: `composite-moment-${kebab(m.composite)}`,
     requires: [m.composite, ...(m.requires ?? [])],
-    check({ surfaces, intent }): readonly SemanticFinding[] {
+    check({ surfaces, intent, action }): readonly SemanticFinding[] {
       const findings: SemanticFinding[] = []
+      const stops = action === undefined ? plannedStops(m, intent) : 0
+      if (stops > 0 && !compositeAnswered(m, surfaces)) {
+        // A surface built in the plan's place is named, so a repair round may retire it (T-0328) for the composite.
+        const first = surfaces[0]
+        const ids = surfaces.map((v) => v.surfaceId)
+        findings.push({
+          code,
+          path: first === undefined ? `intent:${kebab(m.composite)}` : `${first.surfaceId}:${first.components.has('root') ? 'root' : [...first.components.keys()][0] ?? 'root'}`,
+          message:
+            `The guest asked "${intent!.trim()}", a plan of ${stops} timed stops, and ` +
+            `${ids.length === 0 ? 'this turn writes' : `${ids.join(', ')} ${ids.length === 1 ? 'holds' : 'hold'}`} no ${m.composite}, so the plan never reaches a surface. ` +
+            `Make it ONE ${m.composite} ${m.repair}`,
+        })
+      }
       for (const view of surfaces) {
         const wrapped = wrappers(m, view)
         if (wrapped.length > 0) {
