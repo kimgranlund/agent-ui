@@ -984,3 +984,7 @@
 ## T-0483: A paid rerun of the four round 15 failing cells confirms T-0478 to T-0482 (2026-10-27)
 
 - fix-now: .sdlc/evals/rounds/2026-10-27-r15-recheck/report.md:5 says `live-commands.sh` here is the extract and the Reproduce line and round.json `liveCommands` name it, but the round folder holds no live-commands.sh; add the 12-command extract so the reproduce command runs.
+
+## T-0484: A booking ask with two clock times does not draw ITINERARY_MISSING (2026-10-27)
+
+- note: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:269 the "schedule my <day>" list omits weekday names other than Fri-Sun; a plan worded "schedule our Tuesday" would no longer fire.
