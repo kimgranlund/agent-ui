@@ -980,3 +980,7 @@
 - decide: .sdlc/tickets/roadmap.md:122 note: the one em dash in an added tracked line sits inside a T-0479 verifier note quoted by `tickets.py roadmap` (a backticked grep command); no em dash in any added line of code, test, replay or prose of this build.
 - decide: .sdlc/tickets/0480-itinerary-missing-composite/handoff.md:19 note: the Repro line (`npm run chat:probe -- --replay .sdlc/evals/rounds/2026-10-26-r15-pattern/runs/reach-concierge-day-itinerary-haiku-3/fixture.json`) still exits 1 by design, as the builder reports: the recorded fixture has no third round to ship the repair; the authored replay under replays/ is the keyless proof (T-0479 precedent).
 - decide: scripts/e2e-admin/probe/replays/concierge-haiku-itinerary-target-claim.test.mjs:22 note: that replay's say turn is the same day plan, so it now exercises ITINERARY_MISSING rather than SURFACE_CLAIMED's meta-target read; SURFACE_CLAIMED's own cases stay in packages/agent-ui/a2ui/src/live-agent/produce-narration.test.ts:268-282.
+
+## T-0483: A paid rerun of the four round 15 failing cells confirms T-0478 to T-0482 (2026-10-27)
+
+- fix-now: .sdlc/evals/rounds/2026-10-27-r15-recheck/report.md:5 says `live-commands.sh` here is the extract and the Reproduce line and round.json `liveCommands` name it, but the round folder holds no live-commands.sh; add the 12-command extract so the reproduce command runs.
