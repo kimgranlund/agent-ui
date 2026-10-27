@@ -1,0 +1,279 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "reach-travel-trip-itinerary-haiku-3",
+  "agent": "travel",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-27T01:23:06.840Z, traces 2026-10-27.jsonl:152",
+  "seed": {
+    "version": 8,
+    "digest": "sha256:6c278799c52a10627305adf37d415713076cbc6ce0d6ce431ef7195af9dd2a29"
+  },
+  "steps": [
+    {
+      "say": "Plan a two-day trip to Paris on Friday 20 and Saturday 21 November 2026, day by day.",
+      "expect": [
+        "Itinerary"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ls for a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" day-by-day itiner\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ary for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" two-day Paris trip\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I'll use the it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inerary surface and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lik\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ely pull in a weather for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ecast to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"weather\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The forecast only covers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Oct 27-29, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" do\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"esn't reach Nov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 20-21 — I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll be\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"front that I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" can't provide weather for those\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dates rather than guessing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". Currency con\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"version w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"asn't requ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ested,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I'll skip it and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep things simple,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" moving on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to building the itinerary.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For Day 1,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Friday\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Nov 20, I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" planning a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" timed Louvre entry\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the morning, lunch in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the Marais, a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" walk through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Ile de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" la Cité past\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Notre-Dame,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" afternoon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Musée d'Orsay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" visit, and dinner in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Saint-Germain.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Day 2, Satur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"day Nov 21, star\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ts with Montmartre and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Sacré-Cœ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ur, l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"unch n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"earby, an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" af\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ternoon Eiffel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Tower summit visit,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and an evening Seine wal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"k to Trocadéro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" all stops marked as pending\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is a planned future\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" trip, with no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prices included\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no fabricated weather details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" att\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ached.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"paris-itinerary\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"paris-itinerary\\\",\\\"path\\\":\\\"/trip/days\\\",\\\"value\\\":[{\\\"label\\\":\\\"Fri 20 Nov, museums and the river\\\",\\\"stops\\\":[{\\\"label\\\":\\\"Louvre\\\",\\\"detail\\\":\\\"Book a timed entry in advance\\\",\\\"time\\\":\\\"09:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Lunch in Le Marais\\\",\\\"detail\\\":\\\"Walk through the Marais after the Louvre\\\",\\\"time\\\":\\\"12:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Musee d'Orsay\\\",\\\"detail\\\":\\\"Impressionist collection, timed entry\\\",\\\"time\\\":\\\"14:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Seine walk to Saint-Germain\\\",\\\"detail\\\":\\\"Along the left bank, past the bouquinistes\\\",\\\"time\\\":\\\"17:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Dinner in Saint-Germain-des-Pres\\\",\\\"detail\\\":\\\"Reserve ahead for a bistro\\\",\\\"time\\\":\\\"19:30\\\",\\\"status\\\":\\\"pending\\\"}]},{\\\"label\\\":\\\"Sat 21 Nov, Montmartre and the Eiffel Tower\\\",\\\"stops\\\":[{\\\"label\\\":\\\"Sacre-Coeur and Montmartre\\\",\\\"detail\\\":\\\"Early start to beat the crowds\\\",\\\"time\\\":\\\"09:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Place du Tertre and lunch in Montmartre\\\",\\\"detail\\\":\\\"Walk down through the old village streets\\\",\\\"time\\\":\\\"11:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Eiffel Tower\\\",\\\"detail\\\":\\\"Book a summit slot in advance\\\",\\\"time\\\":\\\"14:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Champ de Mars and Trocadero\\\",\\\"detail\\\":\\\"Walk and photograph the tower at dusk\\\",\\\"time\\\":\\\"17:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Farewell dinner near the Trocadero\\\",\\\"detail\\\":\\\"Reserve ahead\\\",\\\"time\\\":\\\"19:30\\\",\\\"status\\\":\\\"pending\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"paris-itinerary\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Itinerary\\\",\\\"title\\\":\\\"Paris, 2 days\\\",\\\"days\\\":{\\\"path\\\":\\\"/trip/days\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's a two-day Paris plan. The weather tool only forecasts to late October, so I can't give you conditions for 20 to 21 November yet. Check a forecast closer to the trip. Times are suggestions, and bookings are your call.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Plan a two-day trip to Paris on Friday 20 and Saturday 21 November 2026, day by day.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":59373,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":2336},{\"id\":\"persona\",\"chars\":2518}],\"over\":false},\"usage\":{\"inputTokens\":7431,\"outputTokens\":1887,\"cacheReadInputTokens\":38416,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"comparison-table\",\"structured-container\",\"variant-picker\"],\"cacheBoundary\":50566}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"paris-itinerary\",\"catalogId\":\"agent-ui--hospitality\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"paris-itinerary\",\"path\":\"/trip/days\",\"value\":[{\"label\":\"Fri 20 Nov, museums and the river\",\"stops\":[{\"label\":\"Louvre\",\"detail\":\"Book a timed entry in advance\",\"time\":\"09:00\",\"status\":\"pending\"},{\"label\":\"Lunch in Le Marais\",\"detail\":\"Walk through the Marais after the Louvre\",\"time\":\"12:30\",\"status\":\"pending\"},{\"label\":\"Musee d'Orsay\",\"detail\":\"Impressionist collection, timed entry\",\"time\":\"14:30\",\"status\":\"pending\"},{\"label\":\"Seine walk to Saint-Germain\",\"detail\":\"Along the left bank, past the bouquinistes\",\"time\":\"17:00\",\"status\":\"pending\"},{\"label\":\"Dinner in Saint-Germain-des-Pres\",\"detail\":\"Reserve ahead for a bistro\",\"time\":\"19:30\",\"status\":\"pending\"}]},{\"label\":\"Sat 21 Nov, Montmartre and the Eiffel Tower\",\"stops\":[{\"label\":\"Sacre-Coeur and Montmartre\",\"detail\":\"Early start to beat the crowds\",\"time\":\"09:00\",\"status\":\"pending\"},{\"label\":\"Place du Tertre and lunch in Montmartre\",\"detail\":\"Walk down through the old village streets\",\"time\":\"11:30\",\"status\":\"pending\"},{\"label\":\"Eiffel Tower\",\"detail\":\"Book a summit slot in advance\",\"time\":\"14:30\",\"status\":\"pending\"},{\"label\":\"Champ de Mars and Trocadero\",\"detail\":\"Walk and photograph the tower at dusk\",\"time\":\"17:30\",\"status\":\"pending\"},{\"label\":\"Farewell dinner near the Trocadero\",\"detail\":\"Reserve ahead\",\"time\":\"19:30\",\"status\":\"pending\"}]}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"paris-itinerary\",\"components\":[{\"id\":\"root\",\"component\":\"Itinerary\",\"title\":\"Paris, 2 days\",\"days\":{\"path\":\"/trip/days\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here's a two-day Paris plan. The weather tool only forecasts to late October, so I can't give you conditions for 20 to 21 November yet. Check a forecast closer to the trip. Times are suggestions, and bookings are your call.",
+          "tools": [
+            {
+              "name": "weather",
+              "input": {
+                "place": "Paris"
+              }
+            },
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your two-day Paris itinerary is below: Friday 20 and Saturday 21 November 2026, with suggested times for each stop.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "paris-itinerary",
+                      "catalogId": "agent-ui--hospitality"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "paris-itinerary",
+                      "path": "/trip/days",
+                      "value": [
+                        {
+                          "label": "Fri 20 Nov, museums and the river",
+                          "stops": [
+                            {
+                              "label": "Louvre",
+                              "detail": "Book a timed entry in advance",
+                              "time": "09:00",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Lunch in Le Marais",
+                              "detail": "Walk through the Marais after the Louvre",
+                              "time": "12:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Musee d'Orsay",
+                              "detail": "Impressionist collection, timed entry",
+                              "time": "14:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Seine walk to Saint-Germain",
+                              "detail": "Along the left bank, past the bouquinistes",
+                              "time": "17:00",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Dinner in Saint-Germain-des-Pres",
+                              "detail": "Reserve ahead for a bistro",
+                              "time": "19:30",
+                              "status": "pending"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "Sat 21 Nov, Montmartre and the Eiffel Tower",
+                          "stops": [
+                            {
+                              "label": "Sacre-Coeur and Montmartre",
+                              "detail": "Early start to beat the crowds",
+                              "time": "09:00",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Place du Tertre and lunch in Montmartre",
+                              "detail": "Walk down through the old village streets",
+                              "time": "11:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Eiffel Tower",
+                              "detail": "Book a summit slot in advance",
+                              "time": "14:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Champ de Mars and Trocadero",
+                              "detail": "Walk and photograph the tower at dusk",
+                              "time": "17:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Farewell dinner near the Trocadero",
+                              "detail": "Reserve ahead",
+                              "time": "19:30",
+                              "status": "pending"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "paris-itinerary",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Itinerary",
+                          "title": "Paris, 2 days",
+                          "days": {
+                            "path": "/trip/days"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-plan",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-planning-notes",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

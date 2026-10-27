@@ -942,3 +942,7 @@
 
 - note: scripts/e2e-admin/probe/replays/mentalist-haiku-same-turn-ask-deck.json:2 holds two em dashes inside the recorded prompt text (twenty-questions skill prose); recorded trace content, not authored prose.
 - note: the solo report's T-0467 ordering dependency is moot; T-0467 is already on base 3bb64e01f.
+
+## T-0475: Live round 15 measures T-0467 to T-0470 and the round 14 fails (2026-10-26)
+
+- note: the report's reproduction claims for W2, P4 and Y were checked only to the extent that the replays exit 1; the specific failed-check names and the source-reading claims (`gameAskHudCheck`, `GAME_WORDS`, `CHANGE_CLAIM_IN_REPLY`) were not independently traced.

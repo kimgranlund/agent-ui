@@ -1,0 +1,293 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "reach-travel-trip-itinerary-haiku-1",
+  "agent": "travel",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-27T01:15:31.481Z, traces 2026-10-27.jsonl:122",
+  "seed": {
+    "version": 8,
+    "digest": "sha256:6c278799c52a10627305adf37d415713076cbc6ce0d6ce431ef7195af9dd2a29"
+  },
+  "steps": [
+    {
+      "say": "Plan a two-day trip to Paris on Friday 20 and Saturday 21 November 2026, day by day.",
+      "expect": [
+        "Itinerary"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is a day-by-day\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Paris itinerary request\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should use the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" itinerary format\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with stops for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each day. I could pull in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" weather and currency con\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"version data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to make\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" more useful, plan\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ning the struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure around\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" two days of stops in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Paris.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"weather\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"currency\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" weather forecast only covers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Oct 27-29, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I can't hon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"estly provide one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for Nov 20-21\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" — I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll need to flag that gap\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". The \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ECB FX r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate I have is also just the lat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est reference from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Oct 26, not gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aranteed for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" travel d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ates. Now I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irming Nov 20,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 2026 falls on a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Friday as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I build out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the itinerary for that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" weekend.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Musée d'Ors\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" closed Mondays, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Saturday works\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fine. I'll put the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" note direct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly in the prose reply r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than adding a separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate meta-line, and build\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" itinerary surface using the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hospitality cat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"alog's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Itinerary component with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"paris-itinerary\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring each\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" day with lab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"els, as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ides, and tim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed stops following\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the established pattern.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll write the days\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data directly as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" literal array in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ateComponents to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep things simple r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than bin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a separate path\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". In the prose response, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is illustrative,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" flag that weather forecas\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ts don\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'t ext\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"end to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" late October,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ention the FX rate (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1 EUR = 1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".12 USD as of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Oct 26), and ask\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" if they'd like fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ight\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" train legs added.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"paris-itinerary\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"paris-itinerary\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Itinerary\\\",\\\"title\\\":\\\"Paris, 2 days\\\",\\\"days\\\":[{\\\"label\\\":\\\"Fri 20 Nov, Louvre and Marais\\\",\\\"aside\\\":\\\"1 EUR = 1.12 USD\\\",\\\"stops\\\":[{\\\"label\\\":\\\"Louvre, timed entry\\\",\\\"detail\\\":\\\"Book a 9:00 slot in advance\\\",\\\"time\\\":\\\"09:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Lunch in Le Marais\\\",\\\"detail\\\":\\\"Walk over from the Louvre, about 20 minutes\\\",\\\"time\\\":\\\"12:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Sainte-Chapelle\\\",\\\"detail\\\":\\\"Stained glass, reserve a timed ticket\\\",\\\"time\\\":\\\"15:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Seine riverside walk to Notre-Dame\\\",\\\"detail\\\":\\\"Exterior views; check the cathedral's current visiting rules\\\",\\\"time\\\":\\\"17:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Dinner in Saint-Germain\\\",\\\"detail\\\":\\\"Bistro near Saint-Germain-des-Prés\\\",\\\"time\\\":\\\"19:30\\\",\\\"status\\\":\\\"pending\\\"}]},{\\\"label\\\":\\\"Sat 21 Nov, Orsay to Montmartre\\\",\\\"stops\\\":[{\\\"label\\\":\\\"Musée d'Orsay\\\",\\\"detail\\\":\\\"Impressionist collection, timed entry\\\",\\\"time\\\":\\\"10:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Lunch by the Luxembourg Gardens\\\",\\\"detail\\\":\\\"Stroll the gardens after lunch\\\",\\\"time\\\":\\\"12:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Sacré-Cœur and Montmartre\\\",\\\"detail\\\":\\\"Climb the steps or take the funicular; golden hour views\\\",\\\"time\\\":\\\"16:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Dinner in Montmartre\\\",\\\"detail\\\":\\\"Relaxed evening in the Pigalle area\\\",\\\"time\\\":\\\"19:30\\\",\\\"status\\\":\\\"pending\\\"}]}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's a two-day Paris plan for Friday 20 and Saturday 21 November 2026. Times and venues are suggestions, and I haven't booked anything. I couldn't get a forecast for those dates; the weather service only returned late-October figures, so I've left weather off the plan. The exchange rate is the latest ECB reference (1 EUR = 1.12 USD, from 26 October).\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Plan a two-day trip to Paris on Friday 20 and Saturday 21 November 2026, day by day.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":59373,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":2336},{\"id\":\"persona\",\"chars\":2518}],\"over\":false},\"usage\":{\"inputTokens\":7612,\"outputTokens\":2352,\"cacheReadInputTokens\":19208,\"cacheCreationInputTokens\":19208},\"miniSkillIds\":[\"comparison-table\",\"structured-container\",\"variant-picker\"],\"cacheBoundary\":50566}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"paris-itinerary\",\"catalogId\":\"agent-ui--hospitality\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"paris-itinerary\",\"components\":[{\"id\":\"root\",\"component\":\"Itinerary\",\"title\":\"Paris, 2 days\",\"days\":[{\"label\":\"Fri 20 Nov, Louvre and Marais\",\"aside\":\"1 EUR = 1.12 USD\",\"stops\":[{\"label\":\"Louvre, timed entry\",\"detail\":\"Book a 9:00 slot in advance\",\"time\":\"09:00\",\"status\":\"pending\"},{\"label\":\"Lunch in Le Marais\",\"detail\":\"Walk over from the Louvre, about 20 minutes\",\"time\":\"12:30\",\"status\":\"pending\"},{\"label\":\"Sainte-Chapelle\",\"detail\":\"Stained glass, reserve a timed ticket\",\"time\":\"15:00\",\"status\":\"pending\"},{\"label\":\"Seine riverside walk to Notre-Dame\",\"detail\":\"Exterior views; check the cathedral's current visiting rules\",\"time\":\"17:00\",\"status\":\"pending\"},{\"label\":\"Dinner in Saint-Germain\",\"detail\":\"Bistro near Saint-Germain-des-Prés\",\"time\":\"19:30\",\"status\":\"pending\"}]},{\"label\":\"Sat 21 Nov, Orsay to Montmartre\",\"stops\":[{\"label\":\"Musée d'Orsay\",\"detail\":\"Impressionist collection, timed entry\",\"time\":\"10:00\",\"status\":\"pending\"},{\"label\":\"Lunch by the Luxembourg Gardens\",\"detail\":\"Stroll the gardens after lunch\",\"time\":\"12:30\",\"status\":\"pending\"},{\"label\":\"Sacré-Cœur and Montmartre\",\"detail\":\"Climb the steps or take the funicular; golden hour views\",\"time\":\"16:00\",\"status\":\"pending\"},{\"label\":\"Dinner in Montmartre\",\"detail\":\"Relaxed evening in the Pigalle area\",\"time\":\"19:30\",\"status\":\"pending\"}]}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here's a two-day Paris plan for Friday 20 and Saturday 21 November 2026. Times and venues are suggestions, and I haven't booked anything. I couldn't get a forecast for those dates; the weather service only returned late-October figures, so I've left weather off the plan. The exchange rate is the latest ECB reference (1 EUR = 1.12 USD, from 26 October).",
+          "tools": [
+            {
+              "name": "weather",
+              "input": {
+                "place": "Paris"
+              }
+            },
+            {
+              "name": "currency",
+              "input": {
+                "amount": 1,
+                "from": "EUR",
+                "to": "USD"
+              }
+            },
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here is your two-day Paris itinerary, Friday 20 and Saturday 21 November. All stops are pending.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "paris-itinerary",
+                      "catalogId": "agent-ui--hospitality"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "paris-itinerary",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Itinerary",
+                          "title": "Paris, 2 days",
+                          "days": [
+                            {
+                              "label": "Fri 20 Nov, Louvre and Marais",
+                              "aside": "1 EUR = 1.12 USD",
+                              "stops": [
+                                {
+                                  "label": "Louvre, timed entry",
+                                  "detail": "Book a 9:00 slot in advance",
+                                  "time": "09:00",
+                                  "status": "pending"
+                                },
+                                {
+                                  "label": "Lunch in Le Marais",
+                                  "detail": "Walk over from the Louvre, about 20 minutes",
+                                  "time": "12:30",
+                                  "status": "pending"
+                                },
+                                {
+                                  "label": "Sainte-Chapelle",
+                                  "detail": "Stained glass, reserve a timed ticket",
+                                  "time": "15:00",
+                                  "status": "pending"
+                                },
+                                {
+                                  "label": "Seine riverside walk to Notre-Dame",
+                                  "detail": "Exterior views; check the cathedral's current visiting rules",
+                                  "time": "17:00",
+                                  "status": "pending"
+                                },
+                                {
+                                  "label": "Dinner in Saint-Germain",
+                                  "detail": "Bistro near Saint-Germain-des-Prés",
+                                  "time": "19:30",
+                                  "status": "pending"
+                                }
+                              ]
+                            },
+                            {
+                              "label": "Sat 21 Nov, Orsay to Montmartre",
+                              "stops": [
+                                {
+                                  "label": "Musée d'Orsay",
+                                  "detail": "Impressionist collection, timed entry",
+                                  "time": "10:00",
+                                  "status": "pending"
+                                },
+                                {
+                                  "label": "Lunch by the Luxembourg Gardens",
+                                  "detail": "Stroll the gardens after lunch",
+                                  "time": "12:30",
+                                  "status": "pending"
+                                },
+                                {
+                                  "label": "Sacré-Cœur and Montmartre",
+                                  "detail": "Climb the steps or take the funicular; golden hour views",
+                                  "time": "16:00",
+                                  "status": "pending"
+                                },
+                                {
+                                  "label": "Dinner in Montmartre",
+                                  "detail": "Relaxed evening in the Pigalle area",
+                                  "time": "19:30",
+                                  "status": "pending"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-plan",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-planning-notes",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
