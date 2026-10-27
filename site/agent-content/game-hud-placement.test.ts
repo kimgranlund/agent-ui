@@ -5,7 +5,9 @@
 // against the feed set and the one-commit rule: ONE Button, or (T-0419) none beside an own-commit OptionDeck.
 import { describe, expect, it } from 'vitest'
 import { FEED_EXCLUDED, FEED_SURFACE_TYPE_SET } from '../../packages/agent-ui/a2ui/src/agent/feed-catalog.ts'
+import { GAME_HUD_PERSONAS } from '../../packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts'
 import { AGENT_CONTENT } from './registry.gen.ts'
+import { findRef } from './schema.ts'
 
 const RULE = /the ask surface holds only (.+?), never (.+?), and the (?:HUD surface|deal sheet) stays beside it\./
 const EXCLUDED = new Set(FEED_EXCLUDED.map((e) => e.type))
@@ -63,5 +65,24 @@ describe('T-0363: game skills place the GameHud on a HUD surface beside the ask'
     expect(askProblems('the Slider, ONE Offer Button, an Accept Button and a Walk away Button')).toEqual(['3 Buttons, not ONE commit Button'])
     expect(askProblems('the question, a Timeline and ONE Answer Button')).toEqual(['Timeline is not a feed type'])
     expect(askProblems('ONE OptionDeck and ONE Answer Button')).toEqual(['1 Buttons beside an own-commit control'])
+  })
+})
+
+// T-0479: the game-ask-hud check knows a game from the session's persona id (`GAME_HUD_PERSONAS`, a2ui-side, which
+// cannot read this content). The set is exactly the personas whose own text or skill and workflow text teaches a GameHud,
+// less the ones whose game opens with no HUD by design.
+const NO_HUD_GAME: Readonly<Record<string, string>> = { croupier: 'its CardTable carries the status, and its game picker (pick-croupier-game-deck) opens before any table' }
+
+describe('T-0479: GAME_HUD_PERSONAS names the personas whose content teaches a GameHud', () => {
+  it('matches the persona, skill and workflow text', () => {
+    const teaches = AGENT_CONTENT.filter((r) => r.kind === 'persona')
+      .filter((p) => {
+        const fm = p.frontmatter as { skills: string[]; workflows: string[] }
+        const refs = [...fm.skills.map((ref) => findRef(AGENT_CONTENT, ref, 'skill', p.id)), ...fm.workflows.map((ref) => findRef(AGENT_CONTENT, ref, 'workflow', p.id))]
+        return [p, ...refs].some((r) => (r as { body?: string } | null)?.body?.includes('GameHud') === true)
+      })
+      .map((p) => p.id)
+    expect(Object.keys(NO_HUD_GAME).every((id) => teaches.includes(id))).toBe(true)
+    expect(teaches.filter((id) => NO_HUD_GAME[id] === undefined).sort()).toEqual([...GAME_HUD_PERSONAS].sort())
   })
 })

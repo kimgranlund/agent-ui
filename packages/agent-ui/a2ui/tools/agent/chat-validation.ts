@@ -189,7 +189,7 @@ export const selectCatalog = selectCatalogShared
  * checks (`src/catalog/composite-moments.ts`) ride every catalog that holds their composite, so a plain `agent-ui`
  * turn runs the games rows.
  */
-export function semanticChecksDeps(catalog: Catalog): { semanticChecks?: readonly SemanticCheck[] } {
+export function semanticChecksDeps(catalog: Catalog, resolution?: unknown): { semanticChecks?: readonly SemanticCheck[]; persona?: string } {
   // T-0202 (D4): the persona's checks and every domain's the id holds, each kept only when this catalog declares
   // the types it reads (`gateChecksOnCatalog`). T-0230: the hidden game state checks run on every catalog (silent
   // unless a surface carries the word-game or Battleship signature). T-0208: then the composite-moment checks. T-0258: then
@@ -207,7 +207,17 @@ export function semanticChecksDeps(catalog: Catalog): { semanticChecks?: readonl
     ],
     catalog,
   )
-  return semanticChecks.length > 0 ? { semanticChecks } : {}
+  // T-0479: the persona the client's resolution stamp names rides along, so a check knows a game from its persona.
+  const persona = personaOfResolution(resolution)
+  return semanticChecks.length > 0 ? { semanticChecks, ...(persona !== undefined ? { persona } : {}) } : {}
+}
+
+/** T-0479: the persona id a request body's resolution stamp (T-0163, `[{id, kind, ...}]`) names in its `kind: 'persona'`
+ *  row; undefined when it names none. Client-sent, so it only gates a semantic check, never the prompt or a catalog. */
+export function personaOfResolution(resolution: unknown): string | undefined {
+  if (!Array.isArray(resolution)) return undefined
+  const row = resolution.find((r): r is { id: string } => typeof r === 'object' && r !== null && (r as { kind?: unknown }).kind === 'persona' && typeof (r as { id?: unknown }).id === 'string')
+  return row?.id.slice(0, 80)
 }
 
 export function buildCatalogMap(catalog: Catalog, basicCatalog: Catalog): Map<string, Catalog> {

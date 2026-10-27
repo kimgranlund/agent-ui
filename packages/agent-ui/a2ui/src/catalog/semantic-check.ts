@@ -104,6 +104,9 @@ export interface SemanticCheckInput {
   /** T-0359: the reply prose of the round being judged (its note), so a check can see a moment written out in words
    *  instead of shown. Absent when the round wrote none. */
   readonly reply?: string
+  /** T-0479: the session's persona id when the host knows it (the client's resolution stamp, a fixture's `agent`), so a
+   *  check can know a game from the persona playing it when no word of the turn names one. Absent otherwise. */
+  readonly persona?: string
 }
 
 /** The `SemanticAction` of a client message (`{action:{name, surfaceId, context?, dataModel?}}`), or undefined.

@@ -156,6 +156,14 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
     expect(semanticChecksDeps(catalog).semanticChecks!.at(-1)).toBe(singlePickCheck)
   })
 
+  it('T-0479: carries the persona id the resolution stamp names, and nothing for a stamp with no persona row', () => {
+    const stamp = [{ id: 'foundation', kind: 'prompt-section', version: 4 }, { id: 'negotiator', kind: 'persona', version: 4 }]
+    expect(semanticChecksDeps(catalog, stamp).persona).toBe('negotiator')
+    expect(semanticChecksDeps(catalog, stamp.slice(0, 1))).not.toHaveProperty('persona')
+    expect(semanticChecksDeps(catalog, 'negotiator')).not.toHaveProperty('persona')
+    expect(semanticChecksDeps(catalog)).not.toHaveProperty('persona')
+  })
+
   it('follows selectCatalog, never the raw id: an unknown id falls back to the default catalog and its checks', () => {
     expect(ids(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier', catalog))).slice(0, CROUPIER.length)).toEqual(CROUPIER)
     expect(ids(semanticChecksDeps(selectCatalog(catalogs, 'agent-ui--croupier-typo', catalog)))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES, ...FRAMED, ...DECK])
@@ -165,7 +173,7 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
     const ROOT = `${(process as { cwd(): string }).cwd()}/packages/agent-ui/a2ui/tools/agent`
     for (const src of [readFileSync(`${ROOT}/dev-proxy-plugin.ts`, 'utf8'), readFileSync(`${ROOT}/worker/index.ts`, 'utf8')]) {
       expect(src).toMatch(/const selectedCatalog = selectCatalog\(catalogs, catalogId, catalog\)/)
-      expect(src).toMatch(/\.\.\.semanticChecksDeps\(selectedCatalog\)/)
+      expect(src).toMatch(/\.\.\.semanticChecksDeps\(selectedCatalog, resolution\)/) // T-0479: with the session's persona id
     }
   })
 })

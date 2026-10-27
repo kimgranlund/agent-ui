@@ -21,7 +21,8 @@
 // with no board. T-0284: a
 // Battleship board opened with no GameHud. T-0296: a Battleship surrender answered with no ResultCard. T-0366: a move
 // typed at an open board-less game (the Negotiator's deal sheet, the Dungeon Master's quest log) answered in prose alone.
-// T-0468: a game's new question deck (an OptionDeck) opened with no GameHud anywhere in the game.
+// T-0468: a game's new question deck (an OptionDeck) opened with no GameHud anywhere in the game; T-0479, any new ask
+// holding a play control, in a game the session's persona plays as well as one its words name.
 // Both games ride base `agent-ui` and both draw a clickable BoardGrid, so each check also skips the other game's
 // surface (T-0263): a word cue (that TextField, or `/secret/word`) with no committed fleet is never judged for a fleet,
 // and a committed fleet with no word cue is never judged for a word.
@@ -452,29 +453,43 @@ export const fleetHudCheck: SemanticCheck = {
   },
 }
 
+/** T-0479: the shipped personas whose game keeps a GameHud (their persona or skill text teaches one), by id, so a turn
+ *  of theirs is a game turn with no game word in it. Not the Croupier: its CardTable carries the status and its game
+ *  picker opens before any table. `site/agent-content/game-hud-placement.test.ts` pins it to that text. */
+export const GAME_HUD_PERSONAS: ReadonlySet<string> = new Set(['admiral', 'alchemist', 'dungeon-master', 'lexicographer', 'mentalist', 'negotiator'])
+/** T-0479: the controls a game's ask plays a move with: a pick deck, a pick card, an amount or a value. Not a TextField: the
+ *  word game's guess field belongs on its board, which the word-game checks judge. */
+const PLAY_CONTROLS = ['OptionDeck', 'OptionCompare', 'AmountPicker', 'Slider', 'ChoiceGroup']
+
 /**
  * T-0468 (live round 14 cluster W, traces 2026-10-26.jsonl:7 and :8): Haiku 5.5 opened Twenty Questions note-only with an
  * ask on ask-1, and the SURFACE_CLAIMED repair built ask-1 alone (one OptionDeck), so the game never had a GameHud.
- * GAME_HUD_MISSING: a say turn whose words name a game (`GAME_WORDS`, in the player's message or the reply) opens a new
- * surface holding an OptionDeck while no GameHud is on this round's surfaces, on an open surface, or anywhere the session
- * showed one. A game that already has its HUD, or a choice deck outside a game, is never judged.
+ * T-0479 (live round 15 cluster W2, trace 2026-10-27.jsonl:9): the Negotiator's repair built ask-1 alone the same way,
+ * a Card holding an AmountPicker, and no word of the turn named a game.
+ * GAME_HUD_MISSING: a say turn in a game (a `GAME_HUD_PERSONAS` persona, or `GAME_WORDS` in the player's message or the
+ * reply) opens a new surface holding a play control (`PLAY_CONTROLS`) while no GameHud is on this round's surfaces, on an
+ * open surface, or anywhere the session showed one. A game that already has its HUD, a choice outside a game, or a
+ * surface another check owns (a board, a card table, a booking) is never judged.
  */
 export const gameAskHudCheck: SemanticCheck = {
   id: 'game-ask-hud',
   requires: ['GameHud', 'OptionDeck'],
-  check({ surfaces, action, intent, open, shownTypes, reply }) {
-    if (action !== undefined || intent === undefined || !GAME_WORDS.test(`${intent} ${reply ?? ''}`)) return []
+  check({ surfaces, action, intent, open, shownTypes, reply, persona }) {
+    if (action !== undefined || intent === undefined) return []
+    if (!GAME_HUD_PERSONAS.has(persona ?? '') && !GAME_WORDS.test(`${intent} ${reply ?? ''}`)) return []
     const holds = (view: SurfaceView, type: string): boolean => [...view.components.values()].some((c) => c.component === type)
     if (shownTypes?.has('GameHud') || [...surfaces, ...(open ?? [])].some((v) => holds(v, 'GameHud'))) return []
-    const deck = surfaces.find((v) => v.priorComponents === undefined && holds(v, 'OptionDeck'))
-    if (deck === undefined) return []
+    const asks = surfaces.filter((v) => v.priorComponents === undefined && ![...OWNED_ELSEWHERE].some((t) => holds(v, t)))
+    const ask = asks.map((v) => ({ v, control: PLAY_CONTROLS.find((t) => holds(v, t)) })).find((a) => a.control !== undefined)
+    if (ask === undefined) return []
+    const what = ask.control === 'OptionDeck' ? "the game's question deck" : `the game's move card (its ${ask.control})`
     return [
       {
         code: 'GAME_HUD_MISSING',
-        path: `${deck.surfaceId}:hud`,
+        path: `${ask.v.surfaceId}:hud`,
         message:
-          `${deck.surfaceId} opens the game's question deck with no GameHud anywhere, so the game's progress and status have no strip. ` +
-          `Keep ${deck.surfaceId} as it is and, in this same answer, create the game's HUD surface beside it (for example hud-1) holding ONE GameHud with its title, status and stats bound to the data model.`,
+          `${ask.v.surfaceId} opens ${what} with no GameHud anywhere, so the game's progress and status have no strip. ` +
+          `Keep ${ask.v.surfaceId} as it is and, in this same answer, create the game's HUD surface beside it (for example hud-1) holding ONE GameHud with its title, status and stats bound to the data model.`,
       },
     ]
   },
