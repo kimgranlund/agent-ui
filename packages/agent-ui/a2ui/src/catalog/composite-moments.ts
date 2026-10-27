@@ -6,7 +6,7 @@
 // surface ONE composite. A row's `notInside` also sends back a composite wrapped in a card of its own (T-0262,
 // `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
 // keeps a row on exactly the catalogs that can emit it: the booking rows ride `<base>--concierge`, the games rows
-// ride `agent-ui` until the games types move to a domain, the ProductCard and Swatch rows ride `agent-ui`, the
+// ride `agent-ui` until the games types move to a domain, the ProductCard, ConfirmReceipt and Swatch rows ride `agent-ui`, the
 // ContrastPair row (T-0377) rides `agent-ui--stylist`, and `a2ui-basic` gets none.
 //
 // The link to the sidecar is a test, not an import (`composite-moments.test.ts`: every `moment` is one of its
@@ -72,6 +72,10 @@
 // token surface (Swatch, Ramp or ContrastPair), a reply that lists a palette in its prose (three or more distinct hex
 // codes, or three or more named colors set out by role or as list lines) while the turn ships no token surface is
 // SURFACE_MISSING.
+//
+// T-0478 (round 15 cluster P4): the ConfirmReceipt row reads an order or cart built by hand: an AmountPicker quantity line
+// (its label, name or bound path names a quantity, "each" or a price) on a surface whose words name an order, a cart or a
+// total, with no ConfirmReceipt on it, the shape a shopkeeper add turn shipped after its CHANGE_CLAIMED repair.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -312,6 +316,20 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     pricedRows: { types: ['DescriptionList', 'List'], cue: /[€$£¥]\s?\d|\d\s?(?:€|eur|usd|gbp)\b/i },
     words: /\b(book|bookable|treatment|treatments|service|services|spa|massage|room|rooms|offer|offers)\b/i,
     ask: { moment: 'services', cue: SERVICES_ASK, rank: 1, surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' },
+  },
+  {
+    // T-0478 (round 15 cluster P4, reach-shopkeeper-cart-amount-haiku-2): an add to the order answered with an order
+    // Column of AmountPicker lines and a total Text, no ConfirmReceipt. The cart is read back as ONE ConfirmReceipt beside
+    // its AmountPicker quantity lines (the shopkeeper's cart-summary); a negotiator deal sheet (GameHud) and a room booking
+    // walk (StepFlow) carry AmountPickers of their own and stand aside.
+    composite: 'ConfirmReceipt',
+    moment: 'a booking or order read back to confirm, then its receipt',
+    repair:
+      'for the order, beside its AmountPicker lines: its title, items as {label, quantity, amount} with each quantity bound to ' +
+      'the path its AmountPicker binds, totalLabel and totalPath, status "pending", and confirmAction and backAction (it draws ' +
+      'its own Confirm and Back, so add no Button); keep each AmountPicker, and drop the hand-built order title and total.',
+    lacks: ['BookingForm', 'BookingConfirmation', 'StepFlow', 'GameHud'],
+    inputCue: { types: ['AmountPicker'], cue: /qty|quantity|\beach\b|\$/i, words: /\b(order|cart|basket|total)\b/i },
   },
   {
     // T-0359: a palette is shown, never listed: hex values written in Text are the hand-built moment, and (on the Stylist)

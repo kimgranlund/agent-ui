@@ -404,6 +404,29 @@ const CONTRACTS: Record<string, Contract> = {
       ]),
     },
   },
+  // T-0478: a shopkeeper add turn reads the cart back as ONE ConfirmReceipt beside its AmountPicker line (round 15 :140).
+  'composite-moment-confirm-receipt': {
+    code: 'CONFIRM_RECEIPT_MISSING',
+    pass: {
+      catalog: UI,
+      intent: 'Add two of the first one to my order.',
+      output: surface('storefront-1', UI, [
+        { id: 'root', component: 'Column', gap: 'md', children: ['receipt', 'qty_arc'] },
+        { id: 'receipt', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: { path: '/cart/qty' }, amount: { path: '/cart/amount' } }], totalLabel: 'Total', totalPath: '/cart/total', status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back_to_shop' } },
+        { id: 'qty_arc', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/cart/qty' }, min: 1, max: 10, step: 1, actionName: 'set_quantity' },
+      ], { cart: { qty: 2, amount: '$378', total: '$378' } }),
+    },
+    fail: {
+      catalog: UI,
+      intent: 'Add two of the first one to my order.',
+      output: surface('storefront-1', UI, [
+        { id: 'root', component: 'Column', gap: 'sm', children: ['order_title', 'line_arc', 'order_total'] },
+        { id: 'order_title', component: 'Text', text: 'Your order', variant: 'h5' },
+        { id: 'line_arc', component: 'AmountPicker', label: 'Brass Arc Floor Lamp ($189 each)', value: 2, min: 0, max: 10, step: 1, actionName: 'set_quantity', name: 'qty_arc' },
+        { id: 'order_total', component: 'Text', text: 'Total: $378', variant: 'label' },
+      ]),
+    },
+  },
   // T-0359: a palette is shown on a Swatch and a Ramp, never written out, and a palette ask is answered on one.
   'composite-moment-swatch': {
     code: 'SWATCH_MISSING',
@@ -897,6 +920,7 @@ const ROW_PROPS: Record<string, readonly string[]> = {
   ResultCard: ['outcome', 'title', 'summary', 'stats'],
   Timeline: ['label'],
   ProductCard: ['title', 'price', 'priceNote', 'action'],
+  ConfirmReceipt: ['title', 'items', 'totalLabel', 'totalPath', 'status', 'confirmAction', 'backAction'],
   Swatch: ['label', 'value'],
   ContrastPair: ['foreground', 'background', 'label'],
 }
