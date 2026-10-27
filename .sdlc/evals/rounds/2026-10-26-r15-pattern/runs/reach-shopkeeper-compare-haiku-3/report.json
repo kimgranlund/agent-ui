@@ -1,0 +1,431 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "reach-shopkeeper-compare-haiku-3",
+  "mode": "live",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "runId": "reach-shopkeeper-compare-haiku-3-1b3ce3d8",
+  "at": "2026-10-27T01:23:23.082Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm playing shopk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eeper with an illustr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ative catalog, so I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll pick the two cheap\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est lamps from my made\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-up in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ventory and comp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"are them, treating the details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as dem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"o values rather than asking the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" user which products they m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ean.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll build an Option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Compare control\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with rows for price, material,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" size, and stock, marking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the better\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" option as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" recommended —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its action comm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" press, no separate subm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it button is needed,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll frame it as an ask\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a note st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating the full question in prose.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Now I'm sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ling on which\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" two lamps are act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually the cheapest:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like a Ceramic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Table Lamp around $38\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and a Linen Des\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"k Lamp a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bit p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ricier, though\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need to double-check the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ordering to make sure these really\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" are the l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"owest-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"priced pair.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Adding more\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\nI'm setting \\\"best\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" appropriately and ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as the OptionCompare\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" required\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll place\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it as the first line of the re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply follow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed by the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose explanation, then call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" render_surface with a short re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are your\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" two cheapest lamps\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". The Ceramic\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Table Lamp is my\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ick for price and stock.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" The Linen Desk\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Lamp g\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ives a softer light\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" if\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you prefer that\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\". Cho\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ose one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'ll add it to your order.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" (\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Prices and stock are illust\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"rative demo values.)\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"SURFACE_CLAIMED\"],\"detail\":\"Round 1 failed:\\n  SURFACE_CLAIMED: at ask-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"lamps\\\":[{\\\"value\\\":\\\"ceramic-table-lamp\\\",\\\"name\\\":\\\"Ceramic Table Lamp\\\",\\\"price\\\":\\\"$28\\\",\\\"material\\\":\\\"Glazed ceramic\\\",\\\"size\\\":\\\"32 cm\\\",\\\"stock\\\":\\\"12 in stock\\\"},{\\\"value\\\":\\\"linen-desk-lamp\\\",\\\"name\\\":\\\"Linen Desk Lamp\\\",\\\"price\\\":\\\"$34\\\",\\\"material\\\":\\\"Linen shade, steel base\\\",\\\"size\\\":\\\"38 cm\\\",\\\"stock\\\":\\\"5 in stock\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"compare\\\"]},{\\\"id\\\":\\\"compare\\\",\\\"component\\\":\\\"OptionCompare\\\",\\\"heading\\\":\\\"Your two cheapest lamps\\\",\\\"actionName\\\":\\\"choose\\\",\\\"best\\\":\\\"ceramic-table-lamp\\\",\\\"rows\\\":[{\\\"key\\\":\\\"price\\\",\\\"label\\\":\\\"Price\\\"},{\\\"key\\\":\\\"material\\\",\\\"label\\\":\\\"Material\\\"},{\\\"key\\\":\\\"size\\\",\\\"label\\\":\\\"Size\\\"},{\\\"key\\\":\\\"stock\\\",\\\"label\\\":\\\"Stock\\\"}],\\\"options\\\":[{\\\"value\\\":\\\"ceramic-table-lamp\\\",\\\"title\\\":\\\"Ceramic Table Lamp\\\",\\\"values\\\":{\\\"price\\\":\\\"$28\\\",\\\"material\\\":\\\"Glazed ceramic\\\",\\\"size\\\":\\\"32 cm\\\",\\\"stock\\\":\\\"12 in stock\\\"}},{\\\"value\\\":\\\"linen-desk-lamp\\\",\\\"title\\\":\\\"Linen Desk Lamp\\\",\\\"values\\\":{\\\"price\\\":\\\"$34\\\",\\\"material\\\":\\\"Linen shade, steel base\\\",\\\"size\\\":\\\"38 cm\\\",\\\"stock\\\":\\\"5 in stock\\\"}}],\\\"value\\\":{\\\"path\\\":\\\"/choice\\\"}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are your two cheapest lamps side by side. The Ceramic Table Lamp is my pick for price and stock; the Linen Desk Lamp gives a softer light. Choose one and I'll add it to your order. (Prices and stock are illustrative demo values.)\",\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare your two cheapest lamps.\",\"k\":3},\"exemplarIds\":[\"list-nested\",\"media-file-grid\",\"frontier-step-flow-booking\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57788,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3501},{\"id\":\"mini-skills\",\"chars\":1521},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":7057,\"outputTokens\":2703,\"cacheReadInputTokens\":37217,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":49621}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"lamps\":[{\"value\":\"ceramic-table-lamp\",\"name\":\"Ceramic Table Lamp\",\"price\":\"$28\",\"material\":\"Glazed ceramic\",\"size\":\"32 cm\",\"stock\":\"12 in stock\"},{\"value\":\"linen-desk-lamp\",\"name\":\"Linen Desk Lamp\",\"price\":\"$34\",\"material\":\"Linen shade, steel base\",\"size\":\"38 cm\",\"stock\":\"5 in stock\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"compare\"]},{\"id\":\"compare\",\"component\":\"OptionCompare\",\"heading\":\"Your two cheapest lamps\",\"actionName\":\"choose\",\"best\":\"ceramic-table-lamp\",\"rows\":[{\"key\":\"price\",\"label\":\"Price\"},{\"key\":\"material\",\"label\":\"Material\"},{\"key\":\"size\",\"label\":\"Size\"},{\"key\":\"stock\",\"label\":\"Stock\"}],\"options\":[{\"value\":\"ceramic-table-lamp\",\"title\":\"Ceramic Table Lamp\",\"values\":{\"price\":\"$28\",\"material\":\"Glazed ceramic\",\"size\":\"32 cm\",\"stock\":\"12 in stock\"}},{\"value\":\"linen-desk-lamp\",\"title\":\"Linen Desk Lamp\",\"values\":{\"price\":\"$34\",\"material\":\"Linen shade, steel base\",\"size\":\"38 cm\",\"stock\":\"5 in stock\"}}],\"value\":{\"path\":\"/choice\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here are your two cheapest lamps side by side. The Ceramic Table Lamp is the better buy: lower price and more in stock. Which one would you like to add to your order?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nHere are your two cheapest lamps. The Ceramic Table Lamp is my pick for price and stock. The Linen Desk Lamp gives a softer light if you prefer that. Choose one and I'll add it to your order. (Prices and stock are illustrative demo values.)",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are your two cheapest lamps side by side. The Ceramic Table Lamp is my pick for price and stock; the Linen Desk Lamp gives a softer light. Choose one and I'll add it to your order. (Prices and stock are illustrative demo values.)",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "lamps": [
+                          {
+                            "value": "ceramic-table-lamp",
+                            "name": "Ceramic Table Lamp",
+                            "price": "$28",
+                            "material": "Glazed ceramic",
+                            "size": "32 cm",
+                            "stock": "12 in stock"
+                          },
+                          {
+                            "value": "linen-desk-lamp",
+                            "name": "Linen Desk Lamp",
+                            "price": "$34",
+                            "material": "Linen shade, steel base",
+                            "size": "38 cm",
+                            "stock": "5 in stock"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "compare"
+                          ]
+                        },
+                        {
+                          "id": "compare",
+                          "component": "OptionCompare",
+                          "heading": "Your two cheapest lamps",
+                          "actionName": "choose",
+                          "best": "ceramic-table-lamp",
+                          "rows": [
+                            {
+                              "key": "price",
+                              "label": "Price"
+                            },
+                            {
+                              "key": "material",
+                              "label": "Material"
+                            },
+                            {
+                              "key": "size",
+                              "label": "Size"
+                            },
+                            {
+                              "key": "stock",
+                              "label": "Stock"
+                            }
+                          ],
+                          "options": [
+                            {
+                              "value": "ceramic-table-lamp",
+                              "title": "Ceramic Table Lamp",
+                              "values": {
+                                "price": "$28",
+                                "material": "Glazed ceramic",
+                                "size": "32 cm",
+                                "stock": "12 in stock"
+                              }
+                            },
+                            {
+                              "value": "linen-desk-lamp",
+                              "title": "Linen Desk Lamp",
+                              "values": {
+                                "price": "$34",
+                                "material": "Linen shade, steel base",
+                                "size": "38 cm",
+                                "stock": "5 in stock"
+                              }
+                            }
+                          ],
+                          "value": {
+                            "path": "/choice"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "target": "ask-1"
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-27.jsonl:153",
+        "outcome": "ok",
+        "retries": [
+          {
+            "round": 2,
+            "codes": [
+              "SURFACE_CLAIMED"
+            ]
+          }
+        ],
+        "thinkingChars": [
+          1010,
+          0
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "list-nested",
+          "media-file-grid",
+          "frontier-step-flow-booking"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Compare your two cheapest lamps.",
+        "expect": [
+          "OptionCompare"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Compare your two cheapest lamps. Here are your two cheapest lamps side by side. The Ceramic Table Lamp is my pick for price and stock; the Linen Desk Lamp gives a softer light. Choose one and I'll add it to your order. (Prices and stock are illustrative demo values.)",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-26-r15-pattern/reach-shopkeeper-compare-haiku-3/turn-1.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "271 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "234 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [ask-1], open [ask-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "pass",
+      "detail": "ask-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "ask-1 holds OptionCompare"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "1010 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "skip",
+      "detail": "no --expect-component"
+    }
+  ],
+  "verdict": "pass"
+}

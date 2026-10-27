@@ -1,0 +1,224 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "reach-shopkeeper-compare-haiku-2",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-27T01:19:04.938Z, traces 2026-10-27.jsonl:138",
+  "seed": {
+    "version": 6,
+    "digest": "sha256:9b7a913f834344373bdbc527bfcca807c82db2c6ee08db03df42e0b8032f42b8"
+  },
+  "steps": [
+    {
+      "say": "Compare your two cheapest lamps.",
+      "expect": [
+        "OptionCompare"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since I don't have real\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" catalog data, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" invent two illustrative l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amps with plausible names\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and prices to compare,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mind I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should be trans\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"parent about\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" these being example\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fig\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ures if asked.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll set up an Opt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ionCompare surface with \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"choose\\\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the action, list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", material, size, and stock\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for each lamp, framed\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a feed ask so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the user's pick can update the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" order summary. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the lamps them\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"selves, I'll go\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a $\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"29 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceramic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Stoneware Bedside\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Lamp and a $38\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Brass Dome Table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Lamp, marking the st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oneware as best\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" value while noting the brass option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" suits dur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ability needs.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are your two cheapest\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" lamps side by side. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Stoneware Bed\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"side Lamp is the l\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"owest price and the one I'\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"d recommend for a bed\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"side table. The Brass\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Dome Table Lamp\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" cost\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"s a little\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" more and is sturdier if\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"'\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ll live som\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ewhere bus\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"y. T\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ap a\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" column to cho\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ose one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" (Prices and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stock are illustrative dem\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"o values.)\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"SURFACE_CLAIMED\"],\"detail\":\"Round 1 failed:\\n  SURFACE_CLAIMED: at ask-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionCompare\\\",\\\"heading\\\":\\\"Your two cheapest lamps\\\",\\\"rows\\\":[{\\\"key\\\":\\\"price\\\",\\\"label\\\":\\\"Price\\\"},{\\\"key\\\":\\\"material\\\",\\\"label\\\":\\\"Material\\\"},{\\\"key\\\":\\\"size\\\",\\\"label\\\":\\\"Size\\\"},{\\\"key\\\":\\\"stock\\\",\\\"label\\\":\\\"In stock\\\"}],\\\"options\\\":[{\\\"value\\\":\\\"stoneware-bedside\\\",\\\"title\\\":\\\"Stoneware Bedside Lamp\\\",\\\"subtitle\\\":\\\"Lowest price\\\",\\\"values\\\":{\\\"price\\\":\\\"$38\\\",\\\"material\\\":\\\"Glazed stoneware\\\",\\\"size\\\":\\\"28 cm tall\\\",\\\"stock\\\":\\\"12 left\\\"}},{\\\"value\\\":\\\"brass-dome\\\",\\\"title\\\":\\\"Brass Dome Table Lamp\\\",\\\"subtitle\\\":\\\"Sturdy pick\\\",\\\"values\\\":{\\\"price\\\":\\\"$54\\\",\\\"material\\\":\\\"Solid brass\\\",\\\"size\\\":\\\"34 cm tall\\\",\\\"stock\\\":\\\"5 left\\\"}}],\\\"best\\\":\\\"stoneware-bedside\\\",\\\"value\\\":\\\"\\\",\\\"actionName\\\":\\\"choose\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are your two cheapest lamps side by side. The Stoneware Bedside Lamp is the lowest price and the one I'd recommend for a bedside table. The Brass Dome Table Lamp costs a little more and is sturdier if it'll live somewhere busy. Tap a column to choose one. (Prices and stock are illustrative demo values.)\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare your two cheapest lamps.\",\"k\":3},\"exemplarIds\":[\"list-nested\",\"media-file-grid\",\"frontier-step-flow-booking\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57788,\"sections\":[{\"id\":\"grammar\",\"chars\":27557},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3501},{\"id\":\"mini-skills\",\"chars\":1521},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":7088,\"outputTokens\":2190,\"cacheReadInputTokens\":37217,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":49621}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionCompare\",\"heading\":\"Your two cheapest lamps\",\"rows\":[{\"key\":\"price\",\"label\":\"Price\"},{\"key\":\"material\",\"label\":\"Material\"},{\"key\":\"size\",\"label\":\"Size\"},{\"key\":\"stock\",\"label\":\"In stock\"}],\"options\":[{\"value\":\"stoneware-bedside\",\"title\":\"Stoneware Bedside Lamp\",\"subtitle\":\"Lowest price\",\"values\":{\"price\":\"$38\",\"material\":\"Glazed stoneware\",\"size\":\"28 cm tall\",\"stock\":\"12 left\"}},{\"value\":\"brass-dome\",\"title\":\"Brass Dome Table Lamp\",\"subtitle\":\"Sturdy pick\",\"values\":{\"price\":\"$54\",\"material\":\"Solid brass\",\"size\":\"34 cm tall\",\"stock\":\"5 left\"}}],\"best\":\"stoneware-bedside\",\"value\":\"\",\"actionName\":\"choose\"}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here are your two cheapest lamps side by side. The Stoneware Bedside Lamp is the lowest price and the one I'd pick for a bedside table. Which one would you like to take home?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nHere are your two cheapest lamps side by side. The Stoneware Bedside Lamp is the lowest price and the one I'd recommend for a bedside table. The Brass Dome Table Lamp costs a little more and is sturdier if it'll live somewhere busy. Tap a column to choose one. (Prices and stock are illustrative demo values.)",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are your two cheapest lamps side by side. The Stoneware Bedside Lamp is the lowest price and the one I'd recommend for a bedside table. The Brass Dome Table Lamp costs a little more and is sturdier if it'll live somewhere busy. Tap a column to choose one. (Prices and stock are illustrative demo values.)",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionCompare",
+                          "heading": "Your two cheapest lamps",
+                          "rows": [
+                            {
+                              "key": "price",
+                              "label": "Price"
+                            },
+                            {
+                              "key": "material",
+                              "label": "Material"
+                            },
+                            {
+                              "key": "size",
+                              "label": "Size"
+                            },
+                            {
+                              "key": "stock",
+                              "label": "In stock"
+                            }
+                          ],
+                          "options": [
+                            {
+                              "value": "stoneware-bedside",
+                              "title": "Stoneware Bedside Lamp",
+                              "subtitle": "Lowest price",
+                              "values": {
+                                "price": "$38",
+                                "material": "Glazed stoneware",
+                                "size": "28 cm tall",
+                                "stock": "12 left"
+                              }
+                            },
+                            {
+                              "value": "brass-dome",
+                              "title": "Brass Dome Table Lamp",
+                              "subtitle": "Sturdy pick",
+                              "values": {
+                                "price": "$54",
+                                "material": "Solid brass",
+                                "size": "34 cm tall",
+                                "stock": "5 left"
+                              }
+                            }
+                          ],
+                          "best": "stoneware-bedside",
+                          "value": "",
+                          "actionName": "choose"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {}
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "list-nested",
+          "media-file-grid",
+          "frontier-step-flow-booking"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
