@@ -257,7 +257,7 @@ async function handleChat(request: Request, env: Env): Promise<Response> {
 // lazy-headersSent equivalent), so this must run BEFORE the Response is constructed, not inside the
 // detached write-loop's catch.
 async function handleProduce(request: Request, env: Env): Promise<Response> {
-  const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, modelSettings, responsePreference, prefers, catalogId } = JSON.parse(await readBody(request)) as {
+  const { input, provider, model, mode, personaSystem, integrations, progressDetail, progressReasoning, genui, a2ui, authoring, builderMission, effort, modelSettings, responsePreference, prefers, catalogId, resolution } = JSON.parse(await readBody(request)) as {
     input: unknown
     provider: string
     model: string
@@ -275,6 +275,8 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
     responsePreference?: unknown
     prefers?: unknown
     catalogId?: unknown
+    /** T-0479: the client's resolution stamp (T-0163); only its persona id is read, for the semantic checks. */
+    resolution?: unknown
   }
   if (!isValidTurnInput(input)) return json(400, { error: 'bad-request' })
   const validInput = input as TurnInput
@@ -341,7 +343,7 @@ async function handleProduce(request: Request, env: Env): Promise<Response> {
   // proxy uses (`semanticChecksDeps` also adds T-0230's hidden-state checks on every catalog, silent without a game signature,
   // and T-0208's composite-moment checks its types allow).
   const selectedCatalog = selectCatalog(catalogs, catalogId, catalog)
-  const deps: ProduceDeps = { provider: dispatch.provider, retrieve: (q) => retrieve(shard, q), catalog: selectedCatalog, ...semanticChecksDeps(selectedCatalog) }
+  const deps: ProduceDeps = { provider: dispatch.provider, retrieve: (q) => retrieve(shard, q), catalog: selectedCatalog, ...semanticChecksDeps(selectedCatalog, resolution) }
 
   const { readable, writable } = new TransformStream()
   const writer = writable.getWriter()

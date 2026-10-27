@@ -147,6 +147,8 @@ export function replaySemanticChecks(catalog: Catalog): readonly SemanticCheck[]
 export interface ReplayContext {
   catalogId: string
   resolveCatalog: ReturnType<typeof nodeCatalogResolver>
+  /** T-0479: the fixture's persona id, handed to the semantic checks as the host hands the session's persona. */
+  agent?: string
 }
 
 /** Run each turn's rounds through the real `produce()` in order, threading a session the way the page
@@ -165,7 +167,7 @@ export async function deriveLines(
   for (const turn of turns) {
     const input = { ...turn.input, session: { turns: [...session] } } as TurnInput
     const rounds = turn.rounds.length > 0 ? turn.rounds.map(scriptedRound) : ['']
-    const result = await runProducerTurn(input, rounds, catalog, semanticChecks.length > 0 ? { semanticChecks } : {})
+    const result = await runProducerTurn(input, rounds, catalog, semanticChecks.length > 0 ? { semanticChecks, ...(ctx.agent !== undefined ? { persona: ctx.agent } : {}) } : {})
     out.push(result.lines)
     session.push({ role: 'user', content: turn.input.kind === 'intent' ? turn.input.text : JSON.stringify(turn.input.message) })
     session.push({ role: 'assistant', content: result.lines.filter((l) => !l.includes('"a2uiMeta"')).join('\n') })
@@ -212,7 +214,7 @@ export async function fixtureFromTrace(entries: readonly TraceEntry[], name: str
       input: client ? { kind: 'client' as const, message } : { kind: 'intent' as const, text: e.line.user },
     }
   })
-  const lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd) })
+  const lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd), agent })
   // T-0222: a client turn that carries an error, not an action, is page-fired (a renderer rejection's error turn).
   const steps: ProbeStep[] = entries.map((e, i) => {
     if (!e.line.user.startsWith('{')) return { say: typedText(e.line.user) }
@@ -272,7 +274,7 @@ export async function offlineReplay(fixture: ProbeFixture, cwd: string): Promise
             : { kind: 'client' as const, message: { version: 'v1.0', action: { name: step !== undefined && 'click' in step ? step.click : 'click' } } }
       return { rounds: t.rounds!, input: t.input ?? fallback }
     })
-    lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd) })
+    lines = await deriveLines(plan, { catalogId, resolveCatalog: nodeCatalogResolver(cwd), agent: fixture.agent })
   }
   const actionSurfaceOf = (input: ProbeTurn['input']): string | undefined => {
     const sid = input?.kind === 'client' ? (input.message as { action?: { surfaceId?: unknown } } | null)?.action?.surfaceId : undefined

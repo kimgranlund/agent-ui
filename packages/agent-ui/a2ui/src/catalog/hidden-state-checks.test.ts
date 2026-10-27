@@ -368,6 +368,41 @@ describe('T-0468: game-ask-hud', () => {
     expect(said('Which plan suits me?', deck('ask-1'))).toEqual([])
     expect(gameAskHudCheck.check({ surfaces: semanticSurfaceViews({ turns: [] }, deck('ask-1')), action: { name: 'choose', surfaceId: 'ask-0', context: {}, dataModel: undefined } })).toEqual([])
   })
+
+  // T-0479 (live round 15 :9): the Negotiator's SURFACE_CLAIMED repair built ask-1 alone, a Card holding an AmountPicker.
+  const offer = (sid: string): A2uiOutput => [
+    { version: 'v1.0', createSurface: { surfaceId: sid, catalogId: 'agent-ui' } } as A2uiServerMessage,
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: sid,
+        components: [
+          { id: 'root', component: 'Card', children: ['picker', 'send'] },
+          { id: 'picker', component: 'AmountPicker', label: 'Your offer', value: { path: '/offer' } },
+          { id: 'send', component: 'Button', label: 'Send offer', action: { action: 'send_offer' } },
+        ],
+      },
+    } as A2uiServerMessage,
+  ]
+  const asPersona = (persona: string | undefined, out: A2uiOutput, prior: Turn[] = []) => {
+    const session = { turns: prior } as SemanticTurnLog
+    const input = { surfaces: semanticSurfaceViews(session, out), intent: "I'd like to buy your brass lantern. What's your price?", open: sessionSurfaceViews(session), reply: 'My asking price is $180.' }
+    return gameAskHudCheck.check({ ...input, ...(persona !== undefined ? { persona } : {}) }).map((f) => `${f.code} ${f.path}`)
+  }
+
+  it('T-0479: a game persona whose new ask holds a play control and no GameHud is GAME_HUD_MISSING, with no game word', () => {
+    expect(asPersona('negotiator', offer('ask-1'))).toEqual(['GAME_HUD_MISSING ask-1:hud'])
+    expect(gameAskHudCheck.check({ surfaces: semanticSurfaceViews({ turns: [] }, offer('ask-1')), intent: 'Hi.', persona: 'negotiator' })[0]?.message).toMatch(/the game's move card \(its AmountPicker\)/)
+    expect(asPersona('mentalist', deck('ask-1'))).toEqual(['GAME_HUD_MISSING ask-1:hud'])
+  })
+
+  it('T-0479: stays silent for a persona with no game, with no persona and no game word, and with a GameHud anywhere', () => {
+    expect(asPersona('shopkeeper', offer('ask-1'))).toEqual([])
+    expect(asPersona('quizmaster', offer('ask-1'))).toEqual([])
+    expect(asPersona(undefined, offer('ask-1'))).toEqual([])
+    expect(asPersona('negotiator', [...hud, ...offer('ask-1')])).toEqual([])
+    expect(asPersona('negotiator', offer('ask-2'), [{ role: 'assistant', content: hud.map((m) => JSON.stringify(m)).join('\n') }])).toEqual([])
+  })
 })
 
 // T-0296 (live round 6 :112, :298, :484): "I surrender. Reveal your fleet." targeting enemy-waters revealed the fleet on

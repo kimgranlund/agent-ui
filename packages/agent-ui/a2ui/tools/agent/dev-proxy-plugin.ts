@@ -551,7 +551,7 @@ export function a2uiDevProxyPlugin(opts?: {
                 provider: trace.wrapProvider(dispatch.provider),
                 retrieve: (q) => retrieve(shard, q),
                 catalog: selectedCatalog,
-                ...semanticChecksDeps(selectedCatalog),
+                ...semanticChecksDeps(selectedCatalog, resolution), // T-0479: with the session's persona id
               }
               // produce() yields ONLY a fully validated payload's lines (SPEC-R5) — stream them line by line.
               // `model` is the allowlist-VALIDATED value (resolvePair) passed as the AUTHORITATIVE opts.model:

@@ -5,7 +5,9 @@
 // hint asks a game for its HUD surface beside the ask deck, and the game-ask-hud check (GAME_HUD_MISSING) sends back a
 // game opening whose new ask deck has no GameHud anywhere. Both turns replay their recorded rounds verbatim, so turn 0's
 // ask-only round now draws the finding that names the missing HUD on rounds 2 and 3 and ships tallied on the round bound; the live
-// measure of the repaired round is the round 15 rerun of smoke-mentalist-first-answer-haiku.
+// measure of the repaired round is the round 15 rerun of smoke-mentalist-first-answer-haiku. T-0479: the check now knows the
+// game from the mentalist persona too, so turn 1's "Yes." (no game word, the ask-2 deck alone after SURFACE_CLAIMED) draws
+// GAME_HUD_MISSING as well.
 import { readFileSync } from 'node:fs'
 import { expect, it } from 'vitest'
 import { parseProbeFixture } from '../model.ts'
@@ -25,5 +27,5 @@ it('mentalist-haiku-claim-ask-only: the SURFACE_CLAIMED repair asks a game for i
   const meta = (i) => report.records[i].lines.map((l) => JSON.parse(l).a2uiMeta).find((m) => m?.trace !== undefined)
   expect(meta(0).trace).toMatchObject({ rounds: 3, failureCodes: ['GAME_HUD_MISSING', 'SEMANTIC_UNCORRECTED'] })
   expect(componentsOn(report.records[0].lines, 'ask-1')).toEqual(['OptionDeck'])
-  expect(meta(1).trace.failureCodes).toContain('SURFACE_CLAIMED')
+  expect(meta(1).trace).toMatchObject({ rounds: 3, failureCodes: ['GAME_HUD_MISSING', 'SEMANTIC_UNCORRECTED'] })
 })

@@ -946,3 +946,11 @@
 ## T-0475: Live round 15 measures T-0467 to T-0470 and the round 14 fails (2026-10-26)
 
 - note: the report's reproduction claims for W2, P4 and Y were checked only to the extent that the replays exit 1; the specific failed-check names and the source-reading claims (`gameAskHudCheck`, `GAME_WORDS`, `CHANGE_CLAIM_IN_REPLY`) were not independently traced.
+
+## T-0479: GAME_HUD_MISSING also judges a Negotiator offer card with no GameHud (2026-10-26)
+
+- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:476 decide: `requires: ['GameHud', 'OptionDeck']` still gates the check on OptionDeck while it now also judges AmountPicker, Slider, ChoiceGroup and OptionCompare (PLAY_CONTROLS :462), so a catalog holding GameHud and AmountPicker but no OptionDeck never runs it; every shipped game catalog holds both today.
+- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:485 note: the new model-read GAME_HUD_MISSING wording `the game's move card (its <control>)` was read by this Fable verifier (the ticket's Constraints ask a Fable review): the T-0468 deck sentence with the noun swapped, same repair instruction, nothing to change.
+- decide: .sdlc/tickets/0479-negotiator-hud-check/handoff.md:35 decide: the Done-when's false-positive sweep over the round 14 and 15 fixtures has no acceptance criterion (the builder authored the `## Acceptance criteria` block). Reran the builder's sweep.mjs on the built tree and at base (138 fixtures each, 0 ERROR): only r14 smoke-mentalist-first-answer-haiku-1 turn 1 and r15 smoke-negotiator-first-offer-haiku-1 turn 0 change, both gaining GAME_HUD_MISSING; the builder's before.txt is byte-identical to my base run.
+- decide: scripts/e2e-admin/probe/replays/negotiator-haiku-claim-amount-ask.json:1 note: three em dashes inside recorded model text (data, as in the other replay fixtures); no em dash in any added line of tracked code or prose (`git diff <base> | grep '^+' | grep '—'` empty).
+- decide: .sdlc/tickets/0479-negotiator-hud-check/handoff.md:19 note: the Repro line (`npm run chat:probe -- --replay .../smoke-negotiator-first-offer-haiku-1/fixture.json`) still exits 1 by design, as the builder reports: that fixture's steps expect a GameHud and no recorded round ships one; the keyless proof is the expect-free replay under replays/ (T-0468 precedent).
