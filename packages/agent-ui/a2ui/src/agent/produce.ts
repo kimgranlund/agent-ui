@@ -1268,9 +1268,10 @@ function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<strin
  *  "I added", "comes to $378", while a question ("would you like added?") claims nothing. T-0474: a sentence-initial
  *  "Added" that is a noun phrase with a modal ("Added fees may apply.") claims nothing. T-0478: so does a thing said to
  *  be in the order or cart ("The lamp is in your order at $189.", "It's in your cart"), while a question ("What's in your
- *  cart?") or "Nothing is in your order yet" claims nothing. */
+ *  cart?") or "Nothing is in your order yet" claims nothing. T-0481: nor does a description of it ("No items are in your order",
+ *  "Here's what's in your cart", "Everything that is in your order ships Tuesday"). */
 const CHANGE_CLAIM_IN_REPLY =
-  /(?:(?<!\bnothing\s?)(?:\b(?:is|are)|['’]s|['’]re)\s+(?:now\s+)?in your (?:order|cart|basket)\b(?![^.!?]*\?)|\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b|(?:^|[.!:]\s*)added\b(?!(?:\s+[\w-]+){1,2}\s+(?:may|might|can|could|will|would|shall|should|apply|applies)\b)|\bI(?:'ve| have)? added\b|\bcomes? to \$?\d)/i
+  /(?:(?<!\b(?:nothing|what|that|which|who|everything|anything|whatever)\s?)(?<!\bno\s+(?:[\w-]+\s+){0,2})(?:\b(?:is|are)|['’]s|['’]re)\s+(?:now\s+)?in your (?:order|cart|basket)\b(?![^.!?]*\?)|\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b|(?:^|[.!:]\s*)added\b(?!(?:\s+[\w-]+){1,2}\s+(?:may|might|can|could|will|would|shall|should|apply|applies)\b)|\bI(?:'ve| have)? added\b|\bcomes? to \$?\d)/i
 
 /** T-0299: `findings` plus every missing-composite finding an earlier round of this turn got (`bound`, by code) that
  *  `views` still leave unanswered, worded as still binding; then each new missing-composite finding is bound. A round

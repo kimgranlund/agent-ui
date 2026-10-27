@@ -961,3 +961,7 @@
 - decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:331 decide: `lacks` lists BookingForm and BookingConfirmation, but composite-moments.test.ts:1632-1635 exercises only the GameHud and StepFlow guards; the two booking guards have no bite proof.
 - decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:332 note: the `words` gate takes `total`, so a bill with a tip AmountPicker ("Tip ($)") beside a "Total" Text would fire CONFIRM_RECEIPT_MISSING; the tested tip negative has no order word.
 - decide: .sdlc/evals/rounds/2026-10-26-r15-pattern/runs/smoke-shopkeeper-browse-and-add-haiku-1/fixture.json note: the Repro fixtures still exit 1 under `chat:probe --replay` (the recorded model never built a receipt, builder's Open item); the acceptance criteria name the new authored replays, so this is not a fail.
+
+## T-0481: A reply that only mentions what is in the order is not a change claim (2026-10-27)
+
+- note: produce.ts:1274 the `(?<!\bno\s+(?:[\w-]+\s+){0,2})` lookbehind also suppresses "No problem, the lamp is in your order" style sentences only if within two words; acceptable but untested.
