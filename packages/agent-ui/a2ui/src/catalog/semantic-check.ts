@@ -130,6 +130,9 @@ export interface SemanticCheck {
    *  effective catalog declares every one (`gateChecksOnCatalog`), so a check attached to a domain never demands
    *  a type the turn cannot emit. Absent: the check runs on every turn it is resolved for. */
   readonly requires?: readonly string[]
+  /** T-0485: any-of twin of `requires`. When set, the check also needs at least one listed type in the catalog, so a check
+   *  that reads one of several interchangeable controls is dropped from a catalog that holds none of them. */
+  readonly requiresAny?: readonly string[]
   /** T-0401: types whose presence drops the check from a catalog (`gateChecksOnCatalog`), so a check can carry the
    *  repair for a catalog that lacks them while a twin that `requires` them carries the one for a catalog that holds them. */
   readonly unless?: readonly string[]
@@ -139,10 +142,10 @@ export interface SemanticCheck {
   holdsFlowOpen?(input: SemanticCheckInput): boolean
 }
 
-/** T-0202 (D4): the checks of `checks` whose `requires` types `catalog` all declares, in order. */
+/** T-0202 (D4): the checks of `checks` whose `requires` types `catalog` all declares (and, T-0485, at least one of whose `requiresAny`), in order. */
 export function gateChecksOnCatalog(checks: readonly SemanticCheck[], catalog: { readonly components: Readonly<Record<string, unknown>> }): readonly SemanticCheck[] {
   const has = (t: string): boolean => Object.hasOwn(catalog.components, t)
-  return checks.filter((c) => (c.requires ?? []).every(has) && !(c.unless ?? []).some(has))
+  return checks.filter((c) => (c.requires ?? []).every(has) && (c.requiresAny === undefined || c.requiresAny.some(has)) && !(c.unless ?? []).some(has))
 }
 
 export interface SemanticCheckResult {

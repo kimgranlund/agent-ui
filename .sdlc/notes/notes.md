@@ -988,3 +988,7 @@
 ## T-0484: A booking ask with two clock times does not draw ITINERARY_MISSING (2026-10-27)
 
 - note: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:269 the "schedule my <day>" list omits weekday names other than Fri-Sun; a plan worded "schedule our Tuesday" would no longer fire.
+
+## T-0485: SemanticCheck gains requiresAny, and the GameHud check gates on GameHud plus any play control (2026-10-27)
+
+- note: packages/agent-ui/a2ui/src/catalog/semantic-check.ts:148 gate is `requiresAny === undefined || some(has)`, so an empty `requiresAny: []` drops the check always; no caller sets it empty.
