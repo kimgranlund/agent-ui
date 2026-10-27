@@ -82,6 +82,8 @@ const deckOptions = (n: number): { value: string; title: string }[] =>
     .map((value) => ({ value, title: value[0]!.toUpperCase() + value.slice(1) }))
 const CONCIERGE = 'agent-ui--hospitality'
 const BASIC_CONCIERGE = 'a2ui-basic--hospitality'
+/** T-0480: the round 15 :150 say turn, a day plan of three timed stops. */
+const DAY_PLAN = 'Plan my Saturday 21 November 2026: breakfast at 08:00, the half-day coastal boat tour at 10:00 and dinner at Vela at 20:00.'
 const CROUPIER = 'agent-ui--croupier'
 const STYLIST = 'agent-ui--stylist'
 
@@ -333,6 +335,25 @@ const CONTRACTS: Record<string, Contract> = {
         { id: 'root', component: 'Card', children: ['t', 'when'] },
         { id: 't', component: 'Text', text: 'Your table is confirmed', variant: 'h4' },
         { id: 'when', component: 'Text', text: 'Friday at 8 pm, four guests' },
+      ]),
+    },
+  },
+  // T-0480: a day plan of timed stops is answered on ONE Itinerary, never with a party-size ask deck alone (round 15 :150).
+  'composite-moment-itinerary': {
+    code: 'ITINERARY_MISSING',
+    pass: {
+      catalog: CONCIERGE,
+      intent: DAY_PLAN,
+      output: surface('plan-1', CONCIERGE, [{ id: 'root', component: 'Itinerary', title: 'Your Saturday', days: { path: '/trip/days' } }], {
+        trip: { days: [{ label: 'Saturday 21 November', stops: [{ time: '08:00', label: 'Breakfast', status: 'pending' }, { time: '10:00', label: 'Half-day coastal boat tour', status: 'pending' }, { time: '20:00', label: 'Dinner at Vela', status: 'pending' }] }] },
+      }),
+    },
+    fail: {
+      catalog: CONCIERGE,
+      intent: DAY_PLAN,
+      output: surface('ask-1', CONCIERGE, [
+        { id: 'root', component: 'Column', children: ['party'] },
+        { id: 'party', component: 'OptionDeck', heading: 'How many guests?', actionName: 'choose', options: [{ value: '1', title: '1 guest' }, { value: '2', title: '2 guests' }, { value: '3', title: '3 guests' }, { value: '4', title: '4 guests' }] },
       ]),
     },
   },
@@ -915,6 +936,7 @@ const KNOWN_VOCABULARY_GAPS: Record<string, string> = {}
 const ROW_PROPS: Record<string, readonly string[]> = {
   BookingForm: ['fields', 'value'],
   BookingConfirmation: ['title', 'data', 'rows', 'label', 'path'],
+  Itinerary: ['title', 'days', 'label', 'stops'],
   BoardGrid: ['rows', 'cols', 'cells', 'actionName'],
   GameHud: ['title', 'status', 'stats'],
   ResultCard: ['outcome', 'title', 'summary', 'stats'],

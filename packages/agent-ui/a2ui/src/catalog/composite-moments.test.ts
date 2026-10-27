@@ -39,6 +39,11 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
     { id: 't', component: 'Text', text: 'Your table is confirmed', variant: 'h4' },
     { id: 'when', component: 'Text', text: 'Friday at 8pm' },
   ],
+  // T-0480: the round 15 :150 answer to a timed day plan, a party-size ask deck alone (read with DAY_PLAN, below).
+  Itinerary: [
+    { id: 'root', component: 'Column', children: ['party'] },
+    { id: 'party', component: 'OptionDeck', heading: 'How many guests?', actionName: 'choose', options: [{ value: '2', title: '2 guests' }] },
+  ],
   BoardGrid: [
     { id: 'root', component: 'Grid', children: ['c1', 'c2', 'c3'] },
     { id: 'c1', component: 'Button', label: 'A1' },
@@ -87,6 +92,7 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
 const COMPOSED: Record<string, A2uiComponent[]> = {
   BookingForm: [{ id: 'root', component: 'BookingForm', title: 'Reserve a table', fields: [] }],
   BookingConfirmation: [{ id: 'root', component: 'BookingConfirmation', title: 'Booking confirmed', rows: [] }],
+  Itinerary: [{ id: 'root', component: 'Itinerary', title: 'Your Saturday', days: { path: '/trip/days' } }],
   BoardGrid: [{ id: 'root', component: 'BoardGrid', rows: 3, cols: 3, cells: { path: '/cells' }, actionName: 'mark' }],
   GameHud: [
     { id: 'root', component: 'Column', children: ['hud', 'board'] },
@@ -126,7 +132,7 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
 }
 
 /** T-0377: a row with `notInside` and no hand-built detector is wrap-only; its hand-built shape is the wrapped composite. */
-const DETECTORS = ['words', 'inputs', 'readBack', 'inputCue', 'logOf', 'gridOf', 'tableColumn', 'pricedRows', 'boardless', 'has'] as const
+const DETECTORS = ['words', 'inputs', 'readBack', 'inputCue', 'logOf', 'gridOf', 'tableColumn', 'pricedRows', 'boardless', 'has', 'planned'] as const
 const wrapOnly = (m: CompositeMoment): boolean => m.notInside !== undefined && DETECTORS.every((k) => m[k] === undefined)
 
 const codeOf = (composite: string): string => {
@@ -134,11 +140,18 @@ const codeOf = (composite: string): string => {
   return `${composite.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_${wrapOnly(row) ? 'WRAPPED' : 'MISSING'}`
 }
 
+/** T-0480: the round 15 :150 say turn, a day plan of three timed stops. */
+const DAY_PLAN = 'Plan my Saturday 21 November 2026: breakfast at 08:00, the half-day coastal boat tour at 10:00 and dinner at Vela at 20:00.'
+/** T-0480: a `planned` row reads the guest's words, so its hand-built and composed surfaces are judged on that say turn. */
+const SAID: Record<string, string> = { Itinerary: DAY_PLAN }
+const saidCodes = (composite: string, components: A2uiComponent[]): string[] =>
+  runSemanticChecks(compositeMomentChecks, { surfaces: [view(components)], intent: SAID[composite] }).findings.map((f) => f.code)
+
 describe('composite moment checks (T-0208)', () => {
   for (const { composite } of COMPOSITE_MOMENTS) {
     it(`${composite}: the hand-built surface yields ${codeOf(composite)} alone and the composite surface yields none`, () => {
-      expect(codes(HAND_BUILT[composite]!)).toEqual([codeOf(composite)])
-      expect(codes(COMPOSED[composite]!)).toEqual([])
+      expect(saidCodes(composite, HAND_BUILT[composite]!)).toEqual([codeOf(composite)])
+      expect(saidCodes(composite, COMPOSED[composite]!)).toEqual([])
     })
   }
 
@@ -1221,7 +1234,7 @@ describe('composite moment checks (T-0208)', () => {
     expect(codes([...SPA_TABLE, table])).not.toContain('PRODUCT_CARD_MISSING')
   })
 
-  it('the catalog gate keeps the booking rows only on agent-ui--hospitality, the games, ProductCard and ConfirmReceipt rows on agent-ui, and none on a2ui-basic', () => {
+  it('the catalog gate keeps the booking and Itinerary rows only on agent-ui--hospitality, the games, ProductCard and ConfirmReceipt rows on agent-ui, and none on a2ui-basic', () => {
     const base = loadCatalog(defaultCatalogRaw)
     const concierge = composeCatalog(base, loadCatalogFragment(hospitalityFragmentRaw), 'hospitality')
     const basic = loadCatalog(basicCatalogRaw)
@@ -1229,7 +1242,7 @@ describe('composite moment checks (T-0208)', () => {
     const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-confirm-receipt', 'composite-moment-swatch']
     expect(ids(base)).toEqual(games)
     expect(concierge.catalogId).toBe('agent-ui--hospitality')
-    expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', ...games])
+    expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', 'composite-moment-itinerary', ...games])
     expect(ids(basic)).toEqual([])
   })
 
@@ -1242,6 +1255,7 @@ describe('composite moment checks (T-0208)', () => {
     expect(compositeMomentChecks.map((c) => c.id)).toEqual([
       'composite-moment-booking-form',
       'composite-moment-booking-confirmation',
+      'composite-moment-itinerary',
       'composite-moment-board-grid',
       'composite-moment-game-hud',
       'composite-moment-result-card',
@@ -1252,7 +1266,7 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-contrast-pair',
       'composite-prose-swatch',
     ])
-    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'CONFIRM_RECEIPT_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'ITINERARY_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'CONFIRM_RECEIPT_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })
@@ -1600,12 +1614,13 @@ describe('T-0478: an order or cart built by hand is CONFIRM_RECEIPT_MISSING', ()
     { id: 'root', component: 'Column', children: ['hud', 'offer'] },
     { id: 'hud', component: 'GameHud', title: 'The brass lantern', status: 'Round 1' },
     { id: 'offer', component: 'AmountPicker', label: 'Your offer ($)', value: 20, name: 'offer' },
-    { id: 'note', component: 'Text', text: 'Asking price $40, your total so far $0' },
+    // T-0480: an order word, since "total" alone no longer opens the gate; the GameHud guard holds the sheet.
+    { id: 'note', component: 'Text', text: 'Asking price $40, your order total so far $0' },
   ]
   const ROOM_WALK: A2uiComponent[] = [
     { id: 'root', component: 'StepFlow', children: ['guests'] },
     { id: 'guests', component: 'AmountPicker', label: 'Guests', value: 2, name: 'qty_guests' },
-    { id: 'sum', component: 'Text', text: 'Total for two nights: $480' },
+    { id: 'sum', component: 'Text', text: 'Order total for two nights: $480' },
   ]
 
   it('the finding names the AmountPicker line and asks for the receipt beside it, with no Button', () => {
@@ -1631,5 +1646,75 @@ describe('T-0478: an order or cart built by hand is CONFIRM_RECEIPT_MISSING', ()
   it('each lacks guard bites: with GameHud and StepFlow out of lacks the deal sheet and the room walk fire', () => {
     const open = compositeMomentCheck({ ...row, lacks: [] })
     for (const comps of [DEAL_SHEET, ROOM_WALK]) expect(open.check({ surfaces: [view(comps)] }).map((f) => f.code)).toEqual(['CONFIRM_RECEIPT_MISSING'])
+  })
+
+  // T-0480 (the T-0478 Fable review): "total" opened the gate, so a bill's tip AmountPicker beside its "Total" Text fired.
+  it('negative control: a bill with a tip AmountPicker beside a "Total" Text yields none', () => {
+    const BILL: A2uiComponent[] = [
+      { id: 'root', component: 'Column', children: ['title', 'tip', 'total'] },
+      { id: 'title', component: 'Text', text: 'Your bill', variant: 'h5' },
+      { id: 'tip', component: 'AmountPicker', label: 'Tip ($)', value: 6, name: 'tip' },
+      { id: 'total', component: 'Text', text: 'Total: $54.00' },
+    ]
+    expect(codes(BILL)).toEqual([])
+  })
+
+  // T-0480 (the T-0478 Fable review): the BookingForm and BookingConfirmation guards each bite on their own.
+  const PRE_ORDER: A2uiComponent[] = [
+    { id: 'root', component: 'Column', children: ['form', 'wine', 'note'] },
+    { id: 'form', component: 'BookingForm', title: 'Reserve a table', fields: [] },
+    { id: 'wine', component: 'AmountPicker', label: 'Bottles of house red ($40 each)', value: 1, name: 'qty_wine' },
+    { id: 'note', component: 'Text', text: 'Add wine to your order' },
+  ]
+  const SETTLED_EXTRAS: A2uiComponent[] = [
+    { id: 'root', component: 'Column', children: ['done', 'towels', 'note'] },
+    { id: 'done', component: 'BookingConfirmation', title: 'Booking confirmed', rows: [] },
+    { id: 'towels', component: 'AmountPicker', label: 'Extra towels (qty)', value: 2, name: 'qty_towels' },
+    { id: 'note', component: 'Text', text: 'Add to your order' },
+  ]
+  for (const [guard, comps] of [['BookingForm', PRE_ORDER], ['BookingConfirmation', SETTLED_EXTRAS]] as const) {
+    it(`the ${guard} guard bites: the surface yields none, and with ${guard} out of lacks it fires`, () => {
+      expect(codes([...comps])).not.toContain('CONFIRM_RECEIPT_MISSING')
+      expect(compositeMomentCheck(row).check({ surfaces: [view([...comps])] })).toEqual([])
+      const open = compositeMomentCheck({ ...row, lacks: row.lacks.filter((t) => t !== guard) })
+      expect(open.check({ surfaces: [view([...comps])] }).map((f) => f.code)).toEqual(['CONFIRM_RECEIPT_MISSING'])
+    })
+  }
+})
+
+describe('T-0480: a day plan of timed stops answered with no Itinerary is ITINERARY_MISSING', () => {
+  const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'Itinerary')!
+  const check = compositeMomentCheck(row)
+  const run = (intent: string | undefined, surfaces: SurfaceView[] = []) => check.check({ surfaces, intent }).map((f) => f.code)
+
+  it('the round 15 :150 prose round and its ask-deck repair each draw the finding; the ask deck is named so a repair may retire it', () => {
+    const [prose] = check.check({ surfaces: [], intent: DAY_PLAN })
+    expect(prose).toMatchObject({ code: 'ITINERARY_MISSING', path: 'intent:itinerary' })
+    expect(prose!.message).toContain('a plan of 3 timed stops, and this turn writes no Itinerary')
+    expect(prose!.message).toContain('Make it ONE Itinerary on a surface of its own')
+    expect(prose!.message).toContain('the turn declares no ask')
+    const [deck] = check.check({ surfaces: [view(HAND_BUILT['Itinerary']!, 'ask-1')], intent: DAY_PLAN })
+    expect(deck).toMatchObject({ code: 'ITINERARY_MISSING', path: 'ask-1:root' })
+    expect(deck!.message).toContain('ask-1 holds no Itinerary')
+  })
+
+  it('clock and am/pm times count, each distinct time once', () => {
+    expect(run('Plan my Sunday: brunch at 11am and the spa at 3 pm')).toEqual(['ITINERARY_MISSING'])
+    expect(run('Put together an itinerary: 9:30 museum, 13:00 lunch')).toEqual(['ITINERARY_MISSING'])
+    expect(run('Plan breakfast at 08:00 and a call at 08:00')).toEqual([])
+  })
+
+  it('negative controls: one timed stop, no plan word, prices, an action turn and a turn whose surface holds an Itinerary yield none', () => {
+    expect(run('Plan dinner at Vela at 20:00.')).toEqual([])
+    expect(run('Book a massage at 15:00 and a table at 20:00.')).toEqual([])
+    expect(run('Plan a picnic: sandwiches $12.50 and juice $3.75')).toEqual([])
+    expect(run(undefined)).toEqual([])
+    expect(check.check({ surfaces: [], intent: DAY_PLAN, action: { name: 'choose', surfaceId: 'ask-1', context: {}, dataModel: undefined } })).toEqual([])
+    expect(run(DAY_PLAN, [view(COMPOSED['Itinerary']!, 'plan-1')])).toEqual([])
+  })
+
+  it('the plan cue bites: with a cue that matches nothing, the day plan yields none', () => {
+    const open = compositeMomentCheck({ ...row, planned: { ...row.planned!, cue: /$^/ } })
+    expect(open.check({ surfaces: [], intent: DAY_PLAN })).toEqual([])
   })
 })
