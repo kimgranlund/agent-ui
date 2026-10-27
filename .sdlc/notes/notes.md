@@ -965,3 +965,10 @@
 ## T-0481: A reply that only mentions what is in the order is not a change claim (2026-10-27)
 
 - note: produce.ts:1274 the `(?<!\bno\s+(?:[\w-]+\s+){0,2})` lookbehind also suppresses "No problem, the lamp is in your order" style sentences only if within two words; acceptable but untested.
+
+## T-0482: GAME_HUD_MISSING runs without OptionDeck in the catalog, and grammar.md says every game ask turn keeps its HUD (2026-10-27)
+
+- note: packages/agent-ui/a2ui/src/agent/prompts/grammar.md:44-45 the new sentence starts on line 44 and wraps onto line 45 at the paragraph's column width, as the sentence before it does (43-44); the criterion's "line 44" names where it begins.
+- decide: packages/agent-ui/a2ui/src/catalog/hidden-state-checks.ts:476 the ticket's Expected said `requires` gates on GameHud plus any one PLAY_CONTROL; `SemanticCheck.requires` is all-of (semantic-check.ts:145), so the build gates on GameHud alone and the body's `PLAY_CONTROLS` lookup (line 483) supplies the play-control gate. The acceptance criteria hold as written; the builder's `requiresAny` idea is a new-ticket candidate, not owed here.
+- note: .sdlc/tickets/0482-hud-check-gate-and-grammar/handoff.md:40-45 the `## Acceptance criteria` block is builder-authored (the solo report says so); it covers Done-when 1 through 3 and this run judged it as written.
+- fix-now: .sdlc/notes/notes.md:929 the T-0468 decide item this ticket resolves still reads open; close it with the T-0482 ruling.

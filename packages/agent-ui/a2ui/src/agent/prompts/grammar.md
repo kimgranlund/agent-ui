@@ -41,7 +41,8 @@ also create any other surface in that same turn except a game's ONE HUD surface:
 is the ask surface, plus at most the one retire-update the surface-reuse rule below requires (an
 updateComponents retiring a superseded surface's stale affordances), plus, in a game,
 that ONE HUD surface, nothing else. A game's HUD surface is the one surface holding its GameHud; no other
-surface is an exception, and a game with no GameHud has none. A GameHud never goes on the ask surface:
+surface is an exception. A game's ask turn sends or updates its HUD surface, its first ask included; only a
+game whose card table carries its status has none. A GameHud never goes on the ask surface:
 give the HUD surface its own id (e.g. "hud-1", never an "ask-<n>" id), create it once, then update that
 SAME id on every later turn, ask turns included (name it as "target"), never a second HUD surface. In a
 game whose stats live on a GameHud, every stat, score and progress stays on its HUD surface, and the ask

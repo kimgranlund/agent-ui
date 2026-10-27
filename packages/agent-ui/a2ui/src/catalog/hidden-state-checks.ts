@@ -470,10 +470,12 @@ const PLAY_CONTROLS = ['OptionDeck', 'OptionCompare', 'AmountPicker', 'Slider', 
  * reply) opens a new surface holding a play control (`PLAY_CONTROLS`) while no GameHud is on this round's surfaces, on an
  * open surface, or anywhere the session showed one. A game that already has its HUD, a choice outside a game, or a
  * surface another check owns (a board, a card table, a booking) is never judged.
+ * T-0482: `requires` names GameHud alone, so a game catalog with any play control and no OptionDeck runs it; the
+ * play-control gate is the `PLAY_CONTROLS` lookup below, which finds nothing in a catalog that holds none.
  */
 export const gameAskHudCheck: SemanticCheck = {
   id: 'game-ask-hud',
-  requires: ['GameHud', 'OptionDeck'],
+  requires: ['GameHud'],
   check({ surfaces, action, intent, open, shownTypes, reply, persona }) {
     if (action !== undefined || intent === undefined) return []
     if (!GAME_HUD_PERSONAS.has(persona ?? '') && !GAME_WORDS.test(`${intent} ${reply ?? ''}`)) return []
