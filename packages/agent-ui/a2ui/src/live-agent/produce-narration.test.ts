@@ -332,6 +332,24 @@ describe('produce(): a targeted claim with no surface id, or a target never crea
     }
   })
 
+  // T-0478 (round 2026-10-26-r15-pattern :6): a thing said to be in the order or cart is an add claim too.
+  it('a targeted "is in your order" or "in your cart" claim gets CHANGE_CLAIMED with render_surface offered', async () => {
+    for (const text of ['The Brass Arc Floor Lamp is in your order at $189. Set the quantity below if you want more than one.', "It's in your cart.", 'Two lamps are now in your cart.']) {
+      const r = await runRounds([{ text: targeted(text, 'table-3') }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }])
+      expect(r.reqs, text).toHaveLength(2)
+      expect(r.reqs[1]!.toolChoice, text).toEqual({ name: 'render_surface' })
+      expect(r.trace, text).toMatchObject({ rounds: 2, failureCodes: ['CHANGE_CLAIMED'] })
+    }
+  })
+
+  it('a targeted question about the order or cart, or an empty one, claims nothing', async () => {
+    for (const text of ["What's in your cart?", 'Is the lamp in your order, or should I hold it?', 'Nothing is in your order yet.', 'Tap Add to order and it will show up in your order summary.']) {
+      const r = await runRounds([{ text: targeted(text, 'table-3') }])
+      expect(r.reqs, text).toHaveLength(1)
+      expect(r.trace.failureCodes, text).toEqual([])
+    }
+  })
+
   it('a targeted reply that only mentions an earlier add, or a thing that comes to mind, claims nothing', async () => {
     for (const text of ['Which lamp would you like added?', 'What comes to mind when you think of brass?', 'The Oak Column lamp is $98.', 'Added fees may apply.', 'Added taxes will apply at checkout.']) {
       const r = await runRounds([{ text: targeted(text, 'table-3') }])

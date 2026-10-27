@@ -70,6 +70,13 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
     { id: 'title', component: 'Text', text: 'A calm blue palette', variant: 'h4' },
     { id: 'list', component: 'Text', text: 'Primary navy #1f3a5f, secondary steel blue #4a6f8a, accent sky #9cc3e0' },
   ],
+  // T-0478: the round 15 :140 repair, an order Column of an AmountPicker line and a total Text.
+  ConfirmReceipt: [
+    { id: 'order', component: 'Column', children: ['title', 'line', 'total'] },
+    { id: 'title', component: 'Text', text: 'Your order', variant: 'h5' },
+    { id: 'line', component: 'AmountPicker', label: 'Brass Arc Floor Lamp ($189 each)', value: 2, name: 'qty_arc' },
+    { id: 'total', component: 'Text', text: 'Total: $378' },
+  ],
   // T-0377: a wrap-only row; its hand-built shape is the composite inside a Card.
   ContrastPair: [
     { id: 'root', component: 'Card', children: ['pair'] },
@@ -106,6 +113,11 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
     { id: 'note', component: 'Text', text: 'Navy #1f3a5f anchors the palette.' },
     { id: 'navy', component: 'Swatch', label: 'Primary navy', value: '#1f3a5f' },
     { id: 'blues', component: 'Ramp', label: 'Navy', steps: [{ label: '500', value: '#3d5f86' }] },
+  ],
+  ConfirmReceipt: [
+    { id: 'order', component: 'Column', children: ['receipt', 'line'] },
+    { id: 'receipt', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: { path: '/cart/qty' }, amount: { path: '/cart/amount' } }], totalPath: '/cart/total', status: 'pending' },
+    { id: 'line', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/cart/qty' } },
   ],
   ContrastPair: [
     { id: 'root', component: 'Column', children: ['pair'] },
@@ -1209,12 +1221,12 @@ describe('composite moment checks (T-0208)', () => {
     expect(codes([...SPA_TABLE, table])).not.toContain('PRODUCT_CARD_MISSING')
   })
 
-  it('the catalog gate keeps the booking rows only on agent-ui--hospitality, the games and ProductCard rows on agent-ui, and none on a2ui-basic', () => {
+  it('the catalog gate keeps the booking rows only on agent-ui--hospitality, the games, ProductCard and ConfirmReceipt rows on agent-ui, and none on a2ui-basic', () => {
     const base = loadCatalog(defaultCatalogRaw)
     const concierge = composeCatalog(base, loadCatalogFragment(hospitalityFragmentRaw), 'hospitality')
     const basic = loadCatalog(basicCatalogRaw)
     const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
-    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-swatch']
+    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-confirm-receipt', 'composite-moment-swatch']
     expect(ids(base)).toEqual(games)
     expect(concierge.catalogId).toBe('agent-ui--hospitality')
     expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', ...games])
@@ -1235,11 +1247,12 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-result-card',
       'composite-moment-timeline',
       'composite-moment-product-card',
+      'composite-moment-confirm-receipt',
       'composite-moment-swatch',
       'composite-moment-contrast-pair',
       'composite-prose-swatch',
     ])
-    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'CONFIRM_RECEIPT_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })
@@ -1578,5 +1591,45 @@ describe('a palette set out in the reply with no token surface is SURFACE_MISSIN
     expect(text('Order #482913 is confirmed, see issue #969')).toEqual([])
     expect(text('Accent #9cc3e0')).toEqual(['SWATCH_MISSING'])
     expect(text('Neutral grey #333333 for body text')).toEqual(['SWATCH_MISSING'])
+  })
+})
+
+describe('T-0478: an order or cart built by hand is CONFIRM_RECEIPT_MISSING', () => {
+  const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'ConfirmReceipt')!
+  const DEAL_SHEET: A2uiComponent[] = [
+    { id: 'root', component: 'Column', children: ['hud', 'offer'] },
+    { id: 'hud', component: 'GameHud', title: 'The brass lantern', status: 'Round 1' },
+    { id: 'offer', component: 'AmountPicker', label: 'Your offer ($)', value: 20, name: 'offer' },
+    { id: 'note', component: 'Text', text: 'Asking price $40, your total so far $0' },
+  ]
+  const ROOM_WALK: A2uiComponent[] = [
+    { id: 'root', component: 'StepFlow', children: ['guests'] },
+    { id: 'guests', component: 'AmountPicker', label: 'Guests', value: 2, name: 'qty_guests' },
+    { id: 'sum', component: 'Text', text: 'Total for two nights: $480' },
+  ]
+
+  it('the finding names the AmountPicker line and asks for the receipt beside it, with no Button', () => {
+    const [f] = runSemanticChecks(compositeMomentChecks, { surfaces: [view(HAND_BUILT['ConfirmReceipt']!, 'storefront-1')] }).findings
+    expect(f!.code).toBe('CONFIRM_RECEIPT_MISSING')
+    expect(f!.path).toBe('storefront-1:line')
+    expect(f!.message).toContain('Make it ONE ConfirmReceipt for the order, beside its AmountPicker lines')
+    expect(f!.message).toContain('so add no Button')
+  })
+
+  it('a quantity read from the name or the bound path counts, and a cart or basket word opens the gate', () => {
+    expect(codes([{ id: 'q', component: 'AmountPicker', label: 'Lamp', name: 'quantity' }, { id: 't', component: 'Text', text: 'Your cart' }])).toEqual(['CONFIRM_RECEIPT_MISSING'])
+    expect(codes([{ id: 'q', component: 'AmountPicker', label: 'Lamp', value: { path: '/cart/arc/qty' } }, { id: 't', component: 'Text', text: 'Basket' }])).toEqual(['CONFIRM_RECEIPT_MISSING'])
+  })
+
+  it('negative controls: a negotiator deal sheet (GameHud), a room booking walk (StepFlow), an amount with no order word and a guest count yield none', () => {
+    expect(codes(DEAL_SHEET)).toEqual([])
+    expect(codes(ROOM_WALK)).toEqual([])
+    expect(codes([{ id: 'tip', component: 'AmountPicker', label: 'Tip ($)', value: 5 }, { id: 't', component: 'Text', text: 'Thanks for dining with us' }])).toEqual([])
+    expect(codes([{ id: 'party', component: 'AmountPicker', label: 'Guests', value: 2 }, { id: 't', component: 'Text', text: 'Your order of service' }])).toEqual([])
+  })
+
+  it('each lacks guard bites: with GameHud and StepFlow out of lacks the deal sheet and the room walk fire', () => {
+    const open = compositeMomentCheck({ ...row, lacks: [] })
+    for (const comps of [DEAL_SHEET, ROOM_WALK]) expect(open.check({ surfaces: [view(comps)] }).map((f) => f.code)).toEqual(['CONFIRM_RECEIPT_MISSING'])
   })
 })
