@@ -264,7 +264,9 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       'and the turn declares no ask: what a booking still needs (the party size) waits until the guest books.',
     lacks: [],
     planned: {
-      cue: /\b(plan|planning|itinerary|schedule)\b/i,
+      // T-0484: "schedule" is a plan as a noun ("a schedule for Saturday") or of a span ("schedule my day"); as a booking verb
+      // ("schedule a massage at 15:00", "schedule the spa at 3pm") it asks for bookings, which the booking rows answer.
+      cue: /\b(plan|planning|itinerary)\b|\b(a|an|my|our|the|daily)\s+schedule\b|\bschedule\s+(my|our)\s+(day|days|trip|weekend|week|saturday|sunday|friday)\b/i,
       stop: /\b(?:[01]?\d|2[0-3]):[0-5]\d\b|\b(?:1[0-2]|0?[1-9])(?::[0-5]\d)?\s?(?:am|pm)\b/gi,
       min: 2,
     },

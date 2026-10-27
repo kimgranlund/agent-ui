@@ -1713,6 +1713,14 @@ describe('T-0480: a day plan of timed stops answered with no Itinerary is ITINER
     expect(run(DAY_PLAN, [view(COMPOSED['Itinerary']!, 'plan-1')])).toEqual([])
   })
 
+  // T-0484 (the T-0480 Fable verifier note): "schedule" as a booking verb is not a plan, however many clock times follow.
+  it('a booking ask with two clock times yields none, while a schedule of the day still does', () => {
+    expect(run('Schedule a massage at 15:00 and a taxi to the airport at 18:00.')).toEqual([])
+    expect(run('Can you schedule the spa at 3pm and dinner at 8pm for us?')).toEqual([])
+    expect(run('Schedule my day: breakfast at 8am and a hike at 10am')).toEqual(['ITINERARY_MISSING'])
+    expect(run('Build me a schedule for Saturday: brunch at 11:00 and the spa at 15:00')).toEqual(['ITINERARY_MISSING'])
+  })
+
   it('the plan cue bites: with a cue that matches nothing, the day plan yields none', () => {
     const open = compositeMomentCheck({ ...row, planned: { ...row.planned!, cue: /$^/ } })
     expect(open.check({ surfaces: [], intent: DAY_PLAN })).toEqual([])
