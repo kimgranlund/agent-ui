@@ -226,6 +226,15 @@ describe('semantic checks attach to their domain and self-gate on their types (D
     expect(gateChecksOnCatalog([ungated], defaultCatalog)).toEqual([ungated])
   })
 
+  it('T-0485: a requiresAny check runs with one listed type in the catalog and is dropped with none', () => {
+    const any: SemanticCheck = { id: 'any-of', requires: ['Dice'], requiresAny: ['Slider', 'Palette'], check: () => [] }
+    const cat = (...types: string[]) => ({ components: Object.fromEntries(types.map((t) => [t, {}])) })
+    expect(gateChecksOnCatalog([any], cat('Dice', 'Slider'))).toEqual([any])
+    expect(gateChecksOnCatalog([any], cat('Dice', 'Palette'))).toEqual([any])
+    expect(gateChecksOnCatalog([any], cat('Dice'))).toEqual([])
+    expect(gateChecksOnCatalog([any], cat('Slider'))).toEqual([])
+  })
+
   it('T-0401: a check is dropped on a catalog that declares any type it is gated unless', () => {
     const twin: SemanticCheck = { id: 'basic-only', unless: ['ConfirmReceipt'], check: () => [] }
     expect(Object.hasOwn(defaultCatalog.components, 'ConfirmReceipt')).toBe(true)

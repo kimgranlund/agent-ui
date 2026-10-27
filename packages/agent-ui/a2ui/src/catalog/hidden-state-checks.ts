@@ -459,7 +459,7 @@ export const fleetHudCheck: SemanticCheck = {
 export const GAME_HUD_PERSONAS: ReadonlySet<string> = new Set(['admiral', 'alchemist', 'dungeon-master', 'lexicographer', 'mentalist', 'negotiator'])
 /** T-0479: the controls a game's ask plays a move with: a pick deck, a pick card, an amount or a value. Not a TextField: the
  *  word game's guess field belongs on its board, which the word-game checks judge. */
-const PLAY_CONTROLS = ['OptionDeck', 'OptionCompare', 'AmountPicker', 'Slider', 'ChoiceGroup']
+const PLAY_CONTROLS: readonly string[] = ['OptionDeck', 'OptionCompare', 'AmountPicker', 'Slider', 'ChoiceGroup']
 
 /**
  * T-0468 (live round 14 cluster W, traces 2026-10-26.jsonl:7 and :8): Haiku 5.5 opened Twenty Questions note-only with an
@@ -470,12 +470,14 @@ const PLAY_CONTROLS = ['OptionDeck', 'OptionCompare', 'AmountPicker', 'Slider', 
  * reply) opens a new surface holding a play control (`PLAY_CONTROLS`) while no GameHud is on this round's surfaces, on an
  * open surface, or anywhere the session showed one. A game that already has its HUD, a choice outside a game, or a
  * surface another check owns (a board, a card table, a booking) is never judged.
- * T-0482: `requires` names GameHud alone, so a game catalog with any play control and no OptionDeck runs it; the
- * play-control gate is the `PLAY_CONTROLS` lookup below, which finds nothing in a catalog that holds none.
+ * T-0482: `requires` names GameHud alone, so a game catalog with any play control and no OptionDeck runs it.
+ * T-0485: `requiresAny` names `PLAY_CONTROLS`, so a catalog that holds a GameHud and no play control drops it; the lookup
+ * below still picks the control a surface holds.
  */
 export const gameAskHudCheck: SemanticCheck = {
   id: 'game-ask-hud',
   requires: ['GameHud'],
+  requiresAny: PLAY_CONTROLS,
   check({ surfaces, action, intent, open, shownTypes, reply, persona }) {
     if (action !== undefined || intent === undefined) return []
     if (!GAME_HUD_PERSONAS.has(persona ?? '') && !GAME_WORDS.test(`${intent} ${reply ?? ''}`)) return []
