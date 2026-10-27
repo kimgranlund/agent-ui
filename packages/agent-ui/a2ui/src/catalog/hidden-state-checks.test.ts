@@ -8,7 +8,7 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import type { A2uiComponent, A2uiOutput, A2uiServerMessage } from '../protocol.ts'
 import { boardlessMoveAppliedCheck, fleetConcedeCheck, fleetSecretCheck, gameAskHudCheck, fleetShotAppliedCheck, gradeGuess, HIDDEN_STATE_CHECKS, fleetHudCheck, wordMoveAppliedCheck, wordSecretCheck } from './hidden-state-checks.ts'
-import { semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
+import { gateChecksOnCatalog, semanticSurfaceViews, sessionSurfaceViews } from './semantic-check.ts'
 import type { SemanticAction, SemanticTurnLog } from './semantic-check.ts'
 
 type Turn = { role: string; content: string }
@@ -402,6 +402,15 @@ describe('T-0468: game-ask-hud', () => {
     expect(asPersona(undefined, offer('ask-1'))).toEqual([])
     expect(asPersona('negotiator', [...hud, ...offer('ask-1')])).toEqual([])
     expect(asPersona('negotiator', offer('ask-2'), [{ role: 'assistant', content: hud.map((m) => JSON.stringify(m)).join('\n') }])).toEqual([])
+  })
+
+  // T-0482: the check once required OptionDeck, so a game catalog with a play control but no OptionDeck never ran it.
+  it('T-0482: a game catalog with a play control and no OptionDeck still gets GAME_HUD_MISSING', () => {
+    const catalog = { components: { GameHud: {}, Card: {}, AmountPicker: {}, Button: {} } }
+    const gated = gateChecksOnCatalog(HIDDEN_STATE_CHECKS, catalog).find((c) => c.id === 'game-ask-hud')
+    const input = { surfaces: semanticSurfaceViews({ turns: [] }, offer('ask-1')), intent: 'Hi.', persona: 'negotiator' }
+    expect(gated?.check(input).map((f) => `${f.code} ${f.path}`)).toEqual(['GAME_HUD_MISSING ask-1:hud'])
+    expect(gateChecksOnCatalog(HIDDEN_STATE_CHECKS, { components: { AmountPicker: {} } }).map((c) => c.id)).not.toContain('game-ask-hud')
   })
 })
 
