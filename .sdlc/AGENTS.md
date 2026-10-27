@@ -1,4 +1,4 @@
-<!-- sdlc-lite:managed:start v1 sha256:d2c06504671a -->
+<!-- sdlc-lite:managed:start v1 sha256:d1361e0f983a -->
 # Work records
 
 This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders and `tickets/roadmap.md`), `work/` (task folders with no ticket), `notes/` (`notes/notes.md`), and `messages/`, beside `config` and `_templates/`. `tickets.py roadmap` (also run by `new` and `close`) generates this block: do not edit inside it; change a ticket's `handoff.md` front matter and rerun `roadmap`. `tickets/roadmap.md` lists every ticket in dependency order. Closed `.NNNN-*` folders are history: open one only when asked.
@@ -16,7 +16,7 @@ This folder holds SDLC Lite records in topic folders: `tickets/` (ticket folders
 - paused: 0
 - blocked: 1
   - T-0353 ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) (0353-foundations-final-cleanup)
-- done: 471
+- done: 473
 - dropped: 5
 
 ## Procedures

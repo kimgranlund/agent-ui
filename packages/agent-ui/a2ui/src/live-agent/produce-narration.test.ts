@@ -350,6 +350,15 @@ describe('produce(): a targeted claim with no surface id, or a target never crea
     }
   })
 
+  // T-0481 (T-0478 verifier probe): a reply that only describes the order ("No items", "what's in", "that is in") claims no add.
+  it('a targeted reply that only describes what is in the order or cart claims nothing', async () => {
+    for (const text of ['No items are in your order yet.', "Here's what's in your cart: two lamps.", 'Everything that is in your order ships Tuesday.']) {
+      const r = await runRounds([{ text: targeted(text, 'table-3') }])
+      expect(r.reqs, text).toHaveLength(1)
+      expect(r.trace.failureCodes, text).toEqual([])
+    }
+  })
+
   it('a targeted reply that only mentions an earlier add, or a thing that comes to mind, claims nothing', async () => {
     for (const text of ['Which lamp would you like added?', 'What comes to mind when you think of brass?', 'The Oak Column lamp is $98.', 'Added fees may apply.', 'Added taxes will apply at checkout.']) {
       const r = await runRounds([{ text: targeted(text, 'table-3') }])
