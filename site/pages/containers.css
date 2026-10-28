@@ -47,11 +47,11 @@
 
 /* A captioned specimen: the live container above the [attr] it demonstrates. T-0142: geometry from the levels,
    never hand-tabled: the card margin as padding, the widget gutter between specimen and caption, and the
-   concentric corner (a held card's radius plus the inset, ADR-0245 Amendment 5 item 3), so a card inside never
-   reads rounder than its frame. */
+   card-level corner. The figure holds controls and text directly, not an inner card, so it takes its own level's
+   radius and not the concentric one a wrapper around a card would (ADR-0245 Amendment 5 clause 3, Kim ruling 2026-10-28). */
 .demo-figure {
   --demo-figure-pad: var(--md-sys-card-margin, 1rem);
-  --demo-figure-radius: calc(var(--md-sys-card-radius, 0.75rem) + var(--demo-figure-pad));
+  --demo-figure-radius: var(--md-sys-card-radius, 0.75rem);
   display: flex;
   flex-direction: column;
   gap: var(--md-sys-widget-gutter, 0.5rem);
@@ -110,7 +110,7 @@
 }
 
 /* The shared event log for the interactive demos (tabs select · modal close/toggle). T-0142: the same level
-   tokens as .demo-figure (inset and corner), never hand-tabled rem. */
+   tokens as .demo-figure (inset and card-level corner), never hand-tabled rem. */
 .event-log {
   margin: var(--md-sys-widget-gutter, 0.5rem) 0 0;
   padding: var(--md-sys-card-margin, 1rem);
@@ -118,7 +118,7 @@
   max-block-size: 13rem;
   overflow-y: auto;
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: calc(var(--md-sys-card-radius, 0.75rem) + var(--md-sys-card-margin, 1rem));
+  border-radius: var(--md-sys-card-radius, 0.75rem);
   background: var(--md-sys-color-neutral-surface-low);
   font-family: var(--md-sys-typeface-mono);
   font-size: 0.8rem;
