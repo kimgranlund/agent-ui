@@ -1000,3 +1000,7 @@
 ## T-0492: site-authoring sitemap rule inverted back, docs/ shorthand paths and the roster-source rename fixed in skills and references (2026-10-28)
 
 - note: four added lines in the diff carry pre-existing em dashes on edited lines (e.g. state-and-persistence.md:78, content-types.md:114); no new em dash was introduced.
+
+## T-0488: Screenshot parity sweep: every control and site demo against the derived geometry and dogfood rules (2026-10-28)
+
+- note: handoff.md F1: `foundations-probe --strict` would red a correct tree until the probe CLASSES move onto `scripts/lib/foundations-model.mjs`; F2 and F4 are High-severity real defects worth the proposed G2 and G3 tickets.
