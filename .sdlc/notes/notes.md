@@ -1008,3 +1008,7 @@
 ## T-0493: foundations-probe reads its expected geometry from foundations-model.mjs, so it stops flagging a correct tree (2026-10-28)
 
 - note: the builder reported which tiers of the repo scale.mjs are still read elsewhere (foundations-model.mjs, generate-foundations.mjs, foundations.test.ts, many browser tests); this satisfies the Constraints report item, retirement is a separate ticket.
+
+## T-0496: list-demo at 400px keeps its row actions and badge labels whole (2026-10-28)
+
+- note: site/pages/list-demo.ts:33 fix uses inline style on the demo page rather than a control change, as the Constraints allow.
