@@ -56,6 +56,8 @@ describe('buildRequestBody per model: only accepted params are sent (T-0185)', (
 
   it.each(MODELS)('%s: every effort and settings combination validates against its row', (model) => {
     const row = capabilitiesFor(model)!
+    let effortHits = 0
+    let thinkingHits = 0
     for (const effort of EFFORTS) {
       for (const modelSettings of SETTINGS) {
         const body = buildRequestBody({ ...BASE, model, ...(effort ? { effort } : {}), modelSettings: modelSettings as never, tools: [{ name: 't', description: 'd', input_schema: { type: 'object' } }], toolChoice: { name: 't' } })
@@ -64,8 +66,12 @@ describe('buildRequestBody per model: only accepted params are sent (T-0185)', (
         for (const key of SAMPLING) expect(body[key], `${label}: ${key}`).toBeUndefined()
         const thinking = body['thinking'] as { type: 'adaptive' | 'disabled' | 'between_tools'; display?: string } | undefined
         const sentEffort = (body['output_config'] as { effort?: Effort } | undefined)?.effort
-        if (sentEffort !== undefined) expect(row.efforts, label).toContain(sentEffort)
+        if (sentEffort !== undefined) {
+          effortHits++
+          expect(row.efforts, label).toContain(sentEffort)
+        }
         if (thinking !== undefined) {
+          thinkingHits++
           expect(row.thinking[thinking.type], label).toBeDefined()
           expect(row.thinking[thinking.type], label).toContain(sentEffort ?? row.defaultEffort)
           if (thinking.display !== undefined) expect(row.displays, label).toContain(thinking.display)
@@ -77,6 +83,8 @@ describe('buildRequestBody per model: only accepted params are sent (T-0185)', (
         }
       }
     }
+    expect(effortHits, `${model}: anti-vacuous: some combination must send output_config.effort`).toBeGreaterThan(0)
+    expect(thinkingHits, `${model}: anti-vacuous: some combination must send thinking`).toBeGreaterThan(0)
   })
 
   it('the negative case: thinking disabled at xhigh on Haiku 5.5 is dropped before the call (adaptive sent instead)', () => {

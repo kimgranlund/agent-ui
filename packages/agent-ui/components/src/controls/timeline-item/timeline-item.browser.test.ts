@@ -282,7 +282,8 @@ describe('ui-timeline-item — nested content ARIA (ADR-0143 F5, zero new machin
     // the native <details> is open — the descendant is a REAL, focusable/reachable part of the tree
     expect(innerItem.checkVisibility ? innerItem.checkVisibility() : true, 'the nested item must be visible while open').toBe(true)
     const details = item.querySelector('[data-part="detail"] details, [data-part="detail"] [data-part="details"]')
-    if (details) expect((details as HTMLDetailsElement).open).toBe(true)
+    expect(details, 'anti-vacuous: the item must build its details part').not.toBeNull()
+    expect((details as HTMLDetailsElement).open).toBe(true)
   })
 
   it('a CLOSED item\'s nested descendants are absent from both the accessibility tree and the tab order (the native <details> guarantee)', () => {

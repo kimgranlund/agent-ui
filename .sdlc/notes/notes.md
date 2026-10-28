@@ -1090,3 +1090,7 @@
 ## T-0490: Consumer CSS recipes and package READMEs load the foundations sheets, pin the current version and list every export (2026-10-28)
 
 - note: AGENTS.md:23 and AGENTS.md:59 updated per Context; no added line in the diff contains an em dash in the touched docs (only pre-existing ones in unchanged lines).
+
+## T-0510: Null and zero guards in browser tests become anti-vacuous asserts (2026-10-28)
+
+- note: verifier did not re-run the builder's per-file mutations; bite rests on the diff making each assert unconditional plus the builder's mutation log.

@@ -29,7 +29,7 @@ describe('genuiPackLibrary(GENUI_PACKS) → validateNewEntry — the D4 round tr
 
   it('a slug collision (two packs sharing a label) still resolves via the suffix-counter law, never a rejection', () => {
     const library = genuiPackLibrary(GENUI_PACKS)
-    if (library.length < 2) return // the registry may grow; this leg only matters once ≥2 packs exist
+    expect(library.length, 'anti-vacuous: the collision leg needs at least two shipped packs').toBeGreaterThanOrEqual(2)
     const [first, second] = library
     const firstResult = validateNewEntry([], ENTRY_KINDS.patternSource, first!.entries[0]!)
     expect(firstResult.ok).toBe(true)
