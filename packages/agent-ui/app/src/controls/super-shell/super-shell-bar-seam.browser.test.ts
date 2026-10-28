@@ -336,7 +336,9 @@ describe('ADR-0166 cl.5 — the INERT arm (a bars-free shell) is untouched by th
   for (const shape of SHAPES) {
     it(`${shape.label}: every carded part keeps all FOUR corners round, and middle fills the frame exactly`, () => {
       const el = mount(shape.slots)
-      for (const card of el.querySelectorAll<HTMLElement>('[data-part="pane"], [data-part="rail"]')) {
+      const cards = el.querySelectorAll<HTMLElement>('[data-part="pane"], [data-part="rail"]')
+      expect(cards.length, 'anti-vacuous').toBeGreaterThan(0)
+      for (const card of cards) {
         expectCorners(card, { start: ROUND, end: ROUND }, `${shape.label} · ${card.getAttribute('data-part')}`)
       }
       const frame = q(el, '[data-part="frame"]').getBoundingClientRect()

@@ -1111,3 +1111,7 @@
 ## T-0513: The a2ui-live render-lint negative control picks a fixed literal that is not the 12px card radius, so it passes again on main (2026-10-28)
 
 - note: scripts/reap-scratch-clones.mjs selftest discovery count flaked once under concurrent load (9 vs 17); not caused by this diff.
+
+## T-0511: Assert-in-loop tests assert their item count first (2026-10-28)
+
+- note: no em dashes in added lines (the em dashes in the diff context are pre-existing describe titles).

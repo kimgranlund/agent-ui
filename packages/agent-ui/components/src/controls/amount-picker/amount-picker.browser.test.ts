@@ -165,7 +165,9 @@ describe('ui-amount-picker: geometry at widget md', () => {
     const h = WIDGET.height
     expect(h).toBe(24)
     for (const name of ['decrease', 'increase', 'readout', 'commit']) expect(rect(part(el, name)).height).toBe(h)
-    for (const chip of el.querySelectorAll('[data-part="preset"]')) expect(rect(chip).height).toBe(h)
+    const chips = el.querySelectorAll('[data-part="preset"]')
+    expect(chips.length, 'anti-vacuous').toBe(4)
+    for (const chip of chips) expect(rect(chip).height).toBe(h)
     expect(rect(part(el, 'decrease')).width).toBe(h)
     expect(rect(part(el, 'increase')).width).toBe(h)
     const svg = part(el, 'decrease').querySelector('svg')!

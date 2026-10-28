@@ -216,7 +216,9 @@ describe('ui-command-modal — control-created parts (idempotent) + ARIA', () =>
 
   it('options get stable ids assigned at connect (for aria-activedescendant)', () => {
     const { list, el } = makePalette([option('a', 'Alpha'), option('b', 'Beta')])
-    for (const opt of list.querySelectorAll<HTMLElement>('[role=option]')) expect(opt.id).toBeTruthy()
+    const opts = list.querySelectorAll<HTMLElement>('[role=option]')
+    expect(opts.length, 'anti-vacuous').toBe(2)
+    for (const opt of opts) expect(opt.id).toBeTruthy()
     el.remove()
   })
 

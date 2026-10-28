@@ -303,7 +303,9 @@ describe('ui-select — option groups (select-groups)', () => {
 
   it('select-groups: the group is named for AT via aria-labelledby → its header; the `label` attr is consumed', () => {
     const { el, listbox } = makeSelect(GROUPED_OPTIONS)
-    for (const group of listbox.querySelectorAll<HTMLElement>(':scope > [role=group]')) {
+    const groups = listbox.querySelectorAll<HTMLElement>(':scope > [role=group]')
+    expect(groups.length, 'anti-vacuous').toBe(2)
+    for (const group of groups) {
       const ref = group.getAttribute('aria-labelledby')
       expect(ref).toBeTruthy()
       const header = listbox.querySelector(`#${ref}`)
@@ -775,7 +777,9 @@ describe('ui-select — value-keyed aria-selected reflect (select-aria-selected-
     const { el, listbox } = makeSelect()
     await whenFlushed()
     // Nothing selected yet — every option starts unmarked.
-    for (const opt of listbox.querySelectorAll('[role=option]')) {
+    const opts = listbox.querySelectorAll('[role=option]')
+    expect(opts.length, 'anti-vacuous').toBe(3)
+    for (const opt of opts) {
       expect(opt.getAttribute('aria-selected')).toBe('false')
     }
 

@@ -198,7 +198,9 @@ describe('mountEntryList — availabilityToggle (SPEC-R2)', () => {
     const section = mountEntryList('resource', 'Add resource', sink)
     section.render([ROW, { ...ROW, id: 'other', availability: 'invocable' }])
     expect(availabilityOf(section), 'no control mounts').toBeNull()
-    for (const row of section.host.querySelectorAll('[data-part="entry"]')) {
+    const rows = section.host.querySelectorAll('[data-part="entry"]')
+    expect(rows.length, 'anti-vacuous').toBe(2)
+    for (const row of rows) {
       // Even a row whose STORED entry is invocable renders unmarked here: availability is inert for a kind
       // that never opted in (SPEC-R1's four-kinds-only clause), and the row's attribute set is unchanged.
       expect(row.hasAttribute('data-availability')).toBe(false)
