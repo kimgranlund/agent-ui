@@ -25,6 +25,8 @@ class ProbeSwitch extends UISwitchElement {
 }
 customElements.define('ui-switch-probe', ProbeSwitch)
 
+const noStates = !('states' in ElementInternals.prototype)
+
 /** Stub the form-association members absent in jsdom (setFormValue / setValidity) BEFORE connect. */
 function stubFormAssoc(internals: ElementInternals): void {
   const i = internals as unknown as Record<string, unknown>
@@ -97,16 +99,12 @@ describe('UISwitchElement (S2 jsdom probes)', () => {
     el.remove()
   })
 
-  it('switch-state-checked: :state(checked) is set when checked=true, cleared when false (CustomStateSet)', () => {
+  // jsdom has no CustomStateSet: these two report as skipped there; the browser legs prove the states
+  // (switch.browser.test.ts, answered-state.browser.test.ts). ariaChecked is the jsdom-accessible proxy.
+  it.skipIf(noStates)('switch-state-checked: :state(checked) is set when checked=true, cleared when false (CustomStateSet)', () => {
     const el = makeProbe()
     document.body.append(el)
     const states = el.probeInternals.states
-    if (!states) {
-      // jsdom may not implement CustomStateSet; the browser smoke (switch.browser.test.ts) proves the state.
-      // The checked-state effect in UIIndicatorElement still RUNS and sets ariaChecked (the jsdom-accessible proxy).
-      el.remove()
-      return
-    }
     expect(states.has('checked')).toBe(false)
     el.checked = true
     expect(states.has('checked')).toBe(true)
@@ -115,14 +113,10 @@ describe('UISwitchElement (S2 jsdom probes)', () => {
     el.remove()
   })
 
-  it('switch-state-answered: :state(answered) is set when answered=true, cleared when false (ADR-0196)', () => {
+  it.skipIf(noStates)('switch-state-answered: :state(answered) is set when answered=true, cleared when false (ADR-0196)', () => {
     const el = makeProbe()
     document.body.append(el)
     const states = el.probeInternals.states
-    if (!states) {
-      el.remove()
-      return
-    }
     expect(states.has('answered')).toBe(false)
     el.answered = true
     expect(states.has('answered')).toBe(true)

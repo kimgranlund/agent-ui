@@ -56,6 +56,9 @@ class ProbeMultiSelect extends UIMultiSelectElement {
 }
 customElements.define('ui-multi-select-probe', ProbeMultiSelect)
 
+// jsdom has no CustomStateSet: tests gated on it report as skipped there; the browser legs prove those states.
+const noStates = !('states' in ElementInternals.prototype)
+
 // ── Helpers ─────────────────────────────────────────────────────────────────────────────────────────
 
 const STD_OPTIONS = `
@@ -415,15 +418,15 @@ describe('ui-multi-select — disabled (ms-disabled)', () => {
     el.remove()
   })
 
-  it('ms-disabled: :state(disabled) mirrors effectiveDisabled (own OR ancestor <fieldset disabled>) — CustomStateSet is absent in jsdom (capability-gated, the checkbox.test.ts precedent); the real :state() paint is a browser-leg proof', async () => {
+  it.skipIf(noStates)('ms-disabled: :state(disabled) mirrors effectiveDisabled (own OR ancestor <fieldset disabled>); skipped in jsdom (no CustomStateSet), the real :state() paint is a browser-leg proof', async () => {
     const { el } = makeMultiSelect()
     el.formDisabledCallback(true) // an ancestor <fieldset disabled> — the platform calls this directly
     await whenFlushed()
-    if (el.probeInternals.states) expect(el.probeInternals.states.has('disabled')).toBe(true)
+    expect(el.probeInternals.states.has('disabled')).toBe(true)
 
     el.formDisabledCallback(false)
     await whenFlushed()
-    if (el.probeInternals.states) expect(el.probeInternals.states.has('disabled')).toBe(false)
+    expect(el.probeInternals.states.has('disabled')).toBe(false)
     el.remove()
   })
 })
@@ -431,15 +434,15 @@ describe('ui-multi-select — disabled (ms-disabled)', () => {
 // ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
 
 describe('ui-multi-select — :state(answered) (ADR-0196)', () => {
-  it('ms-answered-state: setting `answered` adds the custom state; clearing it removes it (capability-gated)', async () => {
+  it.skipIf(noStates)('ms-answered-state: setting `answered` adds the custom state; clearing it removes it (capability-gated)', async () => {
     const { el } = makeMultiSelect()
     el.answered = true
     await whenFlushed()
-    if (el.probeInternals.states) expect(el.probeInternals.states.has('answered')).toBe(true)
+    expect(el.probeInternals.states.has('answered')).toBe(true)
 
     el.answered = false
     await whenFlushed()
-    if (el.probeInternals.states) expect(el.probeInternals.states.has('answered')).toBe(false)
+    expect(el.probeInternals.states.has('answered')).toBe(false)
     el.remove()
   })
 

@@ -123,25 +123,24 @@ describe('UIToggleElement — pressed round-trip', () => {
 
 // ── :state(pressed)/:state(ready) (capability-gated) ─────────────────────────────────────────────
 
+// jsdom has no CustomStateSet: the states tests below report as skipped there; the browser leg proves them.
+const noStates = !('states' in ElementInternals.prototype)
+
 describe('UIToggleElement — custom states (capability-gated)', () => {
-  it(':state(pressed) present when pressed', async () => {
+  it.skipIf(noStates)(':state(pressed) present when pressed', async () => {
     const el = make()
     document.body.append(el)
     el.pressed = true
     await el.updateComplete
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('pressed')).toBe(true)
-    }
+    expect(el.probeInternals.states.has('pressed')).toBe(true)
     el.remove()
   })
 
-  it(':state(pressed) absent when unpressed', async () => {
+  it.skipIf(noStates)(':state(pressed) absent when unpressed', async () => {
     const el = make()
     document.body.append(el)
     await el.updateComplete
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('pressed')).toBe(false)
-    }
+    expect(el.probeInternals.states.has('pressed')).toBe(false)
     el.remove()
   })
 })

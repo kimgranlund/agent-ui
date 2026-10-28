@@ -950,3 +950,30 @@ describe('ui-status-stream — :state(settled) against the real platform (GH #72
     style.remove()
   })
 })
+
+// T-0509: the real-engine proof of the ADR-0191 `:state(pending)` wiring. The jsdom suite's
+// `states.has('pending')` tests are skipped there (jsdom has no CustomStateSet).
+describe('ui-status-stream: :state(pending) against the real platform (ADR-0191, T-0509)', () => {
+  it('a Promise source arms :state(pending) while in flight and clears it once settled; null clears it too', async () => {
+    const el = document.createElement('ui-status-stream') as UIStatusStreamElement
+    document.body.append(el)
+    mounted.push(el)
+    await raf2()
+    expect(el.matches(':state(pending)'), 'no source attached yet').toBe(false)
+
+    let resolve!: (v: string) => void
+    el.setPendingSource(new Promise<string>((r) => (resolve = r)))
+    await raf2()
+    expect(el.matches(':state(pending)'), 'an in-flight source must arm pending').toBe(true)
+    resolve('chunk')
+    await raf2()
+    expect(el.matches(':state(pending)'), 'a settled source must clear pending').toBe(false)
+
+    el.setPendingSource(new Promise(() => {})) // never settles on its own
+    await raf2()
+    expect(el.matches(':state(pending)')).toBe(true)
+    el.setPendingSource(null)
+    await raf2()
+    expect(el.matches(':state(pending)'), 'setPendingSource(null) must clear pending').toBe(false)
+  })
+})

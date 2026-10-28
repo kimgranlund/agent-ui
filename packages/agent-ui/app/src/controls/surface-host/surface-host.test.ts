@@ -885,7 +885,7 @@ describe('ui-surface-host — viewTransitions wraps RE-RENDERS only (GH #742/ADR
 
 describe('ui-surface-host — `working` prop → :state(working) mirror (ADR-0199)', () => {
   // The protected-internals probe subclass (the split.test.ts/drill.test.ts idiom) — jsdom may lack
-  // CustomStateSet, so the states assertion is capability-gated (`?.`); the NON-VACUOUS floor below is
+  // CustomStateSet, so the states test reports as skipped there (`it.skipIf`); the NON-VACUOUS floor below is
   // the reflected attribute (always assertable under jsdom), and the real :state() selector proof is
   // surface-host-working.browser.test.ts's (the jsdom-vacuity lesson).
   class ProbeSurfaceHost extends UISurfaceHostElement {
@@ -894,6 +894,7 @@ describe('ui-surface-host — `working` prop → :state(working) mirror (ADR-019
     }
   }
   if (!customElements.get('zz-probe-surface-host')) customElements.define('zz-probe-surface-host', ProbeSurfaceHost)
+  const noStates = !('states' in ElementInternals.prototype) // jsdom: reports as skipped, never a silent pass
 
   it('`working` defaults to false and reflects to the attribute', async () => {
     const el = mount(document.createElement('zz-probe-surface-host') as ProbeSurfaceHost)
@@ -907,18 +908,14 @@ describe('ui-surface-host — `working` prop → :state(working) mirror (ADR-019
     expect(el.hasAttribute('working')).toBe(false)
   })
 
-  it('mirrors the prop into internals.states (capability-gated; browser leg carries the real-engine proof)', async () => {
+  it.skipIf(noStates)('mirrors the prop into internals.states (capability-gated; browser leg carries the real-engine proof)', async () => {
     const el = mount(document.createElement('zz-probe-surface-host') as ProbeSurfaceHost)
     el.working = true
     await whenFlushed()
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('working')).toBe(true)
-    }
+    expect(el.probeInternals.states.has('working')).toBe(true)
     el.working = false
     await whenFlushed()
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('working')).toBe(false)
-    }
+    expect(el.probeInternals.states.has('working')).toBe(false)
   })
 })
 

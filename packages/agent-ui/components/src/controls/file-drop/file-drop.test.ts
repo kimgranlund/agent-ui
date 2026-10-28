@@ -49,6 +49,9 @@ class ProbeFileDrop extends UIFileDropElement {
 }
 customElements.define('ui-file-drop-probe', ProbeFileDrop)
 
+// jsdom has no CustomStateSet: tests gated on it report as skipped there; the browser legs prove those states.
+const noStates = !('states' in ElementInternals.prototype)
+
 function makeFileDrop(): { el: ProbeFileDrop } {
   const el = new ProbeFileDrop()
   stubFormAssoc(el.probeInternals)
@@ -99,12 +102,21 @@ describe('ui-file-drop — the unwired-host state (fd-unwired-disabled, ADR-0210
     const { el } = makeFileDrop()
     await whenFlushed()
     await new Promise((r) => requestAnimationFrame(() => r(undefined)))
-    // CustomStateSet is absent in jsdom (capability-gated, the checkbox.test.ts precedent) — the real
-    // :state() paint is a browser-leg proof (file-drop.browser.test.ts).
-    if (el.probeInternals.states) expect(el.probeInternals.states.has('disabled')).toBe(true)
     expect(el.probeInternals.ariaDisabled).toBe('true')
     const hint = el.querySelector('[data-part="hint"]')!
     expect(hint.textContent).toBe('File attachment is not available here.')
+    el.remove()
+  })
+
+  // CustomStateSet is absent in jsdom, so the two state halves report as skipped there; the real
+  // :state() proof is the browser leg (file-drop.browser.test.ts).
+  it.skipIf(noStates)('fd-unwired-disabled: no `intake` ⇒ :state(disabled); registering `intake` clears it', async () => {
+    const { el } = makeFileDrop()
+    await whenFlushed()
+    expect(el.probeInternals.states.has('disabled')).toBe(true)
+    el.intake = oneIntake()
+    await whenFlushed()
+    expect(el.probeInternals.states.has('disabled')).toBe(false)
     el.remove()
   })
 
@@ -113,7 +125,6 @@ describe('ui-file-drop — the unwired-host state (fd-unwired-disabled, ADR-0210
     await whenFlushed()
     el.intake = oneIntake()
     await whenFlushed()
-    if (el.probeInternals.states) expect(el.probeInternals.states.has('disabled')).toBe(false)
     expect(el.probeInternals.ariaDisabled).toBeNull()
     const hint = el.querySelector('[data-part="hint"]')!
     expect(hint.textContent).toBe('Drop files here, or browse')
@@ -159,15 +170,15 @@ describe('ui-file-drop — the commit path (fd-intake-commit · fd-picker-commit
     el.remove()
   })
 
-  it('fd-drop-commit: dragenter/dragleave toggle :state(dragging); drop clears it', async () => {
+  it.skipIf(noStates)('fd-drop-commit: dragenter/dragleave toggle :state(dragging); drop clears it', async () => {
     const { el } = makeFileDrop()
     el.intake = oneIntake()
     await whenFlushed()
     el.dispatchEvent(new Event('dragenter', { bubbles: true, cancelable: true }))
-    if (el.probeInternals.states) expect(el.probeInternals.states.has('dragging')).toBe(true)
+    expect(el.probeInternals.states.has('dragging')).toBe(true)
     fireWithFiles(el, 'drop', 'dataTransfer', [file('c.txt')])
     await whenFlushed()
-    if (el.probeInternals.states) expect(el.probeInternals.states.has('dragging')).toBe(false)
+    expect(el.probeInternals.states.has('dragging')).toBe(false)
     el.remove()
   })
 

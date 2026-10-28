@@ -1066,3 +1066,9 @@
 ## T-0500: chat:probe fails a turn whose page renderer rejects the payload (VALIDATION_FAILED), not just the server check (2026-10-28)
 
 - note: scripts/e2e-admin/probe/model.ts: the check emits `skip` for every turn in an offline replay with no rejection row. Per the docs it is intentional, and the other offline-only checks behave the same way.
+
+## T-0509: Real-engine :state() proof for answered, pending, dragging, checked and indeterminate; jsdom state guards report as skipped (2026-10-28)
+
+- note: packages/agent-ui/components/src/controls/_base/indicator-element.ts:158 (base `checked` add used by ui-switch) has no real-engine leg; mutating it alone does not red the checkbox leg because checkbox.ts re-adds it (builder's own finding). Outside H1's list, so not a criterion failure.
+- note: packages/agent-ui/components/src/controls/status-stream/status-stream.test.ts:1346 still carries a jsdom-optional `finalize()` test that asserts only `not.toThrow()` for `:state(settled)`; the real-engine settled leg exists at status-stream.browser.test.ts (GH #72x), so it is not a silent guard.
+- note: no `red-checkpoint` process deviation was printed by redck.py; no criterion is tagged `(red)`.
