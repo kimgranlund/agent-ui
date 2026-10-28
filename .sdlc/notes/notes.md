@@ -1081,3 +1081,8 @@
 ## T-0514: The archived changelog's ADR-0242 link resolves, so docs_check passes on main (2026-10-28)
 
 - note: docs_check.py is exit 0 at base 833bd7dd6 too; the broken-link signal comes from verify_scope's link report, not docs_check.
+
+## T-0512: Early-exit tests pin the throw or the ok, and the drill reduced-motion test asserts the real duration (2026-10-28)
+
+- note: packages/agent-ui/app/src/controls/agent-admin/skill-pack-opt-in.test.ts:207 the new comment contains an em dash ("composes — so").
+- note: other `if (!x.ok) return` sites in skill-pack-opt-in.test.ts and agent-admin-persona-file.test.ts remain unpinned, outside this ticket's three named spots.

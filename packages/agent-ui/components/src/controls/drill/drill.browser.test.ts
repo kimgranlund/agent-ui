@@ -169,15 +169,22 @@ describe('ui-drill — focus moves to the incoming panel heading on a real path 
 })
 
 describe('ui-drill — reduced motion suppresses the CSS-transform base (media-query gate present)', () => {
-  it('the panel viewport carries a transition declaration that is neutralized under prefers-reduced-motion', () => {
+  it('the active panel carries a real transition declaration that is neutralized to 0s under prefers-reduced-motion', async () => {
     const { host } = mount()
-    const settings = host.querySelector('[key="settings"]') as HTMLElement
-    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
-    const transition = getComputedStyle(settings).transitionDuration
-    // Under a real reduced-motion emulation this would read '0s'; absent explicit CDP emulation in this
-    // environment we assert the declaration exists at all (anti-vacuous) rather than assume the OS state.
-    expect(typeof transition).toBe('string')
-    void reduced
+    const root = host.querySelector('[key="root"]') as HTMLElement
+    // Normal motion: the base rule declares opacity/transform/display/overlay transitions at the fast motion duration.
+    const normal = getComputedStyle(root).transitionDuration
+    expect(normal.split(',').every((d) => d.trim() === '0s'), `transition declaration missing, got "${normal}"`).toBe(false)
+    if (server.browser !== 'chromium') return // the reduced-motion emulation leg is Chromium-only (CDP), the status-stream precedent
+    const session = cdp() as unknown as CdpSession
+    await session.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
+    try {
+      expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).toBe(true)
+      const reduced = getComputedStyle(root).transitionDuration
+      expect(reduced.split(',').every((d) => d.trim() === '0s'), `transition not neutralized, got "${reduced}"`).toBe(true)
+    } finally {
+      await session.send('Emulation.setEmulatedMedia', { features: [] })
+    }
   })
 
   it('cl.A7 — the ancestor dim wash is STATIC, never motion: no transition on the ::after scrim', async () => {
