@@ -26,7 +26,7 @@ out-of-order tolerance (`renderer/tree.ts`, runtime SPEC-R3/R4/N1), validate-at-
 | **LLD-C3** | Transport abstraction + stdio | SPEC-R3, R8 | `src/stream/transport.ts` + `tools/pipeline/stdio.ts` | runtime (iface) / dev (stdio) | unbuilt |
 | **LLD-C4** | AG-UI adapter | SPEC-R4 | `tools/pipeline/transports/ag-ui.ts` | dev/server | unbuilt |
 | **LLD-C5** | A2A adapter | SPEC-R5 | `tools/pipeline/transports/a2a.ts` | dev/server | **REALIZED (2026-07-08, B6)** — by the A2A family's bridge build ([`./a2a-a2ui-bridge.lld.md`](./a2a-a2ui-bridge.lld.md), its LLD-C1/C2), at the exact planned path, on the `@agent-ui/a2a` substrate: `envelopeToPart`/`partToEnvelope`/`wrapServerTurn`/`unwrapTurn`/`wrapClientTurn`, one envelope per tagged DataPart, `a2uiClientCapabilities` on every client→server message (HV-8). SPEC-R5 stays this family's contract; acceptance is proven by that build's `bridge.test.ts` (SPEC-R16 AC1) |
-| **LLD-C6** | MCP server | SPEC-R6 | `tools/pipeline/mcp-server.ts` | dev/CLI | unbuilt · blocked by corpus store (retrieve/admit) |
+| **LLD-C6** | MCP server | SPEC-R6 | `tools/pipeline/mcp-server.ts` | dev/CLI | unbuilt by choice (the corpus store's `retrieve.ts` and `admit.ts` exist, so nothing blocks it; the streaming producer scope is deliberately deferred, see [`./a2ui-harness-wiring.lld.md`](./a2ui-harness-wiring.lld.md)) |
 | **LLD-C7** | Conformance/negotiation | SPEC-R7, N3 | `src/stream/conformance.ts` | runtime | unbuilt |
 
 **Split (SPEC-N2):** `src/stream/{codec,transport,conformance}.ts` are zero-dep runtime; the pipeline driver + concrete transports + MCP are dev/server-scoped (they orchestrate agents/IO) and never enter the renderer's consumer bundle.

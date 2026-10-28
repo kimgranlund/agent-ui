@@ -60,7 +60,7 @@ packages/agent-ui/components/src/controls/swiper/
 `swiper.ts` imports the four leaf modules (registering all five tags); the barrel carries FIVE export
 lines (one per descriptor — the C1 lifecycle bijection, family-coherence.test.ts), each a harmless
 re-export of an already-registered module (`swiper.ts`'s own import already ran the `customElements.define`
-side effect); `component-styles.css` imports all five sheets, PRIMARY first (the family-root token order).
+side effect); the generated `all.gen.css` imports all five sheets (`component-styles.css` is retired, ADR-0233; the original PRIMARY-first import order is history, each sheet's `@import` prologue is now codemod-written from its `uses`, `component-build` step 8).
 
 **Component ids (LLD-C1…C12 — the requirement→component spine the SPEC Trace binds to):**
 
