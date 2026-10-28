@@ -107,3 +107,22 @@ describe('transformPackageJson: a2ui ships its ./agent producer toolkit (ADR-023
     })
   })
 })
+
+describe('PACKAGE_ORDER: every internal dependency publishes first (T-0489)', () => {
+  const manifest = (pkg) =>
+    JSON.parse(readFileSync(new URL(`../../packages/agent-ui/${pkg}/package.json`, import.meta.url), 'utf8'))
+
+  it('lists every @agent-ui/* dependency of each package earlier in the order', () => {
+    for (const [i, pkg] of PACKAGE_ORDER.entries()) {
+      for (const dep of Object.keys(manifest(pkg).dependencies ?? {})) {
+        if (!dep.startsWith('@agent-ui/')) continue
+        expect(PACKAGE_ORDER.slice(0, i), `${pkg} -> ${dep}`).toContain(dep.replace('@agent-ui/', ''))
+      }
+    }
+  })
+
+  it("the packed app manifest names @agent-ui-kit/data at the release version", () => {
+    const out = transformPackageJson(manifest('app'), '0.2.0')
+    expect(out.dependencies['@agent-ui-kit/data']).toBe('^0.2.0')
+  })
+})

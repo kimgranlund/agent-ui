@@ -1012,3 +1012,8 @@
 ## T-0496: list-demo at 400px keeps its row actions and badge labels whole (2026-10-28)
 
 - note: site/pages/list-demo.ts:33 fix uses inline style on the demo page rather than a control change, as the Constraints allow.
+
+## T-0489: The release publishes @agent-ui/data, so @agent-ui-kit/app installs (its data dependency 404s on npm) (2026-10-28)
+
+- note: release.yml uses npm trusted publishing registered per package; `@agent-ui-kit/data` does not exist on npm, so the OIDC publish will likely fail at `data` until Kim publishes it once or registers it (builder flagged this too).
+- note: "Bump data to 0.2.0" needs no edit: workspace manifests are private 0.0.0 and the version comes from the script argument; the dry run confirms 0.2.0.

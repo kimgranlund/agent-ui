@@ -4,9 +4,9 @@ A zero-dependency, headless data layer for agent-ui: a `DataSource<T>` seam whos
 optional capabilities, and signal-backed `resource()`, `mutation()` and `paginated()` built on the
 components signals kernel (ADR-0192).
 
-> Not published yet. It is a private workspace package (`@agent-ui/data`, version 0.0.0) and is not in
-> the lockstep set `npm run publish:packages` releases; once added it would publish as
-> `@agent-ui-kit/data`, the same rename the other packages take.
+> Published as `@agent-ui-kit/data` (from v0.2.0) in the lockstep set `npm run publish:packages`
+> releases; in this repo it is the private workspace package `@agent-ui/data`, the same rename the other
+> packages take.
 
 ## Entry points
 
