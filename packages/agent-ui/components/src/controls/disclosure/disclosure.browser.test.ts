@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // content-family M1-a — ui-disclosure cross-engine browser-truth smoke (content-family.lld.md LLD-C10;
 // SPEC-R15 AC1/AC4, SPEC-R17 AC1/AC2, SPEC-R18 AC1-AC3, SPEC-R19 AC2). Runs in BOTH Chromium and WebKit
@@ -18,6 +17,7 @@ import './disclosure.ts' // self-define (registers ui-disclosure)
 // source itself never imports a sibling control.
 import '../switch/switch.css'
 import '../switch/switch.ts'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const px = (v: string): number => Number.parseFloat(v)
 
@@ -59,7 +59,7 @@ describe('ui-disclosure — mounts + a real engine resolves the geometry (whole-
 
     // derived root register (ADR-0245, product / md / md, n 8): height 4n = 32, font type.control = 14.
     const d = rootResolve('md')
-    expect(px(getComputedStyle(summary).blockSize)).toBeCloseTo(d.h, 0)
+    expect(px(getComputedStyle(summary).blockSize)).toBeCloseTo(d.height, 0)
     expect(px(getComputedStyle(summary).fontSize)).toBeCloseTo(d.type.control, 0)
     expect(px(getComputedStyle(summary).paddingBlockStart)).toBe(0) // NEVER block-padding (geometry.md)
     // the slotless-edge inline pad: n = 8 (derived, ADR-0245; was h/2)

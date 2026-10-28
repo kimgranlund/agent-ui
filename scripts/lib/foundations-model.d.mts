@@ -84,5 +84,12 @@ export function containerUnit(n: number, density?: Density): number
 export function widgetOverGroup(a?: Anchors, unit?: (n: number, density: Density) => number): string[]
 export function roomyLevels(a?: Anchors): Array<[string, number, number]>
 export function resolve(tier?: Tier, scale?: Step, size?: Step, density?: Density, a?: Anchors): Emitted
+/** resolve() at the page root register (T-0506, from foundations-rules.mjs). */
+export function rootResolve(size?: Step, density?: Density, a?: Anchors): Emitted
+/** The part sizes drawn from the icon box and c (T-0506): checkbox, radio and switch track 2n, radio dot 2n - 2c - 2,
+ *  thumb 2n - 2c, badge 2n + 2c. */
+export function parts(r?: Emitted): Readonly<Record<'checkbox' | 'radio' | 'switchTrack' | 'radioDot' | 'thumb' | 'badge', number>>
+export const LADDER: [number, number]
+export const TIERS: Record<Tier, [number, number, number, number]>
 export function checkAnchors(a?: Anchors): string[]
 export function checkEmitted(a?: Anchors): string[]

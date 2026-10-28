@@ -3,8 +3,7 @@ import { describe, it, expect } from 'vitest'
 // same approach as the s6/s7 probes). jsdom can NOT compute layout px, so these are STATIC structural/
 // formula checks on the DECLARED calc()s; the rendered-px CHANGE (sm→md→lg, [scale]/[density]) is s13's
 // cross-engine browser smoke, NOT here.
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the skill's anatomy (T-0374 step 7)
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import { readFileSync } from 'node:fs'
 declare const process: { cwd(): string }
 
@@ -35,9 +34,9 @@ const whereBlock = (marker: string): string => {
 }
 
 /** The root register's derived boxes (ADR-0245 clause 2: product at scale sm). Since the cut the icon is the
- *  2n icon box and the height the 4n frame; scale.mjs resolve() is their one source. */
-const iconPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).icon
-const heightPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).h
+ *  2n icon box and the height the 4n frame; foundations-model.mjs resolve() is their one source. */
+const iconPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).iconBox
+const heightPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).height
 
 const iconBySize: Record<string, number | null> = {
   sm: iconPx('sm'),
@@ -97,12 +96,12 @@ describe('button.css — STATIC geometry trip-wires (s11)', () => {
     expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-slot-edge:\s*var\(--md-sys-control-margin,/)
     expect(whereBlock(':where(ui-button) {')).toMatch(/--ui-button-label-compensation:\s*var\(--md-sys-label-compensation,\s*0px\)/)
     for (const size of ['sm', 'md', 'lg'] as const) {
-      const r = model('product', 'md', size)
+      const r = resolve('product', 'md', size)
       expect(r.glyphSlot + 2 * r.controlMargin, `${size}: the 3n slot plus the margin on each side is the height`).toBe(r.height)
       expect(r.labelCompensation, `${size}: C = max(0, R - m - W)`).toBe(Math.max(0, r.controlRadius - r.controlMargin - r.controlGutter))
       expect(r.controlMargin + r.controlGutter + r.labelCompensation, `${size}: the exposed text edge clears the radius`).toBeGreaterThanOrEqual(r.controlRadius)
     }
-    const root = model('product', 'md', 'md')
+    const root = resolve('product', 'md', 'md')
     expect([root.controlMargin, root.controlGutter, root.controlRadius, root.labelCompensation], 'product md/md balanced').toEqual([4, 2, 8, 2])
   })
 

@@ -6,9 +6,7 @@ import type { UICodeEditorElement } from './editor.ts'
 // strings). Imported here so the test asserts against the SAME constants the fix imports, not a
 // coincidentally-matching literal.
 import { LINK_TARGET, LINK_REL } from '@agent-ui/components/controls/text'
-import { resolve } from '../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../scripts/lib/foundations-model.mjs'
-import { rootResolve } from '../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve, rootResolve } from '../../../../../scripts/lib/foundations-model.mjs'
 
 /** Minimal CDP surface (the button-states.browser.test.ts precedent) — `cdp()`'s public type is empty; the
  *  playwright provider gives `.send` at runtime. Chromium-only (WebKit exposes no CDP forced-colors emulation). */
@@ -1191,11 +1189,11 @@ describe('ui-code-editor — derived foundations geometry (ADR-0245 cl.3, dark l
     const r = resolve('product', 'sm', 'md')
     await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
     const cs = getComputedStyle(field)
-    expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.control.margin - 1)
-    expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBe(r.control.margin - 1)
-    expect(px(cs.borderTopLeftRadius), `${server.browser}: radius`).toBe(model('product', 'sm', 'md').controlRadius)
+    expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.inset - 1)
+    expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBe(r.inset - 1)
+    expect(px(cs.borderTopLeftRadius), `${server.browser}: radius`).toBe(resolve('product', 'sm', 'md').controlRadius)
     const box = (wrap.querySelector('[data-part="mode-toggle"]') as HTMLElement).getBoundingClientRect()
-    expect(box.height, `${server.browser}: toggle block size`).toBe(r.h)
+    expect(box.height, `${server.browser}: toggle block size`).toBe(r.height)
   })
 
   it('outside any region the page root derives the geometry (root = product / md / md): padding n - 1, the toggle a 4n square', async () => {
@@ -1203,10 +1201,10 @@ describe('ui-code-editor — derived foundations geometry (ADR-0245 cl.3, dark l
     const r = rootResolve('md')
     await expect.poll(() => field.querySelector('[data-part="mode-toggle"]') !== null, { timeout: 5000 }).toBe(true)
     const cs = getComputedStyle(field)
-    expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.control.margin - 1)
-    expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBe(r.control.margin - 1)
+    expect(px(cs.paddingTop), `${server.browser}: padding-block`).toBe(r.inset - 1)
+    expect(px(cs.paddingLeft), `${server.browser}: padding-inline`).toBe(r.inset - 1)
     const box = (field.querySelector('[data-part="mode-toggle"]') as HTMLElement).getBoundingClientRect()
-    expect(box.height, `${server.browser}: toggle block size`).toBe(r.h)
+    expect(box.height, `${server.browser}: toggle block size`).toBe(r.height)
   })
 
   it('data-foundations="legacy": today\'s geometry holds (font * 0.5 / 0.75 padding, the 24px toggle)', async () => {

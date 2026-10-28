@@ -13,9 +13,9 @@ import { describe, it, expect, afterEach } from 'vitest'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { createRenderer } from '../../renderer/renderer.ts'
 import { personaExemplarSeeds } from '../../examples/persona-exemplars.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const mounted: HTMLElement[] = []
 afterEach(() => {
@@ -116,7 +116,7 @@ describe('the persona composites on the ADR-0046 box model (Amendment 7)', () =>
     const readout = rect(part(card, 'readout'))
     const bets = [...card.querySelectorAll('[data-part="bet-option"]')].map(rect)
     expect(bets).toHaveLength(5)
-    for (const r of bets) expect(r.height).toBeCloseTo(resolve('widget', 'md', 'lg').h, 0) // 28: the lg step at the canvas register
+    for (const r of bets) expect(r.height).toBeCloseTo(resolve('widget', 'md', 'lg').height, 0) // 28: the lg step at the canvas register
     for (let i = 1; i < bets.length; i++) {
       expect(bets[i]!.left - bets[i - 1]!.right).toBeCloseTo(8, 0)
       expect(bets[i]!.top).toBeCloseTo(bets[0]!.top, 0)

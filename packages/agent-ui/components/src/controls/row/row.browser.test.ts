@@ -1,6 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // s3 — ui-row cross-engine browser smoke (the geometry/responsiveness TRUTH jsdom cannot compute). Runs in
 // BOTH Chromium and WebKit (vitest.browser.config.ts → playwright instances). It proves the three behaviours
@@ -19,6 +17,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
 import './row.css'
 import './row.ts'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 /** A query-container wrapper at a fixed width — the row reflows on THIS (its nearest ancestor container), the
  *  "resize the wrapper, not the viewport" proof. Returns the wrapper + the mounted ui-row + its two children. */

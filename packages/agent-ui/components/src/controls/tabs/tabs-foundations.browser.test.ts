@@ -1,5 +1,4 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import './tabs.ts'
 import './tab.ts'
 import './tab-panel.ts'
@@ -8,6 +7,7 @@ import '../_surface/container.css'
 import '../_surface/container-box.css'
 import '../menu/menu.css'
 import './tabs.css'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ui-tabs geometry (ADR-0245 clause 3, delta row "tabs tab height"): inside an opt-in region a tab row is the 4n
 // control height at the region's own n (28 at the root md); outside one it is today's lg ramp step (36), so the
@@ -31,7 +31,7 @@ describe('ui-tabs geometry inside an opt-in region', () => {
     it(`product / ${scale}: the tab row is 4n`, () => {
       const { tab } = mount(`<div data-tier="product" data-scale="${scale}">${TABS}</div>`)
       const r = resolve('product', scale, 'md')
-      expect(tab.getBoundingClientRect().height).toBe(r.h)
+      expect(tab.getBoundingClientRect().height).toBe(r.height)
     })
   }
 })

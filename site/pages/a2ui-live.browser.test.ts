@@ -32,13 +32,13 @@ import '@agent-ui/app/super-shell'
 import '@agent-ui/components/all.css' // the [hidden] panel rule + tab chrome (Batch C tabs legs)
 import '@agent-ui/components/all' // self-defines ui-tabs / ui-tab / ui-tab-panel
 import './a2ui-live.css'
-import { rootResolve } from '../../scripts/lib/foundations-rules.mjs'
+import { rootResolve } from '../../scripts/lib/foundations-model.mjs'
 
 // The page gutter `--md-sys-space-xl` is the card margin at the root register (rootResolve('md')).
 const GUTTER = rootResolve('md').card.margin
 // T-0121: the shell's inter-card gap `--ui-super-shell-gap` is the layout gutter (resolve()'s page level),
 // derived, never a literal.
-const SHELL_GAP = rootResolve('md').page.gutter
+const SHELL_GAP = rootResolve('md').layout.gutter
 
 const mounted: HTMLElement[] = []
 afterEach(() => {

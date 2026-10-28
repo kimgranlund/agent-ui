@@ -13,8 +13,7 @@ import '@agent-ui/components/all.css'
 import type { UIRadioElement } from '@agent-ui/components/controls/radio'
 import type { UIRadioGroupElement } from '@agent-ui/components/controls/radio-group'
 import '@agent-ui/components/all'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve, rootResolve, parts } from '../../../../../../scripts/lib/foundations-model.mjs'
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
 const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
@@ -94,20 +93,20 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
     const el = mount(document.createElement('ui-radio') as UIRadioElement)
     el.textContent = 'Test'
     // --md-sys-compact-md = 2n at the root register on the derived ramp (ADR-0041 clause 2, ADR-0245)
-    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(root('md').parts.radio)
-    expect(Number.parseFloat(getComputedStyle(el, '::before').height)).toBe(root('md').parts.radio)
+    expect(Number.parseFloat(getComputedStyle(el, '::before').width)).toBe(parts(root('md')).radio)
+    expect(Number.parseFloat(getComputedStyle(el, '::before').height)).toBe(parts(root('md')).radio)
   })
 
   it('radio-box-sm: [size=sm] → 12px circle; [size=lg] → 20px circle (the compact ramp at the root)', () => {
     const sm = mount(document.createElement('ui-radio') as UIRadioElement)
     sm.setAttribute('size', 'sm')
     sm.textContent = 'Small'
-    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(root('sm').parts.radio) // --md-sys-compact-sm
+    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(parts(root('sm')).radio) // --md-sys-compact-sm
 
     const lg = mount(document.createElement('ui-radio') as UIRadioElement)
     lg.setAttribute('size', 'lg')
     lg.textContent = 'Large'
-    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(root('lg').parts.radio) // --md-sys-compact-lg
+    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(parts(root('lg')).radio) // --md-sys-compact-lg
   })
 
   it('outside any region the dot keeps today\'s 56% of the box (22% inset)', () => {
@@ -124,7 +123,7 @@ describe('ui-radio browser smoke — box geometry (exact px, ADR-0041)', () => {
 })
 
 // ADR-0245 clause 3 and Amendment 3: inside an opt-in region the circle is 2n and the dot the glyph minus 2
-// (icon box - 2c - 2), against scale.mjs resolve().
+// (icon box - 2c - 2), against foundations-model.mjs resolve().
 describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () => {
   for (const scale of ['sm', 'md'] as const) {
     for (const size of ['sm', 'md', 'lg'] as const) {
@@ -140,11 +139,11 @@ describe('ui-radio geometry inside an opt-in data-tier region (ADR-0245)', () =>
         wrapper.append(el)
         mount(wrapper)
         const ring = getComputedStyle(el, '::before')
-        expect(Number.parseFloat(ring.width)).toBe(r.icon)
-        expect(Number.parseFloat(ring.height)).toBe(r.icon)
+        expect(Number.parseFloat(ring.width)).toBe(r.iconBox)
+        expect(Number.parseFloat(ring.height)).toBe(r.iconBox)
         const dot = getComputedStyle(el, '::after')
-        expect(Number.parseFloat(dot.width)).toBe(r.parts.radioDot)
-        expect(Number.parseFloat(dot.height)).toBe(r.parts.radioDot)
+        expect(Number.parseFloat(dot.width)).toBe(parts(r).radioDot)
+        expect(Number.parseFloat(dot.height)).toBe(parts(r).radioDot)
       })
     }
   }

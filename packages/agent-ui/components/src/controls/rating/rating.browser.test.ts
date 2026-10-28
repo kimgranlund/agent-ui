@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // rating.browser.test.ts — ui-rating browser smoke (ADR-0216; GH #1395).
 //
@@ -20,6 +19,7 @@ import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*)
 import './rating.css' // the control stylesheet (direct — pre-barrel)
 import './rating.ts' // self-define (registers ui-rating)
 import type { UIRatingElement } from './rating.ts'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 function stars(el: Element): HTMLElement {
   return el.querySelector('.stars') as HTMLElement
@@ -41,8 +41,8 @@ describe('ui-rating browser smoke — widget-box geometry (ADR-0041)', () => {
     document.body.append(el)
     const svg = el.querySelector('.stars-base svg') as SVGSVGElement
     const cs = getComputedStyle(svg)
-    expect(Number.parseFloat(cs.width)).toBe(rootResolve('md').icon)
-    expect(Number.parseFloat(cs.height)).toBe(rootResolve('md').icon)
+    expect(Number.parseFloat(cs.width)).toBe(rootResolve('md').iconBox)
+    expect(Number.parseFloat(cs.height)).toBe(rootResolve('md').iconBox)
     el.remove()
   })
 
@@ -50,13 +50,13 @@ describe('ui-rating browser smoke — widget-box geometry (ADR-0041)', () => {
     const sm = document.createElement('ui-rating')
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(Number.parseFloat(getComputedStyle(sm.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(rootResolve('sm').icon)
+    expect(Number.parseFloat(getComputedStyle(sm.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(rootResolve('sm').iconBox)
     sm.remove()
 
     const lg = document.createElement('ui-rating')
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(Number.parseFloat(getComputedStyle(lg.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(rootResolve('lg').icon)
+    expect(Number.parseFloat(getComputedStyle(lg.querySelector('.stars-base svg') as SVGSVGElement).width)).toBe(rootResolve('lg').iconBox)
     lg.remove()
   })
 })

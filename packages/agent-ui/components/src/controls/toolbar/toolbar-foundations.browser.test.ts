@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ADR-0245 dark launch, lane a01: ui-toolbar geometry outside and inside a data-tier region. Outside, every derived
 // token is undefined and each rule falls back to today's value (the expected px below, the default-page
@@ -40,8 +40,8 @@ describe('ui-toolbar foundations (ADR-0245 lane a01)', () => {
     it(`inside product / sm at size ${size} reads the derived geometry`, () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
-      expect(read(el, 'column-gap'), 'gap').toBeCloseTo(r.control.margin, 1)
-      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.control.margin, 1)
+      expect(read(el, 'column-gap'), 'gap').toBeCloseTo(r.inset, 1)
+      expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.inset, 1)
     })
   }
 })

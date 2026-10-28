@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, userEvent } from 'vitest/browser'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 // amount-picker.browser.test.ts: the real-engine proof for ui-amount-picker (T-0196 Design, Test plan), in Chromium
@@ -17,6 +16,7 @@ import '../slider/slider.css'
 import './amount-picker.css'
 import './amount-picker.ts'
 import type { UIAmountPickerElement } from './amount-picker.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 /** The A2UI canvas register: widget / md (20 / 24 / 28 px controls, ADR-0245 Amendments 2 and 8). */
 const WIDGET = resolve('widget', 'md', 'md')
@@ -162,7 +162,7 @@ describe('ui-amount-picker: ARIA', () => {
 describe('ui-amount-picker: geometry at widget md', () => {
   it('every row is the 24px control height; the step buttons are square; the glyph box is n + 6', async () => {
     const el = await picker({ min: '1', max: '20', value: '4', presets: '[1,2,4,8]', slider: '', 'action-name': 'add', label: 'Quantity' })
-    const h = WIDGET.h
+    const h = WIDGET.height
     expect(h).toBe(24)
     for (const name of ['decrease', 'increase', 'readout', 'commit']) expect(rect(part(el, name)).height).toBe(h)
     for (const chip of el.querySelectorAll('[data-part="preset"]')) expect(rect(chip).height).toBe(h)
@@ -175,8 +175,8 @@ describe('ui-amount-picker: geometry at widget md', () => {
   it('size sm and lg take the 20 and 28 rows', async () => {
     const sm = await picker({ size: 'sm' })
     const lg = await picker({ size: 'lg' })
-    expect(rect(part(sm, 'readout')).height).toBe(resolve('widget', 'md', 'sm').h)
-    expect(rect(part(lg, 'readout')).height).toBe(resolve('widget', 'md', 'lg').h)
+    expect(rect(part(sm, 'readout')).height).toBe(resolve('widget', 'md', 'sm').height)
+    expect(rect(part(lg, 'readout')).height).toBe(resolve('widget', 'md', 'lg').height)
   })
 })
 

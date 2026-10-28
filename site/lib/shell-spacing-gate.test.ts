@@ -6,7 +6,7 @@ import { describe, it, expect } from 'vitest'
 // retune of n. T-0121 (ADR-0245 cl.6) repointed the ladder: it was the shell's fixed 18px module
 // multiples plus --md-sys-space-* at density 1, and is now the derived LEVELS at the root register
 // (c, the control, group, widget, card and page margins and gutters, the control height 4n) plus the
-// shell's own multiples (bar 8n, floors 24n, pane 36n), all computed from scale.mjs.
+// shell's own multiples (bar 8n, floors 24n, pane 36n), all computed from foundations-model.mjs.
 // This deterministic, browser-free test (plain `npm test`, no browser needed — it reads CSS source
 // as text) holds the count at the AC19 baseline. A future red here reads as law, not lint noise.
 //
@@ -28,9 +28,8 @@ import { describe, it, expect } from 'vitest'
 // literal arm), `calc(0.4375rem * 2)` fails, and `0.4375rem 0.875rem` fails on BOTH arms.
 // @ts-expect-error - node:fs is typed via @types/node; vitest/node resolves it at runtime
 import { readFileSync } from 'node:fs'
-import { CFG } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import type { Step, Tier } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-import { ROOT_REGISTER, STEP, rootResolve } from '../../scripts/lib/foundations-rules.mjs'
+import { ROOT_REGISTER, STEP } from '../../scripts/lib/foundations-rules.mjs'
+import { LADDER, TIERS, rootResolve, type Step, type Tier } from '../../scripts/lib/foundations-model.mjs'
 declare const process: { cwd(): string }
 
 const ROOT = process.cwd()
@@ -102,19 +101,20 @@ function generatedRoot(): { tier: Tier | undefined; scale: Step | undefined; rul
   const rule = /^:root \{([^}]*)\}/m.exec(css)?.[1] ?? ''
   const num = (name: string): number => Number(new RegExp(`--md-sys-${name}:\\s*(-?[\\d.]+)`).exec(rule)?.[1])
   const row = [num('tier-n0'), num('tier-a'), num('tier-k'), num('tier-g')]
-  const tier = (Object.keys(CFG.tiers) as Tier[]).find((t) => CFG.tiers[t].every((v, i) => v === row[i]))
+  const tier = (Object.keys(TIERS) as Tier[]).find((t) => TIERS[t].every((v, i) => v === row[i]))
   const scale = (Object.keys(STEP) as Step[]).find((s) => STEP[s] === num('scale-s'))
   return { tier, scale, rule: rule.trim() }
 }
 const REGISTER = rootResolve()
 const LEVEL_PX = [
-  REGISTER.c, REGISTER.h,
-  ...[REGISTER.control, REGISTER.group, REGISTER.widget, REGISTER.card, REGISTER.page].flatMap((l) => [l.margin, l.gutter]),
+  REGISTER.c, REGISTER.height,
+  REGISTER.inset, REGISTER.c, // the control level: margin n, gutter c
+  ...[REGISTER.group, REGISTER.widget, REGISTER.card, REGISTER.layout].flatMap((l) => [l.margin, l.gutter]),
 ]
 // super-shell.css's token block, in resolve()'s own terms (the CSS names the page level `layout`): bars and
 // rails a control row plus two widget margins (8n), the floors six page margins (24n). The pane width (42n) is
 // a content measure in n, not a level, so it is no rung.
-const SHELL_PX = [REGISTER.h + 2 * REGISTER.widget.margin, 6 * REGISTER.page.margin]
+const SHELL_PX = [REGISTER.height + 2 * REGISTER.widget.margin, 6 * REGISTER.layout.margin]
 const LADDER_PX = [...new Set([...LEVEL_PX, ...SHELL_PX])]
 
 // AC19(c), the allowlist: an explicit (file, declaration, reason) list. Growing it is a reviewed act,
@@ -337,10 +337,10 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     expect([got.tier, got.scale], `the :root rule (${got.rule})`).toEqual([ROOT_REGISTER.tier, ROOT_REGISTER.scale])
   })
 
-  it('the ladder is the derived levels at the root register, read from scale.mjs (anti-vacuous)', () => {
+  it('the ladder is the derived levels at the root register, read from foundations-model.mjs (anti-vacuous)', () => {
     // n at the root register comes off foundations.gen.css's own :root rule; every level is a multiple of it.
     const n = REGISTER.n
-    expect(n, 'the root register resolves to an n on the ladder').toBeGreaterThanOrEqual(CFG.ladder[0])
+    expect(n, 'the root register resolves to an n on the ladder').toBeGreaterThanOrEqual(LADDER[0])
     for (const px of [REGISTER.c, n, n + REGISTER.c, 2 * n, 3 * n, 4 * n, 8 * n, 24 * n]) {
       expect(LADDER_PX, `${px}px is a rung`).toContain(px)
     }
@@ -356,7 +356,7 @@ describe('AC19 — the shell-family spacing-literal drift gate (SPEC-R11c/AC19)'
     const margin = REGISTER.widget.margin
     const hits = (value: string): number[] => literalsOf(value).map((h) => h.px).filter((px) => LADDER_PX.some((l) => Math.abs(px - l) < 0.01))
     expect(hits(`calc(${rem(margin)} * 2)`), 'a raw level literal in a calc arm is drift').toEqual([margin])
-    expect(hits(`${REGISTER.control.margin}px ${rem(REGISTER.page.margin)}`), 'both arms of a two-value mint').toEqual([REGISTER.control.margin, REGISTER.page.margin])
+    expect(hits(`${REGISTER.inset}px ${rem(REGISTER.layout.margin)}`), 'both arms of a two-value mint').toEqual([REGISTER.inset, REGISTER.layout.margin])
     expect(hits(`calc(var(--ui-x) - var(--md-sys-c, ${REGISTER.c}px))`), "a foundations token's own fallback is not a mint").toEqual([])
     expect(hits(`var(--ui-x, ${rem(margin)})`), 'a fallback of any other var() is still scanned').toEqual([margin])
     expect(hits('calc(var(--md-sys-layout-margin) * 6)'), 'a level token with a unitless multiplier has no literal').toEqual([])

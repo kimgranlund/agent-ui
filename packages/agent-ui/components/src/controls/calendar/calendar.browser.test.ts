@@ -1,5 +1,4 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UICalendarElement } from './calendar.ts'
 
@@ -29,6 +28,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container-box.css' // the box-model layer — provides the shared [data-box] margin/sticky/padding rules
 import './calendar.css'
 import './calendar.ts'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ── mount / cleanup ────────────────────────────────────────────────────────────────────────────
 
@@ -892,7 +892,7 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
 
     const nav = el.querySelector<HTMLElement>('[data-part="nav"]')!
     const cs  = getComputedStyle(nav)
-    const inset = `${rootResolve('md').control.margin}px`
+    const inset = `${rootResolve('md').inset}px`
 
     // At-rest margin: the SAME --ui-box-inset every other [data-box] child carries (n, ADR-0245 cl.6:
     // 8px at the root register, product / md / md), NOT the pre-revision full-bleed margin:0.
@@ -923,7 +923,7 @@ describe('ui-calendar — container box-model inset (ADR-0046 Amendment 2, both 
     await el.updateComplete
 
     const grid = el.querySelector<HTMLElement>('[data-part="grid"]')!
-    expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the box inset`).toBe(`${rootResolve('md').control.margin}px`)
+    expect(getComputedStyle(grid).marginTop, `${server.browser}: grid margin is not the box inset`).toBe(`${rootResolve('md').inset}px`)
   })
 })
 

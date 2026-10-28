@@ -16,7 +16,7 @@ import '@agent-ui/components/all' // self-defines ui-* controls (the real fleet 
 import { createRenderer } from '../../../renderer/renderer.ts'
 import type { A2uiClientMessage } from '../../../renderer/renderer.ts'
 import type { A2uiActionMessage } from '../../../renderer/action.ts'
-import { resolve } from '../../../../../shared/src/tokens/scale.mjs'
+import { resolve, parts } from '../../../../../../../scripts/lib/foundations-model.mjs'
 
 // The A2UI canvas register (ADR-0245 Amendment 2): widget at scale md, n 6; the card margin and gutter read from it.
 const CANVAS = resolve('widget', 'md', 'md')
@@ -230,7 +230,7 @@ describe('BookingForm and BookingConfirmation: labelled fields, compact dates, a
       expect(box(own).height, `${path}: the label is rendered, not just named`).toBeGreaterThan(0)
     }
     for (const cal of mount.querySelectorAll('ui-calendar')) expect(box(cal).height, 'no inline month grid').toBe(0)
-    // 1px frame + the 18px card margin (ADR-0245 Amendment 2, scale.mjs resolve('widget','md','md').card.margin), the same 19px a stock card's regions put their ink at.
+    // 1px frame + the 18px card margin (ADR-0245 Amendment 2, foundations-model.mjs resolve('widget','md','md').card.margin), the same 19px a stock card's regions put their ink at.
     expect(box(wrapOf(mount, 'guestName')).left - box(form).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
     expect(box(form.querySelector('[data-part="title"]')).left - box(form).left).toBeCloseTo(1 + CANVAS.card.margin, 0)
     const card = mount.querySelector('ui-card')!
@@ -297,9 +297,9 @@ describe('BookingForm date fields: arrival and departure are real date inputs wi
     for (const field of [a, d]) {
       const [input, trigger] = [box(inputOf(field)), box(triggerOf(field))]
       expect(inputOf(field).getAttribute('type')).toBe('date')
-      expect(input.height, 'the input at the md step on the canvas register').toBeCloseTo(CANVAS.h, 0)
+      expect(input.height, 'the input at the md step on the canvas register').toBeCloseTo(CANVAS.height, 0)
       expect(trigger.width, 'icon buttons are never rectangular').toBeCloseTo(trigger.height, 1)
-      expect(trigger.height, 'one control step below the input (n - 1)').toBeCloseTo(CANVAS.h - 4, 0)
+      expect(trigger.height, 'one control step below the input (n - 1)').toBeCloseTo(CANVAS.height - 4, 0)
       expect(getComputedStyle(triggerOf(field)).borderTopLeftRadius, 'fully round').toBe('50%')
       expect(trigger.right).toBeLessThanOrEqual(input.right)
       expect(box(field.querySelector('[data-part="label"]')).height).toBeGreaterThan(0)
@@ -421,14 +421,14 @@ describe('BookingForm field kinds (T-0197)', () => {
       ['notes', 'ui-text-field'],
     ]
     for (const [path, row] of rows) {
-      expect(box(wrapOf(mount, path).querySelector(row)).height, `${path}: one control row`).toBeCloseTo(CANVAS.h, 0)
+      expect(box(wrapOf(mount, path).querySelector(row)).height, `${path}: one control row`).toBeCloseTo(CANVAS.height, 0)
       const label = [...wrapOf(mount, path).children].find((c) => c.getAttribute('data-part') === 'label') as HTMLElement
       expect(box(label).height, `${path}: the ui-field label is rendered`).toBeGreaterThan(0)
     }
     for (const path of ['seating', 'breakfast']) {
-      // A choice row is the radio part's own height at widget md (12px, scale.mjs parts.radio), not the 24px input row.
-      expect(box(wrapOf(mount, path).querySelector('ui-radio-group')).height, `${path}: one option row`).toBeCloseTo(CANVAS.parts.radio, 0)
-      for (const radio of wrapOf(mount, path).querySelectorAll('ui-radio')) expect(box(radio).height, `${path}: an option`).toBeCloseTo(CANVAS.parts.radio, 0)
+      // A choice row is the radio part's own height at widget md (12px, foundations-model.mjs parts().radio), not the 24px input row.
+      expect(box(wrapOf(mount, path).querySelector('ui-radio-group')).height, `${path}: one option row`).toBeCloseTo(parts(CANVAS).radio, 0)
+      for (const radio of wrapOf(mount, path).querySelectorAll('ui-radio')) expect(box(radio).height, `${path}: an option`).toBeCloseTo(parts(CANVAS).radio, 0)
     }
     const time = wrapOf(mount, 'arrivalTime').querySelector('ui-text-field')!
     expect(time.getAttribute('type')).toBe('time')
@@ -483,7 +483,7 @@ describe('BookingForm action under the card (T-0197)', () => {
       expect(box(button).right, 'end-aligned with the card').toBeCloseTo(box(card).right, 0)
       expect(box(button).top, 'outside the card box').toBeGreaterThanOrEqual(box(card).bottom)
       expect(box(button).left, 'it hugs its label').toBeGreaterThan(box(card).left + box(card).width / 2)
-      expect(box(button).height, 'the md button, 24px on the canvas register').toBeCloseTo(CANVAS.h, 0)
+      expect(box(button).height, 'the md button, 24px on the canvas register').toBeCloseTo(CANVAS.height, 0)
       done()
     })
   }
@@ -534,7 +534,7 @@ describe('StepFlow last scene with a BookingForm (T-0198)', () => {
       expect(button.parentElement, 'a direct child of the submit-gate root').toBe(form)
       expect(box(button).top - box(card).bottom, 'the widget gutter between card and Button').toBeCloseTo(CANVAS.widget.gutter, 0)
       expect(box(button).right, 'end-aligned with the card').toBeCloseTo(box(card).right, 0)
-      expect(box(button).height, 'the md button, 24px on the canvas register').toBeCloseTo(CANVAS.h, 0)
+      expect(box(button).height, 'the md button, 24px on the canvas register').toBeCloseTo(CANVAS.height, 0)
       const back = flow.querySelector('[data-part="back"]')!
       expect(back, 'Back is drawn on the last scene').not.toBeNull()
       expect(Math.abs(box(back).bottom - box(button).bottom), 'Back shares the Button bottom').toBeLessThanOrEqual(1)

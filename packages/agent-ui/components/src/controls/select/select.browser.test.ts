@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { server, cdp, userEvent, page } from 'vitest/browser'
 import type { UISelectElement } from './select.ts'
 
@@ -649,16 +648,16 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
     // Exact px from the derived ramp at the root register (product / md, ADR-0245 cl.3): 4n
     expect(
       Math.round(smTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=sm] trigger height should be ${rootResolve('sm').h}px`,
-    ).toBe(rootResolve('sm').h)
+      `${server.browser}: [size=sm] trigger height should be ${rootResolve('sm').height}px`,
+    ).toBe(rootResolve('sm').height)
     expect(
       Math.round(mdTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=md] trigger height should be ${rootResolve('md').h}px`,
-    ).toBe(rootResolve('md').h)
+      `${server.browser}: [size=md] trigger height should be ${rootResolve('md').height}px`,
+    ).toBe(rootResolve('md').height)
     expect(
       Math.round(lgTrigger.getBoundingClientRect().height),
-      `${server.browser}: [size=lg] trigger height should be ${rootResolve('lg').h}px`,
-    ).toBe(rootResolve('lg').h)
+      `${server.browser}: [size=lg] trigger height should be ${rootResolve('lg').height}px`,
+    ).toBe(rootResolve('lg').height)
 
     // Anti-vacuous: adjacent sizes must NOT be equal (they step, not collapse)
     expect(
@@ -743,7 +742,7 @@ describe('ui-select — trigger geometry: [size] exact px + [scale] anti-vacuous
 // ════════════════════════════════════════════════════════════════════════════════════════════════
 
 describe('ui-select — panel/option geometry carries [size] (B5, the size-carrying model, both engines)', () => {
-  const HEIGHT: Record<string, number> = { sm: rootResolve('sm').h, md: rootResolve('md').h, lg: rootResolve('lg').h }
+  const HEIGHT: Record<string, number> = { sm: rootResolve('sm').height, md: rootResolve('md').height, lg: rootResolve('lg').height }
 
   function mkSizedSelect(size: string): UISelectElement {
     const el = document.createElement('ui-select') as UISelectElement
@@ -787,8 +786,8 @@ describe('ui-select — panel/option geometry carries [size] (B5, the size-carry
       expect(outset, `${server.browser}: [size=${size}] the panel outset is c`).toBeCloseTo(r.c, 1)
       expect(
         sum,
-        `${server.browser}: [size=${size}] panel-inset+option-inline-outset (${sum}px) should equal the trigger text edge 2n - c (${r.control.margin + r.labelMargin}px)`,
-      ).toBeCloseTo(r.control.margin + r.labelMargin, 1)
+        `${server.browser}: [size=${size}] panel-inset+option-inline-outset (${sum}px) should equal the trigger text edge 2n - c (${r.inset + r.labelInset}px)`,
+      ).toBeCloseTo(r.inset + r.labelInset, 1)
       expect(sum, `${server.browser}: [size=${size}] and the measured trigger text edge`).toBeCloseTo(triggerText, 1)
     }
 

@@ -1,11 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import './icon.css'
 import './icon.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ui-icon geometry under ADR-0245 (the dark launch): inside an opt-in [data-tier] region the control reads the
-// derived tokens and measures against scale.mjs resolve(); outside one it still measures today's values.
+// derived tokens and measures against foundations-model.mjs resolve(); outside one it still measures today's values.
 
 const mounted: HTMLElement[] = []
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()))
@@ -33,7 +33,7 @@ describe('ui-icon geometry (ADR-0245 cl.4: the 2n icon box)', () => {
       ) as HTMLElement
       const r = resolve('product', 'sm', size)
       const box = icon.getBoundingClientRect()
-      expect([box.width, box.height]).toEqual([r.icon, r.icon])
+      expect([box.width, box.height]).toEqual([r.iconBox, r.iconBox])
     })
   }
 
@@ -47,7 +47,7 @@ describe('ui-icon geometry (ADR-0245 cl.4: the 2n icon box)', () => {
     expect([ambient!.getBoundingClientRect().width, ambient!.getBoundingClientRect().height]).toEqual([20, 20])
     expect(explicit!.getBoundingClientRect().width, 'an explicit font-size is honoured').toBe(24)
     // anti-vacuous: 20px is not the root icon box, so a 2n icon would fail the first expectation
-    expect(resolve('product', 'sm', 'md').icon).not.toBe(20)
+    expect(resolve('product', 'sm', 'md').iconBox).not.toBe(20)
   })
 
   it('under data-foundations=legacy: the 1em cell, so the ambient font-size is the lever', () => {

@@ -1,5 +1,4 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // s6 (browser leg) — the CROSS-ENGINE smoke for ui-grid (decomp g9-containers node s6). Where the jsdom
 // grid.test.ts pins the structural contract and grid-css.test.ts pins the declared CSS, this pins the RENDERED
@@ -24,6 +23,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
 import './grid.css'
 import './grid.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ── mount/cleanup: a width-constrained WRAPPER (the query container) holding a ui-grid + N items ──────────
 const mounted: HTMLElement[] = []

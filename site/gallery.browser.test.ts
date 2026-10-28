@@ -18,8 +18,7 @@ import '@agent-ui/icons/phosphor'
 import './lib/component-gallery.ts'
 import { galleryMembers } from './lib/component-gallery.ts'
 import { whenFlushed } from '@agent-ui/components'
-import { resolve } from '../scripts/lib/foundations-model.mjs'
-import { rootResolve } from '../scripts/lib/foundations-rules.mjs'
+import { resolve, rootResolve } from '../scripts/lib/foundations-model.mjs'
 import type { UISelectElement } from '@agent-ui/components/controls/select'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
@@ -172,7 +171,7 @@ describe('<component-gallery> — the ONE <ui-theme-provider> drives every speci
 
     // ADR-0245 Amendment 8: the default is the root register, product at scale md (a md button is 4n = 32px).
     const heightMd = Number.parseFloat(getComputedStyle(live).blockSize)
-    expect(heightMd).toBe(rootResolve('md').h)
+    expect(heightMd).toBe(rootResolve('md').height)
 
     await chooseOption(selectFor(gallery, 'Scale'), 'sm')
     const heightSm = Number.parseFloat(getComputedStyle(live).blockSize)

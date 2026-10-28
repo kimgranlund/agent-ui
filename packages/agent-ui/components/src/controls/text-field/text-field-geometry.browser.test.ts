@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { server, cdp } from 'vitest/browser'
 
 // s11 (geometry leg) — the CROSS-ENGINE geometry smoke for ui-text-field (decomp g4-g6 node s11). Where the
@@ -85,9 +85,9 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
       }
       // the derived ramp at the root register (product / md, ADR-0245 cl.3): height 4n, font = control type.
       const ramp = (['sm', 'md', 'lg'] as const).map((sz) => rootResolve(sz))
-      expect(heights[0]).toBeCloseTo(ramp[0].h, 0)
-      expect(heights[1]).toBeCloseTo(ramp[1].h, 0)
-      expect(heights[2]).toBeCloseTo(ramp[2].h, 0)
+      expect(heights[0]).toBeCloseTo(ramp[0].height, 0)
+      expect(heights[1]).toBeCloseTo(ramp[1].height, 0)
+      expect(heights[2]).toBeCloseTo(ramp[2].height, 0)
       expect(fonts[0]).toBeCloseTo(ramp[0].type.control, 0)
       expect(fonts[1]).toBeCloseTo(ramp[1].type.control, 0)
       expect(fonts[2]).toBeCloseTo(ramp[2].type.control, 0)
@@ -149,7 +149,7 @@ describe('ui-text-field cross-engine geometry smoke (s11, both engines)', () => 
     const r = rootResolve('md')
     expect(padEndPx(field), 'trailing value edge is not n').toBeCloseTo(r.n, 1)
     expect(padStartPx(field), 'leading slot edge is not ½(h−icon)').toBeCloseTo((h - icon) / 2, 1)
-    expect(icon, 'icon cell is not the derived icon box 2n').toBeCloseTo(r.icon, 1)
+    expect(icon, 'icon cell is not the derived icon box 2n').toBeCloseTo(r.iconBox, 1)
     // the icon ramp law: 0 < icon ≤ box (the cell never exceeds the frame).
     expect(icon, 'icon cell is not a positive px').toBeGreaterThan(0)
     expect(icon, 'the icon cell exceeds the box height').toBeLessThanOrEqual(h + 0.5)
@@ -438,7 +438,7 @@ describe('ui-text-field Wave-3 auto-adornment geometry + password masking (s11 W
     const clearSlot = clearBtn.closest('[slot="trailing"]') as HTMLElement
     const md = rootResolve('md')
     for (const [label, el, slotEl, want] of [
-      ['magnifier', magnifier, magnifier, md.icon],
+      ['magnifier', magnifier, magnifier, md.iconBox],
       ['clear-button', clearBtn, clearSlot, glyphBox(md)],
     ] as const) {
       // the drawn mark: the magnifier's own svg (the 2n icon box), or the clear mark's svg (the n + 6 glyph box)
@@ -819,7 +819,7 @@ describe('ui-text-field Wave-5B — type=time codec (s11 Wave-5B, both engines)'
     const cs = getComputedStyle(field)
     const frame = px(cs.paddingInlineStart) + px(cs.paddingInlineEnd) + px(cs.borderInlineStartWidth) + px(cs.borderInlineEndWidth)
     expect(box.width, 'type=time field is narrower than its own frame (a dot)').toBeGreaterThanOrEqual(frame - 0.5)
-    expect(box.height, 'type=time field height is not the derived 4n').toBeCloseTo(rootResolve('md').h, 0)
+    expect(box.height, 'type=time field height is not the derived 4n').toBeCloseTo(rootResolve('md').height, 0)
   })
 })
 

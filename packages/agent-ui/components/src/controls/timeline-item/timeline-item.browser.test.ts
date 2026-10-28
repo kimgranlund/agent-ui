@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import { server, cdp } from 'vitest/browser'
 
 // timeline-family.lld.md §5 · SPEC-R4/R13/R14/R15 — the cross-engine geometry + whole-shape + signifier +
@@ -49,7 +49,7 @@ describe('ui-timeline-item cross-engine geometry smoke — the marker-system exp
     for (const size of ['sm', 'md', 'lg'] as const) {
       item.setAttribute('size', size)
       const r = rootResolve(size)
-      const [mb, dot] = [Math.max(r.icon, glyphBox(r)), glyphBox(r)]
+      const [mb, dot] = [Math.max(r.iconBox, glyphBox(r)), glyphBox(r)]
       const [cw, gut, rg] = [2, mb, 2 * r.n]
       expect(markerBox(item), `size=${size} marker-box`).toBeCloseTo(mb, 0)
       expect(dotSize(item), `size=${size} dot-size`).toBeCloseTo(dot, 0)

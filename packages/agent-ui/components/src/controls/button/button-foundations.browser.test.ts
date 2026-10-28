@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6) and the label edge (step 7)
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -41,9 +40,9 @@ describe('ui-button foundations (ADR-0245 lane a01)', () => {
   for (const size of ['sm', 'md', 'lg'] as const) {
     it(`inside product / sm at size ${size} reads the derived geometry`, () => {
       const r = resolve('product', 'sm', size)
-      const e = model('product', 'sm', size)
+      const e = resolve('product', 'sm', size)
       const el = mount(true, size)
-      expect(read(el, 'block-size'), 'height').toBeCloseTo(r.h, 1)
+      expect(read(el, 'block-size'), 'height').toBeCloseTo(r.height, 1)
       // the skill's anatomy (T-0374 step 7): the host pads the control margin m and the label wrapper, alone so both
       // sides exposed, pads W + C, so the text edge is m + W + C
       expect(read(el, 'padding-inline-start'), 'control margin').toBeCloseTo(e.controlMargin, 1)

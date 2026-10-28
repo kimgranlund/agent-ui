@@ -6,12 +6,12 @@ import { UINavRailItemElement } from './nav-rail-item.ts'
 // `[data-tier]` region, under `data-foundations="legacy"` (clause 10e), the row reads today's ramp through the fallbacks (28px high, a 14px gap, an 18px
 // icon cell); inside `data-tier="product" data-scale="md"` (n 8, the roomier product register) the same rule
 // reads the derived tokens (height 4n = 32, icon cell 2n = 16, gap n = 8, tag type n+4 = 12). Expected
-// numbers are scale.mjs resolve('product', 'md', 'md'); the 36-cell token proof lives in
+// numbers are foundations-model.mjs resolve('product', 'md', 'md'); the 36-cell token proof lives in
 // shared/src/tokens/foundations.browser.test.ts.
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './nav-rail.css'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const mounted: HTMLElement[] = []
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()))
@@ -56,8 +56,8 @@ describe('ui-nav-rail geometry across the data-tier dark launch', () => {
     const { activator, icon } = mount(true)
     await new Promise((r) => requestAnimationFrame(() => r(undefined)))
     const r = resolve('product', 'md', 'md')
-    expect(px(getComputedStyle(activator).blockSize)).toBe(r.h)
-    expect(px(getComputedStyle(icon).inlineSize)).toBe(r.icon)
+    expect(px(getComputedStyle(activator).blockSize)).toBe(r.height)
+    expect(px(getComputedStyle(icon).inlineSize)).toBe(r.iconBox)
     expect(px(getComputedStyle(activator).columnGap)).toBe(r.n)
     expect(px(getComputedStyle(activator).borderInlineStartWidth)).toBe(r.c) // c = round-up(n / 4)
   })

@@ -1072,3 +1072,8 @@
 - note: packages/agent-ui/components/src/controls/_base/indicator-element.ts:158 (base `checked` add used by ui-switch) has no real-engine leg; mutating it alone does not red the checkbox leg because checkbox.ts re-adds it (builder's own finding). Outside H1's list, so not a criterion failure.
 - note: packages/agent-ui/components/src/controls/status-stream/status-stream.test.ts:1346 still carries a jsdom-optional `finalize()` test that asserts only `not.toThrow()` for `:state(settled)`; the real-engine settled leg exists at status-stream.browser.test.ts (GH #72x), so it is not a silent guard.
 - note: no `red-checkpoint` process deviation was printed by redck.py; no criterion is tagged `(red)`.
+
+## T-0506: Tests and scripts read derived geometry from foundations-model.mjs, not the repo scale.mjs tiers directly (2026-10-28)
+
+- note: red-checkpoint deviations: `redck.py deviations` printed no process deviation lines, and no criterion is marked `(red)`.
+- note: the a2ui-live "negative control: an unrelated fixed 12px" test was excluded by the handoff itself and is not judged here.

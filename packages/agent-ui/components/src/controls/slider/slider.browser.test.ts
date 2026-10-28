@@ -21,8 +21,7 @@ import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*)
 import './slider.css'                               // the control stylesheet (direct — pre-barrel)
 import './slider.ts'                                // self-define (registers ui-slider)
 import type { UISliderElement } from './slider.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
 const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
@@ -233,8 +232,8 @@ describe('ui-slider — thumb ring "pops" in both schemes without regressing the
     document.body.append(el)
     const cs = getComputedStyle(rail(el), '::after')
     // default size=md: box=16px at the root (derived compact ramp, ADR-0245) → thumb=12px, border-box means the 2px ring border does NOT grow it.
-    expect(Number.parseFloat(cs.width)).toBe(root('md').icon - 2 * root('md').c)
-    expect(Number.parseFloat(cs.height)).toBe(root('md').icon - 2 * root('md').c)
+    expect(Number.parseFloat(cs.width)).toBe(root('md').iconBox - 2 * root('md').c)
+    expect(Number.parseFloat(cs.height)).toBe(root('md').iconBox - 2 * root('md').c)
     el.remove()
   })
 })
@@ -254,7 +253,7 @@ describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]�
     document.body.append(el)
     // .rail's block-size = --md-sys-compact-md = 2n at the root on the derived ramp (ADR-0041 clause 2, ADR-0245)
     const rect = rail(el).getBoundingClientRect()
-    expect(rect.height).toBe(root('md').icon)
+    expect(rect.height).toBe(root('md').iconBox)
     el.remove()
   })
 
@@ -262,13 +261,13 @@ describe('ui-slider browser smoke (AC1 — .rail block-size exact px per [size]�
     const sm = document.createElement('ui-slider') as UISliderElement
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(rail(sm).getBoundingClientRect().height).toBe(root('sm').icon) // --md-sys-compact-sm, derived
+    expect(rail(sm).getBoundingClientRect().height).toBe(root('sm').iconBox) // --md-sys-compact-sm, derived
     sm.remove()
 
     const lg = document.createElement('ui-slider') as UISliderElement
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(rail(lg).getBoundingClientRect().height).toBe(root('lg').icon) // --md-sys-compact-lg, derived
+    expect(rail(lg).getBoundingClientRect().height).toBe(root('lg').iconBox) // --md-sys-compact-lg, derived
     lg.remove()
   })
 
@@ -296,8 +295,8 @@ describe('ui-slider browser smoke (AC2: thumb = box − 2c, the ADR-0042 Range-h
     document.body.append(el)
     // --md-sys-compact-md=16px → thumb = 16 − 2×2 = 12px (ADR-0041 cl.3: thumb = box − 2×inset, the inset c)
     const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(root('md').icon - 2 * root('md').c)
-    expect(Number.parseFloat(cs.height)).toBe(root('md').icon - 2 * root('md').c)
+    expect(Number.parseFloat(cs.width)).toBe(root('md').iconBox - 2 * root('md').c)
+    expect(Number.parseFloat(cs.height)).toBe(root('md').iconBox - 2 * root('md').c)
     el.remove()
   })
 
@@ -307,8 +306,8 @@ describe('ui-slider browser smoke (AC2: thumb = box − 2c, the ADR-0042 Range-h
     document.body.append(el)
     // --md-sys-compact-sm=12px → thumb = 12 − 2×2 = 8px
     const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(root('sm').icon - 2 * root('sm').c)
-    expect(Number.parseFloat(cs.height)).toBe(root('sm').icon - 2 * root('sm').c)
+    expect(Number.parseFloat(cs.width)).toBe(root('sm').iconBox - 2 * root('sm').c)
+    expect(Number.parseFloat(cs.height)).toBe(root('sm').iconBox - 2 * root('sm').c)
     el.remove()
   })
 
@@ -318,8 +317,8 @@ describe('ui-slider browser smoke (AC2: thumb = box − 2c, the ADR-0042 Range-h
     document.body.append(el)
     // --md-sys-compact-lg=20px → thumb = 20 − 2×3 = 14px (c is 3 at n 10)
     const cs = getComputedStyle(rail(el), '::after')
-    expect(Number.parseFloat(cs.width)).toBe(root('lg').icon - 2 * root('lg').c)
-    expect(Number.parseFloat(cs.height)).toBe(root('lg').icon - 2 * root('lg').c)
+    expect(Number.parseFloat(cs.width)).toBe(root('lg').iconBox - 2 * root('lg').c)
+    expect(Number.parseFloat(cs.height)).toBe(root('lg').iconBox - 2 * root('lg').c)
     el.remove()
   })
 
@@ -681,7 +680,7 @@ describe('ui-slider browser smoke (GH #1162 — one visible label owner under ui
 })
 
 // ADR-0245 clause 3: inside an opt-in region the hit area is 2n, the thumb icon box - 2c and the rail 2c thick (the
-// progress rule), against scale.mjs resolve(); outside, the rail keeps today's 3px.
+// progress rule), against foundations-model.mjs resolve(); outside, the rail keeps today's 3px.
 describe('ui-slider geometry inside an opt-in data-tier region (ADR-0245)', () => {
   const railHeight = (el: Element): number => Number.parseFloat(getComputedStyle(rail(el), '::before').height)
 
@@ -706,10 +705,10 @@ describe('ui-slider geometry inside an opt-in data-tier region (ADR-0245)', () =
         el.setAttribute('size', size)
         wrapper.append(el)
         document.body.append(wrapper)
-        expect(rail(el).getBoundingClientRect().height).toBe(r.icon)
+        expect(rail(el).getBoundingClientRect().height).toBe(r.iconBox)
         const thumb = getComputedStyle(rail(el), '::after')
-        expect(Number.parseFloat(thumb.width)).toBe(r.icon - 2 * r.c)
-        expect(Number.parseFloat(thumb.height)).toBe(r.icon - 2 * r.c)
+        expect(Number.parseFloat(thumb.width)).toBe(r.iconBox - 2 * r.c)
+        expect(Number.parseFloat(thumb.height)).toBe(r.iconBox - 2 * r.c)
         expect(railHeight(el)).toBe(2 * r.c)
         wrapper.remove()
       })

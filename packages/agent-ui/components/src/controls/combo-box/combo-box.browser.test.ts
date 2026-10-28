@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent, page } from 'vitest/browser'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import type { UIComboBoxElement } from './combo-box.ts'
 
 // Wave-4 S5 browser smoke — ui-combo-box (decomp S5 · overlay-controller.lld.md · ADR-0043).
@@ -29,6 +28,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container-box.css' // the box-model layer — provides the shared [data-fade-top]/[data-fade-bottom] mask
 import './combo-box.css'
 import './combo-box.ts'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ── mount/cleanup ─────────────────────────────────────────────────────────────────────────────
 
@@ -728,7 +728,7 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     // The single-line editor is exactly the md height 4n at the root register; its padding-block is
     // (h - font) / 2 - 1 at line-height 1, so a wrapped 2nd line grows it to h + font. Assert it stays
     // under h + 1 rather than growing for a second line.
-    const h = rootResolve('md').h
+    const h = rootResolve('md').height
     expect(
       rect.height,
       `${server.browser}: editor grew to ${rect.height}px — the placeholder wrapped onto a 2nd line (the fixed regression)`,
@@ -851,9 +851,9 @@ describe('ui-combo-box — whole-shape assertion (Test-the-whole-shape DoD law)'
     const r = rootResolve('md')
     expect(
       editorPad,
-      `${server.browser}: editor padding-inline (${editorPad}px) should equal 2n - c (${r.control.margin + r.labelMargin}px)`,
-    ).toBeCloseTo(r.control.margin + r.labelMargin, 0)
-    expect(editorH, `${server.browser}: editor frame is the derived height 4n`).toBeCloseTo(rootResolve('md').h, 0)
+      `${server.browser}: editor padding-inline (${editorPad}px) should equal 2n - c (${r.inset + r.labelInset}px)`,
+    ).toBeCloseTo(r.inset + r.labelInset, 0)
+    expect(editorH, `${server.browser}: editor frame is the derived height 4n`).toBeCloseTo(rootResolve('md').height, 0)
   })
 
   it("an open option's text lines up under the editor's text: the alignment law, measured from the editor edge with the panel's c outset (ADR-0245 Amendment 4)", async () => {

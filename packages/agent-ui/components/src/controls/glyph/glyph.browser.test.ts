@@ -1,13 +1,13 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import '@agent-ui/components/foundation-styles.css'
 import './glyph.css'
 import './glyph.ts'
 import type { UIGlyphElement } from './glyph.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ui-glyph geometry (ADR-0245 clause 4, T-0374): inside an opt-in region the host is the square 3n glyph slot and the
-// svg is the glyph box n + 6 centred in it, both against scale.mjs resolve() at the library root (product / sm) for sm, md and lg
+// svg is the glyph box n + 6 centred in it, both against foundations-model.mjs resolve() at the library root (product / sm) for sm, md and lg
 // and at product / md, one data-scale up; outside a region the em fallbacks hold.
 
 const mounted: HTMLElement[] = []

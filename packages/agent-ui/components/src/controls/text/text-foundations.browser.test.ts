@@ -1,12 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the field label n + 5 (T-0374 step 2)
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
 
 // ui-text geometry under ADR-0245 (the dark launch): inside an opt-in [data-tier] region the control reads the
-// derived tokens and measures against scale.mjs resolve(); outside one it still measures today's values.
+// derived tokens and measures against foundations-model.mjs resolve(); outside one it still measures today's values.
 
 const mounted: HTMLElement[] = []
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()))
@@ -34,9 +33,9 @@ const ROLE: Record<string, number> = {
   headline: root.type.heading,
   title: root.type.title,
   body: root.type.body,
-  label: model('product', 'sm', 'md').type.fieldLabel,
-  kicker: root.type.groupLabel, // an alias of the group label, not the section-label eyebrow (T-0117, ADR-0245 Amendment 3)
-  overline: root.type.groupLabel,
+  label: resolve('product', 'sm', 'md').type.fieldLabel,
+  kicker: root.type.groupKicker, // an alias of the group label, not the section-label eyebrow (T-0117, ADR-0245 Amendment 3)
+  overline: root.type.groupKicker,
   lead: root.type.subhead,
   quote: root.type.subhead,
 }

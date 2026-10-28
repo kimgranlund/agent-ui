@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve, type Resolved, type Step, type Tier } from '../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
-import { resolve as model, type Emitted } from '../../../../../scripts/lib/foundations-model.mjs' // the button anatomy (T-0374 step 7)
+import { resolve, parts, type Emitted, type Step, type Tier } from '../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -14,7 +13,7 @@ import '@agent-ui/components/all'
 // each exposed side, so its exposed text edge is m + W + C (8 at the root under balanced). Every control runs outside any region (the root register,
 // product at scale md: text edge 10 / 14 / 17 at sm / md / lg) and inside a data-tier region that differs from it
 // (product at scale sm), so the region leg still proves the register moves the rule.
-// Expected px come from scale.mjs resolve(), never a pinned literal. Edges are measured from the control's padding
+// Expected px come from foundations-model.mjs resolve(), never a pinned literal. Edges are measured from the control's padding
 // edge: the fleet writes padding = rule and draws its 1px border outside it.
 
 const REGISTERS: ReadonlyArray<readonly [string, Tier, Step, string]> = [
@@ -69,7 +68,7 @@ function edges(box: Element, inner: DOMRect): { start: number; end: number } {
 }
 const near = (got: number, want: number, label: string): void => expect(Math.abs(got - want), `${label}: got ${got}, want ${want}`).toBeLessThanOrEqual(TOLERANCE)
 
-const textEdge = (r: Resolved): number => r.control.margin + r.labelMargin // 2n - c
+const textEdge = (r: Emitted): number => r.inset + r.labelInset // 2n - c
 /** ui-button's exposed text edge (T-0374 step 7): m + W + C. */
 const buttonEdge = (e: Emitted): number => e.controlMargin + e.controlGutter + e.labelCompensation
 
@@ -78,9 +77,9 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
     for (const size of SIZES) {
       const r = resolve(tier, scale, size)
       const edge = textEdge(r)
-      const at = `size ${size} (n ${r.n}: margin ${r.control.margin}, label inset ${r.labelMargin}, text edge ${edge})`
+      const at = `size ${size} (n ${r.n}: margin ${r.inset}, label inset ${r.labelInset}, text edge ${edge})`
 
-      const e = model(tier, scale, size)
+      const e = resolve(tier, scale, size)
       const bEdge = buttonEdge(e)
       it(`ui-button at size ${size} (n ${r.n}: margin ${e.controlMargin}, label W + C ${e.controlGutter + e.labelCompensation}, text edge ${bEdge}): label-only, the 3n adornment wrappers, and the min width 4n`, async () => {
         const wrap = await mount(attrs, size, `
@@ -94,7 +93,7 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         const bare = edges(label, textRect(label))
         near(bare.start, bEdge, 'label-only text edge, start')
         near(bare.end, bEdge, 'label-only text edge, end')
-        near(px(label, 'min-inline-size'), r.minWidth, 'min width')
+        near(px(label, 'min-inline-size'), r.height, 'min width')
 
         const leading = q(wrap, '[data-case="leading"]')
         const icon = q(leading, '[slot="leading"]').getBoundingClientRect()
@@ -119,11 +118,11 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         near(bare.start, edge, 'label-only text edge, start')
         near(bare.end, edge, 'label-only text edge, end')
         // no explicit floor on a toggle (its anonymous label cannot clip): the rule itself keeps it at 4n or wider
-        expect(label.getBoundingClientRect().width, 'a label-only toggle is 4n - 2c plus its text').toBeGreaterThanOrEqual(r.minWidth)
+        expect(label.getBoundingClientRect().width, 'a label-only toggle is 4n - 2c plus its text').toBeGreaterThanOrEqual(r.height)
         const withIcon = q(wrap, '[data-case="icon"]')
         const icon = q(withIcon, '[slot="icon"]').getBoundingClientRect()
-        near(edges(withIcon, icon).start, r.control.margin, 'icon edge')
-        near(textRect(withIcon).left - icon.right, r.control.margin, 'icon to text')
+        near(edges(withIcon, icon).start, r.inset, 'icon edge')
+        near(textRect(withIcon).left - icon.right, r.inset, 'icon to text')
         near(edges(withIcon, textRect(withIcon)).end, edge, 'text edge beside the icon')
       })
 
@@ -134,14 +133,14 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
           <ui-textarea size="${size}" value="Value"></ui-textarea>
           <ui-select size="${size}" value="a"><div role="option" value="a">Value</div></ui-select>`, '240px')
         const field = q(wrap, 'ui-text-field[data-case="plain"]')
-        near(px(field, 'padding-inline-start'), r.control.margin, 'text-field box margin')
+        near(px(field, 'padding-inline-start'), r.inset, 'text-field box margin')
         near(edges(field, textRect(q(field, '[data-part="editor"]'))).start, edge, 'text-field value edge')
-        near(px(field, 'min-inline-size'), r.minWidth, 'text-field min width')
+        near(px(field, 'min-inline-size'), r.height, 'text-field min width')
 
         const leading = q(wrap, 'ui-text-field[data-case="leading"]')
         const icon = q(leading, '[slot="leading"]').getBoundingClientRect()
-        near(edges(leading, icon).start, r.control.margin, 'text-field icon edge')
-        near(textRect(q(leading, '[data-part="editor"]')).left - icon.right, r.control.margin, 'text-field icon to text')
+        near(edges(leading, icon).start, r.inset, 'text-field icon edge')
+        near(textRect(q(leading, '[data-part="editor"]')).left - icon.right, r.inset, 'text-field icon to text')
 
         const area = q(wrap, 'ui-textarea')
         near(edges(area, textRect(q(area, '[data-part="editor"]'))).start, edge, 'textarea text edge')
@@ -149,9 +148,9 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         const trigger = q(wrap, 'ui-select [data-part="trigger"]')
         near(edges(trigger, textRect(q(trigger, '[data-part="label"]'))).start, edge, 'select trigger text edge')
         const caret = q(trigger, '[data-part="caret"]').getBoundingClientRect()
-        near(edges(trigger, caret).end, r.control.margin, 'select caret cell edge')
+        near(edges(trigger, caret).end, r.inset, 'select caret cell edge')
         near(caret.left - q(trigger, '[data-part="label"]').getBoundingClientRect().right, r.c, 'select gutter c')
-        near(px(q(wrap, 'ui-select'), 'min-inline-size'), r.minWidth, 'select min width')
+        near(px(q(wrap, 'ui-select'), 'min-inline-size'), r.height, 'select min width')
       })
 
       it(`the unsized controls at ${at}: combo-box, tab, segment, menu and listbox rows`, async () => {
@@ -164,33 +163,33 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
           <ui-multi-select size="${size}" name="m"><div role="option" value="a">Value</div></ui-multi-select>`, '320px')
         const editor = q(wrap, 'ui-combo-box [data-part="editor"]')
         near(edges(editor, textRect(editor)).start, edge, 'combo-box value edge')
-        near(px(q(wrap, 'ui-combo-box'), 'min-inline-size'), r.minWidth, 'combo-box min width')
+        near(px(q(wrap, 'ui-combo-box'), 'min-inline-size'), r.height, 'combo-box min width')
 
         const tab = q(wrap, 'ui-tab')
         const tabEdges = edges(tab, textRect(tab))
         near(tabEdges.start, edge, 'tab text edge, start')
         near(tabEdges.end, edge, 'tab text edge, end')
-        near(px(tab, 'min-inline-size'), r.minWidth, 'tab min width') // a label-only control is 4n - 2c plus its text, so the floor binds only under 2c of text
+        near(px(tab, 'min-inline-size'), r.height, 'tab min width') // a label-only control is 4n - 2c plus its text, so the floor binds only under 2c of text
         expect(getComputedStyle(tab).flexShrink, 'a tab never shrinks under its label: the strip scrolls (GH #221)').toBe('0')
         const [first, second] = [...wrap.querySelectorAll('ui-tab')] as [HTMLElement, HTMLElement]
         near(second.getBoundingClientRect().left - first.getBoundingClientRect().right, r.c, 'tabs touch with the tight gutter c')
 
         const segment = q(wrap, 'ui-segment')
         near(px(segment, 'padding-inline-start'), edge, 'segment text edge')
-        expect(segment.getBoundingClientRect().width, 'a segment is 4n - 2c plus its text, never under 4n').toBeGreaterThanOrEqual(r.minWidth)
+        expect(segment.getBoundingClientRect().width, 'a segment is 4n - 2c plus its text, never under 4n').toBeGreaterThanOrEqual(r.height)
 
         // the menu panel and the select listbox are closed popovers: their rows have computed style, no layout
         near(px(q(wrap, '[role="menuitem"]'), 'padding-inline-start'), edge, 'menu row text edge')
         const checked = q(wrap, '[role="menuitemcheckbox"]')
-        near(px(q(checked, '[data-part="check"]'), 'inset-inline-start'), r.control.margin, 'menu check box edge') // the ui-glyph check (T-0392)
-        near(px(checked, 'padding-inline-start'), r.control.margin + Math.max(r.icon, glyphBox(r)) + r.control.margin, 'menu check row: box edge n + slot max(2n, n + 6) + n to the text')
+        near(px(q(checked, '[data-part="check"]'), 'inset-inline-start'), r.inset, 'menu check box edge') // the ui-glyph check (T-0392)
+        near(px(checked, 'padding-inline-start'), r.inset + Math.max(r.iconBox, glyphBox(r)) + r.inset, 'menu check row: box edge n + slot max(2n, n + 6) + n to the text')
         near(px(checked, 'padding-inline-end'), edge, 'menu check row text edge, end')
         near(px(q(wrap, 'ui-select [role="option"]'), 'padding-inline-start'), edge, 'select option row text edge')
         near(px(q(wrap, 'ui-combo-box [role="option"]'), 'padding-inline-start'), edge, 'combo-box option row text edge')
 
         const row = q(wrap, 'ui-multi-select [role="option"]')
         // the tick cell is the 2n icon cell, never smaller than the n + 6 glyph box (T-0374: 11 at n 5)
-        near(edges(row, textRect(row)).start, r.control.margin + Math.max(r.icon, glyphBox(r)) + r.control.margin, 'listbox row: tick cell at n, max(2n, n + 6) wide, n to the text')
+        near(edges(row, textRect(row)).start, r.inset + Math.max(r.iconBox, glyphBox(r)) + r.inset, 'listbox row: tick cell at n, max(2n, n + 6) wide, n to the text')
         near(px(row, 'padding-inline-end'), edge, 'listbox row text edge, end')
       })
 
@@ -225,9 +224,9 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
           <ui-badge label="ok" intent="success"></ui-badge>
           <ui-checkbox size="${size}">Label</ui-checkbox>`)
         const badge = q(wrap, 'ui-badge')
-        near(badge.getBoundingClientRect().height, r.parts.badge, 'badge height')
-        expect(r.parts.badge, 'badge height is the icon size plus a c ring').toBe(2 * r.n + 2 * r.c)
-        near(px(badge, 'border-start-start-radius'), model(tier, scale, size).chip.radius, 'badge radius') // the chip radius A x h/2 (Amendment 5, T-0374 step 6)
+        near(badge.getBoundingClientRect().height, parts(r).badge, 'badge height')
+        expect(parts(r).badge, 'badge height is the icon size plus a c ring').toBe(2 * r.n + 2 * r.c)
+        near(px(badge, 'border-start-start-radius'), resolve(tier, scale, size).chip.radius, 'badge radius') // the chip radius A x h/2 (Amendment 5, T-0374 step 6)
         const bare = edges(badge, textRect(badge))
         near(bare.start, r.chip.margin + r.c, 'badge text edge 2c, start')
         near(bare.end, r.chip.margin + r.c, 'badge text edge 2c, end')
@@ -236,13 +235,13 @@ for (const [name, tier, scale, attrs] of REGISTERS) {
         near(glyph.width, glyphBox(r), 'badge glyph')
         near(edges(marked, glyph).start, r.chip.margin + r.c, 'the glyph sits c inside its 2n mark box at the chip margin')
         near(textRect(marked).left - glyph.right, r.c + r.chip.gutter + r.c, 'mark box to text: gutter c + label margin c')
-        near(px(q(wrap, 'ui-checkbox'), 'border-start-start-radius', '::before'), r.parts.checkboxRadius, 'checkbox radius')
-        expect(r.parts.checkboxRadius).toBe(Math.ceil(r.n / 2))
+        near(px(q(wrap, 'ui-checkbox'), 'border-start-start-radius', '::before'), r.checkboxRadius, 'checkbox radius')
+        expect(r.checkboxRadius).toBe(Math.ceil(r.n / 2))
       })
     }
 
     it('action labels align per the table: centered alone or between content, start with trailing only, end with leading only', async () => {
-      const e = model(tier, scale, 'md')
+      const e = resolve(tier, scale, 'md')
       const edge = buttonEdge(e)
       const wrap = await mount(attrs, 'md', `
         <ui-button data-case="alone">Label</ui-button>

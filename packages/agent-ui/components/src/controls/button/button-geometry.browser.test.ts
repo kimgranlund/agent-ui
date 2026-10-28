@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 import { server, cdp } from 'vitest/browser'
 
 // Phase-1 s13 — the CROSS-ENGINE geometry + forced-colors smoke (the gold geometry PROOF; goals §G5 DoD).
@@ -87,9 +87,9 @@ describe('ui-button cross-engine geometry + forced-colors smoke (s13)', () => {
       }
       // The derived ramp at the root register (product / md), ADR-0245 cl.3: height 4n, font = control type.
       const ramp = (['sm', 'md', 'lg'] as const).map((s) => rootResolve(s))
-      expect(heights[0]).toBeCloseTo(ramp[0].h, 0)
-      expect(heights[1]).toBeCloseTo(ramp[1].h, 0)
-      expect(heights[2]).toBeCloseTo(ramp[2].h, 0)
+      expect(heights[0]).toBeCloseTo(ramp[0].height, 0)
+      expect(heights[1]).toBeCloseTo(ramp[1].height, 0)
+      expect(heights[2]).toBeCloseTo(ramp[2].height, 0)
       expect(fonts[0]).toBeCloseTo(ramp[0].type.control, 0)
       expect(fonts[1]).toBeCloseTo(ramp[1].type.control, 0)
       expect(fonts[2]).toBeCloseTo(ramp[2].type.control, 0)

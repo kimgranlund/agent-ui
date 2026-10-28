@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6)
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -42,7 +41,7 @@ describe('ui-multi-select foundations (ADR-0245 lane a01)', () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
       expect(read(el, 'padding-inline-start'), 'padding').toBeCloseTo(r.c, 1)
-      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(model('product', 'sm', size).controlRadius + r.c, 1) // concentric: the row's control radius plus the inset c (Amendment 5, T-0374 step 6)
+      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(resolve('product', 'sm', size).controlRadius + r.c, 1) // concentric: the row's control radius plus the inset c (Amendment 5, T-0374 step 6)
     })
   }
 })

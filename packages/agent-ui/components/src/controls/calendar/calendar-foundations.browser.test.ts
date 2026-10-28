@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import './calendar.css'
 import './calendar.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ui-calendar geometry (ADR-0245 clause 3, dark launch): the day cell is 4n tall. Outside an opt-in region the derived tokens are
 // undefined and the token resolves to today's ramp read (28), so default pages do not move.
@@ -26,7 +26,7 @@ describe('ui-calendar geometry inside an opt-in region', () => {
   for (const scale of ['sm', 'md'] as const) {
     it(`product / ${scale}: --ui-calendar-cell-size is the 4n cell`, () => {
       const r = resolve('product', scale, 'md')
-      expect(token(`<div data-tier="product" data-scale="${scale}"><ui-calendar></ui-calendar></div>`)).toBe(r.h)
+      expect(token(`<div data-tier="product" data-scale="${scale}"><ui-calendar></ui-calendar></div>`)).toBe(r.height)
     })
   }
 })

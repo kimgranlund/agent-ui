@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { rootResolve } from '../../scripts/lib/foundations-rules.mjs'
 
 // highlight-doc.browser.test.ts — GH #1264, the real-engine proof for the guide page's PROSE treatment and its
 // read-only ui-code specimens. Imports the REAL page module through the browser dev-transform pipeline (real
@@ -12,6 +11,7 @@ import { rootResolve } from '../../scripts/lib/foundations-rules.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './highlight-doc.ts'
+import { rootResolve } from '../../scripts/lib/foundations-model.mjs'
 
 const app = document.querySelector('[data-page-content]') as HTMLElement
 

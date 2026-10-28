@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // G9 s5 — the ui-list cross-engine smoke (Chromium + WebKit via Playwright; npm run test:browser). jsdom
 // can't compute flex/gap or honour the [density] ramp — a REAL engine resolves `display:flex; flex-direction
@@ -15,6 +14,7 @@ import '@agent-ui/components/foundation-styles.css' // --md-sys-color-* roles + 
 import '../_surface/container.css' // the shared surface seam (s2)
 import './list.css' // the element's flex layout
 import { UIListElement } from './list.ts' // self-defines ui-list
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // Re-expose the protected `internals` so a probe can read the host-at-boundary AX role a real engine applied.
 class ProbeList extends UIListElement {

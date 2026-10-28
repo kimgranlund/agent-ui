@@ -1,7 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp } from 'vitest/browser'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // avatar.browser.test.ts — the cross-engine browser-truth proof for ui-avatar (SPEC-N2: jsdom is blind to
 // painted geometry, computed-style ink, and WHCM). Covers: the control-height square-box geometry under
@@ -16,6 +14,7 @@ import './avatar.css'
 import './avatar.ts'
 import '../icon/icon.css'
 import '../icon/icon.ts'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 interface CdpSession {
   send(method: string, params?: Record<string, unknown>): Promise<unknown>
@@ -37,16 +36,16 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
   it('default (size=md, no ancestor [scale]) → 32×32 box (--md-sys-height-md at the root register, a button\'s height)', () => {
     const el = mount('<ui-avatar identity="Ada Lovelace"></ui-avatar>')
     const box = el.getBoundingClientRect()
-    expect(box.width).toBe(rootResolve('md').h)
-    expect(box.height).toBe(rootResolve('md').h)
+    expect(box.width).toBe(rootResolve('md').height)
+    expect(box.height).toBe(rootResolve('md').height)
   })
 
   it('[size=sm] → 24px box; [size=lg] → 40px box (the control-height ladder, 4n at the root register since ADR-0245)', () => {
     const sm = mount('<ui-avatar identity="Ada Lovelace" size="sm"></ui-avatar>')
-    expect(sm.getBoundingClientRect().width).toBe(rootResolve('sm').h)
+    expect(sm.getBoundingClientRect().width).toBe(rootResolve('sm').height)
 
     const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')
-    expect(lg.getBoundingClientRect().width).toBe(rootResolve('lg').h)
+    expect(lg.getBoundingClientRect().width).toBe(rootResolve('lg').height)
   })
 
   it('data-scale lg × size md → 40px (4n at product / lg, ADR-0245 cl.3), a region off the product / md root', () => {
@@ -56,7 +55,7 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
     document.body.append(wrap)
     mounted.push(wrap)
     const el = wrap.querySelector('ui-avatar') as HTMLElement
-    expect(el.getBoundingClientRect().width).toBe(resolve('product', 'lg', 'md').h)
+    expect(el.getBoundingClientRect().width).toBe(resolve('product', 'lg', 'md').height)
   })
 
   it('ui-avatar and ui-button share the same height row: the avatar box equals the derived control height (4n, ADR-0245)', () => {
@@ -67,7 +66,7 @@ describe('ui-avatar — control-height square box (SPEC-R20 AC1; ADR-0112 Amendm
     el.parentElement!.append(probe)
     const row = probe.getBoundingClientRect().height
     probe.remove()
-    expect(row).toBe(rootResolve('md').h)
+    expect(row).toBe(rootResolve('md').height)
     expect(el.getBoundingClientRect().height).toBe(row)
   })
 
@@ -106,7 +105,7 @@ describe('ui-avatar — whole-shape: every fallback link actually paints (test-t
     mounted.push(region)
     const sm = region.querySelector('ui-avatar') as HTMLElement
     const smBox = sm.getBoundingClientRect().width
-    expect(smBox, 'the sm box is 4n at n 5').toBe(resolve('product', 'sm', 'sm').h)
+    expect(smBox, 'the sm box is 4n at n 5').toBe(resolve('product', 'sm', 'sm').height)
     expect(smBox * 0.42, 'anti-vacuous: the bare ratio lands under the floor on the sm box').toBeLessThan(9)
     expect(parseFloat(getComputedStyle(sm.querySelector('[data-part="initials"]') as HTMLElement).fontSize)).toBeGreaterThanOrEqual(9)
     const lg = mount('<ui-avatar identity="Ada Lovelace" size="lg"></ui-avatar>')

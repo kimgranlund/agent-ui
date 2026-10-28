@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the skill's anatomy (T-0374 step 7)
+import { resolve as model, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the skill's anatomy (T-0374 step 7)
 
 // TKT-0042 / ADR-0133 — the cross-engine proof for the label-wrapper ellipsis mechanism. Runs in BOTH
 // Chromium and WebKit (vitest.browser.config.ts). Two legs, both explicitly called for by the ticket's
@@ -43,7 +42,7 @@ describe('ui-button label-wrapper geometry regression (ADR-0133) — the label F
     const { btn } = mount('<ui-button>Save</ui-button>') // md default, wide (unconstrained) container
     const r = rootResolve('md')
     const e = model('product', 'md', 'md')
-    expect(frameHeight(btn), 'md frame height (geometry.md §1 row)').toBeCloseTo(r.h, 0)
+    expect(frameHeight(btn), 'md frame height (geometry.md §1 row)').toBeCloseTo(r.height, 0)
     expect(padStartPx(btn), 'leading control margin m').toBeCloseTo(e.controlMargin, 1)
     expect(padEndPx(btn), 'trailing control margin m').toBeCloseTo(e.controlMargin, 1)
 
@@ -61,7 +60,7 @@ describe('ui-button label-wrapper geometry regression (ADR-0133) — the label F
       '<ui-button><svg slot="leading" data-role="icon"><rect width="18" height="18"/></svg>Download</ui-button>',
     )
     const h = frameHeight(btn)
-    expect(h).toBeCloseTo(rootResolve('md').h, 0)
+    expect(h).toBeCloseTo(rootResolve('md').height, 0)
     // both edges pad the control margin m; the wrapper pads W on its occupied start side and W + C on its exposed
     // end side (T-0374 step 7).
     const e = model('product', 'md', 'md')

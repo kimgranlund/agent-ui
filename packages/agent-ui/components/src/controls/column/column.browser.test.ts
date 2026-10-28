@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // s4 — the ui-column cross-engine smoke (the browser-truth harness; runs in BOTH Chromium and WebKit via
 // vitest.browser.config.ts → playwright instances). jsdom computes no layout, so the REAL proofs live here:
@@ -16,6 +14,7 @@ import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-* role
 import '../_surface/container.css' // the shared surface seam (elevation/brightness) — no container-type here
 import './column.css' // the column layout sheet (token block + @scope)
 import './column.ts' // self-defines ui-column
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 let host: HTMLElement
 beforeEach(() => {
