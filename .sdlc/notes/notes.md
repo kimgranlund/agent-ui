@@ -1023,3 +1023,7 @@
 - note: produce.ts:2078-2086 the new empty-round guard covers only the T-0298 semantic repair (the builder's report names the other forced repairs, SURFACE_DROPPED, SURFACE_CLAIMED, CHANGE_CLAIMED, T-0428, as still falling to PARSE); a follow-up ticket candidate.
 - note: no `(red)` deviation lines printed by redck.py; the red run above was done by the verifier at base.
 - note: no keyless replay under scripts/e2e-admin/probe/replays/ was added; the ticket made it optional.
+
+## T-0491: Component and A2UI LLDs drop the retired component-styles barrel step and re-sync their file maps (2026-10-28)
+
+- note: .claude/docs/lld/a2ui-live-agent.lld.md:110 the retained history text keeps its em dashes from before this change; the builder added none.

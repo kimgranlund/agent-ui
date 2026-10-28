@@ -24,7 +24,7 @@ plan (§8).
 | ID | Component | File | Traces |
 |---|---|---|---|
 | LLD-C1 | Page shell + chat-log anatomy — single scrolling log, user/agent bubbles, composer, reset | `site/pages/a2ui-chat.ts` (new) + `site/a2ui-chat.html` (new) + `site/pages/a2ui-chat.css` (new) | SPEC-R1, R2 |
-| LLD-C2 | `SurfaceRegistry` — per-surface host/mount/bubble lifecycle, generalizing `ask-registry.ts`'s `AskRegistry` from "asks only" to every surface | `site/lib/surface-registry.ts` (new) | SPEC-R3, R4 |
+| LLD-C2 | `SurfaceRegistry` — per-surface host/mount/bubble lifecycle, generalizing `ask-registry.ts`'s `AskRegistry` from "asks only" to every surface | `site/lib/surface-registry.ts` (retired in ec78f71d5, M2 Phase 2: the page re-hosts on `ui-conversation`; the rest of this row is history) | SPEC-R3, R4 |
 | LLD-C3 | Line router — routes each ingested line to the correct surface's host (fresh surface vs known surface vs delete), reusing `surfaceIdOf`/`componentTypesOf` from `ask-registry.ts` | `site/pages/a2ui-chat.ts` (LLD-C1's file, the `routeLine` function) | SPEC-R3, R4 |
 | LLD-C4 | Narration driver — turn-duration `ui-status-stream` entries, mechanical-category + (when present) `TurnTrace` enrichment | `site/pages/a2ui-chat.ts` (the `narrate` function) | SPEC-R5 |
 | LLD-C5 | Wire disclosure per bubble | `site/pages/a2ui-chat.ts` (the `a2a-artifact-feed.ts` `disclosure()` idiom, copied as page-chrome — not promoted to a shared lib export; a second copy is the deliberate cost, §6) | SPEC-R7 |
