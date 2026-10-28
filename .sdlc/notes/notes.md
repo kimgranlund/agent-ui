@@ -1040,3 +1040,7 @@
 
 - note: no `process deviation:` lines from `redck.py deviations`; no `(red)` criteria in this handoff.
 - note: criterion 3's check is a plain git diff against HEAD; the r15 folders show no diff, and the check goes red on any edit to them by construction.
+
+## T-0495: ui-text-field type=color stops leaking the swatch value text as a vertical strip (2026-10-28)
+
+- note: text-field-geometry.browser.test.ts:870 the assertions are guarded by `if (value !== null)`, so an absent value part passes; allowed by the criterion's "or is absent".

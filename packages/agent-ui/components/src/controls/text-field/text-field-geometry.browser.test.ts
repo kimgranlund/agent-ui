@@ -864,6 +864,20 @@ describe('ui-text-field Wave-C9 — type=color swatch picker (both engines)', ()
     expect(field.querySelector('ui-color-picker'), 'the picker itself must not exist before first open').toBeNull()
   })
 
+  it('the swatch-button preview shows only the color chip: its value text part takes no visible box (T-0495)', () => {
+    const { field } = mount('<ui-text-field type="color" value="#3b82f6"></ui-text-field>')
+    const swatch = field.querySelector('[data-part="swatch-button"] ui-swatch') as HTMLElement
+    const value = swatch.querySelector('[data-part="value"]') as HTMLElement | null
+    if (value !== null) {
+      const rect = value.getBoundingClientRect()
+      expect(getComputedStyle(value).display, 'the value part must not render inside the adornment').toBe('none')
+      expect(rect.width, 'the value part took a box (the vertical strip leak)').toBe(0)
+      expect(rect.height, 'the value part took a box (the vertical strip leak)').toBe(0)
+    }
+    const fieldH = field.getBoundingClientRect().height
+    expect(swatch.getBoundingClientRect().height, 'the swatch adornment grew taller than the field').toBeLessThanOrEqual(fieldH)
+  })
+
   it('OVERLAY: swatch button click opens the popup in the top layer (:popover-open)', async () => {
     const { field } = mount('<ui-text-field type="color" value="#3b82f6"></ui-text-field>')
     const swatchBtn = field.querySelector('[data-part="swatch-button"]') as HTMLElement
