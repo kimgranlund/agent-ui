@@ -19,7 +19,7 @@
 - Write the **CSS trio**: tokens in `:where(ui-{name})` from `--md-sys-color-` roles; styles in `@scope (ui-{name})`
   consuming **only** `--ui-{name}-*`; a barrel `@import`ing both.
 - Wire geometry **off the ramp** (`block-size`, `padding-block: 0`, the slot/slotless inline-pad,
-  affordance `= font`) — per `docs/references/geometry.md`.
+  affordance `= font`) — per `.claude/docs/references/geometry.md`.
 - **Intent never travels by color alone** (WCAG SC 1.4.1; ADR-0057). The intent anchors are L-matched,
   so intent is hue-only at the token level and collapses under CVD (danger↔success is indistinguishable
   under deuteranopia). Wherever an intent role (`--md-sys-color-danger/-warning/-success/-info` — or any color role

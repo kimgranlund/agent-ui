@@ -996,3 +996,7 @@
 ## T-0487: Stale-docs sweep: specs, LLDs, references and READMEs checked against the code (2026-10-28)
 
 - note: .sdlc/AGENTS.md and .sdlc/tickets/roadmap.md carry uncommitted edits unrelated to T-0487; keep them out of this ticket's commit.
+
+## T-0492: site-authoring sitemap rule inverted back, docs/ shorthand paths and the roster-source rename fixed in skills and references (2026-10-28)
+
+- note: four added lines in the diff carry pre-existing em dashes on edited lines (e.g. state-and-persistence.md:78, content-types.md:114); no new em dash was introduced.

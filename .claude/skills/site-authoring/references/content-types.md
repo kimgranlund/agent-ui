@@ -111,8 +111,8 @@ payload type-checking against `protocol.ts` is a compile-time gate (`npm run che
 **What it is.** Prose pages explaining the *why* and *how* — onboarding, theming via the token roles, the
 layered architecture — the narrative the showcase pages don't carry.
 
-**Strategy.** A guide **summarizes and routes**; it does not restate the canonical `docs/` (plan / goals
-/ process / `references/`). Cite the owner by ID/path (`PRD-G#`, `SPEC-R#`, `docs/references/tokens.md`)
+**Strategy.** A guide **summarizes and routes**; it does not restate the canonical `.claude/docs/` (plan / goals
+/ process / `references/`). Cite the owner by ID/path (`PRD-G#`, `SPEC-R#`, `.claude/docs/references/tokens.md`)
 and link, so the single source stays single. Every code sample is real and **type-checks** (a guide's
 samples are the most drift-prone surface — keep them runnable or derive them).
 
@@ -187,8 +187,9 @@ The proven mechanism for one control's scenario demo page — 39 pages shipped t
   control emits events; DOM via `el()`, never `innerHTML`; the intro closes "The API table is on the
   ui-X API page."
 - **Registration**: a Demo card in `site/main.ts`'s CARD_GROUPS; `llms.txt` gains
-  `; [demo](./x-demo.html)` (the G2 coverage gate bites otherwise); the sitemap EXCLUDES demo pages
-  BY DESIGN (`EXCLUDED_SUFFIX` in `site/lib/sitemap.test.ts`) — their absence there is not a defect.
+  `; [demo](./x-demo.html)` (the G2 coverage gate bites otherwise); the sitemap PREFERS the demo page
+  (`canonicalPageFor` in `site/lib/sitemap.test.ts`, GH #1619): `{slug}-demo.html` is the family's entry
+  when it exists, else `{slug}-doc.html`; a missing demo is a G2 failure (High).
 - **Gates**: the coverage tier law is a MINIMUM — extra demos always pass; behaviour proof rides a
   browser test per the `modal-demo.browser.test.ts` precedent.
 - **Trap**: `data-role` is reserved canonical role vocab enforced by `site-canon.test.ts` — demo/test
