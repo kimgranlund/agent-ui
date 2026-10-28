@@ -82,7 +82,7 @@ inline space, and explicitly flagged by Kim as low-hanging fruit.
 
 ### 2026-07-14 — ADR-0133 authored (proposed) and `ui-button` label-ellipsis anatomy shipped; `ui-badge`/`ui-tab` named-deferred
 
-**ADR:** [`.claude/docs/adr/0133-button-label-ellipsis-anatomy.md`](../adr/0133-button-label-ellipsis-anatomy.md)
+**ADR:** [`.claude/docs/adr/0133-button-label-ellipsis-anatomy.md`](../../adr/0133-button-label-ellipsis-anatomy.md)
 (ADR-0133), status `proposed` — never self-ratified, awaiting Kim. Extends ADR-0106 clause 6 (the
 reserved `ui-button` anatomy follow-up) and reuses ADR-0078 clause 4's `ui-text` stamp/heal
 `MutationObserver` mechanism, adapted from a conditional semantic stamp to an unconditional label

@@ -56,9 +56,9 @@ large inputs up to a `max-height` of `6em`.
   browser files) green in Chromium + WebKit; `npm run size` within budget; independent review before done.
 
 ## Links
-- [LLD](../lld/conversation-composer.lld.md) — v2 section appended (the anatomy/mechanism pin).
-- [TKT-0056](tkt-0056-conversation-composer-extraction.md) — the extraction this builds on (v1).
-- [TKT-0057](tkt-0057-text-field-disable-focus-loss-chromium.md) — the Chromium focus-loss-on-disable
+- [LLD](../../lld/conversation-composer.lld.md) — v2 section appended (the anatomy/mechanism pin).
+- [TKT-0056](../../tickets/tkt-0056-conversation-composer-extraction.md) — the extraction this builds on (v1).
+- [TKT-0057](../../tickets/tkt-0057-text-field-disable-focus-loss-chromium.md) — the Chromium focus-loss-on-disable
   bug found against the OLD nested `ui-text-field`; the new own-editor busy path re-tests the same
   question (the browser probe keeps the engine-split assertion, retargeted).
 - `packages/agent-ui/components/src/controls/textarea/textarea.ts` / `.css` — the donor pattern

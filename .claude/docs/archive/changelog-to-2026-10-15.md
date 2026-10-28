@@ -1024,7 +1024,7 @@ committed color back into `surface.data`. Gates: check · a2ui 975/975 · the si
   tallied `SURFACE_DEGRADED`, instead of a generic halt.
 - **The user and the persona steer it.** A mechanical override ("just tell me", "show me ... as a table")
   withholds or forces the tool; a persona's `prefers` setting adds one advisory prompt section.
-- **Records.** [ADR-0242](.claude/docs/adr/0242-render-surface-terminal-tool-response-type.md) (proposed),
+- **Records.** [ADR-0242](../adr/0242-render-surface-terminal-tool-response-type.md) (proposed),
   the response-type PRD, SPEC and LLD, amendment pointers on the live-agent SPEC, the LLD-C3 and LLD-C10
   folds, a `response-type` eval leg with a 43-prompt labelled set, and three kit scenarios. The legacy
   text-JSONL shape stays byte-identical, so every existing fixture and capture still replays.

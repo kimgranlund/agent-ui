@@ -80,7 +80,7 @@ mismatch that likely resolves to the same visual result today (both chains land 
 - `packages/agent-ui/app/src/controls/agent-admin/agent-admin.css` (the two rule blocks in question)
 - `packages/agent-ui/components/src/controls/textarea/textarea.css:86-106` (the `@scope`-scoped rule these
   are competing against)
-- [TKT-0039](tkt-0039-agent-admin-ui.md) (the in-progress `ui-agent-admin` build this belongs to)
+- [TKT-0039](../../tickets/tkt-0039-agent-admin-ui.md) (the in-progress `ui-agent-admin` build this belongs to)
 
 ## Findings
 
@@ -138,8 +138,7 @@ that chain already matches `ui-text-field`'s — no visual regression from the r
 
 Fix: `packages/agent-ui/app/src/controls/agent-admin/agent-admin.css` — removed the `[data-part='entry-
 content']` and `[data-part='entry-add-content']` rule blocks entirely (dead-code removal, no behavior
-change — confirmed by the evidence above); trimmed `[data-part='entry-content']:focus-visible,
-[data-part='entry-add-content']:focus-visible, ...` to just the two live native-input selectors.
+change — confirmed by the evidence above); trimmed `[data-part='entry-content']:focus-visible, [data-part='entry-add-content']:focus-visible, ...` to just the two live native-input selectors.
 
 Regression test: `packages/agent-ui/app/src/controls/agent-admin/agent-admin.browser.test.ts:319` — new
 describe block `'ui-agent-admin cross-engine smoke — TKT-0050/TKT-0059: entry-content/entry-add-content

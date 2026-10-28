@@ -4,8 +4,8 @@
 
 - **M-A "SaaS Data Workbench" — 🟢 DONE 2026-08-05**, the whole 2026-07-28 three-milestone arc's
   last leg (`.claude/docs/roadmap.md` §2/§3). Full contract chain: intakes frozen
-  ([ADR-0163](../../adr/0163-ui-table-interactive-widening.md) the `ui-table` widening,
-  [ADR-0164](../../adr/0164-entry-list-extraction-home.md) the entry-list extraction home, both
+  ([ADR-0163](../../../adr/0163-ui-table-interactive-widening.md) the `ui-table` widening,
+  [ADR-0164](../../../adr/0164-entry-list-extraction-home.md) the entry-list extraction home, both
   accepted) → PRD accepted (`.claude/docs/prd/saas-data-workbench.prd.md` v0.2, Kim 2026-07-31) →
   SPEC accepted (`.claude/docs/spec/saas-data-workbench.spec.md` v0.1, Kim 2026-08-05, ruling
   PRD-D4/D5/D6) → **MA-1** ui-table widened + `ui-pagination` minted + catalog expression (PR
@@ -18,7 +18,7 @@
   probe proves the display-only default surface unchanged (cl.10). Catalog: `Table`'s 3-slot
   multi-slot value mark (`selected/select` · `sort/change` · `page/change`), a new `Pagination`
   row, `FEED_EXCLUDED` dispositions (ADR-0163 cl.9, reusing the ratified
-  [ADR-0161](../../adr/0161-catalog-multi-slot-two-way-value-marks.md) mechanism — no new
+  [ADR-0161](../../../adr/0161-catalog-multi-slot-two-way-value-marks.md) mechanism — no new
   catalog-mechanism work owed). Files exist and were confirmed on disk:
   `packages/agent-ui/components/src/controls/{table,pagination}/`.
 - **MA-2 — the entry-list machinery is consumable AND styled outside `ui-agent-admin`**
@@ -190,7 +190,7 @@ where the fence lives so a future intake doesn't have to re-derive it:
   precedent (ADR-0137) — the same producer toolkit the shell/agent-admin work already exercises
   live; the workbench uses only the recorded half (PRD-D5).
 - **`a2ui` catalog ← `components`**: the widened `Table`'s 3-slot value mark reuses
-  [ADR-0161](../../adr/0161-catalog-multi-slot-two-way-value-marks.md)'s mechanism, already
+  [ADR-0161](../../../adr/0161-catalog-multi-slot-two-way-value-marks.md)'s mechanism, already
   ratified from a prior wave — no new catalog primitive was needed, only a new consumer of an
   existing one.
 - **`app` never imports `router`** (ADR-0115) — explicitly held through this wave (SPEC-N9); any

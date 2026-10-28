@@ -165,5 +165,5 @@ untouched: the legend's real text needs no override.
 ## Explicitly later
 
 Hover/keyboard interaction and events (ADR-0228 cl.7). Catalog disposition (the `Gauge` A2UI row) is a
-separate, later intake per [ADR-0229](../../../../../.claude/docs/adr/0229-svg-chart-family-extensions.md)
+separate, later intake per [ADR-0229](../../../../../../.claude/docs/adr/0229-svg-chart-family-extensions.md)
 cl.7 — GH #1568 (svg-charts wave 4).

@@ -33,7 +33,7 @@ concurrent session's edits); reviewers are instructed to review the WORKING-TREE
 ## Links
 - `.claude/skills/agent-ui-lateral-review/SKILL.md` — the workflow (axis packs = the reviewers' canon).
 - [TKT-0064](tkt-0064-lateral-fleet-review-workflow.md) — the design record.
-- [TKT-0046](tkt-0046-fleet-interaction-state-styling-consistency-audit.md) — the styling axis's prior
+- [TKT-0046](../../tickets/tkt-0046-fleet-interaction-state-styling-consistency-audit.md) — the styling axis's prior
   (pre-TKT-0062-law) sweep; this run supersedes its entry-control verdicts.
 
 ## Findings

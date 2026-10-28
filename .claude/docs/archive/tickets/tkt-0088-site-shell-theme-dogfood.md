@@ -26,7 +26,7 @@ stays untouched (its LLD's own prediction for this seam).
 - No fetch/env code enters any packaged component; the loader lives site-side.
 
 ## Links
-- [ADR-0141](../adr/0141-theme-packs-ultimate-tokens-pipeline.md) — the contract ·
+- [ADR-0141](../../adr/0141-theme-packs-ultimate-tokens-pipeline.md) — the contract ·
   [TKT-0087](tkt-0087-theme-pack-pipeline.md) — the packs this consumes.
 
 ## Scope/Open

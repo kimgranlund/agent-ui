@@ -89,7 +89,7 @@ support, and could point to a real composition gap other `ui-split`-based app su
 - `[[text-field-no-intrinsic-width]]` memory / `text-field.css:150`'s `min-inline-size: 0` precedent —
   the exact shrink-guard pattern this ticket's fix likely needs to reuse, if the Agent Name field
   (`ui-text-field`, 20ch floor) turns out to be the forcing element
-- [TKT-0039](tkt-0039-agent-admin-ui.md) (the in-progress `ui-agent-admin` build this demo belongs to)
+- [TKT-0039](../../tickets/tkt-0039-agent-admin-ui.md) (the in-progress `ui-agent-admin` build this demo belongs to)
 
 ## Findings
 

@@ -71,7 +71,7 @@ mini-skills.ts}` (the two path-resolution sites) · `packages/agent-ui/a2ui/tool
 site or A2UI dev flow is reachable while it's broken.
 
 ## Links
-- [ADR-0135](../adr/0135-agent-harness-config-schema-and-prompt-files.md) clause 13 (the mechanism
+- [ADR-0135](../../adr/0135-agent-harness-config-schema-and-prompt-files.md) clause 13 (the mechanism
   this ticket corrects) and its Consequences section's own flagged-but-unconfirmed build-time check
   ("the prompt-file reads resolve under both the dev proxy and vitest" — vitest was confirmed, the
   dev proxy was not, and this is exactly where the gap was).
