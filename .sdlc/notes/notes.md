@@ -992,3 +992,7 @@
 ## T-0485: SemanticCheck gains requiresAny, and the GameHud check gates on GameHud plus any play control (2026-10-27)
 
 - note: packages/agent-ui/a2ui/src/catalog/semantic-check.ts:148 gate is `requiresAny === undefined || some(has)`, so an empty `requiresAny: []` drops the check always; no caller sets it empty.
+
+## T-0487: Stale-docs sweep: specs, LLDs, references and READMEs checked against the code (2026-10-28)
+
+- note: .sdlc/AGENTS.md and .sdlc/tickets/roadmap.md carry uncommitted edits unrelated to T-0487; keep them out of this ticket's commit.
