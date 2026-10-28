@@ -1365,14 +1365,13 @@ describe('ui-select — disabled state (select-disabled)', () => {
 
 // ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
 
+// jsdom has no CustomStateSet: the states tests below report as skipped there; the browser leg proves them.
+const noStates = !('states' in ElementInternals.prototype)
+
 describe('ui-select — :state(answered) (ADR-0196)', () => {
-  it('select-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
+  it.skipIf(noStates)('select-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
     const { el } = makeSelect()
     const states = el.probeInternals.states
-    if (!states) {
-      el.remove()
-      return
-    }
     expect(states.has('answered')).toBe(false)
     el.answered = true
     await whenFlushed()

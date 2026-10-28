@@ -98,14 +98,13 @@ describe('UISegmentedControlElement — role (inherited from UIRadioGroupElement
 
 // ── answered/settled choice state (ADR-0196, GH #1065 — inherited unchanged from UIRadioGroupElement) ──
 
+// jsdom has no CustomStateSet: the states tests below report as skipped there; the browser leg proves them.
+const noStates = !('states' in ElementInternals.prototype)
+
 describe('UISegmentedControlElement — :state(answered) (ADR-0196, inherited)', () => {
-  it('sc-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
+  it.skipIf(noStates)('sc-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
     const [control] = buildControl(2)
     const states = control.testInternals.states
-    if (!states) {
-      control.remove()
-      return
-    }
     expect(states.has('answered')).toBe(false)
     control.answered = true
     await control.updateComplete

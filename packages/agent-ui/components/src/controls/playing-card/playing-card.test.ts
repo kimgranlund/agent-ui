@@ -17,6 +17,9 @@ class ProbePlayingCard extends UIPlayingCardElement {
 }
 customElements.define('ui-playing-card-probe', ProbePlayingCard)
 
+// jsdom has no CustomStateSet: tests gated on it report as skipped there; the browser legs prove those states.
+const noStates = !('states' in ElementInternals.prototype)
+
 const mounted: HTMLElement[] = []
 function mount(el: HTMLElement): HTMLElement {
   document.body.append(el)
@@ -245,16 +248,13 @@ describe('UIPlayingCardElement — DOM shape (component-built, both faces always
 })
 
 describe('UIPlayingCardElement — :state(ready) motion gate + connect/disconnect residue', () => {
-  // jsdom's ElementInternals.states support is capability-gated (the checkbox.test.ts precedent) — this
-  // probe only asserts when the environment actually implements CustomStateSet; the cross-engine timing
+  // jsdom has no CustomStateSet, so this probe reports as skipped there; the cross-engine timing
   // proof (the flip transition only present under :state(ready)) lives in playing-card.browser.test.ts.
-  it('arms ready one frame past first paint (ADR-0008 §4a-c) — not synchronously on connect', async () => {
+  it.skipIf(noStates)('arms ready one frame past first paint (ADR-0008 §4a-c), not synchronously on connect', async () => {
     const el = mount(document.createElement('ui-playing-card-probe')) as ProbePlayingCard
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('ready')).toBe(false)
-      await new Promise((r) => requestAnimationFrame(r))
-      expect(el.probeInternals.states.has('ready')).toBe(true)
-    }
+    expect(el.probeInternals.states.has('ready')).toBe(false)
+    await new Promise((r) => requestAnimationFrame(r))
+    expect(el.probeInternals.states.has('ready')).toBe(true)
   })
 
   it('reconnect produces a stable DOM shape — no doubled parts (zero residue)', () => {

@@ -107,6 +107,21 @@ describe('ui-file-drop — :state(disabled)/:state(dragging) real paint', () => 
     await new Promise((r) => setTimeout(r, 0))
     expect(el.probeInternals.states?.has('disabled')).toBe(false)
   })
+
+  it('dragenter arms :state(dragging); dragleave and drop each clear it (T-0509)', async () => {
+    const { el } = mount()
+    el.intake = oneIntake()
+    await new Promise((r) => setTimeout(r, 0))
+    expect(el.matches(':state(dragging)'), 'not dragging before any drag').toBe(false)
+    el.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true }))
+    expect(el.matches(':state(dragging)'), 'dragenter must arm dragging').toBe(true)
+    el.dispatchEvent(new DragEvent('dragleave', { bubbles: true, cancelable: true }))
+    expect(el.matches(':state(dragging)'), 'dragleave to outside must clear dragging').toBe(false)
+    el.dispatchEvent(new DragEvent('dragenter', { bubbles: true, cancelable: true }))
+    expect(el.matches(':state(dragging)')).toBe(true)
+    el.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: new DataTransfer() }))
+    expect(el.matches(':state(dragging)'), 'drop must clear dragging').toBe(false)
+  })
 })
 
 describe('ui-file-drop — composed buttons leave the tab order while unwired/disabled (finding 2)', () => {

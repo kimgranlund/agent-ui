@@ -596,17 +596,15 @@ describe('UIRadioGroupElement — disabled-propagation (C7)', () => {
 
 // ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
 
+// jsdom has no CustomStateSet: the states tests below report as skipped there; the browser leg proves them.
+const noStates = !('states' in ElementInternals.prototype)
+
 describe('UIRadioGroupElement — :state(answered) (ADR-0196)', () => {
-  it('group-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
+  it.skipIf(noStates)('group-answered-state: setting `answered` adds the custom state; clearing it removes it', async () => {
     const group = makeGroup()
     document.body.append(group)
     await group.updateComplete
     const states = group.testInternals.states
-    if (!states) {
-      // jsdom may not implement CustomStateSet — the browser smoke proves the real state.
-      group.remove()
-      return
-    }
     expect(states.has('answered')).toBe(false)
     group.answered = true
     await group.updateComplete

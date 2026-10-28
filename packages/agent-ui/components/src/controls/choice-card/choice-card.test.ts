@@ -19,6 +19,9 @@ class ProbeChoiceCard extends UIChoiceCardElement {
 }
 customElements.define('ui-choice-card-probe', ProbeChoiceCard)
 
+// jsdom has no CustomStateSet: tests gated on it report as skipped there; the browser legs prove those states.
+const noStates = !('states' in ElementInternals.prototype)
+
 describe('ui-choice-card — upgrade + typed prop surface (cc-upgrade)', () => {
   it('cc-upgrade: upgrades to UIChoiceCardElement with default prop values (no connect needed)', () => {
     const el = document.createElement('ui-choice-card') as UIChoiceCardElement
@@ -80,9 +83,18 @@ describe('ui-choice-card — setSelected() (cc-set-selected · cc-set-unselected
     document.body.append(el)
     el.setSelected(true)
     expect(el.probeInternals.ariaSelected).toBe('true')
-    // Optional-chained: jsdom has no CustomStateSet — the real :state(selected) paint is the browser leg.
-    expect(el.probeInternals.states?.has('selected') ?? true).toBe(true)
     expect(el.getAttribute('aria-selected')).toBeNull() // FACE — never a host attribute
+    el.remove()
+  })
+
+  // jsdom has no CustomStateSet, so this reports as skipped there; the real paint is the browser leg.
+  it.skipIf(noStates)('cc-set-selected: setSelected(true) adds :state(selected); setSelected(false) removes it', () => {
+    const el = new ProbeChoiceCard()
+    document.body.append(el)
+    el.setSelected(true)
+    expect(el.probeInternals.states.has('selected')).toBe(true)
+    el.setSelected(false)
+    expect(el.probeInternals.states.has('selected')).toBe(false)
     el.remove()
   })
 
@@ -92,7 +104,6 @@ describe('ui-choice-card — setSelected() (cc-set-selected · cc-set-unselected
     el.setSelected(true)
     el.setSelected(false)
     expect(el.probeInternals.ariaSelected).toBe('false')
-    expect(el.probeInternals.states?.has('selected') ?? false).toBe(false)
     el.remove()
   })
 })

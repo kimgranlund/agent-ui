@@ -235,34 +235,31 @@ describe('UICheckboxElement — ariaChecked (LLD-C2)', () => {
 
 // ── :state(checked) / :state(indeterminate) (LLD-C2, capability-gated) ──────────────────────────
 
+// jsdom has no CustomStateSet: the states tests below report as skipped there; the browser leg proves them.
+const noStates = !('states' in ElementInternals.prototype)
+
 describe('UICheckboxElement — custom states (LLD-C2, capability-gated)', () => {
-  it(':state(checked) present when checked; :state(indeterminate) when indeterminate', async () => {
+  it.skipIf(noStates)(':state(checked) present when checked; :state(indeterminate) when indeterminate', async () => {
     const el = make()
     document.body.append(el)
     el.checked = true
     await el.updateComplete
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('checked')).toBe(true)
-      expect(el.probeInternals.states.has('indeterminate')).toBe(false)
-    }
+    expect(el.probeInternals.states.has('checked')).toBe(true)
+    expect(el.probeInternals.states.has('indeterminate')).toBe(false)
     el.checked = false
     el.indeterminate = true
     await el.updateComplete
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('checked')).toBe(false)
-      expect(el.probeInternals.states.has('indeterminate')).toBe(true)
-    }
+    expect(el.probeInternals.states.has('checked')).toBe(false)
+    expect(el.probeInternals.states.has('indeterminate')).toBe(true)
     el.remove()
   })
 
-  it(':state(checked) absent when unchecked + determinate', async () => {
+  it.skipIf(noStates)(':state(checked) absent when unchecked + determinate', async () => {
     const el = make()
     document.body.append(el)
     await el.updateComplete
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('checked')).toBe(false)
-      expect(el.probeInternals.states.has('indeterminate')).toBe(false)
-    }
+    expect(el.probeInternals.states.has('checked')).toBe(false)
+    expect(el.probeInternals.states.has('indeterminate')).toBe(false)
     el.remove()
   })
 })
@@ -270,19 +267,15 @@ describe('UICheckboxElement — custom states (LLD-C2, capability-gated)', () =>
 // ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
 
 describe('UICheckboxElement — :state(answered) (ADR-0196, capability-gated)', () => {
-  it('setting `answered` adds the custom state; clearing it removes it', async () => {
+  it.skipIf(noStates)('setting `answered` adds the custom state; clearing it removes it', async () => {
     const el = make()
     document.body.append(el)
     el.answered = true
     await el.updateComplete
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('answered')).toBe(true)
-    }
+    expect(el.probeInternals.states.has('answered')).toBe(true)
     el.answered = false
     await el.updateComplete
-    if (el.probeInternals.states) {
-      expect(el.probeInternals.states.has('answered')).toBe(false)
-    }
+    expect(el.probeInternals.states.has('answered')).toBe(false)
     el.remove()
   })
 

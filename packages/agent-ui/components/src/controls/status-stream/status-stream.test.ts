@@ -1358,17 +1358,14 @@ describe('ui-status-stream — the settled custom state (GH #722)', () => {
 
 // ── the pending/stale-content wiring (GH #974/ADR-0191, GH #999) ───────────────────────────────────────
 
+// jsdom has no CustomStateSet: the states tests below report as skipped there; the browser leg proves them.
+const noStates = !('states' in ElementInternals.prototype)
+
 describe('ui-status-stream — setPendingSource wires pendingComputed to :state(pending) (ADR-0191)', () => {
-  it('a Promise source flips :state(pending) true while in flight, false + cleared once it settles', async () => {
+  it.skipIf(noStates)('a Promise source flips :state(pending) true while in flight, false + cleared once it settles', async () => {
     const el = new ProbeStatusStream()
     document.body.append(el)
     const states = el.probeInternals.states
-    if (!states) {
-      // jsdom may not implement CustomStateSet — the browser leg proves the paint. The wiring effect
-      // still RUNS (pendingComputed itself is fully jsdom-testable — pending-computed.test.ts).
-      el.remove()
-      return
-    }
     expect(states.has('pending')).toBe(false) // no source attached yet
     const d = deferred<string>()
     el.setPendingSource(d.promise)
@@ -1382,14 +1379,10 @@ describe('ui-status-stream — setPendingSource wires pendingComputed to :state(
     el.remove()
   })
 
-  it('setPendingSource(null) clears an in-flight wait without throwing', async () => {
+  it.skipIf(noStates)('setPendingSource(null) clears an in-flight wait without throwing', async () => {
     const el = new ProbeStatusStream()
     document.body.append(el)
     const states = el.probeInternals.states
-    if (!states) {
-      el.remove()
-      return
-    }
     el.setPendingSource(new Promise(() => {})) // never settles on its own
     await whenFlushed()
     expect(states.has('pending')).toBe(true)
@@ -1399,14 +1392,10 @@ describe('ui-status-stream — setPendingSource wires pendingComputed to :state(
     el.remove()
   })
 
-  it('composes with :state(settled) — a settled stream can go pending again without leaving settled (Decision cl.3)', async () => {
+  it.skipIf(noStates)('composes with :state(settled): a settled stream can go pending again without leaving settled (Decision cl.3)', async () => {
     const el = new ProbeStatusStream()
     document.body.append(el)
     const states = el.probeInternals.states
-    if (!states) {
-      el.remove()
-      return
-    }
     el.appendEntry({ key: 's1', status: 'done', label: 'step' })
     el.finalize()
     expect(states.has('settled')).toBe(true)

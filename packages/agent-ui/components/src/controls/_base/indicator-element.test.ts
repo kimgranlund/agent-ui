@@ -27,6 +27,9 @@ class UITestIndicatorElement extends UIIndicatorElement {
 }
 customElements.define('ui-test-indicator', UITestIndicatorElement)
 
+// jsdom has no CustomStateSet: tests gated on it report as skipped there; the browser legs prove those states.
+const noStates = !('states' in ElementInternals.prototype)
+
 // ── jsdom stub — form-association surface (setFormValue/setValidity) is absent in jsdom ──────────
 
 function stubFormAssoc(internals: ElementInternals): void {
@@ -143,22 +146,18 @@ describe('UIIndicatorElement — IND-C2 (ARIA + state machine)', () => {
     expect(el.testInternals.ariaChecked).toBe('false')
   })
 
-  it('ind-aria-states-checked: :state(checked) present when checked, absent otherwise', async () => {
-    // CustomStateSet is absent in jsdom — capability-gated; browser smoke covers the real assertion.
+  // CustomStateSet is absent in jsdom, so this reports as skipped there (ariaChecked, its jsdom proxy, is
+  // ind-aria-checked-true above); browser smoke covers it.
+  it.skipIf(noStates)('ind-aria-states-checked: :state(checked) present when checked, absent otherwise', async () => {
     el.checked = true
     await el.updateComplete
-    expect(el.testInternals.ariaChecked).toBe('true') // ariaChecked is the jsdom-accessible proxy
-    if (el.testInternals.states) {
-      expect(el.testInternals.states.has('checked')).toBe(true)
-      // NOTE: 'indeterminate' state is not managed at the base level (checkbox-only); the base
-      // only manages 'checked'. No assertion on 'indeterminate' here.
-    }
+    expect(el.testInternals.states.has('checked')).toBe(true)
+    // NOTE: 'indeterminate' state is not managed at the base level (checkbox-only); the base
+    // only manages 'checked'. No assertion on 'indeterminate' here.
 
     el.checked = false
     await el.updateComplete
-    if (el.testInternals.states) {
-      expect(el.testInternals.states.has('checked')).toBe(false)
-    }
+    expect(el.testInternals.states.has('checked')).toBe(false)
   })
 })
 

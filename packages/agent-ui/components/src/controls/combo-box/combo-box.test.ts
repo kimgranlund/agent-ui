@@ -1559,14 +1559,13 @@ describe('ui-combo-box — the control\'s own effective-disabled channel (combo-
 
 // ── answered/settled choice state (ADR-0196, GH #1065) ───────────────────────────────────────────
 
+// jsdom has no CustomStateSet: the states tests below report as skipped there; the browser leg proves them.
+const noStates = !('states' in ElementInternals.prototype)
+
 describe('ui-combo-box — :state(answered) (ADR-0196)', () => {
-  it('combo-answered-state: setting `answered` adds the custom state; clearing it removes it (capability-gated)', async () => {
+  it.skipIf(noStates)('combo-answered-state: setting `answered` adds the custom state; clearing it removes it (capability-gated)', async () => {
     const { el } = makeCombo()
     const states = el.probeInternals.states
-    if (!states) {
-      el.remove()
-      return
-    }
     expect(states.has('answered')).toBe(false)
     el.answered = true
     await whenFlushed()
