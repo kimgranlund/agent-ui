@@ -77,7 +77,7 @@ function sizeSection(size: (typeof sizes)[number]): HTMLElement {
 
   const matrix = document.createElement('div')
   matrix.className = 'matrix'
-  matrix.style.gridTemplateColumns = `max-content repeat(${states.length}, minmax(7rem, 1fr))`
+  matrix.style.setProperty('--matrix-columns', String(states.length))
 
   matrix.append(gridText('anatomy', 'matrix-head')) // the corner names the row axis
   for (const state of states) matrix.append(gridText(state.label, 'matrix-head'))

@@ -19,15 +19,21 @@
   font-weight: 600;
 }
 
-/* The matrix: a fixed grid — a row-header column + one column per (icon × disabled) combination. */
+/* The matrix: a row-header column + one column per page column. Each page sets --matrix-columns from its own
+ * column list (T-0494). A track never shrinks below its content, so a cell never overlaps its neighbour; when the
+ * columns are wider than the card (a 6-state otp row in the 576px reading column), the card scrolls inline
+ * instead of painting past its edge. Radius and padding are the card level's tokens. */
 .matrix {
   display: grid;
-  grid-template-columns: max-content repeat(4, minmax(7rem, 1fr));
+  grid-template-columns: max-content repeat(var(--matrix-columns, 4), minmax(min-content, 1fr));
   gap: 0.75rem 1.25rem;
   align-items: center;
-  padding: 1.25rem;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  padding: var(--md-sys-card-margin);
   border: 1px solid var(--md-sys-color-neutral-outline-variant);
-  border-radius: 0.75rem;
+  border-radius: var(--md-sys-card-radius);
   background: var(--md-sys-color-neutral-surface-low);
 }
 
@@ -51,6 +57,11 @@
 .matrix-cell {
   display: flex;
   align-items: center;
+}
+
+/* A matrix with no row-header column (a single row of specimens, each under its own head). */
+.matrix--no-rowhead {
+  grid-template-columns: repeat(var(--matrix-columns, 4), minmax(min-content, 1fr));
 }
 
 /* TKT-0037 — the type-variants matrix: one self-contained CARD per type (head + specimen + caption
@@ -93,9 +104,11 @@
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
+/* The label takes 14rem and the cluster the rest; a cluster whose content does not fit beside the label (a 20ch
+ * text field in a 400px column) wraps under it instead of painting past the column (T-0494). */
 .geo-row {
-  display: grid;
-  grid-template-columns: 14rem 1fr;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
   padding-block: 0.6rem;
@@ -109,9 +122,19 @@
   color: var(--md-sys-color-neutral-on-surface-variant);
 }
 
+.geo-row > .geo-label {
+  flex: 0 0 min(100%, 14rem);
+}
+
+.geo-row > .geo-cluster {
+  flex: 1 1 0;
+  min-inline-size: min-content;
+}
+
 /* The cluster wrapper carries [scale]/[density]; lay its buttons out in a row so the geometry delta shows. */
 .geo-cluster {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
 }

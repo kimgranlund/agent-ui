@@ -131,6 +131,7 @@ function sizeSection(size: (typeof sizes)[number]): HTMLElement {
 
   const matrix = document.createElement('div')
   matrix.className = 'matrix'
+  matrix.style.setProperty('--matrix-columns', String(columns.length))
 
   // Header row: an empty corner, then one label per column.
   matrix.append(gridText('variant', 'matrix-head')) // the corner names the row axis (the variant dimension)
@@ -179,9 +180,8 @@ const reversedAnatomies: readonly Anatomy[] = [
   { label: 'caret · label · icon', leading: 'caret', trailing: 'icon' },
 ]
 
-// The anatomy matrix: a row per variant × one column per structure (size md). Reuses the .matrix chrome, but
-// the column count is DERIVED from the structure list (one column per anatomy) — the shared .matrix grid is
-// fixed at 4 columns, so set the template explicitly to stay provably-complete for any structure set.
+// The anatomy matrix: a row per variant × one column per structure (size md). Reuses the .matrix chrome; the
+// column count is DERIVED from the structure list (one column per anatomy) through --matrix-columns (T-0494).
 function anatomySection(title: string, anatomies: readonly Anatomy[]): HTMLElement {
   const section = document.createElement('section')
   section.className = 'size-group'
@@ -192,7 +192,7 @@ function anatomySection(title: string, anatomies: readonly Anatomy[]): HTMLEleme
 
   const matrix = document.createElement('div')
   matrix.className = 'matrix'
-  matrix.style.gridTemplateColumns = `max-content repeat(${anatomies.length}, minmax(7rem, 1fr))`
+  matrix.style.setProperty('--matrix-columns', String(anatomies.length))
 
   matrix.append(gridText('variant', 'matrix-head')) // the corner names the row axis (the variant dimension)
   for (const anatomy of anatomies) matrix.append(gridText(anatomy.label, 'matrix-head'))
