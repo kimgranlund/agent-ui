@@ -1094,3 +1094,7 @@
 ## T-0510: Null and zero guards in browser tests become anti-vacuous asserts (2026-10-28)
 
 - note: verifier did not re-run the builder's per-file mutations; bite rests on the diff making each assert unconditional plus the builder's mutation log.
+
+## T-0515: The remaining early exits in skill-pack-opt-in and persona-file tests pin ok before returning (2026-10-28)
+
+- note: redck.py deviations printed no process deviation lines.
