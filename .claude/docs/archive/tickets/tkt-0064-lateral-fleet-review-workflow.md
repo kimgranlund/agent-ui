@@ -23,7 +23,7 @@ structurally cannot see the three defect classes that only exist BETWEEN compone
   three clusters);
 - **missed reuse** — a control hand-rolls behavior a trait already owns.
 
-The worked precedent is [TKT-0046](tkt-0046-fleet-interaction-state-styling-consistency-audit.md) — a
+The worked precedent is [TKT-0046](../../tickets/tkt-0046-fleet-interaction-state-styling-consistency-audit.md) — a
 manual, single-axis (styling) sweep that produced a findings table, one mechanical fix, and three routed
 clusters. It proved the shape works AND why it must be repeatable: the entry-control state law changed
 TODAY (TKT-0062), silently invalidating that sweep's verdicts for every entry control. A one-off audit
@@ -79,9 +79,9 @@ producing the matrix makes half that axis's findings mechanical instead of judgm
 
 ## Links
 - `.claude/skills/agent-ui-lateral-review/SKILL.md` — the workflow itself (this ticket's deliverable).
-- [TKT-0046](tkt-0046-fleet-interaction-state-styling-consistency-audit.md) — the worked single-axis
+- [TKT-0046](../../tickets/tkt-0046-fleet-interaction-state-styling-consistency-audit.md) — the worked single-axis
   precedent (styling, manual) whose shape Phase 0–4 generalizes.
-- [TKT-0062](tkt-0062-entry-control-filled-state-law.md) — the motivating incident (cross-component
+- [TKT-0062](../../tickets/tkt-0062-entry-control-filled-state-law.md) — the motivating incident (cross-component
   drift among five same-day components) AND the law change that makes the styling axis due for a re-run.
 - `.claude/docs/rubrics/component.md` — the VERTICAL rubric this complements (per-component DoD; the
   lateral workflow never replaces it).

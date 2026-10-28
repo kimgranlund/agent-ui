@@ -98,7 +98,7 @@ forcedColors: An explicit `@media (forced-colors: active)` block — gridlines/n
 
 `ui-column-chart` is the **Display**-class axis-bearing chart family's fifth control (ADR-0229 cl.1) — a
 category-major stacked (or dense single-series) column mark consuming the shared axis/inset/series
-vocabulary [ADR-0228](../../../../../.claude/docs/adr/0228-chart-axis-inset-series-vocabulary.md) mints:
+vocabulary [ADR-0228](../../../../../../.claude/docs/adr/0228-chart-axis-inset-series-vocabulary.md) mints:
 nice-number gridlines, real-DOM tick/category-label pills, a projected/ghost trailing column, a
 baseline-dot-plus-short-tick now-marker, and a static highlight callout. It is **not** interactive and
 **not** form-associated: no hover, no keyboard contract, no events — emphasis is authored data, not a
@@ -144,7 +144,7 @@ union codec) — the **dense single-series** board archetype and the **stacked m
 are the `values.length === 1` / `> 1` cases of this one schema. A row survives hardening only with a
 non-empty string `label` and every `values` entry finite and **non-negative** — a negative or non-finite
 entry drops the **whole row** (stack semantics: a negative segment has no legal position in a stack, the
-same documented hardening class [ADR-0219](../../../../../.claude/docs/adr/0219-pie-donut-part-of-whole-chart.md)
+same documented hardening class [ADR-0219](../../../../../../.claude/docs/adr/0219-pie-donut-part-of-whole-chart.md)
 set for part-of-whole data). Ragged rows (fewer `values` than `series` names) pad with trailing zeros to
 the resolved series count — never thrown.
 
@@ -211,4 +211,4 @@ override.
 Hover/keyboard interaction and events (ADR-0228 cl.7), a `ratio` aspect-pin attribute (cl.7 — charts
 adapt to their measured box by density thinning instead), log/dual axes, a typed time axis, streaming
 point-append. Catalog disposition (the `ColumnChart` A2UI row) is a separate, later intake per
-[ADR-0229](../../../../../.claude/docs/adr/0229-svg-chart-family-extensions.md) cl.7.
+[ADR-0229](../../../../../../.claude/docs/adr/0229-svg-chart-family-extensions.md) cl.7.

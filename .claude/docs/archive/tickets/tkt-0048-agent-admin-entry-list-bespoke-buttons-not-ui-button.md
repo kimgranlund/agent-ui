@@ -98,10 +98,10 @@ investigated further.
   usage examples this ticket wants these buttons to adopt)
 - `packages/agent-ui/components/src/controls/button/button.css:113-135` (the icon-sized-cell mechanism)
 - `packages/agent-ui/icons/src/phosphor/icons.gen.ts` (the current 19-icon subset — no `plus`/`add` glyph)
-- [TKT-0046](tkt-0046-fleet-interaction-state-styling-consistency-audit.md) (the fleet state-styling
+- [TKT-0046](../../tickets/tkt-0046-fleet-interaction-state-styling-consistency-audit.md) (the fleet state-styling
   sweep — these bespoke buttons were out of its scope since they're not a `ui-*` control, but they land in
   the exact gap that sweep was checking for)
-- [TKT-0039](tkt-0039-agent-admin-ui.md) (the in-progress `ui-agent-admin` build this belongs to)
+- [TKT-0039](../../tickets/tkt-0039-agent-admin-ui.md) (the in-progress `ui-agent-admin` build this belongs to)
 
 ## Findings
 

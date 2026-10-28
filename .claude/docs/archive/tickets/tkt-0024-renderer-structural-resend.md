@@ -77,14 +77,14 @@ by inheritance).
 ## Findings
 
 **2026-07-12 — design intake complete, documents-only, no build.** Produced:
-- [`../spec/renderer-structural-resend.spec.md`](../spec/renderer-structural-resend.spec.md) (SPEC-R1…R5,
+- [`../spec/renderer-structural-resend.spec.md`](../../spec/renderer-structural-resend.spec.md) (SPEC-R1…R5,
   SPEC-N1…N3).
-- [`../lld/renderer-structural-resend.lld.md`](../lld/renderer-structural-resend.lld.md) (component map
+- [`../lld/renderer-structural-resend.lld.md`](../../lld/renderer-structural-resend.lld.md) (component map
   LLD-C1…C7: per-node scope registry, a create/wire split in `widget.ts`/`renderer.ts`, resend detection,
   id-keyed children diff, recursive subtree disposal, prop reconcile onto an existing element).
-- [`../decompositions/renderer-structural-resend.decomp.json`](../decompositions/renderer-structural-resend.decomp.json)
+- [`../decompositions/renderer-structural-resend.decomp.json`](../../decompositions/renderer-structural-resend.decomp.json)
   (`coverage_check.py --strict` clean: 15 nodes/12 actions/13 hosts/13 edges, plan mode).
-- [`../adr/0128-renderer-structural-resend-reconciliation.md`](../adr/0128-renderer-structural-resend-reconciliation.md)
+- [`../adr/0128-renderer-structural-resend-reconciliation.md`](../../adr/0128-renderer-structural-resend-reconciliation.md)
   (proposed; one genuine fork — SPEC-R5 survivor reorder — awaits Kim's ruling; every other design question
   settled from shipped mechanics or direct precedent).
 

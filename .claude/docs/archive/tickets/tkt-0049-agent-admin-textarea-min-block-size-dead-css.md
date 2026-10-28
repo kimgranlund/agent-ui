@@ -92,8 +92,8 @@ in-progress-build surface (`ui-agent-admin`, TKT-0039), not a shipped-elsewhere 
   custom property wiring, the component's documented lever — ADR-0134)
 - `.claude/docs/adr/0134-multiline-textarea-face-editor.md` (ADR-0134 — "rows is a MIN, not a fixed
   height", the API this consumer should be using instead of raw CSS)
-- [TKT-0039](tkt-0039-agent-admin-ui.md) (the in-progress `ui-agent-admin` build this belongs to)
-- [TKT-0041](tkt-0041-agent-admin-prompts-pane-native-textarea.md) (the ticket that introduced `ui-textarea`
+- [TKT-0039](../../tickets/tkt-0039-agent-admin-ui.md) (the in-progress `ui-agent-admin` build this belongs to)
+- [TKT-0041](../../tickets/tkt-0041-agent-admin-prompts-pane-native-textarea.md) (the ticket that introduced `ui-textarea`
   into agent-admin in the first place — the `min-block-size` rules likely predate the `ui-textarea` swap
   and were never revisited for the new component's own geometry lever)
 

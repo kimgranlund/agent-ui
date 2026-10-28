@@ -33,8 +33,8 @@ export; the core-minus-16-exempt shape is.)
 - Exports resolve: `@agent-ui/shared/themes/<name>.css` loads under vite dev + build.
 
 ## Links
-- [ADR-0141](../adr/0141-theme-packs-ultimate-tokens-pipeline.md) — the contract ·
-  [ADR-0118](../adr/0118-token-surfaces-v1-scope.md) — the generator-owns-math fence.
+- [ADR-0141](../../adr/0141-theme-packs-ultimate-tokens-pipeline.md) — the contract ·
+  [ADR-0118](../../adr/0118-token-surfaces-v1-scope.md) — the generator-owns-math fence.
 - [TKT-0086](tkt-0086-md-sys-token-migration.md) (prerequisite) ·
   [TKT-0088](tkt-0088-site-shell-theme-dogfood.md) (the consumer).
 

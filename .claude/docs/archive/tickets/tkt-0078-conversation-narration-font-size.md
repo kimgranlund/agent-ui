@@ -44,7 +44,7 @@ minor
 - Browser-verified against a live turn; gates green.
 
 ## Links
-- [TKT-0076](tkt-0076-agent-admin-real-a2ui-surfaces.md) — the surface arm whose narration this sizes.
+- [TKT-0076](../../tickets/tkt-0076-agent-admin-real-a2ui-surfaces.md) — the surface arm whose narration this sizes.
 - ADR-0122 (timeline family — the geometry-only ramp) · ADR-0102 (the three-lane routing law).
 
 ## Findings

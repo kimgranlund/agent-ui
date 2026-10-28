@@ -32,7 +32,7 @@ its own nav misclassification was fixed (TKT-0090/TKT-0095).
   guide), and `llms.txt`.
 
 ## Links
-- [TKT-0090](tkt-0090-codemirror-editable-markdown-prompts.md) / [TKT-0095](tkt-0095-code-editor-doc-nav-misclassified-as-guide.md) —
+- [TKT-0090](../../tickets/tkt-0090-codemirror-editable-markdown-prompts.md) / [TKT-0095](tkt-0095-code-editor-doc-nav-misclassified-as-guide.md) —
   where this gap was first named and left out of scope both times.
 - `packages/agent-ui/code/src/markdown/markdown.md` — the real descriptor this page derives from.
 - `packages/agent-ui/code/src/highlight/index.ts` — the registry/dispatch this guide documents.

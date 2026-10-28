@@ -1077,3 +1077,7 @@
 
 - note: red-checkpoint deviations: `redck.py deviations` printed no process deviation lines, and no criterion is marked `(red)`.
 - note: the a2ui-live "negative control: an unrelated fixed 12px" test was excluded by the handoff itself and is not judged here.
+
+## T-0514: The archived changelog's ADR-0242 link resolves, so docs_check passes on main (2026-10-28)
+
+- note: docs_check.py is exit 0 at base 833bd7dd6 too; the broken-link signal comes from verify_scope's link report, not docs_check.

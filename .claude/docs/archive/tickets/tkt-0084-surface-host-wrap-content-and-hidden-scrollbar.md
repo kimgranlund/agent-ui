@@ -112,7 +112,7 @@ broken chrome on every inline A2UI surface, not an edge case.
 ## Links
 - ADR-0100 (query-container boundary establishment) — the ratified constraint this fix's `wrap`
   mode explicitly trades off (drops `container-type: inline-size`), never silently reopens.
-- [TKT-0076](tkt-0076-agent-admin-real-a2ui-surfaces.md) — the surface arm this bubble-mounted
+- [TKT-0076](../../tickets/tkt-0076-agent-admin-real-a2ui-surfaces.md) — the surface arm this bubble-mounted
   artboard belongs to.
 - `agent-admin.css:23` — the existing `--ui-agent-admin-scrollbar-width: none` "hidden scroller,
   live scroll" precedent this fix's scrollbar token follows.

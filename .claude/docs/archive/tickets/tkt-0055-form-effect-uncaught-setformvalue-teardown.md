@@ -71,7 +71,7 @@ which could mask a REAL regression's exit-code signal in the same run.
   confirmed present in this file's tests at both the current uncommitted working tree AND a clean
   `git worktree` checkout of committed `HEAD` — the last agent-admin.test.ts commit was `b8ed741`, well
   before TKT-0052; this is NOT something TKT-0052 or any currently-uncommitted work introduced)
-- [TKT-0052](tkt-0052-agent-admin-live-model-overlay.md) — the ticket whose full-suite gate re-run
+- [TKT-0052](../../tickets/tkt-0052-agent-admin-live-model-overlay.md) — the ticket whose full-suite gate re-run
   surfaced this
 
 ## Scope/Open

@@ -44,7 +44,7 @@ client-message echoes as the opaque fallback.
   card, an update can land off-screen — accepted for now (game flow keeps the table recent).
 
 ## Links
-- [TKT-0076](tkt-0076-agent-admin-real-a2ui-surfaces.md) — the surface arm this refines.
+- [TKT-0076](../../tickets/tkt-0076-agent-admin-real-a2ui-surfaces.md) — the surface arm this refines.
 - [TKT-0078](tkt-0078-conversation-narration-font-size.md) — same loop's type fix.
 - ADR-0129 (same-surface routing — the precedent this extends to the BUBBLE plane).
 
@@ -65,5 +65,5 @@ its "Opening a new surface…" heal stayed in the same card, one host) → hit �
 bubble throughout, tiles updating in place (9♥ Q♣ ✓19 dealer / K♠ 7♦ 5♣ ✗22 danger), the move
 log showing `↳ clicked "hit"` chips and the now-truthful `↳ ⚠ VALIDATION_FAILED: id-graph
 violation…` echoes. The recurring empty-tile defect surfaced DURING this wave was root-caused
-separately — [TKT-0080](tkt-0080-template-relative-binding-teaching-gap.md). Gates: check green
+separately — [TKT-0080](../../tickets/tkt-0080-template-relative-binding-teaching-gap.md). Gates: check green
 · full jsdom 6320/6320.

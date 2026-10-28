@@ -28,7 +28,7 @@ on main).
 - `npm run check` + full jsdom + browser smoke green; theme-provider built-CSS fixture regenerated.
 
 ## Links
-- [ADR-0140](../adr/0140-system-token-md-sys-consolidation.md) — the contract.
+- [ADR-0140](../../adr/0140-system-token-md-sys-consolidation.md) — the contract.
 - [TKT-0087](tkt-0087-theme-pack-pipeline.md) / [TKT-0088](tkt-0088-site-shell-theme-dogfood.md) —
   the legs this unblocks.
 

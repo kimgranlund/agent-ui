@@ -73,9 +73,9 @@ discoverability/UX miss on an already-shipped feature (its `mod+k` hotkey still 
 - `site/lib/command-palette.ts` — the already-shipped, already-mounted `ui-command-modal` palette
   the Search button now opens.
 - [TKT-0087](tkt-0087-theme-pack-pipeline.md) / [TKT-0088](tkt-0088-site-shell-theme-dogfood.md) /
-  [ADR-0141](../adr/0141-theme-packs-ultimate-tokens-pipeline.md) — the theme-pack feature this
+  [ADR-0141](../../adr/0141-theme-packs-ultimate-tokens-pipeline.md) — the theme-pack feature this
   bug breaks.
-- [TKT-0018](tkt-0018-site-command-search.md) — the command-search feature the Search button opens.
+- [TKT-0018](../../tickets/tkt-0018-site-command-search.md) — the command-search feature the Search button opens.
 
 ## Findings
 
