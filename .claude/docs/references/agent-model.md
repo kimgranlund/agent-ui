@@ -173,7 +173,7 @@ header pointing here.
   tags, or replayed from a recorded run (CL-R1, T-0343). It tests an agent; a kit scenario
   (`*.scenario.json`) tests the A2UI layer and an admin flow tests the agent-admin app.
 - **check**: one named verdict over one probe or eval turn (`model-pick`, `click-target`, `no-halt`,
-  `no-json-as-prose`, `no-internal-leak`, `reply-text`, `no-surface-loss`, `action-updates-surface`,
+  `no-renderer-rejection`, `no-json-as-prose`, `no-internal-leak`, `reply-text`, `no-surface-loss`, `action-updates-surface`,
   `expect-component`, `render-lint`, `reasoning`; `CHECK_NAMES` in `probe/model.ts`), status `pass`, `fail`, `warn` or `skip` (CL-R2). Not a **semantic check** (a
   persona's in-loop domain check that feeds a self-correct round), not the A2UI protocol's `checks`, and
   not a kit finding code.
