@@ -1,0 +1,270 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "reach-concierge-day-itinerary-haiku-1",
+  "agent": "concierge",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-28T16:52:43.857Z, traces 2026-10-28.jsonl:120",
+  "seed": {
+    "version": 25,
+    "digest": "sha256:9e1844aa144c21b6b704eb4c60d3f77062e4405065f3bb6ea6ef53f3ede110ca"
+  },
+  "steps": [
+    {
+      "say": "Plan my Saturday 21 November 2026: breakfast at 08:00, the half-day coastal boat tour at 10:00 and dinner at Vela at 20:00.",
+      "expect": [
+        "Itinerary"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm planning out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the day: breakfast at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 08:00, the coast\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"al boat tour at 10\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\":00 (confirming\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Saturday works against\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the bo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"at's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Tuesday/Thurs\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"day/Saturday sched\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ule), and dinner at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Vela at 20:00,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" building\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this into the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" itinerary component. I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also check the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" weather for Sorrento\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" date so it can\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" be surfaced within the it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inerary panel.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since ne\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ither bre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"akfast ven\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ue nor the boat tour\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting point were\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" specified, I'll note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" those\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as \\\"to confirm with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" front desk\\\" rather than in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"venting details, then pro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceed to call the weather t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ool before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"embling the final\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" itinerary.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"weather\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The forecast data only\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ext\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ends to October\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 30th\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" genuinely can't prov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ide a for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ecast for November 21st —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" be upfront about that g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap rather than gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"essing. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the itinerary, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m also working out what\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" day of the week November 21,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 2026 act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually falls on so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I can label\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the sch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"edule corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ctly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll build a day plan\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with stops mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pending since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"othing's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irmed yet, sk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip a fabricated weather\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep tim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing details modest where\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ations a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ren't known (like the boat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tour). I'll close\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" offer to hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"le re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"servations like the dinner at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Vela, r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than ass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uming b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ookings should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" happen autom\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atically.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"day-plan-sat\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"day-plan-sat\\\",\\\"path\\\":\\\"/plan/days\\\",\\\"value\\\":[{\\\"label\\\":\\\"Sat 21 Nov, Sorrento\\\",\\\"stops\\\":[{\\\"label\\\":\\\"Breakfast\\\",\\\"detail\\\":\\\"Venue to confirm with the front desk\\\",\\\"status\\\":\\\"pending\\\",\\\"time\\\":\\\"08:00\\\"},{\\\"label\\\":\\\"Half-day coastal boat tour\\\",\\\"detail\\\":\\\"Meeting point to confirm with the front desk\\\",\\\"status\\\":\\\"pending\\\",\\\"time\\\":\\\"10:00\\\"},{\\\"label\\\":\\\"Dinner at Vela\\\",\\\"detail\\\":\\\"Fine dining\\\",\\\"status\\\":\\\"pending\\\",\\\"time\\\":\\\"20:00\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"day-plan-sat\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Itinerary\\\",\\\"days\\\":{\\\"path\\\":\\\"/plan/days\\\"},\\\"title\\\":\\\"Saturday, 21 November 2026\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Your Saturday 21 November is laid out below. The coastal boat tour runs on Saturdays, so the 10:00 departure works. The weather service doesn't yet cover 21 November, so I can't give you a forecast for the day. I can check again closer to the date. Breakfast venue and the boat tour meeting point aren't in my notes, so I'll confirm those with the front desk. Shall I also take the Vela reservation for 20:00?\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Plan my Saturday 21 November 2026: breakfast at 08:00, the half-day coastal boat tour at 10:00 and dinner at Vela at 20:00.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":61580,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":1618},{\"id\":\"persona\",\"chars\":5346}],\"over\":false},\"usage\":{\"inputTokens\":9247,\"outputTokens\":1619,\"cacheReadInputTokens\":38678,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"variant-picker\",\"comparison-table\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"day-plan-sat\",\"catalogId\":\"agent-ui--hospitality\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"day-plan-sat\",\"path\":\"/plan/days\",\"value\":[{\"label\":\"Sat 21 Nov, Sorrento\",\"stops\":[{\"label\":\"Breakfast\",\"detail\":\"Venue to confirm with the front desk\",\"status\":\"pending\",\"time\":\"08:00\"},{\"label\":\"Half-day coastal boat tour\",\"detail\":\"Meeting point to confirm with the front desk\",\"status\":\"pending\",\"time\":\"10:00\"},{\"label\":\"Dinner at Vela\",\"detail\":\"Fine dining\",\"status\":\"pending\",\"time\":\"20:00\"}]}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"day-plan-sat\",\"components\":[{\"id\":\"root\",\"component\":\"Itinerary\",\"days\":{\"path\":\"/plan/days\"},\"title\":\"Saturday, 21 November 2026\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Your Saturday 21 November is laid out below. The coastal boat tour runs on Saturdays, so the 10:00 departure works. The weather service doesn't yet cover 21 November, so I can't give you a forecast for the day. I can check again closer to the date. Breakfast venue and the boat tour meeting point aren't in my notes, so I'll confirm those with the front desk. Shall I also take the Vela reservation for 20:00?",
+          "tools": [
+            {
+              "name": "weather",
+              "input": {
+                "place": "Sorrento"
+              }
+            },
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here is your day plan for Saturday 21 November 2026.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "day-plan-sat",
+                      "catalogId": "agent-ui--hospitality"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "day-plan-sat",
+                      "path": "/plan/days",
+                      "value": [
+                        {
+                          "label": "Sat 21 Nov, Sorrento",
+                          "stops": [
+                            {
+                              "label": "Breakfast",
+                              "detail": "Venue to confirm with the front desk",
+                              "status": "pending",
+                              "time": "08:00"
+                            },
+                            {
+                              "label": "Half-day coastal boat tour",
+                              "detail": "Meeting point to confirm with the front desk",
+                              "status": "pending",
+                              "time": "10:00"
+                            },
+                            {
+                              "label": "Dinner at Vela",
+                              "detail": "Fine dining",
+                              "status": "pending",
+                              "time": "20:00"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "day-plan-sat",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Itinerary",
+                          "days": {
+                            "path": "/plan/days"
+                          },
+                          "title": "Saturday, 21 November 2026"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

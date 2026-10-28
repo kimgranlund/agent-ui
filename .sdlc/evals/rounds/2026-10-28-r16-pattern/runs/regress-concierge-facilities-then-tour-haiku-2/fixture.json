@@ -1,0 +1,1055 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "regress-concierge-facilities-then-tour-haiku-2",
+  "agent": "concierge",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-28T16:39:05.985Z, traces 2026-10-28.jsonl:57,2026-10-28.jsonl:58,2026-10-28.jsonl:59,2026-10-28.jsonl:60,2026-10-28.jsonl:61",
+  "seed": {
+    "version": 25,
+    "digest": "sha256:9e1844aa144c21b6b704eb4c60d3f77062e4405065f3bb6ea6ef53f3ede110ca"
+  },
+  "steps": [
+    {
+      "say": "What are the opening hours of the pool, gym and spa? Check the property-knowledge-base.",
+      "expect": [
+        "DescriptionList"
+      ]
+    },
+    {
+      "say": "Is late check-out possible?",
+      "expectRouting": {
+        "domains": [
+          "hospitality"
+        ],
+        "references": [
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "say": "Book the half-day coastal boat tour on Saturday 21 November 2026 for two guests, name Alex Moreau.",
+      "expect": [
+        "BookingForm"
+      ],
+      "expectRouting": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": {
+          "include": [
+            "domain-concierge-booking-request"
+          ]
+        }
+      }
+    },
+    {
+      "say": "Confirm it, the details are right.",
+      "expect": [
+        "ConfirmReceipt"
+      ]
+    },
+    {
+      "say": "What services could I add for the rest of my stay?",
+      "expect": [
+        "ProductCard"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I've\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" got the hours for pool and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gym (06:00–22\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\":00) and spa (09\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\":00–20:00), but\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no location data was given, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll leave that out rather than\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" invent it. I'm struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring this as a single compact\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" info card with one row per facility\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" showing its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hours.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"facilities-hours\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"facilities-hours\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"header\\\",\\\"content\\\"]},{\\\"id\\\":\\\"header\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"title\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Facility hours\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"hours\\\"]},{\\\"id\\\":\\\"hours\\\",\\\"component\\\":\\\"DescriptionList\\\",\\\"rows\\\":[{\\\"label\\\":\\\"Pool (25m, heated)\\\",\\\"value\\\":\\\"06:00 to 22:00\\\"},{\\\"label\\\":\\\"Gym\\\",\\\"value\\\":\\\"06:00 to 22:00\\\"},{\\\"label\\\":\\\"Spa\\\",\\\"value\\\":\\\"09:00 to 20:00. Book treatments at least a day ahead in season\\\"}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. In season, please book spa treatments at least a day ahead.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### property-knowledge-base (resource)\\nAccessibility, policy, group-booking, and wedding facts the concierge cites.\\n\\nStep-free throughout — ramped entrance, lifts to every floor, four ADA rooms with roll-in showers and a portable hoist on request. Check-in 15:00, check-out 11:00; late check-out to 14:00 subject to availability. Cancellations are free up to 48h before arrival, one night’s rate after. Groups of 10+ rooms get a dedicated coordinator and a 10% rate; the event spaces seat 120 banquet-style or 200 standing. Weddings run three packages — Intimate, Classic, Grand — covering the ballroom or the waterfront terrace, in-house catering from Vela’s kitchen, and a preferred-vendor list for florists and photographers; quote a package, never a firm price, without confirming the date with the events team. Pool (25m, heated) and gym open 06:00–22:00; spa 09:00–20:00 — book treatments at least a day ahead in season.\\n\\nWhat are the opening hours of the pool, gym and spa? Check the property-knowledge-base.\",\"k\":3},\"exemplarIds\":[\"domain-hospitality-itinerary-trip\",\"domain-concierge-booking-request\",\"frontier-service-gateway\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":62155,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":2193},{\"id\":\"persona\",\"chars\":5346}],\"over\":false},\"usage\":{\"inputTokens\":4874,\"outputTokens\":922,\"cacheReadInputTokens\":19339,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\",\"nested-record-editor\",\"feature-collection\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"facilities-hours\",\"catalogId\":\"agent-ui--hospitality\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"facilities-hours\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"children\":[\"header\",\"content\"]},{\"id\":\"header\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Facility hours\",\"variant\":\"h4\"},{\"id\":\"content\",\"component\":\"CardContent\",\"children\":[\"hours\"]},{\"id\":\"hours\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Pool (25m, heated)\",\"value\":\"06:00 to 22:00\"},{\"label\":\"Gym\",\"value\":\"06:00 to 22:00\"},{\"label\":\"Spa\",\"value\":\"09:00 to 20:00. Book treatments at least a day ahead in season\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "The pool and gym are open 06:00 to 22:00, and the spa is open 09:00 to 20:00. In season, please book spa treatments at least a day ahead.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are our facility hours.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "facilities-hours",
+                      "catalogId": "agent-ui--hospitality"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "facilities-hours",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "children": [
+                            "header",
+                            "content"
+                          ]
+                        },
+                        {
+                          "id": "header",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Facility hours",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "content",
+                          "component": "CardContent",
+                          "children": [
+                            "hours"
+                          ]
+                        },
+                        {
+                          "id": "hours",
+                          "component": "DescriptionList",
+                          "rows": [
+                            {
+                              "label": "Pool (25m, heated)",
+                              "value": "06:00 to 22:00"
+                            },
+                            {
+                              "label": "Gym",
+                              "value": "06:00 to 22:00"
+                            },
+                            {
+                              "label": "Spa",
+                              "value": "09:00 to 20:00. Book treatments at least a day ahead in season"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-hospitality-itinerary-trip",
+          "domain-concierge-booking-request",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Stand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ard check-out is 11:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"00, but\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" late check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-out until\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 14:00 is poss\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ible sub\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ject to availability. I can m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ention this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est and su\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ggest confirming spec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ifics with the front desk,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mutation needed here\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Yes, late check-out is possible until 14:00, subject to availability. Standard check-out is 11:00. The front desk confirms whether a late slot is free on your departure day, so I'd suggest asking them closer to the date.\",\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Is late check-out possible?\",\"k\":3},\"exemplarIds\":[\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\",\"domain-concierge-booking-request\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":59962,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"persona\",\"chars\":5346}],\"over\":false},\"usage\":{\"inputTokens\":4495,\"outputTokens\":273,\"cacheReadInputTokens\":19339,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":50663}}}"
+      ],
+      "rounds": [
+        {
+          "text": "Yes, late check-out is possible until 14:00, subject to availability. Standard check-out is 11:00. The front desk confirms whether a late slot is free on your departure day, so I'd suggest asking them closer to the date.",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway",
+          "domain-concierge-booking-request"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to confirm that 21 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Nov 2026 fal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ls on a Saturday,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the half-day co\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"astal boat tour only\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" runs Tuesday,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Thursday, and Sa\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"turday. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll work through the date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" calculation to ver\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ify before preparing a pre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-filled booking form for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Alex Moreau and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" two guests.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up fields for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"our (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"select,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" preselected co\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"astal-half-day), date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (dateSingle), gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ests (select), and gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est name (text), with pre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"set values like \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"2026-11-21\\\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"2\\\" guests, and \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Alex Moreau\\\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the structure, I'll foll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ow the example's p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"attern with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a root Column containing the B\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ookingForm, which itself\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" has a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Button child\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for submission with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" confirm_booking action.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The facility-hours card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stays open since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it's inform\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ational, not a request\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing a response. This\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" boo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king form is the confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ation step itself, so I don\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'t need an \\\"ask\\\" w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rapper—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"just a plain surface. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" won't claim the boo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king is complete until the user act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually submits, and since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" don't have the t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"our's ex\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"act depart\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure time in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" my notes, I'll m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ention that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the desk will confirm it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll keep the acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompanying prose brief al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside the render_surface call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"tour-booking\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"tour-booking\\\",\\\"value\\\":{\\\"tour\\\":\\\"coastal-half-day\\\",\\\"date\\\":\\\"2026-11-21\\\",\\\"guests\\\":\\\"2\\\",\\\"guestName\\\":\\\"Alex Moreau\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"tour-booking\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"form\\\"]},{\\\"id\\\":\\\"form\\\",\\\"component\\\":\\\"BookingForm\\\",\\\"title\\\":\\\"Half-day coastal boat tour\\\",\\\"value\\\":{\\\"path\\\":\\\"/\\\"},\\\"fields\\\":[{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Tour\\\",\\\"path\\\":\\\"tour\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"Half-day coastal boat tour\\\",\\\"value\\\":\\\"coastal-half-day\\\"}]},{\\\"kind\\\":\\\"dateSingle\\\",\\\"label\\\":\\\"Date\\\",\\\"path\\\":\\\"date\\\",\\\"required\\\":true},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Guests\\\",\\\"path\\\":\\\"guests\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"1 guest\\\",\\\"value\\\":\\\"1\\\"},{\\\"label\\\":\\\"2 guests\\\",\\\"value\\\":\\\"2\\\"}]},{\\\"kind\\\":\\\"text\\\",\\\"label\\\":\\\"Guest name\\\",\\\"path\\\":\\\"guestName\\\",\\\"required\\\":true}],\\\"child\\\":\\\"bookBtn\\\"},{\\\"id\\\":\\\"bookBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Book now\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"confirm_booking\\\",\\\"context\\\":{\\\"booking\\\":{\\\"path\\\":\\\"/\\\"}},\\\"submit\\\":true}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I've pre-filled the half-day coastal boat tour for Saturday 21 November 2026, for two guests under Alex Moreau. Please check the details and press Book now to send it. I don't have a departure time for this tour, so the front desk will confirm it.\",\"trace\":{\"turnIndex\":4,\"query\":{\"intent\":\"Book the half-day coastal boat tour on Saturday 21 November 2026 for two guests, name Alex Moreau.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":59962,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"persona\",\"chars\":5346}],\"over\":false},\"usage\":{\"inputTokens\":4611,\"outputTokens\":1771,\"cacheReadInputTokens\":19339,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"tour-booking\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"tour-booking\",\"value\":{\"tour\":\"coastal-half-day\",\"date\":\"2026-11-21\",\"guests\":\"2\",\"guestName\":\"Alex Moreau\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"tour-booking\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"form\"]},{\"id\":\"form\",\"component\":\"BookingForm\",\"title\":\"Half-day coastal boat tour\",\"value\":{\"path\":\"/\"},\"fields\":[{\"kind\":\"select\",\"label\":\"Tour\",\"path\":\"tour\",\"required\":true,\"options\":[{\"label\":\"Half-day coastal boat tour\",\"value\":\"coastal-half-day\"}]},{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Guests\",\"path\":\"guests\",\"required\":true,\"options\":[{\"label\":\"1 guest\",\"value\":\"1\"},{\"label\":\"2 guests\",\"value\":\"2\"}]},{\"kind\":\"text\",\"label\":\"Guest name\",\"path\":\"guestName\",\"required\":true}],\"child\":\"bookBtn\"},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book now\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"context\":{\"booking\":{\"path\":\"/\"}},\"submit\":true}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I've pre-filled the half-day coastal boat tour for Saturday 21 November 2026, for two guests under Alex Moreau. Please check the details and press Book now to send it. I don't have a departure time for this tour, so the front desk will confirm it.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your tour booking is pre-filled. Check the details and press Book now to send it.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "tour-booking",
+                      "catalogId": "agent-ui--hospitality",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "tour-booking",
+                      "value": {
+                        "tour": "coastal-half-day",
+                        "date": "2026-11-21",
+                        "guests": "2",
+                        "guestName": "Alex Moreau"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "tour-booking",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "form"
+                          ]
+                        },
+                        {
+                          "id": "form",
+                          "component": "BookingForm",
+                          "title": "Half-day coastal boat tour",
+                          "value": {
+                            "path": "/"
+                          },
+                          "fields": [
+                            {
+                              "kind": "select",
+                              "label": "Tour",
+                              "path": "tour",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "Half-day coastal boat tour",
+                                  "value": "coastal-half-day"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "dateSingle",
+                              "label": "Date",
+                              "path": "date",
+                              "required": true
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Guests",
+                              "path": "guests",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "1 guest",
+                                  "value": "1"
+                                },
+                                {
+                                  "label": "2 guests",
+                                  "value": "2"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "text",
+                              "label": "Guest name",
+                              "path": "guestName",
+                              "required": true
+                            }
+                          ],
+                          "child": "bookBtn"
+                        },
+                        {
+                          "id": "bookBtn",
+                          "component": "Button",
+                          "label": "Book now",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "context": {
+                              "booking": {
+                                "path": "/"
+                              }
+                            },
+                            "submit": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user confirmed\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in chat, that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" counts as the submission it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self—I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" settle the form in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" place as a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single confirmed receipt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with no reference number, updating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the root wrapper's child\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to one ConfirmRe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceipt bound to the dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ft data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with status \\\"confirmed,\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" closing with fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"owEnd true.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay honest here\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the depart\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure time wasn't fin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"alized, I sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouldn't invent a re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ference number—better\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to say the booking is held and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the front desk will confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the time.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to \\\"confirmed\\\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bind the rece\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ipt data to the draft's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root path. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll build out rows for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Tour, Date, Gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ests, and Guest name,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using options for the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tour and guest-count\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fields, and skip items/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"totals since no price was given\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I don't want to invent one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Title it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Half-day coastal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" boat tour\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep the data bin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ointed at the full dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ft object.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure, I'll repl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ace the form\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s child with a new Conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irmReceipt component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using id \\\"receipt\\\", update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the root's children to point to it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and drop the now-un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"used book button. I'll ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep any confirmation text sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple and avoid f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abricating a booking reference\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"tour-booking\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"receipt\\\"]},{\\\"id\\\":\\\"receipt\\\",\\\"component\\\":\\\"ConfirmReceipt\\\",\\\"title\\\":\\\"Half-day coastal boat tour\\\",\\\"status\\\":\\\"confirmed\\\",\\\"data\\\":{\\\"path\\\":\\\"/\\\"},\\\"rows\\\":[{\\\"label\\\":\\\"Tour\\\",\\\"path\\\":\\\"tour\\\",\\\"options\\\":[{\\\"value\\\":\\\"coastal-half-day\\\",\\\"label\\\":\\\"Half-day coastal boat tour\\\"}]},{\\\"label\\\":\\\"Date\\\",\\\"path\\\":\\\"date\\\"},{\\\"label\\\":\\\"Guests\\\",\\\"path\\\":\\\"guests\\\",\\\"options\\\":[{\\\"value\\\":\\\"1\\\",\\\"label\\\":\\\"1 guest\\\"},{\\\"value\\\":\\\"2\\\",\\\"label\\\":\\\"2 guests\\\"}]},{\\\"label\\\":\\\"Guest name\\\",\\\"path\\\":\\\"guestName\\\"}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Done. Your half-day coastal boat tour for two guests on Saturday 21 November 2026 is booked under Alex Moreau, and the booking is held. The front desk will confirm the departure time. Thanks for booking with us. Is there anything else I can help with?\",\"flowEnd\":true,\"target\":{\"surfaceId\":\"tour-booking\"},\"trace\":{\"turnIndex\":6,\"query\":{\"intent\":\"Confirm it, the details are right.\",\"k\":3},\"exemplarIds\":[\"frontier-service-gateway\",\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":62224,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":2262},{\"id\":\"persona\",\"chars\":5346}],\"over\":false},\"usage\":{\"inputTokens\":5984,\"outputTokens\":1460,\"cacheReadInputTokens\":19339,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"feature-collection\",\"confirm-receipt\",\"greeting-card\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"tour-booking\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"receipt\"]},{\"id\":\"receipt\",\"component\":\"ConfirmReceipt\",\"title\":\"Half-day coastal boat tour\",\"status\":\"confirmed\",\"data\":{\"path\":\"/\"},\"rows\":[{\"label\":\"Tour\",\"path\":\"tour\",\"options\":[{\"value\":\"coastal-half-day\",\"label\":\"Half-day coastal boat tour\"}]},{\"label\":\"Date\",\"path\":\"date\"},{\"label\":\"Guests\",\"path\":\"guests\",\"options\":[{\"value\":\"1\",\"label\":\"1 guest\"},{\"value\":\"2\",\"label\":\"2 guests\"}]},{\"label\":\"Guest name\",\"path\":\"guestName\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Done. Your half-day coastal boat tour for two guests on Saturday 21 November 2026 is booked under Alex Moreau, and the booking is held. The front desk will confirm the departure time. Thanks for booking with us. Is there anything else I can help with?\",\"target\":{\"surfaceId\":\"tour-booking\"},\"flowEnd\":true}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"tour-booking\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"receipt\"]},{\"id\":\"receipt\",\"component\":\"ConfirmReceipt\",\"title\":\"Half-day coastal boat tour\",\"status\":\"confirmed\",\"data\":{\"path\":\"/\"},\"rows\":[{\"label\":\"Tour\",\"path\":\"tour\",\"options\":[{\"value\":\"coastal-half-day\",\"label\":\"Half-day coastal boat tour\"}]},{\"label\":\"Date\",\"path\":\"date\"},{\"label\":\"Guests\",\"path\":\"guests\",\"options\":[{\"value\":\"1\",\"label\":\"1 guest\"},{\"value\":\"2\",\"label\":\"2 guests\"}]},{\"label\":\"Guest name\",\"path\":\"guestName\"}]}]}}",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "frontier-service-gateway",
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm thinking through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" what addit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ional services I could recommend—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"spa treatments, dining\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ven\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ues, gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ided tours—and fig\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring out wh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ether these\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" be presented as ProductC\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" they're bookable offer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ings with prices rather than general\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" service list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ings.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll build\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the Grid using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a template b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" spa items array\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", with each ProductCard\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ulling title\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", subtitle, price,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and pri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceNote from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ative paths, pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us a \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Book\\\" action refer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"encing the tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atment id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll list the six tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"atments with their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" durations and prices—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Swedish massage, de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep-tissue, hot\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-stone, sea-sal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"t sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rub, hydrating fac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ial, and couples massage—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" write\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out the data.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the root structure, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" use a Column wrapping\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a heading and the grid component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". Since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the Old Town walk and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" harbor cruise are sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"heduled l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"obby me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"etups rather than b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ookable items, I'll just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mention them briefly in pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead of ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards for them.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"extras-spa\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"extras-spa\\\",\\\"value\\\":{\\\"treatments\\\":[{\\\"id\\\":\\\"swedish-60\\\",\\\"title\\\":\\\"Swedish massage\\\",\\\"subtitle\\\":\\\"Spa treatment\\\",\\\"price\\\":\\\"€120\\\",\\\"priceNote\\\":\\\"60 min\\\"},{\\\"id\\\":\\\"deep-tissue-60\\\",\\\"title\\\":\\\"Deep-tissue massage\\\",\\\"subtitle\\\":\\\"Spa treatment\\\",\\\"price\\\":\\\"€135\\\",\\\"priceNote\\\":\\\"60 min\\\"},{\\\"id\\\":\\\"hot-stone-90\\\",\\\"title\\\":\\\"Hot-stone massage\\\",\\\"subtitle\\\":\\\"Spa treatment\\\",\\\"price\\\":\\\"€170\\\",\\\"priceNote\\\":\\\"90 min\\\"},{\\\"id\\\":\\\"salt-lemon-scrub-45\\\",\\\"title\\\":\\\"Sea-salt and lemon body scrub\\\",\\\"subtitle\\\":\\\"Spa treatment\\\",\\\"price\\\":\\\"€95\\\",\\\"priceNote\\\":\\\"45 min\\\"},{\\\"id\\\":\\\"hydrating-facial-50\\\",\\\"title\\\":\\\"Hydrating facial\\\",\\\"subtitle\\\":\\\"Spa treatment\\\",\\\"price\\\":\\\"€110\\\",\\\"priceNote\\\":\\\"50 min\\\"},{\\\"id\\\":\\\"couples-massage-60\\\",\\\"title\\\":\\\"Couples massage\\\",\\\"subtitle\\\":\\\"Spa treatment for two\\\",\\\"price\\\":\\\"€230\\\",\\\"priceNote\\\":\\\"60 min, for two\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"extras-spa\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"heading\\\",\\\"grid\\\"]},{\\\"id\\\":\\\"heading\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Spa treatments\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"Grid\\\",\\\"min\\\":\\\"16rem\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":{\\\"path\\\":\\\"/treatments\\\",\\\"componentId\\\":\\\"treatment\\\"}},{\\\"id\\\":\\\"treatment\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":{\\\"path\\\":\\\"title\\\"},\\\"subtitle\\\":{\\\"path\\\":\\\"subtitle\\\"},\\\"price\\\":{\\\"path\\\":\\\"price\\\"},\\\"priceNote\\\":{\\\"path\\\":\\\"priceNote\\\"},\\\"actionLabel\\\":\\\"Book\\\",\\\"action\\\":{\\\"action\\\":\\\"book_spa_treatment\\\",\\\"context\\\":{\\\"treatment\\\":{\\\"path\\\":\\\"id\\\"}}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are the spa treatments you can book for the rest of your stay. Spa hours are 09:00 to 20:00, and treatments need booking at least a day ahead in season. Beyond the spa, the Old Town walking tour leaves the lobby daily at 10:00, the harbor cruise departs daily at 17:00, and we have two restaurants, Vela for fine dining and the Quay Bar for casual meals.\",\"trace\":{\"turnIndex\":8,\"query\":{\"intent\":\"What services could I add for the rest of my stay?\",\"k\":3},\"exemplarIds\":[\"domain-hospitality-itinerary-trip\",\"domain-concierge-booking-request\",\"frontier-service-gateway\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":62188,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":2226},{\"id\":\"persona\",\"chars\":5346}],\"over\":false},\"usage\":{\"inputTokens\":6342,\"outputTokens\":1998,\"cacheReadInputTokens\":19339,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"product-presentation\",\"nested-record-editor\",\"greeting-card\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"extras-spa\",\"catalogId\":\"agent-ui--hospitality\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"extras-spa\",\"value\":{\"treatments\":[{\"id\":\"swedish-60\",\"title\":\"Swedish massage\",\"subtitle\":\"Spa treatment\",\"price\":\"€120\",\"priceNote\":\"60 min\"},{\"id\":\"deep-tissue-60\",\"title\":\"Deep-tissue massage\",\"subtitle\":\"Spa treatment\",\"price\":\"€135\",\"priceNote\":\"60 min\"},{\"id\":\"hot-stone-90\",\"title\":\"Hot-stone massage\",\"subtitle\":\"Spa treatment\",\"price\":\"€170\",\"priceNote\":\"90 min\"},{\"id\":\"salt-lemon-scrub-45\",\"title\":\"Sea-salt and lemon body scrub\",\"subtitle\":\"Spa treatment\",\"price\":\"€95\",\"priceNote\":\"45 min\"},{\"id\":\"hydrating-facial-50\",\"title\":\"Hydrating facial\",\"subtitle\":\"Spa treatment\",\"price\":\"€110\",\"priceNote\":\"50 min\"},{\"id\":\"couples-massage-60\",\"title\":\"Couples massage\",\"subtitle\":\"Spa treatment for two\",\"price\":\"€230\",\"priceNote\":\"60 min, for two\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"extras-spa\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"grid\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Spa treatments\",\"variant\":\"h4\"},{\"id\":\"grid\",\"component\":\"Grid\",\"min\":\"16rem\",\"gap\":\"md\",\"children\":{\"path\":\"/treatments\",\"componentId\":\"treatment\"}},{\"id\":\"treatment\",\"component\":\"ProductCard\",\"title\":{\"path\":\"title\"},\"subtitle\":{\"path\":\"subtitle\"},\"price\":{\"path\":\"price\"},\"priceNote\":{\"path\":\"priceNote\"},\"actionLabel\":\"Book\",\"action\":{\"action\":\"book_spa_treatment\",\"context\":{\"treatment\":{\"path\":\"id\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here are the spa treatments you can book for the rest of your stay. Spa hours are 09:00 to 20:00, and treatments need booking at least a day ahead in season. Beyond the spa, the Old Town walking tour leaves the lobby daily at 10:00, the harbor cruise departs daily at 17:00, and we have two restaurants, Vela for fine dining and the Quay Bar for casual meals.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are the spa treatments available for your stay. Tell me which one you'd like and I'll prepare the booking.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "extras-spa",
+                      "catalogId": "agent-ui--hospitality"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "extras-spa",
+                      "value": {
+                        "treatments": [
+                          {
+                            "id": "swedish-60",
+                            "title": "Swedish massage",
+                            "subtitle": "Spa treatment",
+                            "price": "€120",
+                            "priceNote": "60 min"
+                          },
+                          {
+                            "id": "deep-tissue-60",
+                            "title": "Deep-tissue massage",
+                            "subtitle": "Spa treatment",
+                            "price": "€135",
+                            "priceNote": "60 min"
+                          },
+                          {
+                            "id": "hot-stone-90",
+                            "title": "Hot-stone massage",
+                            "subtitle": "Spa treatment",
+                            "price": "€170",
+                            "priceNote": "90 min"
+                          },
+                          {
+                            "id": "salt-lemon-scrub-45",
+                            "title": "Sea-salt and lemon body scrub",
+                            "subtitle": "Spa treatment",
+                            "price": "€95",
+                            "priceNote": "45 min"
+                          },
+                          {
+                            "id": "hydrating-facial-50",
+                            "title": "Hydrating facial",
+                            "subtitle": "Spa treatment",
+                            "price": "€110",
+                            "priceNote": "50 min"
+                          },
+                          {
+                            "id": "couples-massage-60",
+                            "title": "Couples massage",
+                            "subtitle": "Spa treatment for two",
+                            "price": "€230",
+                            "priceNote": "60 min, for two"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "extras-spa",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "grid"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Spa treatments",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "Grid",
+                          "min": "16rem",
+                          "gap": "md",
+                          "children": {
+                            "path": "/treatments",
+                            "componentId": "treatment"
+                          }
+                        },
+                        {
+                          "id": "treatment",
+                          "component": "ProductCard",
+                          "title": {
+                            "path": "title"
+                          },
+                          "subtitle": {
+                            "path": "subtitle"
+                          },
+                          "price": {
+                            "path": "price"
+                          },
+                          "priceNote": {
+                            "path": "priceNote"
+                          },
+                          "actionLabel": "Book",
+                          "action": {
+                            "action": "book_spa_treatment",
+                            "context": {
+                              "treatment": {
+                                "path": "id"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-hospitality-itinerary-trip",
+          "domain-concierge-booking-request",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "full"
+          }
+        ]
+      }
+    }
+  ]
+}
