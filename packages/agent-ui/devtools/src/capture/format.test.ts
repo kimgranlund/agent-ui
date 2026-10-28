@@ -126,12 +126,8 @@ describe('parseCapture failures (SPEC-R10 AC3) — a typed error NAMING the offe
   })
 
   it('the error message carries the field AND what was expected (one-look diagnosis)', () => {
-    try {
-      parseCapture(JSON.stringify({ ...valid(), backend: 'nope' }))
-    } catch (err) {
-      const e = err as CaptureParseError
-      expect(e.message).toContain('backend')
-      expect(e.message).toContain('replay | proxy | a2a')
-    }
+    const bad = JSON.stringify({ ...valid(), backend: 'nope' })
+    expect(() => parseCapture(bad)).toThrow(/backend/)
+    expect(() => parseCapture(bad)).toThrow(/replay \| proxy \| a2a/)
   })
 })

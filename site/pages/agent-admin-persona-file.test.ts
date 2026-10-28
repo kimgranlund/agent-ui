@@ -618,6 +618,7 @@ describe('importedPersonaFrom — collision-safe minting (library semantics)', (
   it('leaves the persona’s own `name` untouched — only the ROSTER label carries the (imported) marker', () => {
     const { label, state } = parsedGood()
     const result = readPersonaFile(personaFileText(exportPersonaFile(personaFromPreset(SOURCE_PRESET), authoredStore())))
+    expect(result.ok).toBe(true)
     if (!result.ok) return
     const minted = importedPersonaFrom(result.file, AGENT_PRESETS.map(personaFromPreset))
     expect(minted.label).toBe(`${label} (imported)`)

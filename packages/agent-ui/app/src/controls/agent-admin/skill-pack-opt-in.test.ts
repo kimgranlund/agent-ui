@@ -201,13 +201,17 @@ describe('D5 — the default-off negative assertion in prompt assembly (nothing 
 
   it('a DISABLED copy and a master-switched-off kind both compose nothing (the three independent conjuncts)', () => {
     const minted = validateNewEntry([], ENTRY_KINDS.skill, importedSkillPackLibrary([snapshotWith(V1_CONTENT, SHA_V1)])[0]!.entries[0]!, { rejectOnCollision: true })
+    expect(minted.ok).toBe(true)
     if (!minted.ok) return
+    // positive control: the same entry, enabled with the kind on, DOES compose — so the two empties below are the switches, not an empty composer
+    expect(composeLiveSystemPrompt([], group([minted.entry]))).toContain('Deploy Checklist')
     expect(composeLiveSystemPrompt([], group([{ ...minted.entry, enabled: false }]))).not.toContain('Deploy Checklist')
     expect(composeLiveSystemPrompt([], group([minted.entry], false))).not.toContain('Deploy Checklist')
   })
 
   it('full text rides ONLY the invocation framing (resolveTurnReferences) — verbatim, labeled, kind-named', () => {
     const minted = validateNewEntry([], ENTRY_KINDS.skill, importedSkillPackLibrary([snapshotWith(V1_CONTENT, SHA_V1)])[0]!.entries[0]!, { rejectOnCollision: true })
+    expect(minted.ok).toBe(true)
     if (!minted.ok) return
     const groups = [{ kind: ENTRY_KINDS.skill, entries: [minted.entry], enabled: true }]
     const resolved = resolveTurnReferences('run the deploy', [{ id: 'deploy-checklist', label: 'Deploy Checklist', kind: ENTRY_KINDS.skill }], groups)
