@@ -26,11 +26,11 @@ Create a router, wire an outlet, navigate by route id; call `connectUrl` only wh
 ## CDN (no build step)
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/router@0.0.5/router-link.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/router@0.2.0/router-link.css">
 <script type="module">
-  import { createRouter } from 'https://esm.sh/@agent-ui-kit/router@0.0.5'
-  import 'https://esm.sh/@agent-ui-kit/router@0.0.5/router-outlet'
-  import 'https://esm.sh/@agent-ui-kit/router@0.0.5/router-link'
+  import { createRouter } from 'https://esm.sh/@agent-ui-kit/router@0.2.0'
+  import 'https://esm.sh/@agent-ui-kit/router@0.2.0/router-outlet'
+  import 'https://esm.sh/@agent-ui-kit/router@0.2.0/router-link'
 </script>
 ```
 

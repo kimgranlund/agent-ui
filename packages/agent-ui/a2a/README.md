@@ -24,7 +24,7 @@ Use the typed wire shapes to build A2A servers/clients and validate inbound mess
 
 ```html
 <script type="module">
-  import { validateA2a } from 'https://esm.sh/@agent-ui-kit/a2a@0.0.5'
+  import { validateA2a } from 'https://esm.sh/@agent-ui-kit/a2a@0.2.0'
 </script>
 ```
 

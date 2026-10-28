@@ -35,7 +35,7 @@ Feed validated A2UI server messages (`createSurface` / `updateComponents` / `upd
 ```html
 <!-- styles come from the components/shared sheets (see @agent-ui-kit/components' CDN section) -->
 <script type="module">
-  import * as a2ui from 'https://esm.sh/@agent-ui-kit/a2ui@0.0.5'
+  import * as a2ui from 'https://esm.sh/@agent-ui-kit/a2ui@0.2.0'
 </script>
 ```
 

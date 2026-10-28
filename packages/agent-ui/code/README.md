@@ -30,13 +30,13 @@ The default entries are dependency-free; only `./editor` pulls the CodeMirror ru
 ## CDN (no build step)
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/code@0.0.5/highlight.css">
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/code@0.0.5/markdown.css">
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/code@0.0.5/editor.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/code@0.2.0/highlight.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/code@0.2.0/markdown.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/code@0.2.0/editor.css">
 <script type="module">
-  import 'https://esm.sh/@agent-ui-kit/code@0.0.5/highlight'
-  import 'https://esm.sh/@agent-ui-kit/code@0.0.5/markdown'
-  import 'https://esm.sh/@agent-ui-kit/code@0.0.5/editor' // CodeMirror still lazy-loads per mount, resolved by the CDN
+  import 'https://esm.sh/@agent-ui-kit/code@0.2.0/highlight'
+  import 'https://esm.sh/@agent-ui-kit/code@0.2.0/markdown'
+  import 'https://esm.sh/@agent-ui-kit/code@0.2.0/editor' // CodeMirror still lazy-loads per mount, resolved by the CDN
 </script>
 ```
 
