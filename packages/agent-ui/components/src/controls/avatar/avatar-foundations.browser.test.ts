@@ -1,13 +1,13 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import './avatar.css'
 import './avatar.ts'
 import '../icon/icon.css'
 import '../icon/icon.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ui-avatar geometry under ADR-0245 (the dark launch): inside an opt-in [data-tier] region the control reads the
-// derived tokens and measures against scale.mjs resolve(); outside one it still measures today's values.
+// derived tokens and measures against foundations-model.mjs resolve(); outside one it still measures today's values.
 
 const mounted: HTMLElement[] = []
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()))
@@ -33,9 +33,9 @@ describe("ui-avatar geometry (ADR-0245 cl.3, Kim's step 0 ruling: 4n)", () => {
       const avatar = mount(`<ui-avatar size="${size}"></ui-avatar>`).querySelector('ui-avatar') as HTMLElement
       const r = resolve('product', 'sm', size)
       const box = avatar.getBoundingClientRect()
-      expect([box.width, box.height]).toEqual([r.h, r.h])
+      expect([box.width, box.height]).toEqual([r.height, r.height])
       const icon = avatar.querySelector('ui-icon') as HTMLElement
-      expect(icon.getBoundingClientRect().width).toBeCloseTo(r.icon, 1)
+      expect(icon.getBoundingClientRect().width).toBeCloseTo(r.iconBox, 1)
     })
   }
 

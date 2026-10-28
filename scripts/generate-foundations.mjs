@@ -141,7 +141,7 @@ export const recomputeList = (rootDefault = ROOT_DEFAULT) =>
  *  Fractional px ship (Kim's 2026-10-19 ruling, T-0374), so checkEmitted() holds neither: it holds every emitted value
  *  finite and monotonic in n. M7's third form, a chip, control, group or component part that
  *  is not whole px, still refuses: the parts (checkbox, switch, badge, table row and kin) are not emitted, and the
- *  browser tests read them from scale.mjs resolve(). */
+ *  browser tests read them from the model's parts() (T-0506). */
 export const EMITTED_M7 = /^M7 h\d+: (?:\w+ not whole px|type off the 0\.5px grid)$/
 
 const refuseOnFailure = (a) => {

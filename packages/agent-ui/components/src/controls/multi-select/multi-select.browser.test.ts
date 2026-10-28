@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, userEvent } from 'vitest/browser'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { UIMultiSelectElement } from './multi-select.ts'
 
 // M-F browser smoke — ui-multi-select (multi-select-field.lld.md · multi-select-field.spec.md SPEC-R7/R8
@@ -20,6 +19,7 @@ import { UIMultiSelectElement } from './multi-select.ts'
 import '@agent-ui/components/foundation-styles.css'
 import './multi-select.css'
 import './multi-select.ts'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ── mount/cleanup ────────────────────────────────────────────────────────────────────────────────────
 
@@ -239,8 +239,8 @@ describe('ui-multi-select — geometry (GEO-LAW: 0 < checkmark glyph ≤ icon ce
     const lgEl = lgWrap.querySelector('ui-multi-select') as UIMultiSelectElement
     const lgHeight = readLength(lgEl, '--ui-multi-select-height')
 
-    expect(smHeight, `${server.browser}: sm row-height lever`).toBe(rootResolve('sm').h)
-    expect(lgHeight, `${server.browser}: lg row-height lever`).toBe(rootResolve('lg').h)
+    expect(smHeight, `${server.browser}: sm row-height lever`).toBe(rootResolve('sm').height)
+    expect(lgHeight, `${server.browser}: lg row-height lever`).toBe(rootResolve('lg').height)
   })
 })
 

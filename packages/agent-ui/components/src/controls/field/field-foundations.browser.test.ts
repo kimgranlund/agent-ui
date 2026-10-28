@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ADR-0245 dark launch, lane a01: ui-field geometry outside and inside a data-tier region. Outside, every derived
 // token is undefined and each rule falls back to today's value (the expected px below, the default-page

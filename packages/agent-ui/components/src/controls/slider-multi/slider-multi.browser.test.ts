@@ -9,15 +9,14 @@ import { describe, it, expect } from 'vitest'
 //   AC3 (forced-colors) — @media forced-colors: the rail/fill/thumbs have forced-color-adjust:none;
 //       stylesheet assertions (verified by reading the CSS @media block).
 //   AC4 (derived geometry, ADR-0245): inside an opt-in data-tier region the box is 2n, the thumb icon box - 2c and the
-//       rail 2c thick against scale.mjs resolve(); outside, today's ramp stands.
+//       rail 2c thick against foundations-model.mjs resolve(); outside, today's ramp stands.
 //   C10 (zero-residue) — connect→disconnect produces no stacked listeners; reconnect re-arms exactly once.
 
 import '@agent-ui/components/foundation-styles.css' // tokens (--md-sys-color-*) + dimensions (--md-sys-compact-*)
 import './slider-multi.css'                          // the control stylesheet (direct — pre-barrel)
 import './slider-multi.ts'                           // self-define (registers ui-slider-multi)
 import { UISliderMultiElement } from './slider-multi.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { parts, resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
 const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
@@ -74,7 +73,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     // --md-sys-compact-md = 16px at the root (derived, ADR-0245) → thumb = 16 − 2×2 = 12px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
     const hiThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="hi"]')!
-    const thumb = root('md').icon - 2 * root('md').c // box − 2c = 16 − 4 = 12
+    const thumb = root('md').iconBox - 2 * root('md').c // box − 2c = 16 − 4 = 12
     expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(thumb)
     expect(Number.parseFloat(getComputedStyle(loThumb).height)).toBe(thumb)
     expect(Number.parseFloat(getComputedStyle(hiThumb).width)).toBe(thumb)
@@ -89,7 +88,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
     // --md-sys-compact-sm = 12px → thumb = 12 − 2×2 = 8px
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('sm').icon - 2 * root('sm').c)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('sm').iconBox - 2 * root('sm').c)
     el.remove()
   })
 
@@ -100,7 +99,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
 
     // --md-sys-compact-lg = 20px → thumb = 20 − 2×3 = 14px (c is 3 at n 10)
     const loThumb = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
-    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('lg').icon - 2 * root('lg').c)
+    expect(Number.parseFloat(getComputedStyle(loThumb).width)).toBe(root('lg').iconBox - 2 * root('lg').c)
     el.remove()
   })
 
@@ -126,7 +125,7 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
     const el = document.createElement('ui-slider-multi')
     document.body.append(el)
     const rows = getComputedStyle(el).gridTemplateRows.split(' ').map((v) => Number.parseFloat(v))
-    expect(rows[rows.length - 1]).toBe(root('md').icon) // --md-sys-compact-md = 16px at the root (derived, ADR-0245)
+    expect(rows[rows.length - 1]).toBe(root('md').iconBox) // --md-sys-compact-md = 16px at the root (derived, ADR-0245)
     el.remove()
   })
 
@@ -276,8 +275,8 @@ describe('ui-slider-multi browser smoke (S2 AC1–AC4 + C10)', () => {
       return w
     }
 
-    expect(makeWithDensity(null), 'the root thumb').toBe(rootResolve('md').glyph)
-    expect(makeWithDensity('sm'), 'the thumb at data-scale sm').toBe(resolve('product', 'sm', 'md').glyph)
+    expect(makeWithDensity(null), 'the root thumb').toBe(parts(rootResolve('md')).thumb)
+    expect(makeWithDensity('sm'), 'the thumb at data-scale sm').toBe(parts(resolve('product', 'sm', 'md')).thumb)
   })
 
   // ── forced-colors (AC3 — stylesheet presence; behavior is system-determined) ────────────────
@@ -444,9 +443,9 @@ describe('ui-slider-multi geometry inside an opt-in data-tier region (ADR-0245)'
         wrapper.append(el)
         document.body.append(wrapper)
         const rows = getComputedStyle(el).gridTemplateRows.split(' ').map((v) => Number.parseFloat(v))
-        expect(rows[rows.length - 1]).toBe(r.icon)
+        expect(rows[rows.length - 1]).toBe(r.iconBox)
         const thumb = getComputedStyle(el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!)
-        expect(Number.parseFloat(thumb.width)).toBe(r.icon - 2 * r.c)
+        expect(Number.parseFloat(thumb.width)).toBe(r.iconBox - 2 * r.c)
         expect(railHeight(el)).toBe(2 * r.c)
         expect(Number.parseFloat(getComputedStyle(el.querySelector('.rail')!).borderTopLeftRadius)).toBe(r.c)
         wrapper.remove()

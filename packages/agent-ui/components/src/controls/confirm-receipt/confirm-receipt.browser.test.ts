@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 // confirm-receipt.browser.test.ts: the real-engine painted proof for ui-confirm-receipt (T-0195, Direction A).
 // jsdom is blind to layout, so this covers the whole-shape fill and hug, the actions row under the record card and
@@ -14,6 +13,7 @@ import '@agent-ui/components/foundation-styles.css'
 import './confirm-receipt.css'
 import './confirm-receipt.ts'
 import type { UIConfirmReceiptElement } from './confirm-receipt.ts'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const mounted: HTMLElement[] = []
 const container = (width: string, attrs: Record<string, string> = {}): HTMLElement => {
@@ -176,19 +176,19 @@ describe('ui-confirm-receipt: Back and Confirm at their own lg step', () => {
     const el = receipt(container('480px'), booking)
     await settle(el)
     for (const name of ['back', 'confirm']) {
-      expect(partOf(el, name).getBoundingClientRect().height).toBeCloseTo(rootResolve('lg').h, 0)
+      expect(partOf(el, name).getBoundingClientRect().height).toBeCloseTo(rootResolve('lg').height, 0)
     }
   })
 
   it('on an A2UI canvas (widget / md) the buttons are 28px, the canvas lg step', async () => {
     const el = receipt(container('480px', { 'data-tier': 'widget', 'data-scale': 'md' }), booking)
     await settle(el)
-    const lg = resolve('widget', 'md', 'lg').h
+    const lg = resolve('widget', 'md', 'lg').height
     expect(lg).toBe(28)
     for (const name of ['back', 'confirm']) {
       const b = partOf(el, name)
       expect(b.getBoundingClientRect().height).toBeCloseTo(lg, 0)
-      expect(parseFloat(getComputedStyle(b).borderTopLeftRadius)).toBeCloseTo(resolve('widget', 'md', 'lg').control.radius, 0)
+      expect(parseFloat(getComputedStyle(b).borderTopLeftRadius)).toBeCloseTo(resolve('widget', 'md', 'lg').controlRadius, 0)
     }
   })
 })

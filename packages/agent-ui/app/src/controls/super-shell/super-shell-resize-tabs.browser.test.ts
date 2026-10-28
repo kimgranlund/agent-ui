@@ -11,15 +11,15 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every default px this file pins is derived
-// from the root register (product at scale md) through scale.mjs, never written as a literal. The pane width
+// from the root register (product at scale md) through foundations-model.mjs, never written as a literal. The pane width
 // is 42n, the nav label column's room (Kim 2026-10-14).
 const ROOT = rootResolve('md')
-const SHELL_GAP = ROOT.page.gutter // --ui-super-shell-gap: the layout gutter 3n
+const SHELL_GAP = ROOT.layout.gutter // --ui-super-shell-gap: the layout gutter 3n
 const SHELL_PANE = 42 * ROOT.n // --ui-super-shell-pane-size: 42n (Kim 2026-10-14)
-const SHELL_FLOOR = ROOT.page.margin * 6 // the pane and canvas floors: six layout margins, 24n
+const SHELL_FLOOR = ROOT.layout.margin * 6 // the pane and canvas floors: six layout margins, 24n
 // The dual-resizable fixtures below PIN their own frame (the retired module's values) so the window they
 // exercise, band line 640px < width < natural fit, exists and does not move with n: 252 + 18 + 162 + 18 + 252
 // = 702px. On the default tokens the natural fit is 2 x 42n + 2 x 3n + 24n, 912px at the root register, a

@@ -16,8 +16,6 @@
 // Comments are blanked before matching in code and stylesheets (offsets kept), so prose about an old name is
 // not a use of it.
 
-import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
-
 /** Hand-tabled ramp token -> the derived token that replaces it at the element's own n (clauses 3, 4, 10a). */
 export const LEGACY_TO_DERIVED = [
   [/--md-sys-height-(?:sm|md|lg)(?![\w-])/, '--md-sys-height'],
@@ -65,9 +63,6 @@ export const hasOwner = (why) => typeof why === 'string' && !why.startsWith('TOD
 
 /** `--md-sys-scale-s` per scale step, as the generator declares it and the root readers decode it. */
 export const STEP = Object.freeze({ sm: -1, md: 0, lg: 1 })
-
-/** scale.mjs resolve() at the root register, at `size` and `density`. */
-export const rootResolve = (size = 'md', density = 'default') => resolve(ROOT_REGISTER.tier, ROOT_REGISTER.scale, size, density)
 
 /** Clause 2: today's `[scale]` value -> the tier and scale it becomes. */
 export const SCALE_TO_TIER = {

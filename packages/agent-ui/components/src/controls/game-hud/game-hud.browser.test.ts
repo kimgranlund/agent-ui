@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radius at the balanced preset (T-0374 step 6)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve as model, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the radius at the balanced preset (T-0374 step 6)
 
 // game-hud.browser.test.ts: the real-engine painted proof for ui-game-hud (ADR-0243, GameHud fork sheet).
 // jsdom is blind to layout, so this covers the whole-shape fill and hug, the stat wrap with no overflow,

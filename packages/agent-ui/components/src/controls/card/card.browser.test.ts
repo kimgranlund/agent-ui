@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs'
+import { resolve as model, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 
 // The root register's derived geometry (ADR-0245): product / md / md is n 8, so the card gutter is 2n and the radius 3n.

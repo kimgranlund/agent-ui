@@ -1,7 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the chip radius at the balanced preset (T-0374 step 6)
+import { resolve, rootResolve, parts } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import { server, cdp } from 'vitest/browser'
 
 // badge.browser.test.ts — cross-engine (Chromium + WebKit) browser-truth probes for ui-badge
@@ -58,7 +56,7 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
   it('a bare labeled badge in an unstyled flex row paints a non-collapsed box == the chip height 2n + 2c (20px at the root register, ADR-0245 Amendment 4)', () => {
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
-    expect(px(cs.blockSize), 'block-size must equal the chip height (2n + 2c, 20px at the root register)').toBeCloseTo(root.parts.badge, 0)
+    expect(px(cs.blockSize), 'block-size must equal the chip height (2n + 2c, 20px at the root register)').toBeCloseTo(parts(root).badge, 0)
     const rect = el.getBoundingClientRect()
     expect(rect.width, 'the host collapsed instead of painting a real pill').toBeGreaterThan(0)
     expect(rect.height, 'the host painted a zero-height box').toBeGreaterThan(0)
@@ -67,7 +65,7 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
   it('an EMPTY label still floors at min-inline-size == the box (a filled dot/pill, never a sliver — SPEC-R13 AC2)', () => {
     const el = mount('<ui-badge></ui-badge>') // no label, neutral intent (no glyph either)
     const rect = el.getBoundingClientRect()
-    expect(rect.width, 'empty-label badge collapsed below the box floor').toBeGreaterThanOrEqual(root.parts.badge - 0.5)
+    expect(rect.width, 'empty-label badge collapsed below the box floor').toBeGreaterThanOrEqual(parts(root).badge - 0.5)
     expect(rect.height).toBeGreaterThan(0)
   })
 
@@ -75,7 +73,7 @@ describe('ui-badge whole-shape (SPEC-R13/R14 AC1, test-the-whole-shape)', () => 
     const el = mount('<ui-badge label="status"></ui-badge>')
     const cs = getComputedStyle(el)
     // getComputedStyle serializes border-radius as a length (px); A x (n + c) at the root register md is 5px under balanced.
-    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(model().chip.radius, 1)
+    expect(px(cs.borderTopLeftRadius)).toBeCloseTo(resolve().chip.radius, 1)
   })
 
   it('padding-block is ZERO (block-size is the vertical lever, never block-padding — geometry.md)', () => {
@@ -99,8 +97,8 @@ describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-
     const compact = mount('<ui-badge label="status"></ui-badge>', { scale: 'sm' })
     const spacious = mount('<ui-badge label="status"></ui-badge>', { scale: 'lg' })
 
-    expect(px(getComputedStyle(compact).blockSize)).toBe(resolve('product', 'sm', 'md').parts.badge)
-    expect(px(getComputedStyle(spacious).blockSize)).toBe(resolve('product', 'lg', 'md').parts.badge)
+    expect(px(getComputedStyle(compact).blockSize)).toBe(parts(resolve('product', 'sm', 'md')).badge)
+    expect(px(getComputedStyle(spacious).blockSize)).toBe(parts(resolve('product', 'lg', 'md')).badge)
 
     const padCompact = px(getComputedStyle(compact).paddingInlineStart)
     const padSpacious = px(getComputedStyle(spacious).paddingInlineStart)
@@ -114,7 +112,7 @@ describe('ui-badge geometry — the compact pad law, NOT h/2 (SPEC-R13 AC1, ADR-
       const el = mount(`<ui-badge label="status" size="${size}"></ui-badge>`)
       expect(px(getComputedStyle(el).blockSize), `a stray size="${size}" moved the box`).toBe(px(getComputedStyle(bare).blockSize))
     }
-    expect(px(getComputedStyle(bare).blockSize), 'the box is the context chip height 2n + 2c').toBe(rootResolve('md').parts.badge) // 20
+    expect(px(getComputedStyle(bare).blockSize), 'the box is the context chip height 2n + 2c').toBe(parts(rootResolve('md')).badge) // 20
   })
 })
 

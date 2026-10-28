@@ -1,9 +1,9 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ADR-0245 dark launch, lane a01: ui-rating geometry outside and inside a data-tier region. Outside, every derived
 // token is undefined and each rule falls back to today's value (the expected px below, the default-page
@@ -39,7 +39,7 @@ describe('ui-rating foundations (ADR-0245 lane a01)', () => {
     it(`inside product / sm at size ${size} reads the derived geometry`, () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
-      expect(read(el, 'block-size'), 'box').toBeCloseTo(r.icon, 1)
+      expect(read(el, 'block-size'), 'box').toBeCloseTo(r.iconBox, 1)
     })
   }
 })
@@ -64,7 +64,7 @@ describe('ui-rating [size] steps the star box (T-0172)', () => {
       const boxes = (['sm', 'md', 'lg'] as const).map((size) => starBox(region, size))
       expect(boxes[0]).toBeLessThan(boxes[1]!)
       expect(boxes[1]).toBeLessThan(boxes[2]!)
-      ;(['sm', 'md', 'lg'] as const).forEach((size, i) => expect(boxes[i], size).toBeCloseTo(resolve(tier, scale, size).icon, 1))
+      ;(['sm', 'md', 'lg'] as const).forEach((size, i) => expect(boxes[i], size).toBeCloseTo(resolve(tier, scale, size).iconBox, 1))
     })
   }
 })

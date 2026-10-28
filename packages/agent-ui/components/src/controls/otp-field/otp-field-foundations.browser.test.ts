@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6)
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import '@agent-ui/shared/foundations.css'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
@@ -41,9 +40,9 @@ describe('ui-otp-field foundations (ADR-0245 lane a01)', () => {
     it(`inside product / sm at size ${size} reads the derived geometry`, () => {
       const r = resolve('product', 'sm', size)
       const el = mount(true, size)
-      expect(read(el, 'block-size'), 'height').toBeCloseTo(r.h, 1)
-      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(model('product', 'sm', size).radius, 1) // the round square at the surface radius A x n (ADR-0245 Amendment 6, T-0374 step 6)
-      expect(r.n, 'anti-vacuous: a round square is not the h/2 pill').toBeLessThan(r.h / 2)
+      expect(read(el, 'block-size'), 'height').toBeCloseTo(r.height, 1)
+      expect(read(el, 'border-top-left-radius'), 'radius').toBeCloseTo(resolve('product', 'sm', size).radius, 1) // the round square at the surface radius A x n (ADR-0245 Amendment 6, T-0374 step 6)
+      expect(r.n, 'anti-vacuous: a round square is not the h/2 pill').toBeLessThan(r.height / 2)
     })
   }
 })

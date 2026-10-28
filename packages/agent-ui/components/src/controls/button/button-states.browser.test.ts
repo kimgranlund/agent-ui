@@ -1,6 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 // Wave-2 s17 — the CROSS-ENGINE interaction-states + focus-ring + caret smoke (the REALIZE re-score; the
 // adversarial real-engine proof of ADR-0008 states / ADR-0009 focus ring / ADR-0012 + geometry-sizing-spec
@@ -22,6 +22,7 @@ import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ── mount/cleanup ────────────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []
@@ -253,7 +254,7 @@ describe('ui-button BTN-CARET — caret = font, icon = icon (ADR-0012 §6, both 
     // the cell is the 3n wrapper for BOTH roles (placement); the icon artwork is 2n, the caret the n + 6 glyph box.
     expect(icon.getBoundingClientRect().width, 'both roles share the one cell').toBeCloseTo(iconCell, 0)
     expect(iconCell, 'the cell is the square 3n wrapper').toBeCloseTo(3 * rootResolve('md').n, 0)
-    expect(iconContent, 'content icon is not the 2n artwork centred in its cell').toBeCloseTo(rootResolve('md').icon, 0)
+    expect(iconContent, 'content icon is not the 2n artwork centred in its cell').toBeCloseTo(rootResolve('md').iconBox, 0)
     expect(caretContent, 'caret content box is not glyph-sized (the named --ui-ind oversize bug)').toBeCloseTo(glyph, 0)
     // the ordering law: 0 < caret(=font) < icon ≤ box.
     expect(caretContent, 'caret content box is not positive').toBeGreaterThan(0)

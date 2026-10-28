@@ -162,6 +162,25 @@ export function resolve(tier = ROOT_REGISTER.tier, scale = ROOT_REGISTER.scale, 
   }
 }
 
+/** resolve() at the page root register (ROOT_REGISTER), at `size` and `density`: what a test means by "the root".
+ *  T-0506 moved it here from foundations-rules.mjs, where it read the frozen scale.mjs. */
+export const rootResolve = (size = 'md', density = 'regular', a = anchors()) => resolve(ROOT_REGISTER.tier, ROOT_REGISTER.scale, size, density, a)
+
+/**
+ * The part sizes a control draws from the icon box and c with no token of its own (the frozen resolver's `parts`,
+ * read here since T-0506): the checkbox, the radio and the switch track are the icon box (2n), the radio dot the icon
+ * box - 2c - 2, the thumb (the check, the switch thumb and a slider thumb) the icon box - 2c, and the badge the chip
+ * height, the icon box + 2c.
+ */
+export const parts = (r = resolve()) => ({
+  checkbox: r.iconBox, radio: r.iconBox, switchTrack: r.iconBox,
+  radioDot: r.iconBox - 2 * r.c - 2, thumb: r.iconBox - 2 * r.c, badge: r.iconBox + 2 * r.c,
+})
+
+/** The ladder of n and the tier rows the sheet emits (the vendored CFG), for a reader that matches the `:root` rule. */
+export const LADDER = CFG.ladder
+export const TIERS = CFG.tiers
+
 /**
  * The guard on the anchors (the refuse-to-emit rule beside the repo's check()): every anchor finite, the heading
  * ratio and the linear roles never falling as n grows, the type order and the floor held on the whole ladder, the

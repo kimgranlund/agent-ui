@@ -8,7 +8,6 @@
 // actually landed, as opposed to merely existing as an unconsumed sheet.
 
 import { describe, it, expect, afterEach } from 'vitest'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 import '@agent-ui/components/foundation-styles.css' // the --md-sys-color-*/--md-sys-space-*/-shape-corner-base roots entry-list.css's own token block reads
 import '@agent-ui/components/all.css' // ui-button/ui-icon/ui-switch/ui-text-field/ui-field's shipped CSS (composed by entry-list.ts)
@@ -31,6 +30,7 @@ import { createMemoryStore } from '../settings/memory-store.ts'
 import type { SettingsStore } from '../settings/store.ts'
 import type { UICodeEditorElement } from '@agent-ui/code/editor'
 import type { UITextFieldElement } from '@agent-ui/components/controls/text-field'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const KIND = 'smoke-kind'
 
@@ -180,7 +180,7 @@ describe('mountEntryList — standalone, ZERO ui-agent-admin/agent-admin.css inv
     expect(field.rows).toBe(4)
     const fontSize = Number.parseFloat(getComputedStyle(field).fontSize)
     // ADR-0245 cut: padding-block is the root register's control inset (n 8, rootResolve('md').control.margin) minus the 1px border
-    const expected = 4 * (fontSize * 1.5) + 2 * (rootResolve('md').control.margin - 1)
+    const expected = 4 * (fontSize * 1.5) + 2 * (rootResolve('md').inset - 1)
     const computed = Number.parseFloat(getComputedStyle(field).minHeight)
     expect(computed).toBeCloseTo(expected, 1)
   })

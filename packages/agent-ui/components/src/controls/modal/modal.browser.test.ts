@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, page, userEvent } from 'vitest/browser'
 import type { UIModalElement } from './modal.ts'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // G9 s9 (browser leg) — the CROSS-ENGINE platform-truth smoke for ui-modal (decomp g9-containers node s9).
 // This is where the native <dialog> behaviour is PROVEN — none of it resolves in jsdom (which ships a bare
@@ -20,6 +19,7 @@ import '../_surface/container.css'
 import '../_surface/container-box.css' // the box-model layer — provides the [data-region] region padding
 import './modal.css'
 import './modal.ts'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ── mount/cleanup ──────────────────────────────────────────────────────────────────────────────────────
 const mounted: HTMLElement[] = []

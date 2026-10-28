@@ -22,9 +22,8 @@ import { server, cdp } from 'vitest/browser'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { SCHEMES, composite, contrast, inkContrast, schemeWrap } from '../button/disabled-recipe.fixture.ts'
+import { resolve, rootResolve, parts } from '../../../../../../scripts/lib/foundations-model.mjs'
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
 const root = (size: 'sm' | 'md' | 'lg') => rootResolve(size)
 
@@ -113,9 +112,9 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     // The Indicator widget box rides the COMPACT ramp (ADR-0041), NOT the full control height ramp (ADR-0038).
     // Derived ramp at the root (ADR-0245): --md-sys-compact-sm=12 / --md-sys-compact-md=16 / --md-sys-compact-lg=20.
     const SIZES: Array<['sm' | 'md' | 'lg', number]> = [
-      ['sm', root('sm').parts.switchTrack],
-      ['md', root('md').parts.switchTrack],
-      ['lg', root('lg').parts.switchTrack],
+      ['sm', parts(root('sm')).switchTrack],
+      ['md', parts(root('md')).switchTrack],
+      ['lg', parts(root('lg')).switchTrack],
     ]
     for (const [size, expected] of SIZES) {
       const { sw } = mount(`<ui-switch size="${size}"></ui-switch>`)
@@ -135,9 +134,9 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
   })
 
   it('ADR-0245: inside an opt-in data-tier region the track is 2n, the thumb icon box - 2c, the width 2 thumb + 2c', () => {
-    // Against scale.mjs resolve() in an explicit product / sm region and at the page root register (product / md).
-    for (const scale of ['sm', 'md']) {
-      for (const size of ['sm', 'md', 'lg']) {
+    // Against foundations-model.mjs resolve() in an explicit product / sm region and at the page root register (product / md).
+    for (const scale of ['sm', 'md'] as const) {
+      for (const size of ['sm', 'md', 'lg'] as const) {
         const r = resolve('product', scale, size)
         const wrap = document.createElement('div')
         wrap.setAttribute('data-tier', 'product')
@@ -147,9 +146,9 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
         mounted.push(wrap)
         const sw = wrap.querySelector('ui-switch') as HTMLElement
         const where = `product / ${scale} / ${size}`
-        expect(trackHeight(sw), `${where} track`).toBe(r.icon)
-        expect(thumbWidth(sw), `${where} thumb`).toBe(r.icon - 2 * r.c)
-        expect(px(getComputedStyle(sw).inlineSize), `${where} width`).toBe(2 * (r.icon - 2 * r.c) + 2 * r.c)
+        expect(trackHeight(sw), `${where} track`).toBe(r.iconBox)
+        expect(thumbWidth(sw), `${where} thumb`).toBe(r.iconBox - 2 * r.c)
+        expect(px(getComputedStyle(sw).inlineSize), `${where} width`).toBe(2 * (r.iconBox - 2 * r.c) + 2 * r.c)
       }
     }
   })
@@ -163,7 +162,7 @@ describe('ui-switch cross-engine browser smoke — track + thumb geometry (ADR-0
     document.body.append(wrap)
     mounted.push(wrap)
     const sw = wrap.querySelector('ui-switch') as HTMLElement
-    const thumb = r.icon - 2 * r.c
+    const thumb = r.iconBox - 2 * r.c
     expect(getComputedStyle(sw, '::after').translate).toBe(`${thumb}px`)
     // start inset c + travel thumb + thumb + end inset c = the track width
     expect(r.c + thumb + thumb + r.c).toBe(px(getComputedStyle(sw).inlineSize))

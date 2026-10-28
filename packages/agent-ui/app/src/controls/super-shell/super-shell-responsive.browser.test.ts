@@ -12,14 +12,14 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every px this file pins is derived from the
-// root register (product at scale md) through scale.mjs, never written as a literal.
+// root register (product at scale md) through foundations-model.mjs, never written as a literal.
 const ROOT = rootResolve('md')
-const SHELL_BAR = ROOT.h + 2 * ROOT.widget.margin // --ui-super-shell-bar-size: a control row plus two widget margins, 8n
+const SHELL_BAR = ROOT.height + 2 * ROOT.widget.margin // --ui-super-shell-bar-size: a control row plus two widget margins, 8n
 const SHELL_INSET = ROOT.widget.margin // --ui-super-shell-overlay-inset: the widget margin 2n
-const SHELL_FLOOR = ROOT.page.margin * 6 // the canvas floors: six layout margins, 24n
+const SHELL_FLOOR = ROOT.layout.margin * 6 // the canvas floors: six layout margins, 24n
 
 const mounted: HTMLElement[] = []
 afterEach(() => { for (const el of mounted.splice(0)) el.remove() })

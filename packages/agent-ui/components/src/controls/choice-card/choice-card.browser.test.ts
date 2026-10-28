@@ -20,9 +20,8 @@ import '@agent-ui/components/foundation-styles.css'
 import './choice-card.css'
 import './choice-card.ts'
 import type { UIChoiceCardElement } from './choice-card.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
 
 interface CdpSession {
   send(method: string, params?: Record<string, unknown>): Promise<unknown>
@@ -293,7 +292,7 @@ describe('ui-choice-card: badge and tick geometry', () => {
       card.setAttribute('value', 'deluxe')
       card.innerHTML = '<strong>Deluxe</strong><span>$185/night</span>'
       region.append(card)
-      const badge = Math.max(r.icon, glyphBox(r))
+      const badge = Math.max(r.iconBox, glyphBox(r))
       expect([px(after(card).width), px(after(card).height)]).toEqual([badge, badge])
       expect(px(before(card).width)).toBeCloseTo(glyphBox(r), 1)
       expect(px(before(card).height)).toBeCloseTo((glyphBox(r) * 13) / 15, 1)
@@ -308,7 +307,7 @@ describe('ui-choice-card: badge and tick geometry', () => {
     let cells = 0
     for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const scale of ['sm', 'md', 'lg'] as const) for (const size of ['sm', 'md', 'lg'] as const) {
       const at = `${tier} / ${scale} / ${size}`
-      const r = model(tier, scale, size)
+      const r = resolve(tier, scale, size)
       const region = document.createElement('div')
       region.setAttribute('data-tier', tier)
       region.setAttribute('data-scale', scale)

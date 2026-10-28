@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import './swiper.css'
 import './swiper.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ui-swiper geometry (ADR-0245 clause 3, dark launch): the paddle band is 4n. Outside an opt-in region the derived tokens are
 // undefined and the token resolves to today's ramp read (28), so default pages do not move.
@@ -26,7 +26,7 @@ describe('ui-swiper geometry inside an opt-in region', () => {
   for (const scale of ['sm', 'md'] as const) {
     it(`product / ${scale}: --ui-swiper-paddle-band is the 4n paddle band`, () => {
       const r = resolve('product', scale, 'md')
-      expect(token(`<div data-tier="product" data-scale="${scale}"><ui-swiper></ui-swiper></div>`)).toBe(r.h)
+      expect(token(`<div data-tier="product" data-scale="${scale}"><ui-swiper></ui-swiper></div>`)).toBe(r.height)
     })
   }
 })

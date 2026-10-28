@@ -17,9 +17,8 @@ import './checkbox.css'                             // the control stylesheet (d
 import './checkbox.ts'                             // self-define (registers ui-checkbox)
 import '../text-field/text-field.css'               // the field the label type is measured against (T-0197)
 import '../text-field/text-field.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve, rootResolve, parts } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
 
 const num = (v: string): number => Number.parseFloat(v)
 // The page root register (no data-tier region): product / md, n 6 / 8 / 10 for size sm / md / lg.
@@ -31,8 +30,8 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     document.body.append(el)
     const cs = getComputedStyle(el, '::before')
     // --md-sys-compact-md = 2n at the root register on the derived ramp (ADR-0041 clause 2, ADR-0245)
-    expect(Number.parseFloat(cs.width)).toBe(root('md').parts.checkbox)
-    expect(Number.parseFloat(cs.height)).toBe(root('md').parts.checkbox)
+    expect(Number.parseFloat(cs.width)).toBe(parts(root('md')).checkbox)
+    expect(Number.parseFloat(cs.height)).toBe(parts(root('md')).checkbox)
     el.remove()
   })
 
@@ -40,13 +39,13 @@ describe('ui-checkbox browser smoke (S1 AC1–AC4)', () => {
     const sm = document.createElement('ui-checkbox')
     sm.setAttribute('size', 'sm')
     document.body.append(sm)
-    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(root('sm').parts.checkbox) // --md-sys-compact-sm
+    expect(Number.parseFloat(getComputedStyle(sm, '::before').width)).toBe(parts(root('sm')).checkbox) // --md-sys-compact-sm
     sm.remove()
 
     const lg = document.createElement('ui-checkbox')
     lg.setAttribute('size', 'lg')
     document.body.append(lg)
-    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(root('lg').parts.checkbox) // --md-sys-compact-lg
+    expect(Number.parseFloat(getComputedStyle(lg, '::before').width)).toBe(parts(root('lg')).checkbox) // --md-sys-compact-lg
     lg.remove()
   })
 
@@ -219,7 +218,7 @@ describe('ui-checkbox -- ADR-0223 two postures (fill default / [inline] hug, bot
 })
 
 // ADR-0245 clauses 3 and 4: inside an opt-in region the box is max(2n, n + 6), the radius n/2, and the check and dash
-// span the n + 6 glyph box (T-0374), centred in the box; the dash is max(1.5px, c/2) tall. Against scale.mjs resolve().
+// span the n + 6 glyph box (T-0374), centred in the box; the dash is max(1.5px, c/2) tall. Against foundations-model.mjs resolve().
 // T-0197: the option label takes the control type role, so it reads at the field text size, not the 1px larger body.
 describe('ui-checkbox label type (T-0197)', () => {
   it('option text is the field text (T-0197)', () => {
@@ -261,12 +260,12 @@ describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', ()
     for (const size of ['sm', 'md', 'lg'] as const) {
       it(`product / ${scale} / ${size}: box max(2n, n + 6), radius ceil(n/2), check n + 6 centred`, () => {
         const r = resolve('product', scale, size)
-        const side = Math.max(r.icon, glyphBox(r))
+        const side = Math.max(r.iconBox, glyphBox(r))
         const { wrap, el } = mountIn(scale, size, { checked: true })
         const box = getComputedStyle(el, '::before')
         expect(num(box.width)).toBe(side)
         expect(num(box.height)).toBe(side)
-        expect(num(box.borderTopLeftRadius)).toBeCloseTo(r.parts.checkboxRadius, 1) // ceil(n/2), the chip radius (ADR-0245 Amendment 4)
+        expect(num(box.borderTopLeftRadius)).toBeCloseTo(r.checkboxRadius, 1) // ceil(n/2), the chip radius (ADR-0245 Amendment 4)
         const check = getComputedStyle(el, '::after')
         expect(num(check.width)).toBeCloseTo(glyphBox(r), 1)
         expect(num(check.height)).toBeCloseTo((glyphBox(r) * 11) / 12, 1)
@@ -276,7 +275,7 @@ describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', ()
 
       it(`product / ${scale} / ${size}: dash n + 6 wide, max(1.5px, c/2) tall, centred`, () => {
         const r = resolve('product', scale, size)
-        const side = Math.max(r.icon, glyphBox(r))
+        const side = Math.max(r.iconBox, glyphBox(r))
         const { wrap, el } = mountIn(scale, size, { indeterminate: true })
         const dash = getComputedStyle(el, '::after')
         expect(num(dash.width)).toBeCloseTo(glyphBox(r), 1)
@@ -293,7 +292,7 @@ describe('ui-checkbox geometry inside an opt-in data-tier region (ADR-0245)', ()
     let cells = 0
     for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const scale of ['sm', 'md', 'lg'] as const) for (const size of ['sm', 'md', 'lg'] as const) {
       const at = `${tier} / ${scale} / ${size}`
-      const r = model(tier, scale, size)
+      const r = resolve(tier, scale, size)
       const wrap = document.createElement('div')
       wrap.setAttribute('data-tier', tier)
       wrap.setAttribute('data-scale', scale)

@@ -2,7 +2,6 @@ import { describe, it, expect, afterEach } from 'vitest'
 import { server, userEvent, cdp } from 'vitest/browser'
 import { UIToolbarElement } from './toolbar.ts'
 import { UIButtonElement } from '../button/button.ts'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 
 // toolbar.lld.md LLD-C9 — the CROSS-ENGINE smoke for ui-toolbar (ADR-0121). Where toolbar.test.ts pins the
 // DECLARED/logical roving behaviour, this pins what a REAL engine does: real focus order (one Tab stop, arrow
@@ -16,6 +15,7 @@ import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container.css'
 import './toolbar.css'
 import '../button/button.css'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; toolbar: UIToolbarElement; buttons: UIButtonElement[] } => {
@@ -149,7 +149,7 @@ describe('ui-toolbar — whole-shape: a populated bar renders with real width/he
     const box = toolbar.getBoundingClientRect()
     expect(box.width, 'the toolbar collapsed to zero width').toBeGreaterThan(0)
     // --ui-toolbar-min-block-size: var(--md-sys-height-md): the 4n md height, 24px at the root register (the ADR-0038 lookup, the tabs precedent)
-    expect(box.height, 'the toolbar did not honour its min-block-size floor').toBeGreaterThanOrEqual(resolve('product', 'sm', 'md').h)
+    expect(box.height, 'the toolbar did not honour its min-block-size floor').toBeGreaterThanOrEqual(resolve('product', 'sm', 'md').height)
 
     // GH #634 displacement gap: the bar's OWN height is pinned above, but never the lone button's
     // VERTICAL POSITION inside the enforced floor — a regression from align-items:center to flex-start on

@@ -1,8 +1,8 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import './table.css'
 import './table.ts'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // ui-table geometry (ADR-0245 clause 3, delta rows "table row" and "table text cell inline padding"): inside an
 // opt-in region a row is at least 4n + 2c tall and a cell pads n + c inline; outside one the row is content-sized
@@ -31,8 +31,8 @@ describe('ui-table geometry inside an opt-in region', () => {
     it(`product / ${scale}: row at least 4n + 2c, cell padding n + c`, () => {
       const td = cell(`<div data-tier="product" data-scale="${scale}">${TABLE}</div>`)
       const r = resolve('product', scale, 'md')
-      expect(td.getBoundingClientRect().height).toBe(r.h + 2 * r.c)
-      expect(Number.parseFloat(getComputedStyle(td).paddingInlineStart)).toBe(r.control.margin + r.c)
+      expect(td.getBoundingClientRect().height).toBe(r.height + 2 * r.c)
+      expect(Number.parseFloat(getComputedStyle(td).paddingInlineStart)).toBe(r.inset + r.c)
     })
   }
 })

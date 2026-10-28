@@ -1,11 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
 
 import '@agent-ui/components/foundation-styles.css'
 import './board-grid.css'
 import './board-grid.ts'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 /** The derived root register (product / md / md, ADR-0245 Amendment 8). */
 const ROOT = rootResolve('md')
@@ -68,7 +68,7 @@ describe('ui-board-grid: whole shape', () => {
 
   it('a board with room paints the derived 6n cell; a narrow one gives way to the 34px floor and no further (ADR-0243 Amendment 2)', () => {
     // 6n at the root md (n 8): height 32 + icon box 16
-    const cell = ROOT.h + ROOT.icon
+    const cell = ROOT.height + ROOT.iconBox
     const roomy = mount('<ui-board-grid rows="6" cols="6"></ui-board-grid>')
     for (const c of cells(roomy)) {
       expect(rect(c).width).toBeCloseTo(cell, 1)
@@ -185,7 +185,7 @@ describe('ui-board-grid: keyboard with real focus', () => {
 })
 
 // ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
-// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md') (the region below, not the root): n 6,
+// data-tier region and today's value outside it. Values are foundations-model.mjs resolve('product', 'sm', 'md') (the region below, not the root): n 6,
 // height 24, c 2, icon box 12, radius 6. Lengths are read through layout (`inline-size: var(<token>)`).
 const lengthOf = (host: HTMLElement, token: string): number => {
   const probe = document.createElement('span')
@@ -209,6 +209,6 @@ describe('ui-board-grid: ADR-0245 derived foundations, dark launch', () => {
     const { out, inside } = foundationsPair('ui-board-grid', 'rows="3" cols="3"')
     expect(lengthOf(out, '--ui-board-grid-cell-size')).toBe(46)
     const sm = resolve('product', 'sm', 'md') // the explicit product / sm region
-    expect(lengthOf(inside, '--ui-board-grid-cell-size')).toBe(sm.h + sm.icon) // 6n = height 24 + icon box 12
+    expect(lengthOf(inside, '--ui-board-grid-cell-size')).toBe(sm.height + sm.iconBox) // 6n = height 24 + icon box 12
   })
 })

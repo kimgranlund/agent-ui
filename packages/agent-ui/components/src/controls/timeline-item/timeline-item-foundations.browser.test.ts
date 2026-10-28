@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
@@ -44,7 +43,7 @@ describe('ui-timeline-item geometry inside an opt-in region', () => {
       const wrap = mount(`<div data-tier="product" data-scale="sm"><ui-timeline-item size="${size}"></ui-timeline-item></div>`)
       const item = wrap.querySelector('ui-timeline-item')!
       const r = resolve('product', 'sm', size)
-      expect(markerBox(item)).toBe(Math.max(r.icon, glyphBox(r)))
+      expect(markerBox(item)).toBe(Math.max(r.iconBox, glyphBox(r)))
       expect(dotSize(item)).toBe(glyphBox(r))
     })
   }
@@ -54,7 +53,7 @@ describe('ui-timeline-item geometry inside an opt-in region', () => {
       `<div data-tier="product" data-scale="sm"><ui-status-stream></ui-status-stream><ui-timeline-item size="md"></ui-timeline-item></div>`,
     )
     const r = resolve('product', 'sm', 'md')
-    const box = Math.max(r.icon, glyphBox(r))
+    const box = Math.max(r.iconBox, glyphBox(r))
     expect(streamTokens(wrap.querySelector('ui-status-stream') as HTMLElement)).toEqual({ box, dot: glyphBox(r) })
     expect(markerBox(wrap.querySelector('ui-timeline-item')!)).toBe(box)
   })
@@ -65,7 +64,7 @@ describe('ui-timeline-item geometry inside an opt-in region', () => {
     let cells = 0
     for (const tier of ['widget', 'product', 'content', 'brand'] as const) for (const scale of ['sm', 'md', 'lg'] as const) for (const size of ['sm', 'md', 'lg'] as const) {
       const at = `${tier} / ${scale} / ${size}`
-      const r = model(tier, scale, size)
+      const r = resolve(tier, scale, size)
       const wrap = mount(`<div data-tier="${tier}" data-scale="${scale}"><ui-timeline-item size="${size}" label="Step"></ui-timeline-item></div>`)
       const part = wrap.querySelector('[data-part="marker"]') as HTMLElement
       const mark = getComputedStyle(part, '::before')

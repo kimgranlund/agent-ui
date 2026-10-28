@@ -18,9 +18,9 @@ import { UIConversationElement } from './conversation.ts'
 import type { UIConversationDialogElement } from './conversation-dialog.ts'
 import type { UIConversationHeaderElement } from './conversation-header.ts'
 import { whenFlushed } from '@agent-ui/components'
-import { ROOT_REGISTER, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
-import { resolve as resolveRegister } from '../../../../shared/src/tokens/scale.mjs'
+import { ROOT_REGISTER } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import { createRenderer as warm } from '@agent-ui/a2ui'
+import { resolve as resolveRegister, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 // ADR-0241 Amendment 1: the default catalog is a lazy record, so warm it at the top level, ahead of any renderer this
 // file builds (a renderer built before the body lands stays on the asynchronous path, so a beforeAll would be too late).
 await warm().preload('agent-ui')
@@ -1780,7 +1780,7 @@ describe('ui-conversation cross-engine: the activity strip sits on one grid deri
 
   const registers = [
     { name: `chat (root ${ROOT_REGISTER.tier} / ${ROOT_REGISTER.scale})`, attrs: {}, n: rootResolve('md').n },
-    { name: 'canvas (widget / md)', attrs: { 'data-tier': 'widget', 'data-scale': 'md' }, n: resolveRegister('widget', 'md', 'md', 'default').n },
+    { name: 'canvas (widget / md)', attrs: { 'data-tier': 'widget', 'data-scale': 'md' }, n: resolveRegister('widget', 'md', 'md', 'regular').n },
   ]
   for (const register of registers) {
     it(`${server.browser} ${register.name}: marker, rail, label column, expands and the trailing edge all derive from n`, async () => {

@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import type { UIServiceCardElement } from '@agent-ui/components/controls/service-card'
 
 // service-card.browser.test.ts — the cross-engine (Chromium + WebKit) browser-truth probes for
@@ -16,6 +15,7 @@ import type { UIServiceCardElement } from '@agent-ui/components/controls/service
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; card: UIServiceCardElement } => {
@@ -220,7 +220,7 @@ describe('ui-service-card forced-colors (ADR-0224 cl.6)', () => {
 // ADR-0245 geometry pin (clause 10c), part-level since T-0352: the action part declares its own md step
 // (`data-size="md"`), so its height, font and glyph gap resolve on the part against the region's ramp like
 // any control, never the card's own n. The legacy opt-out keeps today's 24px; every region (the root, product
-// and widget at scales sm / md / lg) gives scale.mjs's md step there; a card carrying its own data-size moves
+// and widget at scales sm / md / lg) gives the model's md step there; a card carrying its own data-size moves
 // nothing; a host or ancestor override of the token still reaches the button. The legacy gap is read
 // through layout (`inline-size: var(<token>)`) on the action itself.
 const lengthOf = (el: HTMLElement, token: string): number => {
@@ -257,7 +257,7 @@ describe('ui-service-card: the action part declares its own size step (T-0352)',
         const action = actionOf(host)
         const label = `${id} ${host.getAttribute('data-size') ?? 'bare'}`
         expect(action.getAttribute('data-size')).toBe('md')
-        expect(action.getBoundingClientRect().height, label).toBe(step.h)
+        expect(action.getBoundingClientRect().height, label).toBe(step.height)
         expect(getComputedStyle(action).fontSize, label).toBe(`${step.type.control}px`)
         expect(getComputedStyle(action).columnGap, label).toBe(`${step.n}px`)
       }

@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { userEvent } from 'vitest/browser'
-import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
 // Side-effect import: the demo page mounts the app shell + the live ui-command-modal specimen into document.body
 // (mountPage appends to `#app ?? document.body`; the adr-index.browser.test.ts precedent).
 import './command-modal-demo.ts'
+import { resolve } from '../../scripts/lib/foundations-model.mjs'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles),
 // so its duration is set by the browser's scheduling, which stretches under concurrent host load.
@@ -82,7 +82,7 @@ describe('command-modal-demo: the mock row is byte-identical outside a data-tier
     try {
       await raf()
       const r = resolve('product', 'md', 'md')
-      expect(getComputedStyle(search()).minBlockSize).toBe(`${r.h}px`)
+      expect(getComputedStyle(search()).minBlockSize).toBe(`${r.height}px`)
       expect(getComputedStyle(search()).fontSize).toBe(`${r.type.control}px`)
     } finally {
       mock.removeAttribute('data-tier')

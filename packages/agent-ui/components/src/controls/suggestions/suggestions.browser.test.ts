@@ -1,5 +1,4 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // suggestions.browser.test.ts — the real-engine proof for the one-shot chip set (ADR-0213). jsdom is
 // blind to painted geometry/computed ink/native-disabled pointer suppression — this file proves the
@@ -14,6 +13,7 @@ import './suggestions.css'
 import './suggestions.ts'
 import type { UISuggestionsElement } from './suggestions.ts'
 import { whenFlushed } from '../../reactive/index.ts'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const mounted: HTMLElement[] = []
 const mount = (): UISuggestionsElement => {
@@ -53,7 +53,7 @@ describe('ui-suggestions — compact-realm chip geometry (whole-shape gestalt)',
     for (const chip of chips) {
       const rect = chip.getBoundingClientRect()
       expect(rect.width, 'a chip painted zero width').toBeGreaterThan(0)
-      expect(px(getComputedStyle(chip).blockSize), 'chip block-size must equal the derived icon box').toBeCloseTo(rootResolve('md').icon, 0)
+      expect(px(getComputedStyle(chip).blockSize), 'chip block-size must equal the derived icon box').toBeCloseTo(rootResolve('md').iconBox, 0)
       // the pill radius == half the box (a full pill, never a rectangle)
       const radius = px(getComputedStyle(chip).borderTopLeftRadius)
       expect(radius).toBeCloseTo(rect.height / 2, 0)

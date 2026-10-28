@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { server, cdp, page } from 'vitest/browser'
 import type { UITextElement } from './text.ts'
 
@@ -72,7 +71,7 @@ describe('ui-text browser-truth harness — the role×size matrix resolves to re
     }
     // Two groups collapse by DESIGN: quote ≡ lead (both the derived subhead role, ADR-0245 cl.7) and
     // label ≡ kicker (both the field-label role, T-0117). The other six roles are distinct at the root register,
-    // so 9 variants land on exactly 7 distinct sizes (each read from scale.mjs resolve() at product / md).
+    // so 9 variants land on exactly 7 distinct sizes (each read from foundations-model.mjs resolve() at product / md).
     expect(sizes.size).toBe(7)
   })
 

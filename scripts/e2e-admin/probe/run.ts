@@ -12,7 +12,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import type { Browser, BrowserContext, Page } from 'playwright'
 import { newRunId, withRunId } from '../../../packages/agent-ui/a2ui/tools/agent/run-id.ts'
-import { CFG } from '../../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { anchors } from '../../lib/foundations-model.mjs'
 import RULES from '../../dogfood-rules.json' with { type: 'json' }
 import { ADMIN_SELECTORS, openAdmin, pollUntil, setDefaultWaitMs, type AdminPage } from '../admin-page.ts'
 import { classifyRequest, installIntercept, parseBody } from '../intercept.ts'
@@ -218,7 +218,7 @@ async function renderLint(page: Page): Promise<{ findings: Array<{ rule: string;
       }
       return out
     },
-    { pane: ADMIN_SELECTORS.chatPane, floor: CFG.floor as number, glyphBox: GLYPH_BOX_SELECTOR },
+    { pane: ADMIN_SELECTORS.chatPane, floor: anchors().floor, glyphBox: GLYPH_BOX_SELECTOR },
   )
   const notRun = (RULES.render as Array<{ id: string }>).map((r) => r.id).filter((id) => !(LINT_RUN as readonly string[]).includes(id))
   // One finding per rule and element is enough for a report.

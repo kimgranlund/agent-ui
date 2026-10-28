@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // Phase-1 s12 — the browser-truth harness PROOF (trivial, not the real geometry smoke — that's s13).
 // This asserts only that the harness is alive: the family self-defines, the foundation + component CSS
@@ -13,6 +12,7 @@ import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 describe('ui-button browser-truth harness (s12)', () => {
   it('mounts ui-button and a real engine resolves the --ui-button-* frame to a computed px', () => {
@@ -20,12 +20,12 @@ describe('ui-button browser-truth harness (s12)', () => {
     el.textContent = 'Go'
     document.body.append(el)
 
-    // block-size is `var(--ui-button-height)` → `var(--md-sys-height-md)` → the derived 4n md height (scale.mjs resolve()).
+    // block-size is `var(--ui-button-height)` → `var(--md-sys-height-md)` → the derived 4n md height (foundations-model.mjs resolve()).
     // If the foundation/component CSS or the token chain hadn't resolved, this would not be a real px.
     const blockSize = getComputedStyle(el).blockSize
     expect(blockSize).toMatch(/px$/)
     expect(Number.parseFloat(blockSize)).toBeGreaterThan(0)
-    expect(Number.parseFloat(blockSize)).toBe(rootResolve('md').h) // md frame @ scale 1, the ramp truly resolved
+    expect(Number.parseFloat(blockSize)).toBe(rootResolve('md').height) // md frame @ scale 1, the ramp truly resolved
 
     el.remove()
   })

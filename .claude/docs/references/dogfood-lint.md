@@ -23,7 +23,7 @@ Layer 1 and `npm run test:eval-catalog` are local and merge-queue gates, not CI:
 
 `scripts/dogfood-rules.json` holds both lint layers: `render` (layer 1) and `compose` (layer 2). Each render rule
 names its source rule (in the `source` field), its selector, what it measures and the expected value; every geometry value is computed
-from `resolve(tier, scale, size, density)` in `packages/agent-ui/shared/src/tokens/scale.mjs` at the element's
+from `resolve(tier, scale, size, density)` in `scripts/lib/foundations-model.mjs` (T-0374, T-0506) at the element's
 register (the nearest `data-tier`, `data-scale`, `data-size` or `size`, and `data-density` on the element or an
 ancestor; at the root the shared `ROOT_REGISTER` of `scripts/lib/foundations-rules.mjs`, the generator's root inputs,
 product at scale md since Amendment 8; widget at scale md on an A2UI surface, which the renderer stamps). A sweep leg

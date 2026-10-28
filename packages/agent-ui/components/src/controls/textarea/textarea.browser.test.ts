@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
 import type { UITextareaElement } from '@agent-ui/components/controls/textarea'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 
 // The cross-engine behaviour + geometry + focus-ring + forced-colors smoke for ui-textarea (ADR-0134). Where
 // the jsdom probes pin the DECLARED rules, this pins what a REAL engine does with a real contenteditable + a
@@ -22,6 +21,7 @@ import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const SIZED = 'style="inline-size: 260px"'
 

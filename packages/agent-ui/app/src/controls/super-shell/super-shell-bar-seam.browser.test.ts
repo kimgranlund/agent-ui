@@ -23,15 +23,14 @@ import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import './super-shell.css'
 import { UISuperShellElement } from './super-shell.ts'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs'
+import { resolve as model, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 // T-0121: the shell frame reads level tokens (ADR-0245 cl.6), so every px this file pins is derived from the
-// root register (product at scale md) through scale.mjs, never written as a literal.
+// root register (product at scale md) through foundations-model.mjs, never written as a literal.
 const ROOT = rootResolve('md')
-const BAR = ROOT.h + 2 * ROOT.widget.margin // bars and rails: a control row plus the widget margin above and below, 8n
-const GAP = ROOT.page.gutter // the inter-card gap: the layout gutter 3n
-const SEAM = ROOT.control.margin // the strip seams: the control inset n
+const BAR = ROOT.height + 2 * ROOT.widget.margin // bars and rails: a control row plus the widget margin above and below, 8n
+const GAP = ROOT.layout.gutter // the inter-card gap: the layout gutter 3n
+const SEAM = ROOT.inset // the strip seams: the control inset n
 const ROUND = `${model().card.radius}px` // a carded part's round corner: the card radius A x 3m (T-0374 step 6)
 const PANE = 42 * ROOT.n // the default pane: 42n, the nav label column's room (Kim 2026-10-14)
 

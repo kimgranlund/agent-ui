@@ -13,10 +13,10 @@
 
 import { describe, it, expect, afterEach } from 'vitest'
 import { server, cdp, userEvent } from 'vitest/browser'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
 import '@agent-ui/components/foundation-styles.css'
 import '@agent-ui/components/all.css'
 import '@agent-ui/components/all'
+import { rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
 const mounted: HTMLElement[] = []
 const mount = (markup: string): { wrap: HTMLElement; group: HTMLElement; segments: HTMLElement[] } => {
@@ -134,10 +134,10 @@ describe('ui-segmented-control — grid track + segment geometry (both engines)'
     const cs = getComputedStyle(seg)
     const height = px(cs.blockSize)
     const r = rootResolve('md')
-    expect(height).toBeCloseTo(r.h, 0) // --md-sys-height-md default
+    expect(height).toBeCloseTo(r.height, 0) // --md-sys-height-md default
     // the segment's label is anonymous content, so its edge carries the box margin n plus the label inset n - c
-    expect(px(cs.paddingInlineStart)).toBeCloseTo(r.control.margin + r.labelMargin, 0)
-    expect(px(cs.paddingInlineEnd)).toBeCloseTo(r.control.margin + r.labelMargin, 0)
+    expect(px(cs.paddingInlineStart)).toBeCloseTo(r.inset + r.labelInset, 0)
+    expect(px(cs.paddingInlineEnd)).toBeCloseTo(r.inset + r.labelInset, 0)
     expect(px(cs.paddingBlockStart)).toBe(0)
     expect(px(cs.paddingBlockEnd)).toBe(0)
     // line-height: read the --md-sys-control-line-height custom property (== '1'), NEVER assert

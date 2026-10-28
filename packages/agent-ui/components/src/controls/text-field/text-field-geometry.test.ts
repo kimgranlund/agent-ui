@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest'
 // Read text-field.css + the shared dimensions ramp as TEXT (same approach as the
 // button s11 geometry probe). jsdom can NOT compute layout px, so these are STATIC structural/formula checks on
 // the DECLARED calc()s; the rendered-px CHANGE (sm→md→lg, [scale]) is s11's cross-engine browser smoke, NOT here.
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
 import { readFileSync } from 'node:fs'
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 declare const process: { cwd(): string }
 
 // G6 s9 — the STATIC geometry trip-wires for ui-text-field (geometry.md §Mechanization: "a law without a probe
@@ -26,9 +26,9 @@ const whereBlock = (marker: string): string => {
 }
 
 /** The root register's derived boxes (ADR-0245 clause 2: product at scale sm). Since the cut the icon is the
- *  2n icon box and the height the 4n frame; scale.mjs resolve() is their one source. */
-const iconPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).icon
-const heightPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).h
+ *  2n icon box and the height the 4n frame; foundations-model.mjs resolve() is their one source. */
+const iconPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).iconBox
+const heightPx = (size: 'sm' | 'md' | 'lg'): number => resolve('product', 'sm', size).height
 
 const iconBySize: Record<string, number | null> = {
   sm: iconPx('sm'),

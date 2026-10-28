@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
-import { rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs'
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 import { server, cdp, userEvent } from 'vitest/browser'
 import { UITabsElement } from './tabs.ts'
 import { UITabElement } from './tab.ts'
@@ -50,7 +49,7 @@ const px = (v: string): number => Number.parseFloat(v)
 // control rule's padding, margin n + label inset n - c = 2n - c, on each inline side. Root register: 2 and 14.
 const ROOT = rootResolve('md')
 const STRIP_GAP = ROOT.c
-const TAB_PAD = ROOT.control.margin + ROOT.labelMargin
+const TAB_PAD = ROOT.inset + ROOT.labelInset
 
 /** Let a ResizeObserver learn a real post-change size (the select.browser.test.ts `nextFrames` precedent —
  *  two rAFs comfortably clears the RO's own per-spec "after rendering updates" timing). */
@@ -87,7 +86,7 @@ describe('ui-tabs — keyboard roving moves focus + switches the visible panel (
     // jsdom/css-text can't.
     const rowHeight = Number.parseFloat(getComputedStyle(tabEls[0]).blockSize)
     expect(rowHeight, 'the tab row collapsed — the --ui-tabs-tab-height chain did not resolve').toBeGreaterThan(0)
-    expect(rowHeight, 'the tab row height is not 4n at the root register (32px, ADR-0245)').toBeCloseTo(ROOT.h, 0)
+    expect(rowHeight, 'the tab row height is not 4n at the root register (32px, ADR-0245)').toBeCloseTo(ROOT.height, 0)
 
     // baseline: tab 0 selected → its panel shows, the others are display:none (the [hidden] author rule).
     expect(getComputedStyle(panelEls[0]).display, 'panel 0 not shown at baseline').toBe('block')
@@ -169,7 +168,7 @@ describe('ui-tabs — [density] shifts shell spacing; the tab control height is 
     const tabHeightBase = px(getComputedStyle(tabEls[0]).blockSize)
     expect(stripGapBase, 'comfortable strip-gap is not a positive px').toBeGreaterThan(0)
     expect(panelPadBase, 'comfortable panel-pad is not a positive px').toBeGreaterThan(0)
-    expect(tabHeightBase, 'the root tab is not 4n = 32px (ADR-0245 Appendix B)').toBe(ROOT.h)
+    expect(tabHeightBase, 'the root tab is not 4n = 32px (ADR-0245 Appendix B)').toBe(ROOT.height)
 
     expect(stripGapBase, 'the root strip gap is c').toBe(ROOT.c)
 
@@ -1001,7 +1000,7 @@ describe('ui-tabs — orientation="vertical" × overflow="menu": the §7 corner 
   it("[MUST-PROVE] the fit axis flips to BLOCK-size under vertical; the trigger sits at the strip column's block-end, a tab-height square", () => {
     // The fixture box is derived from the tab row (4n at the root register), not a literal: three rows' worth of
     // block-size cannot hold five rows + the trigger reserve at any n, so the fit axis always has to engage.
-    const boxPx = 3 * ROOT.h
+    const boxPx = 3 * ROOT.height
     const wrap = document.createElement('div')
     wrap.style.cssText = `display:flex; flex-direction:column; block-size:${boxPx}px;`
     wrap.innerHTML = `

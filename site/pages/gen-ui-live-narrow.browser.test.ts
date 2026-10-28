@@ -33,7 +33,7 @@
 // turn content). 414×700 is the geometry that actually reproduces Kim's report.
 import { describe, it, expect, beforeAll, vi } from 'vitest'
 import { page } from 'vitest/browser'
-import { resolve } from '../../packages/agent-ui/shared/src/tokens/scale.mjs'
+import { resolve } from '../../scripts/lib/foundations-model.mjs'
 
 // GH #347 — REAL-TIMING HEADROOM. This file awaits real elapsed time (rAF frame settles, real-timer
 // waits, the `waitFor` retry poll below, a `page.viewport()` driver round trip, and a mid-test
@@ -122,8 +122,8 @@ describe('gen-ui-live — GH #260 regression at Kim\'s actual reported geometry 
     // (~44px under the old layout), so the sliver ceiling is the canvas's own floor (the same figure the
     // post-scroll check below must reach) instead of a fixed 60: the canvas floor is not yet visible and a
     // deliberate scroll is still required. T-0121: the floor is six layout margins (24n), read from
-    // scale.mjs at the root register, less a 2px rounding allowance.
-    const CANVAS_FLOOR = resolve('product', 'sm', 'md').page.margin * 6 - 2
+    // foundations-model.mjs at the root register, less a 2px rounding allowance.
+    const CANVAS_FLOOR = resolve('product', 'sm', 'md').layout.margin * 6 - 2
     const preScroll = visibleRect(canvas)
     expect(preScroll.height, 'pre-scroll, the canvas floor is not yet visible, only a sliver of it as in the ORIGINAL bug report; a deliberate scroll is required, same as any normal overflowing page').toBeLessThan(CANVAS_FLOOR)
 

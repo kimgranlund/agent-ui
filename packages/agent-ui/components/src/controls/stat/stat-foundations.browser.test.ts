@@ -1,12 +1,11 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the field label n + 5 (T-0374 step 2)
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import '@agent-ui/components/foundation-styles.css'
 import './stat.css'
 import './stat.ts'
 
 // ui-stat geometry under ADR-0245 (the dark launch): inside an opt-in [data-tier] region the control reads the
-// derived tokens and measures against scale.mjs resolve(); outside one it still measures today's values.
+// derived tokens and measures against foundations-model.mjs resolve(); outside one it still measures today's values.
 
 const mounted: HTMLElement[] = []
 afterEach(() => mounted.splice(0).forEach((el) => el.remove()))
@@ -27,7 +26,7 @@ function mount(html: string, region = true): HTMLElement {
 
 const px = (v: string): number => Number.parseFloat(v)
 const root = resolve('product', 'sm', 'md')
-const fieldLabel = model('product', 'sm', 'md').type.fieldLabel
+const fieldLabel = resolve('product', 'sm', 'md').type.fieldLabel
 
 describe('ui-stat type (ADR-0245 cl.7)', () => {
   const part = (wrap: HTMLElement, p: string): HTMLElement => wrap.querySelector(`[data-part="${p}"]`) as HTMLElement

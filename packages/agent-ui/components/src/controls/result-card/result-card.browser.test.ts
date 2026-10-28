@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { glyphBox, rootResolve } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radius at the balanced preset (T-0374 step 6)
+import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' // the glyph box n + 6 (T-0374)
+import { resolve, rootResolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 
 /** The derived root register (product / md / md, ADR-0245 Amendment 8). */
 const ROOT = rootResolve('md')
@@ -165,7 +164,7 @@ describe('ui-result-card: the producer buttons at the lg step', () => {
     expect(buttons).toHaveLength(3)
     for (const b of buttons) {
       expect(b.getAttribute('size')).toBe('lg')
-      expect(b.getBoundingClientRect().height).toBeCloseTo(rootResolve('lg').h, 0)
+      expect(b.getBoundingClientRect().height).toBeCloseTo(rootResolve('lg').height, 0)
     }
   })
 })
@@ -211,7 +210,7 @@ describe('ui-result-card: the outcome pill and the stat wrap', () => {
 })
 
 // ADR-0245 geometry pin (clause 10c): the migrated tokens read the derived foundation inside an opt-in
-// data-tier region and today's value outside it. Values are scale.mjs resolve('product', 'sm', 'md'): n 6,
+// data-tier region and today's value outside it. Values are foundations-model.mjs resolve('product', 'sm', 'md'): n 6,
 // height 24, c 2, icon box 12, radius 6. Lengths are read through layout (`inline-size: var(<token>)`).
 const lengthOf = (host: HTMLElement, token: string): number => {
   const probe = document.createElement('span')
@@ -250,11 +249,11 @@ describe('ui-result-card: ADR-0245 derived foundations, dark launch', () => {
   it('reads today\'s value outside a data-tier region and the derived value inside', () => {
     const { out, inside } = foundationsPair('ui-result-card', 'outcome="win" result-title="Blackjack"')
     expect(lengthOf(out, '--ui-result-card-outcome-radius')).toBe(999)
-    expect(lengthOf(inside, '--ui-result-card-outcome-radius')).toBe(REGION.h) // any radius over half the pill's height is a pill
+    expect(lengthOf(inside, '--ui-result-card-outcome-radius')).toBe(REGION.height) // any radius over half the pill's height is a pill
     expect(lengthOf(out, '--ui-result-card-outcome-gap')).toBe(5)
     expect(lengthOf(inside, '--ui-result-card-outcome-gap')).toBe(REGION.n)
     expect(lengthOf(out, '--ui-result-card-stat-radius')).toBe(lengthOf(out, '--md-sys-shape-corner-base') - 2)
-    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(model('product', 'sm', 'md').radius) // A x n, balanced by default (T-0374 step 6)
+    expect(lengthOf(inside, '--ui-result-card-stat-radius')).toBe(resolve('product', 'sm', 'md').radius) // A x n, balanced by default (T-0374 step 6)
     for (const el of [out, inside]) expect(lengthOf(el, '--ui-result-card-stat-gap')).toBe(2)
   })
 })

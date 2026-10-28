@@ -1,6 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest'
-import { resolve } from '../../../../shared/src/tokens/scale.mjs'
-import { resolve as model } from '../../../../../../scripts/lib/foundations-model.mjs' // the radii at the balanced preset (T-0374 step 6)
+import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs' // the model the sheet mirrors (T-0506)
 import '@agent-ui/components/foundation-styles.css'
 import '../_surface/container-box.css'
 import './menu.css'
@@ -50,9 +49,9 @@ describe('ui-menu geometry inside an opt-in region', () => {
     it(`product / ${scale}: row 4n, inset c, item radius the control radius, panel radius that plus c`, async () => {
       const { item, panel } = await open(`<div data-tier="product" data-scale="${scale}">${MENU}</div>`)
       const r = resolve('product', scale, 'md')
-      expect(item.getBoundingClientRect().height).toBe(r.h)
+      expect(item.getBoundingClientRect().height).toBe(r.height)
       expect(margin(item)).toBe(r.c)
-      const { controlRadius } = model('product', scale, 'md') // A x h/2 (T-0374 step 6)
+      const { controlRadius } = resolve('product', scale, 'md') // A x h/2 (T-0374 step 6)
       expect(radius(item)).toBe(controlRadius)
       expect(radius(panel)).toBe(controlRadius + r.c)
     })
