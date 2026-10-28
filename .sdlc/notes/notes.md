@@ -1027,3 +1027,7 @@
 ## T-0491: Component and A2UI LLDs drop the retired component-styles barrel step and re-sync their file maps (2026-10-28)
 
 - note: .claude/docs/lld/a2ui-live-agent.lld.md:110 the retained history text keeps its em dashes from before this change; the builder added none.
+
+## T-0497: Site demo figures and event logs take the card-level radius (12px), not the 36px wrapper radius (2026-10-28)
+
+- note: site/lib/__fixtures__/theme-provider-built.css still holds the old concentric calc; a built fixture, not source.
