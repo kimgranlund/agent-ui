@@ -1531,7 +1531,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   let forceSurfaceRound = false
   // T-0499: the next round repairs a semantic finding on a no-payload round (T-0298). If that round comes back empty (no
   // text, no tool call; round 16 :13), it is not filed PARSE: the same repair ask is sent again, render_surface forced.
-  let semanticRepairPending = false
+  // T-0501: so does every other forced repair, SURFACE_DROPPED (T-0281), SURFACE_CLAIMED (T-0442), CHANGE_CLAIMED (T-0448)
+  // and the T-0428 change-claim narration repair.
+  let forcedRepairPending = false
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
   let textJsonlRouted = false // T-0172: sticky, a text round's prose carried A2UI lines that became the payload
@@ -1643,8 +1645,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     let narrationRound = 0 // T-0332: 1 once this round's reply was rewritten by a text-only narration repair call
     const forceSurface = forceSurfaceRound
     forceSurfaceRound = false
-    const semanticRepair = semanticRepairPending
-    semanticRepairPending = false
+    const forcedRepair = forcedRepairPending
+    forcedRepairPending = false
     const namedBy = lastOutput !== undefined ? failureAttribution(lastOutput) : undefined // once a round
     const keep = namedBy !== undefined && failures !== undefined ? surfacesToKeep(lastOutput!, failures, input.session, namedBy) : [] // T-0172
     if (round > 0 && lastOutput !== undefined && outputRound === round - 1) {
@@ -1946,6 +1948,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (round < opts.maxRounds - 1) {
           lastCaptureRound = offeredTools !== undefined
           forceSurfaceRound = offeredTools !== undefined // T-0321
+          forcedRepairPending = true // T-0501
           continue
         }
         shipping = shippableFallback()
@@ -1994,7 +1997,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           failures = findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined
           forceSurfaceRound = offeredTools !== undefined // T-0298
-          semanticRepairPending = true // T-0499
+          forcedRepairPending = true // T-0499
           continue
         }
         if (findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
@@ -2011,6 +2014,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (round < opts.maxRounds - 1) {
           lastCaptureRound = true
           forceSurfaceRound = true
+          forcedRepairPending = true // T-0501
           continue
         }
         shipping = shippableFallback()
@@ -2031,6 +2035,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         failures = [{ code: 'CHANGE_CLAIMED', path: roundTarget }]
         lastCaptureRound = offeredTools !== undefined
         forceSurfaceRound = offeredTools !== undefined // as T-0298: prose stood in for the payload
+        forcedRepairPending = true // T-0501
         continue
       }
       if (narrated !== undefined && !narrationFedBack && round < opts.maxRounds - 1) {
@@ -2040,6 +2045,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           failures = [narrated]
           lastCaptureRound = offeredTools !== undefined
           forceSurfaceRound = offeredTools !== undefined // as T-0298: prose stood in for the payload
+          forcedRepairPending = true // T-0501
           continue
         }
         const firstNarrated = narrated
@@ -2076,12 +2082,12 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const assembled = assembleFromRaw(rest)
     if (assembled === undefined) {
       // T-0499: an empty semantic repair round keeps the failure it was repairing and the attempt it showed, once more
-      // forced, while a round is left; on the last round it is PARSE as before.
-      if (semanticRepair && raw.trim() === '' && captured === undefined && round < opts.maxRounds - 1) {
+      // forced, while a round is left; on the last round it is PARSE as before. T-0501: any forced repair round does.
+      if (forcedRepair && raw.trim() === '' && captured === undefined && round < opts.maxRounds - 1) {
         lastRaw = priorRaw
         lastCaptureRound = offeredTools !== undefined
         forceSurfaceRound = offeredTools !== undefined
-        semanticRepairPending = true
+        forcedRepairPending = true
         continue
       }
       lastOutput = undefined // GH #288 — no parsed output this round; nothing for the next round's feedback to resolve against
@@ -2130,6 +2136,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         if (round < opts.maxRounds - 1) {
           lastCaptureRound = offeredTools !== undefined
           forceSurfaceRound = offeredTools !== undefined // T-0321
+          forcedRepairPending = true // T-0501
           continue
         }
         shipping = shippableFallback()
