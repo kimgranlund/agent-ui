@@ -1058,3 +1058,7 @@
 
 - note: `.sdlc/tickets/0508-weak-test-sweep/handoff.md` Findings: M4 drill.browser.test.ts:179 `expect(typeof transition).toBe('string')` read and confirmed (line 179, `reduced` discarded with `void reduced`); the handoff's M3 format.test.ts range 128-136 spans the whole test rather than the catch line, harmless.
 - note: no em dashes in handoff.md (grep count 0).
+
+## T-0501: An empty round after a SURFACE_DROPPED, SURFACE_CLAIMED or CHANGE_CLAIMED repair re-sends that repair ask, not the PARSE hint (2026-10-28)
+
+- note: produce.ts:2014-2018 and :1948-1952, :2136-2140: the valid-round SURFACE_DROPPED site and the SURFACE_CLAIMED site (:2014) get `forcedRepairPending = true`, but only the no-payload SURFACE_DROPPED path has a dedicated test, as the builder's report says. Not a criterion.

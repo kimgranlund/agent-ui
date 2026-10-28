@@ -3,6 +3,8 @@
 // empty (no text, no tool call) and was filed PARSE, so round 3 got the PARSE hint, answered note-only, and the confirm
 // shipped in prose. An empty round after a semantic repair now re-sends that repair ask with its forced render; an empty
 // round with no semantic repair before it still gets the PARSE hint. Keyless, scripted provider.
+// T-0501 (T-0499 verifier note): so do the other forced repairs of a no-payload round, SURFACE_DROPPED (T-0281),
+// SURFACE_CLAIMED (T-0442), CHANGE_CLAIMED (T-0448) and the T-0428 change-claim narration repair.
 
 import { describe, it, expect } from 'vitest'
 import { produce } from '../agent/produce.ts'
@@ -12,6 +14,9 @@ import { composeCatalog } from '../catalog/compose.ts'
 import { defaultCatalog } from '../catalog/default/index.ts'
 import { hospitalityFragment } from '../catalog/domains/hospitality/manifest.ts'
 import { hospitalitySemanticChecks } from '../catalog/domains/hospitality/checks.ts'
+import { readMetaLine } from '../agent/meta-line.ts'
+import { croupierFragment } from '../catalog/personas/croupier/manifest.ts'
+import { DEAL_TURN, toJsonl } from '../catalog/personas/croupier/hands.fixture.ts'
 
 const catalog = composeCatalog(defaultCatalog, hospitalityFragment, 'hospitality')
 const FORM = [
@@ -93,5 +98,84 @@ describe('produce(): an empty round after a semantic repair keeps that repair (T
     expect(lastAsk(reqs[1]!)).toMatch(/^.*PARSE/)
     expect(lastAsk(reqs[1]!)).not.toContain('SURFACE_MISSING')
     expect(reqs[1]!.toolChoice).toBeUndefined()
+  })
+})
+
+const croupier = composeCatalog(defaultCatalog, croupierFragment, 'croupier')
+const table: TurnInput = { kind: 'intent', text: 'Check, or call if there is a bet.', session: { turns: [{ role: 'user', content: 'Deal round 3' }, { role: 'assistant', content: toJsonl(DEAL_TURN) }] } }
+const CLEAN = '{"a2uiMeta":{"note":"I check behind. You act first."}}\n{"version":"v1.0","updateComponents":{"surfaceId":"table-3","components":[{"id":"messageZone","component":"Text","variant":"body","text":"Dealer stands on 17."}]}}'
+
+async function run(outputs: string[], input: TurnInput, deps: Partial<Parameters<typeof produce>[1]>, maxRounds = 3): Promise<{ reqs: SeamRequest[]; codes: string[] | undefined }> {
+  let n = 0
+  const reqs: SeamRequest[] = []
+  const provider: AgentProvider = {
+    async *stream(req) {
+      reqs.push(req)
+      yield outputs[Math.min(n++, outputs.length - 1)]!
+    },
+  }
+  const lines: string[] = []
+  try {
+    for await (const line of produce(input, { provider, retrieve: () => [], catalog: croupier, ...deps }, { maxRounds, model: 'claude-haiku-5-5', effort: 'medium' })) lines.push(line)
+  } catch {
+    // a halt at the bound is fine here; the requests are what is read
+  }
+  const meta = lines.map((l) => readMetaLine(l)?.a2uiMeta).find((m) => m?.trace !== undefined)
+  return { reqs, codes: meta?.trace?.failureCodes !== undefined ? [...meta.trace.failureCodes] : undefined }
+}
+
+/** The repair ask in `reqs[at]` came back empty; the next request re-sends it, forced, showing the attempt it repaired. */
+function expectResent(reqs: SeamRequest[], at: number, code: string, attempt: string): void {
+  expect(reqs.length).toBeGreaterThan(at + 1)
+  expect(lastAsk(reqs[at]!)).toContain(code)
+  expect(reqs[at]!.toolChoice).toEqual({ name: 'render_surface' })
+  expect(lastAsk(reqs[at + 1]!)).toBe(lastAsk(reqs[at]!))
+  expect(lastAsk(reqs[at + 1]!)).not.toContain('PARSE')
+  expect(lastAsk(reqs[at + 1]!)).not.toContain(TOOL_PARSE_HINT)
+  expect(reqs[at + 1]!.messages.at(-2)).toEqual({ role: 'assistant', content: attempt }) // the repaired attempt, never an empty turn
+  expect(reqs[at + 1]!.toolChoice).toEqual({ name: 'render_surface' })
+  expect(buildRequestBody(reqs[at + 1]!).thinking).toEqual({ type: 'disabled' })
+}
+
+describe('produce(): an empty round after a SURFACE_DROPPED, SURFACE_CLAIMED or CHANGE_CLAIMED repair keeps that repair (T-0501)', () => {
+  it('SURFACE_DROPPED (T-0281): a prose-only retry dropped ask-1 and the repair came back empty: the drop ask is re-sent', async () => {
+    const ASK_OUT_OF_SCOPE =
+      '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"ask-1","components":[{"id":"root","component":"Modal","open":true}]}}'
+    const PROSE_ONLY = '{"a2uiMeta":{"note":"press Book table to confirm","ask":{"surfaceId":"ask-1"}}}'
+    const intent: TurnInput = { kind: 'intent', text: 'a submit button', session: { turns: [] } }
+    const r = await run(['{"a2uiMeta":{"note":"pick one","ask":{"surfaceId":"ask-1"}}}\n' + ASK_OUT_OF_SCOPE, PROSE_ONLY, EMPTY, '{"a2uiMeta":{"note":"pick one"}}\n' + ASK_OUT_OF_SCOPE], intent, { catalog: defaultCatalog }, 4)
+    expect(r.reqs).toHaveLength(4)
+    expectResent(r.reqs, 2, 'SURFACE_DROPPED at ask-1', PROSE_ONLY)
+  })
+
+  it('SURFACE_CLAIMED (T-0442): an ask naming a surface it never creates, then an empty round: the claim ask is re-sent', async () => {
+    const ASKED = JSON.stringify({ a2uiMeta: { note: 'Hit or stand? Pick one below.', ask: { surfaceId: 'ask-9' } } })
+    const r = await run([ASKED, EMPTY, CLEAN], table, {})
+    expect(r.reqs).toHaveLength(3)
+    expectResent(r.reqs, 1, 'SURFACE_CLAIMED at ask-9', ASKED)
+  })
+
+  it('CHANGE_CLAIMED (T-0448): a targeted change claim with no update, then an empty round: the change ask is re-sent', async () => {
+    const CLAIM = JSON.stringify({ a2uiMeta: { note: "Done, the table is now Kim's table.", target: { surfaceId: 'table-3' } } })
+    const r = await run([CLAIM, EMPTY, CLEAN], table, {})
+    expect(r.reqs).toHaveLength(3)
+    expectResent(r.reqs, 1, 'CHANGE_CLAIMED at table-3', CLAIM)
+  })
+
+  it('T-0428: a narrated reply that claims a change, then an empty round: the full narration repair is re-sent', async () => {
+    const rename: TurnInput = { ...table, text: "Rename the table to Kim's table and show my chips as euros." }
+    const SAID = JSON.stringify({ a2uiMeta: { note: "Done: table-3 is now titled Kim's table and your chips show as euros." } })
+    const r = await run([SAID, EMPTY, CLEAN], rename, {})
+    expect(r.reqs).toHaveLength(3)
+    expectResent(r.reqs, 1, 'NARRATED_MECHANICS at table-3', SAID)
+    expect(lastAsk(r.reqs[2]!)).not.toContain('send no A2UI lines')
+  })
+
+  it('an empty round after a narration-only repair (no change claimed) is not a forced repair: it still gets the PARSE hint', async () => {
+    const NARRATED = JSON.stringify({ a2uiMeta: { note: 'There is no hand to hit; the round on table-3 is settled.' } })
+    const r = await run([NARRATED, EMPTY, EMPTY], table, {}, 3)
+    expect(r.reqs).toHaveLength(2)
+    expect(r.reqs[1]!.tools).toBeUndefined()
   })
 })
