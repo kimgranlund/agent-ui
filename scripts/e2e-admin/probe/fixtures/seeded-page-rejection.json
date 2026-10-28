@@ -1,0 +1,30 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "seeded-page-rejection",
+  "agent": "croupier",
+  "source": "hand-authored for the probe selftest (T-0500: the page renderer rejected the turn's payload and fired a VALIDATION_FAILED client turn, which the probe used to count ok; round 16 cluster M, T-0498) (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "hello"
+    },
+    {
+      "page": "VALIDATION_FAILED"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Here is the table.\"}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"canvas\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Deal\",\"action\":{\"action\":\"deal\"}}]}}"
+      ]
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Fixed the table.\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"canvas\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"btn\"]},{\"id\":\"btn\",\"component\":\"Button\",\"variant\":\"solid\",\"label\":\"Deal\",\"action\":{\"action\":\"deal\"}}]}}"
+      ]
+    }
+  ]
+}

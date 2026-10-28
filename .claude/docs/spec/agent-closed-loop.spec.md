@@ -43,6 +43,7 @@ The code table is the owner: `CHECK_NAMES` and `runChecks` in `scripts/e2e-admin
 | `model-pick` | fail | the produce request does not carry the requested model or effort | shipped, T-0174 |
 | `click-target` | fail | a `--click` step finds no visible surface button with that label | shipped, T-0172 |
 | `no-halt` | fail | an error meta-line, a `halt` or `error` trace outcome, or a non-2xx answer | shipped, T-0174 |
+| `no-renderer-rejection` | fail | the page renderer rejected the turn's payload: the next row is a page-fired `VALIDATION_FAILED` client turn (a `{"page":"VALIDATION_FAILED"}` step), though the server-side check passed it; skipped offline with no such row recorded | shipped, T-0500 |
 | `no-json-as-prose` | fail | the visible chat prose carries A2UI JSON or a meta-line | shipped, T-0174; meta-line shape T-0213; text-shape tail T-0229 |
 | `no-internal-leak` | fail | the visible chat prose shows a repair round's correction note or a surface id | shipped, T-0217 |
 | `reply-text` | fail | a turn shipped A2UI lines with no reply text, or the chat shows the message tally in place of a reply | shipped, T-0194 |

@@ -1062,3 +1062,7 @@
 ## T-0501: An empty round after a SURFACE_DROPPED, SURFACE_CLAIMED or CHANGE_CLAIMED repair re-sends that repair ask, not the PARSE hint (2026-10-28)
 
 - note: produce.ts:2014-2018 and :1948-1952, :2136-2140: the valid-round SURFACE_DROPPED site and the SURFACE_CLAIMED site (:2014) get `forcedRepairPending = true`, but only the no-payload SURFACE_DROPPED path has a dedicated test, as the builder's report says. Not a criterion.
+
+## T-0500: chat:probe fails a turn whose page renderer rejects the payload (VALIDATION_FAILED), not just the server check (2026-10-28)
+
+- note: scripts/e2e-admin/probe/model.ts: the check emits `skip` for every turn in an offline replay with no rejection row. Per the docs it is intentional, and the other offline-only checks behave the same way.

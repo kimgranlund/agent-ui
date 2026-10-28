@@ -199,7 +199,12 @@ export async function runProbeSelftest(): Promise<number> {
   expectThat(JSON.stringify(pageStep(window[0]!)) === '{"page":"VALIDATION_FAILED"}', 'desync: a page-fired turn is its own row, a page step')
   const pageRow = record({ index: 1, step: { page: 'VALIDATION_FAILED' }, request: { model: 'm', effort: 'medium', inputKind: 'client', inputError: 'VALIDATION_FAILED' }, lines: ['{"a2uiMeta":{"note":"Fixed."}}', UPDATE_LINE] })
   const pageChecks = runChecks([record(), pageRow], opts)
-  expectThat(caseVerdict(pageChecks, []) === undefined && ['click-target', 'action-updates-surface'].every((n) => statusOf(pageChecks, n) === 'skip,skip'), `desync: a page row is judged like a turn, never as a click (${caseVerdict(pageChecks, [])})`)
+  expectThat(caseVerdict(pageChecks, ['no-renderer-rejection']) === undefined && ['click-target', 'action-updates-surface'].every((n) => statusOf(pageChecks, n) === 'skip,skip'), `desync: a page row is judged like a turn, never as a click (${caseVerdict(pageChecks, ['no-renderer-rejection'])})`)
+  // T-0500: the VALIDATION_FAILED page row means the page renderer rejected the turn before it, though the server
+  // check passed it (round 16 cluster M, T-0498). That turn fails no-renderer-rejection; the page row itself passes.
+  expectThat(statusOf(pageChecks, 'no-renderer-rejection') === 'fail,pass', `desync: the turn a page row rejects fails no-renderer-rejection, the page row passes (${statusOf(pageChecks, 'no-renderer-rejection')})`)
+  const otherPage = runChecks([record(), record({ index: 1, step: pageStep({ inputKind: 'client' }), request: { model: 'm', effort: 'medium', inputKind: 'client' } })], opts)
+  expectThat(statusOf(otherPage, 'no-renderer-rejection') === 'pass,pass', 'desync: a page row that is not VALIDATION_FAILED fails no turn on no-renderer-rejection')
   let pageParsed = false
   try {
     pageParsed = 'page' in parseProbeFixture('{"kind":"agent-ui-chat-probe","version":1,"name":"x","agent":"a","steps":[{"say":"hi"},{"page":"VALIDATION_FAILED"}],"turns":[]}').steps[1]!
@@ -261,6 +266,12 @@ export async function runProbeSelftest(): Promise<number> {
     const verdict = caseVerdict(report.checks, c.fails)
     expectThat(verdict === undefined, `offline ${c.fixture}: ${verdict}`)
   }
+  // T-0500: a replay whose page rejected the first turn's payload (its VALIDATION_FAILED page row) reds offline on
+  // exactly no-renderer-rejection, on that turn. Kept out of SELFTEST_CASES: the real page renderer takes this
+  // payload, so the browser leg would never fire the rejection the fixture records.
+  const rejected = await offlineReplay(loadProbeFixture(path.join(PROBE_FIXTURES_DIR, 'seeded-page-rejection.json')), process.cwd())
+  const rejectedRows = rejected.failed.map((c) => `${c.check}@${c.turn}`).join()
+  expectThat(caseVerdict(rejected.checks, ['no-renderer-rejection']) === undefined && rejectedRows === 'no-renderer-rejection@0', `offline seeded-page-rejection: fails exactly no-renderer-rejection on turn 1 (${rejectedRows})`)
   // T-0258: the live Haiku hello framed each starter choice in its own Card. Its one round trips FRAMED_CHOICE (the
   // scripted model repeats it, so it ships tallied); the repaired fixture's second round ships the Row of Buttons.
   const helloTrace = async (fixture: string): Promise<{ rounds: unknown; codes: string; cards: number }> => {

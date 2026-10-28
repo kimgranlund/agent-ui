@@ -579,7 +579,7 @@ export interface CheckOptions {
 }
 
 /** The named checks, in report order. */
-export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-json-as-prose', 'no-internal-leak', 'reply-text', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'routing-expect', 'render-lint', 'reasoning'] as const
+export const CHECK_NAMES = ['model-pick', 'click-target', 'no-halt', 'no-renderer-rejection', 'no-json-as-prose', 'no-internal-leak', 'reply-text', 'no-surface-loss', 'action-updates-surface', 'expect-component', 'routing-expect', 'render-lint', 'reasoning'] as const
 
 /** Apply these lines to `held`, each open surface's component types (a deleted surface drops out). */
 export function holdTypes(held: Map<string, Set<string>>, lines: readonly string[]): void {
@@ -603,7 +603,8 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
   const shippedSoFar: string[] = []
   const held = new Map<string, Set<string>>()
   let logBefore: string | undefined
-  for (const t of turns) {
+  const rendered = turns.some((t) => t.domHosts !== undefined)
+  for (const [i, t] of turns.entries()) {
     const meta = metaOf(t.lines)
     const before = t.proseScope === 'log' ? (logBefore ?? '') : undefined
     if (t.proseScope === 'log') logBefore = t.proseText
@@ -628,6 +629,14 @@ export function runChecks(turns: readonly TurnRecord[], opts: CheckOptions): Che
       t.trace !== undefined && (t.trace.outcome === 'halt' || t.trace.outcome === 'error') ? `trace outcome ${t.trace.outcome}` :
       t.httpStatus !== undefined && (t.httpStatus < 200 || t.httpStatus >= 300) ? `HTTP ${t.httpStatus}` : undefined
     out.push({ check: 'no-halt', turn: t.index, status: halted ? 'fail' : 'pass', detail: halted ?? `outcome ${t.trace?.outcome ?? 'ok'}` })
+    // no-renderer-rejection (T-0500): the page's renderer took the turn's payload. A rejection fires a VALIDATION_FAILED
+    // client turn, recorded as the next row (a page step), though the server-side check passed the payload (T-0498).
+    const next = turns[i + 1]
+    const rejection = next !== undefined && 'page' in next.step && next.step.page === 'VALIDATION_FAILED' ? next : i === 0 && 'page' in t.step && t.step.page === 'VALIDATION_FAILED' ? t : undefined
+    if (rejection !== undefined)
+      out.push({ check: 'no-renderer-rejection', turn: t.index, status: 'fail', detail: rejection === t ? 'the run opened on a VALIDATION_FAILED client turn the page fired' : `the page renderer rejected the payload: turn ${rejection.index + 1} is its VALIDATION_FAILED client turn` })
+    else if (rendered) out.push({ check: 'no-renderer-rejection', turn: t.index, status: 'pass', detail: 'no VALIDATION_FAILED client turn followed' })
+    else out.push({ check: 'no-renderer-rejection', turn: t.index, status: 'skip', detail: 'no page renderer (offline replay) and no page-fired rejection recorded' })
     // no-json-as-prose: the turn's prose (outside surface hosts; live, what it added to the log) carries no A2UI JSON.
     const leak = a2uiInProse(t.proseText, before)
     out.push({ check: 'no-json-as-prose', turn: t.index, status: leak ? 'fail' : 'pass', detail: leak ? `A2UI JSON in the chat prose: ...${leak}...` : `${t.proseText.length} chars of prose, clean` })
