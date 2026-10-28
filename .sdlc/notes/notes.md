@@ -1053,3 +1053,8 @@
 ## T-0502: layout-permutations keeps fixed-position hosts such as ui-toast-region out of the four-primitives grid (2026-10-28)
 
 - note: site/pages/layout-permutations.ts:48 the filter keys on descriptor `extends === 'UIContainerElement'` rather than on `position: fixed`; it also drops ui-swiper-item, which matches the Goal's in-flow-only wording.
+
+## T-0508: Weak-test sweep: find tests and gates that pass without checking what they claim (2026-10-28)
+
+- note: `.sdlc/tickets/0508-weak-test-sweep/handoff.md` Findings: M4 drill.browser.test.ts:179 `expect(typeof transition).toBe('string')` read and confirmed (line 179, `reduced` discarded with `void reduced`); the handoff's M3 format.test.ts range 128-136 spans the whole test rather than the catch line, harmless.
+- note: no em dashes in handoff.md (grep count 0).
