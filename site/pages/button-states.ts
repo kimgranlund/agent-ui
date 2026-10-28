@@ -103,9 +103,8 @@ hover.append(
     makeButton({ label: 'Soft', variant: 'soft' }),
     makeButton({ label: 'Ghost', variant: 'ghost' }),
     caption('hover each — background steps up one ladder step'),
-    makeButton({ label: 'Disabled', disabled: true }),
-    caption('disabled — holds (pointer-inert, :hover never matches)'),
   ),
+  makeRow(makeButton({ label: 'Disabled', disabled: true }), caption('disabled: holds (pointer-inert, :hover never matches)')),
 )
 
 // ── [2] :focus-visible — the shared fleet focus ring ─────────────────────────────────────────────────────

@@ -24,7 +24,7 @@ import ALLOW from '../../scripts/dogfood-render-allowlist.json'
 vi.setConfig({ testTimeout: 60_000 })
 
 // dogfood-render.browser.test.ts: the render lint (T-0136, layer 1 of .claude/docs/references/dogfood-lint.md).
-// It visits every docs demo page, every browsable A2UI catalog widget and every persona seed with a persona widget
+// It visits every docs demo, permutations and states page (T-0494), every browsable A2UI catalog widget and every persona seed with a persona widget
 // (T-0144) at 400 and 1000px, light and dark, and checks the computed style against the `render` rules of
 // scripts/dogfood-rules.json. Every geometry value comes from the model's resolve() (scripts/lib/foundations-model.mjs, T-0374) at the element's register: the
 // nearest data-tier, data-scale, data-size or size and data-density on the element or an ancestor (the cascade
@@ -1058,7 +1058,8 @@ afterEach(async () => {
   await page.viewport(414, 896) // restore the fleet default (ADR-0150 cl.5)
 })
 
-const DEMOS = import.meta.glob('./*-demo.ts')
+// The permutations and states pages ride the same sweep (T-0494): their matrices and state rows are demo content.
+const DEMOS = import.meta.glob(['./*-demo.ts', './*-permutations.ts', './*-states.ts'])
 
 describe('render lint: every docs demo page (T-0136)', () => {
   for (const [file, load] of Object.entries(DEMOS)) {

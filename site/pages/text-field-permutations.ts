@@ -102,7 +102,7 @@ function sizeSection(size: string): HTMLElement {
 
   const matrix = document.createElement('div')
   matrix.className = 'matrix'
-  matrix.style.gridTemplateColumns = `max-content repeat(${columns.length}, minmax(9rem, 1fr))`
+  matrix.style.setProperty('--matrix-columns', String(columns.length))
 
   matrix.append(gridText('', 'matrix-corner'))
   for (const column of columns) matrix.append(gridText(column.label, 'matrix-head'))
@@ -141,8 +141,8 @@ function anatomySection(): HTMLElement {
   section.append(heading)
 
   const matrix = document.createElement('div')
-  matrix.className = 'matrix'
-  matrix.style.gridTemplateColumns = `repeat(${anatomies.length}, minmax(9rem, 1fr))`
+  matrix.className = 'matrix matrix--no-rowhead' // no row-header column: one row of anatomies
+  matrix.style.setProperty('--matrix-columns', String(anatomies.length))
   for (const anatomy of anatomies) matrix.append(gridText(anatomy.label, 'matrix-head'))
   for (const anatomy of anatomies) {
     const cell = document.createElement('div')

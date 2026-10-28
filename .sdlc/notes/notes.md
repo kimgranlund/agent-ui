@@ -1044,3 +1044,8 @@
 ## T-0495: ui-text-field type=color stops leaking the swatch value text as a vertical strip (2026-10-28)
 
 - note: text-field-geometry.browser.test.ts:870 the assertions are guarded by `if (value !== null)`, so an absent value part passes; allowed by the criterion's "or is absent".
+
+## T-0494: Permutation matrices fit their card at 1000 and 400px, and the render lint visits the permutations and states pages (2026-10-28)
+
+- note: `scripts/dogfood-render-allowlist.json` layout-permutations entry defers a real page defect (fixed-position ui-toast-region in the four-primitives grid); the solo report lists it as a follow-up.
+- note: at 1000px the otp/text-field/toggle/textarea-lg matrices scroll inline inside the card rather than fit it (576px reading column vs 614 to 1665px min-content); consistent with the stated "stacks or scrolls" goal.

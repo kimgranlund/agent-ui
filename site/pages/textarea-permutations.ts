@@ -61,7 +61,7 @@ function sizeSection(size: (typeof sizes)[number]): HTMLElement {
 
   const matrix = document.createElement('div')
   matrix.className = 'matrix'
-  matrix.style.gridTemplateColumns = `max-content repeat(${columns.length}, minmax(9rem, 1fr))`
+  matrix.style.setProperty('--matrix-columns', String(columns.length))
 
   matrix.append(gridText('state', 'matrix-head'))
   for (const column of columns) matrix.append(gridText(column.label, 'matrix-head'))
@@ -91,7 +91,7 @@ function rowsSection(): HTMLElement {
 
   const matrix = document.createElement('div')
   matrix.className = 'matrix'
-  matrix.style.gridTemplateColumns = 'max-content repeat(3, minmax(9rem, 1fr))'
+  matrix.style.setProperty('--matrix-columns', '3')
   matrix.append(gridText('rows', 'matrix-head'), gridText('2', 'matrix-head'), gridText('3 (default)', 'matrix-head'), gridText('8', 'matrix-head'))
   matrix.append(gridText('ui-textarea', 'matrix-rowhead'))
   for (const rows of ['2', '3', '8']) {
