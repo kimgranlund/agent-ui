@@ -18,7 +18,7 @@
   marketing adjectives the render can't back. A reader should be able to reproduce any claim by
   manipulating the live page.
 - **Cite, don't restate.** When prose touches a canonical fact (a token role, an ADR, a SPEC requirement),
-  name the owner (`docs/references/tokens.md`, ADR-0012, `SPEC-R#`) and link — never paraphrase it into a
+  name the owner (`.claude/docs/references/tokens.md`, ADR-0012, `SPEC-R#`) and link — never paraphrase it into a
   second copy that can drift. This is a **normative-fact citation** — see below for the line between it
   and a **provenance citation**, which never belongs inline.
 

@@ -23,7 +23,7 @@ The family's first single-select kind ruled one shape; a future exactly-one kind
   switch back · OFF on the active row ⇒ write the DEFAULT id (fail-closed surfaced in the UI;
   no "none" state) · OFF on an inactive row ⇒ nothing.
 
-- **Delete-active writes the default too, key-then-roster ordered** (cl.4; `agent-admin.ts` `#deleteCatalog`). The LLD's §3 invariant (`docs/lld/catalog-library-pack.lld.md`) is
+- **Delete-active writes the default too, key-then-roster ordered** (cl.4; `agent-admin.ts` `#deleteCatalog`). The LLD's §3 invariant (`.claude/docs/lld/catalog-library-pack.lld.md`) is
   the contract: "a subscriber never observes an active id absent from the roster" — roster-first
   would flash zero switches ON between the writes; key-first stays consistent because the read
   projection guarantees the Default row exists the instant the key moves. Read the INVARIANT

@@ -75,7 +75,7 @@ persisted state synchronously at boot (no flash of default state) hydrates throu
 the wave-1 page seeds its store with `rosterSource.readViewSync()` before the first render, then lets
 the async `resource()` machinery own everything after. Same-tick *writes* also hold on this tier —
 `createLocalStorageAdapter`'s `set`/`delete` bodies contain no `await`, so the backing write completes
-in the calling tick (only the promise's settlement defers); `persona-roster-source.ts`'s
+in the calling tick (only the promise's settlement defers); `agent-roster-source.ts`'s
 `writeSeedVersionSync`/`resetStateSync` lean on that ordering and say so. A future async tier swap
 must re-derive any such sequencing.
 
@@ -107,10 +107,10 @@ The grammar's realization for CRUD-shaped shared state is already ratified (ADR-
 The worked example is the persona roster (wave 1, PR #1543):
 
 - **The source** — `packages/agent-ui/app/src/controls/agent-admin/agent-roster-source.ts`:
-  `createPersonaRosterSource<P>()` returns a `DataSource<P>` (`read · list · create · update · remove
+  `createAgentRosterSource<P>()` returns an `AgentRosterSource<P>`, a `DataSource<P>` (`read · list · create · update · remove
   · subscribe`, the last wired to the adapter's cross-tab seam) that is the ONE owner of the roster's
   persisted records, persisting through `createLocalStorageAdapter` under the legacy namespace so
-  existing users' data survives byte-for-byte. It also exposes a `view` sub-source (roster + active id
+  existing users' data survives byte-for-byte. It also exposes a `view` sub-source (an `AgentRosterView`: roster + active id
   as ONE value — the triplicated active-id collapsed to one owner) and the sync twins the boot path
   needs. Injected data (the shipped personas) arrives at construction — §1 rule 2 — so the module
   never imports site code.
