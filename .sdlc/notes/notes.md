@@ -1017,3 +1017,9 @@
 
 - note: release.yml uses npm trusted publishing registered per package; `@agent-ui-kit/data` does not exist on npm, so the OIDC publish will likely fail at `data` until Kim publishes it once or registers it (builder flagged this too).
 - note: "Bump data to 0.2.0" needs no edit: workspace manifests are private 0.0.0 and the version comes from the script argument; the dry run confirms 0.2.0.
+
+## T-0499: An empty repair round keeps the semantic failure it was repairing (round 16 cluster Q) (2026-10-28)
+
+- note: produce.ts:2078-2086 the new empty-round guard covers only the T-0298 semantic repair (the builder's report names the other forced repairs, SURFACE_DROPPED, SURFACE_CLAIMED, CHANGE_CLAIMED, T-0428, as still falling to PARSE); a follow-up ticket candidate.
+- note: no `(red)` deviation lines printed by redck.py; the red run above was done by the verifier at base.
+- note: no keyless replay under scripts/e2e-admin/probe/replays/ was added; the ticket made it optional.
