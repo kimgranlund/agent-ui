@@ -2,7 +2,7 @@
 id: T-0498
 title: "A component moved to a new parent in the same updateComponents batch survives the reconcile (round 16 cluster M)"
 type: bug             # feature | bug | chore | spike | idea
-status: claimed     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
+status: done     # proposed | ready | claimed | paused | blocked | done | dropped (build progress lives in /board)
 size: L2             # L1 | L2 | L3 | L4 (L5 reserved)
 priority: P2         # P1 | P2 | P3
 depends: []          # T-NNNN, file:<path>, cap:<name>; e.g. [T-0002]
@@ -27,3 +27,15 @@ Do not dispose a dropped child that the merged graph still references or the bat
 - The new replay from :84 passes `npm run chat:probe -- --replay <it>` and its test fails with the fix reverted.
 - `npm run check` and the tests under `packages/agent-ui/a2ui/src/renderer/` pass.
 - Lane: solo because size L2 (steps.py lane; ticket resized from L3, two-file fix with a known root cause, solo at tier L3)
+
+## Outcome
+
+2026-10-28 · lane: full L2 · verdict: pass · verifier: verifier-L2 (sonnet) · base: 0a52a81848f6
+- Changed: A component moved to a new parent in the same updateComponents batch survives the merge and the renderer reconcile (round 16 cluster M)
+- Commits: none
+- Check: 1 component-merge unit test keeps a moved child, no IDGRAPH, fails with fix reverted: pass
+- Check: 2 tree jsdom test: moved child's DOM node is the same node after update, fails with fix reverted: pass
+- Check: 3 replay from :84 passes `npm run chat:probe -- --replay <it>` and its test fails with the fix reve...: pass
+- Check: 4 `npm run check` and renderer-folder tests pass: pass
+- Check: 5 Lane note (solo, L2): pass
+- Follow-up: note: red-checkpoint deviations: redck.py deviations printed no process... -> notes.md
