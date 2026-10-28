@@ -6,8 +6,9 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 | ID | Ticket | Title | Type | Size | Pri | Depends on | Status |
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
+| T-0498 | [0498-reconcile-moved-child](0498-reconcile-moved-child/handoff.md) | A component moved to a new parent in the same updateComponents batch survives the reconcile (round 16 cluster M) | bug | L2 | P2 | none | 🟡 claimed |
 
-Closed: 482 done, 5 dropped (git log or .NNNN-* folders)
+Closed: 483 done, 5 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 

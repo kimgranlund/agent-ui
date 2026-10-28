@@ -251,6 +251,8 @@ since nothing in the renderer currently needed one).
 
 ## 5. Children id-diff reconcile (RSR-C5)
 
+> Amended by T-0498 (2026-10-28): a removed child is disposed only when the merged graph no longer reaches it from `root` and the batch does not redeliver it; a child the same batch moves under a new parent keeps its live node and is relocated by `#mountNode`. The sketch below shows the original unconditional dispose; `tree.ts` (`BatchView`) and `component-merge.ts` are authoritative.
+
 ```ts
 #reconcileChildren(id: string, oldRefs: string[], newRefs: string[]): void {
   const el = this.#surface.widgets.get(id)!                  // guaranteed present — this id is a resend of a mounted node

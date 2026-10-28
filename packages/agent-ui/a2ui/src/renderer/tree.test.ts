@@ -1109,3 +1109,71 @@ describe('T-0405: a non-root id resent with a DIFFERENT component type re-mounts
     expect(rootEl?.tagName).toBe('DIV')
   })
 })
+
+describe('T-0498: a child the same batch moves under a new parent keeps its live node (round 16 :84)', () => {
+  const ask = (): A2uiComponent[] => [
+    { id: 'root', component: 'Column', children: ['ask_ct', 'ask_ft'] },
+    { id: 'ask_ct', component: 'Column', children: ['picker'] },
+    { id: 'picker', component: 'Text', text: 'offer' },
+    { id: 'ask_ft', component: 'Row', child: 'walk' },
+    { id: 'walk', component: 'Text', text: 'Walk away' },
+  ]
+
+  it('a footer whose child moves under a new Row in the same batch keeps the SAME walk element, now under the Row', () => {
+    const { surface, tree, errors } = reconcileHarness()
+    tree.apply(msg(ask()))
+    const walkEl = surface.widgets.get('walk')!
+    const footer = surface.widgets.get('ask_ft')!
+    expect(walkEl.parentNode).toBe(footer)
+
+    tree.apply(
+      msg([
+        { id: 'ask_ft', component: 'Row', child: 'ask_row' },
+        { id: 'ask_row', component: 'Row', children: ['accept', 'walk'] },
+        { id: 'accept', component: 'Text', text: 'Accept' },
+        { id: 'walk', component: 'Text', text: 'Walk away' },
+      ]),
+    )
+
+    expect(errors).toEqual([])
+    const row = surface.widgets.get('ask_row')!
+    expect(surface.widgets.get('walk')).toBe(walkEl) // moved, never disposed and re-minted
+    expect(walkEl.parentNode).toBe(row)
+    expect(row.parentNode).toBe(footer)
+    expect([...row.children].map((c) => c.textContent)).toEqual(['Accept', 'Walk away'])
+    expect(surface.components.has('walk')).toBe(true)
+  })
+
+  it('a grandchild moved out of a dropped container keeps its element; the container itself is disposed', () => {
+    const { surface, tree, errors } = reconcileHarness()
+    tree.apply(msg(ask()))
+    const walkEl = surface.widgets.get('walk')!
+
+    tree.apply(
+      msg([
+        { id: 'root', component: 'Column', children: ['ask_ct', 'ask_row'] },
+        { id: 'ask_row', component: 'Row', children: ['walk'] },
+      ]),
+    )
+
+    expect(errors).toEqual([])
+    expect(surface.widgets.has('ask_ft')).toBe(false)
+    expect(surface.components.has('ask_ft')).toBe(false)
+    expect(surface.widgets.get('walk')).toBe(walkEl)
+    expect(walkEl.parentNode).toBe(surface.widgets.get('ask_row'))
+    expect(tree.rootElement!.textContent).toBe('offerWalk away')
+  })
+
+  it('a dropped child the batch redelivers but nothing names leaves the DOM and keeps its new record, like the server merge', () => {
+    const { surface, tree, errors } = reconcileHarness()
+    tree.apply(msg(ask()))
+    const walkEl = surface.widgets.get('walk')!
+
+    tree.apply(msg([{ id: 'ask_ft', component: 'Row' }, { id: 'walk', component: 'Text', text: 'Leave' }]))
+
+    expect(errors).toEqual([])
+    expect(surface.widgets.has('walk')).toBe(false)
+    expect(walkEl.isConnected).toBe(false)
+    expect(surface.components.get('walk')?.text).toBe('Leave')
+  })
+})
