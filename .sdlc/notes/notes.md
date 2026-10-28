@@ -1004,3 +1004,7 @@
 ## T-0488: Screenshot parity sweep: every control and site demo against the derived geometry and dogfood rules (2026-10-28)
 
 - note: handoff.md F1: `foundations-probe --strict` would red a correct tree until the probe CLASSES move onto `scripts/lib/foundations-model.mjs`; F2 and F4 are High-severity real defects worth the proposed G2 and G3 tickets.
+
+## T-0493: foundations-probe reads its expected geometry from foundations-model.mjs, so it stops flagging a correct tree (2026-10-28)
+
+- note: the builder reported which tiers of the repo scale.mjs are still read elsewhere (foundations-model.mjs, generate-foundations.mjs, foundations.test.ts, many browser tests); this satisfies the Constraints report item, retirement is a separate ticket.
