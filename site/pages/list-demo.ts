@@ -28,13 +28,20 @@ const contacts: readonly Contact[] = [
   { name: 'Priya Natarajan', email: 'priya@northwind.example', role: 'Member', intent: 'neutral' },
   { name: 'Jonas Weber', email: 'jonas@northwind.example', role: 'Invited', intent: 'warning' },
 ]
+// The name/email column is the row's one flexible item: `flex: 1 1 0` plus `min-inline-size: 0` lets it yield, and
+// the email ellipsizes, so a narrow list (400px) never squeezes the trailing badge or the Message action.
+const identityColumn = (c: Contact): HTMLElement => {
+  const email = el('ui-text', { variant: 'body', size: 'sm' }, [text(c.email)])
+  email.style.cssText = 'overflow: hidden; text-overflow: ellipsis; white-space: nowrap'
+  const column = el('ui-column', { gap: 'none' }, [el('ui-text', { variant: 'label' }, [text(c.name)]), email])
+  column.style.flex = '1 1 0'
+  column.style.minInlineSize = '0'
+  return column
+}
 const contactItem = (c: Contact): HTMLElement =>
   el('ui-row', { role: 'listitem', gap: 'md', align: 'center', elevation: '1' }, [
     el('ui-avatar', { identity: c.name, label: c.name, size: 'sm' }),
-    el('ui-column', { gap: 'none' }, [
-      el('ui-text', { variant: 'label' }, [text(c.name)]),
-      el('ui-text', { variant: 'body', size: 'sm' }, [text(c.email)]),
-    ]),
+    identityColumn(c),
     el('ui-badge', { intent: c.intent, label: c.role }),
     uiButton('Message', 'ghost'),
   ])
