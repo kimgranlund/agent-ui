@@ -10,6 +10,12 @@
 // renderer (`acts->bBet`, the five-card-draw trace). "Mounted" is approximated as reachable from `root`
 // through `child`/`children` before the batch; nothing mounts before `root` exists, as in the renderer.
 //
+// T-0498: a dropped child is disposed only when the merged graph no longer reaches it from `root`. One batch
+// may move a child under a new parent it also delivers (`ask_ft.child` from `walk` to `ask_row`, whose
+// `children` list `walk`, round 16 :84); the renderer moves that live node, so its record stays. A dropped
+// child the batch redelivers but nothing reaches keeps its new record (the renderer unmounts it), and the
+// subtree walk follows the record that was mounted, not the one this batch delivered.
+//
 // Pure, total and import-free at runtime, so the catalog-side views (DOM-less, node-free) may import it.
 
 import type { A2uiComponent } from '../protocol.ts'
@@ -36,31 +42,45 @@ function reachableFromRoot(byId: ReadonlyMap<string, A2uiComponent>): Set<string
   return seen
 }
 
-/** Delete `id` and every descendant that has a record, children first (tree.ts `#disposeSubtree`). */
-function disposeSubtree(byId: Map<string, A2uiComponent>, id: string, visiting = new Set<string>()): void {
-  if (visiting.has(id)) return // a cycle never reaches the renderer's reconcile; stay total anyway
-  visiting.add(id)
-  const node = byId.get(id)
-  if (node !== undefined) for (const childId of childRefs(node)) if (byId.has(childId)) disposeSubtree(byId, childId, visiting)
-  byId.delete(id)
+/** What a batch's disposals consult: ids the merged graph reaches from `root` (`live`), ids it delivered,
+ *  each resent mounted id's previous record, and the ids already disposed. */
+interface BatchView {
+  readonly live: ReadonlySet<string>
+  readonly delivered: ReadonlySet<string>
+  readonly previous: ReadonlyMap<string, A2uiComponent>
+  readonly gone: Set<string>
+}
+
+/** Delete `id` and every descendant that has a record, children first (tree.ts `#disposeSubtree`). A
+ *  descendant the merged graph still reaches has moved and stays; a delivered record stays too. */
+function disposeSubtree(byId: Map<string, A2uiComponent>, id: string, batch: BatchView): void {
+  if (batch.gone.has(id)) return // a cycle never reaches the renderer's reconcile; stay total anyway
+  batch.gone.add(id)
+  const node = batch.previous.get(id) ?? byId.get(id)
+  if (node !== undefined) for (const childId of childRefs(node)) if (byId.has(childId) && !batch.live.has(childId)) disposeSubtree(byId, childId, batch)
+  if (!batch.delivered.has(id)) byId.delete(id)
 }
 
 /** Apply one `updateComponents` batch to `byId` in place: upsert by id, then dispose the subtrees a
- *  resent, mounted container dropped from its children. Entries without a string `id` are skipped. */
+ *  resent, mounted container dropped from its children and the merged graph no longer reaches. Entries
+ *  without a string `id` are skipped. */
 export function applyComponentBatch(byId: Map<string, A2uiComponent>, components: readonly unknown[]): void {
   const mounted = reachableFromRoot(byId)
   const resent = new Map<string, A2uiComponent>()
+  const delivered = new Set<string>()
   for (const comp of components) {
     if (typeof comp !== 'object' || comp === null || typeof (comp as { id?: unknown }).id !== 'string') continue
     const record = comp as A2uiComponent
     const previous = byId.get(record.id)
     if (previous !== undefined && mounted.has(record.id)) resent.set(record.id, previous)
     byId.set(record.id, record)
+    delivered.add(record.id)
   }
+  if (resent.size === 0) return
+  const batch: BatchView = { live: reachableFromRoot(byId), delivered, previous: resent, gone: new Set() }
   for (const [id, previous] of resent) {
-    const next = byId.get(id)
-    if (next === undefined) continue // an earlier reconcile in this batch already disposed it
-    const kept = new Set(childRefs(next))
-    for (const removed of childRefs(previous)) if (!kept.has(removed)) disposeSubtree(byId, removed)
+    if (batch.gone.has(id)) continue // an earlier reconcile in this batch already unmounted it
+    const kept = new Set(childRefs(byId.get(id)!))
+    for (const removed of childRefs(previous)) if (!kept.has(removed) && !batch.live.has(removed)) disposeSubtree(byId, removed, batch)
   }
 }

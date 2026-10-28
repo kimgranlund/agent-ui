@@ -1031,3 +1031,7 @@
 ## T-0497: Site demo figures and event logs take the card-level radius (12px), not the 36px wrapper radius (2026-10-28)
 
 - note: site/lib/__fixtures__/theme-provider-built.css still holds the old concentric calc; a built fixture, not source.
+
+## T-0498: A component moved to a new parent in the same updateComponents batch survives the reconcile (round 16 cluster M) (2026-10-28)
+
+- note: red-checkpoint deviations: `redck.py deviations` printed no `process deviation:` lines; failing-first was re-observed by me at pre-build HEAD.

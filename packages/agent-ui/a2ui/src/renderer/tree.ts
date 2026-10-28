@@ -223,7 +223,13 @@ export class SurfaceTree {
     // Structural-resend reconciliation (RSR-C4, SPEC-R1/R2/R3): every id that was ALREADY mounted and is
     // resent in THIS batch reconciles against its previous record — runs AFTER the pending-parent patch-in
     // so a resend that also newly-references a first-arrival id sees that child already mounted.
-    for (const [id, previous] of resent) this.#reconcileNode(id, previous, this.#surface.components.get(id)!)
+    // T-0498: a dropped child the merged graph still reaches from `root` has moved, not left (component-merge.ts).
+    if (resent.size === 0) return
+    const batch: BatchView = { live: reachableFromRoot(this.#surface.components), delivered: new Set(delivered), previous: resent }
+    for (const [id, previous] of resent) {
+      if (!this.#surface.widgets.has(id)) continue // an earlier reconcile in this batch already unmounted it
+      this.#reconcileNode(id, previous, this.#surface.components.get(id)!, batch)
+    }
   }
 
   /** Depth-first mount from `root` (guaranteed present by the caller); fills `surface.widgets`. */
@@ -239,7 +245,8 @@ export class SurfaceTree {
   #mountNode(id: string): Node {
     const node = this.#surface.components.get(id)
     if (node === undefined) return this.#registerPendingAnchor(id)
-    // A tree node is reached once; reuse defends against a degenerate multi-reference / re-entry.
+    // A tree node is reached once; reuse defends against a degenerate multi-reference / re-entry, and
+    // moves a live node whose new parent mounts it in the batch that drops it from the old one (T-0498).
     const existing = this.#surface.widgets.get(id)
     if (existing !== undefined) return existing
 
@@ -456,14 +463,14 @@ export class SurfaceTree {
    * re-mounts in its slot (`#remountNode`). Only a non-root id gets here with a new type; a retyped
    * `root` is dropped as an IDGRAPH in `apply` (SPEC-R3 AC2).
    */
-  #reconcileNode(id: string, previous: A2uiComponent, next: A2uiComponent): void {
+  #reconcileNode(id: string, previous: A2uiComponent, next: A2uiComponent, batch: BatchView): void {
     if (previous.component !== next.component) {
-      this.#remountNode(id, previous)
+      this.#remountNode(id, previous, batch)
       return
     }
     const oldRefs = childRefs(previous)
     const newRefs = childRefs(next)
-    if (!sameOrder(oldRefs, newRefs)) this.#reconcileChildren(id, oldRefs, newRefs)
+    if (!sameOrder(oldRefs, newRefs)) this.#reconcileChildren(id, oldRefs, newRefs, batch)
     if (!samePropsDeep(previous, next)) this.#reconcileProps(id, previous, next)
   }
 
@@ -480,13 +487,13 @@ export class SurfaceTree {
    * also tears down a dynamic-list TEMPLATE rooted in the old element (SPEC-N1 AC1); a template on the new
    * record mounts fresh through `#mountNode`'s ordinary `#mountChildrenInto`.
    */
-  #remountNode(id: string, previous: A2uiComponent): void {
+  #remountNode(id: string, previous: A2uiComponent, batch: BatchView): void {
     const oldEl = this.#surface.widgets.get(id)! // guaranteed present: this id is a resend of a mounted node
     const oldRefs = childRefs(previous)
     const newSet = new Set(childRefs(this.#surface.components.get(id)!))
     for (const childId of oldRefs) {
       if (this.#surface.widgets.has(childId)) {
-        if (!newSet.has(childId)) this.#disposeSubtree(childId) // SPEC-R1 AC2, SPEC-N1
+        if (!newSet.has(childId) && !batch.live.has(childId)) this.#disposeSubtree(childId, batch) // SPEC-R1 AC2, SPEC-N1
         continue
       }
       const anchors = this.#pendingParents.get(childId)
@@ -532,11 +539,12 @@ export class SurfaceTree {
    * anchor against `el` (it would throw `NotFoundError`, the ticket's defect). See the per-iteration
    * comment below for the ownership argument.
    */
-  #reconcileChildren(id: string, oldRefs: string[], newRefs: string[]): void {
+  #reconcileChildren(id: string, oldRefs: string[], newRefs: string[], batch: BatchView): void {
     const el = this.#surface.widgets.get(id)! // guaranteed present — this id is a resend of a mounted node
     const oldSet = new Set(oldRefs)
     const newSet = new Set(newRefs)
-    for (const removedId of oldRefs) if (!newSet.has(removedId)) this.#disposeSubtree(removedId) // SPEC-R1 AC2, SPEC-N1
+    // SPEC-R1 AC2, SPEC-N1. T-0498: a dropped id the merged graph still reaches has moved; its new parent mounts it.
+    for (const removedId of oldRefs) if (!newSet.has(removedId) && !batch.live.has(removedId)) this.#disposeSubtree(removedId, batch)
 
     let anchor: Node | null = null
     for (let i = newRefs.length - 1; i >= 0; i--) {
@@ -566,7 +574,7 @@ export class SurfaceTree {
         continue
       }
       const node = this.#mountNode(childId) // fresh mount — SPEC-R1 AC1, the ordinary #mountNode path
-      el.insertBefore(node, anchor) // safe: `node` was never previously connected
+      el.insertBefore(node, anchor) // a live node moved in from another parent this batch relocates (T-0498)
       anchor = node
     }
 
@@ -608,14 +616,18 @@ export class SurfaceTree {
    * (§ RSR-C1) is exactly the `parentScope` a nested list's reconcile loop + teardown carrier were
    * installed in. `surface.components.delete(id)` makes a LATER re-add of this same id behave exactly
    * like a first-ever arrival — no stale buffered record left for the resend-diff (RSR-C4) to misread.
+   *
+   * T-0498: the walk follows the record that was mounted (`batch.previous` for a resent id), a mounted
+   * descendant the merged graph still reaches has moved and is left live for its new parent to mount,
+   * and a record this batch delivered stays buffered (component-merge.ts keeps it the same way).
    */
-  #disposeSubtree(id: string): void {
-    const node = this.#surface.components.get(id)
+  #disposeSubtree(id: string, batch: BatchView): void {
+    const node = batch.previous.get(id) ?? this.#surface.components.get(id)
     const el = this.#surface.widgets.get(id)
     if (node !== undefined) {
       for (const childId of childRefs(node)) {
         if (this.#surface.widgets.has(childId)) {
-          this.#disposeSubtree(childId) // a mounted descendant: recurse
+          if (!batch.live.has(childId)) this.#disposeSubtree(childId, batch) // a mounted descendant: recurse
           continue
         }
         // `childId` never arrived — this subtree may be holding one of its `#pendingParents` anchors.
@@ -635,13 +647,13 @@ export class SurfaceTree {
     this.#nodeScopes.delete(id)
     el?.remove()
     this.#surface.widgets.delete(id)
-    this.#surface.components.delete(id)
+    if (!batch.delivered.has(id)) this.#surface.components.delete(id)
     // Reveal-order bookkeeping (ADR-0194): `id` may itself have been an ordered container, and/or one
     // of its own children may still be registered under it — both stale once this subtree is gone (a
     // later re-add re-establishes fresh state via `#mountStaticChildrenOrdered`, never reads these).
     this.#siblingOrder.delete(id)
     this.#revealedCount.delete(id)
-    if (node !== undefined) for (const childId of childRefs(node)) this.#childContainer.delete(childId)
+    if (node !== undefined) for (const childId of childRefs(node)) if (this.#childContainer.get(childId) === id) this.#childContainer.delete(childId)
   }
 
   /**
@@ -728,6 +740,29 @@ function childRefs(node: A2uiComponent): string[] {
   if (typeof node.child === 'string') out.push(node.child)
   if (Array.isArray(node.children)) for (const c of node.children) if (typeof c === 'string') out.push(c)
   return out
+}
+
+/** What one batch's reconcile consults (T-0498): ids the merged graph reaches from `root` (`live`), ids
+ *  the batch delivered, and each resent mounted id's previous record. Mirrors component-merge.ts. */
+interface BatchView {
+  readonly live: ReadonlySet<string>
+  readonly delivered: ReadonlySet<string>
+  readonly previous: ReadonlyMap<string, A2uiComponent>
+}
+
+/** Ids reachable from `root` through buffered records, iteratively (component-merge.ts `reachableFromRoot`). */
+function reachableFromRoot(byId: ReadonlyMap<string, A2uiComponent>): Set<string> {
+  const seen = new Set<string>()
+  const stack = byId.has('root') ? ['root'] : []
+  while (stack.length > 0) {
+    const id = stack.pop()!
+    if (seen.has(id)) continue
+    const node = byId.get(id)
+    if (node === undefined) continue
+    seen.add(id)
+    stack.push(...childRefs(node))
+  }
+  return seen
 }
 
 /**

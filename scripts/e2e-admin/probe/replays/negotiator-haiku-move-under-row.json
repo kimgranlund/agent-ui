@@ -1,0 +1,629 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "negotiator-haiku-move-under-row",
+  "agent": "negotiator",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-28T16:44:49.766Z, traces 2026-10-28.jsonl:83,2026-10-28.jsonl:84 (round 16 smoke-negotiator-first-offer-haiku-3, cluster M, T-0498)",
+  "seed": {
+    "version": 4,
+    "digest": "sha256:7d64711cac5c40fa2468bb38cd1b3f88d7e86b5021d367cc62926a40c524cb38"
+  },
+  "steps": [
+    {
+      "say": "I'd like to buy your brass lantern. What's your price?",
+      "expect": [
+        "GameHud"
+      ]
+    },
+    {
+      "say": "I offer 20.",
+      "expect": [
+        "GameHud"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Selim is asking 120 coins for the brass lantern. Name your offer below, or walk away.\",\"ask\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to buy your brass lantern. What's your price?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":51212,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1494}],\"over\":false},\"miniSkillIds\":[\"product-presentation\",\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"item_card\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal: brass lantern\",\"status\":\"Opening ask\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Asking price\",\"value\":\"120 coins\"},{\"label\":\"Offer on table\",\"value\":\"None yet\"},{\"label\":\"Selim's mood\",\"value\":\"Cheerful\"}]},{\"id\":\"item_card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"item_hd\",\"item_ct\"]},{\"id\":\"item_hd\",\"component\":\"CardHeader\",\"children\":[\"item_title\"]},{\"id\":\"item_title\",\"component\":\"Text\",\"text\":\"Brass lantern\",\"variant\":\"h4\"},{\"id\":\"item_ct\",\"component\":\"CardContent\",\"children\":[\"item_desc\",\"spark\"]},{\"id\":\"item_desc\",\"component\":\"Text\",\"variant\":\"body\",\"text\":\"Hand-hammered brass, polished to a gleam, with a stained-glass window. Has never smoked.\"},{\"id\":\"spark\",\"component\":\"Sparkline\",\"values\":[120],\"label\":\"Price history\",\"variant\":\"line\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"ask_hd\",\"ask_ct\",\"ask_ft\"]},{\"id\":\"ask_hd\",\"component\":\"CardHeader\",\"children\":[\"ask_title\"]},{\"id\":\"ask_title\",\"component\":\"Text\",\"text\":\"Your move\",\"variant\":\"h5\"},{\"id\":\"ask_ct\",\"component\":\"CardContent\",\"children\":[\"picker\"]},{\"id\":\"picker\",\"component\":\"AmountPicker\",\"value\":60,\"min\":10,\"max\":120,\"step\":5,\"presets\":[40,60,90],\"currency\":\"coins\",\"label\":\"Your offer\",\"actionName\":\"offer\",\"actionLabel\":\"Send offer\"},{\"id\":\"ask_ft\",\"component\":\"CardFooter\",\"child\":\"walk\"},{\"id\":\"walk\",\"component\":\"Button\",\"label\":\"Walk away\",\"variant\":\"ghost\",\"action\":{\"action\":\"walkaway\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Ah, a connoisseur! This brass lantern was hammered by my cousin in Fez, polished until it outshines the sun, and it has never once smoked. My asking price is 120 coins. Name your offer. I will be offended, but I will also listen.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Selim is asking 120 coins for the brass lantern. Name your offer below, or walk away.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "item_card"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Deal: brass lantern",
+                          "status": "Opening ask",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Asking price",
+                              "value": "120 coins"
+                            },
+                            {
+                              "label": "Offer on table",
+                              "value": "None yet"
+                            },
+                            {
+                              "label": "Selim's mood",
+                              "value": "Cheerful"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "item_card",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "item_hd",
+                            "item_ct"
+                          ]
+                        },
+                        {
+                          "id": "item_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "item_title"
+                          ]
+                        },
+                        {
+                          "id": "item_title",
+                          "component": "Text",
+                          "text": "Brass lantern",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "item_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "item_desc",
+                            "spark"
+                          ]
+                        },
+                        {
+                          "id": "item_desc",
+                          "component": "Text",
+                          "variant": "body",
+                          "text": "Hand-hammered brass, polished to a gleam, with a stained-glass window. Has never smoked."
+                        },
+                        {
+                          "id": "spark",
+                          "component": "Sparkline",
+                          "values": [
+                            120
+                          ],
+                          "label": "Price history",
+                          "variant": "line"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "ask_hd",
+                            "ask_ct",
+                            "ask_ft"
+                          ]
+                        },
+                        {
+                          "id": "ask_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "ask_title"
+                          ]
+                        },
+                        {
+                          "id": "ask_title",
+                          "component": "Text",
+                          "text": "Your move",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "ask_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "picker"
+                          ]
+                        },
+                        {
+                          "id": "picker",
+                          "component": "AmountPicker",
+                          "value": 60,
+                          "min": 10,
+                          "max": 120,
+                          "step": 5,
+                          "presets": [
+                            40,
+                            60,
+                            90
+                          ],
+                          "currency": "coins",
+                          "label": "Your offer",
+                          "actionName": "offer",
+                          "actionLabel": "Send offer"
+                        },
+                        {
+                          "id": "ask_ft",
+                          "component": "CardFooter",
+                          "child": "walk"
+                        },
+                        {
+                          "id": "walk",
+                          "component": "Button",
+                          "label": "Walk away",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "walkaway"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "travel-itinerary",
+          "five-day-weather",
+          "comparison-pricing-table"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "deal-sheet",
+            "load": "index-only"
+          },
+          {
+            "name": "negotiation-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Twenty? *Ha!* Selim's heart nearly stopped. That lantern was carried through three monsoons and still shines like a promise. Yet I am a merchant, not a stone. Come down to 100 coins and we can speak like friends.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Twenty? *Ha!* Selim's heart nearly stopped. That lantern was carried through three monsoons and still shines like a promise. Yet I am a merchant, not a stone. Come down to 100 coins and we can speak like friends.\",\"target\":{\"surfaceId\":\"hud-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I offer 20.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":49718,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Deal: brass lantern\",\"status\":\"Counter-offer\",\"statusIntent\":\"warning\",\"stats\":[{\"label\":\"Asking price\",\"value\":\"100 coins\"},{\"label\":\"Your offer\",\"value\":\"20 coins\"},{\"label\":\"Selim's mood\",\"value\":\"Offended, softening\"}]},{\"id\":\"spark\",\"component\":\"Sparkline\",\"values\":[120,100],\"label\":\"Price history\",\"variant\":\"line\"}]}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"ask_hd\",\"ask_ct\",\"ask_ft\"]},{\"id\":\"ask_hd\",\"component\":\"CardHeader\",\"children\":[\"ask_title\"]},{\"id\":\"ask_title\",\"component\":\"Text\",\"text\":\"Your move\",\"variant\":\"h5\"},{\"id\":\"ask_ct\",\"component\":\"CardContent\",\"children\":[\"picker\"]},{\"id\":\"picker\",\"component\":\"AmountPicker\",\"value\":40,\"min\":20,\"max\":100,\"step\":5,\"presets\":[30,60,90],\"currency\":\"coins\",\"label\":\"Your offer\",\"actionName\":\"offer\",\"actionLabel\":\"Send offer\"},{\"id\":\"ask_ft\",\"component\":\"CardFooter\",\"child\":\"ask_row\"},{\"id\":\"ask_row\",\"component\":\"Row\",\"gap\":\"sm\",\"children\":[\"accept\",\"walk\"]},{\"id\":\"accept\",\"component\":\"Button\",\"label\":\"Accept 100 coins\",\"variant\":\"soft\",\"action\":{\"action\":\"accept\",\"context\":{\"price\":100}}},{\"id\":\"walk\",\"component\":\"Button\",\"label\":\"Walk away\",\"variant\":\"ghost\",\"action\":{\"action\":\"walkaway\"}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"hud-1\"}}}\n\nTwenty? *Ha!* Selim's heart nearly stopped. That lantern was carried through three monsoons and still shines like a promise. Yet I am a merchant, not a stone. Come down to 100 coins and we can speak like friends.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Selim counters at 100 coins. Name your next offer or walk away.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Deal: brass lantern",
+                          "status": "Counter-offer",
+                          "statusIntent": "warning",
+                          "stats": [
+                            {
+                              "label": "Asking price",
+                              "value": "100 coins"
+                            },
+                            {
+                              "label": "Your offer",
+                              "value": "20 coins"
+                            },
+                            {
+                              "label": "Selim's mood",
+                              "value": "Offended, softening"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "spark",
+                          "component": "Sparkline",
+                          "values": [
+                            120,
+                            100
+                          ],
+                          "label": "Price history",
+                          "variant": "line"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "ask_hd",
+                            "ask_ct",
+                            "ask_ft"
+                          ]
+                        },
+                        {
+                          "id": "ask_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "ask_title"
+                          ]
+                        },
+                        {
+                          "id": "ask_title",
+                          "component": "Text",
+                          "text": "Your move",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "ask_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "picker"
+                          ]
+                        },
+                        {
+                          "id": "picker",
+                          "component": "AmountPicker",
+                          "value": 40,
+                          "min": 20,
+                          "max": 100,
+                          "step": 5,
+                          "presets": [
+                            30,
+                            60,
+                            90
+                          ],
+                          "currency": "coins",
+                          "label": "Your offer",
+                          "actionName": "offer",
+                          "actionLabel": "Send offer"
+                        },
+                        {
+                          "id": "ask_ft",
+                          "component": "CardFooter",
+                          "child": "ask_row"
+                        },
+                        {
+                          "id": "ask_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "accept",
+                            "walk"
+                          ]
+                        },
+                        {
+                          "id": "accept",
+                          "component": "Button",
+                          "label": "Accept 100 coins",
+                          "variant": "soft",
+                          "action": {
+                            "action": "accept",
+                            "context": {
+                              "price": 100
+                            }
+                          }
+                        },
+                        {
+                          "id": "walk",
+                          "component": "Button",
+                          "label": "Walk away",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "walkaway"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nStill 100 coins from Selim, friend. Name your next number below, accept the 100, or walk away.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Still 100 coins from Selim, friend. Name your next number below, accept the 100, or walk away.",
+                "target": "ask-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "ask_hd",
+                            "ask_ct",
+                            "ask_ft"
+                          ]
+                        },
+                        {
+                          "id": "ask_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "ask_title"
+                          ]
+                        },
+                        {
+                          "id": "ask_title",
+                          "component": "Text",
+                          "text": "Your move",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "ask_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "picker"
+                          ]
+                        },
+                        {
+                          "id": "picker",
+                          "component": "AmountPicker",
+                          "value": 40,
+                          "min": 20,
+                          "max": 100,
+                          "step": 5,
+                          "presets": [
+                            30,
+                            60,
+                            90
+                          ],
+                          "currency": "coins",
+                          "label": "Your offer",
+                          "actionName": "offer",
+                          "actionLabel": "Send offer"
+                        },
+                        {
+                          "id": "ask_ft",
+                          "component": "CardFooter",
+                          "child": "ask_row"
+                        },
+                        {
+                          "id": "ask_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "accept",
+                            "walk"
+                          ]
+                        },
+                        {
+                          "id": "accept",
+                          "component": "Button",
+                          "label": "Accept 100 coins",
+                          "variant": "soft",
+                          "action": {
+                            "action": "accept",
+                            "context": {
+                              "price": 100
+                            }
+                          }
+                        },
+                        {
+                          "id": "walk",
+                          "component": "Button",
+                          "label": "Walk away",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "walkaway"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Still 100 coins from Selim, friend. Name your next number below, accept the 100, or walk away.\",\"target\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Still 100 coins from Selim, friend. Name your next number below, accept the 100, or walk away.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "ask_hd",
+                            "ask_ct",
+                            "ask_ft"
+                          ]
+                        },
+                        {
+                          "id": "ask_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "ask_title"
+                          ]
+                        },
+                        {
+                          "id": "ask_title",
+                          "component": "Text",
+                          "text": "Your move",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "ask_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "picker"
+                          ]
+                        },
+                        {
+                          "id": "picker",
+                          "component": "AmountPicker",
+                          "value": 40,
+                          "min": 20,
+                          "max": 100,
+                          "step": 5,
+                          "presets": [
+                            30,
+                            60,
+                            90
+                          ],
+                          "currency": "coins",
+                          "label": "Your offer",
+                          "actionName": "offer",
+                          "actionLabel": "Send offer"
+                        },
+                        {
+                          "id": "ask_ft",
+                          "component": "CardFooter",
+                          "child": "ask_row"
+                        },
+                        {
+                          "id": "ask_row",
+                          "component": "Row",
+                          "gap": "sm",
+                          "children": [
+                            "accept",
+                            "walk"
+                          ]
+                        },
+                        {
+                          "id": "accept",
+                          "component": "Button",
+                          "label": "Accept 100 coins",
+                          "variant": "soft",
+                          "action": {
+                            "action": "accept",
+                            "context": {
+                              "price": 100
+                            }
+                          }
+                        },
+                        {
+                          "id": "walk",
+                          "component": "Button",
+                          "label": "Walk away",
+                          "variant": "ghost",
+                          "action": {
+                            "action": "walkaway"
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-suggestions-chips",
+          "frontier-result-card-win",
+          "frontier-confirm-receipt-order"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "deal-sheet",
+            "load": "index-only"
+          },
+          {
+            "name": "negotiation-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
