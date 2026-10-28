@@ -1721,6 +1721,13 @@ describe('T-0480: a day plan of timed stops answered with no Itinerary is ITINER
     expect(run('Build me a schedule for Saturday: brunch at 11:00 and the spa at 15:00')).toEqual(['ITINERARY_MISSING'])
   })
 
+  // T-0503: "schedule our <weekday>" is a plan for any weekday, not only Friday to Sunday.
+  it('schedule my or our any weekday is a plan, while a timed booking stays none', () => {
+    expect(run('Schedule our Tuesday: breakfast at 8am and a hike at 10am')).toEqual(['ITINERARY_MISSING'])
+    expect(run('Please schedule my Monday: standup at 9:00 and lunch at 12:30')).toEqual(['ITINERARY_MISSING'])
+    expect(run('Schedule a massage at 15:00 and a taxi to the airport on Tuesday at 18:00.')).toEqual([])
+  })
+
   it('the plan cue bites: with a cue that matches nothing, the day plan yields none', () => {
     const open = compositeMomentCheck({ ...row, planned: { ...row.planned!, cue: /$^/ } })
     expect(open.check({ surfaces: [], intent: DAY_PLAN })).toEqual([])
