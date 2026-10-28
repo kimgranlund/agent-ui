@@ -430,6 +430,13 @@
     line-height: 1;
   }
 
+  /* type=color swatch-button (T-0495): the composed ui-swatch is a bare chip here. Its `[data-part='value']`
+     text (the hex, a standalone swatch's printed datum) would otherwise lay out in the adornment cell as a
+     vertical strip over the field; the button's own aria-label names the control and the editor shows the value. */
+  :scope [data-part='swatch-button'] [data-part='value'] {
+    display: none;
+  }
+
   /* stepper container (GH #1406): the two step buttons SIDE BY SIDE in a trailing flex ROW —
      step-down (−) left of step-up (+), the iOS/Material stepper convention (supersedes the original
      stacked caret column). Used for type=number and type=currency (no suffix — just the − + pair).
