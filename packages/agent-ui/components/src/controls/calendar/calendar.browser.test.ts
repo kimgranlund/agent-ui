@@ -1592,13 +1592,14 @@ describe('ui-calendar -- ADR-0223 two postures (fill default / [inline] hug, bot
 
 describe('ui-calendar: struck disabled days, glyph carets (T-0149)', () => {
   it('a disabled in-month day is struck through; an adjacent-month day is not', async () => {
-    const { el } = mount('<ui-calendar value="2026-07-15" min="2026-07-05" max="2026-07-20"></ui-calendar>')
+    const { el } = mount('<ui-calendar value="2026-07-15" min="2026-07-05"></ui-calendar>')
     await new Promise((r) => requestAnimationFrame(r))
     const disabled = el.querySelector<HTMLElement>('[role="gridcell"][aria-disabled="true"]:not([data-outside])')!
     const outside = el.querySelector<HTMLElement>('[role="gridcell"][data-outside]:not([aria-disabled="true"])')
     expect(disabled).not.toBeNull()
     expect(getComputedStyle(disabled).textDecorationLine).toContain('line-through')
-    if (outside) expect(getComputedStyle(outside).textDecorationLine).not.toContain('line-through')
+    expect(outside, 'anti-vacuous: July 2026 shows adjacent-month days').not.toBeNull()
+    expect(getComputedStyle(outside!).textDecorationLine).not.toContain('line-through')
   })
 
   it('the prev/next carets are ui-glyph marks, not pack icons', () => {

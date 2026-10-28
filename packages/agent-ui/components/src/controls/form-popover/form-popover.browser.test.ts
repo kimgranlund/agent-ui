@@ -334,13 +334,17 @@ describe('ui-form-popover — whole-shape assertion (T10, the Test-the-whole-sha
     expect(triggerRect.width, `${server.browser}: trigger collapsed to zero width`).toBeGreaterThan(0)
     expect(triggerRect.height, `${server.browser}: trigger collapsed to zero height`).toBeGreaterThan(0)
 
-    const lgHeight = px(getComputedStyle(document.documentElement).getPropertyValue('--md-sys-height-lg'))
-    if (lgHeight > 0) {
-      expect(
-        Math.abs(triggerRect.height - lgHeight),
-        `${server.browser}: trigger height did not track the [size=lg] Control-class ramp`,
-      ).toBeLessThan(2)
-    }
+    // The lg height is a calc over the register's n, undefined on :root; resolve it where the trigger sits.
+    const probe = document.createElement('div')
+    probe.style.cssText = 'position:absolute;block-size:var(--md-sys-height, var(--md-sys-height-lg))'
+    el.append(probe)
+    const lgHeight = probe.getBoundingClientRect().height
+    probe.remove()
+    expect(lgHeight, `${server.browser}: --md-sys-height-lg did not resolve, so the ramp check has nothing to compare`).toBeGreaterThan(0)
+    expect(
+      Math.abs(triggerRect.height - lgHeight),
+      `${server.browser}: trigger height did not track the [size=lg] Control-class ramp`,
+    ).toBeLessThan(2)
 
     el.open = true
     await el.updateComplete

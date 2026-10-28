@@ -1825,15 +1825,18 @@ describe('ui-conversation cross-engine: the activity strip sits on one grid deri
 
       // 1. marker centre = rail centre = header marker centre
       const headerMarkCx = cx(header.querySelector('[data-part="header-marker"]')!)
+      let railsMeasured = 0
       for (const step of steps) {
         const marker = step.querySelector(':scope > [data-part="marker"]')!
         expect(Math.abs(cx(marker.querySelector('[data-role="marker"]') ?? marker) - headerMarkCx), `${step.dataset.kind}: marker on the header's column`).toBeLessThanOrEqual(0.5)
         const after = getComputedStyle(marker, '::after')
         if (after.display !== 'none') {
+          railsMeasured++
           const railCx = marker.getBoundingClientRect().left + Number.parseFloat(after.left) + Number.parseFloat(after.width) / 2
           expect(Math.abs(railCx - headerMarkCx), `${step.dataset.kind}: the rail runs through the marker centre`).toBeLessThanOrEqual(0.5)
         }
       }
+      expect(railsMeasured, 'anti-vacuous: at least one step measured a rail pseudo').toBeGreaterThan(0)
 
       // 2. label, Details summary, detail text and the raw block share one left edge: the label column
       const labelCol = textLeft(header.querySelector('[data-part="header-label"]')!)

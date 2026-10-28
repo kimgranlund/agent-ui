@@ -297,7 +297,9 @@ describe('ui-otp-field — ARIA structure, real-engine proof (both engines)', ()
     const editor = editorOf(el)
     const message = el.querySelector('.ui-otp-field-message') as HTMLElement
     const describedBy = editor.getAttribute('aria-describedby')
-    if (describedBy !== null) expect(describedBy).toBe(message.id) // only the hidden message part, never the echo
+    // A valid, unfielded field carries no description at all: the message part is only referenced while user-invalid.
+    expect(describedBy, `${server.browser}: a valid field must carry no aria-describedby (never the echo)`).toBeNull()
+    expect(message.id, 'the hidden message part keeps an id of its own, distinct from the echo').not.toBe('')
   })
 })
 

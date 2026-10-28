@@ -235,7 +235,9 @@ describe('css-order: the control-sheet order is free (canonical vs three fixed-s
     expect(canonical.size).toBeGreaterThan(FLEET_TAGS.length * 3)
     expect(declaredCustomProperties().length).toBeGreaterThan(500)
     const card = specimens[FLEET_TAGS.indexOf('ui-card')]
-    expect(getComputedStyle(card).getPropertyValue('--ui-container-bg').trim()).not.toBe('')
+    const seed = getComputedStyle(card).getPropertyValue('--md-sys-color-neutral-surface').trim()
+    expect(seed, 'the seed token resolves').not.toBe('')
+    expect(getComputedStyle(card).getPropertyValue('--ui-container-bg').trim(), 'card seeds --ui-container-bg from the neutral-surface token').toBe(seed)
     expect(getComputedStyle(card).backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
 
     for (const seed of SEEDS) {
