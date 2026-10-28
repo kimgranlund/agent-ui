@@ -34,15 +34,17 @@ Design notes: light-DOM rendering (your CSS reaches everything), ARIA via `Eleme
 ## CDN (no build step)
 
 ```html
-<!-- styles: shared's two sheets DIRECTLY (foundation-styles.css uses bare @imports a browser
-     can't resolve), then the seam sheet and each control sheet (relative imports only, CDN-safe) -->
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/tokens.css">
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/dimensions.css">
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/components@0.0.5/shared-styles.css">
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/components@0.0.5/controls/button.css">
+<!-- styles: shared's four foundation sheets DIRECTLY, in this order (foundation-styles.css uses bare
+     @imports a browser can't resolve), then the seam sheet and each control sheet (relative imports only, CDN-safe) -->
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.2.0/tokens.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.2.0/dimensions.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.2.0/foundations.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.2.0/foundations-bridge.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/components@0.2.0/shared-styles.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/components@0.2.0/controls/button.css">
 
 <script type="module">
-  import 'https://esm.sh/@agent-ui-kit/components@0.0.5/controls/button' // self-defines ui-button
+  import 'https://esm.sh/@agent-ui-kit/components@0.2.0/controls/button' // self-defines ui-button
 </script>
 
 <ui-button variant="solid">Save</ui-button>

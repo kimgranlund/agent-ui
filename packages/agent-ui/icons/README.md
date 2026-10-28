@@ -30,7 +30,7 @@ The core entry (`@agent-ui-kit/icons`) carries only the adapter seam — bring y
 
 ```html
 <script type="module">
-  import 'https://esm.sh/@agent-ui-kit/icons@0.0.5/phosphor' // registers the Phosphor pack
+  import 'https://esm.sh/@agent-ui-kit/icons@0.2.0/phosphor' // registers the Phosphor pack
 </script>
 ```
 

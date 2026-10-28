@@ -15,9 +15,12 @@ npm install @agent-ui-kit/shared
 ## Usage
 
 ```js
-// The foundation, in order: color tokens, then the dimensional ramp.
+// The foundation, in order: color tokens, the dimensional ramp, the derived foundations
+// (control geometry: --md-sys-height, --md-sys-icon-box), then the bridge that aliases the old ramp names.
 import '@agent-ui-kit/shared/tokens.css'
 import '@agent-ui-kit/shared/dimensions.css'
+import '@agent-ui-kit/shared/foundations.css'
+import '@agent-ui-kit/shared/foundations-bridge.css'
 // Optional: the document base layer, and named theme packs.
 import '@agent-ui-kit/shared/base.css'
 ```
@@ -31,11 +34,13 @@ Most consumers don't import these directly — `@agent-ui-kit/components/foundat
 ## CDN (no build step)
 
 ```html
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/tokens.css">
-<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.0.5/dimensions.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.2.0/tokens.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.2.0/dimensions.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.2.0/foundations.css">
+<link rel="stylesheet" href="https://esm.sh/@agent-ui-kit/shared@0.2.0/foundations-bridge.css">
 ```
 
-Link `tokens.css` before `dimensions.css` (the ramp reads the color layer's variables). These two sheets are fully self-contained — no bare imports.
+Link the four in this order: `tokens.css` before `dimensions.css` (the ramp reads the color layer's variables), then `foundations.css`, then `foundations-bridge.css`. These four sheets are fully self-contained, no bare imports.
 
 ## The @agent-ui-kit family
 

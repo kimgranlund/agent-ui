@@ -103,13 +103,18 @@ The package exposes its surface through `exports` subpaths, not deep file paths.
 | `@agent-ui/components/registry` | `src/controls/registry.gen.ts` | **The control registry** (generated): `CONTROLS`, one lazy `ControlRecord` per tag (`load()`, `css`, `uses`), for hosts that load controls on demand. |
 | `@agent-ui/components/all` | `src/all.gen.ts` | **DEMO-ONLY** (generated): imports every control entry module. Never imported by package code. |
 | `@agent-ui/components/all.css` | `src/all.gen.css` | **DEMO-ONLY** (generated): `shared-styles.css`, then every control sheet sorted by path. Never imported by package code. |
-| `@agent-ui/components/foundation-styles.css` | `src/foundation-styles.css` | **Foundation CSS barrel** — `@agent-ui/shared/tokens.css` (colour roles) then `dimensions.css` (the ramp). |
+| `@agent-ui/components/foundation-styles.css` | `src/foundation-styles.css` | **Foundation CSS barrel**: `@agent-ui/shared/tokens.css` (colour roles), `dimensions.css` (the ramp), `foundations.css` (the derived geometry) then `foundations-bridge.css` (the old ramp names as aliases). |
+| `@agent-ui/components/loader` | `src/controls/loader.ts` | The on-demand control loader over the registry. |
+| `@agent-ui/components/dogfood-frame` | `src/controls/sandbox-frame/dogfood/dogfood-assets.ts` | The dogfood sandbox-frame assets. |
+| `@agent-ui/components/traits/list-reorder` | `src/traits/list-reorder.ts` | The list-reorder trait, opt-in. |
+| `@agent-ui/components/traits/overlay` | `src/traits/overlay.ts` | The overlay trait, opt-in. |
+| `@agent-ui/components/traits/scroll-spy` | `src/traits/scroll-spy.ts` | The scroll-spy trait, opt-in. |
 | `@agent-ui/components/shared-styles.css` | `src/shared-styles.css` | **The seam sheet** (ADR-0233): the cross-family `_surface/container.css`, `_surface/container-box.css` and `_chart/chart-axis.css` layers, in that order, loaded once before any control sheet. |
 | `@agent-ui/components/base-styles.css` | `src/base-styles.css` | **Document BASE barrel** (opt-in) — `@agent-ui/shared/base.css`: the foundational theme for a SHELL-LESS host page (body typeface `--ui-sans`, body leading, ambient ink/surface, font smoothing). A page composing a shell that sets its own document rule (the docs `_page.css`) does not need it. |
 
 The CSS barrels chain across the one allowed cross-package edge: `foundation-styles.css` imports
-`@agent-ui/shared`'s `tokens.css` + `dimensions.css`, and `base-styles.css` imports its `base.css`
-(all three also `exports` subpaths of that package).
+`@agent-ui/shared`'s `tokens.css`, `dimensions.css`, `foundations.css` + `foundations-bridge.css`, and `base-styles.css` imports its `base.css`
+(all five also `exports` subpaths of that package).
 
 ### Generator-owned exports (ADR-0233)
 
@@ -141,7 +146,7 @@ block reads the `--md-sys-color-*` roles and the `--ui-{height,font,gap}-*` ramp
 reads the `_surface/` seam, so those must be declared first. The host contract (ADR-0233):
 
 ```
-foundation-styles.css   (1) tokens.css  →  dimensions.css          ← FIRST: roles, then the ramp
+foundation-styles.css   (1) tokens → dimensions → foundations → bridge  ← FIRST: roles, ramp, derived geometry, aliases
 base-styles.css         (1b) base.css: OPT-IN document basics      ← after foundation (reads its roles/constants)
 shared-styles.css       (2) the _surface/ and _chart/ seams, ONCE  ← after foundation, before any control sheet
 control sheets          (3) any {name}.css, in ANY order           ← each imports the sheets of its `uses`

@@ -1086,3 +1086,7 @@
 
 - note: packages/agent-ui/app/src/controls/agent-admin/skill-pack-opt-in.test.ts:207 the new comment contains an em dash ("composes — so").
 - note: other `if (!x.ok) return` sites in skill-pack-opt-in.test.ts and agent-admin-persona-file.test.ts remain unpinned, outside this ticket's three named spots.
+
+## T-0490: Consumer CSS recipes and package READMEs load the foundations sheets, pin the current version and list every export (2026-10-28)
+
+- note: AGENTS.md:23 and AGENTS.md:59 updated per Context; no added line in the diff contains an em dash in the touched docs (only pre-existing ones in unchanged lines).
