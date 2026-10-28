@@ -1,0 +1,901 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "reach-concierge-room-stepflow-haiku-3",
+  "mode": "live",
+  "agent": "concierge",
+  "model": "claude-haiku-5-5",
+  "runId": "reach-concierge-room-stepflow-haiku-3-67451b26",
+  "at": "2026-10-28T17:00:10.952Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--hospitality",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the user g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ave no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dates or guest\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" count, this should be a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" step-by-step booking fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ow rather than a single gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ess —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure it with separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate ste\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ps for dates and details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", ending in a Booking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Form as the final step.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll settle on three sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enes: \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Dates\\\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a Calendar range, \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Guests and room\\\" with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guest count\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and room\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" type sel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ector, and a final Booking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Form sc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ene for extras and pre-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"filled conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irmation data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the draft empty init\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ially. I'll sk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king in prose and just build the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" StepFlow directly,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using createSurface with catal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ogId \\\"agent-ui\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"--hospitality\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and sendDataModel true\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", for the Sorrento\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hotel boo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" real\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ize room type options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" aren't something I act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually know from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" house facts, so in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"venting spec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ific room names\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like \\\"King room\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" would be fabric\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating policy. I should av\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oid a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" RadioGroup with made\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-up values\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and instead cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ider a sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"pler field,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" or a Select,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" doesn't commit to spec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ific un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"kn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"own options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m sketching the Book\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ingForm scene — a conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irm-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"your\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-stay step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a breakfast check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"box t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ied to the draft,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bound to a single conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irm button child.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Scene 3 just has\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the breakfast checkb\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ox and the submit button, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" w\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ired to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" confirm_booking action that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" subm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its the boo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king context\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bound to \\\"/draft\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" label \\\"Book now.\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" For the data model, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" init\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ialize the draft object at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with emp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ty checkIn, check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Out, guests, room\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Type, and breakfast f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ields via a single updateData\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Model call.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m laying out the component t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ree: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root Column containing the Step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Flow, which\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ds three step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" scenes b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to the draft path\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". Step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" has\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a heading and a range\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Calendar b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to checkIn/chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"kOut;\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" step two has a heading,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a numeric T\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"extField for guests, and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" RadioGroup for room\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" type,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each bound to their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" respective draft fields with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" required validation.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm finishing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" third\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a BookingForm that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" includes a breakfast chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"kbox and a \\\"Book\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" now\\\" button action,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up the initial draft data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with empty strings for check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"In, checkOut,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" guests, roomType, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" false\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for breakfast. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompanying message\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I want\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" concise wel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"coming the guest and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" walking them\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" through the booking ste\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ps,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mentioning the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" available\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" room types.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"room-booking-1\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"path\\\":\\\"/draft\\\",\\\"value\\\":{\\\"checkIn\\\":\\\"\\\",\\\"checkOut\\\":\\\"\\\",\\\"guests\\\":\\\"\\\",\\\"roomType\\\":\\\"\\\",\\\"breakfast\\\":false}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"room-booking-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"flow\\\"]},{\\\"id\\\":\\\"flow\\\",\\\"component\\\":\\\"StepFlow\\\",\\\"steps\\\":[{\\\"label\\\":\\\"Dates\\\"},{\\\"label\\\":\\\"Guests and room\\\"},{\\\"label\\\":\\\"Extras and confirm\\\"}],\\\"step\\\":0,\\\"draft\\\":{\\\"path\\\":\\\"/draft\\\"},\\\"children\\\":[\\\"s1\\\",\\\"s2\\\",\\\"s3\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"h1\\\",\\\"cal\\\"]},{\\\"id\\\":\\\"h1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"When would you like to stay?\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"cal\\\",\\\"component\\\":\\\"Calendar\\\",\\\"mode\\\":\\\"range\\\",\\\"valueStart\\\":{\\\"path\\\":\\\"/draft/checkIn\\\"},\\\"valueEnd\\\":{\\\"path\\\":\\\"/draft/checkOut\\\"},\\\"name\\\":\\\"dates\\\",\\\"required\\\":true},{\\\"id\\\":\\\"s2\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"h2\\\",\\\"guests\\\",\\\"room\\\"]},{\\\"id\\\":\\\"h2\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Guests and room\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"guests\\\",\\\"component\\\":\\\"TextField\\\",\\\"type\\\":\\\"number\\\",\\\"label\\\":\\\"Number of guests\\\",\\\"name\\\":\\\"guests\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/guests\\\"},\\\"min\\\":\\\"1\\\",\\\"required\\\":true},{\\\"id\\\":\\\"room\\\",\\\"component\\\":\\\"RadioGroup\\\",\\\"name\\\":\\\"roomType\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/roomType\\\"},\\\"required\\\":true,\\\"children\\\":[\\\"r1\\\",\\\"r2\\\",\\\"r3\\\"]},{\\\"id\\\":\\\"r1\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"standard\\\",\\\"label\\\":\\\"Standard room\\\"},{\\\"id\\\":\\\"r2\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"deluxe\\\",\\\"label\\\":\\\"Deluxe room\\\"},{\\\"id\\\":\\\"r3\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"suite\\\",\\\"label\\\":\\\"Suite\\\"},{\\\"id\\\":\\\"s3\\\",\\\"component\\\":\\\"BookingForm\\\",\\\"title\\\":\\\"Confirm your stay\\\",\\\"fields\\\":[{\\\"kind\\\":\\\"checkbox\\\",\\\"label\\\":\\\"Add breakfast\\\",\\\"path\\\":\\\"breakfast\\\"}],\\\"value\\\":{\\\"path\\\":\\\"/draft\\\"},\\\"child\\\":\\\"bookBtn\\\"},{\\\"id\\\":\\\"bookBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Book now\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"confirm_booking\\\",\\\"context\\\":{\\\"booking\\\":{\\\"path\\\":\\\"/draft\\\"}},\\\"submit\\\":true}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"room-booking-1\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"path\\\":\\\"/draft\\\",\\\"value\\\":{\\\"checkIn\\\":\\\"\\\",\\\"checkOut\\\":\\\"\\\",\\\"guests\\\":\\\"\\\",\\\"roomType\\\":\\\"\\\",\\\"breakfast\\\":false}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"room-booking-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"flow\\\"]},{\\\"id\\\":\\\"flow\\\",\\\"component\\\":\\\"StepFlow\\\",\\\"steps\\\":[{\\\"label\\\":\\\"Dates\\\"},{\\\"label\\\":\\\"Guests and room\\\"},{\\\"label\\\":\\\"Extras and confirm\\\"}],\\\"step\\\":0,\\\"draft\\\":{\\\"path\\\":\\\"/draft\\\"},\\\"children\\\":[\\\"s1\\\",\\\"s2\\\",\\\"s3\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"h1\\\",\\\"cal\\\"]},{\\\"id\\\":\\\"h1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"When would you like to stay?\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"cal\\\",\\\"component\\\":\\\"Calendar\\\",\\\"mode\\\":\\\"range\\\",\\\"valueStart\\\":{\\\"path\\\":\\\"/draft/checkIn\\\"},\\\"valueEnd\\\":{\\\"path\\\":\\\"/draft/checkOut\\\"},\\\"name\\\":\\\"dates\\\",\\\"required\\\":true},{\\\"id\\\":\\\"s2\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"h2\\\",\\\"guests\\\",\\\"room\\\"]},{\\\"id\\\":\\\"h2\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Guests and room\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"guests\\\",\\\"component\\\":\\\"TextField\\\",\\\"type\\\":\\\"number\\\",\\\"label\\\":\\\"Number of guests\\\",\\\"name\\\":\\\"guests\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/guests\\\"},\\\"min\\\":\\\"1\\\",\\\"required\\\":true},{\\\"id\\\":\\\"room\\\",\\\"component\\\":\\\"RadioGroup\\\",\\\"name\\\":\\\"roomType\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/roomType\\\"},\\\"required\\\":true,\\\"children\\\":[\\\"r1\\\",\\\"r2\\\",\\\"r3\\\"]},{\\\"id\\\":\\\"r1\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"standard\\\",\\\"label\\\":\\\"Standard room\\\"},{\\\"id\\\":\\\"r2\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"deluxe\\\",\\\"label\\\":\\\"Deluxe room\\\"},{\\\"id\\\":\\\"r3\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"suite\\\",\\\"label\\\":\\\"Suite\\\"},{\\\"id\\\":\\\"s3\\\",\\\"component\\\":\\\"BookingForm\\\",\\\"title\\\":\\\"Confirm your stay\\\",\\\"fields\\\":[{\\\"kind\\\":\\\"checkbox\\\",\\\"label\\\":\\\"Add breakfast\\\",\\\"path\\\":\\\"breakfast\\\"}],\\\"value\\\":{\\\"path\\\":\\\"/draft\\\"},\\\"child\\\":\\\"bookBtn\\\"},{\\\"id\\\":\\\"bookBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Book now\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"confirm_booking\\\",\\\"context\\\":{\\\"booking\\\":{\\\"path\\\":\\\"/draft\\\"}},\\\"submit\\\":true}}]}}\",\"codes\":[\"SCHEMA\"],\"detail\":\"Round 1 failed:\\n  SCHEMA: at [1].updateDataModel.surfaceId\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This system-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"like message is p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ointing out that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" my previous call was missing sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"faceId in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ateDataModel,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" which is acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"urate. It's a legit\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"imate user-turn corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ction request\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", not an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" injection, so I'll re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-call render_surface with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ix and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply norm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ally without m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"entioning the correction.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to correct the structure\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": use\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a StepFlow with three\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" scenes, the last being\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" B\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ookingForm with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its own comm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it button, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the message\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" order\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" createSurface, updateD\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ataModel with surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Id, then updateComponents\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and ensuring \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"root\\\" is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" used only once as the top-level\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" id.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face is new, no target id\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is needed and no meta-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"line is required since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" St\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"epFlow isn't an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask. I'll ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep the reply short\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and concierge-style\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"iding the gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pick dates first, then gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ests and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" room type, then confirm.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\nI\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m laying out the component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree: a root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Column hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding the StepFlow,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" which cont\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ains three scenes —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endar for date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" range sel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ection, one with a guest\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" count field and room-type radio\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" group, and a final Booking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Form step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to the draft data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a bre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"akfast chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"kbox and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" confirm button.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The draft model hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ds checkIn, check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Out, guests, room\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Type, and breakfast f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ields, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the confirm button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s action subm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its the booking context\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pointing to that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" draft.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"room-booking-1\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"room-booking-1\\\",\\\"path\\\":\\\"/draft\\\",\\\"value\\\":{\\\"checkIn\\\":\\\"\\\",\\\"checkOut\\\":\\\"\\\",\\\"guests\\\":\\\"\\\",\\\"roomType\\\":\\\"\\\",\\\"breakfast\\\":false}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"room-booking-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"flow\\\"]},{\\\"id\\\":\\\"flow\\\",\\\"component\\\":\\\"StepFlow\\\",\\\"steps\\\":[{\\\"label\\\":\\\"Dates\\\"},{\\\"label\\\":\\\"Guests and room\\\"},{\\\"label\\\":\\\"Extras and confirm\\\"}],\\\"step\\\":0,\\\"draft\\\":{\\\"path\\\":\\\"/draft\\\"},\\\"children\\\":[\\\"s1\\\",\\\"s2\\\",\\\"s3\\\"]},{\\\"id\\\":\\\"s1\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"h1\\\",\\\"cal\\\"]},{\\\"id\\\":\\\"h1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"When would you like to stay?\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"cal\\\",\\\"component\\\":\\\"Calendar\\\",\\\"mode\\\":\\\"range\\\",\\\"valueStart\\\":{\\\"path\\\":\\\"/draft/checkIn\\\"},\\\"valueEnd\\\":{\\\"path\\\":\\\"/draft/checkOut\\\"},\\\"name\\\":\\\"dates\\\",\\\"required\\\":true},{\\\"id\\\":\\\"s2\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"h2\\\",\\\"guests\\\",\\\"room\\\"]},{\\\"id\\\":\\\"h2\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Guests and room\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"guests\\\",\\\"component\\\":\\\"TextField\\\",\\\"type\\\":\\\"number\\\",\\\"label\\\":\\\"Number of guests\\\",\\\"name\\\":\\\"guests\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/guests\\\"},\\\"min\\\":\\\"1\\\",\\\"required\\\":true},{\\\"id\\\":\\\"room\\\",\\\"component\\\":\\\"RadioGroup\\\",\\\"name\\\":\\\"roomType\\\",\\\"value\\\":{\\\"path\\\":\\\"/draft/roomType\\\"},\\\"required\\\":true,\\\"children\\\":[\\\"r1\\\",\\\"r2\\\",\\\"r3\\\"]},{\\\"id\\\":\\\"r1\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"standard\\\",\\\"label\\\":\\\"Standard room\\\"},{\\\"id\\\":\\\"r2\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"deluxe\\\",\\\"label\\\":\\\"Deluxe room\\\"},{\\\"id\\\":\\\"r3\\\",\\\"component\\\":\\\"Radio\\\",\\\"value\\\":\\\"suite\\\",\\\"label\\\":\\\"Suite\\\"},{\\\"id\\\":\\\"s3\\\",\\\"component\\\":\\\"BookingForm\\\",\\\"title\\\":\\\"Confirm your stay\\\",\\\"fields\\\":[{\\\"kind\\\":\\\"checkbox\\\",\\\"label\\\":\\\"Add breakfast\\\",\\\"path\\\":\\\"breakfast\\\"}],\\\"value\\\":{\\\"path\\\":\\\"/draft\\\"},\\\"child\\\":\\\"bookBtn\\\"},{\\\"id\\\":\\\"bookBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Book now\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"confirm_booking\\\",\\\"context\\\":{\\\"booking\\\":{\\\"path\\\":\\\"/draft\\\"}},\\\"submit\\\":true}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Let's get your room booked. Pick your dates on the calendar, then the number of guests and room type, and finish on the confirm step.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to book a room.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SCHEMA\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":61515,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":1553},{\"id\":\"persona\",\"chars\":5346}],\"over\":false},\"usage\":{\"inputTokens\":9530,\"outputTokens\":6057,\"cacheReadInputTokens\":38678,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"step-flow\",\"product-presentation\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"room-booking-1\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"room-booking-1\",\"path\":\"/draft\",\"value\":{\"checkIn\":\"\",\"checkOut\":\"\",\"guests\":\"\",\"roomType\":\"\",\"breakfast\":false}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"room-booking-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"flow\"]},{\"id\":\"flow\",\"component\":\"StepFlow\",\"steps\":[{\"label\":\"Dates\"},{\"label\":\"Guests and room\"},{\"label\":\"Extras and confirm\"}],\"step\":0,\"draft\":{\"path\":\"/draft\"},\"children\":[\"s1\",\"s2\",\"s3\"]},{\"id\":\"s1\",\"component\":\"Column\",\"children\":[\"h1\",\"cal\"]},{\"id\":\"h1\",\"component\":\"Text\",\"text\":\"When would you like to stay?\",\"variant\":\"h4\"},{\"id\":\"cal\",\"component\":\"Calendar\",\"mode\":\"range\",\"valueStart\":{\"path\":\"/draft/checkIn\"},\"valueEnd\":{\"path\":\"/draft/checkOut\"},\"name\":\"dates\",\"required\":true},{\"id\":\"s2\",\"component\":\"Column\",\"children\":[\"h2\",\"guests\",\"room\"]},{\"id\":\"h2\",\"component\":\"Text\",\"text\":\"Guests and room\",\"variant\":\"h4\"},{\"id\":\"guests\",\"component\":\"TextField\",\"type\":\"number\",\"label\":\"Number of guests\",\"name\":\"guests\",\"value\":{\"path\":\"/draft/guests\"},\"min\":\"1\",\"required\":true},{\"id\":\"room\",\"component\":\"RadioGroup\",\"name\":\"roomType\",\"value\":{\"path\":\"/draft/roomType\"},\"required\":true,\"children\":[\"r1\",\"r2\",\"r3\"]},{\"id\":\"r1\",\"component\":\"Radio\",\"value\":\"standard\",\"label\":\"Standard room\"},{\"id\":\"r2\",\"component\":\"Radio\",\"value\":\"deluxe\",\"label\":\"Deluxe room\"},{\"id\":\"r3\",\"component\":\"Radio\",\"value\":\"suite\",\"label\":\"Suite\"},{\"id\":\"s3\",\"component\":\"BookingForm\",\"title\":\"Confirm your stay\",\"fields\":[{\"kind\":\"checkbox\",\"label\":\"Add breakfast\",\"path\":\"breakfast\"}],\"value\":{\"path\":\"/draft\"},\"child\":\"bookBtn\"},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book now\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"context\":{\"booking\":{\"path\":\"/draft\"}},\"submit\":true}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I'll take you through the booking step by step: dates, then guests and room, then a final check to confirm.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "I'd be glad to help you book a room at the Grand Meridian. Start by choosing your arrival and departure dates, then the number of guests and room type. On the last step you can add breakfast and confirm. The front desk will confirm the exact room once it's booked.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "room-booking-1",
+                      "catalogId": "agent-ui--hospitality",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "path": "/draft",
+                      "value": {
+                        "checkIn": "",
+                        "checkOut": "",
+                        "guests": "",
+                        "roomType": "",
+                        "breakfast": false
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "room-booking-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "flow"
+                          ]
+                        },
+                        {
+                          "id": "flow",
+                          "component": "StepFlow",
+                          "steps": [
+                            {
+                              "label": "Dates"
+                            },
+                            {
+                              "label": "Guests and room"
+                            },
+                            {
+                              "label": "Extras and confirm"
+                            }
+                          ],
+                          "step": 0,
+                          "draft": {
+                            "path": "/draft"
+                          },
+                          "children": [
+                            "s1",
+                            "s2",
+                            "s3"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "Column",
+                          "children": [
+                            "h1",
+                            "cal"
+                          ]
+                        },
+                        {
+                          "id": "h1",
+                          "component": "Text",
+                          "text": "When would you like to stay?",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "cal",
+                          "component": "Calendar",
+                          "mode": "range",
+                          "valueStart": {
+                            "path": "/draft/checkIn"
+                          },
+                          "valueEnd": {
+                            "path": "/draft/checkOut"
+                          },
+                          "name": "dates",
+                          "required": true
+                        },
+                        {
+                          "id": "s2",
+                          "component": "Column",
+                          "children": [
+                            "h2",
+                            "guests",
+                            "room"
+                          ]
+                        },
+                        {
+                          "id": "h2",
+                          "component": "Text",
+                          "text": "Guests and room",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "guests",
+                          "component": "TextField",
+                          "type": "number",
+                          "label": "Number of guests",
+                          "name": "guests",
+                          "value": {
+                            "path": "/draft/guests"
+                          },
+                          "min": "1",
+                          "required": true
+                        },
+                        {
+                          "id": "room",
+                          "component": "RadioGroup",
+                          "name": "roomType",
+                          "value": {
+                            "path": "/draft/roomType"
+                          },
+                          "required": true,
+                          "children": [
+                            "r1",
+                            "r2",
+                            "r3"
+                          ]
+                        },
+                        {
+                          "id": "r1",
+                          "component": "Radio",
+                          "value": "standard",
+                          "label": "Standard room"
+                        },
+                        {
+                          "id": "r2",
+                          "component": "Radio",
+                          "value": "deluxe",
+                          "label": "Deluxe room"
+                        },
+                        {
+                          "id": "r3",
+                          "component": "Radio",
+                          "value": "suite",
+                          "label": "Suite"
+                        },
+                        {
+                          "id": "s3",
+                          "component": "BookingForm",
+                          "title": "Confirm your stay",
+                          "fields": [
+                            {
+                              "kind": "checkbox",
+                              "label": "Add breakfast",
+                              "path": "breakfast"
+                            }
+                          ],
+                          "value": {
+                            "path": "/draft"
+                          },
+                          "child": "bookBtn"
+                        },
+                        {
+                          "id": "bookBtn",
+                          "component": "Button",
+                          "label": "Book now",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "context": {
+                              "booking": {
+                                "path": "/draft"
+                              }
+                            },
+                            "submit": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Let's get your room booked. Pick your dates on the calendar, then the number of guests and room type, and finish on the confirm step.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Let's get your room booked. Pick your dates on the calendar, then the number of guests and room type, and finish on the confirm step.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "room-booking-1",
+                      "catalogId": "agent-ui--hospitality",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "room-booking-1",
+                      "path": "/draft",
+                      "value": {
+                        "checkIn": "",
+                        "checkOut": "",
+                        "guests": "",
+                        "roomType": "",
+                        "breakfast": false
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "room-booking-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "flow"
+                          ]
+                        },
+                        {
+                          "id": "flow",
+                          "component": "StepFlow",
+                          "steps": [
+                            {
+                              "label": "Dates"
+                            },
+                            {
+                              "label": "Guests and room"
+                            },
+                            {
+                              "label": "Extras and confirm"
+                            }
+                          ],
+                          "step": 0,
+                          "draft": {
+                            "path": "/draft"
+                          },
+                          "children": [
+                            "s1",
+                            "s2",
+                            "s3"
+                          ]
+                        },
+                        {
+                          "id": "s1",
+                          "component": "Column",
+                          "children": [
+                            "h1",
+                            "cal"
+                          ]
+                        },
+                        {
+                          "id": "h1",
+                          "component": "Text",
+                          "text": "When would you like to stay?",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "cal",
+                          "component": "Calendar",
+                          "mode": "range",
+                          "valueStart": {
+                            "path": "/draft/checkIn"
+                          },
+                          "valueEnd": {
+                            "path": "/draft/checkOut"
+                          },
+                          "name": "dates",
+                          "required": true
+                        },
+                        {
+                          "id": "s2",
+                          "component": "Column",
+                          "children": [
+                            "h2",
+                            "guests",
+                            "room"
+                          ]
+                        },
+                        {
+                          "id": "h2",
+                          "component": "Text",
+                          "text": "Guests and room",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "guests",
+                          "component": "TextField",
+                          "type": "number",
+                          "label": "Number of guests",
+                          "name": "guests",
+                          "value": {
+                            "path": "/draft/guests"
+                          },
+                          "min": "1",
+                          "required": true
+                        },
+                        {
+                          "id": "room",
+                          "component": "RadioGroup",
+                          "name": "roomType",
+                          "value": {
+                            "path": "/draft/roomType"
+                          },
+                          "required": true,
+                          "children": [
+                            "r1",
+                            "r2",
+                            "r3"
+                          ]
+                        },
+                        {
+                          "id": "r1",
+                          "component": "Radio",
+                          "value": "standard",
+                          "label": "Standard room"
+                        },
+                        {
+                          "id": "r2",
+                          "component": "Radio",
+                          "value": "deluxe",
+                          "label": "Deluxe room"
+                        },
+                        {
+                          "id": "r3",
+                          "component": "Radio",
+                          "value": "suite",
+                          "label": "Suite"
+                        },
+                        {
+                          "id": "s3",
+                          "component": "BookingForm",
+                          "title": "Confirm your stay",
+                          "fields": [
+                            {
+                              "kind": "checkbox",
+                              "label": "Add breakfast",
+                              "path": "breakfast"
+                            }
+                          ],
+                          "value": {
+                            "path": "/draft"
+                          },
+                          "child": "bookBtn"
+                        },
+                        {
+                          "id": "bookBtn",
+                          "component": "Button",
+                          "label": "Book now",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "context": {
+                              "booking": {
+                                "path": "/draft"
+                              }
+                            },
+                            "submit": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-28.jsonl:149",
+        "outcome": "ok",
+        "retries": [
+          {
+            "round": 2,
+            "codes": [
+              "SCHEMA"
+            ]
+          }
+        ],
+        "thinkingChars": [
+          2209,
+          1290
+        ]
+      },
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "facility-info-card",
+            "load": "index-only"
+          },
+          {
+            "name": "amenity-service-card",
+            "load": "index-only"
+          },
+          {
+            "name": "booking-flow",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "property-knowledge-base",
+            "load": "index-only"
+          },
+          {
+            "name": "curated-local-guides",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Wikipedia search",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "I'd like to book a room.",
+        "expect": [
+          "StepFlow"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You I'd like to book a room. Let's get your room booked. Pick your dates on the calendar, then the number of guests and room type, and finish on the confirm step.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-28-r16-pattern/reach-concierge-room-stepflow-haiku-3/turn-1.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "162 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "133 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [room-booking-1], open [room-booking-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "room-booking-1 holds StepFlow"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "3499 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "skip",
+      "detail": "no --expect-component"
+    }
+  ],
+  "verdict": "pass"
+}

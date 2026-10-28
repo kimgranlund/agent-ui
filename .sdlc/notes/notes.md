@@ -1035,3 +1035,8 @@
 ## T-0498: A component moved to a new parent in the same updateComponents batch survives the reconcile (round 16 cluster M) (2026-10-28)
 
 - note: red-checkpoint deviations: `redck.py deviations` printed no `process deviation:` lines; failing-first was re-observed by me at pre-build HEAD.
+
+## T-0486: Live round 16 measures the round 15 fixes (T-0478 to T-0485) across the full matrix (2026-10-28)
+
+- note: no `process deviation:` lines from `redck.py deviations`; no `(red)` criteria in this handoff.
+- note: criterion 3's check is a plain git diff against HEAD; the r15 folders show no diff, and the check goes red on any edit to them by construction.
