@@ -43,7 +43,9 @@ primitivesProse.textContent =
 primitives.append(primitivesProse)
 const primitivesGrid = document.createElement('div')
 primitivesGrid.className = 'demo-grid'
-for (const member of membersOfTier('layout')) {
+// In-flow primitives only: the UIContainerElement surface base. A tier-layout host off it (ui-toast-region's
+// position: fixed popover, ui-swiper-item) would anchor its boxes outside this card, so it stays out of the grid.
+for (const member of membersOfTier('layout').filter((m) => m.doc.descriptor.scalars.get('extends') === 'UIContainerElement')) {
   const attrs: Record<string, string> = { gap: 'sm' }
   if (member.name === 'grid') attrs.min = '5rem' // a low floor so the tracks read inside the figure
   const live = el(member.tag, attrs, ['A', 'B', 'C', 'D'].map(demoBox))

@@ -1049,3 +1049,7 @@
 
 - note: `scripts/dogfood-render-allowlist.json` layout-permutations entry defers a real page defect (fixed-position ui-toast-region in the four-primitives grid); the solo report lists it as a follow-up.
 - note: at 1000px the otp/text-field/toggle/textarea-lg matrices scroll inline inside the card rather than fit it (576px reading column vs 614 to 1665px min-content); consistent with the stated "stacks or scrolls" goal.
+
+## T-0502: layout-permutations keeps fixed-position hosts such as ui-toast-region out of the four-primitives grid (2026-10-28)
+
+- note: site/pages/layout-permutations.ts:48 the filter keys on descriptor `extends === 'UIContainerElement'` rather than on `position: fixed`; it also drops ui-swiper-item, which matches the Goal's in-flow-only wording.
