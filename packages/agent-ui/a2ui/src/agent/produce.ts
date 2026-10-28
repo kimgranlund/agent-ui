@@ -1529,6 +1529,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0310: round 1 of a Haiku click turn is forced too (set below, once the turn's action is read). T-0321: so is the
   // repair round after a SURFACE_DROPPED round (r8 :169 answered two of them in prose with thinking on).
   let forceSurfaceRound = false
+  // T-0499: the next round repairs a semantic finding on a no-payload round (T-0298). If that round comes back empty (no
+  // text, no tool call; round 16 :13), it is not filed PARSE: the same repair ask is sent again, render_surface forced.
+  let semanticRepairPending = false
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
   let textJsonlRouted = false // T-0172: sticky, a text round's prose carried A2UI lines that became the payload
@@ -1640,6 +1643,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     let narrationRound = 0 // T-0332: 1 once this round's reply was rewritten by a text-only narration repair call
     const forceSurface = forceSurfaceRound
     forceSurfaceRound = false
+    const semanticRepair = semanticRepairPending
+    semanticRepairPending = false
     const namedBy = lastOutput !== undefined ? failureAttribution(lastOutput) : undefined // once a round
     const keep = namedBy !== undefined && failures !== undefined ? surfacesToKeep(lastOutput!, failures, input.session, namedBy) : [] // T-0172
     if (round > 0 && lastOutput !== undefined && outputRound === round - 1) {
@@ -1805,6 +1810,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     }
     const tailDelta = nextDelta(true)
     if (tailDelta !== undefined) yield tailDelta
+    const priorRaw = lastRaw // T-0499: the attempt an empty round's repeated repair shows the model
     lastRaw = raw
 
     const peeled = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 / ADR-0198 cl.1 / GH #1196 / ADR-0206: peeled BEFORE heal/validate
@@ -1988,6 +1994,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           failures = findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined
           forceSurfaceRound = offeredTools !== undefined // T-0298
+          semanticRepairPending = true // T-0499
           continue
         }
         if (findings.length > 0) actionSemanticTally.push('SEMANTIC_UNCORRECTED')
@@ -2068,6 +2075,15 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
 
     const assembled = assembleFromRaw(rest)
     if (assembled === undefined) {
+      // T-0499: an empty semantic repair round keeps the failure it was repairing and the attempt it showed, once more
+      // forced, while a round is left; on the last round it is PARSE as before.
+      if (semanticRepair && raw.trim() === '' && captured === undefined && round < opts.maxRounds - 1) {
+        lastRaw = priorRaw
+        lastCaptureRound = offeredTools !== undefined
+        forceSurfaceRound = offeredTools !== undefined
+        semanticRepairPending = true
+        continue
+      }
       lastOutput = undefined // GH #288 — no parsed output this round; nothing for the next round's feedback to resolve against
       // genui-surface SPEC-R1 — a genui structural failure MAY hitch a ride on the SAME retry an A2UI
       // parse failure already needs (never an EXTRA round manufactured purely for genui's sake — see the
