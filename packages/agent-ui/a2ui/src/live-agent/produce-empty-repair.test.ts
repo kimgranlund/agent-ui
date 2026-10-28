@@ -149,6 +149,15 @@ describe('produce(): an empty round after a SURFACE_DROPPED, SURFACE_CLAIMED or 
     expectResent(r.reqs, 2, 'SURFACE_DROPPED at ask-1', PROSE_ONLY)
   })
 
+  it('SURFACE_DROPPED on a valid round (T-0172): an update-only retry is valid but dropped ask-1, then the repair came back empty: the drop ask is re-sent', async () => {
+    const ASK_OUT_OF_SCOPE =
+      '{"version":"v1.0","createSurface":{"surfaceId":"ask-1","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateComponents":{"surfaceId":"ask-1","components":[{"id":"root","component":"Modal","open":true}]}}'
+    const r = await run(['{"a2uiMeta":{"note":"Hit or stand? Pick one below.","ask":{"surfaceId":"ask-1"}}}\n' + ASK_OUT_OF_SCOPE, CLEAN, EMPTY, CLEAN], table, {}, 4)
+    expect(r.reqs).toHaveLength(4)
+    expectResent(r.reqs, 2, 'SURFACE_DROPPED at ask-1', CLEAN)
+  })
+
   it('SURFACE_CLAIMED (T-0442): an ask naming a surface it never creates, then an empty round: the claim ask is re-sent', async () => {
     const ASKED = JSON.stringify({ a2uiMeta: { note: 'Hit or stand? Pick one below.', ask: { surfaceId: 'ask-9' } } })
     const r = await run([ASKED, EMPTY, CLEAN], table, {})
