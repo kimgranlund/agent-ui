@@ -1,7 +1,7 @@
 ---
 name: package-release
 description: >-
-  THIS repo's npm release/versioning law for the 8 @agent-ui/* packages (published as @agent-ui-
+  THIS repo's npm release/versioning law for the 9 @agent-ui/* packages (published as @agent-ui-
   kit/*): lockstep versioning, the patch-only 0.0.1-0.0.99 phase, the judgment-gated 0.#.0 bump,
   and the cut-a-release procedure (push a vX.Y.Z tag; .github/workflows/release.yml publishes and
   creates the GitHub release, T-0465). Use for "release a package update", "cut a release", "bump the package version",
@@ -21,10 +21,10 @@ never restate their internals here.
 
 ## The versioning law
 
-- **Lockstep, always.** All 8 packages — `shared`, `icons`, `a2a`, `components`, `router`, `code`,
-  `a2ui`, `app` — publish at the exact SAME version number on every release. Never a partial bump of
+- **Lockstep, always.** All 9 packages (`shared`, `icons`, `a2a`, `components`, `data`, `router`,
+  `code`, `a2ui`, `app`) publish at the exact SAME version number on every release. Never a partial bump of
   one package alone; the publish script already enforces this mechanically (one `<version>` argument
-  drives all 8), but the DECISION of what that version is follows this law too.
+  drives all 9), but the DECISION of what that version is follows this law too.
 - **Patch-only phase.** Routine releases increment the patch digit: `0.0.1` → `0.0.2` → … → `0.0.99`.
   "Routine" = bug fixes, small features, docs-adjacent changes, non-breaking additions — the default
   for most releases.
@@ -56,7 +56,7 @@ never restate their internals here.
    without it the release gets GitHub's generated notes), then `git tag vX.Y.Z` on `main` and
    `git push origin vX.Y.Z`. The tag push runs `.github/workflows/release.yml` (T-0465): it refuses a tag
    that is not a strict `vX.Y.Z`, runs `npm run publish:packages -- X.Y.Z`
-   (`scripts/publish/publish-packages.mjs`, which builds, transforms, and publishes all 8 packages in
+   (`scripts/publish/publish-packages.mjs`, which builds, transforms, and publishes all 9 packages in
    lockstep) through npm trusted publishing (GitHub OIDC, no npm token anywhere; the trusted publisher fields are in the
    workflow header, T-0466), then creates the GitHub release for the tag.
    **An ENEEDAUTH in the publish step means npm's OIDC exchange was refused** (T-0471, run 40341014351 on
@@ -75,7 +75,7 @@ never restate their internals here.
    `publish-packages.mjs` skips any package already live at that version instead of erroring, so it
    picks up exactly where it left off rather than E403-failing on package 1.
 
-**Done when** all 8 packages report live at the chosen version (each
+**Done when** all 9 packages report live at the chosen version (each
 `npm view @agent-ui-kit/<pkg>@<version>` resolves) — a partial fleet is not done, re-run step 5.
 
 ## Facts worth knowing (don't re-derive these)

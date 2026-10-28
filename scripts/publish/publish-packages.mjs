@@ -1,4 +1,4 @@
-// publish-packages.mjs — builds and publishes the 8 @agent-ui/* workspace packages to the public npm
+// publish-packages.mjs: builds and publishes the 9 @agent-ui/* workspace packages to the public npm
 // registry, SCOPED under the `agent-ui-kit` npm ORG (@agent-ui-kit/shared, @agent-ui-kit/components, …).
 //
 // WHY @agent-ui-kit/* (Kim-ruled 2026-07-19, supersedes the launch-day unscoped agent-ui-* names): npm
@@ -21,7 +21,7 @@
 //   node scripts/publish/publish-packages.mjs <version> [--dry-run]
 //   <version>   the lockstep semver every package publishes as (e.g. 0.1.0); the git tag vX.Y.Z names it, and
 //               pushing that tag runs this script from .github/workflows/release.yml (T-0465); every internal
-//               @agent-ui/* dependency gets rewritten to the SAME version (all 8 packages release together).
+//               @agent-ui/* dependency gets rewritten to the SAME version (all 9 packages release together).
 //   --dry-run   passes --dry-run to `npm publish` (packs and validates, never uploads), for local testing.
 //
 // CONSUMER-PROFILE — HISTORICAL, and now RELAXED (GH #283, 2026-07-27). `@agent-ui-kit/app` used to be
@@ -68,8 +68,10 @@ const REPO_URL = 'git+https://github.com/kimgranlund/agent-ui.git'
 // step (tsc type-checks the whole monorepo as one program, paths already resolve any sibling), but keeps a
 // fresh `npm install agent-ui-app` from ever hitting a transient window where a dependency it needs isn't
 // on the registry yet. Mirrors CLAUDE.md's own documented DAG: shared/icons/a2a have no @agent-ui/* deps;
-// components depends on shared+icons; router/code/a2ui depend on components(+shared); app depends on all.
-export const PACKAGE_ORDER = ['shared', 'icons', 'a2a', 'components', 'router', 'code', 'a2ui', 'app']
+// components depends on shared+icons; data/router/code/a2ui depend on components(+shared); app depends on
+// a2ui, code, components, data and shared (T-0489: app@0.1.0 shipped naming a data package that was never
+// published, so data sits in this set before app).
+export const PACKAGE_ORDER = ['shared', 'icons', 'a2a', 'components', 'data', 'router', 'code', 'a2ui', 'app']
 
 // npm-page metadata (publish concern, so it lives here, not in the workspace manifests): shared base
 // keywords + a per-package flavor. `description` is single-sourced from each workspace package.json.
@@ -79,6 +81,7 @@ const PACKAGE_KEYWORDS = {
   icons: ['icons', 'phosphor'],
   a2a: ['a2a', 'agent2agent', 'protocol', 'agents'],
   components: ['ui-components', 'signals', 'light-dom', 'form-controls', 'accessibility'],
+  data: ['data-layer', 'signals', 'headless', 'fetch'],
   router: ['router', 'spa'],
   code: ['syntax-highlighting', 'markdown', 'code-editor', 'codemirror'],
   a2ui: ['a2ui', 'generative-ui', 'agents', 'renderer'],
@@ -225,7 +228,7 @@ function copyTree(srcDir, destDir, include, transform) {
 }
 
 /** True iff `name@version` already exists on the registry — makes a re-run after a partial failure
- *  RESUMABLE: 8 sequential `npm publish` calls means a failure at package k otherwise leaves 1..k-1 live at
+ *  RESUMABLE: 9 sequential `npm publish` calls means a failure at package k otherwise leaves 1..k-1 live at
  *  that version, and a naive re-run then dies immediately at package 1 with E403 (npm never allows
  *  republishing an existing version), permanently stranding the DAG half-published (caught in review). */
 function isAlreadyPublished(name, version) {

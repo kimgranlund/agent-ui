@@ -1,9 +1,9 @@
-# release.yml: a pushed vX.Y.Z tag publishes the eight @agent-ui-kit/* packages to npm at X.Y.Z and
+# release.yml: a pushed vX.Y.Z tag publishes the nine @agent-ui-kit/* packages to npm at X.Y.Z and
 # creates the GitHub release for the tag (T-0465, Kim 2026-10-25: "publish via git actions and tagging").
 # With ci.yml (PRs) this is the second workflow GitHub runs automatically; deploy-docs.yml stays manual.
 #
 # The publish step is the same command a local release runs, `npm run publish:packages -- <version>`
-# (scripts/publish/publish-packages.mjs): it builds, transforms and publishes all eight in lockstep and
+# (scripts/publish/publish-packages.mjs): it builds, transforms and publishes all nine in lockstep and
 # skips any package already live at that version, so re-running a failed job resumes the fleet.
 #
 # Auth: npm trusted publishing (GitHub OIDC, T-0466; the NPM_TOKEN route failed with a 404 on the scope at the
@@ -12,7 +12,7 @@
 # would only get in its way. The Set up Node step passes no `registry-url`: npm already defaults to
 # https://registry.npmjs.org/, which is the OIDC audience it asks for (`npm:registry.npmjs.org`). Requirements:
 # npm CLI 11.5.1 or newer (the "Require an npm CLI that can publish with OIDC" step enforces it), a GitHub-hosted
-# runner, and a trusted publisher registered on npmjs.com for each of the eight packages (package Settings,
+# runner, and a trusted publisher registered on npmjs.com for each of the nine packages (package Settings,
 # Trusted Publisher, GitHub Actions) with these fields, all case-sensitive and exact: organization or user
 # `kimgranlund` (the GitHub owner, not the npm user `kimgish`), repository `agent-ui`, workflow filename
 # `release.yml` (the bare filename, no `.github/workflows/` path), environment left empty (the job names none),
@@ -97,7 +97,7 @@ jobs:
 
       # No token reaches npm, which authenticates through the job's OIDC identity. `verbose` makes a refused OIDC
       # exchange print the registry's reason instead of a bare ENEEDAUTH (see the header).
-      - name: Publish the eight packages
+      - name: Publish the nine packages
         env:
           NPM_CONFIG_LOGLEVEL: verbose
         run: npm run publish:packages -- ${{ steps.version.outputs.version }}
