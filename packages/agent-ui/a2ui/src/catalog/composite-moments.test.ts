@@ -1234,6 +1234,21 @@ describe('composite moment checks (T-0208)', () => {
     expect(codes([...SPA_TABLE, table])).not.toContain('PRODUCT_CARD_MISSING')
   })
 
+  // T-0516: the ProductCard row's booking guards each bite on their own, like the ConfirmReceipt row's (T-0480).
+  const PRODUCT_ROW = COMPOSITE_MOMENTS.find((m) => m.composite === 'ProductCard')!
+  const BOOKING_GUARDS: Array<[string, A2uiComponent]> = [
+    ['BookingForm', { id: 'form', component: 'BookingForm', title: 'Book a treatment', fields: [] }],
+    ['BookingConfirmation', { id: 'done', component: 'BookingConfirmation', title: 'Treatment booked', rows: [] }],
+  ]
+  for (const [guard, comp] of BOOKING_GUARDS) {
+    it(`T-0516: the ${guard} guard bites: the priced Table beside a ${guard} yields none, and with ${guard} out of lacks it fires`, () => {
+      const comps = [...SPA_TABLE, comp]
+      expect(compositeMomentCheck(PRODUCT_ROW).check({ surfaces: [view(comps)] })).toEqual([])
+      const open = compositeMomentCheck({ ...PRODUCT_ROW, lacks: PRODUCT_ROW.lacks.filter((t) => t !== guard) })
+      expect(open.check({ surfaces: [view(comps)] }).map((f) => f.code)).toEqual(['PRODUCT_CARD_MISSING'])
+    })
+  }
+
   it('the catalog gate keeps the booking and Itinerary rows only on agent-ui--hospitality, the games, ProductCard and ConfirmReceipt rows on agent-ui, and none on a2ui-basic', () => {
     const base = loadCatalog(defaultCatalogRaw)
     const concierge = composeCatalog(base, loadCatalogFragment(hospitalityFragmentRaw), 'hospitality')
