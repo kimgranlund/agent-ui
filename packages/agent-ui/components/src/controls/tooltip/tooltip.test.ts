@@ -504,6 +504,9 @@ describe('ui-tooltip — C10 zero-residue (tooltip-c10-residue · tooltip-c10-st
     el.addEventListener('close', () => closes++)
 
     el.remove() // disconnect → ac.abort() → keydown listener removed
+    expect(closes).toBe(1) // T-0541: a removal while open closes and announces once
+    closes = 0
+    el.open = true // re-arm while detached, so a still-live Escape listener would have something to close
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
     expect(closes).toBe(0) // listener is dead — Escape has no effect
@@ -519,6 +522,8 @@ describe('ui-tooltip — C10 zero-residue (tooltip-c10-residue · tooltip-c10-st
     el.addEventListener('close', () => closes++)
 
     el.remove() // disconnect → listeners removed
+    expect(closes).toBe(1) // T-0541: a removal while open closes and announces once
+    closes = 0
 
     anchor.dispatchEvent(new MouseEvent('mouseleave'))
     expect(closes).toBe(0) // no listener active

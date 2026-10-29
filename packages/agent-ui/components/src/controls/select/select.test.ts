@@ -1462,6 +1462,8 @@ describe('ui-select — C10 zero-residue (select-c10-residue · select-c10-stack
     el.addEventListener('close', () => closes++)
 
     el.remove() // disconnect → scope.dispose() → AC aborts → toggle listener dead
+    expect(closes).toBe(1) // T-0541: a removal while open closes and announces once
+    closes = 0
 
     simulateLightDismiss(listbox) // listener is dead — should not propagate
     expect(closes).toBe(0)
@@ -1490,7 +1492,7 @@ describe('ui-select — C10 zero-residue (select-c10-residue · select-c10-stack
     el.open = true
     await whenFlushed()
     simulateLightDismiss(newListbox)
-    expect(closes).toBe(2) // exactly ONE new listener — not doubled
+    expect(closes).toBe(3) // exactly ONE new listener — not doubled (T-0541: plus the one the removal while open announced)
     el.remove()
   })
 

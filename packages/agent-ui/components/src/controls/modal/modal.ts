@@ -120,6 +120,19 @@ export class UIModalElement extends UIContainerElement {
     scrollFade(this, { viewport: dialog })
   }
 
+  /** T-0541 (Kim 2026-10-28): a host removed while open ends CLOSED and announces it as a dismissal, so a
+   *  two-way bind sees `open` false and a reconnect does not re-run `showModal()` (focus trap, inert page).
+   *  The `close` listener rides the connection signal and cannot hear the dialog's own (task-queued) close
+   *  event, so this announces directly; the opener is dropped, since focus leaves with the removed host. */
+  protected disconnected(): void {
+    if (!this.open) return
+    this.open = false
+    this.#opener = null
+    if (this.#dialog) this.#closeDialog(this.#dialog)
+    this.emit('close')
+    this.emit('toggle')
+  }
+
   /** Open the dialog (idempotent) — record the opener FIRST (showModal moves focus in), then enter the top layer. */
   #openDialog(dialog: HTMLDialogElement): void {
     if (dialog.open) return // already shown — do not re-enter the top layer / re-trap

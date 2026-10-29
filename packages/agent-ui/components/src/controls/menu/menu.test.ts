@@ -1048,6 +1048,8 @@ describe('ui-menu — C10 zero-residue (menu-c10-residue · menu-c10-stacking ·
     el.addEventListener('close', () => closes++)
 
     el.remove() // disconnect → scope.dispose() → AC aborts → toggle listener dead
+    expect(closes).toBe(1) // T-0541: a removal while open closes and announces once
+    closes = 0
 
     simulateLightDismiss(panel) // listener is dead — should not propagate
     expect(closes).toBe(0)
@@ -1077,7 +1079,7 @@ describe('ui-menu — C10 zero-residue (menu-c10-residue · menu-c10-stacking ·
     el.open = true
     await whenFlushed()
     simulateLightDismiss(el.querySelector<HTMLElement>('[data-part="panel"]')!)
-    expect(closes).toBe(2) // exactly ONE listener on the reconnected host — not doubled
+    expect(closes).toBe(3) // exactly ONE listener on the reconnected host — not doubled (T-0541: plus the one the removal while open announced)
     el.remove()
   })
 

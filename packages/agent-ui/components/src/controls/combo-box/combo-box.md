@@ -242,6 +242,8 @@ own form value was catalogued). `value` holds the **last committed** value — u
 typing. `formValue()` returns `null` when `value` is empty (no form entry submitted, matching native
 `<select>` convention).
 
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the listbox. Set `open` again after re-inserting to reopen.
+
 ## The panel scroll cap (TKT-0027)
 
 `--ui-combo-box-panel-max-block-size` is a public dial capping the panel's height, defaulting to

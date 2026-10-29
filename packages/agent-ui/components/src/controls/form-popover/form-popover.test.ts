@@ -374,6 +374,8 @@ describe('ui-form-popover — zero-residue cleanup', () => {
     el.addEventListener('close', () => closes++)
 
     el.remove()
+    expect(closes).toBe(1) // T-0541: a removal while open closes and announces once
+    closes = 0
     simulateLightDismiss(panel)
     expect(closes).toBe(0)
   })

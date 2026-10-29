@@ -862,6 +862,13 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
       } catch (_) {
         // intentional no-op: the popup is gone or no longer popover-typed; focus restore below
       }
+      // T-0541 (Kim 2026-10-28): a host torn down while open ends CLOSED and announces it as a dismissal,
+      // so a two-way bind sees `open` false and a reconnect does not re-show it. The prop settles first,
+      // then `close`+`toggle` fire (the ADR-0101 announce order). A host with no `open` prop only announces.
+      const h = host as UIElement & { open?: unknown }
+      if (h.open === true) h.open = false
+      host.emit('close')
+      host.emit('toggle')
     }
     stopPositioning()
     // restoreFocus() is intentionally NOT called here: on host disconnect the anchor is also

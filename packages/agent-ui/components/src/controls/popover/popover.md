@@ -131,6 +131,8 @@ trigger click), or model-driven alike. When the platform dismisses the panel, th
 `close` listener also sets `open = false` (syncing the prop); `toggle` is the two-way bind signal the
 renderer writes back into the data model (`value: { prop: 'open', event: 'toggle' }`, ADR-0019).
 
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the panel. Set `open` again after re-inserting to reopen.
+
 ## Placement
 
 `placement` (default `'bottom-start'`) is the preferred position relative to the trigger. The JS
