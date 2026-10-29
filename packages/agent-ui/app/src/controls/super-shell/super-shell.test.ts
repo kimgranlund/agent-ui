@@ -2,6 +2,13 @@
 import { describe, it, expect, afterEach, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { UISuperShellElement } from './super-shell.ts'
+import {
+  splitFrontmatter,
+  parseDescriptor,
+  validateComponentDescriptor,
+  compareDescriptorToProps,
+  compareDescriptorToSource,
+} from '@agent-ui/components/descriptor'
 declare const process: { cwd(): string }
 
 const mounted: HTMLElement[] = []
@@ -636,5 +643,36 @@ describe('ui-super-shell — viewTransitionNames named-morph opt-in on segmented
     mounted.push(el)
     await el.updateComplete
     expect(seg.style.viewTransitionName).toBe('ui-vt-super-shell-segment-admin-shell-options-pane')
+  })
+})
+
+// T-0533: the descriptor's structural + contract-to-props + contract-to-source trip-wires (ADR-0004), the
+// gates every other descriptor already carries.
+describe('super-shell.md descriptor', () => {
+  const dir = `${process.cwd()}/packages/agent-ui/app/src/controls/super-shell`
+  const md = readFileSync(`${dir}/super-shell.md`, 'utf8') as string
+  const ts = readFileSync(`${dir}/super-shell.ts`, 'utf8') as string
+  const css = readFileSync(`${dir}/super-shell.css`, 'utf8') as string
+  const parsed = parseDescriptor(splitFrontmatter(md).fence)
+
+  it('is schema-valid', () => {
+    expect(/^tag:\s*ui-super-shell\s*$/m.test(splitFrontmatter(md).fence)).toBe(true)
+    expect(validateComponentDescriptor(parsed)).toEqual([])
+  })
+
+  it('attributes[] is a faithful bijection with the live static props', () => {
+    expect(parsed.attributes.map((a) => a.name).sort()).toEqual(Object.keys(UISuperShellElement.props).sort())
+    expect(compareDescriptorToProps(parsed.attributes, UISuperShellElement.props)).toEqual([])
+  })
+
+  it('a drifted attribute FAILS (negative control)', () => {
+    const flipReflect = parsed.attributes.map((a) => ({ ...a, reflect: false }))
+    expect(compareDescriptorToProps(flipReflect, UISuperShellElement.props)).toContainEqual(
+      expect.objectContaining({ code: 'DRIFT_REFLECT' }),
+    )
+  })
+
+  it('customStates/slots/parts agree with the source', () => {
+    expect(compareDescriptorToSource(parsed, { ts, css })).toEqual([])
   })
 })

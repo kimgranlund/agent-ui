@@ -5,6 +5,7 @@ import {
   scalarSeq,
   collectUsedStates,
   collectStyledSlots,
+  collectCreatedParts,
   compareDescriptorToSource,
 } from './component-descriptor.ts'
 // Read the real button source as TEXT (the proven button-descriptor.test.ts fs pattern).
@@ -150,5 +151,26 @@ describe('source-scan trip-wire — per-code negative controls (s11 / #5)', () =
     expect(compareDescriptorToSource(descNoBadge, { ts: '', css }).map((f) => f.code)).toEqual(['SLOT_UNDOCUMENTED'])
     // documenting the `badge` slot clears it — the check is non-vacuous.
     expect(compareDescriptorToSource(descBadge, { ts: '', css })).toEqual([])
+  })
+
+  it('a created part `scratch` absent from parts -> exactly PART_UNDOCUMENTED (T-0533)', () => {
+    // unique token `scratch`; one creation idiom per extractor branch, plus a selector read and a comment that create nothing.
+    const ts = [
+      `node.dataset.part = 'scratch'`,
+      `other.setAttribute('data-part', 'scratch')`,
+      'host.innerHTML = `<span data-part="scratch"></span>`',
+      `host.querySelector('[data-part="reader"]')`,
+      `// ui-menu stamps data-part="commented" on its trigger`,
+    ].join('\n')
+    const descNoScratch = parseDescriptor(['customStates: []', 'slots: []', 'parts:', '  - name: frame'].join('\n'))
+    const descScratch = parseDescriptor(['customStates: []', 'slots: []', 'parts:', '  - name: frame', '  - name: scratch'].join('\n'))
+    // anti-vacuous: each idiom is collected, and neither the selector read nor the comment is.
+    expect([...collectCreatedParts(ts)]).toEqual(['scratch'])
+    expect([...collectCreatedParts(`a.dataset.part = 'x'`)]).toEqual(['x'])
+    expect([...collectCreatedParts(`a.setAttribute('data-part', 'y')`)]).toEqual(['y'])
+    expect([...collectCreatedParts('`<i data-part="z">`')]).toEqual(['z'])
+    expect(compareDescriptorToSource(descNoScratch, { ts, css: '' }).map((f) => f.code)).toEqual(['PART_UNDOCUMENTED'])
+    // declaring the `scratch` part clears it: the check is non-vacuous.
+    expect(compareDescriptorToSource(descScratch, { ts, css: '' })).toEqual([])
   })
 })

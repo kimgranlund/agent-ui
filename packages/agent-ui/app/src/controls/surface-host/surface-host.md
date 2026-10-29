@@ -60,7 +60,7 @@ events: []              # no DOM events — the mount/stream seam is exposed as 
 
 slots: []                # content model is NOT author-composed — the stage/surface artboard is built entirely by this element's own connect-time logic; no slotted children
 
-parts:                   # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the master-detail.md precedent)
+parts:                   # NOT shadow-DOM ::part() (light-DOM only): light-DOM markers this element's own JS creates; compareDescriptorToSource reds a created part missing here (PART_UNDOCUMENTED, T-0533)
   - name: stage
     description: The checkered artboard box (`[data-part="stage"]`) — a positioning/measurement aid, decorative under forced-colors. Under `[bare]` (GH #241) the checker and stage color strip entirely — the chat path's chromeless mount.
   - name: surface

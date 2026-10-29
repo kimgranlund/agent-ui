@@ -67,6 +67,8 @@ parts:
     description: The control-built `<span data-part="description">` — the one-line description (mirrors `description`, single-clamp with ellipsis). Present only when `description` is non-empty.
   - name: action
     description: The control-built, REAL native `<button type="button" data-part="action">` — deliberately NOT `ui-button` (a genuine native element gets tab-order removal, the inert activation contract, and forced-colors GrayText FOR FREE from the platform when `.disabled` flips, the ONE element identity across both states). Labelled `actionLabel` with a leading → glyph when available; the literal text "Unavailable" (and a real `disabled` attribute) when not.
+  - name: action-glyph
+    description: The control-built `<span data-part="action-glyph" aria-hidden="true">` leading → glyph inside `action`, present only when available (decorative; the accessible name comes from `actionLabel`).
 
 customStates: []       # NO custom state — the whole availability repaint keys on the plain reflected [available] attribute (self-reflect-guarded at connect, service-card.ts's file banner); the fleet custom-state vocabulary (naming.md §6) is closed and stays untouched by this build
 

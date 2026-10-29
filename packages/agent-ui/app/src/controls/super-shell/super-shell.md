@@ -4,8 +4,10 @@
 # resizable inner pane · SPEC-R7 pane segments + tabs narrow arm · SPEC-R8 band ladder · SPEC-R9
 # toggle affordance law · SPEC-R10 scrollbar seam, LLD-C1/C2, ADR-0154/ADR-0155).
 
-name: ui-super-shell
+tag: ui-super-shell
 description: A three-region app shell with collapsible start and end panes around a main pane, adapting to narrow screens.
+tier: layout            # geometry size-class (the shell family's composition band, no control height of its own)
+extends: UIElement
 
 attributes:
   - name: viewTransitions
@@ -20,40 +22,52 @@ attributes:
     default: false
     reflect: true
     description: GH #958 (ADR-0183 cl.4) — the fleet's named-morph convention, proven on THIS surface. Meaningful only alongside `view-transitions` (a name with no transition running is inert, so it is never applied unless both are set AND the platform allows a real transition). When live, every segment in a segmented pane shares ONE `view-transition-name` (`ui-vt-super-shell-segment-{shell}-{slot}`, `dom/view-transition.ts`'s `viewTransitionName`/`setViewTransitionName`; `{shell}` is the host's authored `id` when it has one — stable across page loads, so consumer CSS can target `::view-transition-group(…)` — else `n{N}` from a per-document instance counter) — since CSS shows only the active segment, the browser pairs the outgoing segment's box with the incoming one and MORPHS between them (size/position) instead of a flat cross-fade. PAIRING LAW, both halves — (i) ONE name per pane box, shared by every segment in it (the platform morphs whichever segment was visible before into whichever is visible after; a name on two PAINTED elements in one snapshot aborts the transition); (ii) names are unique per DOCUMENT, not per shell — the `{shell}` discriminator is what keeps two opted-in shells on one page from painting the same name (review repair M1); an authored `id` must be document-unique (the DOM's own law) for that guarantee to hold. Applied once at compose time (the family's build-once law) — a mid-session flip of either prop or of `id` is not retroactive.
-  - name: collapsed-start
+  - name: collapsedStart
+    attribute: collapsed-start
     type: boolean
     default: false
     reflect: true          # SPEC-R2d — observable + settable; a consumer persists it
-  - name: collapsed-end
+  - name: collapsedEnd
+    attribute: collapsed-end
     type: boolean
     default: false
     reflect: true
-  - name: narrow-start
-    type: enum(collapse|stack|tabs)
+  - name: narrowStart
+    attribute: narrow-start
+    type: enum
+    values: [collapse, stack, tabs]
     default: collapse      # SPEC-R7b widened the R4/F2 vocabulary with the tabs arm (ADR-0154)
     reflect: true
-  - name: narrow-end
-    type: enum(collapse|stack|tabs)
+  - name: narrowEnd
+    attribute: narrow-end
+    type: enum
+    values: [collapse, stack, tabs]
     default: collapse
     reflect: true
-  - name: resizable-start
+  - name: resizableStart
+    attribute: resizable-start
     type: boolean
     default: false          # SPEC-R6a — opt-in; applies only to the side's INNERMOST pane
     reflect: true
-  - name: resizable-end
+  - name: resizableEnd
+    attribute: resizable-end
     type: boolean
     default: false
     reflect: true
-  - name: size-start
+  - name: sizeStart
+    attribute: size-start
     type: number
     default: null           # SPEC-R6d — the committed px size; null ⇒ --ui-super-shell-pane-size
     reflect: true
-  - name: size-end
+  - name: sizeEnd
+    attribute: size-end
     type: number
     default: null
     reflect: true
-  - name: collapse-band
-    type: enum(narrow|compact)
+  - name: collapseBand
+    attribute: collapse-band
+    type: enum
+    values: [narrow, compact]
     default: narrow         # SPEC-R8b (ADR-0155) — which line auto-collapses the collapse-mode sides
     reflect: true
 
@@ -81,7 +95,9 @@ events:
   - name: change
     description: SPEC-R6d — fires on a resize COMMIT (pointer release or a keyboard step), never on a live drag move. The fleet's existing vocabulary member, the ui-split precedent — no new event kind.
 
-parts:
+slots: []                # docking is `data-slot` children (header, global-nav, nav-pane, section-nav, content, options-section, options-pane, global-options, footer), read at compose; no named `slot=` positions
+
+parts:                   # light-DOM `data-part` markers this element's own JS creates; compareDescriptorToSource reds a created part missing here (PART_UNDOCUMENTED, T-0533)
   - name: frame
     description: The one control-created wrapper (column flex — bars + middle).
   - name: bar
@@ -90,6 +106,8 @@ parts:
     description: One header-hosted collapse toggle (`data-side="start|end"`, SPEC-R2b/R9, LOGICAL per LLD-C4) — a ui-button that composes ONLY for a side with authored content (SPEC-R9a — no dead toggle on a one-sided shell), and hides below the 40rem line for `stack`/`tabs` sides (their narrow anatomy is owned elsewhere). Carries BOTH glyphs (`list` menu + `x` close, `data-glyph`); CSS swaps them off the host's `data-narrow-open` INSIDE the band query — or, for an AUTO-collapsed side in the band-line→natural-fit window (GH #229/SPEC-R14, Kim's ruling), off `data-auto-collapsed-* + data-narrow-open` together — so the X is state-correct by construction (SPEC-R9b — no stale wide X). An auto-collapsed side's toggle stays VISIBLE and opens that side as the floating overlay (never an inline re-expansion, which cannot fit). `aria-expanded` is truthful at every band (`!collapsed` at wide, `data-narrow-open===side` below the line or while auto-collapsed — SPEC-R9c/R14a). Labeled "Toggle start panes"/"Toggle end panes" — direction-agnostic text.
   - name: scrim
     description: SPEC-R9d — the shell-owned overlay scrim, composed once as the middle row's first child. Inert (display:none) at wide; shown at narrow/compact while a collapse side is overlay-open, and in the band-line→natural-fit window while an AUTO-collapsed side's overlay is open (GH #229/SPEC-R14) — always z-index below the overlay. A tap dismisses the overlay (alongside Escape and a toggle re-tap); focus returns to the opener toggle on close (non-modal — no focus trap).
+  - name: bar-content
+    description: The `<div data-part="bar-content">` row inside each `bar` that holds the bar's authored children between the header's two side-toggles (the footer bar carries one too, with no toggles).
   - name: middle
     description: The `[ rail | pane* | canvas | pane* | rail ]` flex row (SPEC-R5, LLD-C3 — a side stacks ZERO OR MORE panes, not a single fixed pane); the narrow overlay's containing block.
   - name: rail
@@ -104,8 +122,13 @@ parts:
     description: SPEC-R7a — a segmented pane's OWN top-of-pane tab strip. Since GH #221 it IS the fleet `ui-tabs` control (one `ui-tab` per `data-segment` child, `data-part="pane-tab"`), composed PANEL-LESS — the segments stay the shell's `data-active` participants, switched in place (never a reparent — SPEC-R7c's survival law). role=tablist rides the control's own tablist part; role=tab + aria-selected + aria-controls (→ the segment, element-reflection) ride each ui-tab's internals; the tablist part scrolls when labels overflow the pane width. Wired via the control's `select` commit event; programmatic sync SETS its `selected` (no echo, ADR-0019).
   - name: narrow-tabs
     description: SPEC-R7b — the shell-owned, top-level narrow strip composed once when at least one side declares `narrow-*="tabs"`. Since GH #221 it IS the fleet `ui-tabs` control (each `ui-tab` carries `data-part="narrow-tab"` + its narrow-tab value as `key`), panel-less like pane-tabs. Content is always the first tab; each `tabs`-side's panes follow in DOM order, a segmented pane flattening to one tab per segment. Hidden outside the narrow container query; a no-op part when no side opts in.
+  - name: pane-tab
+    description: One `ui-tab` inside a `pane-tabs` strip, one per `data-segment` child of the segmented pane.
+  - name: narrow-tab
+    description: One `ui-tab` inside the `narrow-tabs` strip; content is always the first, then each `tabs`-side pane (or segment) in DOM order.
 
-customStates: []
+customStates:            # :state(dragging), set while a pane-resizer drag is live (the paneResize trait, GH #185), keeps the resizer fill and the cursor on through a fast drag
+  - dragging
 
 face:
   formAssociated: false

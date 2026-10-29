@@ -28,7 +28,7 @@ events:
 
 slots: []                 # docking is composition via ui-master-detail-pane children (master-detail-pane.md), not attribute-slotting — no NAMED slots
 
-parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md precedent)
+parts:                    # NOT shadow-DOM ::part() (light-DOM only): light-DOM markers this element's own JS creates; compareDescriptorToSource reds a created part missing here (PART_UNDOCUMENTED, T-0533)
   - name: back
     description: A control-rendered `<button data-part="back" type="button">` inside the detail `ui-split-pane`, visible only when narrow AND drilled into the detail view. Flips the view back to `list` WITHOUT touching `selected`.
 

@@ -16,7 +16,7 @@ events: []                # behavior-only composition — no event vocabulary of
 
 slots: []                 # docking is data-slot children on the SAME vocabulary ui-super-shell itself defines — no named slots of this element's own
 
-parts:                    # NOT shadow-DOM ::part() (light-DOM only) — documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md/master-detail.md precedent)
+parts:                    # NOT shadow-DOM ::part() (light-DOM only): compareDescriptorToSource reds a created part missing here (PART_UNDOCUMENTED, T-0533)
   - name: (none)
     description: This element creates exactly one part — the composed `<ui-super-shell>` child itself — and adds no parts of its own; every part a consumer sees (bar/rail/pane/canvas/side-toggle) is the inner shell's own (super-shell.md).
 

@@ -63,6 +63,8 @@ parts:
     description: The control-created light-DOM `<div data-part="panel" role="menu" popover="auto">` that enters the Popover API top layer when open. Created ONCE (idempotent guard — the same node persists across disconnect/reconnect). Has tabindex="-1" so programmatic focus (moveFocusIn, overlay LLD-C4) can land on it when no enabled items exist. The overlay controller sets position:fixed + inset on open (LLD-C3); the JS positioning controller manages placement. Always accessibly named (GH #535) — aria-labelledby → the trigger's id by default, or aria-label when the `label` prop is set.
   - name: trigger
     description: The first element child, marked with `data-part="trigger"`. The control adds aria-expanded (synced via the model→overlay effect), aria-controls (pointing to the panel's stable id), and aria-haspopup="menu". The author owns the trigger's visual styling and accessible name. If the author gave no `id`, one is minted (GH #535) so the panel's default aria-labelledby can reference it. GH #705 — if the trigger carries a `[data-role="caret"]` adornment (`ui-button`'s own leading/trailing caret role, `button.md`), this control's own CSS rotates it 180° while open, driven off the same `aria-expanded` it already writes — no author wiring needed; reduced-motion honored.
+  - name: check
+    description: The decorative `<ui-glyph symbol="check" data-part="check">` the control prepends to every `menuitemradio`/`menuitemcheckbox` row (T-0392), at connect and again on each open; shows only on `[aria-checked='true']`, in the reserved check slot so labels align.
 
 customStates: []        # no :state() hooks — open/closed state is the panel's popover top-layer presence
 

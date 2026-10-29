@@ -3822,6 +3822,13 @@ describe('UIAgentAdminElement — a persona switch resets the conversation (GH #
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/agent-admin`
 const agentAdminTs = readFileSync(`${DIR}/agent-admin.ts`, 'utf8') as string
 const agentAdminCss = readFileSync(`${DIR}/agent-admin.css`, 'utf8') as string
+// T-0533: the helper modules that build this element's parts, so PART_UNDOCUMENTED sees every part it mounts.
+const agentAdminPartSources = [
+  agentAdminTs,
+  ...['admin-help.ts', 'agent-team-pane.ts', '../entry-list/entry-list.ts', '../entry-list/entry-form.ts'].map(
+    (f) => readFileSync(`${DIR}/${f}`, 'utf8') as string,
+  ),
+].join('\n')
 
 describe('agent-admin.md descriptor (ui-agent-admin)', () => {
   const md = readFileSync(`${DIR}/agent-admin.md`, 'utf8') as string
@@ -3858,8 +3865,8 @@ describe('agent-admin.md descriptor (ui-agent-admin)', () => {
     )
   })
 
-  it('customStates/slots agree with the source (no undeclared CSS-styled slot, no unused state)', () => {
-    expect(compareDescriptorToSource(parsed, { ts: agentAdminTs, css: agentAdminCss })).toEqual([])
+  it('customStates/slots/parts agree with the source (no undeclared CSS-styled slot or created part, no unused state)', () => {
+    expect(compareDescriptorToSource(parsed, { ts: agentAdminPartSources, css: agentAdminCss })).toEqual([])
   })
 })
 

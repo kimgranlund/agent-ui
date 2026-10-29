@@ -50,6 +50,10 @@ parts:                    # data-part nodes inside the component-built flipper/f
     description: The `<div data-part="back">` face-down back — a pure-CSS repeating-gradient cross-hatch lattice inside an inset frame (no image asset, no glyph); its own static `rotateY(180deg)` brings it upright when the flipper rotates (ADR-0225 cl.4/cl.6).
   - name: index
     description: One `<div data-part="index">` corner index (rank text + suit glyph, real text) — the top-left copy is upright; the bottom-right copy additionally carries `data-inverted` and a 180deg rotation (the physical-card mirrored-corner convention, ADR-0225 §4).
+  - name: index-rank
+    description: The `<span data-part="index-rank">` rank text inside each `index` corner (real text, the card's identification).
+  - name: index-suit
+    description: The `<span data-part="index-suit">` suit glyph inside each `index` corner, after `index-rank`; empty for the '' blank face.
   - name: pips
     description: The `<div data-part="pips">` center content region — holds either the rank's pip grid (A, 2–10, from playing-card-pips.ts's per-rank layout table) or a single `letter` child (J/Q/K); empty for the '' blank face.
   - name: pip

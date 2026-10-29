@@ -142,7 +142,7 @@ slots:                     # ADR-0180 (GH #688) — a RECOGNIZED-CHILDREN contra
     optional: true
     description: The message-composition UI (conversation-composer.md, TKT-0056) — adopted as this element's own `#composer` if authored, else created. The seven callback registrations forward identically either way (ADR-0180 clause 4 — path-blind by construction). GH #666's empty-log state is NOT one of these three — the consumer hands its node to `setEmptyState(node)` and this element seats it inside the (adopted-or-created) dialog (see the section below).
 
-parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the master-detail.md precedent)
+parts:                    # NOT shadow-DOM ::part() (light-DOM only): light-DOM markers this element's own JS creates; compareDescriptorToSource reds a created part missing here (PART_UNDOCUMENTED, T-0533)
   - name: log
     description: The scrolling thread region (`[data-part="log"]`, tag-agnostic — every shipped selector keys on the attribute, never the tagName). ADR-0180 (GH #688) — this is now a `<ui-conversation-dialog>` instance (adopted-or-created; see `slots:` above and conversation-dialog.md for its own `aria-live`/scroll-follow contract), promoted off a bare `div`. Owns its own scroll (SPEC-R4).
   - name: turn
@@ -155,12 +155,24 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
     description: 'The per-agent-turn `ui-status-stream` instance (`[data-part="narration"]`), composed fresh per turn. GH #306/ADR-0160 amendment — renders OUTSIDE the bubble, as the agent turn''s `[data-part="turn"]` wrapper''s second child (after `who`, before the bubble). T-0016 step mode: each step row is a `ui-timeline-item` keyed `t{turn}-step-{id}` carrying `data-kind` (the step''s opaque `kind`); the settle-time rows are markerless note rows marked `data-activity="raw"` (the one "Raw output" reveal) and `data-activity="footer"` (the turn facts).'
   - name: reference-tags
     description: 'GH #891/SPEC-R10 — the SENT user turn''s attachment record (`[data-part="reference-tags"]`), appended INSIDE the user bubble after its `[data-part="body"]`, and ONLY when that turn actually carried references (`addUserMessage`''s optional second argument; an absent/empty list appends nothing at all, so a reference-less bubble is byte-identical to pre-R10). One `[data-part="reference-tag"][data-kind]` per reference — an optional leading `[data-part="reference-tag-icon"]` `ui-icon` (the `TurnReference.icon` glyph the consumer supplied, SPEC-R9) plus a `[data-part="reference-tag-label"]`. DISMISS-LESS by contract: the turn is sent, so there is nothing to remove (the pre-send dismiss affordance is the composer chip''s, and it clears with the text). DISPLAY-ONLY: the bubble body stays the typed text, and the FRAMED attachment text SPEC-R4 puts on the wire never renders in any bubble.'
+  - name: body
+    description: A bubble's text body (`[data-part="body"]`): a `<p>` holding the typed text in a user bubble, the agent turn's settled note `<div>`, and the rendered text `<div>` of a system bubble.
+  - name: reference-tag
+    description: One sent reference (`[data-part="reference-tag"][data-kind]`) inside `reference-tags`, dismiss-less; see `reference-tags`.
+  - name: reference-tag-icon
+    description: The optional leading `ui-icon` (`[data-part="reference-tag-icon"]`) of a `reference-tag`, present only when the reference carried an `icon`.
+  - name: reference-tag-label
+    description: The label `<span>` (`[data-part="reference-tag-label"]`) of a `reference-tag`.
   - name: mounts
     description: The container (`[data-part="mounts"]`) an agent bubble's OWN inline `ui-surface-host` children mount into.
   - name: annotation
     description: The visible "Closed." note (`[data-part="annotation"]`) appended to a surface's bubble on deletion (SPEC-R7).
   - name: disclosure
     description: The opt-in raw-wire `<details>` dump (`[data-part="disclosure"]`), shown only when `disclosure` is true.
+  - name: wire
+    description: The pretty-printed JSONL `<pre>` (`[data-part="wire"]`) inside `disclosure`.
+  - name: copy
+    description: T-0022: the soft `sm` inline `ui-button` (`[data-part="copy"]`) at the top of the narration's raw-output expand that copies the turn's JSONL; its label flips to "Copied" for a moment after a successful clipboard write.
   - name: actions
     description: 'GH #291/ADR-0160 clause 3 — the pre-hydrated action-chip row (`[data-part="actions"]`), appended to a settled agent turn''s bubble ONLY when `AgentTurnHandle.finalize()` was called with a non-empty `actions` list (after the wire disclosure, when both are present). One `ui-button` chip per `TurnAction`; see the `action` event.'
 

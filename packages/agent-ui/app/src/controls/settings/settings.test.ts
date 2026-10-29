@@ -664,6 +664,8 @@ describe('UISettingsElement — rail/select listeners are armed ONCE per connect
 const DIR = `${process.cwd()}/packages/agent-ui/app/src/controls/settings`
 const settingsTs = readFileSync(`${DIR}/settings.ts`, 'utf8') as string
 const settingsCss = readFileSync(`${DIR}/settings.css`, 'utf8') as string
+// T-0533: generate.ts builds the `unsupported-field` part, so PART_UNDOCUMENTED reads it alongside settings.ts.
+const settingsPartSources = [settingsTs, readFileSync(`${DIR}/generate.ts`, 'utf8') as string].join('\n')
 
 describe('settings.md descriptor (ui-settings)', () => {
   const md = readFileSync(`${DIR}/settings.md`, 'utf8') as string
@@ -700,7 +702,7 @@ describe('settings.md descriptor (ui-settings)', () => {
     )
   })
 
-  it('customStates/slots agree with the source (no undeclared CSS-styled slot, no unused state)', () => {
-    expect(compareDescriptorToSource(parsed, { ts: settingsTs, css: settingsCss })).toEqual([])
+  it('customStates/slots/parts agree with the source (no undeclared CSS-styled slot or created part, no unused state)', () => {
+    expect(compareDescriptorToSource(parsed, { ts: settingsPartSources, css: settingsCss })).toEqual([])
   })
 })

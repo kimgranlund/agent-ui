@@ -65,7 +65,7 @@ events: []               # no DOM events of its own — the composed ui-settings
 
 slots: []                 # content model is NOT author-composed — the split/panes/composed children are built entirely by this element's own connect-time logic, the ui-settings/ui-conversation precedent
 
-parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates; documented for completeness (compareDescriptorToSource does not mechanically check `parts:`, the split.md/master-detail.md precedent)
+parts:                     # NOT shadow-DOM ::part() (light-DOM only): light-DOM markers this element's own JS and its helper modules (admin-help.ts, agent-team-pane.ts, entry-list/) create; compareDescriptorToSource reds a created part missing here (PART_UNDOCUMENTED, T-0533)
   - name: settings-item
     description: One config-column section's FOLD, now spread across the Agent/Capabilities/Surface tabs (GH #574 — Kim's ruling, splitting the old single flat Settings tab; GH #225's Kim ruling, the GH #222 Context pattern applied back to the config column, is unchanged) — `<ui-disclosure data-part="settings-item" data-item="agent|model|advanced|danger|surface|prompt-section|skill|workflow|resource|tool|pattern-source|team">` (GH #1197 added `team` — the Team pane's own fold, `agent-team-pane.ts`; T-0391 retired `bankroll` into `danger` and added `advanced`), a chrome-free fold host whose summary IS the section heading (the shared heading register, chevron on the heading row) over the section's content card(s) as its body. ALL default OPEN (config is an editing surface — Context's newest-open logic is a log-reading choice, not a config one), except T-0391's two Agent-tab folds closed at rest: `advanced` (the Model section's set-once rows) and `danger` (the destructive actions, last on the tab); built once, fold state lives in the live DOM, session-ephemeral. The Agent/kind folds carry their master switch ON the summary row via ui-disclosure's `slot="summary"` position slot (GH #226/ADR-0158 — a switch click never folds; the component owns the activation guard and the switch survives any fold rebuild). Replaces the old plain heading parts (agent-header/agent-heading/model-grid-heading/surface-options-heading/entry-section-header/-heading), all retired.
   - name: pane-holder
@@ -226,6 +226,168 @@ parts:                     # NOT shadow-DOM ::part() (light-DOM only) — light-
     description: T-0447, an edit-session receipt's Undo, `<ui-button variant="ghost" data-part="receipt-undo" data-edit="<id>">Undo</ui-button>`, the sibling right after the turn's `receipt-list`. `data-edit` is the per-turn edit id (never the receipt text, so two turns with byte-identical receipts each undo their own record). Activation reverts that turn's edit record with the receipt-link posture (`stopPropagation`; no chat turn, no client message, no host event), then reads `Undone`, disabled. Renders only on an `authoringMode: 'edit'` turn that changed something, so a generate-mode receipt has none.
   - name: receipt-undo-skipped
     description: T-0447, `<p data-part="receipt-undo-skipped">` after `receipt-undo` when an Undo kept keys changed since the edit, `Kept, changed since: ` plus each kept key's receipt location (`<section> › <fold>`), comma-joined.
+  - name: surface-row
+    description: One switch-led modality row in the Surface fold (`<div data-part="surface-row" data-surface="...">`): a `surface-toggle`, its `surface-label`, then a `surface-spacer`.
+  - name: surface-toggle
+    description: The `ui-switch` that leads a `surface-row`, turning that surface modality on or off.
+  - name: surface-label
+    description: The label `<span>` of a `surface-row`, titled with the field's help summary.
+  - name: surface-spacer
+    description: The flexible `<span>` that pushes a `surface-row`'s trailing content to the row's end.
+  - name: surface-genui-dogfood-toggle
+    description: The `ui-switch` for the genui dogfood surface field, in its own row of the Surface fold.
+  - name: prefers-row
+    description: The Surface fold row (`<div data-part="prefers-row">`) holding the `surface-prefers` picker; deliberately not a `surface-row`, which names a switch-led modality row.
+  - name: surface-prefers
+    description: The `ui-segmented-control` inside `prefers-row` that picks the preferred surface.
+  - name: bankroll-label
+    description: The label `<span>` of `bankroll-row`.
+  - name: reset-agent-label
+    description: The label `<span>` of `reset-agent-row`, naming the action.
+  - name: server-tools-heading
+    description: The `ui-text variant="kicker" size="sm"` heading above the `server-tools` rows.
+  - name: receipt-list
+    description: The `<ul data-part="receipt-list">` of field locations a Co-pilot receipt names, one `receipt-link` per location.
+  - name: receipt-link
+    description: A ghost `ui-button` inside `receipt-list` that jumps to the field the receipt names.
+  - name: region-kicker
+    description: The quiet `ui-text variant="kicker"` identity header of a conversation region (GH #665); the agent-admin sheet repoints only its ink.
+  - name: provenance-source
+    description: The `<span>` inside `field-provenance` naming where the field's value came from.
+  - name: provenance-marker
+    description: The `<span>` inside `field-provenance` reading `Modified` or `Seed changed`.
+  - name: provenance-diff
+    description: The `<span>` inside `field-provenance` showing what changed against the seed.
+  - name: provenance-reset
+    description: The soft `sm` `ui-button` inside `field-provenance` that resets the field to its seed.
+  - name: model-grid-head
+    description: The header row of `model-grid`.
+  - name: model-provider
+    description: One provider heading in `model-grid` (`ui-text variant="kicker" size="sm"`, the `region-kicker` recipe).
+  - name: model-row
+    description: One model row in `model-grid`: a `model-row-label` and its `model-include` switch.
+  - name: model-row-label
+    description: The label `<span>` of a `model-row`.
+  - name: model-include
+    description: The `ui-switch` of a `model-row` that includes or excludes the model.
+  - name: drawer-heading
+    description: The title of a `drawer`, the target of its `aria-labelledby`.
+  - name: drawer-content
+    description: The scrolling content region of a `drawer` (`data-region="content"`).
+  - name: drawer-done
+    description: The `ui-button` in a `drawer`'s footer that closes it.
+  - name: server-tool-toggle
+    description: The `ui-switch` that leads a `server-tool-row`, enabling that server tool.
+  - name: server-tool-label
+    description: The label `<span>` of a `server-tool-row`.
+  - name: domain-list-label
+    description: The heading `<span>` of a `domain-list`.
+  - name: domain-list-help
+    description: The help `<span>` under a `domain-list` heading (the field's description).
+  - name: domain-rows
+    description: The `<div>` holding a `domain-list`'s `domain-row`s.
+  - name: domain-add
+    description: The ghost `ui-button` that appends a new `domain-row`.
+  - name: domain-row
+    description: One editable domain in a `domain-list`: a `domain-input` and its `domain-remove` button.
+  - name: domain-input
+    description: The `ui-text-field` of a `domain-row`.
+  - name: domain-remove
+    description: The soft `ui-button` that removes its `domain-row`.
+  - name: danger-confirm-heading
+    description: The `<h2>` title of the `danger-confirm` dialog.
+  - name: danger-confirm-body
+    description: The `<p>` explaining what the `danger-confirm` action does.
+  - name: danger-confirm-actions
+    description: The `<footer>` of `danger-confirm` holding its cancel and confirm buttons.
+  - name: danger-confirm-cancel
+    description: The soft `ui-button` that dismisses `danger-confirm` without acting.
+  - name: danger-confirm-button
+    description: The solid `ui-button` that confirms the destructive action.
+  - name: admin-help-title
+    description: The `<strong>` title inside an `admin-help-card` (admin-help.ts).
+  - name: admin-help-summary
+    description: The one-line `<p>` summary inside an `admin-help-card`.
+  - name: admin-help-body
+    description: One body `<p>` inside an `admin-help-card`, one per paragraph of the entry.
+  - name: admin-help-facts
+    description: The optional `<ul>` of facts inside an `admin-help-card`, present only when the entry lists facts.
+  - name: team-pane
+    description: The Team fold's root (`agent-team-pane.ts`), holding `team-list` and `team-form`.
+  - name: team-list
+    description: The list of saved teams, one `team-card` each.
+  - name: team-list-error
+    description: The `<p>` note shown above `team-list` when loading the teams fails; the last good list stays rendered.
+  - name: team-card
+    description: One saved team: a `team-card-header`, a `team-card-gm` line and `team-card-members`.
+  - name: team-card-header
+    description: The header row of a `team-card`, holding `team-card-title` and the optional `team-card-tagline`.
+  - name: team-card-title
+    description: The team name `<span>` of a `team-card`.
+  - name: team-card-tagline
+    description: The optional tagline `<span>` of a `team-card`.
+  - name: team-card-gm
+    description: The `<span>` naming the team's GM agent on a `team-card`.
+  - name: team-card-members
+    description: The member list of a `team-card`, one `team-card-member-row` each.
+  - name: team-card-member-row
+    description: One member of a `team-card`.
+  - name: team-form
+    description: The create or edit form for a team.
+  - name: team-form-members
+    description: The host of the `team-form-member-row`s in `team-form`.
+  - name: team-form-member-row
+    description: One editable member row in `team-form`.
+  - name: team-form-error
+    description: The `<ul>` of validation issues in `team-form`, one `team-form-error-item` each.
+  - name: team-form-error-item
+    description: One validation issue `<li>` in `team-form-error`.
+  - name: team-form-actions
+    description: The button row of `team-form`, the `entry-form-actions` layout.
+  - name: team-catalog-option
+    description: One `role="option"` catalog entry in the team catalog picker: a `team-catalog-option-label` and a `team-catalog-option-tagline`.
+  - name: team-catalog-option-label
+    description: The label `<span>` of a `team-catalog-option`.
+  - name: team-catalog-option-tagline
+    description: The tagline `<span>` of a `team-catalog-option`.
+  - name: entry-library-menu
+    description: The `ui-menu` (entry-list.ts) that adds an entry from a library pack.
+  - name: entry-library-label
+    description: The label `<span>` of one `entry-library-menu` item.
+  - name: entry-library-description
+    description: The optional description `<span>` of one `entry-library-menu` item.
+  - name: entry-drawer-header
+    description: The title of an `entry-drawer`, the target of its `aria-labelledby`.
+  - name: entry-drawer-content
+    description: The scrolling content region of an `entry-drawer` (`data-region="content"`).
+  - name: entry-drawer-footer
+    description: The footer of an `entry-drawer`, holding its primary action.
+  - name: entry-spacer
+    description: The flexible `<span>` in an `entry-header` that pushes the trailing controls to the row's end.
+  - name: entry-rename
+    description: The `Rename` `ui-button` of an entry row.
+  - name: entry-rename-field
+    description: The `ui-text-field` that replaces the entry label while renaming.
+  - name: entry-content-fold
+    description: The collapsed-by-default `ui-disclosure` Content fold of an entry row.
+  - name: entry-inline-content
+    description: The inline content editor inside `entry-content-fold`.
+  - name: entry-form-heading
+    description: The header region of an entry form (entry-form.ts), holding `entry-form-title` and the optional `entry-form-tag`.
+  - name: entry-form-actions
+    description: The footer button row of an entry form.
+  - name: entry-form-tag
+    description: The `<span>` tag marking a built-in entry in its form heading.
+  - name: entry-form-name
+    description: The name `ui-text-field` of an entry form.
+  - name: entry-form-description
+    description: The description `ui-text-field` of an entry form.
+  - name: entry-form-tier
+    description: The availability tier row of an entry form, present only when the form offers the availability toggle.
+  - name: entry-form-hint
+    description: The `<p>` hint under `entry-form-tier` explaining the chosen availability.
+  - name: entry-remove-hint
+    description: The `<p>` hint next to the remove action of an entry form.
 
 customStates: []          # no :state() hooks — no derived presentation state of this element's own (unlike ui-master-detail's data-view)
 

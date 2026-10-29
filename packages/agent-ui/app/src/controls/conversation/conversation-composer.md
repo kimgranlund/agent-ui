@@ -111,21 +111,25 @@ events: []               # no DOM events — onSubmit/onModelChange/onEffortChan
 
 slots: []                 # content model is NOT author-composed — every part is built entirely by this element's own connect-time logic; no slotted children
 
-parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-DOM markers this element's own JS creates
+parts:                    # NOT shadow-DOM ::part() (light-DOM only): light-DOM markers this element's own JS creates; compareDescriptorToSource reds a created part missing here (PART_UNDOCUMENTED, T-0533)
   - name: context-chips
     description: The opt-in chip row (`[data-part="context-chips"]`), the tags row above the text — hidden (`[hidden]`) when `contextItems` is empty. One `[data-part="context-chip"]` per entry, each a `[data-part="context-chip-label"]` + a `[data-part="context-chip-dismiss"]` `ui-button` (icon-only, `x` glyph) firing `onContextDismiss`.
+  - name: context-chip
+    description: One consumer `contextItems` entry (`[data-part="context-chip"]`) in the chip row, ahead of any reference chips.
+  - name: context-chip-label
+    description: The chip's label `<span>` (`[data-part="context-chip-label"]`).
+  - name: context-chip-meta
+    description: GH #1211: the chip's OPTIONAL secondary line (`[data-part="context-chip-meta"]`, the item's `description`), omitted entirely when absent.
+  - name: context-chip-dismiss
+    description: The chip's icon-only `x` `ui-button` (`[data-part="context-chip-dismiss"]`), labelled "Remove <label> from context", firing `onContextDismiss`.
   - name: editor
     description: The message text (`[data-part="editor"]`) — this element's OWN contenteditable surface (TKT-0058; the ADR-0014 pattern via its multi-line sibling `ui-textarea`, ADR-0134): `contenteditable="plaintext-only"`, `role="textbox"`/`aria-multiline="true"`/`aria-label="Message"` on the PART (never the host), `data-placeholder` ghost text (from the `placeholder` prop, GH #672 — default `"Ask anything…"`) keyed by `data-empty`. Auto-grows from a one-line minimum, capped at `max-block-size: 6em`, then scrolls.
   - name: options
     description: The row below the text (`[data-part="options"]`) — `[data-part="options-leading"]` (the opt-in Provider/Models/Effort/Mode pickers) and `[data-part="options-trailing"]` (the opt-in mic + the always-present send button), space-between.
-  - name: models-trigger
-    description: The Models picker's trigger pill (`[data-picker="models"]`, a `ui-menu`'s `<ui-button variant="soft">`), shown only when `models` is set. Displays the current selection's label (falling back to "Models"), with a trailing caret and a leading identity glyph that shows only under the narrow-host compact collapse (Models `sparkle`, Effort `brain`, Provider `cloud`, Mode `circle-half`; T-0142). NOT `[data-part="models-trigger"]` — `ui-menu`'s own `connected()` unconditionally re-tags its trigger's `data-part` to the literal `"trigger"` the moment the menu connects, so `data-picker` (an attribute `ui-menu` never touches) is the stable selector instead (also reachable as `[data-part="models-menu"] [data-part="trigger"]`, scoped by the host).
-  - name: effort-trigger
-    description: The Effort picker's trigger pill (`[data-picker="effort"]`) — see `models-trigger`, shown only when `efforts` is set.
-  - name: providers-trigger
-    description: The Provider picker's trigger pill (`[data-picker="providers"]`) — see `models-trigger`, shown only when `providers` is set. Selecting a new provider narrows the Models picker to that provider's own model list.
-  - name: mode-trigger
-    description: The Mode picker's trigger pill (`[data-picker="mode"]`) — see `models-trigger`, shown only when `modes` is set.
+  - name: options-leading
+    description: The left cluster of `options` (`[data-part="options-leading"]`), holding the opt-in Provider/Models/Effort/Mode pickers and the capabilities trigger (see `pickers:`).
+  - name: options-trailing
+    description: The right cluster of `options` (`[data-part="options-trailing"]`), holding attach, mic and send.
   - name: attach
     description: 'GH #1211 — the attach button (`[data-part="attach"]`, icon-only `ui-button`, `variant="ghost"`, `paperclip` glyph), a sibling of mic/send placed BEFORE them — OPT-IN: hidden (`[hidden]`) until a consumer calls `onAttach`. Clicking it opens the native file picker (`[data-part="attach-input"]` below). Once wired, `onAttach` also fires from a drop onto the composer host or a paste (of files, never plain text) into the editor — one call per gesture, carrying every `File` it produced. This element inspects NOTHING about a file (no type/size/content check) — validating and extracting is entirely the consumer''s job.'
   - name: attach-input
@@ -138,16 +142,52 @@ parts:                    # NOT shadow-DOM ::part() (light-DOM only) — light-D
     description: GH #849 — the reference typeahead panel (`[data-part="reference-menu"]`, `role="listbox"`, `popover="manual"`, `aria-label="References"`), built lazily on the first live `@`/`/` trigger and placed in the Popover API TOP LAYER with the overlay trait's own `computePosition` (preferring ABOVE the editor, flipping/shifting to stay on screen). `[data-open]` is its own state truth (set alongside `showPopover()`), the CSS/AX-visible signal that the typeahead is live. Focus NEVER moves here — the editor keeps DOM focus and carries `aria-expanded`/`aria-controls`/`aria-activedescendant` (the `ui-combo-box` active-descendant discipline, restated).
   - name: reference-group
     description: One kind's group inside the panel (`[data-part="reference-group"]`, `role="group"` + `aria-label`), with a sighted `[data-part="reference-group-label"]` header (`aria-hidden` — the group's own label is what AT announces). Rendered ONLY when the visible option set spans more than one `kind`, so the Resources-only `@` menu shows no redundant single header while the `/` menu groups Skills/Workflows/Tools.
+  - name: reference-group-label
+    description: The `aria-hidden` sighted header of a `reference-group` (`[data-part="reference-group-label"]`).
   - name: reference-option
     description: One selectable roster entry (`[data-part="reference-option"]`, `role="option"`, a stable `id` for `aria-activedescendant`, plus `data-id`/`data-kind`), holding a `[data-part="reference-option-label"]` and — when the roster entry supplies one — a `[data-part="reference-option-description"]`. `[data-active]` marks the Enter target without moving DOM focus. A click commits it (the panel's own `pointerdown` is preventDefaulted so the editor keeps focus).
-  - name: capabilities-trigger
-    description: 'GH #891/SPEC-R11 — the capabilities panel''s trigger pill (`[data-picker="capabilities"]`, a `ui-button variant="soft"` with the pickers'' own leading-glyph + caret shape), shown only when `capabilities` is set and non-empty, busy-disabled with the other triggers. Unlike the four pickers it is NOT wrapped in a `ui-menu` — it opens this element''s own control-created panel — so it carries `aria-expanded`/`aria-controls` itself. Clicking it toggles the panel.'
+  - name: reference-option-label
+    description: The label of a `reference-option` (`[data-part="reference-option-label"]`).
+  - name: reference-option-description
+    description: The optional description of a `reference-option` (`[data-part="reference-option-description"]`), present only when the roster entry supplies one.
   - name: capabilities-panel
     description: 'GH #891/SPEC-R11 — the capabilities panel (`[data-part="capabilities-panel"]`, `role="group"`, `popover="manual"`, `aria-label="Capabilities"`), built lazily on the first non-empty `capabilities` and placed in the Popover API TOP LAYER with the typeahead''s own `computePosition` (anchored to its trigger, preferring ABOVE it). `[data-open]` is its own state truth. It STAYS OPEN across toggles — multi-toggle in one visit is the point (which is why it is not a `ui-menu`: menuitem action semantics close on activate). Escape, an outside pointerdown, a send, `busy`, and disconnect all close it; Escape returns focus to the trigger.'
   - name: capability-row
     description: 'GH #891/SPEC-R11 — one capability (`[data-part="capability-row"]`, with `data-id`/`data-kind`): an optional leading `[data-part="capability-row-icon"]` `ui-icon`, a `[data-part="capability-row-text"]` column holding `[data-part="capability-row-label"]` + an optional `[data-part="capability-row-description"]`, and a trailing `[data-part="capability-switch"]` `ui-switch` whose `checked` reflects the row''s `included` and whose accessible name is the row''s label. Rows sharing a `kind` sit inside a `[data-part="capability-group"]` (`role="group"` + `aria-label`, with an `aria-hidden` `[data-part="capability-group-label"]` header) — rendered only when the set spans more than one kind, the typeahead''s own grouping law.'
+  - name: capability-row-icon
+    description: The optional leading `ui-icon` of a `capability-row` (`[data-part="capability-row-icon"]`).
+  - name: capability-row-text
+    description: The text column of a `capability-row` (`[data-part="capability-row-text"]`), holding its label and optional description.
+  - name: capability-row-label
+    description: The label of a `capability-row` (`[data-part="capability-row-label"]`); also the switch's accessible name.
+  - name: capability-row-description
+    description: The optional description of a `capability-row` (`[data-part="capability-row-description"]`).
+  - name: capability-switch
+    description: The trailing `ui-switch` of a `capability-row` (`[data-part="capability-switch"]`), `checked` reflecting the row's `included`; its `change` is stopped at the panel boundary.
+  - name: capability-group
+    description: One kind's group of capability rows (`[data-part="capability-group"]`, `role="group"` + `aria-label`), rendered only when the set spans more than one kind.
+  - name: capability-group-label
+    description: The `aria-hidden` sighted header of a `capability-group` (`[data-part="capability-group-label"]`).
   - name: reference-chip
     description: A committed mention/invocation (`[data-part="reference-chip"]`, `data-kind` for per-kind treatment) living in the SAME chip row as the consumer's `contextItems` chips — consumer chips first, reference chips after. Each holds — GH #891 (SPEC-R9) — an OPTIONAL leading `[data-part="reference-chip-icon"]` `ui-icon` (`data-role="icon"`, the glyph the roster entry's own `icon` named; absent ⇒ label-only, never a placeholder box), a `[data-part="reference-chip-label"]`, and a `[data-part="reference-chip-dismiss"]` `ui-button` that drops the reference from this turn. The chip renders NO `@`/`/` sigil: the trigger character is not part of the label (the pre-R9 `[data-part="reference-chip-sigil"]` node is removed) — kind identity is the consumer's glyph + `data-kind`, family identity is the accent ink. Composer-OWNED state (unlike `contextItems`): minted by a commit, cleared on a successful send.
+  - name: reference-chip-icon
+    description: The OPTIONAL leading `ui-icon` of a `reference-chip` (`[data-part="reference-chip-icon"]`, `data-role="icon"`), absent when the roster entry names no `icon`.
+  - name: reference-chip-label
+    description: The label of a `reference-chip` (`[data-part="reference-chip-label"]`).
+  - name: reference-chip-dismiss
+    description: The `ui-button` of a `reference-chip` (`[data-part="reference-chip-dismiss"]`) that drops the reference from this turn.
+
+pickers:                  # the picker trigger pills, keyed by their `data-picker` value; NOT parts: `ui-menu` re-tags its trigger's `data-part` to `trigger` at connect, so `[data-picker="..."]` is the stable selector (T-0533 moved these out of `parts:`)
+  - name: models
+    description: The Models picker's trigger pill (`[data-picker="models"]`, a `ui-menu`'s `<ui-button variant="soft">`), shown only when `models` is set. Displays the current selection's label (falling back to "Models"), with a trailing caret and a leading identity glyph that shows only under the narrow-host compact collapse (Models `sparkle`, Effort `brain`, Provider `cloud`, Mode `circle-half`; T-0142). NOT `[data-part="models-trigger"]`; `ui-menu`'s own `connected()` unconditionally re-tags its trigger's `data-part` to the literal `"trigger"` the moment the menu connects, so `data-picker` (an attribute `ui-menu` never touches) is the stable selector instead (also reachable as `[data-part="models-menu"] [data-part="trigger"]`, scoped by the host).
+  - name: effort
+    description: The Effort picker's trigger pill (`[data-picker="effort"]`) (see `models`), shown only when `efforts` is set.
+  - name: providers
+    description: The Provider picker's trigger pill (`[data-picker="providers"]`) (see `models`), shown only when `providers` is set. Selecting a new provider narrows the Models picker to that provider's own model list.
+  - name: mode
+    description: The Mode picker's trigger pill (`[data-picker="mode"]`) (see `models`), shown only when `modes` is set.
+  - name: capabilities
+    description: 'GH #891/SPEC-R11: the capabilities panel''s trigger pill (`[data-picker="capabilities"]`, a `ui-button variant="soft"` with the pickers'' own leading-glyph + caret shape), shown only when `capabilities` is set and non-empty, busy-disabled with the other triggers. Unlike the four pickers it is NOT wrapped in a `ui-menu`; it opens this element''s own control-created panel; so it carries `aria-expanded`/`aria-controls` itself. Clicking it toggles the panel.'
 
 customStates:          # :state() hooks the stylesheet keys off — set via internals.states, never host attrs
   - ready              # the motion gate (interaction-states standard): armed one frame past first paint so the upgrade SNAPS and only subsequent border/bg/ink/dim state changes animate
