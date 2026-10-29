@@ -1174,3 +1174,9 @@
 ## T-0548: The three Oct 15 work folders are checked against main, archived or ticketed (2026-10-28)
 
 - note: .sdlc/tickets/0548-stale-work-review/handoff.md Findings row 2 names `dev-proxy-plugin.ts` without its path; it lives at `packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts`.
+
+## T-0536: RTL sweep: physical CSS and arrow keys that break under dir=rtl (2026-10-28)
+
+- note: handoff.md: the `## Acceptance criteria` block sits inside the `Do:` bullet of `## Intent` (template splice), so `### Acceptance criteria` bullets are not a top-level section; the criteria commands still run as written.
+- note: handoff.md Findings item 1 cites `slider.css:250` for `linear-gradient(to right`; the `linear-gradient(` token is on line 249 and `to right,` on 250 (immaterial).
+- note: handoff.md item 11 says no `listReorder` caller passes horizontal; grep shows `traits/list-reorder.ts` has no shipped caller at all outside its tests and `traits/index.ts`, so the latent claim holds more strongly than stated.
