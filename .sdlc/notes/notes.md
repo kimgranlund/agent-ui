@@ -1170,3 +1170,7 @@
 
 - note: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:2932 the error-turn guard has no test; builder reports agent-admin needs keys to probe.
 - note: the builder used git stash for its mutation check (0542-solo-L1.md), against the no-stash rule; stack reported unchanged.
+
+## T-0548: The three Oct 15 work folders are checked against main, archived or ticketed (2026-10-28)
+
+- note: .sdlc/tickets/0548-stale-work-review/handoff.md Findings row 2 names `dev-proxy-plugin.ts` without its path; it lives at `packages/agent-ui/a2ui/tools/agent/dev-proxy-plugin.ts`.
