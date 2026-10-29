@@ -1274,3 +1274,7 @@
 ## T-0544: Security sweep: hardening review of the library and site (2026-10-29)
 
 - note: the Medium 2 and Low 4 citations write `worker/index.ts:452`; the file is `packages/agent-ui/a2ui/tools/agent/worker/index.ts`. Path is abbreviated, not wrong.
+
+## T-0563: Catalog media props declare a media URL format (2026-10-29)
+
+- decide: packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json:16 `Image.url` (mapsTo `src`) still declares `safe-href`, which admits `mailto:` and rejects `data:`, the opposite of the render gate for a media prop; the handoff names only the default catalog, and the builder disclosed it. A follow-up could move it to `media-src`. The persona and domain catalogs carry no own media props.

@@ -741,7 +741,7 @@
 
     "Avatar": {
       "properties": {
-        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src" },
+        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src", "format": "media-src" },
         "name": { "type": { "type": "string" }, "bindable": true, "mapsTo": "identity" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label" }
       }
@@ -789,7 +789,7 @@
 
     "Image": {
       "properties": {
-        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src" },
+        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src", "format": "media-src" },
         "alt": { "type": { "type": "string" }, "bindable": true, "mapsTo": "alt", "required": true },
         "fit": { "type": { "type": "string", "enum": ["cover", "contain"] }, "mapsTo": "fit" },
         "aspect": { "type": { "type": "string" }, "mapsTo": "aspect" },
@@ -801,9 +801,9 @@
 
     "Video": {
       "properties": {
-        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src" },
+        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src", "format": "media-src" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label", "required": true },
-        "poster": { "type": { "type": "string" }, "bindable": true, "mapsTo": "poster" },
+        "poster": { "type": { "type": "string" }, "bindable": true, "mapsTo": "poster", "format": "media-src" },
         "aspect": { "type": { "type": "string" }, "mapsTo": "aspect" },
         "preload": { "type": { "type": "string", "enum": ["none", "metadata", "auto"] }, "mapsTo": "preload" }
       }
@@ -811,7 +811,7 @@
 
     "AudioPlayer": {
       "properties": {
-        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src" },
+        "src": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src", "format": "media-src" },
         "label": { "type": { "type": "string" }, "bindable": true, "mapsTo": "label", "required": true },
         "preload": { "type": { "type": "string", "enum": ["none", "metadata", "auto"] }, "mapsTo": "preload" }
       }
@@ -973,7 +973,7 @@
       "properties": {
         "title": { "type": { "type": "string" }, "bindable": true, "mapsTo": "title" },
         "subtitle": { "type": { "type": "string" }, "bindable": true, "mapsTo": "subtitle" },
-        "image": { "type": { "type": "string" }, "bindable": true, "mapsTo": "image" },
+        "image": { "type": { "type": "string" }, "bindable": true, "mapsTo": "image", "format": "media-src" },
         "imageAlt": { "type": { "type": "string" }, "bindable": true, "mapsTo": "imageAlt" },
         "icon": { "type": { "type": "string" }, "bindable": true, "mapsTo": "icon" },
         "price": { "type": { "type": "string" }, "bindable": true, "mapsTo": "price" },
