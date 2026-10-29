@@ -132,16 +132,14 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
     expect(tfLayers('reactive/').length).toBeGreaterThan(0)
   })
 
-  it('drags ONLY {controls/text-field, controls/swatch, controls/_token-surface, controls/glyph, dom, traits, reactive}; and NOT the sibling ui-button', () => {
-    // ADR-0123 LLD-C9 — the type=color leg statically pulls TWO deliberate additions: ui-swatch (a tiny,
-    // zero-dep Display-class leaf, so the trailing swatch-button preview renders immediately, before the
-    // lazy picker has ever loaded — the ADR-0123 own reasoning) and its own `_token-surface/token-surface.ts`
-    // value-lane dependency; the color CODEC (color-picker/color.ts, pure/zero-DOM) is ALSO statically
-    // reached (the currency/date/time codec precedent) — but the color-picker CONTROL itself
-    // (color-picker/color-picker.ts, the pad/canvas/codec machinery) stays out, via dynamic import() below.
+  it('drags ONLY {controls/text-field, controls/glyph, dom, traits, reactive}; and NOT the sibling ui-button', () => {
+    // ADR-0123 LLD-C9, the type=color leg: since T-0527 the color codec (color-picker/color.ts) and the
+    // ui-swatch registration load lazily from `text-field-color.ts` on first color use, so neither is in
+    // the static graph (the swatch preview is typed structurally, with no import of swatch.ts at all). The
+    // color-picker CONTROL stays out too, via dynamic import() below.
     // T-0351: the clear x and the stepper minus/plus are ui-glyph marks, so the zero-dep display atom
     // (controls/glyph, its path table included) is a deliberate static addition too (ADR-0245 cl.5).
-    const ALLOWED = ['controls/text-field/', 'controls/swatch/', 'controls/_token-surface/', 'controls/glyph/', 'controls/color-picker/color.ts', 'dom/', 'traits/', 'reactive/']
+    const ALLOWED = ['controls/text-field/', 'controls/glyph/', 'dom/', 'traits/', 'reactive/']
     for (const p of tf.reached) {
       expect(ALLOWED.some((a) => p.startsWith(a)), `unexpected module in text-field graph: ${p}`).toBe(true)
     }
@@ -152,10 +150,12 @@ describe('ui-text-field tree-shake — the entry graph is tight (s12)', () => {
     // first button-click — the static regex crawler cannot match `import()` expressions, so the
     // calendar module is invisible to the graph and `controls/calendar/` stays empty here.
     expect(tfLayers('controls/calendar/')).toEqual([])
-    // ADR-0123 LLD-C9 — the SAME dynamic-import proof for the color-picker CONTROL: the swatch button's
-    // FIRST activation lazily import()s color-picker.ts — the static crawl never reaches it, so ONLY
-    // color.ts (the pure codec, statically imported for the codec wiring) shows up under this folder.
-    expect(tfLayers('controls/color-picker/')).toEqual(['controls/color-picker/color.ts'])
+    // ADR-0123 LLD-C9, the SAME dynamic-import proof for the color-picker CONTROL: the swatch button's
+    // FIRST activation lazily import()s color-picker.ts, and (T-0527) the codec rides the lazy color kit,
+    // so the static crawl reaches nothing under this folder and never reaches the kit module itself.
+    expect(tfLayers('controls/color-picker/')).toEqual([])
+    expect(tfLayers('controls/swatch/')).toEqual([])
+    expect(tf.reached.has('controls/text-field/text-field-color.ts')).toBe(false)
   })
 
   it('does NOT drag the descriptor tooling, and pulls ONLY @agent-ui/icons as its non-relative import', () => {

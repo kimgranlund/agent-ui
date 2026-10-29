@@ -1156,3 +1156,8 @@
 
 - note: handoff Low item 4 groups `conversation.ts:1361` under one-shot rAF frames, but that line is `setTimeout(() => (button.textContent = COPY_LABEL), 1500)`, not a rAF; the "benign, no fix" conclusion still holds.
 - note: I did not rerun the browser probe; I relied on the saved `probe-results.json` and `run3.log` plus static spot-checks.
+
+## T-0527: text-field loads its type=color codec and swatch only on first color use (2026-10-28)
+
+- note: text-field.ts:~548-550 the codec comment block now has one over-long line ("typeAc.signal is passed so the codec's focus/blur listeners die ... Local variable captures config.codec so TypeScript can narrow the"), a reflow nit only.
+- note: the browser tests import `@agent-ui/components/all`, so they only exercise the already-loaded kit path; the lazy window is covered by the jsdom test alone (the builder reports the same).
