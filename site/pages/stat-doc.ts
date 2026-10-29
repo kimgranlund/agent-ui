@@ -32,7 +32,7 @@ const { content } = mountPage({
   intro:
     'The Display-class metric tile (ADR-0111, report family v1) — label + value + optional delta + optional ' +
     'caption as real, selectable DOM text. Not interactive, not form-associated: no events, no keyboard ' +
-    'contract, no [size]/[scale] control geometry. Generated from stat.md: the attribute and parts tables are ' +
+    'contract, no size or data-scale control geometry. Generated from stat.md: the attribute and parts tables are ' +
     'descriptor-derived; the strip below shows the three delta directions plus a minimal tile.',
 })
 

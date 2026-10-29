@@ -244,7 +244,7 @@ updates only the label span's text.
 ## Geometry
 
 The box rides the **compact-realm** widget-box ramp (`--md-sys-compact-lg`, ADR-0041) — fixed regardless of
-label length or an ancestor `[density]`; the pad follows the compact-realm law (`2px + box·ratio·density`,
+label length or an ancestor `[data-density]`; the pad follows the compact-realm law (`2px + box·ratio·density`,
 never `h/2`); the radius is `box/2` (a pill). Derived, the badge is a chip `2n + 2c` tall and its radius the chip
 pill `n + c`, still `box/2` (ADR-0245 Amendment 5). There is no `[size]` attribute in v1. The label text itself
 rides the fleet font ramp (`--md-sys-font-sm`) at `line-height: 1`, centering like a glyph. An empty label
@@ -1223,7 +1223,7 @@ the mark at `primary-on-surface-disabled`, so a locked box never vanishes.
 ## Sizes
 
 `size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
-(ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). An ancestor `[scale]` attribute re-tables the
+(ADR-0041: 14 · 16 · 18 px at the md step). An ancestor `data-scale` (with `data-tier`) re-tables the
 ramp for its subtree.
 
 ## Accessibility
@@ -3054,8 +3054,7 @@ deprecated `glyph` alias is removed (ADR-0245 clause 10d); `<ui-icon glyph>` and
 anything, so set `symbol`. An unregistered name resolves to
 a non-throwing empty `<svg data-icon-missing>` rather than breaking the render (`resolveIcon`,
 `@agent-ui/icons`). The shipped default is the Phosphor pack (`@agent-ui/icons/phosphor`), covering the
-current `ICON_NAMES` set (`@agent-ui/icons/src/types.ts` — the source of truth; twenty names as of the
-feed-family wave's LLD-C9 icons PREP, spanning caret/chevron · dismissal/visibility · calendar/check ·
+current `ICON_NAMES` set (exported from `@agent-ui/icons`, the source of truth, spanning caret/chevron · dismissal/visibility · calendar/check ·
 search · and the file-type glyphs `user`/`file`/`file-image`/`file-audio`/`file-video`/`file-pdf`/
 `file-text`/`file-zip`/`file-code`). A consuming app can register its own pack, or override individual
 icons, with zero changes to `ui-icon` itself (`registerPack`/`overrideIcon`, ADR-0065 clause 5).
@@ -6978,7 +6977,7 @@ around a truncated `Text` — its first child is the anchor:
 ```html
 <ui-tooltip>
   <ui-text truncate>A title long enough to clip in its column</ui-text>
-  <ui-text slot="content">A title long enough to clip in its column</ui-text>
+  <ui-text>A title long enough to clip in its column</ui-text>
 </ui-tooltip>
 ```
 

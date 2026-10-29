@@ -17,7 +17,7 @@ const { content } = mountPage({
     'The source-attribution aggregate leaf (ADR-0214, GH #1394) — a numbered list of cited sources, ' +
     'index markers assigned by array position (never producer-authored), each entry titled with a real ' +
     'gated hyperlink when its href crosses the fleet safe-href scheme allowlist. Not interactive beyond ' +
-    'the platform-native link an allowed href stamps; no events, no [size]/[scale] control geometry. ' +
+    'the platform-native link an allowed href stamps; no events, no size or data-scale control geometry. ' +
     'Generated from source-list.md: the attribute and parts tables are descriptor-derived; the specimens ' +
     'below show a grounded-answer citation list and the per-entry safeHref gate.',
 })

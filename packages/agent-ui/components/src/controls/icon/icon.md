@@ -70,8 +70,7 @@ deprecated `glyph` alias is removed (ADR-0245 clause 10d); `<ui-icon glyph>` and
 anything, so set `symbol`. An unregistered name resolves to
 a non-throwing empty `<svg data-icon-missing>` rather than breaking the render (`resolveIcon`,
 `@agent-ui/icons`). The shipped default is the Phosphor pack (`@agent-ui/icons/phosphor`), covering the
-current `ICON_NAMES` set (`@agent-ui/icons/src/types.ts` — the source of truth; twenty names as of the
-feed-family wave's LLD-C9 icons PREP, spanning caret/chevron · dismissal/visibility · calendar/check ·
+current `ICON_NAMES` set (exported from `@agent-ui/icons`, the source of truth, spanning caret/chevron · dismissal/visibility · calendar/check ·
 search · and the file-type glyphs `user`/`file`/`file-image`/`file-audio`/`file-video`/`file-pdf`/
 `file-text`/`file-zip`/`file-code`). A consuming app can register its own pack, or override individual
 icons, with zero changes to `ui-icon` itself (`registerPack`/`overrideIcon`, ADR-0065 clause 5).

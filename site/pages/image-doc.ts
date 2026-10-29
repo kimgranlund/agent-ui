@@ -34,7 +34,7 @@ const { content } = mountPage({
   intro:
     'The Display-class URL-sourced content image (GH #1189 R1/R2) — a reserved aspect-ratio box around a ' +
     'real <img>, with native lazy-loading and an optional bottom-scrim caption. Not interactive, not ' +
-    'form-associated: no events, no keyboard contract, no [size]/[scale] control geometry — unlike ui-avatar, ' +
+    'form-associated: no events, no keyboard contract, no size or data-scale control geometry, unlike ui-avatar, ' +
     'there is no fallback chain here, just the <img> mechanics. Generated from image.md: the attribute and ' +
     'parts tables are descriptor-derived; the specimens below show the zero-CLS aspect box, the fit ' +
     'letterboxing difference, and the bottom-scrim caption.',

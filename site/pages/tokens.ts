@@ -154,7 +154,7 @@ content.append(heading(2, 'Dimensional ladders'))
 content.append(
   pageLead(
     'The default (ui-md-equivalent) tier of each ladder — the row every control resolves from before a ' +
-      '[scale] ancestor re-tables it. See the sizing guide for the full [scale] × [size] stepping demo.',
+      'data-scale ancestor re-tables it. See the sizing guide for the full data-scale × size stepping demo.',
   ),
 )
 for (const { prefix, label, note } of DIMENSION_LADDERS) {
@@ -186,7 +186,7 @@ content.append(typescaleHeading)
     document.createTextNode(
       `The ${TYPESCALE_ROLES.length}-role × 3-size fleet type scale (--md-sys-typescale-{role}-{size}-*, ` +
         'ADR-0078): the five M3-verbatim roles plus the editorial extensions, each cell four properties — ' +
-        'size (the one leg that rides [scale]) · weight · line-height · tracking. Rendered live below at each ' +
+        'size (the one leg that rides data-scale) · weight · line-height · tracking. Rendered live below at each ' +
         'cell’s own resolved values. Note: kicker and overline render uppercase in consumers (a text.css ' +
         'treatment, not a typescale property). Controls never read these directly — ui-text does, via its own ' +
         '--ui-text-* repoint. How a subtree rescales the -size leg is the ',
@@ -220,7 +220,7 @@ for (const role of TYPESCALE_ROLES) {
     meta.textContent = `${base}-*  ·  ${row.sizeValue}  ·  ${row.weight}  ·  ${row.lineHeight}  ·  ${row.tracking}`
     const specimen = document.createElement('div')
     specimen.className = 'typescale-specimen'
-    // LIVE resolution — the specimen reads the real custom properties, so a [scale] ancestor or a token
+    // LIVE resolution: the specimen reads the real custom properties, so a data-scale ancestor or a token
     // edit repaints it exactly as it repaints every consumer (never a re-typed literal).
     specimen.style.fontSize = `var(${base}-size)`
     specimen.style.fontWeight = `var(${base}-weight)`
