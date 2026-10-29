@@ -1,0 +1,302 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "reach-travel-trip-itinerary-haiku-1",
+  "agent": "travel",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T03:45:03.177Z, traces 2026-10-29.jsonl:121",
+  "seed": {
+    "version": 8,
+    "digest": "sha256:6c278799c52a10627305adf37d415713076cbc6ce0d6ce431ef7195af9dd2a29"
+  },
+  "steps": [
+    {
+      "say": "Plan a two-day trip to Paris on Friday 20 and Saturday 21 November 2026, day by day.",
+      "expect": [
+        "Itinerary"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is a two-day\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Paris itinerary, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" use the Itinerary component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pull in weather for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Paris along with E\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"UR to USD currency context\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rich the pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"an.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"weather\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"currency\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the forecast only ext\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ends to Oct 31,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I can't honestly provide\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" weather for Nov 20\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-21, so I'll note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ecast isn't available yet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than fabricate it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'll build\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a concise itinerary with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stops and appro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ximate times,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" flagging prices as illust\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rative.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm sketching the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" two-day plan: Fri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"day covering the Louvre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", lunch in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Le Marais, S\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ainte-Chapelle\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Seine walk, and d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inner in Saint-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Germain; Saturday star\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting with Montmartre and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Sacré-Cœ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ur, lunch, then the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Musée d'Ors\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay — all mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pending since the trip h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"asn't started, with an a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"side noting the current\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" EUR/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"USD ex\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"change rate.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est of Saturday, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding a late\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-afternoon walk through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the Tuileries and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Champs-Élysées to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ward the Arc de Tri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"omphe around sunset,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then a farewell dinner\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" near the Eiffel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Tower. I'll note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that weather forecasts a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ren't available this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" far out since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the tool only cov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ers through October \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"31, so I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" flag chec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king closer to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" travel d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ates,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep the currency note at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ughly 100 EUR\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 111 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"USD.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"paris-itinerary\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"paris-itinerary\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Itinerary\\\",\\\"title\\\":\\\"Paris, 2 days\\\",\\\"days\\\":{\\\"path\\\":\\\"/trip/days\\\"}}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"paris-itinerary\\\",\\\"path\\\":\\\"/trip/days\\\",\\\"value\\\":[{\\\"label\\\":\\\"Fri 20 Nov, museums and river\\\",\\\"aside\\\":\\\"1 EUR = 1.11 USD (ECB, 28 Oct). Forecast not yet available for this date.\\\",\\\"stops\\\":[{\\\"label\\\":\\\"Louvre, morning visit\\\",\\\"detail\\\":\\\"Pyramid entrance, timed ticket\\\",\\\"time\\\":\\\"09:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Lunch in Le Marais\\\",\\\"detail\\\":\\\"Bistro near Rue des Rosiers\\\",\\\"time\\\":\\\"12:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Sainte-Chapelle\\\",\\\"detail\\\":\\\"Timed entry, stained glass\\\",\\\"time\\\":\\\"14:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Seine walk to Saint-Germain\\\",\\\"detail\\\":\\\"Along the quays, about 40 minutes\\\",\\\"time\\\":\\\"16:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Dinner in Saint-Germain-des-Prés\\\",\\\"detail\\\":\\\"Reserve ahead on a Friday\\\",\\\"time\\\":\\\"19:30\\\",\\\"status\\\":\\\"pending\\\"}]},{\\\"label\\\":\\\"Sat 21 Nov, Montmartre and the Right Bank\\\",\\\"aside\\\":\\\"Forecast not yet available for this date.\\\",\\\"stops\\\":[{\\\"label\\\":\\\"Sacré-Cœur and Place du Tertre\\\",\\\"detail\\\":\\\"Climb early before the crowds\\\",\\\"time\\\":\\\"09:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Lunch in Montmartre\\\",\\\"detail\\\":\\\"Casual café on the square\\\",\\\"time\\\":\\\"12:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Musée d'Orsay\\\",\\\"detail\\\":\\\"Impressionist collection, timed ticket\\\",\\\"time\\\":\\\"14:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Tuileries and Champs-Élysées\\\",\\\"detail\\\":\\\"Gardens, then the avenue\\\",\\\"time\\\":\\\"16:30\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Arc de Triomphe\\\",\\\"detail\\\":\\\"Around sunset\\\",\\\"time\\\":\\\"17:00\\\",\\\"status\\\":\\\"pending\\\"},{\\\"label\\\":\\\"Farewell dinner near the Eiffel Tower\\\",\\\"detail\\\":\\\"Reserve ahead\\\",\\\"time\\\":\\\"20:00\\\",\\\"status\\\":\\\"pending\\\"}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's a two-day Paris plan for Friday 20 and Saturday 21 November 2026. The times and stops are suggestions, and I haven't booked any tickets or prices.\\n\\nThe weather service only forecasts about three days ahead, so I can't give a forecast for your dates yet. Check again closer to the trip. The exchange rate is live: 100 EUR is about 111.33 USD (ECB rate, 28 October).\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Plan a two-day trip to Paris on Friday 20 and Saturday 21 November 2026, day by day.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":59470,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":2336},{\"id\":\"persona\",\"chars\":2518}],\"over\":false},\"usage\":{\"inputTokens\":7628,\"outputTokens\":2499,\"cacheReadInputTokens\":19236,\"cacheCreationInputTokens\":19236},\"miniSkillIds\":[\"comparison-table\",\"structured-container\",\"variant-picker\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"paris-itinerary\",\"catalogId\":\"agent-ui--hospitality\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"paris-itinerary\",\"components\":[{\"id\":\"root\",\"component\":\"Itinerary\",\"title\":\"Paris, 2 days\",\"days\":{\"path\":\"/trip/days\"}}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"paris-itinerary\",\"path\":\"/trip/days\",\"value\":[{\"label\":\"Fri 20 Nov, museums and river\",\"aside\":\"1 EUR = 1.11 USD (ECB, 28 Oct). Forecast not yet available for this date.\",\"stops\":[{\"label\":\"Louvre, morning visit\",\"detail\":\"Pyramid entrance, timed ticket\",\"time\":\"09:00\",\"status\":\"pending\"},{\"label\":\"Lunch in Le Marais\",\"detail\":\"Bistro near Rue des Rosiers\",\"time\":\"12:30\",\"status\":\"pending\"},{\"label\":\"Sainte-Chapelle\",\"detail\":\"Timed entry, stained glass\",\"time\":\"14:30\",\"status\":\"pending\"},{\"label\":\"Seine walk to Saint-Germain\",\"detail\":\"Along the quays, about 40 minutes\",\"time\":\"16:30\",\"status\":\"pending\"},{\"label\":\"Dinner in Saint-Germain-des-Prés\",\"detail\":\"Reserve ahead on a Friday\",\"time\":\"19:30\",\"status\":\"pending\"}]},{\"label\":\"Sat 21 Nov, Montmartre and the Right Bank\",\"aside\":\"Forecast not yet available for this date.\",\"stops\":[{\"label\":\"Sacré-Cœur and Place du Tertre\",\"detail\":\"Climb early before the crowds\",\"time\":\"09:30\",\"status\":\"pending\"},{\"label\":\"Lunch in Montmartre\",\"detail\":\"Casual café on the square\",\"time\":\"12:30\",\"status\":\"pending\"},{\"label\":\"Musée d'Orsay\",\"detail\":\"Impressionist collection, timed ticket\",\"time\":\"14:00\",\"status\":\"pending\"},{\"label\":\"Tuileries and Champs-Élysées\",\"detail\":\"Gardens, then the avenue\",\"time\":\"16:30\",\"status\":\"pending\"},{\"label\":\"Arc de Triomphe\",\"detail\":\"Around sunset\",\"time\":\"17:00\",\"status\":\"pending\"},{\"label\":\"Farewell dinner near the Eiffel Tower\",\"detail\":\"Reserve ahead\",\"time\":\"20:00\",\"status\":\"pending\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here's a two-day Paris plan for Friday 20 and Saturday 21 November 2026. The times and stops are suggestions, and I haven't booked any tickets or prices.\n\nThe weather service only forecasts about three days ahead, so I can't give a forecast for your dates yet. Check again closer to the trip. The exchange rate is live: 100 EUR is about 111.33 USD (ECB rate, 28 October).",
+          "tools": [
+            {
+              "name": "weather",
+              "input": {
+                "place": "Paris"
+              }
+            },
+            {
+              "name": "currency",
+              "input": {
+                "amount": 100,
+                "from": "EUR",
+                "to": "USD"
+              }
+            },
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your two-day Paris plan is below, day by day. Times and stops are suggestions; I haven't booked anything.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "paris-itinerary",
+                      "catalogId": "agent-ui--hospitality"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "paris-itinerary",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Itinerary",
+                          "title": "Paris, 2 days",
+                          "days": {
+                            "path": "/trip/days"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "paris-itinerary",
+                      "path": "/trip/days",
+                      "value": [
+                        {
+                          "label": "Fri 20 Nov, museums and river",
+                          "aside": "1 EUR = 1.11 USD (ECB, 28 Oct). Forecast not yet available for this date.",
+                          "stops": [
+                            {
+                              "label": "Louvre, morning visit",
+                              "detail": "Pyramid entrance, timed ticket",
+                              "time": "09:00",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Lunch in Le Marais",
+                              "detail": "Bistro near Rue des Rosiers",
+                              "time": "12:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Sainte-Chapelle",
+                              "detail": "Timed entry, stained glass",
+                              "time": "14:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Seine walk to Saint-Germain",
+                              "detail": "Along the quays, about 40 minutes",
+                              "time": "16:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Dinner in Saint-Germain-des-Prés",
+                              "detail": "Reserve ahead on a Friday",
+                              "time": "19:30",
+                              "status": "pending"
+                            }
+                          ]
+                        },
+                        {
+                          "label": "Sat 21 Nov, Montmartre and the Right Bank",
+                          "aside": "Forecast not yet available for this date.",
+                          "stops": [
+                            {
+                              "label": "Sacré-Cœur and Place du Tertre",
+                              "detail": "Climb early before the crowds",
+                              "time": "09:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Lunch in Montmartre",
+                              "detail": "Casual café on the square",
+                              "time": "12:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Musée d'Orsay",
+                              "detail": "Impressionist collection, timed ticket",
+                              "time": "14:00",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Tuileries and Champs-Élysées",
+                              "detail": "Gardens, then the avenue",
+                              "time": "16:30",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Arc de Triomphe",
+                              "detail": "Around sunset",
+                              "time": "17:00",
+                              "status": "pending"
+                            },
+                            {
+                              "label": "Farewell dinner near the Eiffel Tower",
+                              "detail": "Reserve ahead",
+                              "time": "20:00",
+                              "status": "pending"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-plan",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-planning-notes",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

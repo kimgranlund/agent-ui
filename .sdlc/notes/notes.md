@@ -1180,3 +1180,8 @@
 - note: handoff.md: the `## Acceptance criteria` block sits inside the `Do:` bullet of `## Intent` (template splice), so `### Acceptance criteria` bullets are not a top-level section; the criteria commands still run as written.
 - note: handoff.md Findings item 1 cites `slider.css:250` for `linear-gradient(to right`; the `linear-gradient(` token is on line 249 and `to right,` on 250 (immaterial).
 - note: handoff.md item 11 says no `listReorder` caller passes horizontal; grep shows `traits/list-reorder.ts` has no shipped caller at all outside its tests and `traits/index.ts`, so the latent claim holds more strongly than stated.
+
+## T-0532: Live round 17 measures the round 16 fixes (T-0498 to T-0501) across the full matrix (2026-10-28)
+
+- note: the red-checkpoint deviation check (redck.py deviations) printed no `process deviation:` lines, and no criterion is `(red)`.
+- note: report says M, Q, and the weekday cue were not exercised live (0 moves, 0 empty rounds after a repair); the live-commands.sh diff against round 16 differs only in the T-0532 comment and round names.

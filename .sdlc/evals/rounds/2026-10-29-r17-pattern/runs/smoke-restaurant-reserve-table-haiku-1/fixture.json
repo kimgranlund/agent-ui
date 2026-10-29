@@ -1,0 +1,291 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-restaurant-reserve-table-haiku-1",
+  "agent": "restaurant",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T03:16:14.938Z, traces 2026-10-29.jsonl:3",
+  "seed": {
+    "version": 8,
+    "digest": "sha256:6628561bbf3c9d1e4e218dd3fc6060a28ede6c6ed289386d2db101487c0b83f3"
+  },
+  "steps": [
+    {
+      "say": "I'd like to reserve a table for dinner.",
+      "expect": [
+        "BookingForm"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is a reservation request, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up a compact Booking\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Form surface capturing date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", seating, covers, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dietary notes, using the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hospitality catalog with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model enabled — th\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"inking through whether this form it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self ser\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ves as the confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ation step.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Following the example p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"attern, I'll give\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the form a Button child for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irm_booking\\\" and define\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fields:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ker, a seating-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"time select, a covers select\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with options like 1–8 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"(plus a note for larger\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" parties), and a dietary\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" notes field, though I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" unsure ex\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"actly what field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" kind to use for free text.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure the data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" model at /booking with date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", seating, covers, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dietary fields, wr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ap ever\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ything in a root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Column hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding the form,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ark date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"seating/covers as required.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the prose, I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping it short: in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"viting them to pick date\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", seating, and party size,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with space\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" add dietary notes.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"I'd be gl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ad to reserve a table at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Vela. Cho\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ose your date, seating and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" party size below\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", and add any dietary requ\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"irements in the notes. We\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" have\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" two seatings,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 18:00 and 20\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\":30. For par\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ties lar\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ger than e\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ight, please t\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ell me in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the not\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"es and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" we\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" will\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" arrange it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\".\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"vela-booking\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"vela-booking\\\",\\\"path\\\":\\\"/booking\\\",\\\"value\\\":{\\\"date\\\":\\\"\\\",\\\"seating\\\":\\\"\\\",\\\"covers\\\":\\\"\\\",\\\"dietary\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"vela-booking\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"form\\\"]},{\\\"id\\\":\\\"form\\\",\\\"component\\\":\\\"BookingForm\\\",\\\"title\\\":\\\"Reserve a table at Vela\\\",\\\"value\\\":{\\\"path\\\":\\\"/booking\\\"},\\\"fields\\\":[{\\\"kind\\\":\\\"dateSingle\\\",\\\"label\\\":\\\"Date\\\",\\\"path\\\":\\\"date\\\",\\\"required\\\":true},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Seating\\\",\\\"path\\\":\\\"seating\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"18:00\\\",\\\"value\\\":\\\"1800\\\"},{\\\"label\\\":\\\"20:30\\\",\\\"value\\\":\\\"2030\\\"}]},{\\\"kind\\\":\\\"select\\\",\\\"label\\\":\\\"Covers (guests)\\\",\\\"path\\\":\\\"covers\\\",\\\"required\\\":true,\\\"options\\\":[{\\\"label\\\":\\\"1\\\",\\\"value\\\":\\\"1\\\"},{\\\"label\\\":\\\"2\\\",\\\"value\\\":\\\"2\\\"},{\\\"label\\\":\\\"3\\\",\\\"value\\\":\\\"3\\\"},{\\\"label\\\":\\\"4\\\",\\\"value\\\":\\\"4\\\"},{\\\"label\\\":\\\"5\\\",\\\"value\\\":\\\"5\\\"},{\\\"label\\\":\\\"6\\\",\\\"value\\\":\\\"6\\\"},{\\\"label\\\":\\\"7\\\",\\\"value\\\":\\\"7\\\"},{\\\"label\\\":\\\"8\\\",\\\"value\\\":\\\"8\\\"}]},{\\\"kind\\\":\\\"text\\\",\\\"label\\\":\\\"Dietary requirements\\\",\\\"path\\\":\\\"dietary\\\"}],\\\"child\\\":\\\"bookBtn\\\"},{\\\"id\\\":\\\"bookBtn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Book now\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"confirm_booking\\\",\\\"context\\\":{\\\"booking\\\":{\\\"path\\\":\\\"/booking\\\"}},\\\"submit\\\":true}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I'd be glad to reserve a table at Vela. Choose your date, seating and party size below, and add any dietary requirements in the notes. We have two seatings, at 18:00 and 20:30. For parties larger than eight, please tell me in the notes and we will arrange it.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to reserve a table for dinner.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":58539,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":1670},{\"id\":\"persona\",\"chars\":2253}],\"over\":false},\"usage\":{\"inputTokens\":3213,\"outputTokens\":1593,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":18960},\"miniSkillIds\":[\"master-detail-split\",\"feature-collection\",\"table-toolbar-pagination\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"vela-booking\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"vela-booking\",\"path\":\"/booking\",\"value\":{\"date\":\"\",\"seating\":\"\",\"covers\":\"\",\"dietary\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"vela-booking\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"form\"]},{\"id\":\"form\",\"component\":\"BookingForm\",\"title\":\"Reserve a table at Vela\",\"value\":{\"path\":\"/booking\"},\"fields\":[{\"kind\":\"dateSingle\",\"label\":\"Date\",\"path\":\"date\",\"required\":true},{\"kind\":\"select\",\"label\":\"Seating\",\"path\":\"seating\",\"required\":true,\"options\":[{\"label\":\"18:00\",\"value\":\"1800\"},{\"label\":\"20:30\",\"value\":\"2030\"}]},{\"kind\":\"select\",\"label\":\"Covers (guests)\",\"path\":\"covers\",\"required\":true,\"options\":[{\"label\":\"1\",\"value\":\"1\"},{\"label\":\"2\",\"value\":\"2\"},{\"label\":\"3\",\"value\":\"3\"},{\"label\":\"4\",\"value\":\"4\"},{\"label\":\"5\",\"value\":\"5\"},{\"label\":\"6\",\"value\":\"6\"},{\"label\":\"7\",\"value\":\"7\"},{\"label\":\"8\",\"value\":\"8\"}]},{\"kind\":\"text\",\"label\":\"Dietary requirements\",\"path\":\"dietary\"}],\"child\":\"bookBtn\"},{\"id\":\"bookBtn\",\"component\":\"Button\",\"label\":\"Book now\",\"variant\":\"solid\",\"action\":{\"action\":\"confirm_booking\",\"context\":{\"booking\":{\"path\":\"/booking\"}},\"submit\":true}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "I'd be glad to reserve a table at Vela. Choose your date, seating and party size below, and add any dietary requirements in the notes. We have two seatings, at 18:00 and 20:30. For parties larger than eight, please tell me in the notes and we will arrange it.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here is the booking form. Fill in the date, seating and covers, then press Book now.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "vela-booking",
+                      "catalogId": "agent-ui--hospitality",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "vela-booking",
+                      "path": "/booking",
+                      "value": {
+                        "date": "",
+                        "seating": "",
+                        "covers": "",
+                        "dietary": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "vela-booking",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "form"
+                          ]
+                        },
+                        {
+                          "id": "form",
+                          "component": "BookingForm",
+                          "title": "Reserve a table at Vela",
+                          "value": {
+                            "path": "/booking"
+                          },
+                          "fields": [
+                            {
+                              "kind": "dateSingle",
+                              "label": "Date",
+                              "path": "date",
+                              "required": true
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Seating",
+                              "path": "seating",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "18:00",
+                                  "value": "1800"
+                                },
+                                {
+                                  "label": "20:30",
+                                  "value": "2030"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "select",
+                              "label": "Covers (guests)",
+                              "path": "covers",
+                              "required": true,
+                              "options": [
+                                {
+                                  "label": "1",
+                                  "value": "1"
+                                },
+                                {
+                                  "label": "2",
+                                  "value": "2"
+                                },
+                                {
+                                  "label": "3",
+                                  "value": "3"
+                                },
+                                {
+                                  "label": "4",
+                                  "value": "4"
+                                },
+                                {
+                                  "label": "5",
+                                  "value": "5"
+                                },
+                                {
+                                  "label": "6",
+                                  "value": "6"
+                                },
+                                {
+                                  "label": "7",
+                                  "value": "7"
+                                },
+                                {
+                                  "label": "8",
+                                  "value": "8"
+                                }
+                              ]
+                            },
+                            {
+                              "kind": "text",
+                              "label": "Dietary requirements",
+                              "path": "dietary"
+                            }
+                          ],
+                          "child": "bookBtn"
+                        },
+                        {
+                          "id": "bookBtn",
+                          "component": "Button",
+                          "label": "Book now",
+                          "variant": "solid",
+                          "action": {
+                            "action": "confirm_booking",
+                            "context": {
+                              "booking": {
+                                "path": "/booking"
+                              }
+                            },
+                            "submit": true
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "menu-card",
+            "load": "index-only"
+          },
+          {
+            "name": "table-reservation",
+            "load": "index-only"
+          },
+          {
+            "name": "dietary-and-cellar-notes",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
