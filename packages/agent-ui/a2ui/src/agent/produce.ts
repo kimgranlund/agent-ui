@@ -1271,9 +1271,9 @@ function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<strin
  *  cart?") or "Nothing is in your order yet" claims nothing. T-0481: nor does a description of it ("No items are in your order",
  *  "Here's what's in your cart", "Everything that is in your order ships Tuesday"). T-0583: a claim reads "you've got two lamps in your
  *  order", "your cart total is $136" or "I come down to $165" (round 19 :124, :84), while "You've got nothing in your
- *  order" or a question claims nothing. */
+ *  order" or a question claims nothing. T-0585: "I've started your order" (round 20 :43) is one, "Shall I start your order?" is none. */
 const CHANGE_CLAIM_IN_REPLY =
-  /(?:(?<!\b(?:nothing|what|that|which|who|everything|anything|whatever)\s?)(?<!\bno\s+(?:[\w-]+\s+){0,2})(?:\b(?:is|are)|['’]s|['’]re)\s+(?:now\s+)?in your (?:order|cart|basket)\b(?![^.!?]*\?)|\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b|(?:^|[.!:]\s*)added\b(?!(?:\s+[\w-]+){1,2}\s+(?:may|might|can|could|will|would|shall|should|apply|applies)\b)|\bI(?:'ve| have)? added\b|\bcomes? to \$?\d|(?:['’]ve|\bhave) got (?!(?:nothing|no)\b)[^.!?]*\bin your (?:order|cart|basket)\b(?![^.!?]*\?)|\btotal is (?:now )?\$?\d|\bcom(?:e|es|ing) down to \$?\d)/i
+  /(?:(?<!\b(?:nothing|what|that|which|who|everything|anything|whatever)\s?)(?<!\bno\s+(?:[\w-]+\s+){0,2})(?:\b(?:is|are)|['’]s|['’]re)\s+(?:now\s+)?in your (?:order|cart|basket)\b(?![^.!?]*\?)|\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b|(?:^|[.!:]\s*)added\b(?!(?:\s+[\w-]+){1,2}\s+(?:may|might|can|could|will|would|shall|should|apply|applies)\b)|\bI(?:'ve| have)? added\b|\bcomes? to \$?\d|(?:['’]ve|\bhave) got (?!(?:nothing|no)\b)[^.!?]*\bin your (?:order|cart|basket)\b(?![^.!?]*\?)|\btotal is (?:now )?\$?\d|\bcom(?:e|es|ing) down to \$?\d|\b(?:I['’]ve|I have) started your (?:order|cart|basket)\b)/i
 
 /** T-0299: `findings` plus every missing-composite finding an earlier round of this turn got (`bound`, by code) that
  *  `views` still leave unanswered, worded as still binding; then each new missing-composite finding is bound. A round
@@ -1821,6 +1821,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     const peeled = peelMetaLine(raw) // ADR-0088 §1 / ADR-0097 §1 / ADR-0174 cl.2 / ADR-0178 cl.1 / ADR-0198 cl.1 / GH #1196 / ADR-0206: peeled BEFORE heal/validate
     let { ask, plan, personaPatch, flowEnd, team, target } = peeled
     let { note, rest: afterMeta } = peeled
+    let metaNote: string | undefined // T-0585: the meta-line note a text or capture reply replaces below, still read for a change claim
     // RTS-R3/R4: classify the round. A legacy-shape text channel keeps today's body exactly; otherwise the
     // text after the meta-line is the reply and the payload is the captured `render_surface` input, or none.
     const captured = capture
@@ -1890,6 +1891,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
         lastRaw = [raw.trim() || captured.reply, captured.jsonl.trim() || (captured.sentString ?? '').trim()].filter((s) => s !== '').join('\n')
       }
       reply = reply.trim()
+      if (reply !== '' && note !== reply) metaNote = note
       if (reply !== '') note = reply
       afterMeta = captured?.jsonl ?? routed ?? ''
     }
@@ -2032,7 +2034,9 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       // id never reaches the T-0428 test below, so it is sent back here: once, with the full repair (round 13 :155 "Done,
       // the table is now Kim's table", :43 "Your total is now $189"). The regex is a heuristic, so a claim still standing on
       // the last round ships tallied CHANGE_CLAIM_UNCORRECTED rather than halting.
-      const changeClaim = narrated === undefined && turnIntent !== undefined && roundTarget !== undefined && genuiLine === undefined && note !== undefined && CHANGE_CLAIM_IN_REPLY.test(note)
+      // T-0585: the meta-line note is the model's own declaration, so a claim there counts as one in the prose (round 20 :43).
+      const claimsChange = note !== undefined && (CHANGE_CLAIM_IN_REPLY.test(note) || (metaNote !== undefined && CHANGE_CLAIM_IN_REPLY.test(metaNote)))
+      const changeClaim = narrated === undefined && turnIntent !== undefined && roundTarget !== undefined && genuiLine === undefined && claimsChange
       if (changeClaim && !changeClaimFedBack && round < opts.maxRounds - 1) {
         changeClaimFedBack = true
         failures = [{ code: 'CHANGE_CLAIMED', path: roundTarget }]
@@ -2044,7 +2048,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if (narrated !== undefined && !narrationFedBack && round < opts.maxRounds - 1) {
         narrationFedBack = true
         // T-0428: a say reply that claims a change it never sent keeps the full repair, so the update can still land.
-        if (turnIntent !== undefined && CHANGE_CLAIM_IN_REPLY.test(note!)) {
+        if (turnIntent !== undefined && claimsChange) {
           failures = [narrated]
           lastCaptureRound = offeredTools !== undefined
           forceSurfaceRound = offeredTools !== undefined // as T-0298: prose stood in for the payload

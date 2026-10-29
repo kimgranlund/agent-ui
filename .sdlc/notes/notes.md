@@ -1398,3 +1398,7 @@
 
 - note: the `red-checkpoint` deviation check printed no deviation lines; no `(red)` criteria exist.
 - note: the claim that the three T-0583 branches never fired live and that `note = reply` at `produce.ts` line 1893 hides the meta note is the report's own evidence (direct regex runs); I confirmed the :43 fixture replays red on the stated checks but did not re-run the regex. It is proposal text, not a criterion.
+
+## T-0585: The change-claim check also reads the reply's meta-line note (2026-10-29)
+
+- note: produce.ts `metaNote` is set only when a text or capture reply replaced the peeled note (`reply !== '' && note !== reply`); a legacy-shape reply whose note IS the reply is still tested once via `note`, so no gap found.

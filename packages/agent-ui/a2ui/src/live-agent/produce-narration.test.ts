@@ -384,6 +384,50 @@ describe('produce(): a targeted claim with no surface id, or a target never crea
     }
   })
 
+  // T-0585 (round 2026-10-29-r20-pattern cluster Z, :43): the prose "I've started your order" missed the regex while
+  // the meta-line note "Added the Brass Dome Table Lamp to your order." matched, but only the prose was tested.
+  const withMeta = (prose: string, metaNote: string, at: 'lead' | 'tail' = 'tail'): string => {
+    const meta = JSON.stringify({ a2uiMeta: { note: metaNote, target: { surfaceId: 'table-3' } } })
+    return at === 'lead' ? `${meta}\n${prose}` : `${prose}\n\n${meta}`
+  }
+  it('a note-only reply whose meta-line note claims a change, or whose prose says "I\'ve started your order", gets CHANGE_CLAIMED with render_surface forced', async () => {
+    for (const text of [
+      withMeta('A Brass Dome Table Lamp is $64, so I\'ve started your order on this same page. You can change the quantity below, and the total will follow.', 'Added the Brass Dome Table Lamp to your order.'),
+      withMeta('A Brass Dome Table Lamp is $64. You can change the quantity below.', 'Added the Brass Dome Table Lamp to your order.'),
+      withMeta('A Brass Dome Table Lamp is $64. You can change the quantity below.', 'Added the Brass Dome Table Lamp to your order.', 'lead'),
+      targeted('A Brass Dome Table Lamp is $64, so I\'ve started your order on this same page.', 'table-3'),
+      targeted('I have started your cart with the lamp.', 'table-3'),
+    ]) {
+      const r = await runRounds([{ text }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }])
+      expect(r.reqs, text).toHaveLength(2)
+      expect(r.reqs[1]!.toolChoice, text).toEqual({ name: 'render_surface' })
+      expect(lastUser(r.reqs[1]!), text).toContain('CHANGE_CLAIMED at table-3')
+      expect(r.wire, text).toEqual([UPDATE])
+      expect(r.trace, text).toMatchObject({ rounds: 2, failureCodes: ['CHANGE_CLAIMED'] })
+    }
+  })
+
+  it('a meta-line note or prose that claims nothing, or offers to start the order, stays clean', async () => {
+    for (const text of [
+      withMeta('We have three brass lamps, from $64. Pick one to see it up close.', 'Here are our lamps.'),
+      withMeta('We have three brass lamps, from $64.', 'Here are our lamps.', 'lead'),
+      withMeta('Shall I start your order?', 'Shall I start your order?'),
+      targeted('Shall I start your order with the Brass Dome Table Lamp?', 'table-3'),
+      targeted('Have you started your order yet?', 'table-3'),
+    ]) {
+      const r = await runRounds([{ text }])
+      expect(r.reqs, text).toHaveLength(1)
+      expect(r.trace.failureCodes, text).toEqual([])
+    }
+  })
+
+  it('an untargeted reply whose meta-line note claims a change ships on round 1 as before', async () => {
+    const text = `A Brass Dome Table Lamp is $64.\n\n${JSON.stringify({ a2uiMeta: { note: 'Added the Brass Dome Table Lamp to your order.' } })}`
+    const r = await runRounds([{ text }])
+    expect(r.reqs).toHaveLength(1)
+    expect(r.trace.failureCodes).toEqual([])
+  })
+
   it('a targeted reply that only mentions an earlier add, or a thing that comes to mind, claims nothing', async () => {
     for (const text of ['Which lamp would you like added?', 'What comes to mind when you think of brass?', 'The Oak Column lamp is $98.', 'Added fees may apply.', 'Added taxes will apply at checkout.']) {
       const r = await runRounds([{ text: targeted(text, 'table-3') }])
