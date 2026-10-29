@@ -57,6 +57,7 @@ export class UISplitElement extends UIContainerElement {
   #observer: MutationObserver | null = null
   #resizeHandle: PaneResizeHandle | null = null
   #separatorEls: HTMLElement[] = []
+  #autoLabelled = new WeakSet<HTMLElement>()
   #lastPaneCount: number | null = null // null = never synced (connect-time seed path)
   #warnedSizesMismatch = false
   readonly #collapseMemory = new Map<number, number>()
@@ -355,9 +356,14 @@ export class UISplitElement extends UIContainerElement {
     const bounds = this.#boundsFor(panes)
     this.#separatorEls.forEach((sep, i) => {
       const j = i + 1
-      sep.setAttribute('aria-orientation', axis)
+      // A separator's orientation is its own, not the layout axis: side-by-side panes (axis=horizontal) have a vertical divider.
+      sep.setAttribute('aria-orientation', axis === 'horizontal' ? 'vertical' : 'horizontal')
       sep.setAttribute('aria-controls', panes[i]?.id ?? '')
-      if (!sep.hasAttribute('aria-label')) sep.setAttribute('aria-label', 'Resize panel')
+      // Position-named so a 3+ pane split has distinct names; an authored aria-label is kept, the generated one tracks the pane count.
+      if (!sep.hasAttribute('aria-label') || this.#autoLabelled.has(sep)) {
+        sep.setAttribute('aria-label', `Resize panel ${j} of ${panes.length}`)
+        this.#autoLabelled.add(sep)
+      }
 
       const ri = ratios[i] ?? 0
       const rj = ratios[j] ?? 0

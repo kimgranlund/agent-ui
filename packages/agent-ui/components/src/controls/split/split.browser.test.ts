@@ -85,7 +85,7 @@ describe('ui-split browser smoke (AC1 — whole-shape, SPEC-R1 AC1)', () => {
   it('vertical axis: panes stack top-to-bottom, separators are horizontal dividers', () => {
     const { el, panes } = mount(2, { axis: 'vertical' })
     const sep = el.querySelector('[data-separator]') as HTMLElement
-    expect(sep.getAttribute('aria-orientation')).toBe('vertical')
+    expect(sep.getAttribute('aria-orientation')).toBe('horizontal')
     const p0 = panes[0].getBoundingClientRect()
     const p1 = panes[1].getBoundingClientRect()
     expect(p1.top).toBeGreaterThanOrEqual(p0.bottom - 1) // p1 sits BELOW p0

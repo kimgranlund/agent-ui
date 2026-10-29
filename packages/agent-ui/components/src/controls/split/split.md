@@ -121,8 +121,8 @@ in-flight drag aborts that drag and settles at the pre-mutation ratios before re
 
 ## Accessibility
 
-Each separator is a focusable (`tabindex="0"`) `role="separator"` with `aria-orientation` (matching `axis`),
-`aria-controls` (the leading pane's id), an `aria-label` (default `"Resize panel"`), and
+Each separator is a focusable (`tabindex="0"`) `role="separator"` with `aria-orientation` (the separator's own orientation, the opposite of `axis`: `vertical` between side-by-side panes),
+`aria-controls` (the leading pane's id), an `aria-label` (default `"Resize panel {n} of {count}"`, so each separator is distinct), and
 `aria-valuenow`/`-valuemin`/`-valuemax` describing the leading pane's extent as an **integer percentage of
 the two-neighbor pair's combined extent** — recomputed on every resize. Keyboard: Arrow keys (RTL-logical on
 the horizontal axis) step by `--ui-split-key-step`; Home/End snap to the pair's bounds; Enter toggles

@@ -114,7 +114,7 @@ describe('UISplitElement — separator ARIA (SPEC-R4 AC2)', () => {
     const el = makeSplit(3)
     for (const [i, sep] of el.seps.entries()) {
       expect(sep.getAttribute('role')).toBe('separator')
-      expect(sep.getAttribute('aria-orientation')).toBe('horizontal')
+      expect(sep.getAttribute('aria-orientation')).toBe('vertical') // axis=horizontal lays panes side by side, so the divider is vertical
       expect(sep.getAttribute('tabindex')).toBe('0')
       expect(sep.getAttribute('aria-label')).toBeTruthy()
       const controls = sep.getAttribute('aria-controls')
@@ -128,9 +128,17 @@ describe('UISplitElement — separator ARIA (SPEC-R4 AC2)', () => {
     el.remove()
   })
 
-  it('aria-orientation matches axis="vertical"', () => {
+  it('aria-orientation is the opposite of axis="vertical" (stacked panes, horizontal divider)', () => {
     const el = makeSplit(2, { axis: 'vertical' })
-    expect(el.seps[0].getAttribute('aria-orientation')).toBe('vertical')
+    expect(el.seps[0].getAttribute('aria-orientation')).toBe('horizontal')
+    el.remove()
+  })
+
+  it('a three-pane split names each separator distinctly by position', () => {
+    const el = makeSplit(3)
+    const names = el.seps.map((sep) => sep.getAttribute('aria-label'))
+    expect(names).toEqual(['Resize panel 1 of 3', 'Resize panel 2 of 3'])
+    expect(new Set(names).size).toBe(names.length)
     el.remove()
   })
 
