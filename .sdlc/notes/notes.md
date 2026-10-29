@@ -1421,3 +1421,7 @@
 - decide: packages/agent-ui/a2ui/src/agent: note: `@agent-ui/a2ui/agent` sits at 87765 of 87808 B gz after this row, 43 B of headroom.
 - decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:364: note: on a Surprise me pick the game is read from the reply, where "draw" as a verb matches `other` and silences the row (builder-disclosed).
 - decide: scripts/e2e-admin/probe/replays: note: round 19 :116 (the HUD-only answer to the pick) has no replay fixture; the any-surface gate covers it by construction, with no observed run.
+
+## T-0589: Live round 21 measures the round 20 cluster fixes (2026-10-29)
+
+- note: the report's 5 proposed tickets (J1, P4c, P5c, H1, Q1) are unfiled by design, as the handoff asks for proposals only.
