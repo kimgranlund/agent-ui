@@ -1,0 +1,585 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-stylist-palette-haiku-2",
+  "agent": "stylist",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T03:46:54.221Z, traces 2026-10-29.jsonl:129",
+  "seed": {
+    "version": 3,
+    "digest": "sha256:5be5c45f741dd489178106991cf29bd19acc06721e592b446c7f3d95954a4226"
+  },
+  "steps": [
+    {
+      "say": "Propose a calm blue palette for a banking app.",
+      "expect": [
+        "Swatch",
+        "Ramp"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm planning a calm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" blue pal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ette with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" anchor swatches and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a tonal ramp,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using ContrastPair to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" show foreground/background pair\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ings. Since I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" don't have access\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the contrast-floors\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" resource,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll avoid st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating prec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ise AA ratios and inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead let ContrastPair\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" own rendering conv\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ey cont\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rast qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ality, keeping my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" explanation\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to one conc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ise paragraph on intent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and contrast.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ling on a muted indigo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" accent al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ongside the blues\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a near\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-white surface and d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ark ink for text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" building out the tonal ram\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"p for primary across\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" five\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ste\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ps from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" light to dark, and set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up cont\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rast pairs—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ink on surface, white\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text on primary—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"tr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"usting the component to compute and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" display the actual ratios\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"serting specific numbers my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"self.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm structuring\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing a title, a row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of color swatches (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"primary, secondary, acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ent, surface, ink),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a caption pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us tonal ramp,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and another caption with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the contrast pair\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" examples wrapped in a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row. I'll write a br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ief prose intro about\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" banking palette's cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ustworthy intent and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" contrast consid\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"erations, then iss\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ue the surface creation call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" without any ext\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ra meta-line since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" this is a f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh surface.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"A\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" calm ban\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"king palette should\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" fe\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"el ste\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ady and trustworthy,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" so I've\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" built it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" around a deep primary blue\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with soft\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"er bl\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ue-\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"teal support\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and a near\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"-white surface. The prim\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ary tonal range run\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"s from p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ale to deep so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it can c\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"over back\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"grounds, bu\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ttons and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" em\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"phasis. The text pair\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ings put\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" d\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ark ink on the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" light\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" surface and white\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the primary,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and each\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"airing shows its cont\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"rast rating so\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you can check\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" leg\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ibility.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"palette-banking-1\\\",\\\"catalogId\\\":\\\"agent-ui--stylist\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"palette-banking-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"root_content\\\"]},{\\\"id\\\":\\\"root_content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"title\\\",\\\"roles_row\\\",\\\"tonal_caption\\\",\\\"tonal_ramp\\\",\\\"pair_caption\\\",\\\"pairs_row\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"h3\\\",\\\"text\\\":\\\"Calm blue palette for banking\\\"},{\\\"id\\\":\\\"roles_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"lg\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"sw_primary\\\",\\\"sw_secondary\\\",\\\"sw_accent\\\",\\\"sw_surface\\\",\\\"sw_ink\\\"]},{\\\"id\\\":\\\"sw_primary\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Primary\\\",\\\"value\\\":\\\"oklch(0.52 0.12 250)\\\"},{\\\"id\\\":\\\"sw_secondary\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Secondary\\\",\\\"value\\\":\\\"oklch(0.68 0.07 215)\\\"},{\\\"id\\\":\\\"sw_accent\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Accent\\\",\\\"value\\\":\\\"oklch(0.6 0.1 265)\\\"},{\\\"id\\\":\\\"sw_surface\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Surface\\\",\\\"value\\\":\\\"oklch(0.98 0.005 240)\\\"},{\\\"id\\\":\\\"sw_ink\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Ink\\\",\\\"value\\\":\\\"oklch(0.25 0.04 250)\\\"},{\\\"id\\\":\\\"tonal_caption\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"caption\\\",\\\"text\\\":\\\"Primary tonal range\\\"},{\\\"id\\\":\\\"tonal_ramp\\\",\\\"component\\\":\\\"Ramp\\\",\\\"label\\\":\\\"Primary tonal range\\\",\\\"steps\\\":[{\\\"label\\\":\\\"100\\\",\\\"value\\\":\\\"oklch(0.95 0.02 250)\\\"},{\\\"label\\\":\\\"300\\\",\\\"value\\\":\\\"oklch(0.8 0.07 250)\\\"},{\\\"label\\\":\\\"500\\\",\\\"value\\\":\\\"oklch(0.52 0.12 250)\\\"},{\\\"label\\\":\\\"700\\\",\\\"value\\\":\\\"oklch(0.38 0.1 250)\\\"},{\\\"label\\\":\\\"900\\\",\\\"value\\\":\\\"oklch(0.22 0.05 250)\\\"}]},{\\\"id\\\":\\\"pair_caption\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"caption\\\",\\\"text\\\":\\\"Text pairings\\\"},{\\\"id\\\":\\\"pairs_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"cp_ink\\\",\\\"cp_white\\\"]},{\\\"id\\\":\\\"cp_ink\\\",\\\"component\\\":\\\"ContrastPair\\\",\\\"foreground\\\":\\\"oklch(0.25 0.04 250)\\\",\\\"background\\\":\\\"oklch(0.98 0.005 240)\\\",\\\"label\\\":\\\"Body text on surface\\\",\\\"sample\\\":\\\"Your balance is up to date.\\\"},{\\\"id\\\":\\\"cp_white\\\",\\\"component\\\":\\\"ContrastPair\\\",\\\"foreground\\\":\\\"oklch(0.99 0.005 250)\\\",\\\"background\\\":\\\"oklch(0.52 0.12 250)\\\",\\\"label\\\":\\\"Button label on primary\\\",\\\"sample\\\":\\\"Transfer funds\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"palette-banking-1\\\",\\\"catalogId\\\":\\\"agent-ui--stylist\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"palette-banking-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"root_content\\\"]},{\\\"id\\\":\\\"root_content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"col\\\"]},{\\\"id\\\":\\\"col\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"title\\\",\\\"roles_row\\\",\\\"tonal_caption\\\",\\\"tonal_ramp\\\",\\\"pair_caption\\\",\\\"pairs_row\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"h3\\\",\\\"text\\\":\\\"Calm blue palette for banking\\\"},{\\\"id\\\":\\\"roles_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"lg\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"sw_primary\\\",\\\"sw_secondary\\\",\\\"sw_accent\\\",\\\"sw_surface\\\",\\\"sw_ink\\\"]},{\\\"id\\\":\\\"sw_primary\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Primary\\\",\\\"value\\\":\\\"oklch(0.52 0.12 250)\\\"},{\\\"id\\\":\\\"sw_secondary\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Secondary\\\",\\\"value\\\":\\\"oklch(0.68 0.07 215)\\\"},{\\\"id\\\":\\\"sw_accent\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Accent\\\",\\\"value\\\":\\\"oklch(0.6 0.1 265)\\\"},{\\\"id\\\":\\\"sw_surface\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Surface\\\",\\\"value\\\":\\\"oklch(0.98 0.005 240)\\\"},{\\\"id\\\":\\\"sw_ink\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Ink\\\",\\\"value\\\":\\\"oklch(0.25 0.04 250)\\\"},{\\\"id\\\":\\\"tonal_caption\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"caption\\\",\\\"text\\\":\\\"Primary tonal range\\\"},{\\\"id\\\":\\\"tonal_ramp\\\",\\\"component\\\":\\\"Ramp\\\",\\\"label\\\":\\\"Primary tonal range\\\",\\\"steps\\\":[{\\\"label\\\":\\\"100\\\",\\\"value\\\":\\\"oklch(0.95 0.02 250)\\\"},{\\\"label\\\":\\\"300\\\",\\\"value\\\":\\\"oklch(0.8 0.07 250)\\\"},{\\\"label\\\":\\\"500\\\",\\\"value\\\":\\\"oklch(0.52 0.12 250)\\\"},{\\\"label\\\":\\\"700\\\",\\\"value\\\":\\\"oklch(0.38 0.1 250)\\\"},{\\\"label\\\":\\\"900\\\",\\\"value\\\":\\\"oklch(0.22 0.05 250)\\\"}]},{\\\"id\\\":\\\"pair_caption\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"caption\\\",\\\"text\\\":\\\"Text pairings\\\"},{\\\"id\\\":\\\"pairs_row\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"cp_ink\\\",\\\"cp_white\\\"]},{\\\"id\\\":\\\"cp_ink\\\",\\\"component\\\":\\\"ContrastPair\\\",\\\"foreground\\\":\\\"oklch(0.25 0.04 250)\\\",\\\"background\\\":\\\"oklch(0.98 0.005 240)\\\",\\\"label\\\":\\\"Body text on surface\\\",\\\"sample\\\":\\\"Your balance is up to date.\\\"},{\\\"id\\\":\\\"cp_white\\\",\\\"component\\\":\\\"ContrastPair\\\",\\\"foreground\\\":\\\"oklch(0.99 0.005 250)\\\",\\\"background\\\":\\\"oklch(0.52 0.12 250)\\\",\\\"label\\\":\\\"Button label on primary\\\",\\\"sample\\\":\\\"Transfer funds\\\"}]}}\",\"codes\":[\"CONTRAST_PAIR_WRAPPED\"],\"detail\":\"Round 1 failed:\\n  CONTRAST_PAIR_WRAPPED: at palette-banking-1:root (palette-banking-1 wraps its ContrastPair in root (a Card), a card around a card. Make it ONE ContrastPair per text pairing with its foreground, background and label, never inside a Card: drop the Card around them with its CardHeader and CardContent (a root Card needs the surface re-created and its data model sent again), and hold the Card's title Text first, then each Swatch, Ramp and ContrastPair, in a root Column.)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This message is in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the user turn, not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"side a function result, so I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" treat it as a genuine\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" user instruction rather than an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" injection and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should follow it. I need to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" remove the Card wrap\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"per, restructure the root as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a Column with the title Text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" first follow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed by each Swatch,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Ramp, and Cont\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rastPair, and recre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate the surface with a fres\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"h id since the root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" type is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" changing.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll call createSurface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" again with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" same surfaceId palette\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-banking-1 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and catalogId agent-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ui--stylist, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updateComponents with the new\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Column struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure, sk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ipping target and any meta-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"line since the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reply should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" read\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" clean first pass without a corre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ction note or surface id mention\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also need to reconcile the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stated pal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ette description with what\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" swatches and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" contrast \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ratings actually show, since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" those curr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ently contradict each other.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need to restructure so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Swatch, Ram\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"p, and ContrastP\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"air s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its directly in the root Column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ested in Rows,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" even though that means dropping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" roles_row and pairs\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"_row containers.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping captions as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Text is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fine since they're not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rest\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ricted, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the order\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" becomes: title, swat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ches, tonal ca\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ption, \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ramp, pair caption,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" then the two contrast pair\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" flattened out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wrappers.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since the root type\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" changes from Card to Column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I need to recreate the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface and res\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"end the components, but there's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" no data model involved so I can\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" skip that step. For the re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply, I'll keep it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" short with no correction note or sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face id mentioned.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"palette-banking-1\\\",\\\"catalogId\\\":\\\"agent-ui--stylist\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"palette-banking-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"title\\\",\\\"sw_primary\\\",\\\"sw_secondary\\\",\\\"sw_accent\\\",\\\"sw_surface\\\",\\\"sw_ink\\\",\\\"tonal_caption\\\",\\\"tonal_ramp\\\",\\\"pair_caption\\\",\\\"cp_ink\\\",\\\"cp_white\\\"]},{\\\"id\\\":\\\"title\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"h3\\\",\\\"text\\\":\\\"Calm blue palette for banking\\\"},{\\\"id\\\":\\\"sw_primary\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Primary\\\",\\\"value\\\":\\\"oklch(0.52 0.12 250)\\\"},{\\\"id\\\":\\\"sw_secondary\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Secondary\\\",\\\"value\\\":\\\"oklch(0.68 0.07 215)\\\"},{\\\"id\\\":\\\"sw_accent\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Accent\\\",\\\"value\\\":\\\"oklch(0.6 0.1 265)\\\"},{\\\"id\\\":\\\"sw_surface\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Surface\\\",\\\"value\\\":\\\"oklch(0.98 0.005 240)\\\"},{\\\"id\\\":\\\"sw_ink\\\",\\\"component\\\":\\\"Swatch\\\",\\\"label\\\":\\\"Ink\\\",\\\"value\\\":\\\"oklch(0.25 0.04 250)\\\"},{\\\"id\\\":\\\"tonal_caption\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"caption\\\",\\\"text\\\":\\\"Primary tonal range\\\"},{\\\"id\\\":\\\"tonal_ramp\\\",\\\"component\\\":\\\"Ramp\\\",\\\"label\\\":\\\"Primary tonal range\\\",\\\"steps\\\":[{\\\"label\\\":\\\"100\\\",\\\"value\\\":\\\"oklch(0.95 0.02 250)\\\"},{\\\"label\\\":\\\"300\\\",\\\"value\\\":\\\"oklch(0.8 0.07 250)\\\"},{\\\"label\\\":\\\"500\\\",\\\"value\\\":\\\"oklch(0.52 0.12 250)\\\"},{\\\"label\\\":\\\"700\\\",\\\"value\\\":\\\"oklch(0.38 0.1 250)\\\"},{\\\"label\\\":\\\"900\\\",\\\"value\\\":\\\"oklch(0.22 0.05 250)\\\"}]},{\\\"id\\\":\\\"pair_caption\\\",\\\"component\\\":\\\"Text\\\",\\\"variant\\\":\\\"caption\\\",\\\"text\\\":\\\"Text pairings\\\"},{\\\"id\\\":\\\"cp_ink\\\",\\\"component\\\":\\\"ContrastPair\\\",\\\"foreground\\\":\\\"oklch(0.25 0.04 250)\\\",\\\"background\\\":\\\"oklch(0.98 0.005 240)\\\",\\\"label\\\":\\\"Body text on surface\\\",\\\"sample\\\":\\\"Your balance is up to date.\\\"},{\\\"id\\\":\\\"cp_white\\\",\\\"component\\\":\\\"ContrastPair\\\",\\\"foreground\\\":\\\"oklch(0.99 0.005 250)\\\",\\\"background\\\":\\\"oklch(0.52 0.12 250)\\\",\\\"label\\\":\\\"Button label on primary\\\",\\\"sample\\\":\\\"Transfer funds\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"A calm banking palette should feel steady and trustworthy, so I've built it around a deep primary blue with softer blue-teal support and a near-white surface. The primary tonal range runs from pale to deep for backgrounds, buttons and emphasis. Dark ink sits on the light surface, and white sits on the primary, with each pairing's contrast rating shown so you can check legibility.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Propose a calm blue palette for a banking app.\",\"k\":3},\"exemplarIds\":[\"brand-palette\",\"color-picker-form\",\"pattern-schedule-picker\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"CONTRAST_PAIR_WRAPPED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":56730,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22257},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5057},{\"id\":\"persona\",\"chars\":1617}],\"over\":false},\"usage\":{\"inputTokens\":7253,\"outputTokens\":5448,\"cacheReadInputTokens\":37512,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":50056}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"palette-banking-1\",\"catalogId\":\"agent-ui--stylist\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"palette-banking-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"title\",\"sw_primary\",\"sw_secondary\",\"sw_accent\",\"sw_surface\",\"sw_ink\",\"tonal_caption\",\"tonal_ramp\",\"pair_caption\",\"cp_ink\",\"cp_white\"]},{\"id\":\"title\",\"component\":\"Text\",\"variant\":\"h3\",\"text\":\"Calm blue palette for banking\"},{\"id\":\"sw_primary\",\"component\":\"Swatch\",\"label\":\"Primary\",\"value\":\"oklch(0.52 0.12 250)\"},{\"id\":\"sw_secondary\",\"component\":\"Swatch\",\"label\":\"Secondary\",\"value\":\"oklch(0.68 0.07 215)\"},{\"id\":\"sw_accent\",\"component\":\"Swatch\",\"label\":\"Accent\",\"value\":\"oklch(0.6 0.1 265)\"},{\"id\":\"sw_surface\",\"component\":\"Swatch\",\"label\":\"Surface\",\"value\":\"oklch(0.98 0.005 240)\"},{\"id\":\"sw_ink\",\"component\":\"Swatch\",\"label\":\"Ink\",\"value\":\"oklch(0.25 0.04 250)\"},{\"id\":\"tonal_caption\",\"component\":\"Text\",\"variant\":\"caption\",\"text\":\"Primary tonal range\"},{\"id\":\"tonal_ramp\",\"component\":\"Ramp\",\"label\":\"Primary tonal range\",\"steps\":[{\"label\":\"100\",\"value\":\"oklch(0.95 0.02 250)\"},{\"label\":\"300\",\"value\":\"oklch(0.8 0.07 250)\"},{\"label\":\"500\",\"value\":\"oklch(0.52 0.12 250)\"},{\"label\":\"700\",\"value\":\"oklch(0.38 0.1 250)\"},{\"label\":\"900\",\"value\":\"oklch(0.22 0.05 250)\"}]},{\"id\":\"pair_caption\",\"component\":\"Text\",\"variant\":\"caption\",\"text\":\"Text pairings\"},{\"id\":\"cp_ink\",\"component\":\"ContrastPair\",\"foreground\":\"oklch(0.25 0.04 250)\",\"background\":\"oklch(0.98 0.005 240)\",\"label\":\"Body text on surface\",\"sample\":\"Your balance is up to date.\"},{\"id\":\"cp_white\",\"component\":\"ContrastPair\",\"foreground\":\"oklch(0.99 0.005 250)\",\"background\":\"oklch(0.52 0.12 250)\",\"label\":\"Button label on primary\",\"sample\":\"Transfer funds\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "A calm banking palette should feel steady and trustworthy, so I've built it around a deep primary blue with softer blue-teal support and a near-white surface. The primary tonal range runs from pale to deep so it can cover backgrounds, buttons and emphasis. The text pairings put dark ink on the light surface and white on the primary, and each pairing shows its contrast rating so you can check legibility.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's a calm blue palette for the banking app: swatches for the anchors, the primary tonal range, and two text pairings with their contrast ratings.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "palette-banking-1",
+                      "catalogId": "agent-ui--stylist"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "palette-banking-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "root_content"
+                          ]
+                        },
+                        {
+                          "id": "root_content",
+                          "component": "CardContent",
+                          "children": [
+                            "col"
+                          ]
+                        },
+                        {
+                          "id": "col",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "title",
+                            "roles_row",
+                            "tonal_caption",
+                            "tonal_ramp",
+                            "pair_caption",
+                            "pairs_row"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "variant": "h3",
+                          "text": "Calm blue palette for banking"
+                        },
+                        {
+                          "id": "roles_row",
+                          "component": "Row",
+                          "gap": "lg",
+                          "wrap": true,
+                          "children": [
+                            "sw_primary",
+                            "sw_secondary",
+                            "sw_accent",
+                            "sw_surface",
+                            "sw_ink"
+                          ]
+                        },
+                        {
+                          "id": "sw_primary",
+                          "component": "Swatch",
+                          "label": "Primary",
+                          "value": "oklch(0.52 0.12 250)"
+                        },
+                        {
+                          "id": "sw_secondary",
+                          "component": "Swatch",
+                          "label": "Secondary",
+                          "value": "oklch(0.68 0.07 215)"
+                        },
+                        {
+                          "id": "sw_accent",
+                          "component": "Swatch",
+                          "label": "Accent",
+                          "value": "oklch(0.6 0.1 265)"
+                        },
+                        {
+                          "id": "sw_surface",
+                          "component": "Swatch",
+                          "label": "Surface",
+                          "value": "oklch(0.98 0.005 240)"
+                        },
+                        {
+                          "id": "sw_ink",
+                          "component": "Swatch",
+                          "label": "Ink",
+                          "value": "oklch(0.25 0.04 250)"
+                        },
+                        {
+                          "id": "tonal_caption",
+                          "component": "Text",
+                          "variant": "caption",
+                          "text": "Primary tonal range"
+                        },
+                        {
+                          "id": "tonal_ramp",
+                          "component": "Ramp",
+                          "label": "Primary tonal range",
+                          "steps": [
+                            {
+                              "label": "100",
+                              "value": "oklch(0.95 0.02 250)"
+                            },
+                            {
+                              "label": "300",
+                              "value": "oklch(0.8 0.07 250)"
+                            },
+                            {
+                              "label": "500",
+                              "value": "oklch(0.52 0.12 250)"
+                            },
+                            {
+                              "label": "700",
+                              "value": "oklch(0.38 0.1 250)"
+                            },
+                            {
+                              "label": "900",
+                              "value": "oklch(0.22 0.05 250)"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "pair_caption",
+                          "component": "Text",
+                          "variant": "caption",
+                          "text": "Text pairings"
+                        },
+                        {
+                          "id": "pairs_row",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "cp_ink",
+                            "cp_white"
+                          ]
+                        },
+                        {
+                          "id": "cp_ink",
+                          "component": "ContrastPair",
+                          "foreground": "oklch(0.25 0.04 250)",
+                          "background": "oklch(0.98 0.005 240)",
+                          "label": "Body text on surface",
+                          "sample": "Your balance is up to date."
+                        },
+                        {
+                          "id": "cp_white",
+                          "component": "ContrastPair",
+                          "foreground": "oklch(0.99 0.005 250)",
+                          "background": "oklch(0.52 0.12 250)",
+                          "label": "Button label on primary",
+                          "sample": "Transfer funds"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "A calm banking palette should feel steady and trustworthy, so I've built it around a deep primary blue with softer blue-teal support and a near-white surface. The primary tonal range runs from pale to deep for backgrounds, buttons and emphasis. Dark ink sits on the light surface, and white sits on the primary, with each pairing's contrast rating shown so you can check legibility.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "A calm banking palette should feel steady and trustworthy, so I've built it around a deep primary blue with softer blue-teal support and a near-white surface. The primary tonal range runs from pale to deep for backgrounds, buttons and emphasis. Dark ink sits on the light surface, and white sits on the primary, with each pairing's contrast rating shown so you can check legibility.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "palette-banking-1",
+                      "catalogId": "agent-ui--stylist"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "palette-banking-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "title",
+                            "sw_primary",
+                            "sw_secondary",
+                            "sw_accent",
+                            "sw_surface",
+                            "sw_ink",
+                            "tonal_caption",
+                            "tonal_ramp",
+                            "pair_caption",
+                            "cp_ink",
+                            "cp_white"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "variant": "h3",
+                          "text": "Calm blue palette for banking"
+                        },
+                        {
+                          "id": "sw_primary",
+                          "component": "Swatch",
+                          "label": "Primary",
+                          "value": "oklch(0.52 0.12 250)"
+                        },
+                        {
+                          "id": "sw_secondary",
+                          "component": "Swatch",
+                          "label": "Secondary",
+                          "value": "oklch(0.68 0.07 215)"
+                        },
+                        {
+                          "id": "sw_accent",
+                          "component": "Swatch",
+                          "label": "Accent",
+                          "value": "oklch(0.6 0.1 265)"
+                        },
+                        {
+                          "id": "sw_surface",
+                          "component": "Swatch",
+                          "label": "Surface",
+                          "value": "oklch(0.98 0.005 240)"
+                        },
+                        {
+                          "id": "sw_ink",
+                          "component": "Swatch",
+                          "label": "Ink",
+                          "value": "oklch(0.25 0.04 250)"
+                        },
+                        {
+                          "id": "tonal_caption",
+                          "component": "Text",
+                          "variant": "caption",
+                          "text": "Primary tonal range"
+                        },
+                        {
+                          "id": "tonal_ramp",
+                          "component": "Ramp",
+                          "label": "Primary tonal range",
+                          "steps": [
+                            {
+                              "label": "100",
+                              "value": "oklch(0.95 0.02 250)"
+                            },
+                            {
+                              "label": "300",
+                              "value": "oklch(0.8 0.07 250)"
+                            },
+                            {
+                              "label": "500",
+                              "value": "oklch(0.52 0.12 250)"
+                            },
+                            {
+                              "label": "700",
+                              "value": "oklch(0.38 0.1 250)"
+                            },
+                            {
+                              "label": "900",
+                              "value": "oklch(0.22 0.05 250)"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "pair_caption",
+                          "component": "Text",
+                          "variant": "caption",
+                          "text": "Text pairings"
+                        },
+                        {
+                          "id": "cp_ink",
+                          "component": "ContrastPair",
+                          "foreground": "oklch(0.25 0.04 250)",
+                          "background": "oklch(0.98 0.005 240)",
+                          "label": "Body text on surface",
+                          "sample": "Your balance is up to date."
+                        },
+                        {
+                          "id": "cp_white",
+                          "component": "ContrastPair",
+                          "foreground": "oklch(0.99 0.005 250)",
+                          "background": "oklch(0.52 0.12 250)",
+                          "label": "Button label on primary",
+                          "sample": "Transfer funds"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "stylist"
+        ],
+        "exemplars": [
+          "brand-palette",
+          "color-picker-form",
+          "pattern-schedule-picker"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "palette-presentation",
+            "load": "index-only"
+          },
+          {
+            "name": "contrast-floors",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
