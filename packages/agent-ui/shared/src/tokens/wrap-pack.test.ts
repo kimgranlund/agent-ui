@@ -3,7 +3,8 @@
 // `tools/`-side script's logic is co-tested from its nearest `src/` sibling, never from inside `tools/`
 // itself, which the standing run never collects).
 import { describe, it, expect } from 'vitest'
-import { extractRootBody, wrapPack, repointFill } from '../../tools/themes/wrap-pack.ts'
+import { readFileSync } from 'node:fs'
+import { extractRootBody, wrapPack, repointFill, repointText } from '../../tools/themes/wrap-pack.ts'
 
 const VALID_EXPORT = `:root {
   color-scheme: light dark;
@@ -132,5 +133,24 @@ describe('repointFill', () => {
   it('refuses a pack that declares only some of the three fill roles', () => {
     const partial = repointFill(ramp(STOPS) + roles()).replace(/^--md-sys-color-primary-fill-hover:[^;]*;\n/m, '')
     expect(() => repointFill(partial)).toThrow(/declares .* but not primary-fill-hover; a fill ladder is all three roles or none/)
+  })
+})
+
+// T-0567: repointText walks primary-high from its stock 650 / 400 legs to the first stop that clears 4.5:1 as text on
+// every plane of its scheme (darker for light, lighter for dark), on two committed packs' own ramps.
+describe('repointText: primary-high', () => {
+  const pack = (name: string) => readFileSync(`${process.cwd()}/packages/agent-ui/shared/src/tokens/themes/${name}.css`, 'utf8')
+  const withHigh = (css: string, light: string, dark: string) =>
+    css.replace(/--md-sys-color-primary-high: light-dark\([^;]*;/, `--md-sys-color-primary-high: light-dark(var(--md-sys-color-primary-${light}), var(--md-sys-color-primary-${dark}));`)
+  const high = (css: string) => css.match(/--md-sys-color-primary-high: light-dark\(var\(--md-sys-color-primary-(\d+)\), var\(--md-sys-color-primary-(\d+)\)\);/)?.slice(1)
+
+  it('walks the dark leg lighter (400 to 350) where 400 misses on n-800, and keeps a light 650 that clears (ruby)', () => {
+    expect(high(repointText(withHigh(pack('ruby'), '650', '400')))).toEqual(['650', '350'])
+  })
+  it('walks the light leg darker (650 to 700) where 650 misses on n-200, and keeps a dark 400 that clears (lagoon)', () => {
+    expect(high(repointText(withHigh(pack('lagoon'), '650', '400')))).toEqual(['700', '400'])
+  })
+  it('lands on the FIRST passing stop from the start, not any passing stop (a hand-set 800 / 250 is walked back)', () => {
+    expect(high(repointText(withHigh(pack('ruby'), '800', '250')))).toEqual(['650', '350'])
   })
 })
