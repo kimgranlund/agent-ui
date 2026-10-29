@@ -680,3 +680,30 @@ describe('ui-modal — GH #1554: real pixel-legibility regression (page text beh
     },
   )
 })
+
+describe('ui-modal: an accessible name written after first connect still reaches the dialog (T-0520, both engines)', () => {
+  it('renaming an open modal forwards the new aria-label/aria-labelledby onto the dialog and leaves none on the host', async () => {
+    const { wrap, modal, dialog } = mount('<ui-modal aria-label="Old name"><h2 id="t0520-modal-title">Settings</h2></ui-modal>')
+    modal.open = true
+    await modal.updateComplete
+    expect(dialog.open, 'precondition: the modal is open').toBe(true)
+    expect(dialog.getAttribute('aria-label')).toBe('Old name')
+
+    modal.setAttribute('aria-label', 'New name')
+    expect(dialog.getAttribute('aria-label'), 'the late aria-label never reached the dialog').toBe('New name')
+    expect(modal.hasAttribute('aria-label'), 'the late aria-label stayed on the host').toBe(false)
+
+    modal.setAttribute('aria-labelledby', 't0520-modal-title')
+    expect(dialog.getAttribute('aria-labelledby'), 'the late aria-labelledby never reached the dialog').toBe('t0520-modal-title')
+    expect(modal.hasAttribute('aria-labelledby'), 'the late aria-labelledby stayed on the host').toBe(false)
+
+    // A rename while detached (a reopen with a new title) lands too.
+    modal.open = false
+    await modal.updateComplete
+    wrap.remove()
+    modal.setAttribute('aria-label', 'Reopened name')
+    document.body.append(wrap)
+    expect(dialog.getAttribute('aria-label')).toBe('Reopened name')
+    expect(modal.hasAttribute('aria-label')).toBe(false)
+  })
+})

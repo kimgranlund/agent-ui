@@ -2266,8 +2266,9 @@ form-popover SPEC-R5 lesson).
 ## Accessibility
 
 The `<dialog>` part carries the **dialog** role natively and `aria-modal` is set by `showModal()`. An author
-accessible name (`aria-label` / `aria-labelledby`) is **forwarded** off the host onto the dialog part, so the
-host stays free of `role`/`aria-*`; a labelling heading child is the common pattern.
+accessible name (`aria-label` / `aria-labelledby`) is **forwarded** off the host onto the dialog part, and a
+name written later (a binding, a renderer update, a reopen with a new title) is forwarded again on every
+change, so the host stays free of `role`/`aria-*`; a labelling heading child is the common pattern.
 
 ## Surface
 
@@ -3647,8 +3648,9 @@ dialog). The platform does **not** restore focus to the invoking element on clos
 ## Accessibility
 
 The `<dialog>` part carries the **dialog** role natively and `aria-modal` is set by `showModal()`. An author
-accessible name (`aria-label` / `aria-labelledby`) is **forwarded** off the host onto the dialog part, so the
-host stays free of `role`/`aria-*` (the family's `internals`-only ARIA discipline) and the name rides the
+accessible name (`aria-label` / `aria-labelledby`) is **forwarded** off the host onto the dialog part, and a
+name written later (a binding, a renderer update, a reopen with a new title) is forwarded again on every
+change, so the host stays free of `role`/`aria-*` (the family's `internals`-only ARIA discipline) and the name rides the
 semantic element; a labelling heading child is the common pattern.
 
 ## Surface
@@ -6595,17 +6597,18 @@ Native semantics carry it (SPEC-R6; ADR-0163 cl.3, the correctness crux): the st
 — header association, `th scope`, and screen-reader table navigation come from the platform, for free, WITH
 EVERY CAPABILITY ENABLED — `role=grid` is explicitly REJECTED (it would forfeit exactly this rationale). The
 host mints **no** ARIA at all — no `role`, no `aria-label` — the `<caption>` (from `label`) is the table's
-accessible name. The interior scroll container additionally carries `role="region" tabindex="0"` (+
-`aria-labelledby` the caption when present) — the WAI-ARIA APG accessible-overflow pattern, so keyboard-only
-users can reach overflowed columns even in engines without keyboard-focusable scrollers by default. This is
+accessible name. The interior scroll container carries `tabindex="0"` while it overflows, and `role="region"`
+(+ `aria-labelledby` the caption) while `label` names it: the WAI-ARIA APG accessible-overflow pattern, so
+keyboard-only users can reach overflowed columns even in engines without keyboard-focusable scrollers by
+default, and a table that fits adds no empty Tab stop (T-0520). This is
 platform scroll affordance, not a component-defined keyboard contract. Every interactive part (a composed
 `ui-checkbox`/`ui-radio` selection control, the composed `ui-checkbox` select-all, a composed `ui-button`
 sort trigger — ADR-0163 amendment, GH #1445; pre-amendment each was a real native `<input>`/`<button>`) is
 a real, focusable FACE control in the **normal tab order** — no roving tabindex, no composite-widget
 keyboard contract, no `UIListboxElement`; selection state is conveyed ONLY by the composed control's OWN
 `ariaChecked` (via internals) — **never `aria-selected` on rows** (rejected — selection-widget vocabulary
-ATs do not convey it on plain-table rows). An unlabeled table (`label` absent) yields an unnamed scroll
-region — an accepted residual, not a violation; provide `label` when the table needs an accessible name.
+ATs do not convey it on plain-table rows). An unlabelled table (`label` absent) drops the region role, so it
+is never a nameless landmark; provide `label` when the table needs an accessible name.
 
 ## Sizing
 

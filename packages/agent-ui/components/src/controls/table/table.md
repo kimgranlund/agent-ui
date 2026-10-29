@@ -125,7 +125,7 @@ slots: []              # no light-DOM content model — render() stays the inher
 
 parts:                  # the light-DOM anatomy this control stamps (native table elements + data-part nodes)
   - name: scroll
-    description: The `<div data-part="scroll" role="region" tabindex="0">` — the component's OWN overflow container (SPEC-R5). Created once per connection and never replaced by a data update (SPEC-R4.1); no code path ever writes its `scrollLeft`/`scrollTop`. `aria-labelledby` points at the caption's id when `label` is non-empty (SPEC-R5 AC2) — an unlabeled table yields an unnamed region, an accepted residual.
+    description: The `<div data-part="scroll">`, the component's OWN overflow container (SPEC-R5). Created once per connection and never replaced by a data update (SPEC-R4.1); no code path ever writes its `scrollLeft`/`scrollTop`. While `label` is non-empty it carries `role="region"` + `aria-labelledby` the caption's id (SPEC-R5 AC2); an unlabelled table drops the role, so it is never a nameless region (T-0520). `tabindex="0"` is present only while the container overflows on either axis, so a table that fits is not a Tab stop (T-0520).
   - name: table
     description: The real, stamped `<table>` (ADR-0111 cl.3 — the ADR-0078 cl.4 stamp doctrine scaled up; ADR-0163 cl.3 keeps this native role even with every capability enabled — `role=grid` is REJECTED). Attached to `scroll` only when at least one valid column exists (SPEC-R3 row 1); its node identity — and its `thead`/`tbody` children's — persists across every `rows`-only update (SPEC-R4.3).
   - name: caption
@@ -158,13 +158,13 @@ aria:
   role: none              # the HOST mints no role at all — the stamped <table> IS the table (SPEC-R6; ADR-0163 cl.3 — role=grid REJECTED, this stays true with every capability enabled, the correctness crux)
   roleSource: native-table # header association / th scope / SR table navigation come from the PLATFORM, not internals
   labelSource: caption     # the real <caption> (from `label`) is the table's accessible name — never a host aria-label
-  interiorRegion: The `[data-part='scroll']` container carries `role="region" tabindex="0"` + `aria-labelledby` (the caption's id, when present) — the WAI-ARIA APG accessible-overflow pattern on an INTERIOR node (the Option/MenuItem interior-attribute sanction; only HOST aria rides internals, SPEC-R5 AC2).
+  interiorRegion: The `[data-part='scroll']` container carries `role="region"` + `aria-labelledby` (the caption's id) only while `label` is non-empty, and `tabindex="0"` only while it overflows (T-0520): the WAI-ARIA APG accessible-overflow pattern on an INTERIOR node (the Option/MenuItem interior-attribute sanction; only HOST aria rides internals, SPEC-R5 AC2).
   selectionSource: The composed ui-checkbox/ui-radio's OWN `ariaChecked` (via internals) IS the announced selection (ADR-0163 cl.3, amended GH #1445 — the identical signal a native input's AX mapping produced, now FACE-sourced) — no `aria-selected` on rows (rejected; selection-widget vocabulary ATs do not convey on plain-table rows).
 
 keyboard:
   - note: Every interactive part (a composed `select` ui-checkbox/ui-radio, the composed `select-all` ui-checkbox, a composed `sort-button` ui-button) is a real focusable FACE control in the NORMAL tab order (ADR-0163 cl.3 — the APG's own "all focusable elements contained in a table are included in the page tab sequence"; amended GH #1445 — each part was a real native `<input>`/`<button>` pre-amendment, now a composed control carrying the SAME tab-stop/keyboard contract via its own `tabbable`/`pressActivation` traits). NO roving tabindex, NO composite-widget keyboard contract, NO `UIListboxElement` — this is deliberately NOT a composite widget. A 50-row selectable table has 50 checkbox tab stops, native-honest, same as a form of 50 checkboxes.
   - note: Each `select`/`select-all` composed control activates via its own native-parity Space toggle (`pressActivation`, indicator-element.ts); each `sort-button` composed `ui-button` activates via its own native-parity Space/Enter activation (`pressActivation`, button.ts). No component-defined key binding is added for any of these — they are real FACE controls, not simulated widgets. For `selectable='single'`, `ui-table` additionally installs its OWN capture-phase click guard (`connected()`) so a click cannot uncheck the sole selected radio — the one keyboard/pointer-contract addition this control makes, replacing the native `name`-group's platform-provided guarantee.
-  - note: the scroll region's `tabindex="0"` makes it a native tab stop + native-scrollable target (arrow keys / Page Up-Down scroll it in engines with keyboard-focusable scrollers) — this is PLATFORM behavior, not a component-defined binding.
+  - note: while the scroll container overflows, its `tabindex="0"` makes it a native tab stop + native-scrollable target (arrow keys / Page Up-Down scroll it in engines with keyboard-focusable scrollers); this is PLATFORM behavior, not a component-defined binding.
   - note: A non-interactive table cell/row (every cell when `selectable=''`, and every non-select/non-sort cell always) is never focusable and carries no keyboard contract of its own.
 
 geometry:
@@ -314,17 +314,18 @@ Native semantics carry it (SPEC-R6; ADR-0163 cl.3, the correctness crux): the st
 — header association, `th scope`, and screen-reader table navigation come from the platform, for free, WITH
 EVERY CAPABILITY ENABLED — `role=grid` is explicitly REJECTED (it would forfeit exactly this rationale). The
 host mints **no** ARIA at all — no `role`, no `aria-label` — the `<caption>` (from `label`) is the table's
-accessible name. The interior scroll container additionally carries `role="region" tabindex="0"` (+
-`aria-labelledby` the caption when present) — the WAI-ARIA APG accessible-overflow pattern, so keyboard-only
-users can reach overflowed columns even in engines without keyboard-focusable scrollers by default. This is
+accessible name. The interior scroll container carries `tabindex="0"` while it overflows, and `role="region"`
+(+ `aria-labelledby` the caption) while `label` names it: the WAI-ARIA APG accessible-overflow pattern, so
+keyboard-only users can reach overflowed columns even in engines without keyboard-focusable scrollers by
+default, and a table that fits adds no empty Tab stop (T-0520). This is
 platform scroll affordance, not a component-defined keyboard contract. Every interactive part (a composed
 `ui-checkbox`/`ui-radio` selection control, the composed `ui-checkbox` select-all, a composed `ui-button`
 sort trigger — ADR-0163 amendment, GH #1445; pre-amendment each was a real native `<input>`/`<button>`) is
 a real, focusable FACE control in the **normal tab order** — no roving tabindex, no composite-widget
 keyboard contract, no `UIListboxElement`; selection state is conveyed ONLY by the composed control's OWN
 `ariaChecked` (via internals) — **never `aria-selected` on rows** (rejected — selection-widget vocabulary
-ATs do not convey it on plain-table rows). An unlabeled table (`label` absent) yields an unnamed scroll
-region — an accepted residual, not a violation; provide `label` when the table needs an accessible name.
+ATs do not convey it on plain-table rows). An unlabelled table (`label` absent) drops the region role, so it
+is never a nameless landmark; provide `label` when the table needs an accessible name.
 
 ## Sizing
 
