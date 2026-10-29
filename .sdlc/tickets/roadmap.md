@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 530 done, 5 dropped (git log or .NNNN-* folders)
+Closed: 532 done, 5 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -122,4 +122,4 @@ Closed: 530 done, 5 dropped (git log or .NNNN-* folders)
 - decide: .sdlc/tickets/0480-itinerary-missing-composite/handoff.md:19 note: the Repro line (`npm run chat:probe -- --replay .sdlc/evals/rounds/2026-10-26-r15-pattern/runs/reach-concierge-day-itinerary-haiku-3/fixture.json`) still exits 1 by design, as the builder reports: the recorded fixture has no third round to ship the repair; the authored replay under replays/ is the keyless proof (T-0479 precedent). -> stale, by design: the Repro still exits 1 and the authored replay is the keyless proof (triage 2026-10-28) (from T-0480: A day plan with timed stops answered with no Itinerary is a missing composite (2026-10-27))
 - decide: scripts/e2e-admin/probe/replays/concierge-haiku-itinerary-target-claim.test.mjs:22 note: that replay's say turn is the same day plan, so it now exercises ITINERARY_MISSING rather than SURFACE_CLAIMED's meta-target read; SURFACE_CLAIMED's own cases stay in packages/agent-ui/a2ui/src/live-agent/produce-narration.test.ts:268-282. -> stale, informational: SURFACE_CLAIMED keeps its own cases in produce-narration.test.ts (triage 2026-10-28) (from T-0480: A day plan with timed stops answered with no Itinerary is a missing composite (2026-10-27))
 - decide: packages/agent-ui/app/src/leak-gate.browser.test.ts: ui-agent-admin is excluded from the app gate (host listener count drifts 1052 to 1133 between rounds); a follow-up could settle whether that is late render or a stack. (from T-0543: A standing browser test proves no control leaks listeners, observers, intervals or popovers after removal (2026-10-28))
-- decide: redck deviations: no `process deviation:` lines printed. (from T-0562: The leak gate covers ui-agent-admin (2026-10-28))
+- decide: packages/agent-ui/app/src/controls/conversation/conversation-composer.ts:1329 and :1572 call `computePosition` without the new `rtl` argument, so the composer's two popups stay physical under rtl. The ticket Context names them in the fan-out, but its proposed scope excludes the app package and no criterion covers them; the builder disclosed it. Worth a follow-up ticket. (from T-0538: Range controls and overlays behave correctly under dir=rtl (2026-10-28))
