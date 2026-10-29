@@ -1,0 +1,1243 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-shopkeeper-browse-and-add-haiku-2",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T22:59:39.785Z, traces 2026-10-29.jsonl:42,2026-10-29.jsonl:43",
+  "seed": {
+    "version": 6,
+    "digest": "sha256:9b7a913f834344373bdbc527bfcca807c82db2c6ee08db03df42e0b8032f42b8"
+  },
+  "steps": [
+    {
+      "say": "What lamps do you have?",
+      "expect": [
+        "ProductCard"
+      ]
+    },
+    {
+      "say": "Add the first one to my order.",
+      "expect": [
+        "ConfirmReceipt"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is a browse request\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I'll render a stor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efront surface with product ti\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"les showing lamp names,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prices, a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" standout badge where\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" relevant, and a buy\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on each—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" separate ask needed since the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface itself prov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ides the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buying\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" interaction.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll keep the prose br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ief,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" staying in character as the L\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antern & Loom shop\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"keeper.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Building out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the surface struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"R\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of the l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ineup: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"age ceramic table lam\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"p at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" $64 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"with no badge, a linen\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" drum pendant at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" $112 mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked \\\"On sale,\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and an oak reading lam\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"p at $78 mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked \\\"Sold out\\\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its button disabled. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll keep the clos\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply short and sk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"entioning illustrative p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ricing unless asked.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" lamps we have in\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stock right now. T\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ell\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" me which one you'\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"d like to add\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to an\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" order.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"storefront-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"storefront-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"intro\\\",\\\"tiles\\\"]},{\\\"id\\\":\\\"intro\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Our lamps, all in the shop's current catalog:\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"tiles\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"p1\\\",\\\"p2\\\",\\\"p3\\\",\\\"p4\\\"]},{\\\"id\\\":\\\"p1\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"p1_hd\\\",\\\"p1_ct\\\",\\\"p1_ft\\\"]},{\\\"id\\\":\\\"p1_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"p1_name\\\",\\\"p1_badge\\\"]},{\\\"id\\\":\\\"p1_name\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Brass Arc Floor Lamp\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"p1_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"New\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"p1_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"p1_price\\\",\\\"p1_desc\\\"]},{\\\"id\\\":\\\"p1_price\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"$189\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"p1_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Solid brass, 190 cm arc, linen shade.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"p1_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"p1_btn\\\"]},{\\\"id\\\":\\\"p1_btn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Add to order\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-brass-arc\\\"}}},{\\\"id\\\":\\\"p2\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"p2_hd\\\",\\\"p2_ct\\\",\\\"p2_ft\\\"]},{\\\"id\\\":\\\"p2_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"p2_name\\\"]},{\\\"id\\\":\\\"p2_name\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Sage Ceramic Table Lamp\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"p2_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"p2_price\\\",\\\"p2_desc\\\"]},{\\\"id\\\":\\\"p2_price\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"$64\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"p2_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Hand-glazed stoneware, 35 cm, natural linen shade.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"p2_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"p2_btn\\\"]},{\\\"id\\\":\\\"p2_btn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Add to order\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-sage-ceramic\\\"}}},{\\\"id\\\":\\\"p3\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"p3_hd\\\",\\\"p3_ct\\\",\\\"p3_ft\\\"]},{\\\"id\\\":\\\"p3_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"p3_name\\\",\\\"p3_badge\\\"]},{\\\"id\\\":\\\"p3_name\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Linen Drum Pendant\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"p3_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"On sale\\\",\\\"intent\\\":\\\"success\\\"},{\\\"id\\\":\\\"p3_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"p3_price\\\",\\\"p3_desc\\\"]},{\\\"id\\\":\\\"p3_price\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"$112\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"p3_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Cotton-linen drum, 40 cm wide, brass fitting.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"p3_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"p3_btn\\\"]},{\\\"id\\\":\\\"p3_btn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Add to order\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-linen-drum\\\"}}},{\\\"id\\\":\\\"p4\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"p4_hd\\\",\\\"p4_ct\\\",\\\"p4_ft\\\"]},{\\\"id\\\":\\\"p4_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"p4_name\\\",\\\"p4_badge\\\"]},{\\\"id\\\":\\\"p4_name\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Oak Reading Lamp\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"p4_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Sold out\\\",\\\"intent\\\":\\\"danger\\\"},{\\\"id\\\":\\\"p4_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"p4_price\\\",\\\"p4_desc\\\"]},{\\\"id\\\":\\\"p4_price\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"$78\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"p4_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Oiled oak base, adjustable arm.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"p4_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"p4_btn\\\"]},{\\\"id\\\":\\\"p4_btn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Sold out\\\",\\\"variant\\\":\\\"ghost\\\",\\\"disabled\\\":true,\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-oak-reading\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are the lamps we have in stock right now. Tell me which one you'd like to add to an order.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[\"frontier-greet-card\",\"frontier-amount-picker-bet\",\"travel-itinerary\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57807,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4161},{\"id\":\"mini-skills\",\"chars\":783},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":3238,\"outputTokens\":3133,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":18637},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"storefront-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"intro\",\"tiles\"]},{\"id\":\"intro\",\"component\":\"Text\",\"text\":\"Our lamps, all in the shop's current catalog:\",\"variant\":\"body\"},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p1\",\"p2\",\"p3\",\"p4\"]},{\"id\":\"p1\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p1_hd\",\"p1_ct\",\"p1_ft\"]},{\"id\":\"p1_hd\",\"component\":\"CardHeader\",\"children\":[\"p1_name\",\"p1_badge\"]},{\"id\":\"p1_name\",\"component\":\"Text\",\"text\":\"Brass Arc Floor Lamp\",\"variant\":\"h4\"},{\"id\":\"p1_badge\",\"component\":\"Badge\",\"label\":\"New\",\"intent\":\"info\"},{\"id\":\"p1_ct\",\"component\":\"CardContent\",\"children\":[\"p1_price\",\"p1_desc\"]},{\"id\":\"p1_price\",\"component\":\"Text\",\"text\":\"$189\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p1_desc\",\"component\":\"Text\",\"text\":\"Solid brass, 190 cm arc, linen shade.\",\"variant\":\"caption\"},{\"id\":\"p1_ft\",\"component\":\"CardFooter\",\"children\":[\"p1_btn\"]},{\"id\":\"p1_btn\",\"component\":\"Button\",\"label\":\"Add to order\",\"variant\":\"solid\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-arc\"}}},{\"id\":\"p2\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p2_hd\",\"p2_ct\",\"p2_ft\"]},{\"id\":\"p2_hd\",\"component\":\"CardHeader\",\"children\":[\"p2_name\"]},{\"id\":\"p2_name\",\"component\":\"Text\",\"text\":\"Sage Ceramic Table Lamp\",\"variant\":\"h4\"},{\"id\":\"p2_ct\",\"component\":\"CardContent\",\"children\":[\"p2_price\",\"p2_desc\"]},{\"id\":\"p2_price\",\"component\":\"Text\",\"text\":\"$64\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p2_desc\",\"component\":\"Text\",\"text\":\"Hand-glazed stoneware, 35 cm, natural linen shade.\",\"variant\":\"caption\"},{\"id\":\"p2_ft\",\"component\":\"CardFooter\",\"children\":[\"p2_btn\"]},{\"id\":\"p2_btn\",\"component\":\"Button\",\"label\":\"Add to order\",\"variant\":\"solid\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-sage-ceramic\"}}},{\"id\":\"p3\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p3_hd\",\"p3_ct\",\"p3_ft\"]},{\"id\":\"p3_hd\",\"component\":\"CardHeader\",\"children\":[\"p3_name\",\"p3_badge\"]},{\"id\":\"p3_name\",\"component\":\"Text\",\"text\":\"Linen Drum Pendant\",\"variant\":\"h4\"},{\"id\":\"p3_badge\",\"component\":\"Badge\",\"label\":\"On sale\",\"intent\":\"success\"},{\"id\":\"p3_ct\",\"component\":\"CardContent\",\"children\":[\"p3_price\",\"p3_desc\"]},{\"id\":\"p3_price\",\"component\":\"Text\",\"text\":\"$112\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p3_desc\",\"component\":\"Text\",\"text\":\"Cotton-linen drum, 40 cm wide, brass fitting.\",\"variant\":\"caption\"},{\"id\":\"p3_ft\",\"component\":\"CardFooter\",\"children\":[\"p3_btn\"]},{\"id\":\"p3_btn\",\"component\":\"Button\",\"label\":\"Add to order\",\"variant\":\"solid\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-drum\"}}},{\"id\":\"p4\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p4_hd\",\"p4_ct\",\"p4_ft\"]},{\"id\":\"p4_hd\",\"component\":\"CardHeader\",\"children\":[\"p4_name\",\"p4_badge\"]},{\"id\":\"p4_name\",\"component\":\"Text\",\"text\":\"Oak Reading Lamp\",\"variant\":\"h4\"},{\"id\":\"p4_badge\",\"component\":\"Badge\",\"label\":\"Sold out\",\"intent\":\"danger\"},{\"id\":\"p4_ct\",\"component\":\"CardContent\",\"children\":[\"p4_price\",\"p4_desc\"]},{\"id\":\"p4_price\",\"component\":\"Text\",\"text\":\"$78\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p4_desc\",\"component\":\"Text\",\"text\":\"Oiled oak base, adjustable arm.\",\"variant\":\"caption\"},{\"id\":\"p4_ft\",\"component\":\"CardFooter\",\"children\":[\"p4_btn\"]},{\"id\":\"p4_btn\",\"component\":\"Button\",\"label\":\"Sold out\",\"variant\":\"ghost\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-oak-reading\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here are the lamps we have in stock right now. Tell me which one you'd like to add to an order.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are our lamps. Tap \"Add to order\" on any you like.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "storefront-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "intro",
+                            "tiles"
+                          ]
+                        },
+                        {
+                          "id": "intro",
+                          "component": "Text",
+                          "text": "Our lamps, all in the shop's current catalog:",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p1",
+                            "p2",
+                            "p3",
+                            "p4"
+                          ]
+                        },
+                        {
+                          "id": "p1",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p1_hd",
+                            "p1_ct",
+                            "p1_ft"
+                          ]
+                        },
+                        {
+                          "id": "p1_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p1_name",
+                            "p1_badge"
+                          ]
+                        },
+                        {
+                          "id": "p1_name",
+                          "component": "Text",
+                          "text": "Brass Arc Floor Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p1_badge",
+                          "component": "Badge",
+                          "label": "New",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "p1_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p1_price",
+                            "p1_desc"
+                          ]
+                        },
+                        {
+                          "id": "p1_price",
+                          "component": "Text",
+                          "text": "$189",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p1_desc",
+                          "component": "Text",
+                          "text": "Solid brass, 190 cm arc, linen shade.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p1_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p1_btn"
+                          ]
+                        },
+                        {
+                          "id": "p1_btn",
+                          "component": "Button",
+                          "label": "Add to order",
+                          "variant": "solid",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-arc"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p2",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p2_hd",
+                            "p2_ct",
+                            "p2_ft"
+                          ]
+                        },
+                        {
+                          "id": "p2_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p2_name"
+                          ]
+                        },
+                        {
+                          "id": "p2_name",
+                          "component": "Text",
+                          "text": "Sage Ceramic Table Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p2_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p2_price",
+                            "p2_desc"
+                          ]
+                        },
+                        {
+                          "id": "p2_price",
+                          "component": "Text",
+                          "text": "$64",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p2_desc",
+                          "component": "Text",
+                          "text": "Hand-glazed stoneware, 35 cm, natural linen shade.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p2_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p2_btn"
+                          ]
+                        },
+                        {
+                          "id": "p2_btn",
+                          "component": "Button",
+                          "label": "Add to order",
+                          "variant": "solid",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-sage-ceramic"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p3",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p3_hd",
+                            "p3_ct",
+                            "p3_ft"
+                          ]
+                        },
+                        {
+                          "id": "p3_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p3_name",
+                            "p3_badge"
+                          ]
+                        },
+                        {
+                          "id": "p3_name",
+                          "component": "Text",
+                          "text": "Linen Drum Pendant",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p3_badge",
+                          "component": "Badge",
+                          "label": "On sale",
+                          "intent": "success"
+                        },
+                        {
+                          "id": "p3_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p3_price",
+                            "p3_desc"
+                          ]
+                        },
+                        {
+                          "id": "p3_price",
+                          "component": "Text",
+                          "text": "$112",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p3_desc",
+                          "component": "Text",
+                          "text": "Cotton-linen drum, 40 cm wide, brass fitting.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p3_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p3_btn"
+                          ]
+                        },
+                        {
+                          "id": "p3_btn",
+                          "component": "Button",
+                          "label": "Add to order",
+                          "variant": "solid",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-drum"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p4",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p4_hd",
+                            "p4_ct",
+                            "p4_ft"
+                          ]
+                        },
+                        {
+                          "id": "p4_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p4_name",
+                            "p4_badge"
+                          ]
+                        },
+                        {
+                          "id": "p4_name",
+                          "component": "Text",
+                          "text": "Oak Reading Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p4_badge",
+                          "component": "Badge",
+                          "label": "Sold out",
+                          "intent": "danger"
+                        },
+                        {
+                          "id": "p4_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p4_price",
+                            "p4_desc"
+                          ]
+                        },
+                        {
+                          "id": "p4_price",
+                          "component": "Text",
+                          "text": "$78",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p4_desc",
+                          "component": "Text",
+                          "text": "Oiled oak base, adjustable arm.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p4_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p4_btn"
+                          ]
+                        },
+                        {
+                          "id": "p4_btn",
+                          "component": "Button",
+                          "label": "Sold out",
+                          "variant": "ghost",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-oak-reading"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "frontier-amount-picker-bet",
+          "travel-itinerary"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The user selects the Brass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Arc Floor L\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amp at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" $189. According\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the rule,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king the first item should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" open the order summary right\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" same storefront surface: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ConfirmReceip\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"t show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing order\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lines with total plus an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" AmountPicker for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antity per line, with status b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" path\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" holding \\\"pending\\\" and no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Button included\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since this upd\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ates the existing stor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efront-1 surface r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than super\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"seding it, I'll res\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"end the full\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree via updateComponents\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", keeping the tiles\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and adding the order section —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Column with intro, tiles\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new order\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Card containing CardHeader\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", CardContent with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Row for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amp name and b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound AmountPicker,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and the ConfirmRe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ceipt with its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" title, rows, items\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" label/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"path, and status. I need to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lead with the a2ui\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Meta line\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" targeting stor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efront-1, then prose\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", then the render_surface call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the order\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card, the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ConfirmReceipt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" itself draws Back and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Confirm,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to a status path \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"(\\\"pending\\\") with conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irmAction/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"backAction inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead of separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate buttons — I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll use confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"_order and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cancel_order actions.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" The data model need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" /cart object with status, l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ines (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"name, qty, amount),\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and total, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ConfirmReceip\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"t's items array bound to those\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lines pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us the total.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Working\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" through the single line\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" item: the AmountPic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ker bin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ds its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" value to that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" item's quantity path with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ensible min/max/step,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I decide whether quantity\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" changes should f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ire an action or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" just update the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model directly,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eling it sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply \\\"Quantity\\\" since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" there's only one line.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" total can't rec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompute d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ynamically, I'll just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" leave it as a static display\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ching qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antity 1 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"for hon\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"esty. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m planning to resend the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new order card (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"header\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", receipt, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" quantity picker) while le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aving the un\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"changed tiles alone\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"airing that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model update for the cart.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Added the Brass Arc\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Floor Lamp \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"($189)\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" to your order. Your order summ\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ary is below the lamps.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Change the quantity with the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" picker, or confirm when\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you're ready.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"PARSE\"],\"detail\":\"Round 1 failed:\\n  PARSE: the payload did not parse as JSON lines\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"My\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" previous attempt was\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" malformed since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I wrote JSON as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose instead of act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually calling render_surface,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need to call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it proper\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ly now with messages as an array\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the reply addressed\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the user without any correction note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" or surface id. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" build the order summary on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" storefront-1, the already\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-open surface, following the r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ule that the first pick opens\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the order summary there\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm designing a Con\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"firmReceipt card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" showing order lines with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" plus an AmountPic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ker for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each line bound to its quant\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ity, with status \\\"pending\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and no ext\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ra button since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ConfirmReceip\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"t ren\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ders its own Back and Conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irm actions. I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"uring the data as items with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" label, quantity, and am\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ount, bin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding the pic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ker values to paths like /c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"art/items/0/quant\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ity with s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ensible min/max/step sett\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ings, keeping ever\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ything minimal per\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the persona's request\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for one card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with per-line quantity p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ickers.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I need to fig\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure out whether stor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efront-1 act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ually has\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a valid r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endered sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" earlier turn's output\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" loo\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked like prose rather than a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" proper component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree. Since the surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" listed as open, I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" avoid createSurface and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" instead send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a full updateComponents call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the complete tree—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"including the stor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efront tiles and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new order card—along with an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updateDataModel call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for the cart data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to be safe reg\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ardless of what\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" curr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ently r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endered.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll keep p1's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button but\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" change\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" disabled \\\"In your order\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" label since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s already been added\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", le\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aving the other lamp bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ttons active\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" confirm receipt component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" back\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" map to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" remov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing from the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" order.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to write\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the final J\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"SON message array with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the render\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"_surface reply targ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eting storefront-1,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and compose a short\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose reply conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irming the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Brass Arc Floor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Lamp was added along\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with its price.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Structuring the full component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tree now: a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root column containing the intro text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", the row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" of four product\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tiles, and the order summ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ary card. Each product\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" g\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ets a header with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" name and badge, content with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" price and description, and a footer\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"y act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ions for the available\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lamps, s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"old-out dis\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"abled for p4, and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"In your order\\\" disabled\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state for p1. The order card\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" hol\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ds the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" confirm receipt and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" quantity picker b\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ound to the c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"art item path\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" min/max bounds.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'm settling the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cart data model—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"pending status, total, and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single item\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" entry—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ciding to emit just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" updateComponents call against the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" exist\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing storefront-1 sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face without a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" red\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"undant createSurface, acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"epting the risk that the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s to already be open for this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to land c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"leanly.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":3,\"codes\":[\"CHANGE_CLAIMED\"],\"detail\":\"Round 2 failed:\\n  CHANGE_CLAIMED: at storefront-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"storefront-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"intro\\\",\\\"tiles\\\",\\\"order\\\"]},{\\\"id\\\":\\\"intro\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Our lamps, all in the shop's current catalog:\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"tiles\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"p1\\\",\\\"p2\\\",\\\"p3\\\",\\\"p4\\\"]},{\\\"id\\\":\\\"p1\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"p1_hd\\\",\\\"p1_ct\\\",\\\"p1_ft\\\"]},{\\\"id\\\":\\\"p1_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"p1_name\\\",\\\"p1_badge\\\"]},{\\\"id\\\":\\\"p1_name\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Brass Arc Floor Lamp\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"p1_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"New\\\",\\\"intent\\\":\\\"info\\\"},{\\\"id\\\":\\\"p1_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"p1_price\\\",\\\"p1_desc\\\"]},{\\\"id\\\":\\\"p1_price\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"$189\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"p1_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Solid brass, 190 cm arc, linen shade.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"p1_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"p1_btn\\\"]},{\\\"id\\\":\\\"p1_btn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Added\\\",\\\"variant\\\":\\\"ghost\\\",\\\"disabled\\\":true,\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-brass-arc\\\"}}},{\\\"id\\\":\\\"p2\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"p2_hd\\\",\\\"p2_ct\\\",\\\"p2_ft\\\"]},{\\\"id\\\":\\\"p2_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"p2_name\\\"]},{\\\"id\\\":\\\"p2_name\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Sage Ceramic Table Lamp\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"p2_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"p2_price\\\",\\\"p2_desc\\\"]},{\\\"id\\\":\\\"p2_price\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"$64\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"p2_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Hand-glazed stoneware, 35 cm, natural linen shade.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"p2_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"p2_btn\\\"]},{\\\"id\\\":\\\"p2_btn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Add to order\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-sage-ceramic\\\"}}},{\\\"id\\\":\\\"p3\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"p3_hd\\\",\\\"p3_ct\\\",\\\"p3_ft\\\"]},{\\\"id\\\":\\\"p3_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"p3_name\\\",\\\"p3_badge\\\"]},{\\\"id\\\":\\\"p3_name\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Linen Drum Pendant\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"p3_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"On sale\\\",\\\"intent\\\":\\\"success\\\"},{\\\"id\\\":\\\"p3_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"p3_price\\\",\\\"p3_desc\\\"]},{\\\"id\\\":\\\"p3_price\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"$112\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"p3_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Cotton-linen drum, 40 cm wide, brass fitting.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"p3_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"p3_btn\\\"]},{\\\"id\\\":\\\"p3_btn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Add to order\\\",\\\"variant\\\":\\\"solid\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-linen-drum\\\"}}},{\\\"id\\\":\\\"p4\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"p4_hd\\\",\\\"p4_ct\\\",\\\"p4_ft\\\"]},{\\\"id\\\":\\\"p4_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"p4_name\\\",\\\"p4_badge\\\"]},{\\\"id\\\":\\\"p4_name\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Oak Reading Lamp\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"p4_badge\\\",\\\"component\\\":\\\"Badge\\\",\\\"label\\\":\\\"Sold out\\\",\\\"intent\\\":\\\"danger\\\"},{\\\"id\\\":\\\"p4_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"p4_price\\\",\\\"p4_desc\\\"]},{\\\"id\\\":\\\"p4_price\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"$78\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true},{\\\"id\\\":\\\"p4_desc\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Oiled oak base, adjustable arm.\\\",\\\"variant\\\":\\\"caption\\\"},{\\\"id\\\":\\\"p4_ft\\\",\\\"component\\\":\\\"CardFooter\\\",\\\"children\\\":[\\\"p4_btn\\\"]},{\\\"id\\\":\\\"p4_btn\\\",\\\"component\\\":\\\"Button\\\",\\\"label\\\":\\\"Sold out\\\",\\\"variant\\\":\\\"ghost\\\",\\\"disabled\\\":true,\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-oak-reading\\\"}}},{\\\"id\\\":\\\"order\\\",\\\"component\\\":\\\"Card\\\",\\\"elevation\\\":\\\"1\\\",\\\"children\\\":[\\\"order_hd\\\",\\\"order_ct\\\"]},{\\\"id\\\":\\\"order_hd\\\",\\\"component\\\":\\\"CardHeader\\\",\\\"children\\\":[\\\"order_title\\\"]},{\\\"id\\\":\\\"order_title\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Your order\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"order_ct\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"line1\\\",\\\"line1_qty\\\",\\\"order_total\\\"]},{\\\"id\\\":\\\"line1\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Brass Arc Floor Lamp: $189 each\\\",\\\"variant\\\":\\\"body\\\"},{\\\"id\\\":\\\"line1_qty\\\",\\\"component\\\":\\\"AmountPicker\\\",\\\"value\\\":1,\\\"min\\\":1,\\\"max\\\":10,\\\"step\\\":1,\\\"currency\\\":\\\"USD\\\",\\\"label\\\":\\\"Quantity\\\",\\\"actionName\\\":\\\"set_quantity\\\",\\\"actionLabel\\\":\\\"Update\\\",\\\"name\\\":\\\"qty_brass_arc\\\"},{\\\"id\\\":\\\"order_total\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Total: $189\\\",\\\"variant\\\":\\\"body\\\",\\\"emphasis\\\":true}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"storefront-1\\\",\\\"value\\\":{\\\"order\\\":{\\\"lines\\\":[{\\\"sku\\\":\\\"lamp-brass-arc\\\",\\\"name\\\":\\\"Brass Arc Floor Lamp\\\",\\\"unitPrice\\\":189,\\\"quantity\\\":1}],\\\"total\\\":189}}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Added the Brass Arc Floor Lamp ($189) to your order. The order summary is below the lamps, with a quantity picker. Change the quantity or confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add the first one to my order.\",\"k\":3},\"exemplarIds\":[\"wallet-summary-card\",\"frontier-round-outcome\",\"crud-entry-list-drawer\"],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"CHANGE_CLAIMED\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":62620,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7383},{\"id\":\"mini-skills\",\"chars\":2374},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":21688,\"outputTokens\":9365,\"cacheReadInputTokens\":37274,\"cacheCreationInputTokens\":18636},\"miniSkillIds\":[\"confirm-receipt\",\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"intro\",\"tiles\",\"order\"]},{\"id\":\"intro\",\"component\":\"Text\",\"text\":\"Our lamps, all in the shop's current catalog:\",\"variant\":\"body\"},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p1\",\"p2\",\"p3\",\"p4\"]},{\"id\":\"p1\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p1_hd\",\"p1_ct\",\"p1_ft\"]},{\"id\":\"p1_hd\",\"component\":\"CardHeader\",\"children\":[\"p1_name\",\"p1_badge\"]},{\"id\":\"p1_name\",\"component\":\"Text\",\"text\":\"Brass Arc Floor Lamp\",\"variant\":\"h4\"},{\"id\":\"p1_badge\",\"component\":\"Badge\",\"label\":\"New\",\"intent\":\"info\"},{\"id\":\"p1_ct\",\"component\":\"CardContent\",\"children\":[\"p1_price\",\"p1_desc\"]},{\"id\":\"p1_price\",\"component\":\"Text\",\"text\":\"$189\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p1_desc\",\"component\":\"Text\",\"text\":\"Solid brass, 190 cm arc, linen shade.\",\"variant\":\"caption\"},{\"id\":\"p1_ft\",\"component\":\"CardFooter\",\"children\":[\"p1_btn\"]},{\"id\":\"p1_btn\",\"component\":\"Button\",\"label\":\"Added\",\"variant\":\"ghost\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-arc\"}}},{\"id\":\"p2\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p2_hd\",\"p2_ct\",\"p2_ft\"]},{\"id\":\"p2_hd\",\"component\":\"CardHeader\",\"children\":[\"p2_name\"]},{\"id\":\"p2_name\",\"component\":\"Text\",\"text\":\"Sage Ceramic Table Lamp\",\"variant\":\"h4\"},{\"id\":\"p2_ct\",\"component\":\"CardContent\",\"children\":[\"p2_price\",\"p2_desc\"]},{\"id\":\"p2_price\",\"component\":\"Text\",\"text\":\"$64\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p2_desc\",\"component\":\"Text\",\"text\":\"Hand-glazed stoneware, 35 cm, natural linen shade.\",\"variant\":\"caption\"},{\"id\":\"p2_ft\",\"component\":\"CardFooter\",\"children\":[\"p2_btn\"]},{\"id\":\"p2_btn\",\"component\":\"Button\",\"label\":\"Add to order\",\"variant\":\"solid\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-sage-ceramic\"}}},{\"id\":\"p3\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p3_hd\",\"p3_ct\",\"p3_ft\"]},{\"id\":\"p3_hd\",\"component\":\"CardHeader\",\"children\":[\"p3_name\",\"p3_badge\"]},{\"id\":\"p3_name\",\"component\":\"Text\",\"text\":\"Linen Drum Pendant\",\"variant\":\"h4\"},{\"id\":\"p3_badge\",\"component\":\"Badge\",\"label\":\"On sale\",\"intent\":\"success\"},{\"id\":\"p3_ct\",\"component\":\"CardContent\",\"children\":[\"p3_price\",\"p3_desc\"]},{\"id\":\"p3_price\",\"component\":\"Text\",\"text\":\"$112\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p3_desc\",\"component\":\"Text\",\"text\":\"Cotton-linen drum, 40 cm wide, brass fitting.\",\"variant\":\"caption\"},{\"id\":\"p3_ft\",\"component\":\"CardFooter\",\"children\":[\"p3_btn\"]},{\"id\":\"p3_btn\",\"component\":\"Button\",\"label\":\"Add to order\",\"variant\":\"solid\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-drum\"}}},{\"id\":\"p4\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p4_hd\",\"p4_ct\",\"p4_ft\"]},{\"id\":\"p4_hd\",\"component\":\"CardHeader\",\"children\":[\"p4_name\",\"p4_badge\"]},{\"id\":\"p4_name\",\"component\":\"Text\",\"text\":\"Oak Reading Lamp\",\"variant\":\"h4\"},{\"id\":\"p4_badge\",\"component\":\"Badge\",\"label\":\"Sold out\",\"intent\":\"danger\"},{\"id\":\"p4_ct\",\"component\":\"CardContent\",\"children\":[\"p4_price\",\"p4_desc\"]},{\"id\":\"p4_price\",\"component\":\"Text\",\"text\":\"$78\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p4_desc\",\"component\":\"Text\",\"text\":\"Oiled oak base, adjustable arm.\",\"variant\":\"caption\"},{\"id\":\"p4_ft\",\"component\":\"CardFooter\",\"children\":[\"p4_btn\"]},{\"id\":\"p4_btn\",\"component\":\"Button\",\"label\":\"Sold out\",\"variant\":\"ghost\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-oak-reading\"}}},{\"id\":\"order\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"order_hd\",\"order_ct\"]},{\"id\":\"order_hd\",\"component\":\"CardHeader\",\"children\":[\"order_title\"]},{\"id\":\"order_title\",\"component\":\"Text\",\"text\":\"Your order\",\"variant\":\"h4\"},{\"id\":\"order_ct\",\"component\":\"CardContent\",\"children\":[\"line1\",\"line1_qty\",\"order_total\"]},{\"id\":\"line1\",\"component\":\"Text\",\"text\":\"Brass Arc Floor Lamp: $189 each\",\"variant\":\"body\"},{\"id\":\"line1_qty\",\"component\":\"AmountPicker\",\"value\":1,\"min\":1,\"max\":10,\"step\":1,\"currency\":\"USD\",\"label\":\"Quantity\",\"actionName\":\"set_quantity\",\"actionLabel\":\"Update\",\"name\":\"qty_brass_arc\"},{\"id\":\"order_total\",\"component\":\"Text\",\"text\":\"Total: $189\",\"variant\":\"body\",\"emphasis\":true}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-1\",\"value\":{\"order\":{\"lines\":[{\"sku\":\"lamp-brass-arc\",\"name\":\"Brass Arc Floor Lamp\",\"unitPrice\":189,\"quantity\":1}],\"total\":189}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Added the Brass Arc Floor Lamp ($189) to your order. Your order summary is below the lamps. Change the quantity with the picker, or confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-1\"}}}\n\nAdded the Brass Arc Floor Lamp ($189) to your order. Your order summary is below the lamps. Change the quantity with the picker, or confirm when you're ready.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Added the Brass Arc Floor Lamp ($189) to your order. Your order summary is below the lamps. Change the quantity with the picker, or confirm when you're ready.",
+                "target": "storefront-1",
+                "messages": "[{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-1\",\"path\":\"/cart\",\"value\":{\"status\":\"pending\",\"total\":\"$189\",\"items\":[{\"label\":\"Brass Arc Floor Lamp\",\"quantity\":1,\"amount\":\"$189\"}]}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"intro\",\"tiles\",\"order_card\"]},{\"id\":\"order_card\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"order_hd\",\"order_ct\"]},{\"id\":\"order_hd\",\"component\":\"CardHeader\",\"children\":[\"order_title\"]},{\"id\":\"order_title\",\"component\":\"Text\",\"text\":\"Your order\",\"variant\":\"h4\"},{\"id\":\"order_ct\",\"component\":\"CardContent\",\"children\":[\"receipt\",\"qty_pick\"]},{\"id\":\"receipt\",\"component\":\"ConfirmReceipt\",\"title\":\"Order summary\",\"data\":{\"path\":\"/cart\"},\"items\":{\"path\":\"/cart/items\"},\"totalLabel\":\"Total\",\"totalPath\":\"total\",\"status\":{\"path\":\"/cart/status\"},\"confirmAction\":{\"action\":\"confirm_order\"},\"backAction\":{\"action\":\"remove_from_order\"}},\"qty_pick\":null}]}}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Added the Brass Arc Floor Lamp ($189) to your order. The order summary is below the lamps, with a quantity picker. Change the quantity or confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-1\"}}}\n\nAdded the Brass Arc Floor Lamp ($189) to your order. The order summary is below the lamps, with a quantity picker. Change the quantity or confirm when you're ready.",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Added the Brass Arc Floor Lamp ($189) to your order. The order summary is below the lamps, with a quantity picker. Change the quantity or confirm when you're ready.",
+                "target": "storefront-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "intro",
+                            "tiles",
+                            "order"
+                          ]
+                        },
+                        {
+                          "id": "intro",
+                          "component": "Text",
+                          "text": "Our lamps, all in the shop's current catalog:",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p1",
+                            "p2",
+                            "p3",
+                            "p4"
+                          ]
+                        },
+                        {
+                          "id": "p1",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p1_hd",
+                            "p1_ct",
+                            "p1_ft"
+                          ]
+                        },
+                        {
+                          "id": "p1_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p1_name",
+                            "p1_badge"
+                          ]
+                        },
+                        {
+                          "id": "p1_name",
+                          "component": "Text",
+                          "text": "Brass Arc Floor Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p1_badge",
+                          "component": "Badge",
+                          "label": "New",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "p1_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p1_price",
+                            "p1_desc"
+                          ]
+                        },
+                        {
+                          "id": "p1_price",
+                          "component": "Text",
+                          "text": "$189",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p1_desc",
+                          "component": "Text",
+                          "text": "Solid brass, 190 cm arc, linen shade.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p1_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p1_btn"
+                          ]
+                        },
+                        {
+                          "id": "p1_btn",
+                          "component": "Button",
+                          "label": "Added",
+                          "variant": "ghost",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-arc"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p2",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p2_hd",
+                            "p2_ct",
+                            "p2_ft"
+                          ]
+                        },
+                        {
+                          "id": "p2_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p2_name"
+                          ]
+                        },
+                        {
+                          "id": "p2_name",
+                          "component": "Text",
+                          "text": "Sage Ceramic Table Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p2_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p2_price",
+                            "p2_desc"
+                          ]
+                        },
+                        {
+                          "id": "p2_price",
+                          "component": "Text",
+                          "text": "$64",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p2_desc",
+                          "component": "Text",
+                          "text": "Hand-glazed stoneware, 35 cm, natural linen shade.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p2_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p2_btn"
+                          ]
+                        },
+                        {
+                          "id": "p2_btn",
+                          "component": "Button",
+                          "label": "Add to order",
+                          "variant": "solid",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-sage-ceramic"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p3",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p3_hd",
+                            "p3_ct",
+                            "p3_ft"
+                          ]
+                        },
+                        {
+                          "id": "p3_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p3_name",
+                            "p3_badge"
+                          ]
+                        },
+                        {
+                          "id": "p3_name",
+                          "component": "Text",
+                          "text": "Linen Drum Pendant",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p3_badge",
+                          "component": "Badge",
+                          "label": "On sale",
+                          "intent": "success"
+                        },
+                        {
+                          "id": "p3_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p3_price",
+                            "p3_desc"
+                          ]
+                        },
+                        {
+                          "id": "p3_price",
+                          "component": "Text",
+                          "text": "$112",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p3_desc",
+                          "component": "Text",
+                          "text": "Cotton-linen drum, 40 cm wide, brass fitting.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p3_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p3_btn"
+                          ]
+                        },
+                        {
+                          "id": "p3_btn",
+                          "component": "Button",
+                          "label": "Add to order",
+                          "variant": "solid",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-drum"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p4",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p4_hd",
+                            "p4_ct",
+                            "p4_ft"
+                          ]
+                        },
+                        {
+                          "id": "p4_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p4_name",
+                            "p4_badge"
+                          ]
+                        },
+                        {
+                          "id": "p4_name",
+                          "component": "Text",
+                          "text": "Oak Reading Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p4_badge",
+                          "component": "Badge",
+                          "label": "Sold out",
+                          "intent": "danger"
+                        },
+                        {
+                          "id": "p4_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p4_price",
+                            "p4_desc"
+                          ]
+                        },
+                        {
+                          "id": "p4_price",
+                          "component": "Text",
+                          "text": "$78",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p4_desc",
+                          "component": "Text",
+                          "text": "Oiled oak base, adjustable arm.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p4_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p4_btn"
+                          ]
+                        },
+                        {
+                          "id": "p4_btn",
+                          "component": "Button",
+                          "label": "Sold out",
+                          "variant": "ghost",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-oak-reading"
+                            }
+                          }
+                        },
+                        {
+                          "id": "order",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "order_hd",
+                            "order_ct"
+                          ]
+                        },
+                        {
+                          "id": "order_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "order_title"
+                          ]
+                        },
+                        {
+                          "id": "order_title",
+                          "component": "Text",
+                          "text": "Your order",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "order_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "line1",
+                            "line1_qty",
+                            "order_total"
+                          ]
+                        },
+                        {
+                          "id": "line1",
+                          "component": "Text",
+                          "text": "Brass Arc Floor Lamp: $189 each",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "line1_qty",
+                          "component": "AmountPicker",
+                          "value": 1,
+                          "min": 1,
+                          "max": 10,
+                          "step": 1,
+                          "currency": "USD",
+                          "label": "Quantity",
+                          "actionName": "set_quantity",
+                          "actionLabel": "Update",
+                          "name": "qty_brass_arc"
+                        },
+                        {
+                          "id": "order_total",
+                          "component": "Text",
+                          "text": "Total: $189",
+                          "variant": "body",
+                          "emphasis": true
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "storefront-1",
+                      "value": {
+                        "order": {
+                          "lines": [
+                            {
+                              "sku": "lamp-brass-arc",
+                              "name": "Brass Arc Floor Lamp",
+                              "unitPrice": 189,
+                              "quantity": 1
+                            }
+                          ],
+                          "total": 189
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "wallet-summary-card",
+          "frontier-round-outcome",
+          "crud-entry-list-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

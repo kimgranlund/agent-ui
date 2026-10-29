@@ -1,0 +1,231 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "reach-shopkeeper-compare-haiku-1",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T23:16:33.369Z, traces 2026-10-29.jsonl:122",
+  "seed": {
+    "version": 6,
+    "digest": "sha256:9b7a913f834344373bdbc527bfcca807c82db2c6ee08db03df42e0b8032f42b8"
+  },
+  "steps": [
+    {
+      "say": "Compare your two cheapest lamps.",
+      "expect": [
+        "OptionCompare"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to pull\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" two l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amps from my cat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"alog and compare their pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ices, pic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"king the lowest two\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", using cons\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istent illustrative details\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" name, material, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" size\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll recommend the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Linen Drum l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amp for value since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it's cheaper with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" more stock.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m structuring the options\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with string values, opt\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ional subtitles, and row\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keys/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"labels, then set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up the me\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ta-line with the \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask note carrying the full question\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and surfaceId, pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" render_surface call with send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"DataModel true and no separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate commit button since Option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Compare commits on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its own press. The root component should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" be the OptionCompare\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" itself.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Here\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" are our two most\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" affordable lamps.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Prices and stock are ill\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ustrative demo values.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"SURFACE_CLAIMED\"],\"detail\":\"Round 1 failed:\\n  SURFACE_CLAIMED: at ask-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"lamps\\\":[{\\\"value\\\":\\\"linen-drum\\\",\\\"name\\\":\\\"Linen Drum Lamp\\\",\\\"price\\\":\\\"$38\\\",\\\"material\\\":\\\"Linen shade, oak base\\\",\\\"size\\\":\\\"35 cm tall\\\",\\\"stock\\\":\\\"14 in stock\\\"},{\\\"value\\\":\\\"brass-stem\\\",\\\"name\\\":\\\"Brass Stem Lamp\\\",\\\"price\\\":\\\"$54\\\",\\\"material\\\":\\\"Brass, cotton shade\\\",\\\"size\\\":\\\"42 cm tall\\\",\\\"stock\\\":\\\"6 in stock\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"children\\\":[\\\"compare\\\"]},{\\\"id\\\":\\\"compare\\\",\\\"component\\\":\\\"OptionCompare\\\",\\\"heading\\\":\\\"Your two cheapest lamps\\\",\\\"options\\\":[{\\\"value\\\":\\\"linen-drum\\\",\\\"title\\\":\\\"Linen Drum Lamp\\\",\\\"values\\\":{\\\"price\\\":\\\"$38\\\",\\\"material\\\":\\\"Linen shade, oak base\\\",\\\"size\\\":\\\"35 cm tall\\\",\\\"stock\\\":\\\"14 in stock\\\"}},{\\\"value\\\":\\\"brass-stem\\\",\\\"title\\\":\\\"Brass Stem Lamp\\\",\\\"values\\\":{\\\"price\\\":\\\"$54\\\",\\\"material\\\":\\\"Brass, cotton shade\\\",\\\"size\\\":\\\"42 cm tall\\\",\\\"stock\\\":\\\"6 in stock\\\"}}],\\\"rows\\\":[{\\\"key\\\":\\\"price\\\",\\\"label\\\":\\\"Price\\\"},{\\\"key\\\":\\\"material\\\",\\\"label\\\":\\\"Material\\\"},{\\\"key\\\":\\\"size\\\",\\\"label\\\":\\\"Size\\\"},{\\\"key\\\":\\\"stock\\\",\\\"label\\\":\\\"Stock\\\"}],\\\"best\\\":\\\"linen-drum\\\",\\\"value\\\":\\\"\\\",\\\"actionName\\\":\\\"choose\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are our two most affordable lamps side by side. The Linen Drum is the better buy for most people: it's the lower price and has more in stock. Which one would you like to take home? Prices and stock are illustrative demo values.\",\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare your two cheapest lamps.\",\"k\":3},\"exemplarIds\":[\"list-nested\",\"media-file-grid\",\"frontier-step-flow-booking\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57885,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3501},{\"id\":\"mini-skills\",\"chars\":1521},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":6995,\"outputTokens\":2391,\"cacheReadInputTokens\":37273,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"lamps\":[{\"value\":\"linen-drum\",\"name\":\"Linen Drum Lamp\",\"price\":\"$38\",\"material\":\"Linen shade, oak base\",\"size\":\"35 cm tall\",\"stock\":\"14 in stock\"},{\"value\":\"brass-stem\",\"name\":\"Brass Stem Lamp\",\"price\":\"$54\",\"material\":\"Brass, cotton shade\",\"size\":\"42 cm tall\",\"stock\":\"6 in stock\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"children\":[\"compare\"]},{\"id\":\"compare\",\"component\":\"OptionCompare\",\"heading\":\"Your two cheapest lamps\",\"options\":[{\"value\":\"linen-drum\",\"title\":\"Linen Drum Lamp\",\"values\":{\"price\":\"$38\",\"material\":\"Linen shade, oak base\",\"size\":\"35 cm tall\",\"stock\":\"14 in stock\"}},{\"value\":\"brass-stem\",\"title\":\"Brass Stem Lamp\",\"values\":{\"price\":\"$54\",\"material\":\"Brass, cotton shade\",\"size\":\"42 cm tall\",\"stock\":\"6 in stock\"}}],\"rows\":[{\"key\":\"price\",\"label\":\"Price\"},{\"key\":\"material\",\"label\":\"Material\"},{\"key\":\"size\",\"label\":\"Size\"},{\"key\":\"stock\",\"label\":\"Stock\"}],\"best\":\"linen-drum\",\"value\":\"\",\"actionName\":\"choose\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here are our two most affordable lamps side by side. The Linen Drum is the better buy for most people: it's the lower price and has more in stock. Which one would you like to take home?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nHere are our two most affordable lamps. Prices and stock are illustrative demo values.",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are our two most affordable lamps side by side. The Linen Drum is the better buy for most people: it's the lower price and has more in stock. Which one would you like to take home? Prices and stock are illustrative demo values.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "lamps": [
+                          {
+                            "value": "linen-drum",
+                            "name": "Linen Drum Lamp",
+                            "price": "$38",
+                            "material": "Linen shade, oak base",
+                            "size": "35 cm tall",
+                            "stock": "14 in stock"
+                          },
+                          {
+                            "value": "brass-stem",
+                            "name": "Brass Stem Lamp",
+                            "price": "$54",
+                            "material": "Brass, cotton shade",
+                            "size": "42 cm tall",
+                            "stock": "6 in stock"
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "children": [
+                            "compare"
+                          ]
+                        },
+                        {
+                          "id": "compare",
+                          "component": "OptionCompare",
+                          "heading": "Your two cheapest lamps",
+                          "options": [
+                            {
+                              "value": "linen-drum",
+                              "title": "Linen Drum Lamp",
+                              "values": {
+                                "price": "$38",
+                                "material": "Linen shade, oak base",
+                                "size": "35 cm tall",
+                                "stock": "14 in stock"
+                              }
+                            },
+                            {
+                              "value": "brass-stem",
+                              "title": "Brass Stem Lamp",
+                              "values": {
+                                "price": "$54",
+                                "material": "Brass, cotton shade",
+                                "size": "42 cm tall",
+                                "stock": "6 in stock"
+                              }
+                            }
+                          ],
+                          "rows": [
+                            {
+                              "key": "price",
+                              "label": "Price"
+                            },
+                            {
+                              "key": "material",
+                              "label": "Material"
+                            },
+                            {
+                              "key": "size",
+                              "label": "Size"
+                            },
+                            {
+                              "key": "stock",
+                              "label": "Stock"
+                            }
+                          ],
+                          "best": "linen-drum",
+                          "value": "",
+                          "actionName": "choose"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "target": "{\"surfaceId\":\"ask-1\"}"
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "list-nested",
+          "media-file-grid",
+          "frontier-step-flow-booking"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

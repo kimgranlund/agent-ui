@@ -1,0 +1,542 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-shopkeeper-browse-and-add-haiku-3",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T23:07:52.833Z, traces 2026-10-29.jsonl:79,2026-10-29.jsonl:80",
+  "seed": {
+    "version": 6,
+    "digest": "sha256:9b7a913f834344373bdbc527bfcca807c82db2c6ee08db03df42e0b8032f42b8"
+  },
+  "steps": [
+    {
+      "say": "What lamps do you have?",
+      "expect": [
+        "ProductCard"
+      ]
+    },
+    {
+      "say": "Add the first one to my order.",
+      "expect": [
+        "ConfirmReceipt"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This is a brows\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing request\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", so I'll l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ay out a stor\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efront with product tiles for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" handful of lamps, each\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" showing name, price, a bad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ge for standout items\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and a buy action, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the desc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"riptions brief.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Adding remaining product c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ards...\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"storefront-lamps\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"storefront-lamps\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"heading\\\",\\\"tiles\\\"]},{\\\"id\\\":\\\"heading\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Lamps\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"tiles\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"p_desk\\\",\\\"p_ceramic\\\",\\\"p_pendant\\\",\\\"p_oak\\\",\\\"p_lantern\\\"]},{\\\"id\\\":\\\"p_desk\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Brass Desk Lamp\\\",\\\"subtitle\\\":\\\"Solid brass, 42 cm arm\\\",\\\"price\\\":\\\"$68\\\",\\\"badge\\\":\\\"New\\\",\\\"badgeIntent\\\":\\\"info\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-brass-desk\\\",\\\"name\\\":\\\"Brass Desk Lamp\\\",\\\"price\\\":68}}},{\\\"id\\\":\\\"p_ceramic\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Ceramic Table Lamp\\\",\\\"subtitle\\\":\\\"Glazed stoneware, 35 cm\\\",\\\"price\\\":\\\"$54\\\",\\\"priceOld\\\":\\\"$64\\\",\\\"badge\\\":\\\"Sale\\\",\\\"badgeIntent\\\":\\\"success\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-ceramic-table\\\",\\\"name\\\":\\\"Ceramic Table Lamp\\\",\\\"price\\\":54}}},{\\\"id\\\":\\\"p_pendant\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Linen Pendant\\\",\\\"subtitle\\\":\\\"Natural linen shade, 40 cm\\\",\\\"price\\\":\\\"$89\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-linen-pendant\\\",\\\"name\\\":\\\"Linen Pendant\\\",\\\"price\\\":89}}},{\\\"id\\\":\\\"p_oak\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Oak Floor Lamp\\\",\\\"subtitle\\\":\\\"Solid oak, 160 cm tall\\\",\\\"price\\\":\\\"$120\\\",\\\"badge\\\":\\\"Low stock\\\",\\\"badgeIntent\\\":\\\"warning\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-oak-floor\\\",\\\"name\\\":\\\"Oak Floor Lamp\\\",\\\"price\\\":120}}},{\\\"id\\\":\\\"p_lantern\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Glass Lantern\\\",\\\"subtitle\\\":\\\"Hand-blown glass, 28 cm\\\",\\\"price\\\":\\\"$38\\\",\\\"badge\\\":\\\"Sold out\\\",\\\"badgeIntent\\\":\\\"danger\\\",\\\"actionLabel\\\":\\\"Sold out\\\",\\\"disabled\\\":true,\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-glass-lantern\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"We have five lamps in stock right now. Pick one to add it to your order.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[\"frontier-greet-card\",\"frontier-amount-picker-bet\",\"travel-itinerary\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57807,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4161},{\"id\":\"mini-skills\",\"chars\":783},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":3238,\"outputTokens\":1752,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":18637},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"storefront-lamps\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-lamps\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"tiles\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p_desk\",\"p_ceramic\",\"p_pendant\",\"p_oak\",\"p_lantern\"]},{\"id\":\"p_desk\",\"component\":\"ProductCard\",\"title\":\"Brass Desk Lamp\",\"subtitle\":\"Solid brass, 42 cm arm\",\"price\":\"$68\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-desk\",\"name\":\"Brass Desk Lamp\",\"price\":68}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Ceramic Table Lamp\",\"subtitle\":\"Glazed stoneware, 35 cm\",\"price\":\"$54\",\"priceOld\":\"$64\",\"badge\":\"Sale\",\"badgeIntent\":\"success\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-ceramic-table\",\"name\":\"Ceramic Table Lamp\",\"price\":54}}},{\"id\":\"p_pendant\",\"component\":\"ProductCard\",\"title\":\"Linen Pendant\",\"subtitle\":\"Natural linen shade, 40 cm\",\"price\":\"$89\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-pendant\",\"name\":\"Linen Pendant\",\"price\":89}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Floor Lamp\",\"subtitle\":\"Solid oak, 160 cm tall\",\"price\":\"$120\",\"badge\":\"Low stock\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-oak-floor\",\"name\":\"Oak Floor Lamp\",\"price\":120}}},{\"id\":\"p_lantern\",\"component\":\"ProductCard\",\"title\":\"Glass Lantern\",\"subtitle\":\"Hand-blown glass, 28 cm\",\"price\":\"$38\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"actionLabel\":\"Sold out\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-glass-lantern\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "We have five lamps in stock right now. Pick one to add it to your order.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "storefront-lamps",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-lamps",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "tiles"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p_desk",
+                            "p_ceramic",
+                            "p_pendant",
+                            "p_oak",
+                            "p_lantern"
+                          ]
+                        },
+                        {
+                          "id": "p_desk",
+                          "component": "ProductCard",
+                          "title": "Brass Desk Lamp",
+                          "subtitle": "Solid brass, 42 cm arm",
+                          "price": "$68",
+                          "badge": "New",
+                          "badgeIntent": "info",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-desk",
+                              "name": "Brass Desk Lamp",
+                              "price": 68
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Ceramic Table Lamp",
+                          "subtitle": "Glazed stoneware, 35 cm",
+                          "price": "$54",
+                          "priceOld": "$64",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-ceramic-table",
+                              "name": "Ceramic Table Lamp",
+                              "price": 54
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_pendant",
+                          "component": "ProductCard",
+                          "title": "Linen Pendant",
+                          "subtitle": "Natural linen shade, 40 cm",
+                          "price": "$89",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-pendant",
+                              "name": "Linen Pendant",
+                              "price": 89
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak Floor Lamp",
+                          "subtitle": "Solid oak, 160 cm tall",
+                          "price": "$120",
+                          "badge": "Low stock",
+                          "badgeIntent": "warning",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-oak-floor",
+                              "name": "Oak Floor Lamp",
+                              "price": 120
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_lantern",
+                          "component": "ProductCard",
+                          "title": "Glass Lantern",
+                          "subtitle": "Hand-blown glass, 28 cm",
+                          "price": "$38",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "actionLabel": "Sold out",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-glass-lantern"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "frontier-amount-picker-bet",
+          "travel-itinerary"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Adding the Brass\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Desk Lamp means\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I need to transform the same\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" storefront-lamps sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face into an order summary view:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a ConfirmRece\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ipt show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the order lines and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" total, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an AmountPicker for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antity per line, and a status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" field bound to a \\\"pending\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" value with no button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll bind qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antity with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an AmountPicker t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ied to the order\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" item\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s quantity path, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" min/max/step and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" currency field\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". For the tiles, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" only\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to resend the root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" children changed,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" but\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the unchanged tile components\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" don\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'t need resending — only\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the new order summary component gets\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" added alongside the existing he\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ading and tiles.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the order data,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll init\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ialize the model with items, total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" (\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"$68.00\\\"), and status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"pending\\\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll structure the lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the rece\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ipt and the quantity pic\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ker,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ConfirmReceip\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"t holding Back and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Confirm actions m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"apped to \\\"back\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and \\\"confirm_order\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" respectively.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The reply note should confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" adding the Brass Des\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"k Lamp ($68\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\") and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" invite the user to adjust\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" quantity or brow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"se more lamps, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a meta-line targeting\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" storefront-lamps plac\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed first since there\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s no ask need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed. I'll update the root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component's children to he\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ading, tiles, and order\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", then write out the full message list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"CHANGE_CLAIMED\"],\"detail\":\"Round 1 failed:\\n  CHANGE_CLAIMED: at storefront-lamps\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"storefront-lamps\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"heading\\\",\\\"tiles\\\",\\\"order\\\"]},{\\\"id\\\":\\\"heading\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Lamps\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"tiles\\\",\\\"component\\\":\\\"Row\\\",\\\"gap\\\":\\\"md\\\",\\\"wrap\\\":true,\\\"children\\\":[\\\"p_desk\\\",\\\"p_ceramic\\\",\\\"p_pendant\\\",\\\"p_oak\\\",\\\"p_lantern\\\"]},{\\\"id\\\":\\\"p_desk\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Brass Desk Lamp\\\",\\\"subtitle\\\":\\\"Solid brass, 42 cm arm\\\",\\\"price\\\":\\\"$68\\\",\\\"badge\\\":\\\"In your order\\\",\\\"badgeIntent\\\":\\\"info\\\",\\\"actionLabel\\\":\\\"Added\\\",\\\"disabled\\\":true,\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-brass-desk\\\",\\\"name\\\":\\\"Brass Desk Lamp\\\",\\\"price\\\":68}}},{\\\"id\\\":\\\"p_ceramic\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Ceramic Table Lamp\\\",\\\"subtitle\\\":\\\"Glazed stoneware, 35 cm\\\",\\\"price\\\":\\\"$54\\\",\\\"priceOld\\\":\\\"$64\\\",\\\"badge\\\":\\\"Sale\\\",\\\"badgeIntent\\\":\\\"success\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-ceramic-table\\\",\\\"name\\\":\\\"Ceramic Table Lamp\\\",\\\"price\\\":54}}},{\\\"id\\\":\\\"p_pendant\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Linen Pendant\\\",\\\"subtitle\\\":\\\"Natural linen shade, 40 cm\\\",\\\"price\\\":\\\"$89\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-linen-pendant\\\",\\\"name\\\":\\\"Linen Pendant\\\",\\\"price\\\":89}}},{\\\"id\\\":\\\"p_oak\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Oak Floor Lamp\\\",\\\"subtitle\\\":\\\"Solid oak, 160 cm tall\\\",\\\"price\\\":\\\"$120\\\",\\\"badge\\\":\\\"Low stock\\\",\\\"badgeIntent\\\":\\\"warning\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-oak-floor\\\",\\\"name\\\":\\\"Oak Floor Lamp\\\",\\\"price\\\":120}}},{\\\"id\\\":\\\"p_lantern\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Glass Lantern\\\",\\\"subtitle\\\":\\\"Hand-blown glass, 28 cm\\\",\\\"price\\\":\\\"$38\\\",\\\"badge\\\":\\\"Sold out\\\",\\\"badgeIntent\\\":\\\"danger\\\",\\\"actionLabel\\\":\\\"Sold out\\\",\\\"disabled\\\":true,\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"lamp-glass-lantern\\\"}}},{\\\"id\\\":\\\"order\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"order_content\\\"]},{\\\"id\\\":\\\"order_content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"order_list\\\",\\\"order_total\\\"]},{\\\"id\\\":\\\"order_list\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"sm\\\",\\\"children\\\":[\\\"line_desk\\\"]},{\\\"id\\\":\\\"line_desk\\\",\\\"component\\\":\\\"AmountPicker\\\",\\\"label\\\":\\\"Brass Desk Lamp\\\",\\\"value\\\":1,\\\"min\\\":0,\\\"max\\\":10,\\\"step\\\":1,\\\"currency\\\":\\\"$\\\",\\\"actionName\\\":\\\"set_quantity\\\",\\\"actionLabel\\\":\\\"Update\\\"},{\\\"id\\\":\\\"order_total\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Total: $68\\\",\\\"variant\\\":\\\"label\\\",\\\"emphasis\\\":true}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Added the Brass Desk Lamp ($68) to your order. Set the quantity below, or pick more lamps. Confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-lamps\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add the first one to my order.\",\"k\":3},\"exemplarIds\":[\"wallet-summary-card\",\"frontier-round-outcome\",\"crud-entry-list-drawer\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"CHANGE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":62620,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7383},{\"id\":\"mini-skills\",\"chars\":2374},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":12496,\"outputTokens\":3160,\"cacheReadInputTokens\":18637,\"cacheCreationInputTokens\":18636},\"miniSkillIds\":[\"confirm-receipt\",\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-lamps\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"tiles\",\"order\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p_desk\",\"p_ceramic\",\"p_pendant\",\"p_oak\",\"p_lantern\"]},{\"id\":\"p_desk\",\"component\":\"ProductCard\",\"title\":\"Brass Desk Lamp\",\"subtitle\":\"Solid brass, 42 cm arm\",\"price\":\"$68\",\"badge\":\"In your order\",\"badgeIntent\":\"info\",\"actionLabel\":\"Added\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-desk\",\"name\":\"Brass Desk Lamp\",\"price\":68}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Ceramic Table Lamp\",\"subtitle\":\"Glazed stoneware, 35 cm\",\"price\":\"$54\",\"priceOld\":\"$64\",\"badge\":\"Sale\",\"badgeIntent\":\"success\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-ceramic-table\",\"name\":\"Ceramic Table Lamp\",\"price\":54}}},{\"id\":\"p_pendant\",\"component\":\"ProductCard\",\"title\":\"Linen Pendant\",\"subtitle\":\"Natural linen shade, 40 cm\",\"price\":\"$89\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-pendant\",\"name\":\"Linen Pendant\",\"price\":89}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Floor Lamp\",\"subtitle\":\"Solid oak, 160 cm tall\",\"price\":\"$120\",\"badge\":\"Low stock\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-oak-floor\",\"name\":\"Oak Floor Lamp\",\"price\":120}}},{\"id\":\"p_lantern\",\"component\":\"ProductCard\",\"title\":\"Glass Lantern\",\"subtitle\":\"Hand-blown glass, 28 cm\",\"price\":\"$38\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"actionLabel\":\"Sold out\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-glass-lantern\"}}},{\"id\":\"order\",\"component\":\"Card\",\"children\":[\"order_content\"]},{\"id\":\"order_content\",\"component\":\"CardContent\",\"children\":[\"order_list\",\"order_total\"]},{\"id\":\"order_list\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"line_desk\"]},{\"id\":\"line_desk\",\"component\":\"AmountPicker\",\"label\":\"Brass Desk Lamp\",\"value\":1,\"min\":0,\"max\":10,\"step\":1,\"currency\":\"$\",\"actionName\":\"set_quantity\",\"actionLabel\":\"Update\"},{\"id\":\"order_total\",\"component\":\"Text\",\"text\":\"Total: $68\",\"variant\":\"label\",\"emphasis\":true}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Added the Brass Desk Lamp ($68) to your order. Set the quantity below, or pick more lamps. Confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-lamps\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Added the Brass Desk Lamp ($68) to your order. Set the quantity below, or pick more lamps. Confirm when you're ready.",
+                "target": "storefront-lamps",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-lamps",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "tiles",
+                            "order"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p_desk",
+                            "p_ceramic",
+                            "p_pendant",
+                            "p_oak",
+                            "p_lantern"
+                          ]
+                        },
+                        {
+                          "id": "p_desk",
+                          "component": "ProductCard",
+                          "title": "Brass Desk Lamp",
+                          "subtitle": "Solid brass, 42 cm arm",
+                          "price": "$68",
+                          "badge": "In your order",
+                          "badgeIntent": "info",
+                          "actionLabel": "Added",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-desk",
+                              "name": "Brass Desk Lamp",
+                              "price": 68
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Ceramic Table Lamp",
+                          "subtitle": "Glazed stoneware, 35 cm",
+                          "price": "$54",
+                          "priceOld": "$64",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-ceramic-table",
+                              "name": "Ceramic Table Lamp",
+                              "price": 54
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_pendant",
+                          "component": "ProductCard",
+                          "title": "Linen Pendant",
+                          "subtitle": "Natural linen shade, 40 cm",
+                          "price": "$89",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-pendant",
+                              "name": "Linen Pendant",
+                              "price": 89
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak Floor Lamp",
+                          "subtitle": "Solid oak, 160 cm tall",
+                          "price": "$120",
+                          "badge": "Low stock",
+                          "badgeIntent": "warning",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-oak-floor",
+                              "name": "Oak Floor Lamp",
+                              "price": 120
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_lantern",
+                          "component": "ProductCard",
+                          "title": "Glass Lantern",
+                          "subtitle": "Hand-blown glass, 28 cm",
+                          "price": "$38",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "actionLabel": "Sold out",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-glass-lantern"
+                            }
+                          }
+                        },
+                        {
+                          "id": "order",
+                          "component": "Card",
+                          "children": [
+                            "order_content"
+                          ]
+                        },
+                        {
+                          "id": "order_content",
+                          "component": "CardContent",
+                          "children": [
+                            "order_list",
+                            "order_total"
+                          ]
+                        },
+                        {
+                          "id": "order_list",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "line_desk"
+                          ]
+                        },
+                        {
+                          "id": "line_desk",
+                          "component": "AmountPicker",
+                          "label": "Brass Desk Lamp",
+                          "value": 1,
+                          "min": 0,
+                          "max": 10,
+                          "step": 1,
+                          "currency": "$",
+                          "actionName": "set_quantity",
+                          "actionLabel": "Update"
+                        },
+                        {
+                          "id": "order_total",
+                          "component": "Text",
+                          "text": "Total: $68",
+                          "variant": "label",
+                          "emphasis": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "wallet-summary-card",
+          "frontier-round-outcome",
+          "crud-entry-list-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
