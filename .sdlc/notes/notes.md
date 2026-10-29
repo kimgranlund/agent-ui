@@ -1151,3 +1151,8 @@
 - note: scripts/measure-size.mjs:961 comment says markdown solo stayed 12224 and marginal moved 4565 -> 5370; my base-tree run printed solo 13102, marginal 5443, already over its 5120 budget (the traits rode the markdown solo through the root barrel), so the stated reason is not what I measured. The 5.5 KB cap still holds (5370 now); the comment's figures are unverified.
 - note: `node scripts/measure-size.mjs` also prints the cluster drift (`slider` absent from the derived cluster) at base too; inherited, not this ticket.
 - note: @agent-ui/app marginal moved 61351 -> 62156 on the same frame shift; T-0522 owns that row.
+
+## T-0535: Cleanup and leak sweep: listeners, observers, timers and effects released on disconnect (2026-10-28)
+
+- note: handoff Low item 4 groups `conversation.ts:1361` under one-shot rAF frames, but that line is `setTimeout(() => (button.textContent = COPY_LABEL), 1500)`, not a rAF; the "benign, no fix" conclusion still holds.
+- note: I did not rerun the browser probe; I relied on the saved `probe-results.json` and `run3.log` plus static spot-checks.
