@@ -53,13 +53,15 @@ aria:
   roleSource: none        # the host carries no role attribute and internals sets none; each SEPARATOR sets role="separator" + aria-orientation/-controls/-valuenow/-valuemin/-valuemax/-label directly as HTML attributes (control-rendered light-DOM elements, not internals-backed — there is no ElementInternals per separator)
 
 keyboard:                 # per FOCUSED SEPARATOR (tabindex=0), not the host itself
-  - key: ArrowRight/ArrowLeft (horizontal) or ArrowUp/ArrowDown (vertical)
+  - keys: ArrowRight / ArrowLeft (horizontal)
     action: Step the leading pane by --ui-split-key-step (5%), clamped to the two-neighbor pair's bounds. RTL-logical on the horizontal axis (SPEC-R3/R4 AC3 — ArrowRight shrinks the inline-start pane under dir=rtl).
-  - key: Home
+  - keys: ArrowUp / ArrowDown (vertical)
+    action: Step the leading pane by --ui-split-key-step (5%), clamped to the two-neighbor pair's bounds.
+  - keys: Home
     action: Drive the leading pane to its minimum within the pair (redistribute clamps it there).
-  - key: End
+  - keys: End
     action: Drive the leading pane to its maximum within the pair (redistribute clamps it there).
-  - key: Enter
+  - keys: Enter
     action: Toggle collapse-to-last when the leading pane is `collapsible` (a no-op otherwise, documented).
 
 geometry:

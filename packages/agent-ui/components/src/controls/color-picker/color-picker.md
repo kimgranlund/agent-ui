@@ -97,18 +97,18 @@ aria:
   readout: the composed ui-text-field's own role=textbox (its editor part) + the composed ui-swatch's role=img.
 
 keyboard:
-  - key: Tab
-    description: Reaches the pad, then each channel ui-slider (hue, chroma, lightness), then the readout ui-text-field, in DOM order — every channel is independently reachable without ever touching the pad (SPEC-R6).
-  - key: ArrowLeft / ArrowRight (pad focused)
-    description: Step chroma (X axis) by ∓0.004 (Shift = coarse, ∓0.04). Fires input + change together (an atomic committed step); preventDefault suppresses scroll.
-  - key: ArrowUp / ArrowDown (pad focused)
-    description: Step lightness (Y axis) by ±0.01 (Shift = coarse, ±0.05). Fires input + change together.
-  - key: Home / End (pad focused)
-    description: Chroma → minimum (0) / maximum (0.4).
-  - key: PageUp / PageDown (pad focused)
-    description: Lightness → maximum (1) / minimum (0).
-  - key: Arrow keys / Home / End / PageUp / PageDown (a channel ui-slider focused)
-    description: The unmodified UIRangeElement keyboard contract (±step / ±10×step / min/max) for that one channel.
+  - keys: Tab
+    action: Reaches the pad, then each channel ui-slider (hue, chroma, lightness), then the readout ui-text-field, in DOM order — every channel is independently reachable without ever touching the pad (SPEC-R6).
+  - keys: ArrowLeft / ArrowRight (pad focused)
+    action: Step chroma (X axis) by ∓0.004 (Shift = coarse, ∓0.04). Fires input + change together (an atomic committed step); preventDefault suppresses scroll.
+  - keys: ArrowUp / ArrowDown (pad focused)
+    action: Step lightness (Y axis) by ±0.01 (Shift = coarse, ±0.05). Fires input + change together.
+  - keys: Home / End (pad focused)
+    action: Chroma → minimum (0) / maximum (0.4).
+  - keys: PageUp / PageDown (pad focused)
+    action: Lightness → maximum (1) / minimum (0).
+  - keys: ArrowLeft / ArrowRight / ArrowUp / ArrowDown / Home / End / PageUp / PageDown (a channel ui-slider focused)
+    action: The unmodified UIRangeElement keyboard contract (±step / ±10×step / min/max) for that one channel.
 
 geometry:
   tier: pattern                                  # container + control-height rows (geometry.md) — the pad is a sized surface, channel rows are Indicator-class ui-sliders, the readout is a Control-height ui-text-field

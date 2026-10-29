@@ -138,10 +138,12 @@ aria:
   roleSource: none
 
 keyboard:
-  - key: ArrowLeft / ArrowRight
-    description: On a focused `pane-resizer`, steps the pane's size by one inter-card gap (`--ui-super-shell-gap`, the layout gutter 3n), RTL-aware (SPEC-R6b, the ui-split precedent); the toggles remain native ui-button activation, and panes scroll natively.
-  - key: Home / End
-    description: On a focused `pane-resizer`, jumps straight to the SPEC-R6c bound (pane minimum / the canvas-derived maximum).
+  - keys: ArrowLeft / ArrowRight
+    action: On a focused `pane-resizer`, steps the pane's size by one inter-card gap (`--ui-super-shell-gap`, the layout gutter 3n), RTL-aware (SPEC-R6b, the ui-split precedent); the toggles remain native ui-button activation, and panes scroll natively.
+  - keys: Home / End
+    action: On a focused `pane-resizer`, jumps straight to the SPEC-R6c bound (pane minimum / the canvas-derived maximum).
+  - keys: Escape
+    action: While a collapse side is open as the narrow overlay (`data-narrow-open`), closes it (SPEC-R9d); non-modal, so no focus trap and the keydown is heard anywhere inside the shell. A no-op when no overlay is open.
 
 geometry:
   sizeClass: layout
