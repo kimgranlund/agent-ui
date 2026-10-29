@@ -1305,3 +1305,7 @@
 ## T-0550: A cart's ConfirmReceipt with a bound quantity ships its AmountPicker (round 17 cluster P5) (2026-10-29)
 
 - decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:779 decide: the row emits `SURFACE_MISSING` as the ticket pins, not a `<COMPOSITE>_MISSING` code; the builder reports it therefore gets no T-0299 cross-round bind. No criterion names it and the replay heals in one repair round, so it is left open here, not verified.
+
+## T-0565: a2ui-basic Image.url uses the media URL format (2026-10-29)
+
+- note: packages/agent-ui/a2ui/src/catalog/a2ui-basic/factories.ts:78 doc comment updated to media-src; no em dashes in the added lines.

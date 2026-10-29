@@ -3,6 +3,7 @@ import { validateCatalogConformance, SAFE_HREF_SCHEMES, MEDIA_SRC_SCHEMES } from
 import { demoCatalog } from '../fixtures.ts'
 import { loadCatalog } from './catalog.ts'
 import { defaultCatalog } from './default/index.ts'
+import { a2uiBasicCatalog } from './a2ui-basic/index.ts'
 import type { A2uiComponent } from '../protocol.ts'
 import { SAFE_HREF_SCHEMES as COMPONENTS_SAFE_HREF_SCHEMES, MEDIA_SRC_SCHEMES as COMPONENTS_MEDIA_SRC_SCHEMES } from '@agent-ui/components/controls/text'
 
@@ -353,6 +354,25 @@ describe('validateCatalogConformance: PropDef.format media-src (T-0563)', () => 
       { code: 'CATALOG', path: 'w.link' },
       { code: 'CATALOG', path: 'w.media' },
     ])
+  })
+})
+
+describe('validateCatalogConformance: a2ui-basic Image.url declares format media-src (T-0565)', () => {
+  const urlFailures = (value: unknown) =>
+    validateCatalogConformance(comp({ id: 'b', component: 'Image', description: 'A photo', url: value }), a2uiBasicCatalog)
+      .filter((f) => f.path === 'b.url')
+
+  it('Image.url declares format media-src', () => {
+    expect(a2uiBasicCatalog.components['Image']?.properties['url']?.format).toBe('media-src')
+  })
+
+  it('data: image literals pass and schemes outside the media allowlist fail CATALOG', () => {
+    expect(urlFailures('data:image/png;base64,AAAA')).toEqual([])
+    expect(urlFailures('https://example.com/a.png')).toEqual([])
+    expect(urlFailures('/media/a.png')).toEqual([])
+    expect(urlFailures({ path: '/media/url' })).toEqual([])
+    expect(urlFailures('ftp://example.com/a.png')).toEqual([{ code: 'CATALOG', path: 'b.url' }])
+    expect(urlFailures('mailto:someone@example.com')).toEqual([{ code: 'CATALOG', path: 'b.url' }])
   })
 })
 
