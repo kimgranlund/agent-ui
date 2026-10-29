@@ -1292,3 +1292,7 @@
 
 - note: packages/agent-ui/components/src/controls/drill/drill.ts: `file` now reports UTF-8 text (was `data` at base), Low item 5 fixed.
 - note: packages/agent-ui/app/src/controls/agent-admin/agent-admin.md:110 the merged entry-section and drawer-trigger descriptions carry pre-existing em dashes.
+
+## T-0530: The a2ui root barrel stops re-exporting the shipped persona and domain catalogs, which move to a subpath (2026-10-29)
+
+- note: `packages/agent-ui/a2ui/src/catalog/index.ts:53` and `scripts/measure-size.mjs` comments are accurate to the new layout; no stale text found.

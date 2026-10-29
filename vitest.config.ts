@@ -214,6 +214,9 @@ export default defineConfig({
       // T-0315: the a2ui `./corpus` subpath (pure, no `node:*`), mirrors the package's exports map; the site's preset
       // test reads the hidden-state key helpers from it. Placed BEFORE the broad entry for the same prefix-match reason.
       '@agent-ui/a2ui/corpus': r('./packages/agent-ui/a2ui/src/corpus/index.ts'),
+      // T-0530: the a2ui `./catalogs` subpath (the shipped persona and domain packages, off the root barrel),
+      // mirrors the package's exports map; placed BEFORE the broad entry for the same prefix-match reason.
+      '@agent-ui/a2ui/catalogs': r('./packages/agent-ui/a2ui/src/catalog/shipped.ts'),
       '@agent-ui/a2ui': r('./packages/agent-ui/a2ui/src/index.ts'),
       // ADR-0139 — the `./editor` subpath (ui-code-editor). `@agent-ui/app`'s entry-list.ts/agent-admin.ts are
       // the first cross-package consumers of `@agent-ui/code/editor` (the CM editor); a jsdom test driving

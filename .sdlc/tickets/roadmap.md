@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 540 done, 5 dropped (git log or .NNNN-* folders)
+Closed: 551 done, 5 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -128,3 +128,6 @@ Closed: 540 done, 5 dropped (git log or .NNNN-* folders)
 - decide: `super-shell.css:55` the overlay scrim goes from 0.32 to 0.8 alpha to match ui-modal, as the Goal asks. The builder asks Kim to look at `shots/after/super-shell-scrim-*.png`. (from T-0558: Secondary text leaves the neutral fill role, dark primary-high text meets AA, and the super-shell scrim uses the backdrop token (2026-10-28))
 - decide: packages/agent-ui/a2ui/src/renderer/widget.ts:169-174: note: a catalog entry with factories but no `catalog.components` def (the stub-catalog carve-out, `componentDef === undefined`) stays unconstrained, as the findings' proposed fix specified; every shipped catalog carries defs, so this only matters for a host-registered factory-only catalog. (from T-0552: The A2UI renderer applies only catalog-declared props to rendered elements (2026-10-28))
 - decide: packages/agent-ui/a2ui/src/renderer/renderer.test.ts:436: fix-now: `querySelector('[data-part="aria-label"]')?.textContent ?? ''` then `.not.toContain('Party size')` passes whether the undeclared label was skipped or the span is simply absent, so the line no longer discriminates; assert the `ui-select` element's `label` property is empty instead (or assert the span is non-null before the not-contains). The case still asserts the `VALIDATION_FAILED` error at `root.label`, and the T-0552 declared-props tests carry the real negative control. (from T-0552: The A2UI renderer applies only catalog-declared props to rendered elements (2026-10-28))
+- decide: redck deviations: no `process deviation:` lines printed. (from T-0562: The leak gate covers ui-agent-admin (2026-10-28))
+- decide: sequential unbounded quantifiers (`a*a*a*a*b`) and overlapping alternation (`(a|aa)+`, 99 ms at 35 chars) pass `hasNestedQuantifier`; whether a count cap on unbounded quantifiers per pattern is worth a follow-up. (from T-0554: Hardening batch: payload regex cap, frame bridge source check, harness proxy URL, worker limiter, icon pack note (2026-10-28))
+- decide: packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json:16 `Image.url` (mapsTo `src`) still declares `safe-href`, which admits `mailto:` and rejects `data:`, the opposite of the render gate for a media prop; the handoff names only the default catalog, and the builder disclosed it. A follow-up could move it to `media-src`. The persona and domain catalogs carry no own media props. (from T-0563: Catalog media props declare a media URL format (2026-10-29))

@@ -16,7 +16,8 @@
 // import site. The a2ui `PersonaCatalogManifest` (the Node-safe fragment triple) is a different thing and
 // stays untouched.
 import { AGENT_PRESETS, personaFromPreset } from '../../pages/agent-admin-presets.ts'
-import { SHIPPED_PERSONA_CATALOGS, SHIPPED_PERSONA_CATALOG_MANIFESTS } from '@agent-ui/a2ui'
+import { SHIPPED_PERSONA_CATALOG_MANIFESTS } from '@agent-ui/a2ui'
+import { SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui/catalogs'
 import { canonicalJson } from '../../agent-content/schema.ts'
 import { canonicalDigest } from '../../agent-content/digest.ts'
 import { formatManifest, type AgentManifest } from './format.ts'

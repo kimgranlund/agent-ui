@@ -10,7 +10,7 @@ import { whenFlushed } from '@agent-ui/components'
 import '@agent-ui/app/agent-admin'
 import type { UIAgentAdminElement } from '@agent-ui/app/agent-admin'
 import { createMemoryStore } from '@agent-ui/app'
-import { SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui'
+import { SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui/catalogs'
 import {
   A2UI_CATALOG_KEY,
   A2UI_LOCAL_PATTERNS_KEY,
