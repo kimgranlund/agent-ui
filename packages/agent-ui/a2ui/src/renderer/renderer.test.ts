@@ -437,6 +437,9 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
       expect(mount.querySelector('ui-select')).not.toBeNull()
       expect(mount.querySelector('[data-part="aria-label"]')?.textContent ?? '').not.toContain('Party size')
       expect(mount.querySelector('[data-part="label"]')?.textContent).not.toContain('Party size')
+      // The prop itself stays at its default: applying it would set `label` (and reflect the attribute).
+      expect((mount.querySelector('ui-select') as { label?: string }).label).toBe('')
+      expect(mount.querySelector('ui-select')?.hasAttribute('label')).toBe(false)
 
       const errors = sent.filter(isError)
       expect(errors).toHaveLength(1)
