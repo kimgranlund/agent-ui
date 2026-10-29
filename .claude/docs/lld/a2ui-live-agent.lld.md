@@ -560,7 +560,11 @@ through a copy-on-write pointer set so the payload objects that will ship are ne
 `SEMANTIC_HINT`. On the last round the payload ships and the meta-line's trace gains `SEMANTIC_UNCORRECTED`; a
 check that threw adds `SEMANTIC_CHECK_ERROR`. A semantic `continue` always leaves a round to run, so semantic
 failures never reach `ProduceHalt`. Both hosts build the deps through `semanticChecksDeps(selectedCatalog)`,
-which spreads `{}` when the selected catalog's persona declares none.
+which adds the persona's and domains' checks plus the catalog-wide ones, each kept only when the selected catalog
+declares the types it reads (`gateChecksOnCatalog`), and spreads `{}` when none applies. The catalog-wide list
+includes, since T-0556, `inertPropCheck` (`INERT_PROP`: a Basic prop kept for interop that renders nothing) and
+`receiptTotalCheck` (`RECEIPT_TOTAL_PATH`: a ConfirmReceipt `totalLabel` with no `totalPath`), both in
+`src/catalog/inert-prop-checks.ts`.
 
 **Catalog load under Node** mirrors the real
 `validate-payload.ts` / `import-seeds.ts` mechanism: `loadCatalog` reads `catalog.json` via

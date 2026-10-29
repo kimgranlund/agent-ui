@@ -3,11 +3,11 @@
 import { prop, type PropsSchema } from '../../dom/index.ts'
 
 export const props = {
-  // The video URL. Renders no <video> at all when empty (never a dead player shell). — generated from video.md attributes.src — edit the descriptor, not this file.
+  // The video URL. Renders no <video> at all when empty (never a dead player shell). The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL renders, and a denied one renders as empty. — generated from video.md attributes.src — edit the descriptor, not this file.
   src: prop.string(''),
   // REQUIRED in spirit (the a2ui catalog enforces it at admission, the Image `alt` discipline) — written as the interior <video>'s aria-label, its accessible name. Never synthesized. — generated from video.md attributes.label — edit the descriptor, not this file.
   label: prop.string(''),
-  // Optional poster-frame URL shown before playback starts (the native <video poster> attribute, passed through verbatim; empty ⇒ no poster attribute at all). — generated from video.md attributes.poster — edit the descriptor, not this file.
+  // Optional poster-frame URL shown before playback starts (the native <video poster> attribute; empty or denied by the media gate, as for `src`, gives no poster attribute at all). — generated from video.md attributes.poster — edit the descriptor, not this file.
   poster: prop.string(''),
   // A "W/H" aspect ratio driving the host CSS aspect-ratio box. Malformed/omitted falls back to 16/9 — NEVER to "auto" — so space is reserved before any metadata loads (zero CLS, by construction; the ui-image law). — generated from video.md attributes.aspect — edit the descriptor, not this file.
   aspect: prop.string('16/9'),

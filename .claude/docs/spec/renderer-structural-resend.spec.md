@@ -1,6 +1,6 @@
 # SPEC — Renderer structural-resend reconciliation (`@agent-ui/a2ui` renderer)
 
-> Status: proposed · v0.1 · 2026-07-12 · Layer: SPEC (execution contract)
+> Status: proposed · v0.2 · 2026-10-29 (v0.1 2026-07-12; v0.2: SPEC-R2 AC3's non-identity arm now holds, T-0556) · Layer: SPEC (execution contract)
 > Refines: [`./a2ui-runtime.spec.md`](./a2ui-runtime.spec.md) SPEC-R3/R4 (§3.3 component tree & progressive
 > rendering) — closes the gap those requirements leave open (§2 below); cites, never restates, SPEC-R3's
 > render-on-root and SPEC-R4's out-of-order tolerance.
@@ -99,9 +99,10 @@ the LLD's, not restated here)*
   factories.ts`'s `accessorFactory` rows), *when* applied, *then* the prop's prior value does not linger — it
   resets to the widget's declared default (matches message-lifecycle SPEC-R2 AC1's "silent drop", now true
   end-to-end for this class of prop). *Given* an omitted prop whose catalog mapping is **non-identity** (a
-  bespoke factory — e.g. `Button.label`, a control's non-identity `label`/attribute mapping), the renderer is
-  NOT required to reset it in this wave (§5 non-goal) — its prior value may linger; closing this fully needs a
-  catalog-level capability this SPEC does not add.
+  bespoke factory, e.g. `Button.label` or `Stat.value -> figure`), *when* applied, *then* it also resets: the
+  renderer calls the factory's optional `WidgetFactory.resetProp(el, prop)` hook, which every shipped
+  non-identity row implements (T-0556, 2026-10-29). A host factory without the hook keeps the prior value. A
+  prop the catalog does not declare is never applied (T-0552), so it has nothing to reset.
 
 **SPEC-R3 — No reconcile without an actual delta.** A resend whose complete record (props + structural
 references) is unchanged from the previously buffered one for that id MUST NOT tear down or reinstall that
@@ -178,10 +179,8 @@ today. *(→ consistency with existing reconcile precedent)*
 - **Corpus admission / GRAMMAR/skill teaching text edits** — this SPEC governs renderer mechanics only; the
   producer-facing teaching already lives in the message-lifecycle SPEC and needs no wording change (its
   assumption becomes true, not different).
-- **Resetting a non-identity-mapped omitted prop** (SPEC-R2 AC3's narrowed arm) — the catalog's `WidgetFactory`
-  exposes only `create()`/`applyProp(el, prop, value)`, no per-prop default reader; a prop whose mapping is a
-  bespoke, non-identity one (e.g. `Button.label`) cannot be reset without a new, optional catalog-level
-  capability this SPEC does not add. Deferred, not silently dropped — flagged as a follow-up.
+- **Resetting a non-identity-mapped omitted prop**: no longer a non-goal. T-0556 (2026-10-29) added the optional
+  `WidgetFactory.resetProp` hook this item deferred, and SPEC-R2 AC3 now covers both arms.
 - **A resent container whose `children` is a dynamic-list TEMPLATE object** (`{path, componentId}`, runtime
   SPEC-R6/LLD-C6), not a static id array — this SPEC's id-keyed diff (SPEC-R1) operates on the static
   `children: string[]`/`child` shape only; a template-to-template resend (e.g. a changed `componentId`) is not

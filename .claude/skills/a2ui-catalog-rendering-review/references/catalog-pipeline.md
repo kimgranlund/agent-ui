@@ -24,7 +24,7 @@ control's own surface must change (a prop the catalog wants to expose does not e
   ```
   "Type": {
     "properties": { "<prop>": { "type": <JsonSchema>, "bindable"?: bool, "mapsTo": "<control prop | textContent | attr>",
-                                "format"?: "safe-href", "required"?: bool, "rejectFunctionCall"?: bool } },
+                                "format"?: "safe-href" | "media-src", "required"?: bool, "rejectFunctionCall"?: bool } },
     "children"?: "child" | "children" | "ChildList",
     "value"?: { "prop", "event", "readProp"?, "marshal"?: "singletonStringList" } | [ ≥1 slots, DISTINCT prop ]   // ADR-0161 / ADR-0169 cl.7
   }
@@ -50,7 +50,9 @@ control's own surface must change (a prop the catalog wants to expose does not e
 - Persona fragments `catalog/personas/{concierge,croupier,fixture-demo}/{catalog.json,factories.ts,manifest.ts}`
   merge via `compose.ts` (`CATALOG_COMPOSE_COLLISION` on a name already in the base). `catalog/a2ui-basic/`
   is the upstream-pinned catalog (SPEC-R10/N5), reusing default factories via `withBasicCommon`.
-- `factories.ts` — one `WidgetFactory {tag, create, applyProp, value?, submitGate?}` (`types.ts`).
+- `factories.ts` — one `WidgetFactory {tag, create, applyProp, resetProp?, value?, submitGate?}` (`types.ts`).
+  The renderer applies only props the row declares (T-0552); `resetProp` restores a dropped non-identity prop
+  on a later `updateComponents` (T-0556).
   Helpers: `accessorFactory(tag, value?, submitGate?)` (identity `el[prop]=value`) ·
   `mappedAccessorFactory(tag, {wire: prop})` (`attachmentFactory = mappedAccessorFactory('ui-attachment', { name: 'filename' })`) ·
   bespoke factories for `textContent`/attribute mappings (`buttonFactory`, `optionFactory`,
@@ -177,7 +179,8 @@ component-build-agent if the control lacks the prop)
 2. `catalog.json`: `"foo": { "type": {...}, "bindable"?, "mapsTo": "<descriptor attribute name>" }` —
    kind/enum equal to the descriptor attribute or a cited `AGREEMENT_EXCEPTIONS` row; wire ≠ control
    name → `mappedAccessorFactory`/bespoke and the mapping recorded in `mapsTo`.
-3. `factories.ts`: identity → nothing; non-identity → extend the mapping/bespoke `applyProp` (+ walker
+3. `factories.ts`: identity → nothing; non-identity → extend the mapping/bespoke `applyProp` plus a
+   `resetProp` arm (`renderer/reset-mapped-props.test.ts` reds a non-identity row without one) (+ walker
    skip-list entry + own describe block). `index.test.ts` conformance case (literal passes,
    out-of-enum fails, `{path}` iff bindable).
 4. Recapture the prompt baseline. Optionally: seed showing the prop, `A2UI_INITIAL` value,
