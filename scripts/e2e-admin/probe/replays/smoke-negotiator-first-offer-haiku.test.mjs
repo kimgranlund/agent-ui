@@ -15,11 +15,13 @@ import { offlineReplay } from '../trace.ts'
 // HUD keeps the old price. T-0366: the boardless-move-applied check now sends it back with ACTION_NOT_APPLIED. The
 // fixture records no repaired round, so the turn ships SEMANTIC_UNCORRECTED and both probe checks stay red here.
 // The scripted provider replays the one recorded prose round for each repair, so the turn runs to the bound (3 rounds).
+// T-0583: the note's "I come down to 230 gold" is a change claim, so the last round's standing claim is also tallied
+// CHANGE_CLAIM_UNCORRECTED.
 it('smoke-negotiator-first-offer-haiku: turn 0 ships a GameHud; the prose-only offer on turn 1 gets ACTION_NOT_APPLIED', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./smoke-negotiator-first-offer-haiku.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => [c.check, c.turn ?? null])).toEqual([['action-updates-surface', 1], ['expect-component', 1]])
   const trace = (i) => report.records[i].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
   expect(trace(0)).toMatchObject({ rounds: 3, failureCodes: ['SURFACE_NOT_CREATED', 'TEXT_JSONL_ROUTED'] })
-  expect(trace(1)).toMatchObject({ rounds: 3, failureCodes: ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'] })
+  expect(trace(1)).toMatchObject({ rounds: 3, failureCodes: ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED', 'CHANGE_CLAIM_UNCORRECTED'] })
 })

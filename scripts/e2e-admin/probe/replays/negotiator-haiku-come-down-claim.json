@@ -1,0 +1,413 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "negotiator-haiku-come-down-claim",
+  "agent": "negotiator",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-29.jsonl:83,2026-10-29.jsonl:84 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "I'd like to buy your brass lantern. What's your price?"
+    },
+    {
+      "say": "I offer 20."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Ah, the brass lantern! Hand-beaten, a little dented, and it lights like a dream. My asking price is $180. It is not a coin less... well, perhaps a few coins less, for a customer with a good story. What will you offer?\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Ah, the brass lantern! Hand-beaten, a little dented, and it lights like a dream. My asking price is $180. It is not a coin less... well, perhaps a few coins less, for a customer with a good story. What will you offer?\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to buy your brass lantern. What's your price?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":51212,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1494}],\"over\":false},\"miniSkillIds\":[\"product-presentation\",\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"item\",\"history\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Brass lantern\",\"status\":\"Opening ask\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Asking\",\"value\":\"$180\"},{\"label\":\"On the table\",\"value\":\"$180\"},{\"label\":\"Mood\",\"value\":\"Amused\"}]},{\"id\":\"item\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"item_hd\",\"item_ct\"]},{\"id\":\"item_hd\",\"component\":\"CardHeader\",\"children\":[\"item_title\"]},{\"id\":\"item_title\",\"component\":\"Text\",\"text\":\"Brass lantern\",\"variant\":\"h4\"},{\"id\":\"item_ct\",\"component\":\"CardContent\",\"children\":[\"item_desc\"]},{\"id\":\"item_desc\",\"component\":\"Text\",\"text\":\"Hand-beaten brass, a little dented, and it lights like a dream.\"},{\"id\":\"history\",\"component\":\"Sparkline\",\"values\":[180],\"label\":\"Price history\",\"variant\":\"line\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"move\":\"offer\",\"offer\":150}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"ask_ct\",\"ask_ft\"]},{\"id\":\"ask_ct\",\"component\":\"CardContent\",\"children\":[\"q\",\"move\",\"amt\"]},{\"id\":\"q\",\"component\":\"Text\",\"text\":\"Your move, friend?\",\"variant\":\"h5\"},{\"id\":\"move\",\"component\":\"SegmentedControl\",\"name\":\"move\",\"value\":{\"path\":\"/move\"},\"children\":[\"seg_offer\",\"seg_accept\",\"seg_walk\"]},{\"id\":\"seg_offer\",\"component\":\"Segment\",\"value\":\"offer\",\"label\":\"Offer\"},{\"id\":\"seg_accept\",\"component\":\"Segment\",\"value\":\"accept\",\"label\":\"Accept\"},{\"id\":\"seg_walk\",\"component\":\"Segment\",\"value\":\"walk\",\"label\":\"Walk away\"},{\"id\":\"amt\",\"component\":\"AmountPicker\",\"name\":\"offer\",\"value\":{\"path\":\"/offer\"},\"min\":40,\"max\":180,\"step\":5,\"currency\":\"USD\",\"label\":\"Your offer\"},{\"id\":\"ask_ft\",\"component\":\"CardFooter\",\"children\":[\"send\"]},{\"id\":\"send\",\"component\":\"Button\",\"label\":\"Send\",\"variant\":\"solid\",\"action\":{\"action\":\"send_move\",\"context\":{\"move\":{\"path\":\"/move\"},\"offer\":{\"path\":\"/offer\"}}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Ah, the brass lantern! Hand-beaten, a little dented, and it lights like a dream. My asking price is $180. It is not a coin less... well, perhaps a few coins less, for a customer with a good story. What will you offer?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "My asking price is $180 for the brass lantern. Make your move below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "item",
+                            "history"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Brass lantern",
+                          "status": "Opening ask",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Asking",
+                              "value": "$180"
+                            },
+                            {
+                              "label": "On the table",
+                              "value": "$180"
+                            },
+                            {
+                              "label": "Mood",
+                              "value": "Amused"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "item",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "item_hd",
+                            "item_ct"
+                          ]
+                        },
+                        {
+                          "id": "item_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "item_title"
+                          ]
+                        },
+                        {
+                          "id": "item_title",
+                          "component": "Text",
+                          "text": "Brass lantern",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "item_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "item_desc"
+                          ]
+                        },
+                        {
+                          "id": "item_desc",
+                          "component": "Text",
+                          "text": "Hand-beaten brass, a little dented, and it lights like a dream."
+                        },
+                        {
+                          "id": "history",
+                          "component": "Sparkline",
+                          "values": [
+                            180
+                          ],
+                          "label": "Price history",
+                          "variant": "line"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "move": "offer",
+                        "offer": 150
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "ask_ct",
+                            "ask_ft"
+                          ]
+                        },
+                        {
+                          "id": "ask_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "q",
+                            "move",
+                            "amt"
+                          ]
+                        },
+                        {
+                          "id": "q",
+                          "component": "Text",
+                          "text": "Your move, friend?",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "move",
+                          "component": "SegmentedControl",
+                          "name": "move",
+                          "value": {
+                            "path": "/move"
+                          },
+                          "children": [
+                            "seg_offer",
+                            "seg_accept",
+                            "seg_walk"
+                          ]
+                        },
+                        {
+                          "id": "seg_offer",
+                          "component": "Segment",
+                          "value": "offer",
+                          "label": "Offer"
+                        },
+                        {
+                          "id": "seg_accept",
+                          "component": "Segment",
+                          "value": "accept",
+                          "label": "Accept"
+                        },
+                        {
+                          "id": "seg_walk",
+                          "component": "Segment",
+                          "value": "walk",
+                          "label": "Walk away"
+                        },
+                        {
+                          "id": "amt",
+                          "component": "AmountPicker",
+                          "name": "offer",
+                          "value": {
+                            "path": "/offer"
+                          },
+                          "min": 40,
+                          "max": 180,
+                          "step": 5,
+                          "currency": "USD",
+                          "label": "Your offer"
+                        },
+                        {
+                          "id": "ask_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "send"
+                          ]
+                        },
+                        {
+                          "id": "send",
+                          "component": "Button",
+                          "label": "Send",
+                          "variant": "solid",
+                          "action": {
+                            "action": "send_move",
+                            "context": {
+                              "move": {
+                                "path": "/move"
+                              },
+                              "offer": {
+                                "path": "/offer"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "I'd like to buy your brass lantern. What's your price?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "travel-itinerary",
+          "five-day-weather",
+          "comparison-pricing-table"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "deal-sheet",
+            "load": "index-only"
+          },
+          {
+            "name": "negotiation-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Twenty? Friend, that is not an offer, it is an insult to my grandmother's lantern. Still, I am a reasonable man. I come down to $165, and not one coin lower until you show me something more serious.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Twenty? Friend, that is not an offer, it is an insult to my grandmother's lantern. Still, I am a reasonable man. I come down to $165, and not one coin lower until you show me something more serious.\",\"target\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"I offer 20.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":49718,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":49718}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Twenty?! Friend, that is not an offer, it is an insult to my grandmother's lantern. I will come down to $165, and not one coin lower until you show me something more serious.\",\"target\":{\"surfaceId\":\"ask-1\"}}}\n\nTwenty? Friend, that is not an offer, it is an insult to my grandmother's lantern. Still, I am a reasonable man. I come down to $165, and not one coin lower until you show me something more serious.",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\": {\"note\": \"Twenty? That is an insult to my grandmother's lantern. I come down to $165, and not one coin lower.\", \"target\": {\"surfaceId\": \"ask-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Twenty? That is an insult to my grandmother's lantern. I come down to $165, and not one coin lower.",
+                "target": "ask-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Brass lantern",
+                          "status": "Offended",
+                          "statusIntent": "warning",
+                          "stats": [
+                            {
+                              "label": "Asking",
+                              "value": "$165"
+                            },
+                            {
+                              "label": "Your offer",
+                              "value": "$20"
+                            },
+                            {
+                              "label": "Mood",
+                              "value": "Offended"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "history",
+                          "component": "Sparkline",
+                          "values": [
+                            180,
+                            165
+                          ],
+                          "label": "Price history",
+                          "variant": "line"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "move": "offer",
+                        "offer": 20
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "q",
+                          "component": "Text",
+                          "text": "I come down to $165. Your move?",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "amt",
+                          "component": "AmountPicker",
+                          "name": "offer",
+                          "value": {
+                            "path": "/offer"
+                          },
+                          "min": 20,
+                          "max": 165,
+                          "step": 5,
+                          "currency": "USD",
+                          "label": "Your offer"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "I offer 20."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-suggestions-chips",
+          "frontier-result-card-win",
+          "frontier-confirm-receipt-order"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "deal-sheet",
+            "load": "index-only"
+          },
+          {
+            "name": "negotiation-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
