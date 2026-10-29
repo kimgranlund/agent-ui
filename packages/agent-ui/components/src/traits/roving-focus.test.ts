@@ -221,6 +221,25 @@ describe('rovingFocus — roving tabindex + keyboard nav (listbox-roving LLD-C1)
     }
   })
 
+  it('rov-type-ahead-cleanup: disconnect cancels the pending type-ahead reset timer', () => {
+    vi.useFakeTimers()
+    try {
+      const setSpy = vi.spyOn(globalThis, 'setTimeout')
+      const clearSpy = vi.spyOn(globalThis, 'clearTimeout')
+      const [host] = makeHost(3, { labels: ['Apple', 'Banana', 'Cherry'] })
+      kd(host, 'b') // arms the 200ms buffer-reset timer
+      const at = setSpy.mock.calls.findIndex((c) => c[1] === 200)
+      expect(at).toBeGreaterThanOrEqual(0)
+      const timerId = setSpy.mock.results[at].value
+      clearSpy.mockClear()
+      host.remove() // the connection cleanup must clear it, not leave it to fire on a removed host
+      expect(clearSpy).toHaveBeenCalledWith(timerId)
+    } finally {
+      vi.restoreAllMocks()
+      vi.useRealTimers()
+    }
+  })
+
   it('rov-type-ahead-disabled: type-ahead skips disabled items', () => {
     // Apple(0), Avocado(1, disabled), Apricot(2). Initial roving = 0 (Apple).
     const [host, items] = makeHost(3, { labels: ['Apple', 'Avocado', 'Apricot'], disabledIndices: [1] })

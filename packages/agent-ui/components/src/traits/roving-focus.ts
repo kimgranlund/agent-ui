@@ -249,6 +249,8 @@ export function rovingFocus(host: UIElement, opts: RovingFocusOptions): () => vo
     if (released) return
     released = true
     cancelAnimationFrame(settleHandle)
+    if (typeTimer !== null) clearTimeout(typeTimer)
+    typeTimer = null
     // Best-effort — an item that has since left the DOM entirely needs no cleanup. A reconnect's fresh
     // `rovingFocus()` call re-stamps it.
     for (const item of items()) item.removeAttribute(ROVING_ITEM_ATTR)

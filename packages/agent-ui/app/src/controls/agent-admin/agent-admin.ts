@@ -2929,11 +2929,14 @@ export class UIAgentAdminElement extends UIElement {
       this.#pendingErrorTurn = pending
       setTimeout(() => {
         if (this.#pendingErrorTurn === pending) this.#pendingErrorTurn = undefined
+        if (!this.isConnected) return
         this.#runSurfaceTurn({ kind: 'client', message: pending.message }, origin)
       }, 0)
       return
     }
-    setTimeout(() => this.#runSurfaceTurn({ kind: 'client', message }, origin), 0)
+    setTimeout(() => {
+      if (this.isConnected) this.#runSurfaceTurn({ kind: 'client', message }, origin)
+    }, 0)
   }
 
   /** T-0221: fold a renderer error into the error turn still waiting to run, when it is the same rejection
