@@ -1309,3 +1309,7 @@
 ## T-0565: a2ui-basic Image.url uses the media URL format (2026-10-29)
 
 - note: packages/agent-ui/a2ui/src/catalog/a2ui-basic/factories.ts:78 doc comment updated to media-src; no em dashes in the added lines.
+
+## T-0566: Basic exemplars drop inert props and ticket records use relative paths (2026-10-29)
+
+- note: .sdlc/tickets/roadmap.md: tickets.py check reports the roadmap as stale. Regenerate it at close.
