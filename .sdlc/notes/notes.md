@@ -1348,3 +1348,9 @@
 ## T-0574: Drill transitions follow dir=rtl, the leak-gate title is accurate, and the dark primary-high tone is settled (2026-10-29)
 
 - note: part 3 is a report with no token change; dark primary-high is 400 on this base, the equal-350 state lives only in the unlanded T-0567 lane.
+
+## T-0577: The regex guard comment is accurate and patterns carry a per-pattern repeat cap (2026-10-29)
+
+- decide: packages/agent-ui/a2ui/src/catalog/regex-guard.ts:13 says the cap keeps "a sequence of repeats cheap at MAX_VALUE_LENGTH"; a node probe at the value cap (1023 a's plus x) measured `^a*a*b` 1.6 ms, unanchored `a*a*b` 544 ms, `^a*a*a*b` 582 ms, unanchored `a*a*a*b` 141786 ms. The cap of 2 refuses the last two shapes; an unanchored two-repeat pattern still costs about half a second per keystroke on an adversarial value. Whether that is cheap enough, or the cap should be 1 or the value cap lower, is Kim's call; no criterion names it.
+- note: packages/agent-ui/a2ui/src/catalog/regex-guard.test.ts:97 the census reads `process.cwd()` for the corpus dir, so the file passes only when vitest runs from the repo root (as every runner here does).
+- note: .sdlc/notes/notes.md:1266-1267 are the two T-0554 follow-ups this ticket resolves (the comment reword and the repeat cap); the close should clear them.
