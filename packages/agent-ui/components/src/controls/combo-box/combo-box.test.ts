@@ -1138,6 +1138,8 @@ describe('ui-combo-box — C10 zero-residue (combo-c10-residue · combo-c10-clea
     el.addEventListener('close', () => closes++)
 
     el.remove() // disconnect → scope.dispose() + AC abort → all listeners removed
+    expect(closes).toBe(1) // T-0541: a removal while open closes and announces once
+    closes = 0
 
     simulateLightDismiss(listbox)
     expect(closes).toBe(0) // toggle listener removed — no propagation

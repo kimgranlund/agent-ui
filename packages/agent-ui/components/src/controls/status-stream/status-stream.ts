@@ -412,6 +412,9 @@ export class UIStatusStreamElement extends UIContainerElement {
         this.#setCollapsed(!this.#collapsed, true)
       }
     })
+    // T-0541: re-arm the shared ticking interval that `disconnected()` stopped, so a moved or re-attached
+    // stream with a live entry keeps its elapsed times running instead of freezing until the next update.
+    this.#refreshTicking()
   }
 
   /** GH #147/ADR-0153 Fork 1 — stop the shared ticking interval on disconnect (zero residue after removal,

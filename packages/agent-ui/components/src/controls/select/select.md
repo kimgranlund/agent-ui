@@ -206,6 +206,8 @@ Set or read the selected option key via the `value` property (or `value` attribu
 trigger label updates reactively. `formValue()` submits the key under `name`. When nothing
 is selected (`value = ''`), the placeholder is shown and the form entry is absent (`null`).
 
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the listbox. Set `open` again after re-inserting to reopen.
+
 ## Keyboard
 
 - **Closed trigger**: Enter/Space opens the panel (native button). ArrowDown/ArrowUp also opens it, landing focus on the current selection.

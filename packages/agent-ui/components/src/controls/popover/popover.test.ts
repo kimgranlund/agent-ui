@@ -406,6 +406,8 @@ describe('ui-popover — C10 zero-residue (popover-c10-residue · popover-c10-st
     el.addEventListener('close', () => closes++)
 
     el.remove() // disconnect → scope.dispose() (cleanup fires) → AC aborts (toggle listener dead)
+    expect(closes).toBe(1) // T-0541: a removal while open closes and announces once
+    closes = 0
 
     // After disconnect: the popup's toggle listener is gone (host.listen rides the connection AC).
     simulateLightDismiss(panel) // listener is dead — should not propagate
@@ -436,7 +438,7 @@ describe('ui-popover — C10 zero-residue (popover-c10-residue · popover-c10-st
     el.open = true
     await whenFlushed()
     simulateLightDismiss(el.querySelector<HTMLElement>('[data-part="panel"]')!)
-    expect(closes).toBe(2) // exactly ONE new listener on the reconnected host — not doubled
+    expect(closes).toBe(3) // exactly ONE new listener on the reconnected host — not doubled (T-0541: plus the one the removal while open announced)
     el.remove()
   })
 

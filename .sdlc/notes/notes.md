@@ -1254,3 +1254,9 @@
 
 - note: packages/agent-ui/components/src/controls/drill/drill.css:341-356 the opt-in View Transitions layer keeps its default animation under rtl; the builder named this as open and only the CSS-transform base slide was in scope.
 - note: packages/agent-ui/components/src/controls/glyph/glyph.css:50 the mirror also reaches step-flow and confirm-receipt carets (quoted-only in the ticket); no browser test covers those two, they are covered by the shared rule and the glyph test.
+
+## T-0541: status-stream re-arms ticking on reconnect, and a disconnected open overlay closes and emits close (2026-10-29)
+
+- note: dependents of the changed overlay trait outside the criteria (app conversation-composer, nav-rail, text-field) also pass: `npx vitest run packages/agent-ui/app/src/controls/conversation packages/agent-ui/app/src/controls/nav-rail packages/agent-ui/components/src/controls/text-field packages/agent-ui/components/src/layering.test.ts` exit 0, 12 files, 515 tests.
+- note: criteria #2 and #4 named gate_lock; the queue never granted a slot in 1800 s because of external machine load, so both ran direct. Re-running through the queue when load drops is optional.
+- note: packages/agent-ui/components/src/leak-gate.browser.test.ts status-stream case title ("not re-armed on reconnect with no running entry") is inaccurate, as the builder already flagged; left as is.

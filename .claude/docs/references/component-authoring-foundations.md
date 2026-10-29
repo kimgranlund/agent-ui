@@ -30,6 +30,16 @@ Cross-cutting behaviour composes by calling the trait directly from the control'
 `tabbable(this, …)`); a **controller** is a stateful object the host reads *from* (owns signals, exposes an
 API). Both ride the connection scope and die on disconnect. (`.claude/docs/plan.md` §7)
 
+## The reconnect contract
+
+A disconnect stops what the connection armed and a reconnect re-arms it, so a moved or re-attached control
+behaves like a fresh one: a timer stopped in `disconnected()` is restarted from `connected()` (ui-status-stream's
+elapsed ticking). An overlay-family control (popover, menu, select, combo-box, form-popover, modal, drawer,
+tooltip) removed while open ends closed: `open` becomes false and it emits `close` + `toggle` as a dismissal
+would, so a two-way bind sees the close and a reconnect does not re-show it (Kim 2026-10-28, T-0541). The
+`overlay` trait's cleanup carries the rule for the popover-based controls; ui-modal and ui-drawer carry it in
+their own `disconnected()`. Proof: `packages/agent-ui/components/src/reconnect-contract.browser.test.ts`.
+
 ## The two design axes
 
 A component is judged on two crossing planes, scored **separately**: **COMPOSE** (whole→part: layer ·

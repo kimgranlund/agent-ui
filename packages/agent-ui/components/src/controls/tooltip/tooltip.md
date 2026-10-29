@@ -133,6 +133,8 @@ externally) — emits **`close`** then **`toggle`** (the ADR-0019 two-way bind s
 trait, AFTER `open` has already settled to `false` (ADR-0101): a bound renderer reading `el.open`
 inside either listener sees the correct, settled value on every path, not only a user dismiss.
 
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the tooltip. Set `open` again after re-inserting to reopen.
+
 ## Placement
 
 `placement` (default `'bottom-start'`) is the preferred position relative to the anchor. The

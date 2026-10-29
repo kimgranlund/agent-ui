@@ -1780,6 +1780,8 @@ own form value was catalogued). `value` holds the **last committed** value — u
 typing. `formValue()` returns `null` when `value` is empty (no form entry submitted, matching native
 `<select>` convention).
 
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the listbox. Set `open` again after re-inserting to reopen.
+
 ## The panel scroll cap (TKT-0027)
 
 `--ui-combo-box-panel-max-block-size` is a public dial capping the panel's height, defaulting to
@@ -2247,6 +2249,8 @@ syncs `open = false` and emits the family **`close`** plus **`toggle`** — the 
 writes back into the data model (`value: { prop: 'open', event: 'toggle' }`, ADR-0019). A close the agent drove
 (the prop already went false) only restores focus — no redundant emit.
 
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached, the dialog leaves the top layer and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-run `showModal()`. Set `open` again after re-inserting to reopen.
+
 ## Dismissal
 
 `persistent` (default **off**, modal's ADR-0020 shape verbatim) gates user dismissal. By default the user can
@@ -2628,6 +2632,8 @@ visible summary current, e.g. by listening for `change` events bubbling from the
 ACTUAL open-state transition (ADR-0101): `toggle` on a real show, `close` + `toggle` on a real hide
 — platform-driven (Escape, outside-click), component-driven (a trigger click), or model-driven
 alike. `toggle` is the two-way bind signal (`value: { prop: 'open', event: 'toggle' }`, ADR-0019).
+
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the panel. Set `open` again after re-inserting to reopen.
 
 ## Keyboard — native, not roving
 
@@ -3477,6 +3483,8 @@ trait announces every ACTUAL open-state transition (ADR-0101): `toggle` on a rea
 the control's own `close` listener also sets `open = false` so the prop stays consistent. `toggle` is
 the two-way bind signal (`value: { prop: 'open', event: 'toggle' }`, ADR-0019).
 
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the panel. Set `open` again after re-inserting to reopen.
+
 ## Commit → select
 
 When the user activates a menuitem (Enter/Space on a non-button item, or click), the control emits
@@ -3637,6 +3645,8 @@ the **user** dismisses the modal (Escape, a backdrop click, or an external close
 syncs `open = false` and emits the family **`close`** plus **`toggle`** — the two-way bind signal the renderer
 writes back into the data model (`value: { prop: 'open', event: 'toggle' }`, ADR-0019). A close the agent drove
 (the prop already went false) only restores focus — no redundant emit.
+
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached, the dialog leaves the top layer and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-run `showModal()`. Set `open` again after re-inserting to reopen.
 
 ## Dismissal
 
@@ -4198,6 +4208,8 @@ The overlay trait announces every ACTUAL open-state transition (ADR-0101): `togg
 trigger click), or model-driven alike. When the platform dismisses the panel, the control's own
 `close` listener also sets `open = false` (syncing the prop); `toggle` is the two-way bind signal the
 renderer writes back into the data model (`value: { prop: 'open', event: 'toggle' }`, ADR-0019).
+
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the panel. Set `open` again after re-inserting to reopen.
 
 ## Placement
 
@@ -5119,6 +5131,8 @@ The control creates two internal parts on first connect:
 Set or read the selected option key via the `value` property (or `value` attribute). The
 trigger label updates reactively. `formValue()` submits the key under `name`. When nothing
 is selected (`value = ''`), the placeholder is shown and the form entry is absent (`null`).
+
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the listbox. Set `open` again after re-inserting to reopen.
 
 ## Keyboard
 
@@ -7806,6 +7820,8 @@ Every real close — user-driven (mouseleave/focusout/Escape) or programmatic (`
 externally) — emits **`close`** then **`toggle`** (the ADR-0019 two-way bind signal) from the overlay
 trait, AFTER `open` has already settled to `false` (ADR-0101): a bound renderer reading `el.open`
 inside either listener sees the correct, settled value on every path, not only a user dismiss.
+
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-show the tooltip. Set `open` again after re-inserting to reopen.
 
 ## Placement
 

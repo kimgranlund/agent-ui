@@ -119,6 +119,8 @@ syncs `open = false` and emits the family **`close`** plus **`toggle`** — the 
 writes back into the data model (`value: { prop: 'open', event: 'toggle' }`, ADR-0019). A close the agent drove
 (the prop already went false) only restores focus — no redundant emit.
 
+Removing the element while it is open closes it (T-0541, Kim 2026-10-28): `open` reads `false` once it is detached, the dialog leaves the top layer and `close` + `toggle` fire as for a dismissal, so a two-way bind sees the close and a reconnect (a DOM move included) does not re-run `showModal()`. Set `open` again after re-inserting to reopen.
+
 ## Dismissal
 
 `persistent` (default **off**) gates user dismissal. By default the user can dismiss a modal with Escape or a
