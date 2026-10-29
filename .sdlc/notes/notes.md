@@ -1219,3 +1219,8 @@
 
 - decide: packages/agent-ui/a2ui/src/catalog/catalog.json: decide: the default catalog's media PropDefs (Image.src, Avatar.src, Video.src/poster, AudioPlayer.src, ProductCard.image) still carry no format, so the static validator admits any string and only the render-time gate denies; findings.md Medium 1 proposed a format too, and `safe-href` does not fit (it rejects data: and admits mailto:), so a media-specific validator format is a follow-up.
 - decide: packages/agent-ui/components/src/controls/text/media-src.ts:44: note: with an origin allowlist set, `data:` and `blob:` sources always pass (by design, they fetch nothing remote); the browser shards that render `data:` media were not run here and the land gate covers them.
+
+## T-0558: Secondary text leaves the neutral fill role, dark primary-high text meets AA, and the super-shell scrim uses the backdrop token (2026-10-28)
+
+- decide: `super-shell.css:55` the overlay scrim goes from 0.32 to 0.8 alpha to match ui-modal, as the Goal asks. The builder asks Kim to look at `shots/after/super-shell-scrim-*.png`.
+- note: `.sdlc/AGENTS.md` and `.sdlc/tickets/roadmap.md` modifications in the lane tree are not part of this ticket's diff and should not be committed with it.

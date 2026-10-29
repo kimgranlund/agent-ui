@@ -55,7 +55,8 @@
 
   /* Pill: Best (quiet) and Your pick (filled), full pills at the small control type */
   --ui-option-compare-pill-bg: var(--md-sys-color-primary-container-low);
-  --ui-option-compare-pill-ink: var(--md-sys-color-primary-high);
+  /* T-0558: dark reads the primary variant ink (primary-high's dark 400 leg was 4.41:1 on the pill). */
+  --ui-option-compare-pill-ink: light-dark(var(--md-sys-color-primary-high), var(--md-sys-color-primary-on-surface-variant));
   --ui-option-compare-pick-bg: var(--md-sys-color-primary-fill);
   --ui-option-compare-pick-ink: var(--md-sys-color-primary-on-primary);
   --ui-option-compare-pill-size: var(--md-sys-type-small-control);

@@ -80,8 +80,10 @@
   /* ── Disabled / out-of-range day ink (muted; WCAG exempts inactive controls). */
   --ui-calendar-disabled-ink: var(--md-sys-color-neutral-on-surface-variant);
 
-  /* ── Adjacent-month day ink (prev/next month overflow cells — dimmed to neutral mid). */
-  --ui-calendar-outside-ink: var(--md-sys-color-neutral);
+  /* ── Adjacent-month day ink (prev/next month overflow cells, dimmed to the placeholder ink, one step
+     nearer the surface than the disabled ink above so the two stay distinct; T-0558: was the `neutral` fill role,
+     3.86:1 in light). */
+  --ui-calendar-outside-ink: var(--md-sys-color-neutral-placeholder);
 
   /* ── Nav button geometry — the ‹ and › inline affordances are sized = font (§4.6 law).
      They are plain buttons; no fixed icon-cell needed (they're typography glyphs). */

@@ -376,7 +376,7 @@ describe('ui-nav-rail — GH #624 nav polish (both engines)', () => {
     ).toBeCloseTo(borderWidth + start, 1)
   })
 
-  it('item 4: the kicker ink resolves to the neutral role, not the on-surface ink', async () => {
+  it('item 4: the kicker ink resolves to the muted meta ink, not the on-surface ink', async () => {
     const rail = document.createElement('ui-nav-rail')
     const group = new UINavRailGroupElement()
     group.label = 'Components'
@@ -391,7 +391,7 @@ describe('ui-nav-rail — GH #624 nav polish (both engines)', () => {
     const inkColor = resolveColor(getComputedStyle(rail).getPropertyValue('--ui-nav-rail-ink').trim())
     const neutralColor = resolveColor(getComputedStyle(rail).getPropertyValue('--ui-nav-rail-meta-ink').trim())
     expect(kickerColor, `${server.browser}: the kicker still reads the on-surface ink`).not.toBe(inkColor)
-    expect(kickerColor, `${server.browser}: the kicker does not resolve to the neutral role`).toBe(neutralColor)
+    expect(kickerColor, `${server.browser}: the kicker does not resolve to the muted meta ink`).toBe(neutralColor)
   })
 
   it('item 5: the active item ink resolves to the primary-high role, not the base primary', async () => {
@@ -1143,7 +1143,7 @@ describe('ui-nav-rail — the name|tag row (SPEC-R6)', () => {
     expect(activatorHeightNarrow, `${server.browser}: the row grew — a wrap, not a truncate`).toBeCloseTo(activatorHeightWide, 0)
   })
 
-  it('GH #624 item 3: the tag reads the mono typeface and the neutral color role, not the row ink', async () => {
+  it('GH #624 item 3: the tag reads the mono typeface and the muted meta ink, not the row ink', async () => {
     const { el, tag } = withTag()
     mountRail(el, '900px')
     await new Promise((r) => requestAnimationFrame(() => r(undefined)))
@@ -1153,7 +1153,7 @@ describe('ui-nav-rail — the name|tag row (SPEC-R6)', () => {
     const inkColor = resolveColor(getComputedStyle(el).getPropertyValue('--ui-nav-rail-ink').trim())
     const neutralColor = resolveColor(getComputedStyle(el).getPropertyValue('--ui-nav-rail-meta-ink').trim())
     expect(tagColor, `${server.browser}: the tag still reads the row's own ink`).not.toBe(inkColor)
-    expect(tagColor, `${server.browser}: the tag does not resolve to the neutral role`).toBe(neutralColor)
+    expect(tagColor, `${server.browser}: the tag does not resolve to the muted meta ink`).toBe(neutralColor)
   })
 })
 

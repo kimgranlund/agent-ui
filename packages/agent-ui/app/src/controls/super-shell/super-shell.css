@@ -49,7 +49,10 @@
   --ui-super-shell-radius-block-start: var(--ui-super-shell-radius);
   --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
   --ui-super-shell-surface: var(--md-sys-color-neutral-surface);
-  --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem rgb(0 0 0 / 0.25);
+  /* T-0558: the overlay scrim reads ui-modal's backdrop role, so a theme repaints both and the three
+     scrim sites below cannot drift; the card shadow is the same role at 31.25% (0.8 x 0.3125 = 0.25 alpha). */
+  --ui-super-shell-scrim: var(--md-sys-color-dialog-backdrop);
+  --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem color-mix(in oklch, var(--ui-super-shell-scrim) 31.25%, transparent);
   /* GH #381 — the floating overlay card's OUTLINE, cast in the `--ui-super-shell-bar-seam` mold above:
      ONE composite value, not a width/style/color trio, so the TKT-0062 repoint law gives a consumer
      exactly one site to retune it (`0 solid transparent` for none, `2px dashed …` for a louder edge).
@@ -615,7 +618,7 @@
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: rgb(0 0 0 / 0.32);
+    background: var(--ui-super-shell-scrim);
   }
 
   /* ── SPEC-R4: narrow (<40rem) auto-collapse — the QUERY alone hides sides (never the attrs, so a
@@ -761,7 +764,7 @@
       position: absolute;
       inset: 0;
       z-index: 1;
-      background: rgb(0 0 0 / 0.32);
+      background: var(--ui-super-shell-scrim);
     }
 
     /* SPEC-R7b/R7c — the narrow-tabs strip + its addressed participant. The `:has()` guard is what
@@ -867,7 +870,7 @@
       position: absolute;
       inset: 0;
       z-index: 1;
-      background: rgb(0 0 0 / 0.32);
+      background: var(--ui-super-shell-scrim);
     }
   }
 }

@@ -83,7 +83,8 @@
   --ui-toggle-bg: var(--md-sys-color-primary-container);
   --ui-toggle-bg-hover: var(--md-sys-color-primary-container-hover);
   --ui-toggle-bg-active: var(--md-sys-color-primary-container-active);
-  --ui-toggle-ink: var(--md-sys-color-primary-high);
+  /* T-0558: dark reads the primary variant ink (primary-high's dark 400 leg was 4.41:1 on the pressed fill). */
+  --ui-toggle-ink: light-dark(var(--md-sys-color-primary-high), var(--md-sys-color-primary-on-surface-variant));
   --ui-toggle-border: transparent;
 }
 
