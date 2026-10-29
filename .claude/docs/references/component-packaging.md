@@ -108,7 +108,9 @@ The package exposes its surface through `exports` subpaths, not deep file paths.
 | `@agent-ui/components/dogfood-frame` | `src/controls/sandbox-frame/dogfood/dogfood-assets.ts` | The dogfood sandbox-frame assets. |
 | `@agent-ui/components/traits/list-reorder` | `src/traits/list-reorder.ts` | The list-reorder trait, opt-in. |
 | `@agent-ui/components/traits/overlay` | `src/traits/overlay.ts` | The overlay trait, opt-in. |
+| `@agent-ui/components/traits/pane-resize` | `src/traits/pane-resize.ts` | The pane-resize trait (axis- and RTL-aware N-separator drag), opt-in; moved off the root barrel (T-0526). |
 | `@agent-ui/components/traits/roving-focus` | `src/traits/roving-focus.ts` | The roving-focus trait (one tab stop, arrow/Home/End roving), opt-in; published for `ui-nav-rail` (T-0521). |
+| `@agent-ui/components/traits/scroll-fade` | `src/traits/scroll-fade.ts` | The edge-aware scroll-fade trait, opt-in; moved off the root barrel (T-0526). |
 | `@agent-ui/components/traits/scroll-spy` | `src/traits/scroll-spy.ts` | The scroll-spy trait, opt-in. |
 | `@agent-ui/components/shared-styles.css` | `src/shared-styles.css` | **The seam sheet** (ADR-0233): the cross-family `_surface/container.css`, `_surface/container-box.css` and `_chart/chart-axis.css` layers, in that order, loaded once before any control sheet. |
 | `@agent-ui/components/base-styles.css` | `src/base-styles.css` | **Document BASE barrel** (opt-in) — `@agent-ui/shared/base.css`: the foundational theme for a SHELL-LESS host page (body typeface `--ui-sans`, body leading, ambient ink/surface, font smoothing). A page composing a shell that sets its own document rule (the docs `_page.css`) does not need it. |

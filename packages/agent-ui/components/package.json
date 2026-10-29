@@ -210,7 +210,9 @@
     "./shared-styles.css": "./src/shared-styles.css",
     "./traits/list-reorder": "./src/traits/list-reorder.ts",
     "./traits/overlay": "./src/traits/overlay.ts",
+    "./traits/pane-resize": "./src/traits/pane-resize.ts",
     "./traits/roving-focus": "./src/traits/roving-focus.ts",
+    "./traits/scroll-fade": "./src/traits/scroll-fade.ts",
     "./traits/scroll-spy": "./src/traits/scroll-spy.ts"
   }
 }

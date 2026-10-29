@@ -1,6 +1,6 @@
-// site/pages/traits-doc.ts: the @agent-ui/components TRAITS guide, the four public trait subpaths
-// (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy, ./traits/roving-focus) plus the
-// ./dogfood-frame asset pair.
+// site/pages/traits-doc.ts: the @agent-ui/components TRAITS guide, the six public trait subpaths
+// (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy, ./traits/roving-focus,
+// ./traits/pane-resize, ./traits/scroll-fade) plus the ./dogfood-frame asset pair.
 // Traits live in components/src/traits/ — NOT controls/ — so they carry no descriptor `.md` and sit
 // OUTSIDE the site-coverage/site-toc/site-canon descriptor-driven gates (those walk controls/src/
 // controls only, AGENTS.md's Packages section): this is an ungrouped site-level GUIDE page, the SAME
@@ -34,6 +34,8 @@ import overlaySrc from '../../packages/agent-ui/components/src/traits/overlay.ts
 import listReorderSrc from '../../packages/agent-ui/components/src/traits/list-reorder.ts?raw'
 import scrollSpySrc from '../../packages/agent-ui/components/src/traits/scroll-spy.ts?raw'
 import rovingFocusSrc from '../../packages/agent-ui/components/src/traits/roving-focus.ts?raw'
+import paneResizeSrc from '../../packages/agent-ui/components/src/traits/pane-resize.ts?raw'
+import scrollFadeSrc from '../../packages/agent-ui/components/src/traits/scroll-fade.ts?raw'
 
 // ── local derivation helpers — used only on this page (no other page slices a trait's own source) ─────────────
 
@@ -69,12 +71,20 @@ function extractBlock(source: string, marker: string): string {
 }
 
 /** Slice an `export function {name}(…): ReturnType` signature (through the char right before its body's
- *  opening `{`) verbatim out of `source`. Throws if the function has been renamed/removed. */
+ *  opening `{`) verbatim out of `source`. The body search starts after the paren-balanced parameter list,
+ *  so a `= {}` default (scrollFade's `opts`) is not mistaken for the body. Throws if the function has been
+ *  renamed/removed. */
 function extractSignature(source: string, name: string): string {
   const marker = `export function ${name}(`
   const start = source.indexOf(marker)
   if (start === -1) throw new Error(`traits-doc: function "${name}" not found — renamed or removed?`)
-  const bodyStart = source.indexOf('{', start)
+  let depth = 0
+  let i = start + marker.length - 1
+  for (; i < source.length; i++) {
+    if (source[i] === '(') depth++
+    else if (source[i] === ')' && --depth === 0) break
+  }
+  const bodyStart = source.indexOf('{', i)
   return source.slice(start, bodyStart).trim()
 }
 
@@ -119,8 +129,8 @@ const { content } = mountPage({
     'Traits are the layer BELOW controls (AGENTS.md’s Packages section: reactive ← dom ← traits ← controls) — ' +
     'stateless `(host, opts) => cleanup` behaviours (and a couple of stateful controllers) invoked directly ' +
     'from a control’s own `connected()`. Most traits live entirely inside `components/src/traits/` with no ' +
-    'subpath export at all; exactly four are published as their own `@agent-ui/components/traits/*` ' +
-    'entries for a consumer outside the fleet to reuse directly. This page documents those four, plus the ' +
+    'subpath export at all; exactly six are published as their own `@agent-ui/components/traits/*` ' +
+    'entries for a consumer outside the fleet to reuse directly. This page documents those six, plus the ' +
     'unrelated `./dogfood-frame` asset pair.',
 })
 
@@ -144,8 +154,8 @@ content.append(
   ),
 )
 
-// ════════════════ 2 · The four public subpaths ════════════════
-content.append(heading(2, 'The four public subpaths'))
+// ════════════════ 2 · The six public subpaths ════════════════
+content.append(heading(2, 'The six public subpaths'))
 content.append(
   para(
     'Read straight from ',
@@ -163,6 +173,8 @@ content.append(
     './traits/list-reorder': 'Pointer-drag + keyboard-fallback list reordering (WCAG 2.2 SC 2.5.7).',
     './traits/scroll-spy': 'IntersectionObserver-based heading-activation for a sticky TOC nav.',
     './traits/roving-focus': 'One tab stop plus arrow, Home and End roving focus over a set of items.',
+    './traits/pane-resize': 'Axis- and RTL-aware drag over N pane separators, reporting each resize as a ratio delta.',
+    './traits/scroll-fade': 'Edge-aware scroll fade: flags only the viewport edges that hide content past them.',
   }
   const table = document.createElement('table')
   const thead = document.createElement('thead')
@@ -370,7 +382,75 @@ content.append(
   ),
 )
 
-// ════════════════ 7 · @agent-ui/components/dogfood-frame ════════════════
+// ════════════════ 7 · pane-resize ════════════════
+content.append(heading(2, '@agent-ui/components/traits/pane-resize'))
+content.append(
+  para(
+    'The axis- and RTL-aware drag gesture over N pane separators (app-surfaces-m4 LLD-C2): a press on a ',
+    code('[data-separator]'),
+    ' element captures the pointer, and every move reports the separator’s index and its delta as a ratio of ' +
+      'the host’s own extent, live and then once more on commit. The returned handle’s ',
+    code('abortDrag()'),
+    ' ends an in-flight drag silently when the pane count changes under it.',
+  ),
+)
+content.append(heading(3, 'PaneResizeOptions and PaneResizeHandle, derived from source'))
+content.append(codeBlock(extractInterface(paneResizeSrc, 'PaneResizeOptions'), 'ts'))
+content.append(codeBlock(extractInterface(paneResizeSrc, 'PaneResizeHandle'), 'ts'))
+content.append(codeBlock(extractSignature(paneResizeSrc, 'paneResize'), 'ts'))
+content.append(
+  para(
+    'Inside the fleet it backs ',
+    code('ui-split'),
+    '; ',
+    code('@agent-ui/app'),
+    '’s ',
+    code('ui-super-shell'),
+    ' reuses it for its pane resizer. It rode the components root barrel until T-0526 moved it to this ' +
+      'subpath, off the foundation row every consumer pays.',
+  ),
+)
+
+// ════════════════ 8 · scroll-fade ════════════════
+content.append(heading(2, '@agent-ui/components/traits/scroll-fade'))
+content.append(
+  para(
+    'The edge-aware scroll fade: it sets ',
+    code('data-fade-top'),
+    ' and ',
+    code('data-fade-bottom'),
+    ' on a scroll viewport only while content is hidden past that edge, and publishes each edge’s bracket ' +
+      'band so the fade reaches past a sticky header or footer. The paint is CSS (the shared container-box ' +
+      'mask rule); this trait only decides which edge.',
+  ),
+)
+content.append(heading(3, 'ScrollFadeOptions, derived from source'))
+content.append(codeBlock(extractInterface(scrollFadeSrc, 'ScrollFadeOptions'), 'ts'))
+content.append(codeBlock(extractSignature(scrollFadeSrc, 'scrollFade'), 'ts'))
+content.append(
+  para(
+    'Inside the fleet it backs ',
+    code('ui-modal'),
+    ', ',
+    code('ui-drawer'),
+    ', ',
+    code('ui-menu'),
+    ', ',
+    code('ui-select'),
+    ', ',
+    code('ui-combo-box'),
+    ', ',
+    code('ui-command-modal'),
+    ' and ',
+    code('ui-card-content'),
+    '; ',
+    code('ui-super-shell'),
+    ' wires it over its hidden-scrollbar panes. It rode the components root barrel until T-0526 moved it ' +
+      'to this subpath.',
+  ),
+)
+
+// ════════════════ 9 · @agent-ui/components/dogfood-frame ════════════════
 content.append(heading(2, '@agent-ui/components/dogfood-frame'))
 content.append(
   para(
