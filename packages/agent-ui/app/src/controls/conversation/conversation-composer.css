@@ -36,7 +36,7 @@
   --ui-conversation-composer-border: transparent; /* default — the ring is the interactive indicator */
   --ui-conversation-composer-border-hover: var(--md-sys-color-neutral-outline-variant); /* the ONE visible-border state */
   --ui-conversation-composer-border-focus: transparent; /* editor-focused — the ring is the sole indicator */
-  --ui-conversation-composer-ink: var(--md-sys-color-neutral); /* default — empty, idle (== the placeholder ink) */
+  --ui-conversation-composer-ink: var(--md-sys-color-neutral-placeholder); /* default: empty, idle (== the placeholder ink) */
   --ui-conversation-composer-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-conversation-composer-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-conversation-composer-ink-focus: var(--md-sys-color-neutral-on-surface);
@@ -47,7 +47,7 @@
      forwarding the busy dim below; it forwarded every other repoint too, for free and by accident).
      Pinning keeps the placeholder at the SAME default-state ink role in every interactive state;
      busy gets its own EXPLICIT repoint below (the combo-box.css disabled precedent). */
-  --ui-conversation-composer-placeholder: var(--md-sys-color-neutral);
+  --ui-conversation-composer-placeholder: var(--md-sys-color-neutral-placeholder);
   --ui-conversation-composer-ink-variant: var(--md-sys-color-neutral-on-surface-variant); /* unrelated to this table — the chip/picker retint role, unchanged */
   --ui-conversation-composer-chip-bg: var(--md-sys-color-neutral-container); /* TKT-0066: was a direct role read in @scope */
 

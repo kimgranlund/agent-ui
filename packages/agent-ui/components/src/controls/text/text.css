@@ -248,7 +248,7 @@
    is not load-bearing here — this token is consumed only by the `a[href]` selector below, never by the
    base :scope rule, so it cannot lose a specificity-0 tie against anything above). ── */
 :where(ui-text) {
-  --ui-text-link-ink: var(--md-sys-color-primary);
+  --ui-text-link-ink: var(--md-sys-color-primary-placeholder); /* primary 650/350, the lightest primary pair clearing 4.5:1 as text on every surface plane in both schemes (T-0557, gated in tokens.test.ts); a pack-carried role so a theme re-hues it */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-text) consumes ONLY --ui-text-* ════════════════ */

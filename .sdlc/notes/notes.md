@@ -1229,3 +1229,7 @@
 
 - decide: packages/agent-ui/a2ui/src/renderer/widget.ts:169-174: note: a catalog entry with factories but no `catalog.components` def (the stub-catalog carve-out, `componentDef === undefined`) stays unconstrained, as the findings' proposed fix specified; every shipped catalog carries defs, so this only matters for a host-registered factory-only catalog.
 - decide: packages/agent-ui/a2ui/src/renderer/renderer.test.ts:436: fix-now: `querySelector('[data-part="aria-label"]')?.textContent ?? ''` then `.not.toContain('Party size')` passes whether the undeclared label was skipped or the span is simply absent, so the line no longer discriminates; assert the `ui-select` element's `label` property is empty instead (or assert the span is non-null before the not-contains). The case still asserts the `VALIDATION_FAILED` error at `root.label`, and the T-0552 declared-props tests carry the real negative control.
+
+## T-0557: Placeholders and links meet AA contrast, and ui-pagination marks the current page in forced colors (2026-10-28)
+
+- note: the solo report's open item stands: a field on the dimmest light planes (n-175 4.50, n-200 4.22 under the field fill) misses AA, and router-link active ink `primary-high` is 4.39 on dark n-800. The tokens.test.ts field-fill gate is on the page surface only, matching the criterion wording.

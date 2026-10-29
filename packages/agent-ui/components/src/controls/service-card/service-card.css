@@ -59,7 +59,7 @@
   /* Title / path / description ink. Title mutes under :not([available]) (cl.3); path/description stay
      on the same secondary plane regardless of availability (only the title + accent + action move). */
   --ui-service-card-title-ink: var(--md-sys-color-neutral-on-surface);
-  --ui-service-card-path-ink: var(--md-sys-color-primary); /* the PRIMARY-role code-accent path (Kim, 2026-08-20); mutes under :not([available]) */
+  --ui-service-card-path-ink: var(--md-sys-color-primary-placeholder); /* the PRIMARY-role code-accent path (Kim, 2026-08-20) on the fleet link ink (T-0557: AA as text on the card fill); mutes under :not([available]) */
   --ui-service-card-description-ink: var(--md-sys-color-neutral-on-surface-variant);
 
   /* Type — title reads the title-medium row; description reads body-medium; path reads the SAME

@@ -383,6 +383,84 @@ describe('tokens.css: the 3:1 field-boundary outline role (ADR-0245 Amendment 7)
   })
 })
 
+// tok-text-ink (T-0557): placeholder text (every text-entry control) reads --md-sys-color-neutral-placeholder and link
+// text (ui-text, ui-source-list, ui-router-link, the ui-service-card path) reads --md-sys-color-primary-placeholder,
+// both because the plain --md-sys-color-neutral / --md-sys-color-primary anchors fall under 4.5:1 as text. Each role
+// clears 4.5:1 on every elevation plane in both schemes, and the placeholder also on the idle field fill
+// (--md-sys-color-neutral-container-low composited over the page surface). Recomputed from the declared legs.
+describe('tokens.css: placeholder and link text inks stay WCAG-AA (T-0557)', () => {
+  const AA = 4.5
+  const oklchOf = (family: string, stop: string): [number, number, number] => {
+    const m = bare.match(new RegExp(`--md-sys-color-${family}-${stop}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)`))
+    if (!m) throw new Error(`primitive --md-sys-color-${family}-${stop} not found`)
+    return [parseFloat(m[1]), parseFloat(m[2]), parseFloat(m[3])]
+  }
+  const oklchToLin = ([L, C, H]: [number, number, number]): number[] => {
+    const h = (H * Math.PI) / 180, a = C * Math.cos(h), b = C * Math.sin(h)
+    const l_ = L + 0.3963377774 * a + 0.2158037573 * b
+    const m_ = L - 0.1055613458 * a - 0.0638541728 * b
+    const s_ = L - 0.0894841775 * a - 1.291485548 * b
+    const l = l_ ** 3, m = m_ ** 3, s = s_ ** 3
+    return [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+    ]
+  }
+  const clamp01 = (x: number) => Math.min(1, Math.max(0, x))
+  const toGamma = (c: number) => { c = clamp01(c); return c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055 }
+  const toLin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)
+  const gammaOf = (family: string, stop: string) => oklchToLin(oklchOf(family, stop)).map(toGamma)
+  const lum = (g: number[]) => { const [r, gg, b] = g.map(toLin); return 0.2126 * r + 0.7152 * gg + 0.0722 * b }
+  const contrast = (f: number[], b: number[]) => { const a = lum(f), c = lum(b), hi = Math.max(a, c), lo = Math.min(a, c); return (hi + 0.05) / (lo + 0.05) }
+  const over = (src: number[], a: number, dst: number[]) => src.map((s, i) => a * s + (1 - a) * dst[i])
+  const elev = { light: ['050', '075', '100', '125', '150', '175', '200'], dark: ['950', '925', '900', '875', '850', '825', '800'] }
+
+  /** The two legs of --md-sys-color-{role} declared as light-dark(var(--md-sys-color-{family}-X), var(--md-sys-color-{family}-Y)). */
+  const legs = (role: string, family: string): [string, string] => {
+    const m = rootBlock.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-${family}-([\\w-]+)\\)\\s*,\\s*var\\(--md-sys-color-${family}-([\\w-]+)\\)\\s*\\)`))
+    if (!m) throw new Error(`role --md-sys-color-${role} not found as a two-leg ${family} light-dark()`)
+    return [m[1], m[2]]
+  }
+  /** The worst contrast of a role, as text, over the seven elevation planes of each scheme. */
+  const worstOnPlanes = (role: string, family: string) => {
+    const [light, dark] = legs(role, family)
+    let w = Infinity, where = ''
+    for (const [scheme, leg] of [['light', light], ['dark', dark]] as const) {
+      for (const plane of elev[scheme]) {
+        const r = contrast(gammaOf(family, leg), gammaOf('neutral', plane))
+        if (r < w) { w = r; where = `${scheme} ${family}-${leg} on n-${plane}` }
+      }
+    }
+    return { ratio: w, where }
+  }
+
+  for (const [role, family] of [['neutral-placeholder', 'neutral'], ['primary-placeholder', 'primary']] as const) {
+    it(`--md-sys-color-${role} clears 4.5:1 as text on every elevation plane in BOTH schemes`, () => {
+      const w = worstOnPlanes(role, family)
+      expect(w.ratio, `worst ${role} cell: ${w.where} = ${w.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+    })
+  }
+
+  it('--md-sys-color-neutral-placeholder clears 4.5:1 on the idle field fill over the page surface in BOTH schemes', () => {
+    const ink = legs('neutral-placeholder', 'neutral')
+    const page = legs('neutral-surface', 'neutral')
+    const [fillL, fillD] = legs('neutral-container-low', 'neutral')
+    expect([fillL, fillD]).toEqual(['scrim-100', 'scrim-100']) // anti-vacuous: the fill really is the 10% neutral wash
+    const alpha = parseInt(fillL.slice('scrim-'.length), 10) / 1000
+    for (const i of [0, 1]) {
+      const fill = over(gammaOf('neutral', '500'), alpha, gammaOf('neutral', page[i]))
+      const r = contrast(gammaOf('neutral', ink[i]), fill)
+      expect(r, `${i ? 'dark' : 'light'}: n-${ink[i]} on the field fill over n-${page[i]} = ${r.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+    }
+  })
+
+  it('NEGATIVE control: the plain --md-sys-color-neutral and --md-sys-color-primary anchors FAIL 4.5:1 as text (why both inks moved)', () => {
+    expect(worstOnPlanes('neutral', 'neutral').ratio).toBeLessThan(AA)
+    expect(worstOnPlanes('primary', 'primary').ratio).toBeLessThan(AA)
+  })
+})
+
 describe('tokens.css — the dialog-backdrop scrim role (TKT-0019)', () => {
   it('declares --md-sys-color-dialog-backdrop as scheme-invariant black 80% opacity', () => {
     // Generator-native since Kim's ultimate-tokens rework: a single bare black role (no light-dark()

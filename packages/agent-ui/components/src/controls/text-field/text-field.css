@@ -77,7 +77,7 @@
   --ui-text-field-border-focus: transparent; /* :focus-within — TRANSPARENT: the shared outline ring is the SOLE focus indicator (a --md-sys-color-focus-ring border-color step doubled with the ring into a visible double border — a defect found on the live site; ADR-0014 dev#1). Transparent holds the box geometry (the 1px frame still occupies its track — no layout shift). */
   --ui-text-field-border-invalid: var(--md-sys-color-danger); /* :state(user-invalid) — UNCHANGED, orthogonal to the table above */
   --ui-text-field-border-invalid-hover: var(--md-sys-color-danger-high); /* user-invalid + :hover — UNCHANGED */
-  --ui-text-field-ink: var(--md-sys-color-neutral); /* default — empty, idle (== the placeholder ink, below) */
+  --ui-text-field-ink: var(--md-sys-color-neutral-placeholder); /* default: empty, idle (== the placeholder ink, below) */
   --ui-text-field-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-text-field-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-text-field-ink-focus: var(--md-sys-color-neutral-on-surface);
@@ -89,7 +89,7 @@
      accident). Pinning keeps the placeholder at the SAME default-state ink role in every
      interactive state; disabled gets its own EXPLICIT repoint below (the combo-box.css
      disabled precedent). */
-  --ui-text-field-placeholder: var(--md-sys-color-neutral);
+  --ui-text-field-placeholder: var(--md-sys-color-neutral-placeholder);
 
   /* Geometry — off the s6 dimensional ramp (default size = md). [size] repoints below. */
   --ui-text-field-height: var(--md-sys-height, var(--md-sys-height-md));

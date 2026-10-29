@@ -54,7 +54,7 @@
   --ui-textarea-border-focus: transparent; /* :focus-within — TRANSPARENT: the shared outline ring is the SOLE focus indicator (a --md-sys-color-focus-ring border-color step doubled with the ring into a visible double border; text-field ADR-0014 dev#1 precedent). Transparent holds the box geometry (the 1px frame still occupies its track — no layout shift). */
   --ui-textarea-border-invalid: var(--md-sys-color-danger); /* :state(user-invalid) — UNCHANGED, orthogonal to the table above */
   --ui-textarea-border-invalid-hover: var(--md-sys-color-danger-high); /* user-invalid + :hover — UNCHANGED */
-  --ui-textarea-ink: var(--md-sys-color-neutral); /* default — empty, idle (== the placeholder ink, below) */
+  --ui-textarea-ink: var(--md-sys-color-neutral-placeholder); /* default: empty, idle (== the placeholder ink, below) */
   --ui-textarea-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-textarea-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-textarea-ink-focus: var(--md-sys-color-neutral-on-surface);
@@ -63,7 +63,7 @@
      focus, the table above), and an alias re-resolves WITH it, so focusing or hovering an EMPTY
      textarea silently brightened the placeholder to the focus/hover ink. Disabled gets its own
      EXPLICIT repoint below instead. */
-  --ui-textarea-placeholder: var(--md-sys-color-neutral);
+  --ui-textarea-placeholder: var(--md-sys-color-neutral-placeholder);
 
   /* Geometry — the MULTI-LINE law (ADR-0134), not the single-line ramp. Font is the ONE sizing lever that
      [size] repoints; padding-block/padding-inline/line-box all DERIVE from it via calc() below, so a single
