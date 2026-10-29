@@ -1204,3 +1204,9 @@
 - decide: packages/agent-ui/app/src/controls/conversation/conversation-composer.ts:1329 and :1572 call `computePosition` without the new `rtl` argument, so the composer's two popups stay physical under rtl. The ticket Context names them in the fan-out, but its proposed scope excludes the app package and no criterion covers them; the builder disclosed it. Worth a follow-up ticket.
 - note: packages/agent-ui/components/src/traits/overlay.ts header comments (lines 1-27) carry pre-existing em dashes outside this diff.
 - note: WebKit's native range does not mirror arrow keys under rtl (builder measured), so native key parity is asserted in Chromium only and the mirrored mapping in both engines; the shipped behavior follows Chromium and the spec of the handoff.
+
+## T-0545: Theme sweep: every control in light, dark and high contrast, token-only colors and contrast ratios (2026-10-28)
+
+- note: handoff Findings High #2 says the computed diff in forced colors is a faint `background-color rgba(255,255,255,0.1)` vs `0`; `states/states.json` records `diffs: []` (fully collapsed) for the same buttons in forced mode. The conclusion (current page invisible) holds either way.
+- note: the theme packs are unswept (default theme only), as the report states; a possible follow-up.
+- note: No `(red)` criteria; `redck.py deviations` printed no process deviation.
