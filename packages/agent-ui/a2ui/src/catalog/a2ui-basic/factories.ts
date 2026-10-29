@@ -75,8 +75,8 @@ const IMAGE_VARIANT_DIMS: Record<string, Partial<CSSStyleDeclaration>> = {
 const IMAGE_STYLE_KEYS = ['inlineSize', 'blockSize', 'maxInlineSize', 'maxBlockSize', 'borderRadius', 'objectFit'] as const
 
 /**
- * `Image` → `<img>` (cl.9b row 2). `url`→`src` (`safe-href`-validated, `Text.href`'s ADR-0114
- * arm); `description`→`alt`; `fit`→`el.style.objectFit` through the literal map (`scaleDown`→
+ * `Image` → `<img>` (cl.9b row 2). `url`→`src` (`media-src`-validated, the static twin of the
+ * media gate, T-0565); `description`→`alt`; `fit`→`el.style.objectFit` through the literal map (`scaleDown`→
  * `'scale-down'`, else pass-through); `variant`→the dims table above. Apply-order-independent: an
  * explicit `fit` re-asserts `objectFit` on every apply, so it always wins over whatever the variant's
  * OWN `objectFit` set, regardless of which prop applies second (the `Text.href`/`variant` precedent).

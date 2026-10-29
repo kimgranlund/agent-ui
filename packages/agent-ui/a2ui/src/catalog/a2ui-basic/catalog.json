@@ -13,7 +13,7 @@
 
     "Image": {
       "properties": {
-        "url": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src", "format": "safe-href" },
+        "url": { "type": { "type": "string" }, "bindable": true, "mapsTo": "src", "format": "media-src" },
         "description": { "type": { "type": "string" }, "bindable": true, "mapsTo": "alt" },
         "fit": { "type": { "type": "string", "enum": ["contain", "cover", "fill", "none", "scaleDown"] }, "mapsTo": "fit" },
         "variant": { "type": { "type": "string", "enum": ["icon", "avatar", "smallFeature", "mediumFeature", "largeFeature", "header"] }, "mapsTo": "variant" },
