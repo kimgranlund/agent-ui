@@ -1313,3 +1313,7 @@
 ## T-0566: Basic exemplars drop inert props and ticket records use relative paths (2026-10-29)
 
 - note: .sdlc/tickets/roadmap.md: tickets.py check reports the roadmap as stale. Regenerate it at close.
+
+## T-0569: Getting-started per-control import list counts and labels only control modules (2026-10-29)
+
+- note: scripts/reap-scratch-clones.mjs selftest "same root twice" case is flaky under concurrent runs (9 vs 12 candidates in the shared tmp dir).
