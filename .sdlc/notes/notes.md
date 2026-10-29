@@ -1133,3 +1133,7 @@
 ## T-0521: A bare ui-nav-rail delivers the keyboard model its tablist role promises, or drops the role (2026-10-28)
 
 - note: `site/lib/site-manifest.json` and `site/public/llms.txt` still say "three published trait subpaths" (the builder reported it as open, outside scope); a follow-up should refresh them.
+
+## T-0525: The red measure-size rows are re-based to measured plus headroom, each citing its mover (2026-10-28)
+
+- note: scripts/measure-size.mjs:231 new comments use "--" and "->"; em dashes on the modified override lines (:408, :409, :412, :413) are pre-existing text in the same strings.
