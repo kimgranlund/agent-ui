@@ -36,10 +36,11 @@
   --ui-nav-rail-surface: var(--md-sys-color-neutral-surface);
   --ui-nav-rail-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-nav-rail-scrim: var(--md-sys-color-neutral-scrim);
-  /* GH #624 items 3/4 — the kicker (`context-label`) and the trailing tag column both read the fleet's
-     `neutral` role (the muted mid-tone, distinct from `--ui-nav-rail-ink`'s near-black/white on-surface
-     ink): both are secondary/meta text, never the row's own name. */
-  --ui-nav-rail-meta-ink: var(--md-sys-color-neutral);
+  /* GH #624 items 3/4: the kicker (`context-label`) and the trailing tag column both read the muted
+     `neutral-on-surface-variant` ink (distinct from `--ui-nav-rail-ink`'s near-black/white on-surface
+     ink): both are secondary/meta text, never the row's own name. T-0558: was the `neutral` fill role,
+     4.11:1 in light; the variant ink clears AA in both schemes. */
+  --ui-nav-rail-meta-ink: var(--md-sys-color-neutral-on-surface-variant);
   --ui-nav-rail-tag-font-family: var(--md-sys-typeface-mono);
   /* GH #624 item 2 — the active-marker border's own width, named so the activator's left padding (below)
      can subtract it: the marker is `border-inline-start`, always taking inline space even transparent, so
@@ -126,7 +127,7 @@
     line-height: var(--ui-nav-rail-context-label-line-height);
     letter-spacing: var(--ui-nav-rail-context-label-tracking);
     text-transform: uppercase; /* GH #370 — casing lives at the consumer (the text.css kicker precedent) */
-    color: var(--ui-nav-rail-meta-ink); /* GH #624 item 4 — the neutral role, not the on-surface ink */
+    color: var(--ui-nav-rail-meta-ink); /* GH #624 item 4: the muted variant ink, not the on-surface ink */
     padding-inline: calc(var(--ui-nav-rail-height) / 2);
     padding-block-start: var(--ui-nav-rail-context-pad-block-start);
     padding-block-end: var(--ui-nav-rail-context-pad-block-end);
@@ -217,8 +218,8 @@
     white-space: nowrap;
     min-inline-size: 0;
     font-size: var(--ui-nav-rail-label-font);
-    /* GH #624 item 3 — the tag reads as code/meta (a component name, e.g. `ui-attachment`), so it takes
-       the mono typeface + the neutral role rather than the row's own prose ink. */
+    /* GH #624 item 3: the tag reads as code/meta (a component name, e.g. `ui-attachment`), so it takes
+       the mono typeface + the muted variant ink rather than the row's own prose ink. */
     font-family: var(--ui-nav-rail-tag-font-family);
     color: var(--ui-nav-rail-meta-ink);
   }
