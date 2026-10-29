@@ -1369,3 +1369,7 @@
 
 - note: redck.py deviations printed no `process deviation:` lines for this build, and every red check was still run by me on base.
 - note: the last-round leg (plain PARSE, failureCodes `['PARSE','SURFACE_DEGRADED']`) is pinned by the second new test in produce-empty-repair.test.ts, and it passes.
+
+## T-0580: The 0.2.1 release notes cover every PR merged through 2383 (2026-10-29)
+
+- note: .github/release-notes/v0.2.1.md:36 the Producer repairs bullet now chains three "and" clauses ("closed in place, and an unparseable..."), so it reads a little awkwardly.
