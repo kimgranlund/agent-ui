@@ -1238,3 +1238,9 @@
 
 - note: redck.py deviations printed no `process deviation:` lines.
 - note: the Chromium AX leg returns early on WebKit (no CDP Accessibility domain), so the AX-tree criterion is Chromium-only by design, as the criterion states.
+
+## T-0528: The size cluster is re-derived with a gated slider row, and router, code/editor, a2ui, a2a, icons and devtools get budgeted rows (2026-10-28)
+
+- fix-now: scripts/measure-size.mjs:348 a stray `if (packageEntryOver) console.error(...)` sits inside the MIN_CONTROL_ENTRIES failure block, before `let packageEntryOver` (line 1113), so that path would throw a TDZ ReferenceError instead of printing; delete the line (the real one is at the end of the file).
+- note: `node scripts/measure-size.mjs` still exits 1 on rows owned by T-0525 and T-0522 (barrel, per-control marginal, @agent-ui/app, and code/markdown red at HEAD too); no criterion asks for exit 0.
+- note: a2ui `.` and `./agent` pins carry about 1% headroom (61184 vs 60508, 86784 vs 86257) under the ceil-256 plus 512 B rule, as the builder reported.

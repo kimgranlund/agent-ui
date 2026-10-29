@@ -374,6 +374,7 @@ const CONTROL_ENTRIES = Object.entries(pkg.exports)
 const MIN_CONTROL_ENTRIES = 60
 if (CONTROL_ENTRIES.length < MIN_CONTROL_ENTRIES) {
   console.error(`size: found ${CONTROL_ENTRIES.length} ./controls/* JS entries in the components exports map, expected at least ${MIN_CONTROL_ENTRIES}`)
+  if (packageEntryOver) console.error('size: an @agent-ui/a2ui, a2a, icons or devtools entry exceeds its budget')
   process.exit(1)
 }
 
@@ -447,8 +448,9 @@ const MARGINAL_OVERRIDES = {
 //
 // The honest instrument for a cycle is ONE row over the smallest independently-removable unit: the cycle
 // plus every entry the cycle EXCLUSIVELY reaches. `gz(ALL) − gz(ALL ∖ cluster)` rises if ANY member grows,
-// so the codecs, the calendar picker, the OKLCH/canvas math, the composed slider channels and the swatch
-// preview are all gated again — by one real figure instead of five fictional zeros. The cluster's own
+// so the codecs, the calendar picker, the OKLCH/canvas math and the swatch preview are all gated again,
+// by one real figure instead of fictional zeros. (The composed slider channels left the cluster with T-0196,
+// see the SLIDER PAIR row below.) The cluster's own
 // members are then reported WITHOUT a budget: a row that cannot measure its control must not print a pass.
 //
 // Membership is DERIVED from the real import graph on every run (below) and cross-checked against the
@@ -522,12 +524,39 @@ for (let grew = true; grew; ) {
   }
 }
 // Pinned membership + the measured budget (the file's own "measure first, then pin" convention).
-// Measured 10931 B gz 2026-07-29 for exactly this five-entry closure; 11.5 KB pinned, ~7% headroom — the
+// Measured 10931 B gz 2026-07-29 for the original five-entry closure; 11.5 KB pinned, ~7% headroom, the
 // same margin the sandbox-frame/status-stream overrides above reserve.
-const CLUSTER_EXPECTED = ['calendar', 'color-picker', 'slider', 'swatch', 'text-field']
+// RE-DERIVED 2026-10-28 (T-0528, from the T-0523 sweep's H2): five entries -> four. The mover is T-0196
+// (5b1feee50): `amount-picker.ts` statically imports `../slider/slider.ts`, so slider gained a masker
+// outside the cycle and left the closure. The import is legitimate. Slider is gated by the SLIDER PAIR row
+// below instead. Budget re-measured for the four-entry closure: 11079 B gz, the same
+// figure as the five-entry one (slider's bytes were already masked), so the 11.5 KB pin stands (~6% headroom).
+const CLUSTER_EXPECTED = ['calendar', 'color-picker', 'swatch', 'text-field']
 const CLUSTER_BUDGET = 11.5 * KB
 const CLUSTER_WHY =
-  'ADR-0123 text-field ⇄ color-picker is a CYCLE (color-picker statically imports text-field; text-field dynamically imports color-picker), plus the three entries only they reach (calendar, slider, swatch) — no per-entry leave-one-out can remove any of them, so the group is gated as one'
+  'ADR-0123 text-field ⇄ color-picker is a CYCLE (color-picker statically imports text-field; text-field dynamically imports color-picker), plus the two entries only they reach (calendar, swatch): no per-entry leave-one-out can remove any of them, so the group is gated as one'
+
+// ── The SLIDER PAIR row (T-0528) ──────────────────────────────────────────────────────────────────────────
+// Slider is reached by color-picker (inside the cluster) and by amount-picker (outside it). Neither a plain
+// leave-one-out nor a pair leave-one-out `gz(ALL) - gz(ALL minus {slider, amount-picker})` removes slider's
+// module, because color-picker still reaches it; that pair figure would read about amount-picker alone and
+// pass at any slider size, the same fiction GH #354 closed. The honest frame removes the pair from a bundle
+// the cluster is already gone from: `gz(ALL minus cluster) - gz(ALL minus cluster minus pair)`, what an app
+// shipping every control but the cycle pays to add slider and its outside masker. The pair is DERIVED as
+// slider plus every masker of slider outside the cluster, and cross-checked against the pinned set below.
+const SLIDER_PAIR_EXPECTED = ['amount-picker', 'slider']
+const SLIDER_PAIR_BUDGET = 3 * KB // measured 2529 B gz 2026-10-28 (T-0528); rounded up to the next 256 B plus 512 B headroom
+const sliderPairDerived = pathOf.has('slider')
+  ? ['slider', ...maskersOf('slider').filter((m) => !cluster.has(m))].sort()
+  : []
+let sliderPairDrift = false
+if (sliderPairDerived.join(',') !== SLIDER_PAIR_EXPECTED.join(',')) {
+  sliderPairDrift = true
+  console.error(
+    `size: the derived slider pair [${sliderPairDerived.join(', ')}] no longer matches the pinned set [${SLIDER_PAIR_EXPECTED.join(', ')}]: re-derive the slider pair row's membership and budget (T-0528), never paper over it`,
+  )
+}
+const sliderPair = new Set(SLIDER_PAIR_EXPECTED)
 const clusterDerived = [...cluster].sort()
 let clusterMembershipDrift = false
 if (clusterDerived.join(',') !== CLUSTER_EXPECTED.join(',')) {
@@ -552,6 +581,13 @@ for (const [name, path] of CONTROL_ENTRIES) {
     )
     continue
   }
+  if (sliderPair.has(name)) {
+    // Same rule as the cluster: slider's own row reads ~0 behind color-picker, so the pair row gates both.
+    console.log(
+      `  ${name.padEnd(14)} marginal ${String(marginal).padStart(5)} B gz, NOT GATED (slider pair member; gated by the slider pair row below)   solo ${solo} B gz (informational)`,
+    )
+    continue
+  }
   const [budget, reason] = MARGINAL_OVERRIDES[name] ?? [MARGINAL_BUDGET_DEFAULT, undefined]
   const status = marginal <= budget ? 'within' : 'OVER'
   if (marginal > budget) marginalOver = true
@@ -568,6 +604,13 @@ const clusterMarginal = gzAll - gzWithoutCluster
 const clusterOverBudget = clusterMarginal > CLUSTER_BUDGET
 console.log(
   `  cluster [${CLUSTER_EXPECTED.join(' + ')}]: marginal ${clusterMarginal} B gz — ${clusterOverBudget ? 'OVER' : 'within'} budget ${CLUSTER_BUDGET} B (${CLUSTER_WHY})`,
+)
+const sliderPairPaths = new Set(SLIDER_PAIR_EXPECTED.map((name) => pathOf.get(name)).filter((p) => p !== undefined))
+const gzWithoutClusterAndPair = await gzOfEntries(allPaths.filter((p) => !clusterPaths.has(p) && !sliderPairPaths.has(p)))
+const sliderPairMarginal = gzWithoutCluster - gzWithoutClusterAndPair
+const sliderPairOverBudget = sliderPairMarginal > SLIDER_PAIR_BUDGET
+console.log(
+  `  slider pair [${SLIDER_PAIR_EXPECTED.join(' + ')}]: marginal ${sliderPairMarginal} B gz (frame: every control but the cluster), ${sliderPairOverBudget ? 'OVER' : 'within'} budget ${SLIDER_PAIR_BUDGET} B (slider is masked by color-picker inside the cluster and amount-picker outside it, T-0196; no other frame removes its module)`,
 )
 
 // ── @agent-ui/app (LLD-C8, SPEC-R7 AC4) — the whole app-tier barrel (ui-super-shell + ui-master-detail,
@@ -892,15 +935,18 @@ console.log(
 )
 
 // ── @agent-ui/router (LLD-C9, SPEC-R7 AC4) — the SPA router family, ANOTHER package above components on
-// the DAG (`shared ← components ← {a2ui, router} ← app`). Same marginal semantics as the @agent-ui/app
-// section above, one row: what does a consumer who ALREADY has the components foundation pay to add the
-// WHOLE router surface — the headless core barrel (`.`) PLUS both elements (`./router-outlet`,
+// the DAG (`shared ← components ← {a2ui, router} ← app`). One absolute row (see the budget comment below)
+// over the WHOLE router surface: the headless core barrel (`.`) PLUS both elements (`./router-outlet`,
 // `./router-link`), the realistic "a consumer using the family" shape, not the core-alone figure (which
 // would understate what most consumers actually ship, since the elements are the reason to reach for
 // this package). A synthetic virtual entry (the same no-temp-file plugin pattern as the T5 per-control
 // section) imports all three public subpaths; router-link.css is a stylesheet asset, not JS, so it is
 // intentionally excluded (no bundler-measurable byte cost through this JS pipeline).
-const ROUTER_MARGINAL_BUDGET = 4 * KB // provisional, recorded at LLD-C9 kickoff (SPEC-R7 AC4) — first measurement, no re-base expected
+// MEASURED ABSOLUTELY since 2026-10-28 (T-0528, from the T-0523 sweep's L2): since ADR-0233 the router no
+// longer pulls the whole `components .` barrel, so `solo - foundation` read -2363 B gz and the old 4 KB
+// marginal budget passed at any size up to foundation + 4 KB. The absolute solo figure is gated instead (the
+// `code .` and `traits/*` precedent). Measured 5296 B gz, pinned at 5888 (rounded up to the next 256 B plus 512 B headroom).
+const ROUTER_BUDGET = 5888
 const routerPkgDir = fileURLToPath(new URL('../packages/agent-ui/router', import.meta.url))
 const routerVirtualSrc = [
   `import ${JSON.stringify(`${routerPkgDir}/src/index.ts`)}`,
@@ -930,11 +976,9 @@ const routerCode = routerOutput
   .join('')
 const routerMin = Buffer.byteLength(routerCode)
 const routerGz = gzipSync(routerCode, { level: 9 }).length
-const routerMarginal = routerGz - foundationGz
-const routerStatus = routerMarginal <= ROUTER_MARGINAL_BUDGET ? 'within' : 'OVER'
-const routerOver = routerMarginal > ROUTER_MARGINAL_BUDGET
+const routerOver = routerGz > ROUTER_BUDGET
 console.log(
-  `\n@agent-ui/router (core + ui-router-outlet + ui-router-link): marginal ${routerMarginal} B gz — ${routerStatus} budget (${ROUTER_MARGINAL_BUDGET} B gz)   solo ${routerGz} B gz (${routerMin} B min, informational — includes the ${foundationGz} B gz components foundation)`,
+  `\n@agent-ui/router (core + ui-router-outlet + ui-router-link): ${routerGz} B gz (${routerMin} B min), ${routerOver ? 'OVER' : 'within'} budget (${ROUTER_BUDGET} B gz); absolute, the components modules it really reaches included`,
 )
 
 // ── @agent-ui/code (LLD-C10, SPEC-C9 AC2) — the code+prose family: a THIRD sibling branch off components
@@ -946,7 +990,7 @@ console.log(
 //     near-zero figure demonstrates this more directly than a marginal-over-foundation frame would).
 //   • `./markdown` DOES pull real fleet controls (ui-text/ui-code/ui-table via
 //     @agent-ui/components/controls/*), so it is measured the SAME marginal-over-foundation way as
-//     @agent-ui/app/@agent-ui/router above: what a consumer who already pays for the components foundation
+//     @agent-ui/app above: what a consumer who already pays for the components foundation
 //     pays ON TOP to add ui-markdown.
 const codePkgDir = fileURLToPath(new URL('../packages/agent-ui/code', import.meta.url))
 
@@ -994,11 +1038,17 @@ console.log(
 
 // ./editor (ADR-0139 cl.8c) — the CM-carrying subpath, measured in TWO parts so CodeMirror bytes NEVER enter
 // a gated figure: (1) the `ui-code-editor` wrapper's own ENTRY chunk (CM-free by the confinement gate — it
-// statically pulls only @agent-ui/components), measured MARGINAL over the components foundation and GATED, the
-// same frame as ./markdown/@agent-ui/app/@agent-ui/router; (2) the lazy CM chunk(s) the dynamic
+// statically pulls only @agent-ui/components), measured ABSOLUTELY and GATED (T-0528, see the budget comment);
+// (2) the lazy CM chunk(s) the dynamic
 // `import('./cm-editor.ts')` splits off, reported INFORMATIONALLY, never gated (CM version bumps move it — an
 // ordinary dependency PR, ADR-0139 cl.8d). Baselined against gen-ui-kit's own measured CM footprint.
-const CODE_EDITOR_BUDGET = 2 * KB // measured 247 B gz marginal at the ADR-0139 build wave, 517 B gz after the ADR-0147 richtext-mode wave (ADR-0080 discipline) — pinned with headroom; the CM-free wrapper is a single control's worth of code on top of the foundation. The lazy CM chunk (~172 KB gz post-ADR-0147 — cm-richtext.ts's decoration engine joined it, below) is informational, NEVER gated.
+// MEASURED ABSOLUTELY since 2026-10-28 (T-0528, from the T-0523 sweep's L2): since ADR-0233 the wrapper no
+// longer pulls the whole `components .` barrel, so `entry - foundation` read -4677 B gz and the old 2 KB
+// marginal budget passed at any size up to foundation + 2 KB. The absolute entry chunk is gated instead (the
+// `code .` and `traits/*` precedent). Measured 2982 B gz, pinned at 3.5 KB (rounded up to the next 256 B plus 512 B
+// headroom). History of
+// the retired marginal budget, 2 KB: measured 247 B gz marginal at the ADR-0139 build wave, 517 B gz after the ADR-0147 richtext-mode wave (ADR-0080 discipline), pinned with headroom; the CM-free wrapper is a single control's worth of code on top of the foundation. The lazy CM chunk (~172 KB gz post-ADR-0147, cm-richtext.ts's decoration engine joined it, below) is informational, NEVER gated.
+const CODE_EDITOR_BUDGET = 3.5 * KB
 const editorBundle = await rolldown({ input: `${codePkgDir}/src/editor/index.ts` })
 const { output: editorOutput } = await editorBundle.generate({ format: 'esm', minify: true })
 await editorBundle.close()
@@ -1007,10 +1057,9 @@ const editorEntryCode = editorChunks.filter((c) => c.isEntry).map((c) => c.code)
 const editorLazyCode = editorChunks.filter((c) => !c.isEntry).map((c) => c.code).join('')
 const editorEntryGz = gzipSync(editorEntryCode, { level: 9 }).length
 const editorLazyGz = editorLazyCode ? gzipSync(editorLazyCode, { level: 9 }).length : 0
-const editorMarginal = editorEntryGz - foundationGz
-const codeEditorOver = editorMarginal > CODE_EDITOR_BUDGET
+const codeEditorOver = editorEntryGz > CODE_EDITOR_BUDGET
 console.log(
-  `\n@agent-ui/code/editor (ui-code-editor wrapper — the CM-FREE entry chunk): marginal ${editorMarginal} B gz — ${codeEditorOver ? 'OVER' : 'within'} budget (${CODE_EDITOR_BUDGET} B gz)   solo ${editorEntryGz} B gz (informational — includes the ${foundationGz} B gz components foundation)`,
+  `\n@agent-ui/code/editor (ui-code-editor wrapper, the CM-FREE entry chunk): ${editorEntryGz} B gz, ${codeEditorOver ? 'OVER' : 'within'} budget (${CODE_EDITOR_BUDGET} B gz); absolute, the components modules it really reaches included`,
 )
 console.log(
   `@agent-ui/code/editor — the lazy CodeMirror chunk(s) (dynamic import('./cm-editor.ts'), never in any main bundle): ${editorLazyGz} B gz (informational, non-gating — ADR-0139 cl.8c/8d)`,
@@ -1080,11 +1129,65 @@ console.log(
   `@agent-ui/data . tree-shake probe (SPEC-R1 AC3): ${dataTreeShakeFailed ? 'FAILED' : 'clean'} — ${dataCore.moduleIds.length} modules bundled, ${dataLeakedModules.length} from ./gateway|./stream, leaked symbols [${dataLeakedSymbols.join(', ')}], DOM foundation bytes ${dataDomLeak ? 'PRESENT' : 'absent'} (headless — kernel only)`,
 )
 
+// ── The packages that had no row (T-0528, from the T-0523 sweep's L3): @agent-ui/a2ui, @agent-ui/a2a,
+// @agent-ui/icons and @agent-ui/devtools. Each public JS entry is bundled alone and measured ABSOLUTELY over
+// its EAGER chunks: the entry chunk plus every chunk it statically imports, transitively. Entry-only (the
+// ./editor precedent) is not enough here: the a2ui root entry statically imports split chunks it shares with
+// its lazy ones. Any chunk only a dynamic import reaches (a2ui's lazy catalog bodies, ADR-0241) is reported
+// informationally, never gated. Pinned 2026-10-28 at the measured figure rounded up to the next 256 B plus
+// 512 B headroom (the registry row's rule above). The node-only subpaths (`@agent-ui/devtools/server`,
+// `./playwright`) and a2ui's single-module `./agent/*` leaves stay unmeasured: the first two never ship to a
+// browser, the leaves are reached through `./agent`.
+// Follow-up named by T-0528, not fixed here: the a2ui root barrel re-exports `SHIPPED_PERSONA_CATALOGS` and
+// `SHIPPED_DOMAIN_CATALOGS` (src/catalog/index.ts), so the `.` row below carries the persona checks and
+// domain factory modules statically; they belong behind a subpath.
+const PACKAGE_ENTRY_ROWS = [
+  // [label, package dir, entry file, budget]; each budget comment carries its 2026-10-28 measurement
+  ['@agent-ui/a2ui . (renderer + validator + catalogs, the root barrel)', 'a2ui', 'src/index.ts', 61184], // measured 60508 B gz
+  ['@agent-ui/a2ui/registry', 'a2ui', 'src/registry/index.ts', 8448], // measured 7907 B gz
+  ['@agent-ui/a2ui/agent (the producer toolkit, embedded prompt assets)', 'a2ui', 'src/agent/index.ts', 86784], // measured 86257 B gz
+  ['@agent-ui/a2ui/examples', 'a2ui', 'src/examples/index.ts', 53760], // measured 53092 B gz
+  ['@agent-ui/a2ui/corpus', 'a2ui', 'src/corpus/index.ts', 12800], // measured 12080 B gz
+  ['@agent-ui/a2a . (wire types + validation + arena)', 'a2a', 'src/index.ts', 7936], // measured 7267 B gz
+  ['@agent-ui/icons . (pure adapter core)', 'icons', 'src/index.ts', 1792], // measured 1102 B gz
+  ['@agent-ui/icons/phosphor', 'icons', 'src/phosphor/index.ts', 13824], // measured 13235 B gz
+  ['@agent-ui/devtools . (transport shelf + capture)', 'devtools', 'src/index.ts', 3840], // measured 3184 B gz
+]
+let packageEntryOver = false
+console.log('')
+for (const [label, pkgName, rel, budget] of PACKAGE_ENTRY_ROWS) {
+  const input = fileURLToPath(new URL(`../packages/agent-ui/${pkgName}/${rel}`, import.meta.url))
+  const bundle = await rolldown({ input })
+  const { output } = await bundle.generate({ format: 'esm', minify: true })
+  await bundle.close()
+  const chunks = output.filter((c) => c.type === 'chunk')
+  const byName = new Map(chunks.map((c) => [c.fileName, c]))
+  const eager = new Set()
+  const queue = chunks.filter((c) => c.isEntry)
+  while (queue.length > 0) {
+    const c = queue.pop()
+    if (eager.has(c)) continue
+    eager.add(c)
+    for (const dep of c.imports) if (byName.has(dep)) queue.push(byName.get(dep))
+  }
+  const entryCode = chunks.filter((c) => eager.has(c)).map((c) => c.code).join('')
+  const lazyCode = chunks.filter((c) => !eager.has(c)).map((c) => c.code).join('')
+  const entryGz = gzipSync(entryCode, { level: 9 }).length
+  const lazyNote = lazyCode ? `; lazy chunk(s) ${gzipSync(lazyCode, { level: 9 }).length} B gz (informational, non-gating)` : ''
+  const rowOver = entryGz > budget
+  if (rowOver) packageEntryOver = true
+  console.log(
+    `${label}: ${entryGz} B gz (${Buffer.byteLength(entryCode)} B min, eager chunks), ${rowOver ? 'OVER' : 'within'} budget (${budget} B gz)${lazyNote}`,
+  )
+}
+
 if (
   over ||
   marginalOver ||
   clusterOverBudget ||
   clusterMembershipDrift ||
+  sliderPairOverBudget ||
+  sliderPairDrift ||
   appOver ||
   pdfExtractorOver ||
   routerOver ||
@@ -1095,22 +1198,26 @@ if (
   dataCoreOver ||
   dataGatewayOver ||
   dataStreamOver ||
-  dataTreeShakeFailed
+  dataTreeShakeFailed ||
+  packageEntryOver
 ) {
   if (over) console.error('size: a barrel exceeds its budget')
   if (marginalOver) console.error('size: a control exceeds its per-control marginal budget')
   if (clusterOverBudget) console.error('size: the import-cycle control cluster exceeds its marginal budget')
   if (clusterMembershipDrift) console.error('size: the import-cycle cluster membership drifted from its pinned set')
+  if (sliderPairOverBudget) console.error('size: the slider pair exceeds its marginal budget')
+  if (sliderPairDrift) console.error('size: the slider pair membership drifted from its pinned set')
   if (appOver) console.error('size: @agent-ui/app exceeds its marginal budget')
   if (pdfExtractorOver) console.error('size: @agent-ui/app/lib/pdf-extractor exceeds its budget')
-  if (routerOver) console.error('size: @agent-ui/router exceeds its marginal budget')
+  if (routerOver) console.error('size: @agent-ui/router exceeds its budget')
   if (codeCoreOver) console.error('size: @agent-ui/code . (core) exceeds its budget')
   if (codeHighlightOver) console.error('size: @agent-ui/code/highlight exceeds its budget')
   if (codeMarkdownOver) console.error('size: @agent-ui/code/markdown exceeds its marginal budget')
-  if (codeEditorOver) console.error('size: @agent-ui/code/editor (wrapper) exceeds its marginal budget')
+  if (codeEditorOver) console.error('size: @agent-ui/code/editor (wrapper) exceeds its budget')
   if (dataCoreOver) console.error('size: @agent-ui/data . exceeds its brotli budget (SPEC-R14 c — record the number in ADR-0192 Consequences, never raise silently)')
   if (dataGatewayOver) console.error('size: @agent-ui/data/gateway exceeds its brotli budget (SPEC-R14 c)')
   if (dataStreamOver) console.error('size: @agent-ui/data/stream exceeds its brotli budget (SPEC-R14 c)')
   if (dataTreeShakeFailed) console.error('size: @agent-ui/data . tree-shake probe failed — a ./gateway or ./stream module/symbol (or DOM foundation bytes) reached the core barrel (SPEC-R1 AC3)')
+  if (packageEntryOver) console.error('size: an @agent-ui/a2ui, a2a, icons or devtools entry exceeds its budget')
   process.exit(1)
 }
