@@ -5,6 +5,9 @@
 // round with no semantic repair before it still gets the PARSE hint. Keyless, scripted provider.
 // T-0501 (T-0499 verifier note): so do the other forced repairs of a no-payload round, SURFACE_DROPPED (T-0281),
 // SURFACE_CLAIMED (T-0442), CHANGE_CLAIMED (T-0448) and the T-0428 change-claim narration repair.
+// T-0578: live round 18 cluster R (smoke-shopkeeper-browse-and-add-haiku-2 :43). A forced repair round that comes back
+// non-empty but unparseable keeps the ask it was repairing beside the PARSE ask and its location, still forced, while a
+// round is left; on the last round it is plain PARSE as before.
 
 import { describe, it, expect } from 'vitest'
 import { produce } from '../agent/produce.ts'
@@ -186,5 +189,75 @@ describe('produce(): an empty round after a SURFACE_DROPPED, SURFACE_CLAIMED or 
     const r = await run([NARRATED, EMPTY, EMPTY], table, {}, 3)
     expect(r.reqs).toHaveLength(2)
     expect(r.reqs[1]!.tools).toBeUndefined()
+  })
+})
+
+// T-0578: :43 r1 answered "Add the first one to my order." with a storefront meta line and a note (CHANGE_CLAIMED); the
+// forced r2 called render_surface with `messages` as a string one closing brace short after the updateComponents message.
+const STORE = [
+  { version: 'v1.0', createSurface: { surfaceId: 'storefront', catalogId: 'agent-ui' } },
+  { version: 'v1.0', updateComponents: { surfaceId: 'storefront', components: [{ id: 'root', component: 'Column', children: ['heading'] }, { id: 'heading', component: 'Text', text: 'Lamps', variant: 'h4' }] } },
+]
+  .map((m) => JSON.stringify(m))
+  .join('\n')
+const addFirst: TurnInput = { kind: 'intent', text: 'Add the first one to my order.', session: { turns: [{ role: 'user', content: 'What lamps do you have?' }, { role: 'assistant', content: STORE }] } }
+const ADDED = 'Added the Brass Desk Lamp ($84) to your order. The order summary is below the lamps, where you can change the quantity.'
+const R1 = `${JSON.stringify({ a2uiMeta: { note: ADDED, target: { surfaceId: 'storefront' } } })}\n\n${ADDED}`
+const BRACE_SHORT = '[{"version":"v1.0","updateComponents":{"surfaceId":"storefront","components":[{"id":"root","component":"Column","gap":"md","children":["heading","tiles","order"]},{"id":"heading","component":"Text","text":"Lamps","variant":"h4"},{"id":"tiles","component":"Row","gap":"md","wrap":true,"children":["p_brass","p_ceramic","p_linen","p_oak","p_paper"]},{"id":"p_brass","component":"ProductCard","title":"Brass Desk Lamp","subtitle":"Solid brass, 45 cm arm","price":"$84","badge":"Sale","badgeIntent":"success","actionLabel":"Buy","action":{"action":"buy","context":{"sku":"brass-desk-lamp","name":"Brass Desk Lamp","price":84}}},{"id":"p_ceramic","component":"ProductCard","title":"Ochre Ceramic Table Lamp","subtitle":"Hand-glazed stoneware, 38 cm","price":"$58","badge":"New","badgeIntent":"info","actionLabel":"Buy","action":{"action":"buy","context":{"sku":"ochre-ceramic-table-lamp","name":"Ochre Ceramic Table Lamp","price":58}}},{"id":"p_linen","component":"ProductCard","title":"Linen Drum Pendant","subtitle":"Natural linen shade, cotton cord","price":"$112","actionLabel":"Buy","action":{"action":"buy","context":{"sku":"linen-drum-pendant","name":"Linen Drum Pendant","price":112}}},{"id":"p_oak","component":"ProductCard","title":"Oak Floor Lamp","subtitle":"Oiled oak base, linen shade","price":"$149","badge":"Sold out","badgeIntent":"danger","actionLabel":"Sold out","disabled":true,"action":{"action":"buy","context":{"sku":"oak-floor-lamp"}}},{"id":"p_paper","component":"ProductCard","title":"Paper Lantern","subtitle":"Folding washi paper, 30 cm","price":"$24","badge":"Sale","badgeIntent":"success","actionLabel":"Buy","action":{"action":"buy","context":{"sku":"paper-lantern","name":"Paper Lantern","price":24}}},{"id":"order","component":"ConfirmReceipt","title":"Your order","data":{"path":"/order"},"items":[{"label":"Brass Desk Lamp","quantity":1,"amount":"$84"}],"totalLabel":"Total","totalPath":"/order/total","status":"pending","confirmAction":{"action":"confirm_order"},"backAction":{"action":"back"}}]},{"version":"v1.0","updateDataModel":{"surfaceId":"storefront","path":"/order","value":{"total":"$84"}}}]'
+const CLOSED = BRACE_SHORT.replace('{"action":"back"}}]},{"version"', '{"action":"back"}}]}},{"version"')
+type Round = string | { messages: string }
+
+async function storefront(rounds: Round[], maxRounds = 3): Promise<{ reqs: SeamRequest[]; lines: string[] }> {
+  let n = 0
+  const reqs: SeamRequest[] = []
+  const provider: AgentProvider = {
+    async *stream(req) {
+      reqs.push(req)
+      const round = rounds[Math.min(n++, rounds.length - 1)]!
+      if (typeof round === 'string') {
+        yield round
+        return
+      }
+      await req.executeTool?.('render_surface', { reply: ADDED, target: 'storefront', messages: round.messages }, req.signal)
+      yield ''
+    },
+  }
+  const lines: string[] = []
+  try {
+    for await (const line of produce(addFirst, { provider, retrieve: () => [], catalog: defaultCatalog }, { maxRounds, model: 'claude-haiku-5-5', effort: 'medium' })) lines.push(line)
+  } catch {
+    // a halt at the bound is fine here; the requests are what is read
+  }
+  return { reqs, lines }
+}
+
+describe('produce(): an unparseable forced repair round keeps its repair ask and the forced render_surface (T-0578)', () => {
+  it('r1 claims a change, r2 sends a string one brace short: r3 is forced and names CHANGE_CLAIMED and the parse location, and its update ships', async () => {
+    expect(() => JSON.parse(BRACE_SHORT)).toThrow(/position 2028/)
+    const { reqs, lines } = await storefront([R1, { messages: BRACE_SHORT }, { messages: CLOSED }])
+    expect(reqs).toHaveLength(3)
+    expect(lastAsk(reqs[1]!)).toContain('CHANGE_CLAIMED at storefront')
+    expect(reqs[1]!.toolChoice).toEqual({ name: 'render_surface' })
+    expect(lastAsk(reqs[2]!)).toContain('CHANGE_CLAIMED at storefront')
+    expect(lastAsk(reqs[2]!)).toContain('PARSE')
+    expect(lastAsk(reqs[2]!)).toContain('a closing } is missing in message 1')
+    expect(reqs[2]!.messages.at(-2)!.content).toContain(BRACE_SHORT) // the string as sent, so the location names text the model can see
+    expect(reqs[2]!.toolChoice).toEqual({ name: 'render_surface' })
+    expect(buildRequestBody(reqs[2]!).thinking).toEqual({ type: 'disabled' })
+    const shipped = lines.flatMap((l) => {
+      const m = JSON.parse(l)
+      return m.updateComponents?.surfaceId === 'storefront' ? m.updateComponents.components.map((c: { component: string }) => c.component) : []
+    })
+    expect(shipped).toContain('ConfirmReceipt')
+    const trace = lines.map((l) => readMetaLine(l)?.a2uiMeta?.trace).find((t) => t !== undefined)
+    expect(trace?.failureCodes).not.toContain('CHANGE_CLAIM_UNCORRECTED')
+  })
+
+  it('on the last round an unparseable forced repair stays plain PARSE: no round is left to repair it', async () => {
+    const { reqs, lines } = await storefront([R1, { messages: BRACE_SHORT }], 2)
+    expect(reqs).toHaveLength(2)
+    expect(lastAsk(reqs[1]!)).toContain('CHANGE_CLAIMED at storefront')
+    const trace = lines.map((l) => readMetaLine(l)?.a2uiMeta?.trace).find((t) => t !== undefined)
+    expect(trace?.failureCodes).toEqual(['PARSE', 'SURFACE_DEGRADED']) // the repair ask is not carried past the last round
   })
 })
