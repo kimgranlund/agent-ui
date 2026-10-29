@@ -87,6 +87,15 @@ const DAY_PLAN = 'Plan my Saturday 21 November 2026: breakfast at 08:00, the hal
 const CROUPIER = 'agent-ui--croupier'
 const STYLIST = 'agent-ui--stylist'
 
+// T-0556: a Basic contact form, and a ConfirmReceipt read back on its own.
+const BASIC_CONTACT: Record<string, unknown>[] = [
+  { id: 'root', component: 'Column', children: ['email', 'topic'] },
+  { id: 'email', component: 'TextField', label: 'Email address', value: { path: '/contact/email' }, variant: 'shortText' },
+  { id: 'topic', component: 'ChoicePicker', label: 'Topic', variant: 'mutuallyExclusive', options: [{ label: 'Billing', value: 'billing' }, { label: 'Technical issue', value: 'technical' }], value: { path: '/contact/topic' } },
+]
+const RECEIPT = { id: 'root', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: { path: '/cart/qty' }, amount: { path: '/cart/amount' } }], status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back_to_shop' } }
+const RECEIPT_MODEL = { cart: { qty: 1, amount: '$189', total: '$189' } }
+
 // Palette (T-0359).
 const PALETTE_NODES = [
   { id: 'root', component: 'Column', children: ['navy', 'blues'] },
@@ -535,6 +544,21 @@ const CONTRACTS: Record<string, Contract> = {
         { id: 'go', component: 'Button', label: 'Plan my week', action: { event: { name: 'plan' } } },
       ]),
     },
+  },
+  // T-0556: a Basic TextField or ChoicePicker prop that renders nothing here (ADR-0169 v1-inert) is sent back.
+  'inert-prop': {
+    code: 'INERT_PROP',
+    pass: { catalog: 'a2ui-basic', output: surface('contact-1', 'a2ui-basic', BASIC_CONTACT, { contact: { email: '', topic: ['billing'] } }) },
+    fail: {
+      catalog: 'a2ui-basic',
+      output: surface('contact-1', 'a2ui-basic', BASIC_CONTACT.map((c) => (c['id'] === 'email' ? { ...c, validationRegexp: '^.+@.+$' } : c)), { contact: { email: '', topic: ['billing'] } }),
+    },
+  },
+  // T-0556: a ConfirmReceipt totalLabel with no totalPath draws no total row.
+  'receipt-total-path': {
+    code: 'RECEIPT_TOTAL_PATH',
+    pass: { catalog: UI, output: surface('order-1', UI, [{ ...RECEIPT, totalLabel: 'Total', totalPath: '/cart/total' }], RECEIPT_MODEL) },
+    fail: { catalog: UI, output: surface('order-1', UI, [{ ...RECEIPT, totalLabel: 'Total' }], RECEIPT_MODEL) },
   },
   'word-secret': {
     code: 'WORD_SECRET_MISSING',

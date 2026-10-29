@@ -21,6 +21,7 @@ import { compositeMomentChecks } from '../catalog/composite-moments.ts'
 import { framedChoiceCheck } from '../catalog/framed-choice-check.ts'
 import { optionDeckCountCheck } from '../catalog/option-deck-check.ts'
 import { singlePickCheck } from '../catalog/single-pick-check.ts'
+import { inertPropCheck, receiptTotalCheck } from '../catalog/inert-prop-checks.ts'
 import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews } from '../catalog/semantic-check.ts'
 import type { Catalog } from '../catalog/catalog.ts'
 
@@ -49,13 +50,13 @@ const CATALOGS: ReadonlyMap<string, Catalog> = new Map([
   ...composeDomainCatalogDocs(BASES, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
 ])
 
-/** The checks a live turn on `catalogId` runs: the persona's or each domain's own, then the hidden-state and composite-moment rows, the framed-choice check, the option-deck count check and the single-pick check. */
+/** The checks a live turn on `catalogId` runs: the persona's or each domain's own, then the hidden-state and composite-moment rows, the framed-choice check, the option-deck count check, the single-pick check and (T-0556) the two prop-hygiene checks. */
 function liveChecks(catalogId: string, catalog: Catalog) {
   const own = [
     ...semanticChecksForCatalog(catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS),
     ...domainSemanticChecksForCatalog(catalogId, SHIPPED_DOMAIN_CATALOG_MANIFESTS),
   ]
-  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck, singlePickCheck], catalog)
+  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck, singlePickCheck, inertPropCheck, receiptTotalCheck], catalog)
 }
 
 const isError = (m: A2uiClientMessage): m is Extract<A2uiClientMessage, { error: unknown }> => 'error' in m

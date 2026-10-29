@@ -10,6 +10,7 @@ export const fixtureBannerFactory: WidgetFactory = {
   applyProp: (el, prop, value) => {
     if (prop === 'text') el.textContent = value == null ? '' : String(value)
   },
+  resetProp: (el, prop) => fixtureBannerFactory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the text
 }
 
 /** Every component the fixture's `catalog.json` declares MUST appear here (mirrors the registry's own

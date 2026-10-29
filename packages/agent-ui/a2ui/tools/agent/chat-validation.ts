@@ -33,6 +33,7 @@ import { compositeMomentChecks } from '../../src/catalog/composite-moments.ts'
 import { framedChoiceCheck } from '../../src/catalog/framed-choice-check.ts'
 import { optionDeckCountCheck } from '../../src/catalog/option-deck-check.ts'
 import { singlePickCheck } from '../../src/catalog/single-pick-check.ts'
+import { inertPropCheck, receiptTotalCheck } from '../../src/catalog/inert-prop-checks.ts'
 import { ProduceHalt } from '../../src/agent/produce.ts'
 import { AgentTimeoutError } from '../../src/agent/deadlines.ts'
 import { ANTHROPIC_WORKSPACE_ENV } from '../../src/agent/providers/anthropic.ts'
@@ -195,6 +196,7 @@ export function semanticChecksDeps(catalog: Catalog, resolution?: unknown): { se
   // unless a surface carries the word-game or Battleship signature). T-0208: then the composite-moment checks. T-0258: then
   // the framed-choice check (a Card per choice), on every catalog with Card and Button. T-0193: then the option-deck
   // count check, on every catalog with OptionDeck. T-0419: then the single-pick check, on every catalog with OptionDeck.
+  // T-0556: then the inert-prop check (a2ui-basic) and the receipt total check (every catalog with ConfirmReceipt).
   const semanticChecks = gateChecksOnCatalog(
     [
       ...semanticChecksForCatalog(catalog.catalogId, SHIPPED_PERSONA_CATALOG_MANIFESTS),
@@ -204,6 +206,8 @@ export function semanticChecksDeps(catalog: Catalog, resolution?: unknown): { se
       framedChoiceCheck,
       optionDeckCountCheck,
       singlePickCheck,
+      inertPropCheck,
+      receiptTotalCheck,
     ],
     catalog,
   )

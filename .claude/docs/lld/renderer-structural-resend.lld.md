@@ -1,6 +1,6 @@
 # LLD — Renderer structural-resend reconciliation
 
-> Status: proposed · v0.3 · 2026-10-22 (v0.2 2026-07-12; v0.3 records the T-0172 root upsert and the §4 retype re-mount, T-0405) · Layer: LLD (implementation plan)
+> Status: proposed · v0.4 · 2026-10-29 (v0.2 2026-07-12; v0.3 records the T-0172 root upsert and the §4 retype re-mount, T-0405; v0.4 the T-0556 non-identity reset) · Layer: LLD (implementation plan)
 > Implements: [`../spec/renderer-structural-resend.spec.md`](../spec/renderer-structural-resend.spec.md)
 > (SPEC-R1…R5, SPEC-N1…N3).
 > Composes on: [`./a2ui-renderer.lld.md`](./a2ui-renderer.lld.md) LLD-C4 (`tree.ts`, SPEC-R3/R4), LLD-C6
@@ -354,7 +354,7 @@ re-add behave exactly like a first-ever arrival — no special case needed anywh
 ```
 
 **Omitted-prop reset — narrowed to identity-mapped props, an honest limitation for non-identity ones (the
-first draft's biggest wrong assumption, now corrected).** Disposing the old scope stops an effect from
+first draft's biggest wrong assumption, now corrected; the limitation is closed by T-0556, below).** Disposing the old scope stops an effect from
 RE-RUNNING; it does NOT undo whatever value that effect (or a one-time `applyProp`) already wrote to `el`.
 `rewireNode` only visits keys present in `next` — a key dropped between `previous` and `next` is otherwise
 never revisited and its stale value sticks. The catalog's `WidgetFactory` (`catalog/types.ts`) exposes only
@@ -405,6 +405,12 @@ a follow-up rather than silently left unfenced. **Recorded as a discovered-reali
 not a silent gap** — the SPEC's AC3 should be read as "for every identity-mapped prop" until that follow-up
 lands (a build-time SPEC wording tightening, alongside the ADR-0128 `Repairs` note).
 
+**Closed by T-0556 (2026-10-29):** `WidgetFactory.resetProp?: (el, prop) => void` (`catalog/types.ts`) is that
+capability. `#resetOmittedProps` calls it through a new optional `TreeDeps.resetMappedProp` for a dropped prop whose
+`mapsTo` is not identity, on the same `resolveFactory`-resolved factory; every shipped non-identity row implements it,
+and `renderer/reset-mapped-props.test.ts` reads the rows from the catalogs, so a new row without the hook reds there.
+SPEC-R2 AC3 now holds for the full catalog.
+
 `el` itself is never touched by `.remove()`/`.replaceChild()` — only its prop effects and listeners are torn
 down and reinstalled against the SAME element, which is what preserves DOM identity, focus, and any
 component-internal state (SPEC-R2 AC1). `itemScope` is always `undefined` here: prop reconcile only ever
@@ -433,7 +439,7 @@ transient inconsistent read.
 | Resend adding a child whose own record has not yet arrived (out-of-order, within the SAME structural-resend wave) | The normal `#mountNode` pending-anchor path handles it — `#reconcileChildren`'s "fresh mount" branch calls `#mountNode`, unchanged (SPEC-R4 of the runtime SPEC, untouched) |
 | Resend of a node inside a list-item's instance subtree | Never reaches `#reconcileNode` — list-item ids are not registered in `surface.widgets`/`#nodeScopes` (unchanged design boundary, `#mountInstance`) |
 | Resend of a container whose `children` is a dynamic-list TEMPLATE object, not a static array | Not reconciled (§5 non-goal) — `childRefs` returns `[]` for a template either way |
-| Dropped prop with a non-identity (`mapsTo !== prop`) catalog mapping | Not reset (§7 narrowed scope) — a follow-up `WidgetFactory.resetProp?` capability is the closing mechanism, out of this ticket |
+| Dropped prop with a non-identity (`mapsTo !== prop`) catalog mapping | Reset through the factory's `resetProp` hook (§7, T-0556); a factory without the hook leaves the value |
 | Whole-surface teardown (`deleteSurface`/`dispose()`) | The RSR-C1 teardown carrier disposes every remaining `#nodeScopes` entry — SPEC-N3 (runtime) holds unchanged |
 
 ## 9. File & integration plan

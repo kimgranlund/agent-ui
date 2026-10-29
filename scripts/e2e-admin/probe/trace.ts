@@ -22,6 +22,7 @@ import { compositeMomentChecks } from '../../../packages/agent-ui/a2ui/src/catal
 import { framedChoiceCheck } from '../../../packages/agent-ui/a2ui/src/catalog/framed-choice-check.ts'
 import { optionDeckCountCheck } from '../../../packages/agent-ui/a2ui/src/catalog/option-deck-check.ts'
 import { singlePickCheck } from '../../../packages/agent-ui/a2ui/src/catalog/single-pick-check.ts'
+import { inertPropCheck, receiptTotalCheck } from '../../../packages/agent-ui/a2ui/src/catalog/inert-prop-checks.ts'
 import { gateChecksOnCatalog, type SemanticCheck } from '../../../packages/agent-ui/a2ui/src/catalog/semantic-check.ts'
 import { runProducerTurn } from '../../../packages/agent-ui/a2ui/tools/testkit/producer-leg.ts'
 import { nodeCatalogResolver } from '../../../packages/agent-ui/a2ui/tools/testkit/load.node.ts'
@@ -137,11 +138,11 @@ export const PERSONA_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticC
 export const DOMAIN_SEMANTIC_CHECKS: Readonly<Record<string, readonly SemanticCheck[]>> = { hospitality: hospitalitySemanticChecks }
 
 /** The semantic checks a live turn on this catalog ran: its persona's (`<base>--<persona>`) or each domain's
- *  (`<base>--<d1>+<d2>`), (T-0230) the hidden game state checks every catalog runs, then (T-0208) the composite-moment checks and (T-0258) the framed-choice check and (T-0193) the option-deck count check and (T-0419) the single-pick check, gated on the types the catalog declares, as `semanticChecksDeps` does. */
+ *  (`<base>--<d1>+<d2>`), (T-0230) the hidden game state checks every catalog runs, then (T-0208) the composite-moment checks and (T-0258) the framed-choice check and (T-0193) the option-deck count check and (T-0419) the single-pick check and (T-0556) the two prop-hygiene checks, gated on the types the catalog declares, as `semanticChecksDeps` does. */
 export function replaySemanticChecks(catalog: Catalog): readonly SemanticCheck[] {
   const tail = splitCatalogId(catalog.catalogId).tail ?? ''
   const own = PERSONA_SEMANTIC_CHECKS[tail] ?? tail.split('+').flatMap((d) => DOMAIN_SEMANTIC_CHECKS[d] ?? [])
-  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck, singlePickCheck], catalog)
+  return gateChecksOnCatalog([...own, ...HIDDEN_STATE_CHECKS, ...compositeMomentChecks, framedChoiceCheck, optionDeckCountCheck, singlePickCheck, inertPropCheck, receiptTotalCheck], catalog)
 }
 
 export interface ReplayContext {

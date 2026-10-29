@@ -253,6 +253,12 @@ export const buttonFactory: WidgetFactory = {
         setAttr(el, prop, value)
     }
   },
+  // T-0556: `undefined` removes the icon adornment and the label text; an icon-only label also leaves `aria-label`,
+  // which `applyProp` would set to the empty string.
+  resetProp: (el, prop) => {
+    if (prop === 'label' && (el as { iconOnly?: unknown }).iconOnly) el.removeAttribute('aria-label')
+    else buttonFactory.applyProp(el, prop, undefined)
+  },
 }
 
 // The ADR-0078 cl.5 fan-out table — the wire `Text.variant` (catalog-frozen `h1…h5 | caption | body`
@@ -328,6 +334,7 @@ const TEXT_VARIANT_TABLE: Record<string, { as: string; variant: string; size: st
  */
 export const textFactory: WidgetFactory = {
   tag: 'ui-text',
+  resetProp: (el, prop) => textFactory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the text
   create: () => document.createElement('ui-text'),
   applyProp: (el, prop, value) => {
     switch (prop) {
@@ -371,6 +378,11 @@ function setProp(el: HTMLElement, prop: string, value: unknown): void {
   ;(el as unknown as Record<string, unknown>)[prop] = value
 }
 
+/** A fresh, never-connected `tag` instance's `prop` (its declared default): what a `resetProp` hook restores (T-0556). */
+export function pristineValue(tag: string, prop: string): unknown {
+  return (document.createElement(tag) as unknown as Record<string, unknown>)[prop]
+}
+
 /**
  * Build a factory for a control whose catalog properties all map 1:1 onto reflecting prop accessors
  * (the container family + text-field + the ADR-0053 `Field`/`FormProvider`/`Select` rows). `value`
@@ -404,6 +416,11 @@ function mappedAccessorFactory(tag: string, mapping: Record<string, string>): Wi
     tag,
     create: () => document.createElement(tag),
     applyProp: (el, prop, value) => setProp(el, mapping[prop] ?? prop, value),
+    // T-0556: a dropped mapped prop takes the target accessor's value on a fresh instance (its declared default).
+    resetProp: (el, prop) => {
+      const target = mapping[prop]
+      if (target !== undefined) setProp(el, target, pristineValue(tag, target))
+    },
   }
 }
 
@@ -453,6 +470,13 @@ export const drawerFactory: WidgetFactory = accessorFactory('ui-drawer', { prop:
  */
 export const toastFactory: WidgetFactory = {
   tag: 'ui-toast',
+  // T-0556: once connected the label lives in the built message part, so clearing the host would drop the parts too.
+  resetProp: (el, prop) => {
+    if (prop !== 'label') return
+    const message = el.querySelector(':scope > [data-part="message"]')
+    if (message !== null) message.textContent = ''
+    else el.textContent = ''
+  },
   create: () => document.createElement('ui-toast'),
   applyProp: (el, prop, value) => {
     if (prop === 'label') el.textContent = value == null ? '' : String(value)
@@ -519,15 +543,17 @@ export const formProviderFactory: WidgetFactory = accessorFactory('ui-form-provi
  * `value`, which `ui-checkbox` already uses for the submitted string).
  */
 function indicatorFactory(tag: string): WidgetFactory {
-  return {
+  const factory: WidgetFactory = {
     tag,
     create: () => document.createElement(tag),
     applyProp: (el, prop, value) => {
       if (prop === 'label') el.textContent = value == null ? '' : String(value)
       else setProp(el, prop, value)
     },
+    resetProp: (el, prop) => factory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the label text
     value: { prop: 'checked', event: 'change' },
   }
+  return factory
 }
 export const checkboxFactory: WidgetFactory = indicatorFactory('ui-checkbox')
 export const switchFactory: WidgetFactory = indicatorFactory('ui-switch')
@@ -552,6 +578,7 @@ export const selectFactory: WidgetFactory = accessorFactory('ui-select', { prop:
  */
 export const optionFactory: WidgetFactory = {
   tag: 'div[role=option]',
+  resetProp: (el, prop) => optionFactory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the text
   create: () => {
     const el = document.createElement('div')
     el.setAttribute('role', 'option')
@@ -598,6 +625,7 @@ export const menuFactory: WidgetFactory = accessorFactory('ui-menu', { prop: 'op
  */
 export const menuItemFactory: WidgetFactory = {
   tag: 'div[role=menuitem]',
+  resetProp: (el, prop) => menuItemFactory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the text
   create: () => {
     const el = document.createElement('div')
     el.setAttribute('role', 'menuitem')
@@ -674,6 +702,7 @@ export const radioGroupFactory: WidgetFactory = accessorFactory('ui-radio-group'
  */
 export const radioFactory: WidgetFactory = {
   tag: 'ui-radio',
+  resetProp: (el, prop) => radioFactory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the text
   create: () => document.createElement('ui-radio'),
   applyProp: (el, prop, value) => {
     if (prop === 'label') el.textContent = value == null ? '' : String(value)
@@ -730,6 +759,7 @@ export const segmentedControlFactory: WidgetFactory = accessorFactory('ui-segmen
  */
 export const segmentFactory: WidgetFactory = {
   tag: 'ui-segment',
+  resetProp: (el, prop) => segmentFactory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the text
   create: () => document.createElement('ui-segment'),
   applyProp: (el, prop, value) => {
     if (prop === 'label') el.textContent = value == null ? '' : String(value)
@@ -1031,6 +1061,7 @@ export const paginationFactory: WidgetFactory = accessorFactory('ui-pagination',
  */
 export const codeFactory: WidgetFactory = {
   tag: 'ui-code',
+  resetProp: (el, prop) => codeFactory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the text
   create: () => document.createElement('ui-code'),
   applyProp: (el, prop, value) => {
     if (prop === 'code') el.textContent = value == null ? '' : String(value)
@@ -1235,6 +1266,9 @@ export const swiperFactory: WidgetFactory = {
     if (prop === 'slidesInView') (el as unknown as Record<string, unknown>)['slides-in-view'] = value
     else (el as unknown as Record<string, unknown>)[prop] = value
   },
+  resetProp: (el, prop) => {
+    if (prop === 'slidesInView') el.removeAttribute('slides-in-view') // T-0556: the reflected attribute drives the prop
+  },
   value: { prop: 'active', event: 'select' },
 }
 
@@ -1404,6 +1438,7 @@ export const multiSelectFactory: WidgetFactory = {
  */
 export const toggleFactory: WidgetFactory = {
   tag: 'ui-toggle',
+  resetProp: (el, prop) => toggleFactory.applyProp(el, prop, undefined), // T-0556: `undefined` clears the text
   create: () => document.createElement('ui-toggle'),
   applyProp: (el, prop, value) => {
     if (prop === 'label') el.textContent = value == null ? '' : String(value)

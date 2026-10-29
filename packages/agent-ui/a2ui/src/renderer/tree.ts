@@ -50,7 +50,7 @@
 import type { A2uiChildTemplate, A2uiComponent, A2uiError, A2uiServerMessage } from '../protocol.ts'
 import { MAX_RENDER_DEPTH } from '../protocol.ts'
 import type { Surface } from './surface.ts'
-import type { CreateWidget, ItemScope, CreateOnly, RewireNode, ResetProp, ComponentDefOf } from './types.ts'
+import type { CreateWidget, ItemScope, CreateOnly, RewireNode, ResetProp, ResetMappedProp, ComponentDefOf } from './types.ts'
 import type { Scope } from '@agent-ui/components'
 import { createScope, effect } from '@agent-ui/components'
 import { renderList } from './list.ts'
@@ -59,8 +59,8 @@ import { renderList } from './list.ts'
 export type UpdateComponentsMessage = Extract<A2uiServerMessage, { updateComponents: object }>
 
 /**
- * Cross-slice collaborators the tree needs: the widget factory (LLD-C7), a client-error sink, and — for
- * structural-resend reconciliation (RSR-C4..C7, ADR-0128) — the three additional host entry points that
+ * Cross-slice collaborators the tree needs: the widget factory (LLD-C7), a client-error sink, and, for
+ * structural-resend reconciliation (RSR-C4..C7, ADR-0128), the additional host entry points that
  * let `#reconcileProps` re-wire an EXISTING element without ever minting a new one.
  */
 export interface TreeDeps {
@@ -70,8 +70,10 @@ export interface TreeDeps {
   create: CreateOnly
   /** Wire props/action/checks onto an EXISTING element (RSR-C6's `#reconcileProps`) — never re-mints. */
   rewireNode: RewireNode
-  /** Resolve `node`'s factory and call its `applyProp` — the narrowed identity-mapped omitted-prop reset. */
+  /** Resolve `node`'s factory and call its `applyProp`: the identity-mapped omitted-prop reset. */
   resetProp: ResetProp
+  /** Resolve `node`'s factory and call its optional `resetProp` hook: the non-identity omitted-prop reset (T-0556). */
+  resetMappedProp?: ResetMappedProp
   /** The catalog `ComponentDef` for a node's type — the enum/`mapsTo` authority `#resetOmittedProps` reads. */
   componentDefOf: ComponentDefOf
   /** Emit a client→server error (here only `IDGRAPH`); the host wraps it in `{version, error}`. */
@@ -679,7 +681,7 @@ export class SurfaceTree {
     old.propsScope.dispose() // kills every bound-prop effect AND the input/action/checks listeners this
     old.ac.abort() // node installed — same one-two as #disposeSubtree, but the ELEMENT (and children) survive
 
-    this.#resetOmittedProps(previous, next, el) // SPEC-R2 AC3 — narrowed, honest scope (below)
+    this.#resetOmittedProps(previous, next, el) // SPEC-R2 AC3 (below)
 
     const propsScope = createScope()
     const ac = new AbortController()
@@ -688,16 +690,16 @@ export class SurfaceTree {
   }
 
   /**
-   * SPEC-R2 AC3's narrowed omitted-prop reset. Disposing the old scope stops an effect from re-running; it
+   * SPEC-R2 AC3's omitted-prop reset. Disposing the old scope stops an effect from re-running; it
    * does NOT undo whatever value that effect (or a one-time `applyProp`) already wrote to `el` — a key
    * dropped between `previous` and `next` is never revisited by `rewireNode` (which only visits keys
-   * present in `next`) and its stale value would otherwise stick. Resets ONLY when the catalog's mapping
-   * for the dropped prop is IDENTITY (`PropDef.mapsTo === prop`, the majority of the catalog, verified
+   * present in `next`) and its stale value would otherwise stick. When the catalog's mapping for the
+   * dropped prop is IDENTITY (`PropDef.mapsTo === prop`, the majority of the catalog, verified
    * against `catalog/default/factories.ts`'s `accessorFactory` rows) — a fresh, never-yet-written pristine
    * instance's property read IS the class's declared default for an identity-mapped prop (`dom/props.ts`'s
-   * lazy-inited signal). A bespoke, non-identity mapping (e.g. `Button.label`) is NOT reset by this wave —
-   * the `WidgetFactory` interface has no per-prop default reader, only `applyProp`; closing this fully
-   * needs a new, optional catalog-level capability, out of this ticket's scope (ADR-0128 Consequences).
+   * lazy-inited signal). A bespoke, non-identity mapping (e.g. `Button.label`, `Stat.value -> figure`) has no
+   * pristine property to read, so it resets through the factory's optional `resetProp` hook instead (T-0556,
+   * closing the ADR-0128 Consequences gap; `reset-mapped-props.test.ts` holds every shipped row to it).
    *
    * The `componentDef` guard runs BEFORE the pristine `create()` call (M1 review fix) — `next.component`
    * being unresolved (an unknown type, the placeholder path) must not re-resolve the factory a SECOND time
@@ -713,8 +715,10 @@ export class SurfaceTree {
     if (componentDef === undefined) return // unresolved factory — never re-emit CATALOG from a reconcile (SPEC-N3)
     const pristine = this.#deps.create(next, this.#surface) // never connected, never appended — GC'd on return
     for (const key of droppedKeys) {
-      if (componentDef.properties[key]?.mapsTo !== key) continue // non-identity (bespoke) mapping: not reset
-      this.#deps.resetProp(el, next, this.#surface, key, (pristine as unknown as Record<string, unknown>)[key])
+      const def = componentDef.properties[key]
+      if (def === undefined) continue // undeclared (T-0552): never applied, so nothing to reset
+      if (def.mapsTo !== key) this.#deps.resetMappedProp?.(el, next, this.#surface, key) // bespoke mapping: the factory's hook
+      else this.#deps.resetProp(el, next, this.#surface, key, (pristine as unknown as Record<string, unknown>)[key])
     }
   }
 }
