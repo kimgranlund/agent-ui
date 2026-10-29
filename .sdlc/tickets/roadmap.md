@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 567 done, 5 dropped (git log or .NNNN-* folders)
+Closed: 569 done, 5 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -131,3 +131,4 @@ Closed: 567 done, 5 dropped (git log or .NNNN-* folders)
 - decide: packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json:16 `Image.url` (mapsTo `src`) still declares `safe-href`, which admits `mailto:` and rejects `data:`, the opposite of the render gate for a media prop; the handoff names only the default catalog, and the builder disclosed it. A follow-up could move it to `media-src`. The persona and domain catalogs carry no own media props. -> fixed T-0565: a2ui-basic Image.url declares media-src (triage 2026-10-29) (from T-0563: Catalog media props declare a media URL format (2026-10-29))
 - decide: scripts/measure-size.mjs:266 overlay budget raised to 2688 on the builder's own reading of the ADR-0197 cl.5 precedent; Kim to confirm the bump or trim overlay.ts. -> fixed T-0529: the 2688 overlay row is re-based citing Kim's ADR-0197 cl.5 confirmation, the same ruling as T-0525 (triage 2026-10-29) (from T-0529: npm run size gates in check:scripts (2026-10-29))
 - decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:779 decide: the row emits `SURFACE_MISSING` as the ticket pins, not a `<COMPOSITE>_MISSING` code; the builder reports it therefore gets no T-0299 cross-round bind. No criterion names it and the replay heals in one repair round, so it is left open here, not verified. -> stale, by design: the ticket pins SURFACE_MISSING for this row and the replay heals in one repair round (triage 2026-10-29) (from T-0550: A cart's ConfirmReceipt with a bound quantity ships its AmountPicker (round 17 cluster P5) (2026-10-29))
+- decide: packages/agent-ui/a2ui/src/catalog/regex-guard.ts:13 says the cap keeps "a sequence of repeats cheap at MAX_VALUE_LENGTH"; a node probe at the value cap (1023 a's plus x) measured `^a*a*b` 1.6 ms, unanchored `a*a*b` 544 ms, `^a*a*a*b` 582 ms, unanchored `a*a*a*b` 141786 ms. The cap of 2 refuses the last two shapes; an unanchored two-repeat pattern still costs about half a second per keystroke on an adversarial value. Whether that is cheap enough, or the cap should be 1 or the value cap lower, is Kim's call; no criterion names it. (from T-0577: The regex guard comment is accurate and patterns carry a per-pattern repeat cap (2026-10-29))

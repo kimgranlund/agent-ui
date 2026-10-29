@@ -1532,7 +1532,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
   // T-0499: the next round repairs a semantic finding on a no-payload round (T-0298). If that round comes back empty (no
   // text, no tool call; round 16 :13), it is not filed PARSE: the same repair ask is sent again, render_surface forced.
   // T-0501: so does every other forced repair, SURFACE_DROPPED (T-0281), SURFACE_CLAIMED (T-0442), CHANGE_CLAIMED (T-0448)
-  // and the T-0428 change-claim narration repair.
+  // and the T-0428 change-claim narration repair. T-0578: a non-empty round that does not parse keeps the repair too,
+  // beside PARSE (round 18 :43).
   let forcedRepairPending = false
   let surfaceRequestedFedBack = false // RTS-R6: the ONE correction round a surface override with no payload gets
   let textJsonlIgnored = false // RTS-R3: sticky, a capture round's text channel carried wire or genui lines that were dropped
@@ -2083,8 +2084,11 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
     if (assembled === undefined) {
       // T-0499: an empty semantic repair round keeps the failure it was repairing and the attempt it showed, once more
       // forced, while a round is left; on the last round it is PARSE as before. T-0501: any forced repair round does.
-      if (forcedRepair && raw.trim() === '' && captured === undefined && round < opts.maxRounds - 1) {
-        lastRaw = priorRaw
+      // T-0578: so does a non-empty one that does not parse, beside PARSE (its location rides `parseNote`): round 18 :43,
+      // a CHANGE_CLAIMED repair whose `messages` string was one brace short.
+      if (forcedRepair && round < opts.maxRounds - 1) {
+        if (raw.trim() === '' && captured === undefined) lastRaw = priorRaw
+        else failures = [...failures!.filter((f) => f.code !== 'PARSE'), { code: 'PARSE', path: '' }] // the repair this round answered
         lastCaptureRound = offeredTools !== undefined
         forceSurfaceRound = offeredTools !== undefined
         forcedRepairPending = true

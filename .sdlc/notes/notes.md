@@ -1364,3 +1364,8 @@
 
 - note: .claude/docs/spec/a2ui-catalog.spec.md SPEC-R10 AC1 and the 5.2 intro: edited lines keep pre-existing em dashes.
 - note: packages/agent-ui/a2ui/src/catalog/a2ui-basic/index.test.ts:26 keeps the stale "no fleet media control" reason string.
+
+## T-0578: An unparseable forced-repair round keeps its repair ask and the forced render_surface (2026-10-29)
+
+- note: redck.py deviations printed no `process deviation:` lines for this build, and every red check was still run by me on base.
+- note: the last-round leg (plain PARSE, failureCodes `['PARSE','SURFACE_DEGRADED']`) is pinned by the second new test in produce-empty-repair.test.ts, and it passes.
