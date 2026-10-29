@@ -11,13 +11,19 @@
 //   (b) trailing-comma removal                                                    → 'trailing-comma'
 //   (c) single-object → array envelope normalization                             → 'single-object-envelope'
 //   (d) a missing per-message `version` filled from the caller's pin              → 'version-fill'
-// Structured (`A2uiOutput`) input skips the text arms (a)/(b) — only (c)/(d) can still apply, so an
+//   (e) an envelope-level `surfaceId` moved into the one surface op that lacks it  → 'surface-id-move'
+// Structured (`A2uiOutput`) input skips the text arms (a)/(b); only (c)/(d)/(e) can still apply, so an
 // already-array, already-versioned ADR-0055 seed heals to `changed:false`.
+//
+// Arm (e) is Kim's 2026-10-29 ruling (T-0588, round 20 cluster S), recorded here because the ADRs are
+// frozen: it widens the ADR-0061 clause 1 list by this one arm. It is form: the message names exactly
+// one id and one op, and the key sits one level too high. It never decides between two ids: an op that
+// already carries `surfaceId` (equal, different or not a string) is left alone for tier-1.
 //
 // NOTHING SEMANTIC IS EVER REPAIRED. Unknown components, malformed pointers, missing/duplicate roots,
 // wrong catalogs — none of these are form defects, so heal never touches them; they flow through
 // unchanged to tier-1 (`validateA2ui`, `../renderer/validate.ts`) and reject there. Widening the closed
-// list is an amendment to ADR-0061 clause 1, never an ad-hoc addition here (each new arm must argue it
+// list takes a recorded ruling (ADR-0061 clause 1, now frozen; arm (e) above), never an ad-hoc addition here (each new arm must argue it
 // is form, not semantics).
 //
 // Zero-dep, platform-neutral (SPEC-N5): no imports beyond the local `protocol.ts` types.
@@ -85,7 +91,37 @@ export function heal(input: string | A2uiOutput, pin?: HealPin): HealResult {
     })
   }
 
+  // Arm (e): move an envelope-level `surfaceId` into the one surface op that lacks it (T-0588).
+  messages = messages.map((m) => {
+    const moved = moveStraySurfaceId(m)
+    if (moved === m) return m
+    repairs.add('surface-id-move')
+    return moved
+  })
+
   return { ok: true, messages: messages as A2uiOutput, changed: repairs.size > 0, repairs: [...repairs] }
+}
+
+// ── arm (e): stray envelope surfaceId ───────────────────────────────────────────────────────────
+
+/** The ops whose body carries `surfaceId` (validate.ts `MESSAGE_KINDS` minus the envelope-level
+ *  `actionResponse` and `callFunction`, ADR-0034). Local so heal keeps its no-import rule. */
+const SURFACE_OPS = ['createSurface', 'updateComponents', 'updateDataModel', 'deleteSurface'] as const
+
+/**
+ * `{version, <op>: {...}, surfaceId}` becomes `{version, <op>: {surfaceId, ...}}` when the envelope id is a
+ * string, the message has exactly one other key besides `version`, that key is a surface op, its body is an
+ * object and the body has no `surfaceId` key. Anything else comes back as the same object.
+ */
+function moveStraySurfaceId(m: unknown): unknown {
+  if (!isPlainObject(m) || typeof m.surfaceId !== 'string') return m
+  const { surfaceId, ...rest } = m
+  const keys = Object.keys(rest).filter((k) => k !== 'version')
+  if (keys.length !== 1) return m
+  const op = keys[0]!
+  const body = rest[op]
+  if (!(SURFACE_OPS as readonly string[]).includes(op) || !isPlainObject(body) || 'surfaceId' in body) return m
+  return { ...rest, [op]: { surfaceId, ...body } }
 }
 
 // ── arm (a): fence / prose stripping ────────────────────────────────────────────────────────────

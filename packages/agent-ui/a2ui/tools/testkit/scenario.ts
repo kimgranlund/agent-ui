@@ -85,7 +85,7 @@ export interface ScriptedToolSpec {
 
 /** heal.ts's closed repair names, minus `single-object-envelope`: per-line heal reports that one for every
  *  one-object line, so the kit drops it from every repair union and a scenario may not list it. */
-export const HEAL_REPAIRS = ['fence-strip', 'trailing-comma', 'version-fill'] as const
+export const HEAL_REPAIRS = ['fence-strip', 'trailing-comma', 'version-fill', 'surface-id-move'] as const
 export type HealRepair = (typeof HEAL_REPAIRS)[number]
 export const ENVELOPE_REPAIR = 'single-object-envelope'
 

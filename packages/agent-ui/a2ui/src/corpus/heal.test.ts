@@ -115,6 +115,80 @@ describe('heal — the ONE shared healer (ADR-0061, LLD-C7)', () => {
       expect(verdict.valid).toBe(false)
       expect(verdict.failures.some((f) => f.code === 'VERSION_UNSUPPORTED')).toBe(true)
     })
+
+    // T-0588 (round 20 cluster S, 2026-10-29.jsonl:61 r3): Haiku 5.5 sent the updateDataModel with `surfaceId` on the
+    // envelope beside the op, and the turn spent its last round on `SCHEMA [1].updateDataModel.surfaceId`.
+    const STRAY_LINE =
+      '{"version":"v1.0","updateDataModel":{"value":{"spa":[{"id":"swedish","title":"Swedish massage","price":"€120","priceNote":"60 min"}]}},"surfaceId":"stay-services"}'
+
+    it('(e) moves an envelope surfaceId into the one op that lacks it (the :61 r3 line), and the op validates', () => {
+      const before = heal(STRAY_LINE, { protocolVersion: 'v1.0' })
+      expect(before.ok).toBe(true)
+      if (!before.ok) return
+      expect(before.repairs).toEqual(['single-object-envelope', 'surface-id-move'])
+      expect(before.messages).toEqual([
+        {
+          version: 'v1.0',
+          updateDataModel: {
+            surfaceId: 'stay-services',
+            value: { spa: [{ id: 'swedish', title: 'Swedish massage', price: '€120', priceNote: '60 min' }] },
+          },
+        },
+      ])
+      const surface = [{ version: 'v1.0', createSurface: { surfaceId: 'stay-services', catalogId: 'demo' } }, ...before.messages] as A2uiOutput
+      expect(validateA2ui(surface, demoCatalog).failures).toEqual([])
+    })
+
+    it('(e) the same line unhealed is the SCHEMA the round saw (the arm is what makes it valid)', () => {
+      const raw = [{ version: 'v1.0', createSurface: { surfaceId: 'stay-services', catalogId: 'demo' } }, JSON.parse(STRAY_LINE)] as A2uiOutput
+      expect(validateA2ui(raw, demoCatalog).failures).toContainEqual({ code: 'SCHEMA', path: '[1].updateDataModel.surfaceId' })
+    })
+
+    it('(e) applies to structured input too, per message, for each surface op', () => {
+      const messages = [
+        { version: 'v1.0', surfaceId: 's1', createSurface: { catalogId: 'demo' } },
+        { version: 'v1.0', updateComponents: { surfaceId: 's1', components: [] } },
+        { version: 'v1.0', surfaceId: 's1', deleteSurface: {} },
+      ] as unknown as A2uiOutput
+      const result = heal(messages)
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.repairs).toEqual(['surface-id-move'])
+      expect(result.messages).toEqual([
+        { version: 'v1.0', createSurface: { surfaceId: 's1', catalogId: 'demo' } },
+        { version: 'v1.0', updateComponents: { surfaceId: 's1', components: [] } },
+        { version: 'v1.0', deleteSurface: { surfaceId: 's1' } },
+      ])
+    })
+
+    it('(e) never decides between two ids: an envelope and op surfaceId that disagree are left untouched', () => {
+      const messages = [
+        { version: 'v1.0', surfaceId: 'envelope-id', updateDataModel: { surfaceId: 'op-id', value: {} } },
+      ] as unknown as A2uiOutput
+      const result = heal(messages)
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.changed).toBe(false)
+      expect(result.repairs).toEqual([])
+      expect(result.messages).toEqual(messages)
+    })
+
+    it('(e) leaves every other shape alone: no op, two ops, a non-string id, an op that is not an object, a non-surface op', () => {
+      const shapes = [
+        { version: 'v1.0', surfaceId: 's1', note: 'no recognized envelope key present' },
+        { version: 'v1.0', surfaceId: 's1', createSurface: { catalogId: 'demo' }, updateDataModel: { value: {} } },
+        { version: 'v1.0', surfaceId: 7, updateDataModel: { value: {} } },
+        { version: 'v1.0', surfaceId: 's1', updateDataModel: 'value' },
+        { version: 'v1.0', surfaceId: 's1', updateDataModel: { surfaceId: null, value: {} } },
+        { version: 'v1.0', surfaceId: 's1', callFunction: { name: 'f' } },
+      ] as unknown as A2uiOutput
+      const result = heal(shapes)
+      expect(result.ok).toBe(true)
+      if (!result.ok) return
+      expect(result.changed).toBe(false)
+      expect(result.repairs).toEqual([])
+      expect(result.messages).toEqual(shapes)
+    })
   })
 
   describe('no-laundering negative control — semantic defects pass through unhealed and still reject at tier-1', () => {

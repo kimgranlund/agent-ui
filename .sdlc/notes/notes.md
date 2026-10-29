@@ -1407,3 +1407,10 @@
 ## T-0587: ProductCard actionLabel binds like title and price (2026-10-29)
 
 - note: factories.ts:1493 doc comment updated; no renderer change was needed, so product-card-action.test.ts is a regression guard that is green on base too.
+
+## T-0588: Heal moves a stray envelope surfaceId into its op (2026-10-29)
+
+- decide: packages/agent-ui/a2ui/src/renderer/validate.ts:287 decide: tier-1 accepts the disagreeing envelope/op `surfaceId` shape (probe on the built tree: `validateA2ui` returns `valid=true, failures=[]` for `{surfaceId:'envelope-id', updateDataModel:{surfaceId:'op-id',...}}`); the handoff Intent's "stays for SCHEMA" does not hold today and criterion 1 pins heal's behaviour only.
+- decide: packages/agent-ui/a2ui/src/agent/produce.ts:827 decide: `misplacedSurfaceIdNote` is now reachable only through an op whose own `surfaceId` is a non-string, the shape the builder reports crashes `failureAttribution` on base too; the T-0264 feedback-text test was folded into the T-0588 case, so that feedback path has no test left.
+- decide: .sdlc/tickets/0588-heal-stray-envelope-surface-id/handoff.md:30 note: the `## Acceptance criteria` block was authored by the builder (solo report line 10; the solo dispatch snapshot carries none); it covers every clause of the Intent's Done-when and adds the ruling-record check.
+- decide: packages/agent-ui/a2ui/src/corpus/heal.test.ts:124-191 note: criterion 1 says "four `(e)` heal cases"; the file has five `(e)`-labelled cases, four of which call `heal()`.
