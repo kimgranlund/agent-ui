@@ -1194,3 +1194,7 @@
 
 - decide: packages/agent-ui/app/src/leak-gate.browser.test.ts: ui-agent-admin is excluded from the app gate (host listener count drifts 1052 to 1133 between rounds); a follow-up could settle whether that is late render or a stack.
 - note: the ResizeObserver loop console errors are noisy in the run output but do not fail the suite.
+
+## T-0546: A2UI catalog conformance sweep: catalog components and props against renderer factories (2026-10-28)
+
+- note: the handoff does not record the exact `npm run test:a2ui-kit` exit evidence beyond the builder's claim; I did not rerun it (not a criterion).
