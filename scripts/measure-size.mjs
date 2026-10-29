@@ -42,6 +42,8 @@ const targets = [
   // (`scrollFade`, the paneResize/ADR-0023 precedent — ui-super-shell's SPEC-R10 scrollbar seam needs the
   // fleet's ONE fade trait, never a deep import), which pulls the scroll-fade trait into the root surface
   // (+~182 B gz over the old 7 KB). ADR-0155 Consequences names this re-measure explicitly (ADR-0040/0049).
+  // T-0526 (2026-10-28): scrollFade and paneResize left this barrel for their own `./traits/*` subpaths
+  // (rows below), measured 7659 -> 6854 B gz; the 7.5 KB cap stays as the checkpoint, not re-based down.
   ['@agent-ui/components . (reactive+dom barrel)', '../packages/agent-ui/components/src/index.ts', 7.5 * KB],
   // family-total = the WORST-CASE ceiling (every control defined at once), NOT the eventual distributed size:
   // a real consumer imports a subset and ships ~5–14 KB (single control ~5 KB incl. the shared dom+reactive+
@@ -288,6 +290,14 @@ const targets = [
   // import is `import type { UIElement } from '../dom/index.ts'` (erased), so the absolute figure is the
   // proof. Measured 981 B gz 2026-10-28; pinned at 1.5 KB (measure-first-then-pin, ADR-0080).
   ['@agent-ui/components/traits/roving-focus (opt-in subpath)', '../packages/agent-ui/components/src/traits/roving-focus.ts', 1.5 * KB],
+  // T-0526: the FIFTH and SIXTH `./traits/*` subpaths (`traits/pane-resize`, `traits/scroll-fade`, package.json),
+  // moved OFF the root barrel (where ADR-0154 and ADR-0155 had put them) to free the foundation row every
+  // consumer pays: 805 B gz measured off it (7659 -> 6854, Kim approved the breaking export change
+  // 2026-10-28). Same tree-shake shape as the rows above: each trait's only import is
+  // `import type { UIElement } from '../dom/index.ts'` (erased), so the absolute figure is the proof.
+  // Measured 469 B gz and 591 B gz 2026-10-28; pinned at 1 KB each (measure-first-then-pin, ADR-0080).
+  ['@agent-ui/components/traits/pane-resize (opt-in subpath)', '../packages/agent-ui/components/src/traits/pane-resize.ts', 1 * KB],
+  ['@agent-ui/components/traits/scroll-fade (opt-in subpath)', '../packages/agent-ui/components/src/traits/scroll-fade.ts', 1 * KB],
 ]
 
 let over = false
@@ -971,7 +981,10 @@ console.log(
 )
 
 // ./markdown — MARGINAL over the components foundation (it pulls real ui-text/ui-code/ui-table).
-const CODE_MARKDOWN_BUDGET = 5 * KB // measured marginal 1033 B gz at M1 kickoff (LLD-C10, ADR-0080 discipline) — pinned with headroom
+// RE-BASED 2026-10-28 (T-0526): 5 KB -> 5.5 KB for the measurement-frame shift, not weight: markdown's
+// solo stayed 12224 B gz while the components foundation it is measured against lost scrollFade and
+// paneResize to `./traits/*` subpaths (7659 -> 6854 B gz), so the marginal read 4565 -> 5370 B gz.
+const CODE_MARKDOWN_BUDGET = 5.5 * KB // measured marginal 1033 B gz at M1 kickoff (LLD-C10, ADR-0080 discipline), pinned with headroom
 const codeMarkdown = await gzOfEntry(`${codePkgDir}/src/markdown/index.ts`)
 const codeMarkdownMarginal = codeMarkdown.gz - foundationGz
 const codeMarkdownOver = codeMarkdownMarginal > CODE_MARKDOWN_BUDGET

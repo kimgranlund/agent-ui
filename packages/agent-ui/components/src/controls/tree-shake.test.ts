@@ -406,3 +406,46 @@ describe('traits/roving-focus tree-shake: the opt-in subpath is a type-only LEAF
     )
   })
 })
+
+// ── T-0526: the `./traits/pane-resize` and `./traits/scroll-fade` subpaths (the roving-focus precedent above) ──
+//
+// Both traits rode the root barrel (ADR-0154, ADR-0155) until T-0526 moved them to their own opt-in subpaths,
+// freeing 805 B gz on the foundation row every consumer pays (7659 -> 6854). `scripts/measure-size.mjs` gates
+// each ABSOLUTE size, honest only while the trait pulls no kernel at runtime; the root-barrel case below keeps
+// either from drifting back onto `index.ts`.
+const PANE_RESIZE_ENTRY = 'traits/pane-resize.ts'
+const SCROLL_FADE_ENTRY = 'traits/scroll-fade.ts'
+for (const entry of [PANE_RESIZE_ENTRY, SCROLL_FADE_ENTRY]) {
+  describe(`${entry} tree-shake: the opt-in subpath is a type-only LEAF (T-0526)`, () => {
+    it('the glob reached the trait source (anti-vacuous: a missing key makes the scan below trivially empty)', () => {
+      expect(sources.has(entry), `${entry} is not in the crawled source map`).toBe(true)
+      expect((sources.get(entry) ?? '').length, 'the trait source is empty').toBeGreaterThan(500)
+    })
+
+    it('carries ZERO value imports: every import is erased, so its runtime graph is empty', () => {
+      const src = sources.get(entry) as string
+      const valueFrom = [...src.matchAll(/(?:^|\n)\s*(?:import|export)(?!\s+type\b)[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+      const bare = [...src.matchAll(/(?:^|\n)\s*import\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+      expect(
+        [...valueFrom, ...bare],
+        `${entry} gained a RUNTIME import: the subpath now drags real modules, and measure-size.mjs's absolute framing (plus its 1 KB cap) no longer holds`,
+      ).toEqual([])
+      expect(src, 'the type-only dom import vanished, so this suite would then be asserting nothing').toMatch(
+        /import type \{[^}]*\} from '\.\.\/dom\/index\.ts'/,
+      )
+    })
+  })
+}
+
+describe('the components root barrel reaches neither subpath trait (T-0526)', () => {
+  const root = crawl('index.ts')
+  it('the crawl reached the root barrel and its dom layer (anti-vacuous)', () => {
+    expect(sources.has('index.ts'), 'index.ts is not in the crawled source map').toBe(true)
+    expect(root.reached.has('dom/index.ts')).toBe(true)
+  })
+
+  it('index.ts does not re-export pane-resize or scroll-fade, directly or transitively', () => {
+    expect(root.reached.has(PANE_RESIZE_ENTRY), 'pane-resize is back on the root barrel').toBe(false)
+    expect(root.reached.has(SCROLL_FADE_ENTRY), 'scroll-fade is back on the root barrel').toBe(false)
+  })
+})

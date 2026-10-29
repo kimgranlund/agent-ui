@@ -1145,3 +1145,9 @@
 ## T-0531: Descriptor contract sweep: each control's descriptor against its code and generated props (2026-10-28)
 
 - note: handoff.md `### Low` item 3 says card-content's scroll keys are documented "only inside a YAML comment" on `card.md`'s `keyboard: []` line, but card.md has a prose "Keyboard operability" section at card.md:268 and the :73 comment points to it. The drift is that no structured `keyboard:` row exists, not that the prose is missing.
+
+## T-0526: scroll-fade and pane-resize move off the components root barrel to ./traits subpaths (2026-10-28)
+
+- note: scripts/measure-size.mjs:961 comment says markdown solo stayed 12224 and marginal moved 4565 -> 5370; my base-tree run printed solo 13102, marginal 5443, already over its 5120 budget (the traits rode the markdown solo through the root barrel), so the stated reason is not what I measured. The 5.5 KB cap still holds (5370 now); the comment's figures are unverified.
+- note: `node scripts/measure-size.mjs` also prints the cluster drift (`slider` absent from the derived cluster) at base too; inherited, not this ticket.
+- note: @agent-ui/app marginal moved 61351 -> 62156 on the same frame shift; T-0522 owns that row.

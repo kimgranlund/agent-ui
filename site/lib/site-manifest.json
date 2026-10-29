@@ -250,7 +250,7 @@
   {
     "href": "./traits-doc.html",
     "label": "Traits",
-    "description": "@agent-ui/components' three published trait subpaths (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy) plus ./dogfood-frame \u2014 the (host, opts) => cleanup behaviours below controls, derived from source.",
+    "description": "@agent-ui/components' six published trait subpaths (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy, ./traits/roving-focus, ./traits/pane-resize, ./traits/scroll-fade) plus ./dogfood-frame: the (host, opts) => cleanup behaviours below controls, derived from source.",
     "level": "L2",
     "section": "Guides",
     "group": "Packages & seams"

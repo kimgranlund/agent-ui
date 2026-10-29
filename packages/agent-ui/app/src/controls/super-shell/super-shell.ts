@@ -42,7 +42,9 @@
 //
 // `controls → @agent-ui/components` + siblings only — never router/a2a (layering.test.ts).
 
-import { UIElement, prop, paneResize, scrollFade, withViewTransition, viewTransitionAvailable, viewTransitionName, setViewTransitionName, type PaneResizeHandle, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { UIElement, prop, withViewTransition, viewTransitionAvailable, viewTransitionName, setViewTransitionName, type PropsSchema, type ReactiveProps } from '@agent-ui/components'
+import { paneResize, type PaneResizeHandle } from '@agent-ui/components/traits/pane-resize'
+import { scrollFade } from '@agent-ui/components/traits/scroll-fade'
 import '@agent-ui/components/controls/button'
 import '@agent-ui/components/controls/icon'
 // GH #221 — both tab strips (SPEC-R7a pane-tabs, SPEC-R7b narrow-tabs) compose the fleet ui-tabs
