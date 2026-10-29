@@ -208,7 +208,9 @@ describe('UIPlayingCardElement — DOM shape (component-built, both faces always
     el.rank = 'A'
     el.suit = 'spades'
     await el.updateComplete
-    for (const index of el.querySelectorAll("[data-part='index']")) {
+    const indices = el.querySelectorAll("[data-part='index']")
+    expect(indices.length, 'anti-vacuous').toBe(2)
+    for (const index of indices) {
       expect(index.textContent).toContain('A')
       expect(index.textContent).toContain('♠')
     }

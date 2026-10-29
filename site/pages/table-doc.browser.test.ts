@@ -50,7 +50,9 @@ describe('GH #882 — the ui-table docs Examples specimens fill their host (SPEC
   it('no specimen <ui-table> carries a hand-authored width-capping inline style', () => {
     const section = renderSpecimens()
     mount(section)
-    for (const table of [...section.querySelectorAll('ui-table')] as HTMLElement[]) {
+    const tables = [...section.querySelectorAll('ui-table')] as HTMLElement[]
+    expect(tables.length, 'anti-vacuous: the Examples section must render both specimens').toBe(2)
+    for (const table of tables) {
       expect(table.style.maxInlineSize, 'GH #882 — the arbitrary 32rem cap must not return').toBe('')
       expect(table.style.maxWidth, 'GH #882 — the arbitrary 32rem cap must not return (physical alias)').toBe('')
     }

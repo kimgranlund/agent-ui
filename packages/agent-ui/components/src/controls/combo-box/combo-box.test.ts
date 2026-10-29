@@ -1286,7 +1286,9 @@ describe('ui-combo-box — value-keyed aria-selected reflect (combo-aria-selecte
     const { el, listbox } = makeCombo()
     await whenFlushed()
     // Nothing committed yet — every option starts unmarked.
-    for (const opt of listbox.querySelectorAll('[role=option]')) {
+    const opts = listbox.querySelectorAll('[role=option]')
+    expect(opts.length, 'anti-vacuous').toBe(3)
+    for (const opt of opts) {
       expect(opt.getAttribute('aria-selected')).toBe('false')
     }
 
@@ -1309,7 +1311,9 @@ describe('ui-combo-box — value-keyed aria-selected reflect (combo-aria-selecte
 
     el.value = 'pineapple' // not in the option set — free text
     await whenFlushed()
-    for (const opt of listbox.querySelectorAll('[role=option]')) {
+    const opts = listbox.querySelectorAll('[role=option]')
+    expect(opts.length, 'anti-vacuous').toBe(3)
+    for (const opt of opts) {
       expect(opt.getAttribute('aria-selected'), 'no option key matches free text — none should read selected').toBe('false')
     }
     el.remove()

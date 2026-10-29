@@ -89,13 +89,16 @@ describe('ui-suggestions — compact-realm chip geometry (whole-shape gestalt)',
     const colGap = px(getComputedStyle(el).columnGap)
     expect(colGap, 'anti-vacuous: the column gap resolves to a real px value').toBeGreaterThan(0)
     // same-row adjacency: consecutive chips on the same line are colGap apart, left-to-right
+    let sameRowPairs = 0
     for (let i = 1; i < chips.length; i++) {
       const prev = chips[i - 1]!.getBoundingClientRect()
       const next = chips[i]!.getBoundingClientRect()
       if (Math.abs(next.top - prev.top) < 1) {
+        sameRowPairs++
         expect(Math.abs(next.left - prev.right - colGap)).toBeLessThanOrEqual(1)
       }
     }
+    expect(sameRowPairs, 'anti-vacuous: a 480px host fits the three chips on one row, so both neighbour pairs are measured').toBe(2)
   })
 
   it('an empty set paints a zero-height, non-intrusive host (no phantom box)', async () => {
