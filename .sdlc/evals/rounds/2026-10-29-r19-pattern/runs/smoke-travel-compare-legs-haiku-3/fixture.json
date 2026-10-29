@@ -1,0 +1,239 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-travel-compare-legs-haiku-3",
+  "agent": "travel",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T18:47:07.934Z, traces 2026-10-29.jsonl:78",
+  "seed": {
+    "version": 8,
+    "digest": "sha256:6c278799c52a10627305adf37d415713076cbc6ce0d6ce431ef7195af9dd2a29"
+  },
+  "steps": [
+    {
+      "say": "Compare the train and a flight from London to Paris on Friday 20 November 2026.",
+      "expect": [
+        "OptionCompare"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm planning to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" present a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single OptionCompare with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" train\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" versus flight legs for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Friday,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" including\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mode, duration, and ill\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ustrative p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ricing, fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"agging the best option and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" making \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"choose\\\" the actionable next\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" step—while noting the prices\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" are ill\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ustrative,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" not gu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aranteed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll struct\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ure the comparison table with r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows for journ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ey time, door-to-door\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" time, illustrative price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", baggage/check-in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and best use\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" case, com\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"paring train and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" flight options with Eurost\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ar lik\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ely favored for city-center\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" conv\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enience. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the O\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ptionCompare as the root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" component\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the meta note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" conc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ise and fl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"agging that pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ices/schedules are illust\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"rative rather than live data\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the flight option, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" short-haul journ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ey time\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" vers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us total\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" door\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-to-door including\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" security and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" transfers, pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us pricing and the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" extra c\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ost for checked bags. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll mark train as the best\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" overall and close\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" by\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" asking the user which m\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ode they'd pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efer.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"SURFACE_CLAIMED\"],\"detail\":\"Round 1 failed:\\n  SURFACE_CLAIMED: at ask-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionCompare\\\",\\\"heading\\\":\\\"London to Paris, Friday 20 November 2026\\\",\\\"actionName\\\":\\\"choose\\\",\\\"best\\\":\\\"train\\\",\\\"rows\\\":[{\\\"key\\\":\\\"mode\\\",\\\"label\\\":\\\"Mode\\\"},{\\\"key\\\":\\\"duration\\\",\\\"label\\\":\\\"Duration\\\"},{\\\"key\\\":\\\"price\\\",\\\"label\\\":\\\"Price (illustrative)\\\"},{\\\"key\\\":\\\"comfort\\\",\\\"label\\\":\\\"Comfort\\\"}],\\\"options\\\":[{\\\"value\\\":\\\"train\\\",\\\"title\\\":\\\"Eurostar train\\\",\\\"subtitle\\\":\\\"St Pancras to Gare du Nord\\\",\\\"values\\\":{\\\"mode\\\":\\\"Train\\\",\\\"duration\\\":\\\"2h 16m\\\",\\\"price\\\":\\\"from £89\\\",\\\"comfort\\\":\\\"City centre to city centre, no security queue\\\"}},{\\\"value\\\":\\\"flight\\\",\\\"title\\\":\\\"Flight\\\",\\\"subtitle\\\":\\\"Heathrow or Gatwick to CDG\\\",\\\"values\\\":{\\\"mode\\\":\\\"Plane\\\",\\\"duration\\\":\\\"about 1h 15m in the air, 4h+ door to door\\\",\\\"price\\\":\\\"from £74\\\",\\\"comfort\\\":\\\"Airport security and transfers add time\\\"}}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's the comparison. The train is the better choice for a city-centre to city-centre trip: it's faster door to door and avoids airport security. Prices and times are illustrative demo values, not live fares. Which would you like to book?\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare the train and a flight from London to Paris on Friday 20 November 2026.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":58655,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":1521},{\"id\":\"persona\",\"chars\":2518}],\"over\":false},\"usage\":{\"inputTokens\":6943,\"outputTokens\":2624,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":38471},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionCompare\",\"heading\":\"London to Paris, Friday 20 November 2026\",\"actionName\":\"choose\",\"best\":\"train\",\"rows\":[{\"key\":\"mode\",\"label\":\"Mode\"},{\"key\":\"duration\",\"label\":\"Duration\"},{\"key\":\"price\",\"label\":\"Price (illustrative)\"},{\"key\":\"comfort\",\"label\":\"Comfort\"}],\"options\":[{\"value\":\"train\",\"title\":\"Eurostar train\",\"subtitle\":\"St Pancras to Gare du Nord\",\"values\":{\"mode\":\"Train\",\"duration\":\"2h 16m\",\"price\":\"from £89\",\"comfort\":\"City centre to city centre, no security queue\"}},{\"value\":\"flight\",\"title\":\"Flight\",\"subtitle\":\"Heathrow or Gatwick to CDG\",\"values\":{\"mode\":\"Plane\",\"duration\":\"about 1h 15m in the air, 4h+ door to door\",\"price\":\"from £74\",\"comfort\":\"Airport security and transfers add time\"}}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here's the comparison. The train is the better choice for a city-centre to city-centre trip: it's faster door to door and avoids airport security. Prices and times are illustrative demo values, not live fares. Which would you like to book: the train or the flight?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's the comparison. The train is the better choice for a city-centre to city-centre trip: it's faster door to door and avoids airport security. Prices and times are illustrative demo values, not live fares. Which would you like to book?",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui--hospitality",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionCompare",
+                          "heading": "London to Paris, Friday 20 November 2026",
+                          "actionName": "choose",
+                          "best": "train",
+                          "rows": [
+                            {
+                              "key": "mode",
+                              "label": "Mode"
+                            },
+                            {
+                              "key": "duration",
+                              "label": "Duration"
+                            },
+                            {
+                              "key": "price",
+                              "label": "Price (illustrative)"
+                            },
+                            {
+                              "key": "comfort",
+                              "label": "Comfort"
+                            }
+                          ],
+                          "options": [
+                            {
+                              "value": "train",
+                              "title": "Eurostar train",
+                              "subtitle": "St Pancras to Gare du Nord",
+                              "values": {
+                                "mode": "Train",
+                                "duration": "2h 16m",
+                                "price": "from £89",
+                                "comfort": "City centre to city centre, no security queue"
+                              }
+                            },
+                            {
+                              "value": "flight",
+                              "title": "Flight",
+                              "subtitle": "Heathrow or Gatwick to CDG",
+                              "values": {
+                                "mode": "Plane",
+                                "duration": "about 1h 15m in the air, 4h+ door to door",
+                                "price": "from £74",
+                                "comfort": "Airport security and transfers add time"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-plan",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-planning-notes",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

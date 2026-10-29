@@ -1,0 +1,897 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "smoke-shopkeeper-browse-and-add-haiku-2",
+  "mode": "live",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "runId": "smoke-shopkeeper-browse-and-add-haiku-2-0bc6753a",
+  "at": "2026-10-29T18:39:40.721Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For this lamp brow\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing request, I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting up a simple storefront\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface with product tiles show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing name, price, a badge\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" for standouts, and a bu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"y button\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" each. Since this is a f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh surface rather than a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" question, I don\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'t need an ask meta-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"line or a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gree\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll invent a small\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"alog: a br\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ass table lamp, a lin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"en drum shade floor l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amp, a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" glazed st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"oneware d\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ome lamp on\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sale, an oak arc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lamp that's sold out\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and a rattan pend\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ant with limited stock. These\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icely as ProductCards\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" in a gr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"id lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out, each with title, price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", bad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ge, and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" buy action tied to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" item's sku. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep any\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" about illustrative p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ricing brief,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and set up the sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face with a catalog\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reference before\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" popul\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating it.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are the lamps on the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" shelf right now. The\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" prices and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" stock are illustrative dem\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"o values.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"shop-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"shop-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"heading\\\",\\\"grid\\\"]},{\\\"id\\\":\\\"heading\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Lamps at Lantern & Loom\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"Grid\\\",\\\"gap\\\":\\\"md\\\",\\\"min\\\":\\\"240px\\\",\\\"children\\\":[\\\"p_brass\\\",\\\"p_linen\\\",\\\"p_ceramic\\\",\\\"p_oak\\\"]},{\\\"id\\\":\\\"p_brass\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Brass Desk Lamp\\\",\\\"subtitle\\\":\\\"Solid brass, 42 cm, in stock\\\",\\\"price\\\":\\\"$68\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"brass-desk-lamp\\\"}}},{\\\"id\\\":\\\"p_linen\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Linen Drum Floor Lamp\\\",\\\"subtitle\\\":\\\"Natural linen shade, 140 cm\\\",\\\"price\\\":\\\"$120\\\",\\\"badge\\\":\\\"New\\\",\\\"badgeIntent\\\":\\\"info\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"linen-drum-floor-lamp\\\"}}},{\\\"id\\\":\\\"p_ceramic\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Glazed Ceramic Table Lamp\\\",\\\"subtitle\\\":\\\"Stoneware base, cream glaze\\\",\\\"price\\\":\\\"$54\\\",\\\"priceOld\\\":\\\"$72\\\",\\\"badge\\\":\\\"Sale\\\",\\\"badgeIntent\\\":\\\"success\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"glazed-ceramic-table-lamp\\\"}}},{\\\"id\\\":\\\"p_oak\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Oak Arc Lamp\\\",\\\"subtitle\\\":\\\"Oak and brass, 200 cm reach\\\",\\\"price\\\":\\\"$210\\\",\\\"badge\\\":\\\"Sold out\\\",\\\"badgeIntent\\\":\\\"danger\\\",\\\"disabled\\\":true,\\\"actionLabel\\\":\\\"Sold out\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"oak-arc-lamp\\\"}}}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are the lamps on the shelf right now. The prices and stock are illustrative demo values.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[\"frontier-greet-card\",\"frontier-amount-picker-bet\",\"travel-itinerary\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":57807,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4161},{\"id\":\"mini-skills\",\"chars\":783},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":3238,\"outputTokens\":1870,\"cacheReadInputTokens\":0,\"cacheCreationInputTokens\":18637},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"shop-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"shop-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"grid\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps at Lantern & Loom\",\"variant\":\"h4\"},{\"id\":\"grid\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"240px\",\"children\":[\"p_brass\",\"p_linen\",\"p_ceramic\",\"p_oak\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Desk Lamp\",\"subtitle\":\"Solid brass, 42 cm, in stock\",\"price\":\"$68\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"brass-desk-lamp\"}}},{\"id\":\"p_linen\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Floor Lamp\",\"subtitle\":\"Natural linen shade, 140 cm\",\"price\":\"$120\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"linen-drum-floor-lamp\"}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Glazed Ceramic Table Lamp\",\"subtitle\":\"Stoneware base, cream glaze\",\"price\":\"$54\",\"priceOld\":\"$72\",\"badge\":\"Sale\",\"badgeIntent\":\"success\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"glazed-ceramic-table-lamp\"}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Arc Lamp\",\"subtitle\":\"Oak and brass, 200 cm reach\",\"price\":\"$210\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"disabled\":true,\"actionLabel\":\"Sold out\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"oak-arc-lamp\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here are the lamps on the shelf right now. The prices and stock are illustrative demo values.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are our lamps. Tap buy on any you like.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "shop-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "shop-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "grid"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps at Lantern & Loom",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "Grid",
+                          "gap": "md",
+                          "min": "240px",
+                          "children": [
+                            "p_brass",
+                            "p_linen",
+                            "p_ceramic",
+                            "p_oak"
+                          ]
+                        },
+                        {
+                          "id": "p_brass",
+                          "component": "ProductCard",
+                          "title": "Brass Desk Lamp",
+                          "subtitle": "Solid brass, 42 cm, in stock",
+                          "price": "$68",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "brass-desk-lamp"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_linen",
+                          "component": "ProductCard",
+                          "title": "Linen Drum Floor Lamp",
+                          "subtitle": "Natural linen shade, 140 cm",
+                          "price": "$120",
+                          "badge": "New",
+                          "badgeIntent": "info",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "linen-drum-floor-lamp"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Glazed Ceramic Table Lamp",
+                          "subtitle": "Stoneware base, cream glaze",
+                          "price": "$54",
+                          "priceOld": "$72",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "glazed-ceramic-table-lamp"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak Arc Lamp",
+                          "subtitle": "Oak and brass, 200 cm reach",
+                          "price": "$210",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "disabled": true,
+                          "actionLabel": "Sold out",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "oak-arc-lamp"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-29.jsonl:42",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          700
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "frontier-amount-picker-bet",
+          "travel-itinerary"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "What lamps do you have?",
+        "expect": [
+          "ProductCard"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You What lamps do you have? Here are the lamps on the shelf right now. The prices and stock are illustrative demo values.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-29-r19-pattern/smoke-shopkeeper-browse-and-add-haiku-2/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Adding the Brass Des\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"k Lamp op\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ens an order summary on the same\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" surface, keeping the product\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" tiles for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" browsing while app\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ending a confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" receipt with total and per\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-line quantity pickers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", status set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to pending with no button. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to update shop-1's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" components to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" include\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" both the tiles and this\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new order summary.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll bind items to a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" path so qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antity updates prop\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"agate to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the total automatically, with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and confirm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"/back actions also bound to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" their own\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" paths. For each line's A\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"mountPicker, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m binding value\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to the absolute item\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antity path and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" using a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"set_quantity\\\" action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sku as context,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping min/max/step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ple and a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" descriptive label per item.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm structuring the lay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out as a Column containing a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" heading, the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" product grid, and an order section\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" gr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ouping the receipt and am\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ount pickers together. R\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask, this is a surface update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" targeting the shop sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face, so I'll send\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an updateDataModel call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" writ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the full order object to the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" /order path.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For ConfirmRece\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ipt, I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" binding its data f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ields directly to subpaths\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" /order/status, /order/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"items\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" /order/total, with title\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and label\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text set, ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eping the quantity picker\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s own commit action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" separate since\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" next\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" turn hand\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"les sy\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ncing items.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll order\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the root's children as heading,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" grid, receipt, then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antity picker, placing it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" right\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" after the receipt. I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll keep the pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose brief, just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" noting the $\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"68 price and qu\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"antity of 1 for the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Brass Desk L\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"amp.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Added the Brass Desk\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Lamp at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" $68. Your order summary\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is below the sh\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"el\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"f, and you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" can change\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" quantity with the pic\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ker.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"\\n\\n\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"CHANGE_CLAIMED\"],\"detail\":\"Round 1 failed:\\n  CHANGE_CLAIMED: at shop-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"shop-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"heading\\\",\\\"grid\\\",\\\"order\\\"]},{\\\"id\\\":\\\"heading\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Lamps at Lantern & Loom\\\",\\\"variant\\\":\\\"h4\\\"},{\\\"id\\\":\\\"grid\\\",\\\"component\\\":\\\"Grid\\\",\\\"gap\\\":\\\"md\\\",\\\"min\\\":\\\"240px\\\",\\\"children\\\":[\\\"p_brass\\\",\\\"p_linen\\\",\\\"p_ceramic\\\",\\\"p_oak\\\"]},{\\\"id\\\":\\\"p_brass\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Brass Desk Lamp\\\",\\\"subtitle\\\":\\\"Solid brass, 42 cm, in stock\\\",\\\"price\\\":\\\"$68\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"brass-desk-lamp\\\"}}},{\\\"id\\\":\\\"p_linen\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Linen Drum Floor Lamp\\\",\\\"subtitle\\\":\\\"Natural linen shade, 140 cm\\\",\\\"price\\\":\\\"$120\\\",\\\"badge\\\":\\\"New\\\",\\\"badgeIntent\\\":\\\"info\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"linen-drum-floor-lamp\\\"}}},{\\\"id\\\":\\\"p_ceramic\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Glazed Ceramic Table Lamp\\\",\\\"subtitle\\\":\\\"Stoneware base, cream glaze\\\",\\\"price\\\":\\\"$54\\\",\\\"priceOld\\\":\\\"$72\\\",\\\"badge\\\":\\\"Sale\\\",\\\"badgeIntent\\\":\\\"success\\\",\\\"actionLabel\\\":\\\"Buy\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"glazed-ceramic-table-lamp\\\"}}},{\\\"id\\\":\\\"p_oak\\\",\\\"component\\\":\\\"ProductCard\\\",\\\"title\\\":\\\"Oak Arc Lamp\\\",\\\"subtitle\\\":\\\"Oak and brass, 200 cm reach\\\",\\\"price\\\":\\\"$210\\\",\\\"badge\\\":\\\"Sold out\\\",\\\"badgeIntent\\\":\\\"danger\\\",\\\"disabled\\\":true,\\\"actionLabel\\\":\\\"Sold out\\\",\\\"action\\\":{\\\"action\\\":\\\"buy\\\",\\\"context\\\":{\\\"sku\\\":\\\"oak-arc-lamp\\\"}}},{\\\"id\\\":\\\"order\\\",\\\"component\\\":\\\"Card\\\",\\\"children\\\":[\\\"order_content\\\"]},{\\\"id\\\":\\\"order_content\\\",\\\"component\\\":\\\"CardContent\\\",\\\"children\\\":[\\\"order_lines\\\",\\\"order_picker\\\",\\\"order_total\\\"]},{\\\"id\\\":\\\"order_lines\\\",\\\"component\\\":\\\"DescriptionList\\\",\\\"rows\\\":[{\\\"label\\\":\\\"Brass Desk Lamp\\\",\\\"value\\\":\\\"$68\\\"}]},{\\\"id\\\":\\\"order_picker\\\",\\\"component\\\":\\\"AmountPicker\\\",\\\"label\\\":\\\"Brass Desk Lamp quantity\\\",\\\"value\\\":1,\\\"min\\\":1,\\\"max\\\":10,\\\"step\\\":1,\\\"currency\\\":\\\"USD\\\",\\\"actionName\\\":\\\"set_quantity\\\",\\\"actionLabel\\\":\\\"Update\\\",\\\"name\\\":\\\"qty_brass\\\"},{\\\"id\\\":\\\"order_total\\\",\\\"component\\\":\\\"Text\\\",\\\"text\\\":\\\"Total: $68\\\",\\\"variant\\\":\\\"label\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"shop-1\\\",\\\"value\\\":{\\\"order\\\":{\\\"lines\\\":[{\\\"sku\\\":\\\"brass-desk-lamp\\\",\\\"label\\\":\\\"Brass Desk Lamp\\\",\\\"quantity\\\":1,\\\"price\\\":68}],\\\"total\\\":68}}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Added the Brass Desk Lamp at $68. Your order summary is below the shelf, and you can change the quantity with the picker.\",\"target\":{\"surfaceId\":\"shop-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add the first one to my order.\",\"k\":3},\"exemplarIds\":[\"wallet-summary-card\",\"frontier-round-outcome\",\"crud-entry-list-drawer\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"CHANGE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":62620,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7383},{\"id\":\"mini-skills\",\"chars\":2374},{\"id\":\"persona\",\"chars\":3145}],\"over\":false},\"usage\":{\"inputTokens\":12136,\"outputTokens\":3380,\"cacheReadInputTokens\":18637,\"cacheCreationInputTokens\":18636},\"miniSkillIds\":[\"confirm-receipt\",\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"shop-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"grid\",\"order\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps at Lantern & Loom\",\"variant\":\"h4\"},{\"id\":\"grid\",\"component\":\"Grid\",\"gap\":\"md\",\"min\":\"240px\",\"children\":[\"p_brass\",\"p_linen\",\"p_ceramic\",\"p_oak\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Desk Lamp\",\"subtitle\":\"Solid brass, 42 cm, in stock\",\"price\":\"$68\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"brass-desk-lamp\"}}},{\"id\":\"p_linen\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Floor Lamp\",\"subtitle\":\"Natural linen shade, 140 cm\",\"price\":\"$120\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"linen-drum-floor-lamp\"}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Glazed Ceramic Table Lamp\",\"subtitle\":\"Stoneware base, cream glaze\",\"price\":\"$54\",\"priceOld\":\"$72\",\"badge\":\"Sale\",\"badgeIntent\":\"success\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"glazed-ceramic-table-lamp\"}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Arc Lamp\",\"subtitle\":\"Oak and brass, 200 cm reach\",\"price\":\"$210\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"disabled\":true,\"actionLabel\":\"Sold out\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"oak-arc-lamp\"}}},{\"id\":\"order\",\"component\":\"Card\",\"children\":[\"order_content\"]},{\"id\":\"order_content\",\"component\":\"CardContent\",\"children\":[\"order_lines\",\"order_picker\",\"order_total\"]},{\"id\":\"order_lines\",\"component\":\"DescriptionList\",\"rows\":[{\"label\":\"Brass Desk Lamp\",\"value\":\"$68\"}]},{\"id\":\"order_picker\",\"component\":\"AmountPicker\",\"label\":\"Brass Desk Lamp quantity\",\"value\":1,\"min\":1,\"max\":10,\"step\":1,\"currency\":\"USD\",\"actionName\":\"set_quantity\",\"actionLabel\":\"Update\",\"name\":\"qty_brass\"},{\"id\":\"order_total\",\"component\":\"Text\",\"text\":\"Total: $68\",\"variant\":\"label\"}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"shop-1\",\"value\":{\"order\":{\"lines\":[{\"sku\":\"brass-desk-lamp\",\"label\":\"Brass Desk Lamp\",\"quantity\":1,\"price\":68}],\"total\":68}}}}"
+      ],
+      "rounds": [
+        {
+          "text": "Added the Brass Desk Lamp at $68. Your order summary is below the shelf, and you can change the quantity with the picker.\n\n{\"a2uiMeta\":{\"target\":{\"surfaceId\":\"shop-1\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Added the Brass Desk Lamp at $68. Your order summary is below the shelf, and you can change the quantity with the picker.",
+                "target": "shop-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "shop-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "grid",
+                            "order"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps at Lantern & Loom",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "grid",
+                          "component": "Grid",
+                          "gap": "md",
+                          "min": "240px",
+                          "children": [
+                            "p_brass",
+                            "p_linen",
+                            "p_ceramic",
+                            "p_oak"
+                          ]
+                        },
+                        {
+                          "id": "p_brass",
+                          "component": "ProductCard",
+                          "title": "Brass Desk Lamp",
+                          "subtitle": "Solid brass, 42 cm, in stock",
+                          "price": "$68",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "brass-desk-lamp"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_linen",
+                          "component": "ProductCard",
+                          "title": "Linen Drum Floor Lamp",
+                          "subtitle": "Natural linen shade, 140 cm",
+                          "price": "$120",
+                          "badge": "New",
+                          "badgeIntent": "info",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "linen-drum-floor-lamp"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Glazed Ceramic Table Lamp",
+                          "subtitle": "Stoneware base, cream glaze",
+                          "price": "$54",
+                          "priceOld": "$72",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "glazed-ceramic-table-lamp"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak Arc Lamp",
+                          "subtitle": "Oak and brass, 200 cm reach",
+                          "price": "$210",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "disabled": true,
+                          "actionLabel": "Sold out",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "oak-arc-lamp"
+                            }
+                          }
+                        },
+                        {
+                          "id": "order",
+                          "component": "Card",
+                          "children": [
+                            "order_content"
+                          ]
+                        },
+                        {
+                          "id": "order_content",
+                          "component": "CardContent",
+                          "children": [
+                            "order_lines",
+                            "order_picker",
+                            "order_total"
+                          ]
+                        },
+                        {
+                          "id": "order_lines",
+                          "component": "DescriptionList",
+                          "rows": [
+                            {
+                              "label": "Brass Desk Lamp",
+                              "value": "$68"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "order_picker",
+                          "component": "AmountPicker",
+                          "label": "Brass Desk Lamp quantity",
+                          "value": 1,
+                          "min": 1,
+                          "max": 10,
+                          "step": 1,
+                          "currency": "USD",
+                          "actionName": "set_quantity",
+                          "actionLabel": "Update",
+                          "name": "qty_brass"
+                        },
+                        {
+                          "id": "order_total",
+                          "component": "Text",
+                          "text": "Total: $68",
+                          "variant": "label"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "shop-1",
+                      "value": {
+                        "order": {
+                          "lines": [
+                            {
+                              "sku": "brass-desk-lamp",
+                              "label": "Brass Desk Lamp",
+                              "quantity": 1,
+                              "price": 68
+                            }
+                          ],
+                          "total": 68
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-29.jsonl:43",
+        "outcome": "ok",
+        "retries": [
+          {
+            "round": 2,
+            "codes": [
+              "CHANGE_CLAIMED"
+            ]
+          }
+        ],
+        "thinkingChars": [
+          1458,
+          0
+        ]
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "wallet-summary-card",
+          "frontier-round-outcome",
+          "crud-entry-list-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "Add the first one to my order.",
+        "expect": [
+          "ConfirmReceipt"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You What lamps do you have? Here are the lamps on the shelf right now. The prices and stock are illustrative demo values. You Add the first one to my order. Added the Brass Desk Lamp at $68. Your order summary is below the shelf, and you can change the quantity with the picker.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-29-r19-pattern/smoke-shopkeeper-browse-and-add-haiku-2/turn-2.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-renderer-rejection",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no VALIDATION_FAILED client turn followed"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "121 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "93 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [shop-1], open [shop-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "shop-1 holds ProductCard"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "700 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-renderer-rejection",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no VALIDATION_FAILED client turn followed"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "278 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "121 chars of reply beside 2 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [shop-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "shop-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "fail",
+      "detail": "no surface this turn updated holds ConfirmReceipt (touched shop-1)"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "1458 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "fail",
+      "detail": "missing ConfirmReceipt (shipped Column, Text, Grid, ProductCard, Card, CardContent, DescriptionList, AmountPicker)"
+    }
+  ],
+  "verdict": "fail"
+}

@@ -1,0 +1,329 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-travel-compare-legs-haiku-1",
+  "agent": "travel",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T18:31:15.004Z, traces 2026-10-29.jsonl:4",
+  "seed": {
+    "version": 8,
+    "digest": "sha256:6c278799c52a10627305adf37d415713076cbc6ce0d6ce431ef7195af9dd2a29"
+  },
+  "steps": [
+    {
+      "say": "Compare the train and a flight from London to Paris on Friday 20 November 2026.",
+      "expect": [
+        "OptionCompare"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ls for comparing train vers\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us flight from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" London to Paris for that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Friday with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" illustrative prices, so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'll build a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" single OptionCompare sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face with both options,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" high\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"lighting the better choice and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" giving an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" honest recommendation.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" weighing r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows like duration, price\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", schedule, and city-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"centre access -\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"- Eurostar at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ughly 2h16 city\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-cent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"re to city-centre versus\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" flights at\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" about 1h15 plus\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" airport transfer time, which\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" mak\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es them f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"airly comparable door-to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-door. Train\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ed\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ges out as the rec\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ommended option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since it avoids airport h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"assle, with all pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ices clearly mar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ked as illustrative.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Since this cho\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ice commits by its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" own press via\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ionName,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I don't think a separate \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask meta-line is needed\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" here.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Filling in the flight option\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" details with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" comparable duration, price,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" frequency, check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-in and baggage info\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", plus rough\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" door-to-door time\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" estimates for both options so\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the comparison fe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"els balanced and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" real\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"istic.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionCompare\\\",\\\"heading\\\":\\\"London to Paris, Friday 20 November 2026\\\",\\\"actionName\\\":\\\"choose\\\",\\\"best\\\":\\\"train\\\",\\\"rows\\\":[{\\\"key\\\":\\\"duration\\\",\\\"label\\\":\\\"Travel time\\\"},{\\\"key\\\":\\\"doorToDoor\\\",\\\"label\\\":\\\"Door to door (approx.)\\\"},{\\\"key\\\":\\\"price\\\",\\\"label\\\":\\\"Price (illustrative)\\\"},{\\\"key\\\":\\\"frequency\\\",\\\"label\\\":\\\"Frequency\\\"},{\\\"key\\\":\\\"checkIn\\\",\\\"label\\\":\\\"Arrive before departure\\\"},{\\\"key\\\":\\\"baggage\\\",\\\"label\\\":\\\"Baggage\\\"}],\\\"options\\\":[{\\\"value\\\":\\\"train\\\",\\\"title\\\":\\\"Eurostar train\\\",\\\"subtitle\\\":\\\"St Pancras to Gare du Nord\\\",\\\"values\\\":{\\\"duration\\\":\\\"About 2 h 16 min\\\",\\\"doorToDoor\\\":\\\"About 3 h\\\",\\\"price\\\":\\\"From about £89\\\",\\\"frequency\\\":\\\"Several departures daily\\\",\\\"checkIn\\\":\\\"30 min\\\",\\\"baggage\\\":\\\"Generous allowance, no weight check\\\"}},{\\\"value\\\":\\\"flight\\\",\\\"title\\\":\\\"Direct flight\\\",\\\"subtitle\\\":\\\"London airport to Paris airport\\\",\\\"values\\\":{\\\"duration\\\":\\\"About 1 h 15 min in the air\\\",\\\"doorToDoor\\\":\\\"About 4 to 5 h\\\",\\\"price\\\":\\\"From about £75\\\",\\\"frequency\\\":\\\"Many departures daily\\\",\\\"checkIn\\\":\\\"90 min\\\",\\\"baggage\\\":\\\"Fees may apply\\\"}}]}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionCompare\\\",\\\"heading\\\":\\\"London to Paris, Friday 20 November 2026\\\",\\\"actionName\\\":\\\"choose\\\",\\\"best\\\":\\\"train\\\",\\\"rows\\\":[{\\\"key\\\":\\\"duration\\\",\\\"label\\\":\\\"Travel time\\\"},{\\\"key\\\":\\\"doorToDoor\\\",\\\"label\\\":\\\"Door to door (approx.)\\\"},{\\\"key\\\":\\\"price\\\",\\\"label\\\":\\\"Price (illustrative)\\\"},{\\\"key\\\":\\\"frequency\\\",\\\"label\\\":\\\"Frequency\\\"},{\\\"key\\\":\\\"checkIn\\\",\\\"label\\\":\\\"Arrive before departure\\\"},{\\\"key\\\":\\\"baggage\\\",\\\"label\\\":\\\"Baggage\\\"}],\\\"options\\\":[{\\\"value\\\":\\\"train\\\",\\\"title\\\":\\\"Eurostar train\\\",\\\"subtitle\\\":\\\"St Pancras to Gare du Nord\\\",\\\"values\\\":{\\\"duration\\\":\\\"About 2 h 16 min\\\",\\\"doorToDoor\\\":\\\"About 3 h\\\",\\\"price\\\":\\\"From about £89\\\",\\\"frequency\\\":\\\"Several departures daily\\\",\\\"checkIn\\\":\\\"30 min\\\",\\\"baggage\\\":\\\"Generous allowance, no weight check\\\"}},{\\\"value\\\":\\\"flight\\\",\\\"title\\\":\\\"Direct flight\\\",\\\"subtitle\\\":\\\"London airport to Paris airport\\\",\\\"values\\\":{\\\"duration\\\":\\\"About 1 h 15 min in the air\\\",\\\"doorToDoor\\\":\\\"About 4 to 5 h\\\",\\\"price\\\":\\\"From about £75\\\",\\\"frequency\\\":\\\"Many departures daily\\\",\\\"checkIn\\\":\\\"90 min\\\",\\\"baggage\\\":\\\"Fees may apply\\\"}}]}}}\",\"codes\":[\"PARSE\"],\"detail\":\"Round 1 failed:\\n  PARSE: the payload did not parse as JSON lines\\n  parse error at payload line 2, column 1052: Expected ',' or ']' after array element in JSON at position 1051 (line 1 column 1052)\\n  near: ...:\\\"90 min\\\",\\\"baggage\\\":\\\"Fees may apply\\\"}}]}}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"This message is coming through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" as a user turn r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than an\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" actual tool result, so it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s really\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" just the user inst\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ructing me, even though it's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" fram\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed as an automated check dem\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"anding a specific ra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w output\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" format. I need to weigh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" that fram\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing against my act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual system\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" instructions about how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"m supposed to resp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ond.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Ra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w NDJSON output in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose conflicts with my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" system format, so the right move is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to use the render_surface t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ool with valid messages instead\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", along with a pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ose meta-line note. The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" earlier tur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"n's \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask surface with OptionC\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompare looks fine per the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rules, so the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" act\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ual fix needed is just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" correcting how\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the output\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" was delivered — I should ke\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ep my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" note nat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ural and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" addressed to the user, without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" cal\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ling att\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ention to the correction itself.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Now I'm we\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ighing whether to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reuse ask-1 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a fresh ask-2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the prior \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1 may\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" not have actually r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"endered given\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the par\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"se failure —\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reusing it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" risks a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" demoted id, but creating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-2 risks dupl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icate cards if ask-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1 did render. I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" lean toward tre\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ating \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1 as not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" having\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" successfully created,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" since the pay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"load failed to parse, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" proceed from\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" there.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" also\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" up the create\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Surface call\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with the right catalog id and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" data model flag, build the com\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"parison messages, and keep\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompanying note brief. The\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" meta-line should l\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ead the re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply with the note and ask,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" followed by the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" render_surface t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ool call contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing that\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reply line,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" without\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" extra prose outside it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":3,\"codes\":[\"SURFACE_CLAIMED\"],\"detail\":\"Round 2 failed:\\n  SURFACE_CLAIMED: at ask-2\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-2\\\",\\\"catalogId\\\":\\\"agent-ui--hospitality\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionCompare\\\",\\\"heading\\\":\\\"London to Paris, Friday 20 November 2026\\\",\\\"actionName\\\":\\\"choose\\\",\\\"best\\\":\\\"eurostar\\\",\\\"rows\\\":[{\\\"key\\\":\\\"mode\\\",\\\"label\\\":\\\"Mode\\\"},{\\\"key\\\":\\\"duration\\\",\\\"label\\\":\\\"Duration\\\"},{\\\"key\\\":\\\"price\\\",\\\"label\\\":\\\"Illustrative price\\\"}],\\\"options\\\":[{\\\"value\\\":\\\"eurostar\\\",\\\"title\\\":\\\"Eurostar\\\",\\\"subtitle\\\":\\\"St Pancras to Gare du Nord\\\",\\\"values\\\":{\\\"mode\\\":\\\"Train\\\",\\\"duration\\\":\\\"2h 16m\\\",\\\"price\\\":\\\"£89\\\"}},{\\\"value\\\":\\\"flight\\\",\\\"title\\\":\\\"Direct flight\\\",\\\"subtitle\\\":\\\"Heathrow to Charles de Gaulle\\\",\\\"values\\\":{\\\"mode\\\":\\\"Plane\\\",\\\"duration\\\":\\\"1h 15m plus airport time\\\",\\\"price\\\":\\\"£104\\\"}}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's the Eurostar against a direct flight for Friday 20 November 2026. Prices are illustrative. I'd pick the train: it's about an hour quicker door to door because both stations are central. Which would you like to book?\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Compare the train and a flight from London to Paris on Friday 20 November 2026.\",\"k\":3},\"exemplarIds\":[\"domain-concierge-booking-request\",\"domain-hospitality-itinerary-trip\",\"frontier-service-gateway\"],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"SURFACE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":58655,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22864},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3953},{\"id\":\"mini-skills\",\"chars\":1521},{\"id\":\"persona\",\"chars\":2518}],\"over\":false},\"usage\":{\"inputTokens\":11076,\"outputTokens\":4190,\"cacheReadInputTokens\":19236,\"cacheCreationInputTokens\":38471},\"miniSkillIds\":[\"feature-collection\",\"comparison-table\"],\"cacheBoundary\":50663}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"OptionCompare\",\"heading\":\"London to Paris, Friday 20 November 2026\",\"actionName\":\"choose\",\"best\":\"eurostar\",\"rows\":[{\"key\":\"mode\",\"label\":\"Mode\"},{\"key\":\"duration\",\"label\":\"Duration\"},{\"key\":\"price\",\"label\":\"Illustrative price\"}],\"options\":[{\"value\":\"eurostar\",\"title\":\"Eurostar\",\"subtitle\":\"St Pancras to Gare du Nord\",\"values\":{\"mode\":\"Train\",\"duration\":\"2h 16m\",\"price\":\"£89\"}},{\"value\":\"flight\",\"title\":\"Direct flight\",\"subtitle\":\"Heathrow to Charles de Gaulle\",\"values\":{\"mode\":\"Plane\",\"duration\":\"1h 15m plus airport time\",\"price\":\"£104\"}}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here's how the Eurostar and a direct flight compare for Friday 20 November 2026. Prices are illustrative demo values. I'd recommend the train: it's about an hour quicker door to door because both stations are central. Which would you like to book?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--hospitality\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionCompare\",\"heading\":\"London to Paris, Friday 20 November 2026\",\"actionName\":\"choose\",\"best\":\"train\",\"rows\":[{\"key\":\"duration\",\"label\":\"Travel time\"},{\"key\":\"doorToDoor\",\"label\":\"Door to door (approx.)\"},{\"key\":\"price\",\"label\":\"Price (illustrative)\"},{\"key\":\"frequency\",\"label\":\"Frequency\"},{\"key\":\"checkIn\",\"label\":\"Arrive before departure\"},{\"key\":\"baggage\",\"label\":\"Baggage\"}],\"options\":[{\"value\":\"train\",\"title\":\"Eurostar train\",\"subtitle\":\"St Pancras to Gare du Nord\",\"values\":{\"duration\":\"About 2 h 16 min\",\"doorToDoor\":\"About 3 h\",\"price\":\"From about £89\",\"frequency\":\"Several departures daily\",\"checkIn\":\"30 min\",\"baggage\":\"Generous allowance, no weight check\"}},{\"value\":\"flight\",\"title\":\"Direct flight\",\"subtitle\":\"London airport to Paris airport\",\"values\":{\"duration\":\"About 1 h 15 min in the air\",\"doorToDoor\":\"About 4 to 5 h\",\"price\":\"From about £75\",\"frequency\":\"Many departures daily\",\"checkIn\":\"90 min\",\"baggage\":\"Fees may apply\"}}]}}}",
+          "tools": []
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Here's the Eurostar against a direct flight for Friday 20 November 2026. Prices are illustrative. I'd still pick the train: it's about an hour quicker door to door because both stations are central. Which would you like to book?\",\"ask\":{\"surfaceId\":\"ask-2\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's the Eurostar against a direct flight for Friday 20 November 2026. Prices are illustrative. I'd pick the train: it's about an hour quicker door to door because both stations are central. Which would you like to book?",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-2",
+                      "catalogId": "agent-ui--hospitality",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-2",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionCompare",
+                          "heading": "London to Paris, Friday 20 November 2026",
+                          "actionName": "choose",
+                          "best": "eurostar",
+                          "rows": [
+                            {
+                              "key": "mode",
+                              "label": "Mode"
+                            },
+                            {
+                              "key": "duration",
+                              "label": "Duration"
+                            },
+                            {
+                              "key": "price",
+                              "label": "Illustrative price"
+                            }
+                          ],
+                          "options": [
+                            {
+                              "value": "eurostar",
+                              "title": "Eurostar",
+                              "subtitle": "St Pancras to Gare du Nord",
+                              "values": {
+                                "mode": "Train",
+                                "duration": "2h 16m",
+                                "price": "£89"
+                              }
+                            },
+                            {
+                              "value": "flight",
+                              "title": "Direct flight",
+                              "subtitle": "Heathrow to Charles de Gaulle",
+                              "values": {
+                                "mode": "Plane",
+                                "duration": "1h 15m plus airport time",
+                                "price": "£104"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [
+          "hospitality"
+        ],
+        "exemplars": [
+          "domain-concierge-booking-request",
+          "domain-hospitality-itinerary-trip",
+          "frontier-service-gateway"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "gallery-swiper",
+            "load": "index-only"
+          },
+          {
+            "name": "itinerary-timeline",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-plan",
+            "load": "index-only"
+          },
+          {
+            "name": "trip-planning-notes",
+            "load": "index-only"
+          },
+          {
+            "name": "Weather (Open-Meteo)",
+            "load": "index-only"
+          },
+          {
+            "name": "Currency rates (Frankfurter)",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

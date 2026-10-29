@@ -1,0 +1,406 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-mentalist-first-answer-haiku-1",
+  "agent": "mentalist",
+  "model": "claude-haiku-5-5",
+  "source": "probe live run 2026-10-29T18:32:22.289Z, traces 2026-10-29.jsonl:7,2026-10-29.jsonl:8",
+  "seed": {
+    "version": 4,
+    "digest": "sha256:e110c13f0cb88f2894857b73cb49f5a464a40ea86adbbcda0bbbd055079d56ab"
+  },
+  "steps": [
+    {
+      "say": "Let's play Twenty Questions. I'm thinking of something.",
+      "expect": [
+        "GameHud"
+      ]
+    },
+    {
+      "say": "Yes.",
+      "expect": [
+        "GameHud"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The user\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ready to begin,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" so I'm st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"epping into the Mental\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ist role: I'll ask\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one y\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es/no/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"sort-of question per turn\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an OptionDeck,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" H\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"UD surface t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"racks the scoreboard\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and question\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" timeline.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Time to kick off with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the first question.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Status\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Question\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 1 of 20\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" with st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ats for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Asked and Confidence\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", plus a progress ind\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"icator tracking questions used\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\". For the Timeline I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'ll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep it simple with one active\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" TimelineItem show\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing \\\"Q1 ·\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Is it alive?\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\" I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m laying out h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ud-1's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" root as a Column contain\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ud and log children, bin\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding stat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" values to data-model paths where\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" pract\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ical but keeping the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" initial set\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"up mod\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"est.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For the first ask step\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'m building an OptionD\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eck with three cho\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ices — yes, no, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" sort of — each carrying\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a short\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" description and icon.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll settle on \\\"check\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\\", \\\"close\\\", and \\\"spar\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"kle\\\" as the three gly\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ph\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"s for Yes/No/\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Sort of. Now I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" need to cra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ft the opening note text with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the full first\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" question sp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"elled out in prose—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"something\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" like \\\"Right, you've got\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" something in mind. Let's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" begin. Question 1 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"of 20: Is it al\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ive?\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Pick Yes, No\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" or Sort of below\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"—then\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" foll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ow it with a short t\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ool reply line while\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" setting up the init\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ial game\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" state.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Let's begin.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Question 1 of 20:\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" it alive?\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"value\\\":{\\\"hud\\\":{\\\"status\\\":\\\"Question 1 of 20\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Asked\\\",\\\"value\\\":\\\"0 of 20\\\"},{\\\"label\\\":\\\"Confidence\\\",\\\"value\\\":\\\"Low\\\"},{\\\"label\\\":\\\"Narrowing\\\",\\\"value\\\":\\\"Open\\\"}]}}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"Column\\\",\\\"gap\\\":\\\"md\\\",\\\"children\\\":[\\\"hud\\\",\\\"log\\\"]},{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Twenty Questions\\\",\\\"status\\\":{\\\"path\\\":\\\"/hud/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/hud/stats\\\"},\\\"progress\\\":{\\\"value\\\":0,\\\"max\\\":20,\\\"label\\\":\\\"Questions spent\\\"}},{\\\"id\\\":\\\"log\\\",\\\"component\\\":\\\"Timeline\\\",\\\"label\\\":\\\"Questions so far\\\",\\\"children\\\":[\\\"q1\\\"]},{\\\"id\\\":\\\"q1\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"status\\\":\\\"active\\\",\\\"label\\\":\\\"Q1: Is it alive?\\\",\\\"description\\\":\\\"Live, awaiting your answer\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionDeck\\\",\\\"heading\\\":\\\"Is it alive?\\\",\\\"actionName\\\":\\\"choose\\\",\\\"options\\\":[{\\\"value\\\":\\\"yes\\\",\\\"title\\\":\\\"Yes\\\",\\\"description\\\":\\\"It is alive.\\\",\\\"icon\\\":\\\"check\\\"},{\\\"value\\\":\\\"no\\\",\\\"title\\\":\\\"No\\\",\\\"description\\\":\\\"It is not alive.\\\",\\\"icon\\\":\\\"close\\\"},{\\\"value\\\":\\\"sort_of\\\",\\\"title\\\":\\\"Sort of\\\",\\\"description\\\":\\\"Depends how you squint.\\\",\\\"icon\\\":\\\"sparkle\\\"}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Let's begin. Question 1 of 20: is it alive?\",\"ask\":{\"surfaceId\":\"ask-1\"},\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### twenty-questions (workflow)\\nGuessing-game domain — the 20-questions loop: one question per turn, HUD-tracked, honest reveal by 20.\\n\\nThink of the answer FIRST and keep it fixed (state it honestly in the final reveal). Ask ONE question per turn in chat; the surface only tracks state (guess-hud idiom). Guess early when confidence is high; always reveal by question 20 via the Modal.\\n\\nLet's play Twenty Questions. I'm thinking of something.\",\"k\":3},\"exemplarIds\":[\"trivia-round-resume\",\"frontier-result-card-win\",\"five-day-weather\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":61186,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":7287},{\"id\":\"mini-skills\",\"chars\":2122},{\"id\":\"persona\",\"chars\":2059}],\"over\":false},\"usage\":{\"inputTokens\":5016,\"outputTokens\":2522,\"cacheReadInputTokens\":18637,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-game-sheet\",\"game-hud\",\"comparison-table\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"hud-1\",\"value\":{\"hud\":{\"status\":\"Question 1 of 20\",\"stats\":[{\"label\":\"Asked\",\"value\":\"0 of 20\"},{\"label\":\"Confidence\",\"value\":\"Low\"},{\"label\":\"Narrowing\",\"value\":\"Open\"}]}}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"hud\",\"log\"]},{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":{\"path\":\"/hud/status\"},\"statusIntent\":\"info\",\"stats\":{\"path\":\"/hud/stats\"},\"progress\":{\"value\":0,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"label\":\"Questions so far\",\"children\":[\"q1\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Q1: Is it alive?\",\"description\":\"Live, awaiting your answer\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Is it alive?\",\"actionName\":\"choose\",\"options\":[{\"value\":\"yes\",\"title\":\"Yes\",\"description\":\"It is alive.\",\"icon\":\"check\"},{\"value\":\"no\",\"title\":\"No\",\"description\":\"It is not alive.\",\"icon\":\"close\"},{\"value\":\"sort_of\",\"title\":\"Sort of\",\"description\":\"Depends how you squint.\",\"icon\":\"sparkle\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Splendid, you've got something in mind. I'll start narrowing it down. Question 1 of 20: Is it alive? Pick Yes, No or Sort of below.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nLet's begin. Question 1 of 20: is it alive?",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Question 1 of 20: is it alive? Pick Yes, No or Sort of below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "hud-1",
+                      "value": {
+                        "hud": {
+                          "status": "Question 1 of 20",
+                          "stats": [
+                            {
+                              "label": "Asked",
+                              "value": "0 of 20"
+                            },
+                            {
+                              "label": "Confidence",
+                              "value": "Low"
+                            },
+                            {
+                              "label": "Narrowing",
+                              "value": "Open"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "hud",
+                            "log"
+                          ]
+                        },
+                        {
+                          "id": "hud",
+                          "component": "GameHud",
+                          "title": "Twenty Questions",
+                          "status": {
+                            "path": "/hud/status"
+                          },
+                          "statusIntent": "info",
+                          "stats": {
+                            "path": "/hud/stats"
+                          },
+                          "progress": {
+                            "value": 0,
+                            "max": 20,
+                            "label": "Questions spent"
+                          }
+                        },
+                        {
+                          "id": "log",
+                          "component": "Timeline",
+                          "label": "Questions so far",
+                          "children": [
+                            "q1"
+                          ]
+                        },
+                        {
+                          "id": "q1",
+                          "component": "TimelineItem",
+                          "status": "active",
+                          "label": "Q1: Is it alive?",
+                          "description": "Live, awaiting your answer"
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionDeck",
+                          "heading": "Is it alive?",
+                          "actionName": "choose",
+                          "options": [
+                            {
+                              "value": "yes",
+                              "title": "Yes",
+                              "description": "It is alive.",
+                              "icon": "check"
+                            },
+                            {
+                              "value": "no",
+                              "title": "No",
+                              "description": "It is not alive.",
+                              "icon": "close"
+                            },
+                            {
+                              "value": "sort_of",
+                              "title": "Sort of",
+                              "description": "Depends how you squint.",
+                              "icon": "sparkle"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "trivia-round-resume",
+          "frontier-result-card-win",
+          "five-day-weather"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "guess-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "full"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since Q\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1 is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" answered and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" ask sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" stay frozen, I need\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" new ask-2 for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Q2 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"while updating the HUD sur\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"face with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh stats, progress,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" and timeline data rather than\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" touching the complet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ed ask.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'm marking q\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1 as done with\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" answer in\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the log, ad\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ding q2 as a f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"resh tim\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"eline item, and bumping\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the HUD's progress value\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" reflect complet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ion — while leaving the root\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" column\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" untouched since it h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"asn't changed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"For ask-2, I'\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll build an OptionDe\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ck surface asking \\\"Is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" it man-made?\\\" with y\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"es/no/sort_of\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" choices, no separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate commit button needed since the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" action f\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ires on sel\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ection. I'll update\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the HUD stats (\\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1 of 20\\\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"idence:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" Low, Narrowing\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\": Open) and write\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the response\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" text\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" trans\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"itioning from conf\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"irming it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s alive into pos\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" man\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-made question.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"path\\\":\\\"/hud\\\",\\\"value\\\":{\\\"status\\\":\\\"Question 2 of 20\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Asked\\\",\\\"value\\\":\\\"1 of 20\\\"},{\\\"label\\\":\\\"Confidence\\\",\\\"value\\\":\\\"Low\\\"},{\\\"label\\\":\\\"Narrowing\\\",\\\"value\\\":\\\"Living things\\\"}]}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"hud\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Twenty Questions\\\",\\\"status\\\":{\\\"path\\\":\\\"/hud/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":{\\\"path\\\":\\\"/hud/stats\\\"},\\\"progress\\\":{\\\"value\\\":1,\\\"max\\\":20,\\\"label\\\":\\\"Questions spent\\\"}},{\\\"id\\\":\\\"log\\\",\\\"component\\\":\\\"Timeline\\\",\\\"label\\\":\\\"Questions so far\\\",\\\"children\\\":[\\\"q1\\\",\\\"q2\\\"]},{\\\"id\\\":\\\"q1\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"status\\\":\\\"done\\\",\\\"label\\\":\\\"Q1: Is it alive?\\\",\\\"description\\\":\\\"Answered: Yes\\\"},{\\\"id\\\":\\\"q2\\\",\\\"component\\\":\\\"TimelineItem\\\",\\\"status\\\":\\\"active\\\",\\\"label\\\":\\\"Q2: Is it man-made?\\\",\\\"description\\\":\\\"Live, awaiting your answer\\\"}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-2\\\",\\\"catalogId\\\":\\\"agent-ui\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-2\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionDeck\\\",\\\"heading\\\":\\\"Is it man-made?\\\",\\\"actionName\\\":\\\"choose\\\",\\\"options\\\":[{\\\"value\\\":\\\"yes\\\",\\\"title\\\":\\\"Yes\\\",\\\"description\\\":\\\"People made it.\\\",\\\"icon\\\":\\\"check\\\"},{\\\"value\\\":\\\"no\\\",\\\"title\\\":\\\"No\\\",\\\"description\\\":\\\"Nature made it.\\\",\\\"icon\\\":\\\"close\\\"},{\\\"value\\\":\\\"sort_of\\\",\\\"title\\\":\\\"Sort of\\\",\\\"description\\\":\\\"Made from natural stuff, or shaped by people.\\\",\\\"icon\\\":\\\"sparkle\\\"}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Alive, so the rocks are out. Question 2 of 20: is it man-made?\",\"ask\":{\"surfaceId\":\"ask-2\"},\"target\":{\"surfaceId\":\"hud-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Yes.\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":149200,\"total\":51777,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"persona\",\"chars\":2059}],\"over\":false},\"usage\":{\"inputTokens\":1620,\"outputTokens\":1483,\"cacheReadInputTokens\":18637,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"hud-1\",\"path\":\"/hud\",\"value\":{\"status\":\"Question 2 of 20\",\"stats\":[{\"label\":\"Asked\",\"value\":\"1 of 20\"},{\"label\":\"Confidence\",\"value\":\"Low\"},{\"label\":\"Narrowing\",\"value\":\"Living things\"}]}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":{\"path\":\"/hud/status\"},\"statusIntent\":\"info\",\"stats\":{\"path\":\"/hud/stats\"},\"progress\":{\"value\":1,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"label\":\"Questions so far\",\"children\":[\"q1\",\"q2\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"done\",\"label\":\"Q1: Is it alive?\",\"description\":\"Answered: Yes\"},{\"id\":\"q2\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Q2: Is it man-made?\",\"description\":\"Live, awaiting your answer\"}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Is it man-made?\",\"actionName\":\"choose\",\"options\":[{\"value\":\"yes\",\"title\":\"Yes\",\"description\":\"People made it.\",\"icon\":\"check\"},{\"value\":\"no\",\"title\":\"No\",\"description\":\"Nature made it.\",\"icon\":\"close\"},{\"value\":\"sort_of\",\"title\":\"Sort of\",\"description\":\"Made from natural stuff, or shaped by people.\",\"icon\":\"sparkle\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Alive, so the rocks are out. Question 2 of 20: is it man-made?\",\"target\":{\"surfaceId\":\"hud-1\"},\"ask\":{\"surfaceId\":\"ask-2\"}}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"hud-1\",\"path\":\"/hud\",\"value\":{\"status\":\"Question 2 of 20\",\"stats\":[{\"label\":\"Asked\",\"value\":\"1 of 20\"},{\"label\":\"Confidence\",\"value\":\"Low\"},{\"label\":\"Narrowing\",\"value\":\"Living things\"}]}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"hud\",\"component\":\"GameHud\",\"title\":\"Twenty Questions\",\"status\":{\"path\":\"/hud/status\"},\"statusIntent\":\"info\",\"stats\":{\"path\":\"/hud/stats\"},\"progress\":{\"value\":1,\"max\":20,\"label\":\"Questions spent\"}},{\"id\":\"log\",\"component\":\"Timeline\",\"label\":\"Questions so far\",\"children\":[\"q1\",\"q2\"]},{\"id\":\"q1\",\"component\":\"TimelineItem\",\"status\":\"done\",\"label\":\"Q1: Is it alive?\",\"description\":\"Answered: Yes\"},{\"id\":\"q2\",\"component\":\"TimelineItem\",\"status\":\"active\",\"label\":\"Q2: Is it man-made?\",\"description\":\"Live, awaiting your answer\"}]}}\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-2\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-2\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Is it man-made?\",\"actionName\":\"choose\",\"options\":[{\"value\":\"yes\",\"title\":\"Yes\",\"description\":\"People made it.\",\"icon\":\"check\"},{\"value\":\"no\",\"title\":\"No\",\"description\":\"Nature made it.\",\"icon\":\"close\"},{\"value\":\"sort_of\",\"title\":\"Sort of\",\"description\":\"Made from natural stuff, or shaped by people.\",\"icon\":\"sparkle\"}]}]}}",
+          "tools": []
+        }
+      ],
+      "routing": {
+        "domains": [],
+        "exemplars": [],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "guess-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "index-only"
+          },
+          {
+            "name": "twenty-questions",
+            "load": "full"
+          }
+        ]
+      }
+    }
+  ]
+}

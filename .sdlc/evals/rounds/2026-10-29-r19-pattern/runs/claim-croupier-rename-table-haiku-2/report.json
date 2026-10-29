@@ -1,0 +1,780 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "claim-croupier-rename-table-haiku-2",
+  "mode": "live",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "runId": "claim-croupier-rename-table-haiku-2-1393d5f0",
+  "at": "2026-10-29T19:01:23.374Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"Since there's no bankro\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ll on file, I'll open\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the first\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" round at 1,000 \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"and set up a fresh table\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" table-1, as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" its\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" own game surface. I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" let the bl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ackjack table's own bet\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" strip handle the st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ake r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ather than asking for it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" separately, keeping h\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ands empty until the bet is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" placed.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll sk\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ip the children prop since this is\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a fresh surface, not\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" an \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-type\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" one, so no meta-line\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" is needed. The re\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ply itself will\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" explain the game:\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" confirming\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" blackjack, no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting the star\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ting bankroll of 1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\",000, and bri\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"efly cov\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ering the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rules (two cards each,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" dealer sh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ows one, natural pays \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"3:2, dealer st\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ands on all\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" 17s, \"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"1:1 pay\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"out, push\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on ties)\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" before inviting the player to place\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bet.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"Black\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"jack it\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" is. You\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" start with 1,000 ch\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ips. Each\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" h\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"and,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you get two cards and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the dealer shows one,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" hole card face\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" down. A natural (\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"an\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Ace and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" a ten-value\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" card) pays 3:2\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" \"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"unless the dealer also has\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" one\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\",\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" which is a push. Ot\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"herwise you\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" act\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" first with\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Hit, Stand, or\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Double,\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and the dealer draws to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 17 and stands on all\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 17s. W\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ins p\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ay 1:1, and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" equ\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"al totals push.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Set\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" your bet on\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the table to\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" deal.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"value\\\":{\\\"bankroll\\\":1000,\\\"bet\\\":0,\\\"dealerHand\\\":[],\\\"playerHand\\\":[],\\\"dealerTotal\\\":\\\"\\\",\\\"playerTotal\\\":\\\"\\\",\\\"phase\\\":\\\"betting\\\",\\\"status\\\":\\\"Place your bet to deal\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"betAction\\\":\\\"deal\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Blackjack it is. You start with 1,000 chips. Each hand, you get two cards and the dealer shows one, with the hole card face down. A natural (an Ace and a ten-value card) pays 3:2 unless the dealer also has one, which is a push. Otherwise you act first with Hit, Stand, or Double, and the dealer draws to 17 and stands on all 17s. Wins pay 1:1, and equal totals push. Set your bet on the table to deal.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"## Referenced for this message\\n### blackjack (resource)\\nblackjack, 21, hit, stand, double, split: the classic house game\\n\\nTwo cards each; dealer shows one, hole card face-down. Values: pips as printed, faces 10, Ace 1 or 11. A natural (Ace + ten-card on the deal) ends the round at once: reveal the hole card, settle it (3:2 unless the dealer also has 21, then a push), and offer no hit, stand or double. Otherwise the player acts first: hit, stand, double (one card, doubled stake), split pairs; over 21 busts immediately. Dealer then reveals and draws to 17, standing on all 17s. Blackjack (Ace + ten-card) pays 3:2, a win pays 1:1, equal totals push.\\n\\nLet's play blackjack.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-round-outcome\",\"frontier-result-card-win\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":62350,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22903},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3515},{\"id\":\"mini-skills\",\"chars\":2358},{\"id\":\"persona\",\"chars\":5775}],\"over\":false},\"usage\":{\"inputTokens\":4790,\"outputTokens\":1359,\"cacheReadInputTokens\":19032,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"card-layout\",\"game-table-chrome\",\"game-hud\"],\"cacheBoundary\":50702}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"table-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"table-1\",\"value\":{\"bankroll\":1000,\"bet\":0,\"dealerHand\":[],\"playerHand\":[],\"dealerTotal\":\"\",\"playerTotal\":\"\",\"phase\":\"betting\",\"status\":\"Place your bet to deal\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Blackjack\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"betAction\":\"deal\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Blackjack it is. You start with 1,000 chips. Each hand, you get two cards and the dealer shows one, with the hole card face down. A natural (an Ace and a ten-value card) pays 3:2 unless the dealer also has one, which is a push. Otherwise you act first with Hit, Stand, or Double, and the dealer draws to 17 and stands on all 17s. Wins pay 1:1, and equal totals push. Set your bet on the table to deal.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Blackjack it is. You start with 1,000 chips. Set your bet on the table to deal.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "table-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "table-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "bet": 0,
+                        "dealerHand": [],
+                        "playerHand": [],
+                        "dealerTotal": "",
+                        "playerTotal": "",
+                        "phase": "betting",
+                        "status": "Place your bet to deal"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Blackjack",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-29.jsonl:140",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          668
+        ]
+      },
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-round-outcome",
+          "frontier-result-card-win"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      },
+      "step": {
+        "say": "Let's play blackjack.",
+        "expect": [
+          "CardTable"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play blackjack. blackjack Blackjack it is. You start with 1,000 chips. Each hand, you get two cards and the dealer shows one, with the hole card face down. A natural (an Ace and a ten-value card) pays 3:2 unless the dealer also has one, which is a push. Otherwise you act first with Hit, Stand, or Double, and the dealer draws to 17 and stands on all 17s. Wins pay 1:1, and equal totals push. Set your bet on the table to deal.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-29-r19-pattern/claim-croupier-rename-table-haiku-2/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I can r\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ename the title to\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"Kim's table\\\" eas\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ily en\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ough, but CardTable do\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"esn't have a currency pr\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"op, so there\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"'s no native way to display ch\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ips as euros—\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"just\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" a plain number for\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" bankroll. I should be\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" upfront about that limitation\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" rather than fake it through\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" status text.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll resend the full C\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ardTable component with the updated\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" title,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keeping everything else as-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"is, and include the meta-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"line targeting the exist\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing surface before my\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" prose expl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"anation.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"The table is\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" now tit\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"led Kim's table. I\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" can't swit\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"ch the chip count to euros\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\", because\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" the table has no currency setting\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" and\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" shows a plain number.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Your bankroll stays at\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" 1,000 chips.\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" Set your bet to de\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\"al when\"}}",
+        "{\"a2uiMeta\":{\"textDelta\":\" you're ready.\"}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"CHANGE_CLAIMED\"],\"detail\":\"Round 1 failed:\\n  CHANGE_CLAIMED: at table-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"table-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"CardTable\\\",\\\"title\\\":\\\"Kim's table\\\",\\\"dealerHand\\\":{\\\"path\\\":\\\"/dealerHand\\\"},\\\"playerHand\\\":{\\\"path\\\":\\\"/playerHand\\\"},\\\"dealerTotal\\\":{\\\"path\\\":\\\"/dealerTotal\\\"},\\\"playerTotal\\\":{\\\"path\\\":\\\"/playerTotal\\\"},\\\"bankroll\\\":{\\\"path\\\":\\\"/bankroll\\\"},\\\"bet\\\":{\\\"path\\\":\\\"/bet\\\"},\\\"phase\\\":{\\\"path\\\":\\\"/phase\\\"},\\\"status\\\":{\\\"path\\\":\\\"/status\\\"},\\\"statusIntent\\\":\\\"info\\\",\\\"betAction\\\":\\\"deal\\\"}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"The table is now titled Kim's table. I can't switch the chip count to euros, since the table has no currency setting, so it keeps showing a plain number. Your bankroll stays at 1,000 chips. Set your bet to deal when you're ready.\",\"target\":{\"surfaceId\":\"table-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Rename the table to Kim's table and show my chips as euros.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"comparison-pricing-table\",\"ops-report\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"CHANGE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":63107,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22903},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":4891},{\"id\":\"mini-skills\",\"chars\":1670},{\"id\":\"persona\",\"chars\":5844}],\"over\":false},\"usage\":{\"inputTokens\":11821,\"outputTokens\":1479,\"cacheReadInputTokens\":38063,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"master-detail-split\",\"feature-collection\",\"table-toolbar-pagination\"],\"cacheBoundary\":50702}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"table-1\",\"components\":[{\"id\":\"root\",\"component\":\"CardTable\",\"title\":\"Kim's table\",\"dealerHand\":{\"path\":\"/dealerHand\"},\"playerHand\":{\"path\":\"/playerHand\"},\"dealerTotal\":{\"path\":\"/dealerTotal\"},\"playerTotal\":{\"path\":\"/playerTotal\"},\"bankroll\":{\"path\":\"/bankroll\"},\"bet\":{\"path\":\"/bet\"},\"phase\":{\"path\":\"/phase\"},\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"betAction\":\"deal\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Done, the table is now Kim's table. I can't switch the chip count to euros, though: the table has no currency setting, so it will keep showing a plain number. Your bankroll stays at 1,000 chips.\",\"target\":{\"surfaceId\":\"table-1\"}}}\n\nThe table is now titled Kim's table. I can't switch the chip count to euros, because the table has no currency setting and shows a plain number. Your bankroll stays at 1,000 chips. Set your bet to deal when you're ready.",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "The table is now titled Kim's table. I can't switch the chip count to euros, since the table has no currency setting, so it keeps showing a plain number. Your bankroll stays at 1,000 chips. Set your bet to deal when you're ready.",
+                "target": "table-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "table-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "CardTable",
+                          "title": "Kim's table",
+                          "dealerHand": {
+                            "path": "/dealerHand"
+                          },
+                          "playerHand": {
+                            "path": "/playerHand"
+                          },
+                          "dealerTotal": {
+                            "path": "/dealerTotal"
+                          },
+                          "playerTotal": {
+                            "path": "/playerTotal"
+                          },
+                          "bankroll": {
+                            "path": "/bankroll"
+                          },
+                          "bet": {
+                            "path": "/bet"
+                          },
+                          "phase": {
+                            "path": "/phase"
+                          },
+                          "status": {
+                            "path": "/status"
+                          },
+                          "statusIntent": "info",
+                          "betAction": "deal"
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-29.jsonl:141",
+        "outcome": "ok",
+        "retries": [
+          {
+            "round": 2,
+            "codes": [
+              "CHANGE_CLAIMED"
+            ]
+          }
+        ],
+        "thinkingChars": [
+          455,
+          0
+        ]
+      },
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "comparison-pricing-table",
+          "ops-report"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "full"
+          }
+        ]
+      },
+      "step": {
+        "say": "Rename the table to Kim's table and show my chips as euros.",
+        "expect": [
+          "CardTable"
+        ]
+      },
+      "domHosts": 1,
+      "proseText": "You Let's play blackjack. blackjack Blackjack it is. You start with 1,000 chips. Each hand, you get two cards and the dealer shows one, with the hole card face down. A natural (an Ace and a ten-value card) pays 3:2 unless the dealer also has one, which is a push. Otherwise you act first with Hit, Stand, or Double, and the dealer draws to 17 and stands on all 17s. Wins pay 1:1, and equal totals push. Set your bet on the table to deal. You Rename the table to Kim's table and show my chips as euros. The table is now titled Kim's table. I can't switch the chip count to euros, since the table has no currency setting, so it keeps showing a plain number. Your bankroll stays at 1,000 chips. Set your bet to deal when you're ready.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-29-r19-pattern/claim-croupier-rename-table-haiku-2/turn-2.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-renderer-rejection",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no VALIDATION_FAILED client turn followed"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "437 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "401 chars of reply beside 3 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [table-1], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "table-1 holds CardTable"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "668 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-renderer-rejection",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no VALIDATION_FAILED client turn followed"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "731 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "229 chars of reply beside 1 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [table-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "table-1 updated"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "pass",
+      "detail": "table-1 holds CardTable"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "pass",
+      "detail": "455 thinking chars"
+    },
+    {
+      "check": "expect-component",
+      "status": "skip",
+      "detail": "no --expect-component"
+    }
+  ],
+  "verdict": "pass"
+}

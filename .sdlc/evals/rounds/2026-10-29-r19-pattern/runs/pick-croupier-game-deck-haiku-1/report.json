@@ -1,0 +1,744 @@
+{
+  "kind": "agent-ui-chat-probe-report",
+  "version": 1,
+  "name": "pick-croupier-game-deck-haiku-1",
+  "mode": "live",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "runId": "pick-croupier-game-deck-haiku-1-c73b0a1a",
+  "at": "2026-10-29T18:55:20.380Z",
+  "turns": [
+    {
+      "index": 0,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "intent"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"As the Croupier, I\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" should present the available\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" games as a picker-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"style option deck using\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" \\\"\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"pick_game\\\" as the action\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", listing one option per enab\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"led resource and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" allowing a\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" random choice — this fits the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" opening greet or\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" wh\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"enever someone asks what's\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" on offer.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"I'll declare a fres\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"h ask (\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ask-1) since the O\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ptionDeck comm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"its on its own press, no\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" separ\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ate subm\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"it needed. For\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" the games\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" themselves, I'll include\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" blackjack, spanish\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"-21, pontoon,\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" texas-holdem, om\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"aha, five-card-dra\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"w, and seven-card-\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"stud as\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" seven options pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"us the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" random\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" p\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ick, each with a title\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\", description, and\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" icon mat\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ching the de\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ck's exp\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ected shape.\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"The note\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" acc\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ompanying the ask needs\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" to carry the full question in pl\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ain prose list\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ing the games, so I'll\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" keep it\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" concise while still na\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"ming the\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\" options available\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\".\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"reasoning\",\"detail\":\"\\n\\n\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"content\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"retry\",\"round\":2,\"codes\":[\"SURFACE_CLAIMED\"],\"detail\":\"Round 1 failed:\\n  SURFACE_CLAIMED: at ask-1\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\",\\\"sendDataModel\\\":true}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"value\\\":{\\\"bankroll\\\":1000,\\\"pick\\\":\\\"\\\"}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"ask-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"OptionDeck\\\",\\\"heading\\\":\\\"Pick your table\\\",\\\"subheading\\\":\\\"Every table starts you with 1,000 chips.\\\",\\\"allowRandom\\\":true,\\\"randomLabel\\\":\\\"Surprise me\\\",\\\"actionName\\\":\\\"pick_game\\\",\\\"value\\\":{\\\"path\\\":\\\"/pick\\\"},\\\"options\\\":[{\\\"value\\\":\\\"blackjack\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"description\\\":\\\"Beat the dealer to 21 without going bust.\\\",\\\"icon\\\":\\\"star\\\"},{\\\"value\\\":\\\"spanish-21\\\",\\\"title\\\":\\\"Spanish 21\\\",\\\"description\\\":\\\"Blackjack with no tens and bonus 21s.\\\",\\\"icon\\\":\\\"sparkle\\\"},{\\\"value\\\":\\\"pontoon\\\",\\\"title\\\":\\\"Pontoon\\\",\\\"description\\\":\\\"British blackjack: twist, stick, buy.\\\",\\\"icon\\\":\\\"star\\\"},{\\\"value\\\":\\\"texas-holdem\\\",\\\"title\\\":\\\"Texas Hold'em\\\",\\\"description\\\":\\\"Two hole cards, five on the board.\\\",\\\"icon\\\":\\\"heart\\\"},{\\\"value\\\":\\\"omaha\\\",\\\"title\\\":\\\"Omaha\\\",\\\"description\\\":\\\"Four hole cards, exactly two plus three.\\\",\\\"icon\\\":\\\"heart\\\"},{\\\"value\\\":\\\"five-card-draw\\\",\\\"title\\\":\\\"Five-card Draw\\\",\\\"description\\\":\\\"Discard and draw, classic poker.\\\",\\\"icon\\\":\\\"sparkle\\\"},{\\\"value\\\":\\\"seven-card-stud\\\",\\\"title\\\":\\\"Seven-card Stud\\\",\\\"description\\\":\\\"Up cards and down cards, no board.\\\",\\\"icon\\\":\\\"star\\\"}]}]}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"createSurface\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"catalogId\\\":\\\"agent-ui--croupier\\\"}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateDataModel\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"value\\\":{\\\"bankroll\\\":1000}}}\\n{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"The Croupier\\\",\\\"status\\\":\\\"Choose a game to begin\\\",\\\"statusIntent\\\":\\\"neutral\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"I deal seven games: Blackjack, Spanish 21, Pontoon (British blackjack), Texas Hold'em, Omaha, Five-card Draw and Seven-card Stud. Pick one from the table below, or hit Surprise me and I'll choose at random.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What games can we play?\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-option-deck-picker\",\"restaurant-menu\"],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"SURFACE_CLAIMED\"],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":62342,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22903},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":5082},{\"id\":\"mini-skills\",\"chars\":783},{\"id\":\"persona\",\"chars\":5775}],\"over\":false},\"usage\":{\"inputTokens\":9766,\"outputTokens\":2753,\"cacheReadInputTokens\":38063,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":50702}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"bankroll\":1000,\"pick\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Pick your table\",\"subheading\":\"Every table starts you with 1,000 chips.\",\"allowRandom\":true,\"randomLabel\":\"Surprise me\",\"actionName\":\"pick_game\",\"value\":{\"path\":\"/pick\"},\"options\":[{\"value\":\"blackjack\",\"title\":\"Blackjack\",\"description\":\"Beat the dealer to 21 without going bust.\",\"icon\":\"star\"},{\"value\":\"spanish-21\",\"title\":\"Spanish 21\",\"description\":\"Blackjack with no tens and bonus 21s.\",\"icon\":\"sparkle\"},{\"value\":\"pontoon\",\"title\":\"Pontoon\",\"description\":\"British blackjack: twist, stick, buy.\",\"icon\":\"star\"},{\"value\":\"texas-holdem\",\"title\":\"Texas Hold'em\",\"description\":\"Two hole cards, five on the board.\",\"icon\":\"heart\"},{\"value\":\"omaha\",\"title\":\"Omaha\",\"description\":\"Four hole cards, exactly two plus three.\",\"icon\":\"heart\"},{\"value\":\"five-card-draw\",\"title\":\"Five-card Draw\",\"description\":\"Discard and draw, classic poker.\",\"icon\":\"sparkle\"},{\"value\":\"seven-card-stud\",\"title\":\"Seven-card Stud\",\"description\":\"Up cards and down cards, no board.\",\"icon\":\"star\"}]}]}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui--croupier\"}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"hud-1\",\"value\":{\"bankroll\":1000}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"GameHud\",\"title\":\"The Croupier\",\"status\":\"Choose a game to begin\",\"statusIntent\":\"neutral\",\"stats\":[{\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"I deal seven games: Blackjack, Spanish 21, Pontoon (British blackjack), Texas Hold'em, Omaha, Five-card Draw and Seven-card Stud. Pick one from the table below, or hit Surprise me and I'll choose at random.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "I deal seven games: Blackjack, Spanish 21, Pontoon (British blackjack), Texas Hold'em, Omaha, Five-card Draw and Seven-card Stud. Pick one from the table below, or hit Surprise me and I'll choose at random.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "bankroll": 1000,
+                        "pick": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionDeck",
+                          "heading": "Pick your table",
+                          "subheading": "Every table starts you with 1,000 chips.",
+                          "allowRandom": true,
+                          "randomLabel": "Surprise me",
+                          "actionName": "pick_game",
+                          "value": {
+                            "path": "/pick"
+                          },
+                          "options": [
+                            {
+                              "value": "blackjack",
+                              "title": "Blackjack",
+                              "description": "Beat the dealer to 21 without going bust.",
+                              "icon": "star"
+                            },
+                            {
+                              "value": "spanish-21",
+                              "title": "Spanish 21",
+                              "description": "Blackjack with no tens and bonus 21s.",
+                              "icon": "sparkle"
+                            },
+                            {
+                              "value": "pontoon",
+                              "title": "Pontoon",
+                              "description": "British blackjack: twist, stick, buy.",
+                              "icon": "star"
+                            },
+                            {
+                              "value": "texas-holdem",
+                              "title": "Texas Hold'em",
+                              "description": "Two hole cards, five on the board.",
+                              "icon": "heart"
+                            },
+                            {
+                              "value": "omaha",
+                              "title": "Omaha",
+                              "description": "Four hole cards, exactly two plus three.",
+                              "icon": "heart"
+                            },
+                            {
+                              "value": "five-card-draw",
+                              "title": "Five-card Draw",
+                              "description": "Discard and draw, classic poker.",
+                              "icon": "sparkle"
+                            },
+                            {
+                              "value": "seven-card-stud",
+                              "title": "Seven-card Stud",
+                              "description": "Up cards and down cards, no board.",
+                              "icon": "star"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "hud-1",
+                      "catalogId": "agent-ui--croupier"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "hud-1",
+                      "value": {
+                        "bankroll": 1000
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "GameHud",
+                          "title": "The Croupier",
+                          "status": "Choose a game to begin",
+                          "statusIntent": "neutral",
+                          "stats": [
+                            {
+                              "label": "Bankroll",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-29.jsonl:115",
+        "outcome": "ok",
+        "retries": [
+          {
+            "round": 2,
+            "codes": [
+              "SURFACE_CLAIMED"
+            ]
+          }
+        ],
+        "thinkingChars": [
+          775,
+          0
+        ]
+      },
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-option-deck-picker",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "say": "What games can we play?",
+        "expect": [
+          "OptionDeck"
+        ]
+      },
+      "domHosts": 2,
+      "proseText": "You What games can we play? I deal seven games: Blackjack, Spanish 21, Pontoon (British blackjack), Texas Hold'em, Omaha, Five-card Draw and Seven-card Stud. Pick one from the table below, or hit Surprise me and I'll choose at random.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-29-r19-pattern/pick-croupier-game-deck-haiku-1/turn-1.png"
+    },
+    {
+      "index": 1,
+      "request": {
+        "model": "claude-haiku-5-5",
+        "effort": "medium",
+        "catalogId": "agent-ui--croupier",
+        "inputKind": "client",
+        "actionSurface": "ask-1"
+      },
+      "httpStatus": 200,
+      "lines": [
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"sent\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"started\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"tool\",\"detail\":\"render_surface\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"validating\",\"source\":\"{\\\"version\\\":\\\"v1.0\\\",\\\"updateComponents\\\":{\\\"surfaceId\\\":\\\"hud-1\\\",\\\"components\\\":[{\\\"id\\\":\\\"root\\\",\\\"component\\\":\\\"GameHud\\\",\\\"title\\\":\\\"Blackjack\\\",\\\"status\\\":\\\"Place your bet\\\",\\\"statusIntent\\\":\\\"info\\\",\\\"stats\\\":[{\\\"label\\\":\\\"Bankroll\\\",\\\"value\\\":{\\\"path\\\":\\\"/bankroll\\\"}}]}]}}\"}}}",
+        "{\"a2uiMeta\":{\"progress\":{\"stage\":\"done\"}}}",
+        "{\"a2uiMeta\":{\"note\":\"Blackjack it is. Place your bet below to deal the first hand.\",\"target\":{\"surfaceId\":\"hud-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"pick_game\\\" action (from component root). Action context: {\\\"value\\\":\\\"blackjack\\\"}. Current surface data model: {\\\"bankroll\\\":1000,\\\"pick\\\":\\\"blackjack\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[\"domain-croupier-card-table-round\",\"frontier-option-compare-legs\",\"agent-roster-drawer\"],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-haiku-5-5\",\"prompt\":{\"limit\":150200,\"total\":62816,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22903},{\"id\":\"functions\",\"chars\":145},{\"id\":\"few-shot\",\"chars\":3850},{\"id\":\"mini-skills\",\"chars\":2420},{\"id\":\"persona\",\"chars\":5844}],\"over\":false},\"usage\":{\"inputTokens\":5799,\"outputTokens\":211,\"cacheReadInputTokens\":19031,\"cacheCreationInputTokens\":0},\"miniSkillIds\":[\"game-table-chrome\",\"option-deck\",\"variant-picker\"],\"cacheBoundary\":50702}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"GameHud\",\"title\":\"Blackjack\",\"status\":\"Place your bet\",\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Bankroll\",\"value\":{\"path\":\"/bankroll\"}}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Blackjack it is. Place your bet below to deal the first hand.",
+                "target": "hud-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "hud-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "GameHud",
+                          "title": "Blackjack",
+                          "status": "Place your bet",
+                          "statusIntent": "info",
+                          "stats": [
+                            {
+                              "label": "Bankroll",
+                              "value": {
+                                "path": "/bankroll"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "roundsSource": "trace",
+      "trace": {
+        "id": "2026-10-29.jsonl:116",
+        "outcome": "ok",
+        "retries": [],
+        "thinkingChars": [
+          0
+        ]
+      },
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-option-compare-legs",
+          "agent-roster-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          }
+        ]
+      },
+      "step": {
+        "click": "Blackjack",
+        "expect": [
+          "CardTable"
+        ]
+      },
+      "domHosts": 2,
+      "proseText": "You What games can we play? Blackjack it is. Place your bet below to deal the first hand.",
+      "proseScope": "log",
+      "lint": [],
+      "lintNotRun": [
+        "register",
+        "pill-radius",
+        "icon-square",
+        "control-height",
+        "text-edge",
+        "card-radius",
+        "panel-radius",
+        "badge-hug",
+        "option-indicator",
+        "inline-text",
+        "adornment-gap",
+        "entry-cell-radius",
+        "glyph-box",
+        "dash-scale",
+        "link-ink",
+        "disabled-ink",
+        "disabled-ghost",
+        "disabled-edge",
+        "disabled-toggle-fill",
+        "button-text-ink",
+        "avatar-disc",
+        "badge-overlay",
+        "button-identity",
+        "action-group",
+        "prose-gap",
+        "glyph-gap",
+        "scroll-clip",
+        "field-outline",
+        "slider-disabled",
+        "switch-off-edge",
+        "icon-box",
+        "calendar-cap",
+        "table-pager",
+        "table-scroll-cue",
+        "ring-parity",
+        "legend-gap",
+        "series-separation",
+        "chip-opaque",
+        "chart-empty-mark",
+        "diverging-zero",
+        "placeholder-dots",
+        "picker-dash",
+        "caption-in-specimen",
+        "figure-parity",
+        "overline-gap",
+        "avatar-cluster",
+        "supporting-ink",
+        "board-letter",
+        "unframed-inset"
+      ],
+      "screenshot": "/Users/kimgranlund/Library/Caches/agent-ui/evidence/2026-10-29-r19-pattern/pick-croupier-game-deck-haiku-1/turn-2.png"
+    }
+  ],
+  "checks": [
+    {
+      "check": "model-pick",
+      "turn": 0,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn"
+    },
+    {
+      "check": "no-halt",
+      "turn": 0,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-renderer-rejection",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no VALIDATION_FAILED client turn followed"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 0,
+      "status": "pass",
+      "detail": "234 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 0,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 0,
+      "status": "pass",
+      "detail": "206 chars of reply beside 6 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 0,
+      "status": "pass",
+      "detail": "rounds created [ask-1, hud-1], open [ask-1, hud-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 0,
+      "status": "skip",
+      "detail": "not a click turn or a targeted say turn"
+    },
+    {
+      "check": "expect-component",
+      "turn": 0,
+      "status": "pass",
+      "detail": "ask-1 holds OptionDeck"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 0,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 0,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 0,
+      "status": "pass",
+      "detail": "775 thinking chars"
+    },
+    {
+      "check": "model-pick",
+      "turn": 1,
+      "status": "pass",
+      "detail": "claude-haiku-5-5 / medium"
+    },
+    {
+      "check": "click-target",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clicked \"Blackjack\""
+    },
+    {
+      "check": "no-halt",
+      "turn": 1,
+      "status": "pass",
+      "detail": "outcome ok"
+    },
+    {
+      "check": "no-renderer-rejection",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no VALIDATION_FAILED client turn followed"
+    },
+    {
+      "check": "no-json-as-prose",
+      "turn": 1,
+      "status": "pass",
+      "detail": "89 chars of prose, clean"
+    },
+    {
+      "check": "no-internal-leak",
+      "turn": 1,
+      "status": "pass",
+      "detail": "no correction note or surface id"
+    },
+    {
+      "check": "reply-text",
+      "turn": 1,
+      "status": "pass",
+      "detail": "61 chars of reply beside 1 A2UI line(s)"
+    },
+    {
+      "check": "no-surface-loss",
+      "turn": 1,
+      "status": "pass",
+      "detail": "rounds created [], open [ask-1, hud-1] (trace)"
+    },
+    {
+      "check": "action-updates-surface",
+      "turn": 1,
+      "status": "pass",
+      "detail": "ask-1 left as history; the turn settled its target hud-1"
+    },
+    {
+      "check": "expect-component",
+      "turn": 1,
+      "status": "fail",
+      "detail": "no surface this turn updated holds CardTable (touched hud-1)"
+    },
+    {
+      "check": "routing-expect",
+      "turn": 1,
+      "status": "skip",
+      "detail": "no --expect-routing on this step"
+    },
+    {
+      "check": "render-lint",
+      "turn": 1,
+      "status": "pass",
+      "detail": "clean (not run: register, pill-radius, icon-square, control-height, text-edge, card-radius, panel-radius, badge-hug, option-indicator, inline-text, adornment-gap, entry-cell-radius, glyph-box, dash-scale, link-ink, disabled-ink, disabled-ghost, disabled-edge, disabled-toggle-fill, button-text-ink, avatar-disc, badge-overlay, button-identity, action-group, prose-gap, glyph-gap, scroll-clip, field-outline, slider-disabled, switch-off-edge, icon-box, calendar-cap, table-pager, table-scroll-cue, ring-parity, legend-gap, series-separation, chip-opaque, chart-empty-mark, diverging-zero, placeholder-dots, picker-dash, caption-in-specimen, figure-parity, overline-gap, avatar-cluster, supporting-ink, board-letter, unframed-inset)"
+    },
+    {
+      "check": "reasoning",
+      "turn": 1,
+      "status": "warn",
+      "detail": "effort medium but no thinking text captured"
+    },
+    {
+      "check": "expect-component",
+      "status": "skip",
+      "detail": "no --expect-component"
+    }
+  ],
+  "verdict": "fail"
+}
