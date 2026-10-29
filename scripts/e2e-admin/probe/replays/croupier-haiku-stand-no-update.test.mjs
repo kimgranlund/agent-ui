@@ -10,13 +10,14 @@ import { offlineReplay } from '../trace.ts'
 // the retry's settled table failed SCHEMA only because `surfaceId` sat beside `updateDataModel`, and the third round
 // answered in prose with no wire, so the table kept Hit and Stand. The SCHEMA feedback now names that key and the move
 // inside. Turn 2's third round is AUTHORED to it (round 2's own messages, `surfaceId` moved inside), so the replay
-// shows the settled table with Deal again.
+// shows the settled table with Deal again. T-0588: heal's arm (e) now moves that `surfaceId` itself, so round 2 ships
+// the settled table and the authored round 3 is never asked for.
 it('croupier-haiku-stand-no-update: the ACTION_NOT_APPLIED retry ships the settled table', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./croupier-haiku-stand-no-update.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual([])
   const trace = report.records[2].lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined)
-  expect(trace).toMatchObject({ rounds: 3, failureCodes: ['SCHEMA', 'TEXT_JSONL_ROUTED'] })
+  expect(trace).toMatchObject({ rounds: 2, healed: 1, failureCodes: ['ACTION_NOT_APPLIED', 'TEXT_JSONL_ROUTED'] })
   const labels = report.records[2].lines.flatMap((l) => JSON.parse(l).updateComponents?.components ?? []).map((c) => c.label).filter(Boolean)
   expect(labels).toEqual(['Deal again'])
 })

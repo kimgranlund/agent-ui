@@ -821,7 +821,9 @@ function expectedTypeNote(failure: RoundFailure, catalog: Catalog, lastOutput: A
 
 /** T-0264: a `SCHEMA` failure on `[i].<kind>.surfaceId` whose message carries `surfaceId` on the envelope, beside
  *  `<kind>`, names the misplaced key and the move; `''` otherwise. A Haiku 5.5 Stand retry wrote
- *  `{"version","updateDataModel":{"value"},"surfaceId"}`, read the bare path as unfixable and answered in prose. */
+ *  `{"version","updateDataModel":{"value"},"surfaceId"}`, read the bare path as unfixable and answered in prose.
+ *  T-0588: heal's arm (e) now moves that shape before validation, so this note fires only when the op carries its own
+ *  non-string `surfaceId`. */
 function misplacedSurfaceIdNote(failure: RoundFailure, lastOutput: A2uiOutput | undefined): string {
   const m = /^\[(\d+)\]\.(\w+)\.surfaceId$/.exec(failure.path)
   if (failure.code !== 'SCHEMA' || m === null || lastOutput === undefined) return ''
@@ -846,7 +848,7 @@ function stripOuterFence(raw: string): string {
  * line is unparseable (mapped by the caller to a PARSE failure fed back).
  *
  * `healedCount` counts a line only when `heal()` applied a REAL form repair (fence-strip,
- * trailing-comma, version-fill) — NOT merely `healed.changed`. Per-line `heal()` always reports the
+ * trailing-comma, version-fill, surface-id-move), NOT merely `healed.changed`. Per-line `heal()` always reports the
  * mechanical `'single-object-envelope'` repair (each line is a lone object, never an array — ADR-0061's
  * arm (c) fires on every call in this mode), so treating bare `changed` as "corrected" would make the
  * trace's healed count saturate to `lines.length` on every well-formed turn, defeating its purpose.

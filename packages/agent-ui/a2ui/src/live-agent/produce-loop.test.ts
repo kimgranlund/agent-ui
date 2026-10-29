@@ -518,21 +518,23 @@ describe('produce() runtime loop (LLD-C3 / SPEC-R4/R5)', () => {
   })
 
   // T-0264: a Haiku 5.5 Stand retry put `surfaceId` on the message envelope beside `updateDataModel`, got the bare
-  // "SCHEMA at [0].updateDataModel.surfaceId", and answered its last round in prose. The feedback now names the move.
-  it('T-0264: a surfaceId beside the operation key is named in the SCHEMA feedback with the move inside', async () => {
-    const MISPLACED =
-      '{"version":"v1.0","updateDataModel":{"value":{"n":1}},"surfaceId":"main"}\n' +
+  // "SCHEMA at [0].updateDataModel.surfaceId", and answered its last round in prose; the feedback then named the move.
+  // T-0588: heal now moves that shape itself (arm e, round 20 :61 r3), so the line no longer costs a round.
+  it('T-0588: the T-0264 line with the op lacking surfaceId heals in round 1 and counts as healed', async () => {
+    const STRAY =
+      '{"a2uiMeta":{"note":"hi"}}\n' +
       '{"version":"v1.0","createSurface":{"surfaceId":"main","catalogId":"agent-ui"}}\n' +
+      '{"version":"v1.0","updateDataModel":{"value":{"n":1}},"surfaceId":"main"}\n' +
       '{"version":"v1.0","updateComponents":{"surfaceId":"main","components":[{"id":"root","component":"Button","label":"Hi","action":{"action":"submit"}}]}}'
-    const { provider, calls, reqs } = stubProvider([MISPLACED, VALID])
+    const { provider, calls } = stubProvider([STRAY, VALID])
     const deps: ProduceDeps = { provider, retrieve: () => [], catalog: defaultCatalog }
-    for await (const _ of produce(intent, deps, { maxRounds: 3 })) void _
+    const lines: string[] = []
+    for await (const line of produce(intent, deps, { maxRounds: 3 })) lines.push(line)
 
-    expect(calls()).toBe(2)
-    const feedback = reqs()[1]!.messages.find((m) => m.role === 'user' && /INVALID/.test(m.content))!
-    expect(feedback.content).toContain(
-      'SCHEMA at [0].updateDataModel.surfaceId (this message has "surfaceId" beside "updateDataModel"; move it inside: {"version":"v1.0","updateDataModel":{"surfaceId":"main",...}})',
-    )
+    expect(calls()).toBe(1)
+    const trace = readMetaLine(lines[0]!)!.a2uiMeta.trace!
+    expect(trace).toMatchObject({ rounds: 1, healed: 1, failureCodes: [] })
+    expect(lines).toContain('{"version":"v1.0","updateDataModel":{"surfaceId":"main","value":{"n":1}}}')
   })
 
   it('T-0264: a SCHEMA miss with no envelope surfaceId keeps the bare path', async () => {

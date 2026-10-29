@@ -68,8 +68,9 @@ mean is `a2ui-payload-authoring`'s `references/meta-line-vocabulary.md`.
 
 ## The healer
 
-`heal(input, pin?)` repairs FORM only, from a closed list (ADR-0061; widening it is an amendment,
-never an ad-hoc addition):
+`heal(input, pin?)` repairs FORM only, from a closed list (ADR-0061; widening it takes a recorded
+ruling, never an ad-hoc addition; Kim's 2026-10-29 ruling in T-0588 added `surface-id-move`, recorded
+in the `corpus/heal.ts` header because the ADRs are frozen):
 
 | Repair id | What |
 |---|---|
@@ -77,6 +78,7 @@ never an ad-hoc addition):
 | `trailing-comma` | trailing commas removed |
 | `single-object-envelope` | a lone object wrapped into an array |
 | `version-fill` | an ABSENT per-message `version` filled from `pin.protocolVersion` |
+| `surface-id-move` | an envelope-level string `surfaceId` moved into the one surface op (`createSurface`, `updateComponents`, `updateDataModel`, `deleteSurface`) whose body has no `surfaceId`; an op that already has one, equal or not, is left alone |
 
 Nothing semantic is ever repaired: unknown components, bad pointers, missing roots and wrong
 catalogs flow through unchanged and reject at `validateA2ui`. A WRONG `version` is left alone and
