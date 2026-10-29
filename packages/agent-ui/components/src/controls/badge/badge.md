@@ -120,7 +120,7 @@ updates only the label span's text.
 ## Geometry
 
 The box rides the **compact-realm** widget-box ramp (`--md-sys-compact-lg`, ADR-0041) — fixed regardless of
-label length or an ancestor `[density]`; the pad follows the compact-realm law (`2px + box·ratio·density`,
+label length or an ancestor `[data-density]`; the pad follows the compact-realm law (`2px + box·ratio·density`,
 never `h/2`); the radius is `box/2` (a pill). Derived, the badge is a chip `2n + 2c` tall and its radius the chip
 pill `n + c`, still `box/2` (ADR-0245 Amendment 5). There is no `[size]` attribute in v1. The label text itself
 rides the fleet font ramp (`--md-sys-font-sm`) at `line-height: 1`, centering like a glyph. An empty label

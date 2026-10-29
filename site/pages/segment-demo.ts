@@ -82,7 +82,7 @@ const modelNote = el('p', {}, [
 ])
 
 // ── scale — the leaf's Control-height row is the HOST's (segment.md: sizing applied by ui-segmented-control's
-// compound selector, not the leaf's own tier); an ancestor [scale] re-tables the whole row (ADR-0038). ─────
+// compound selector, not the leaf's own tier); an ancestor data-scale re-tables the whole row (ADR-0038). ─────
 const scaledControl = (scale: string): HTMLElement =>
   el('div', { 'data-scale': scale }, [
     el('ui-segmented-control', { name: `density-${scale}` }, [

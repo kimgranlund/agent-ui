@@ -150,7 +150,7 @@ the mark at `primary-on-surface-disabled`, so a locked box never vanishes.
 ## Sizes
 
 `size` selects from the widget-box ramp (`sm` · `md` (default) · `lg`), sourcing `--md-sys-compact-{size}`
-(ADR-0041: 14 · 16 · 18 px at the default `ui-md` scale). An ancestor `[scale]` attribute re-tables the
+(ADR-0041: 14 · 16 · 18 px at the md step). An ancestor `data-scale` (with `data-tier`) re-tables the
 ramp for its subtree.
 
 ## Accessibility

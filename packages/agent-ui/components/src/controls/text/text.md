@@ -218,7 +218,7 @@ around a truncated `Text` — its first child is the anchor:
 ```html
 <ui-tooltip>
   <ui-text truncate>A title long enough to clip in its column</ui-text>
-  <ui-text slot="content">A title long enough to clip in its column</ui-text>
+  <ui-text>A title long enough to clip in its column</ui-text>
 </ui-tooltip>
 ```
 

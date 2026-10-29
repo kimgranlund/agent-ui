@@ -87,7 +87,7 @@ component-preview {
 }
 /* The knob controls are dogfooded ui-* controls (ui-select · ui-segmented-control · ui-switch ·
  * ui-text-field) rendered RAW — each carries its OWN control CSS, so the chrome here is layout-only.
- * The compact look comes from the container: `.preview-knobs` carries `scale="ui-sm"` (ADR-0038's
+ * The compact look comes from the container: `.preview-knobs` carries `data-scale="sm"` (ADR-0038's
  * subtree scale register, dimensions.css), which re-tables the md ramp every control reads by default
  * to today's sm row — superseding the per-control `.knob-select/.knob-input/.knob-switch` token-repoint
  * classes (GH #1407; those classes were themselves the 2026-08-17 size-attr scrub's replacement for

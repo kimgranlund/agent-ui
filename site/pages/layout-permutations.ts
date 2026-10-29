@@ -67,7 +67,7 @@ for (const value of justifies) {
   justifySection.append(captioned(`[justify="${value}"]`, el('ui-row', { gap: 'sm', justify: value }, ['1', '2', '3'].map(demoBox))))
 }
 
-// ── [4] flex grammar — gap (the --md-sys-space ladder; rides [density], not [scale]) ────────────────────────────
+// ── [4] flex grammar: gap (the --md-sys-space ladder; rides data-density, not data-scale) ────────────────────────────
 const gapSection = document.createElement('section')
 gapSection.append(heading(2, 'Flex grammar — gap (the --md-sys-space ladder)'))
 const gapGrid = document.createElement('div')

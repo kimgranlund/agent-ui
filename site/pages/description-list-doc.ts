@@ -16,7 +16,7 @@ const { content } = mountPage({
   intro:
     'The Display-class key–value receipt primitive (ADR-0201) — per row a label on the secondary plane ' +
     'with its value adjacent, rows as hardened data, a valueless field omitted by construction. Not ' +
-    'interactive, not form-associated: no events, no keyboard contract, no [size]/[scale] control ' +
+    'interactive, not form-associated: no events, no keyboard contract, no size or data-scale control ' +
     'geometry. Generated from description-list.md: the attribute and parts tables are descriptor-derived; ' +
     'the receipts below show the canonical confirm-step job and the omission law.',
 })

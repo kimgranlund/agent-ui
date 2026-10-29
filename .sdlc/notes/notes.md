@@ -1317,3 +1317,7 @@
 ## T-0569: Getting-started per-control import list counts and labels only control modules (2026-10-29)
 
 - note: scripts/reap-scratch-clones.mjs selftest "same root twice" case is flaky under concurrent runs (9 vs 12 candidates in the shared tmp dir).
+
+## T-0570: Rendered docs stop teaching the retired scale and density attributes (2026-10-29)
+
+- note: site/pages/bar-chart-demo.ts:5, site/pages/layout-permutations.ts:70, site/pages/tokens.ts (LIVE resolution comment), packages/agent-ui/components/src/controls/icon/icon.md:72 keep em dashes already on the touched lines.

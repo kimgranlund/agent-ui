@@ -145,7 +145,7 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './sizing.html',
         title: 'Sizing & density',
-        blurb: 'The five size-classes, a live MEASURED [scale] × [size] matrix (real getBoundingClientRect reads), the compact realm’s pad law, and density-rides-rhythm-never-the-box.',
+        blurb: 'The five size-classes, a live MEASURED data-scale × size matrix (real getBoundingClientRect reads), the compact realm’s pad law, and density-rides-rhythm-never-the-box.',
       },
       {
         href: './forms.html',
@@ -220,7 +220,7 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './button-permutations.html',
         title: 'Permutations',
-        blurb: 'Every size × variant × disabled of ui-button, plus the [scale]/[density] subtree-geometry demo.',
+        blurb: 'Every size × variant × disabled of ui-button, plus the data-scale / data-tier subtree-geometry demo.',
       },
       {
         href: './button-states.html',
@@ -271,7 +271,7 @@ const CARD_GROUPS: readonly CardGroup[] = [
       {
         href: './text-field-permutations.html',
         title: 'Permutations',
-        blurb: 'Every size × state of ui-text-field, the adornment anatomy, every [type] variant, and the [scale]/[density] geometry demo.',
+        blurb: 'Every size × state of ui-text-field, the adornment anatomy, every [type] variant, and the data-scale / data-tier geometry demo.',
       },
       {
         href: './text-field-states.html',

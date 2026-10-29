@@ -2,7 +2,7 @@
 // ADR-0107; pairs with bar-chart-doc.ts, the descriptor-derived API page). Mounts the REAL control over a
 // realistic regional revenue report: a quarter switcher (a real ui-segmented-control whose `change` commit
 // writes the chart's `data`), the mixed-sign diverging model (month-over-month change), long labels, the
-// degenerate cases, and an ancestor `[density]` — never a mock. A display leaf emits nothing; the switcher's
+// degenerate cases, and an ancestor `[data-density]`, never a mock. A display leaf emits nothing; the switcher's
 // own change event log is the honesty proof that a real prop write re-renders the real row list.
 import { mountPage } from './_page.ts' // FIRST: foundation CSS cascade + self-defining ui-* controls (ADR-0003)
 import './containers.css' // shared demo chrome (.event-log/.demo-figure/.demo-grid + section spacing)

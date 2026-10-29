@@ -131,7 +131,7 @@
   min-inline-size: min-content;
 }
 
-/* The cluster wrapper carries [scale]/[density]; lay its buttons out in a row so the geometry delta shows. */
+/* The cluster wrapper carries data-scale / data-density; lay its buttons out in a row so the geometry delta shows. */
 .geo-cluster {
   display: flex;
   flex-wrap: wrap;
