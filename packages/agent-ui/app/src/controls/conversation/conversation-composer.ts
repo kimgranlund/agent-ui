@@ -1333,6 +1333,7 @@ export class UIConversationComposerElement extends UIElement {
       window.innerWidth,
       window.innerHeight,
       0.25 * rootPx,
+      getComputedStyle(trigger).direction === 'rtl',
     )
     panel.style.position = 'fixed'
     panel.style.top = `${top}px`
@@ -1576,6 +1577,7 @@ export class UIConversationComposerElement extends UIElement {
       window.innerWidth,
       window.innerHeight,
       0.25 * rootPx,
+      getComputedStyle(editor).direction === 'rtl',
     )
     menu.style.position = 'fixed'
     menu.style.top = `${top}px`

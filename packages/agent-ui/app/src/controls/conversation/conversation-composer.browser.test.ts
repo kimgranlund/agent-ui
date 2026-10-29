@@ -183,6 +183,56 @@ describe('ui-conversation-composer — GH #849 reference typeahead (both engines
   })
 })
 
+describe('ui-conversation-composer — T-0561: both popups align to the logical start under dir=rtl (both engines)', () => {
+  const EPS = 1.5
+
+  it('the reference typeahead: top-start under rtl hugs the editor right edge, under ltr its left edge', async () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const { wrap, el } = mountComposer()
+      wrap.dir = dir
+      el.mentionables = MENTIONABLES
+      await el.updateComplete
+      const editor = editorOf(el)
+      editor.focus()
+      await userEvent.type(editor, '@')
+      await el.updateComplete
+
+      const menu = menuOf(el)!
+      expect(menu.matches(':popover-open'), `${server.browser} ${dir}: the typeahead is open`).toBe(true)
+      const box = menu.getBoundingClientRect()
+      const anchor = editor.getBoundingClientRect()
+      expect(box.width, `${dir}: the panel is narrower than the editor, so start vs end is observable`).toBeLessThan(anchor.width - 20)
+      if (dir === 'rtl') expect(Math.abs(box.right - anchor.right), `${server.browser}: rtl aligns the panel to the editor's right edge`).toBeLessThan(EPS)
+      else expect(Math.abs(box.left - anchor.left), `${server.browser}: ltr aligns the panel to the editor's left edge`).toBeLessThan(EPS)
+      await userEvent.keyboard('{Escape}')
+    }
+  })
+
+  it('the capabilities panel: top-start under rtl hugs the trigger right edge, under ltr its left edge', async () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const { wrap, el } = mountComposer()
+      wrap.dir = dir
+      el.capabilities = [
+        { id: 'skill-style', label: 'House style', kind: 'skill', icon: 'star', included: true },
+        { id: 'svc:calc:*', label: 'Calculator', kind: 'tool', icon: 'gear', included: false },
+      ]
+      await el.updateComplete
+      const trigger = el.querySelector<HTMLElement>('[data-picker="capabilities"]')!
+      await userEvent.click(trigger)
+      await el.updateComplete
+
+      const panel = el.querySelector<HTMLElement>('[data-part="capabilities-panel"]')!
+      expect(panel.matches(':popover-open'), `${server.browser} ${dir}: the panel is open`).toBe(true)
+      const box = panel.getBoundingClientRect()
+      const anchor = trigger.getBoundingClientRect()
+      expect(box.width, `${dir}: the panel is wider than the trigger, so start vs end is observable`).toBeGreaterThan(anchor.width + 20)
+      if (dir === 'rtl') expect(Math.abs(box.right - anchor.right), `${server.browser}: rtl aligns the panel to the trigger's right edge`).toBeLessThan(EPS)
+      else expect(Math.abs(box.left - anchor.left), `${server.browser}: ltr aligns the panel to the trigger's left edge`).toBeLessThan(EPS)
+      await userEvent.keyboard('{Escape}')
+    }
+  })
+})
+
 describe('ui-conversation-composer — GH #891 SPEC-R9: the chip is label + a REAL kind glyph, never a sigil (both engines)', () => {
   it('the committed chip paints its consumer glyph as a resolved svg, and no `/` character renders anywhere in it', async () => {
     const { el } = mountComposer()
