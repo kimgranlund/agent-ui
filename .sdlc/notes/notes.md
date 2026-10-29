@@ -1270,3 +1270,7 @@
 ## T-0559: Theme hygiene: dead fallback colors, a toast shadow token, forced-colors polish (2026-10-29)
 
 - note: packages/agent-ui/shared/src/tokens/dimensions.test.ts:44 also swapped em dashes in two unrelated describe titles to colons (harmless, repo rule).
+
+## T-0544: Security sweep: hardening review of the library and site (2026-10-29)
+
+- note: the Medium 2 and Low 4 citations write `worker/index.ts:452`; the file is `packages/agent-ui/a2ui/tools/agent/worker/index.ts`. Path is abbreviated, not wrong.
