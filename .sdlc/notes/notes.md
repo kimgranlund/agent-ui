@@ -1325,3 +1325,7 @@
 ## T-0567: primary-high meets AA as text in every theme pack (2026-10-29)
 
 - note: tests-red-on-base.txt is builder-recorded; I confirmed base redness by running the probe at base, not by re-running the 18 vitest failures.
+
+## T-0547: Release notes and a dry run for 0.2.1, the first publish that includes @agent-ui-kit/data (2026-10-29)
+
+- note: package READMEs and CDN recipes still name 0.2.0 as the latest release (builder report); bump them to 0.2.1 at or after publish.
