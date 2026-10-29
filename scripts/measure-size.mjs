@@ -1148,7 +1148,7 @@ console.log(
 // statically (60593 to 50571 B gz, re-pinned 2026-10-29 by the same rule); `./catalogs` carries them instead.
 const PACKAGE_ENTRY_ROWS = [
   // [label, package dir, entry file, budget]; each budget comment carries its 2026-10-28 measurement
-  ['@agent-ui/a2ui . (renderer + validator + catalog model, the root barrel)', 'a2ui', 'src/index.ts', 51200], // measured 50571 B gz 2026-10-29 (T-0530)
+  ['@agent-ui/a2ui . (renderer + validator + catalog model, the root barrel)', 'a2ui', 'src/index.ts', 52224], // measured 51334 B gz 2026-10-29 after T-0530 and the hardening merges; 51 KiB plus 1 KiB headroom (Kim 2026-10-29)
   ['@agent-ui/a2ui/catalogs (the shipped persona and domain packages)', 'a2ui', 'src/catalog/shipped.ts', 15360], // measured 14779 B gz 2026-10-29 (T-0530)
   ['@agent-ui/a2ui/registry', 'a2ui', 'src/registry/index.ts', 8448], // measured 7907 B gz
   ['@agent-ui/a2ui/agent (the producer toolkit, embedded prompt assets)', 'a2ui', 'src/agent/index.ts', 86784], // measured 86257 B gz
