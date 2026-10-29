@@ -263,7 +263,12 @@ const targets = [
   // on main after PR #1401 (the #1339 IACVT fix: post-open verify + reveal/scroll observers + JS-path
   // demotion, reconciled with #1359's detector) -- REAL reviewed weight, not drift; the row's actual
   // guard (no runtime reach back into dom/reactive) still holds — overlay.ts's import stays type-only.
-  ['@agent-ui/components/traits/overlay (opt-in subpath)', '../packages/agent-ui/components/src/traits/overlay.ts', 2.5 * KB],
+  // RE-BASED 2026-10-29 (T-0529, the ticket that gates this script in check:scripts): 2560 -> 2688 B gz,
+  // measured 2570 B gz on main (10 B over, ~4.6% headroom). One real mover, reviewed weight not drift: T-0538
+  // (#2345, 387b335bf) added the dir=rtl logical-align mapping (physicalAlign + readDirection) to overlay.ts;
+  // the row went red between T-0528 and this gate. Ruling for the bump is Kim's 2026-10-28 ADR-0197 cl.5
+  // confirmation (the T-0525 precedent); flagged in the T-0529 report for her to confirm.
+  ['@agent-ui/components/traits/overlay (opt-in subpath)', '../packages/agent-ui/components/src/traits/overlay.ts', 2688],
   // GH #952 review LOW — the package's SECOND `./traits/*` subpath (`traits/list-reorder`, package.json:80)
   // gets the same budgeted row as `traits/overlay`, under the same absolute-not-marginal reasoning:
   // `list-reorder.ts`'s ONLY import is `import type { UIElement } from '../dom/index.ts'` (type-only, fully

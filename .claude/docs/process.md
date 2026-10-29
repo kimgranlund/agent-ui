@@ -91,7 +91,8 @@ check, so each is a script or a probe, never an agent. Two speeds:
 
 **Heavy gates (a `check`/`size` script at DoD / CI):**
 - size/tree-shake — per-component marginal ≤ cap; keep-all ratchet shrink-only; importing one control
-  drags only it + real deps.
+  drags only it + real deps. Gated since Kim's 2026-10-28 ruling (T-0529): `scripts/measure-size.mjs` runs
+  inside `check:scripts`, superseding the manual-only stance of ADR-0040 section 3 (ADRs are frozen).
 - behaviour + browser-truth probes (the test suite of record).
 
 The fast gates are wired as a hook so they fire without anyone remembering (required reliability →
