@@ -14,13 +14,13 @@ import type { ExampleSeed } from './types.ts'
 
 const CONTACT_SID = 'contact-form'
 
-/** A support contact form: self-labelled TextFields, a chips ChoicePicker, a CheckBox, one submit Button. */
+/** A support contact form: self-labelled TextFields, a ChoicePicker, a CheckBox, one submit Button. */
 export const basicContactFormSeed: ExampleSeed<'a2ui-basic'> = {
   name: 'basic-contact-support-form',
   description:
     'A support contact form on the Basic catalog: an h2 title and body intro, self-labelled TextFields for ' +
-    'name and email (shortText, the email one with a validationRegexp) and the message (longText), a ' +
-    'mutuallyExclusive chips ChoicePicker for the topic bound to a string-array value, a CheckBox for "email ' +
+    'name and email (shortText) and the message (longText), a ' +
+    'mutuallyExclusive ChoicePicker for the topic bound to a string-array value, a CheckBox for "email ' +
     'me a copy", and a right-aligned primary Button whose child Text is the label and whose ' +
     'submit_contact_request event carries every bound field in its context.',
   promptText:
@@ -64,14 +64,12 @@ export const basicContactFormSeed: ExampleSeed<'a2ui-basic'> = {
             label: 'Email address',
             value: { path: '/contact/email' },
             variant: 'shortText',
-            validationRegexp: '^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$',
           },
           {
             id: 'topic_picker',
             component: 'ChoicePicker',
             label: 'Topic',
             variant: 'mutuallyExclusive',
-            displayStyle: 'chips',
             options: [
               { label: 'General question', value: 'general' },
               { label: 'Billing', value: 'billing' },
@@ -211,13 +209,13 @@ export const basicProductListSeed: ExampleSeed<'a2ui-basic'> = {
 
 const NOTIFY_SID = 'notification-settings'
 
-/** A notification settings panel: CheckBox channels, a chips digest picker, a Slider, a two-button action row. */
+/** A notification settings panel: CheckBox channels, a digest picker, a Slider, a two-button action row. */
 export const basicNotificationSettingsSeed: ExampleSeed<'a2ui-basic'> = {
   name: 'basic-notification-settings',
   description:
     'A notification preferences panel on the Basic catalog: a header Row pairing a notifications Icon with an ' +
     'h2 title, an h4 subheading over three self-labelled CheckBoxes (email, push, SMS) bound to booleans, a ' +
-    'horizontal Divider, a mutuallyExclusive chips ChoicePicker for the digest cadence, a 0 to 100 Slider for ' +
+    'horizontal Divider, a mutuallyExclusive ChoicePicker for the digest cadence, a 0 to 100 Slider for ' +
     'alert volume, and a right-aligned action Row with a borderless "Restore defaults" Button beside a primary ' +
     '"Save preferences" Button whose event context carries the whole /prefs object.',
   promptText:
@@ -259,7 +257,6 @@ export const basicNotificationSettingsSeed: ExampleSeed<'a2ui-basic'> = {
             component: 'ChoicePicker',
             label: 'Activity digest',
             variant: 'mutuallyExclusive',
-            displayStyle: 'chips',
             options: [
               { label: 'Off', value: 'off' },
               { label: 'Daily', value: 'daily' },
@@ -293,12 +290,12 @@ export const basicNotificationSettingsSeed: ExampleSeed<'a2ui-basic'> = {
 
 const BOOKING_SID = 'appointment-booking'
 
-/** An appointment request: a chips service picker, a bounded DateTimeInput, an optional notes field. */
+/** An appointment request: a service picker, a bounded DateTimeInput, an optional notes field. */
 export const basicAppointmentBookingSeed: ExampleSeed<'a2ui-basic'> = {
   name: 'basic-appointment-booking',
   description:
     'An appointment booking form on the Basic catalog: a header Row pairing a calendarToday Icon with an h2 ' +
-    'title, a caption naming the shop, a mutuallyExclusive chips ChoicePicker for the service, one ' +
+    'title, a caption naming the shop, a mutuallyExclusive ChoicePicker for the service, one ' +
     'DateTimeInput with enableDate and enableTime whose value, min and max all bind ISO date-time strings in ' +
     'the model, an optional longText TextField for notes, and a right-aligned primary "Request appointment" ' +
     'Button whose request_appointment event context carries the service, slot and notes.',
@@ -339,7 +336,6 @@ export const basicAppointmentBookingSeed: ExampleSeed<'a2ui-basic'> = {
             component: 'ChoicePicker',
             label: 'Service',
             variant: 'mutuallyExclusive',
-            displayStyle: 'chips',
             options: [
               { label: 'Haircut (30 min)', value: 'cut' },
               { label: 'Cut and beard trim (45 min)', value: 'cut-beard' },

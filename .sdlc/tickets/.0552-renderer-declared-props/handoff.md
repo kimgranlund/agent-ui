@@ -29,11 +29,11 @@ This repo is public. Commit messages, the PR title and body, this handoff and co
 verifier: L3
 Run from the lane checkout root. Each new test file fails on base fcd4ce71b (widget.ts reverted) and passes after.
 - `npx vitest run packages/agent-ui/a2ui/src/renderer/declared-props.test.ts`: undeclared keys stay off the element on the static, bound and resend paths (jsdom).
-- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.40.0/scripts/gate_lock.py run --need compute_units=2 --nice -- npx vitest run --config vitest.browser.config.ts --project packages-rest packages/agent-ui/a2ui/src/renderer/declared-props.browser.test.ts`: the same in Chromium and WebKit.
-- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.40.0/scripts/gate_lock.py run --need compute_units=4 --nice -- npx vitest run --project packages packages/agent-ui/a2ui`: every a2ui jsdom suite (renderer, catalog, testkit) stays green.
-- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.40.0/scripts/gate_lock.py run --need compute_units=2 --nice -- npm run test:a2ui-kit`: the test kit passes.
-- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.40.0/scripts/gate_lock.py run --need compute_units=2 --nice -- npm run test:a2ui-kit:browser`: the kit browser leg passes.
-- `python3 /Users/kimgranlund/.claude/plugins/cache/sdlc-lite/sdlc-lite/0.40.0/scripts/gate_lock.py run --need compute_units=2 --nice -- npm run check`: the standing gate exits 0.
+- `python3 <sdlc-lite scripts>/gate_lock.py run --need compute_units=2 --nice -- npx vitest run --config vitest.browser.config.ts --project packages-rest packages/agent-ui/a2ui/src/renderer/declared-props.browser.test.ts`: the same in Chromium and WebKit.
+- `python3 <sdlc-lite scripts>/gate_lock.py run --need compute_units=4 --nice -- npx vitest run --project packages packages/agent-ui/a2ui`: every a2ui jsdom suite (renderer, catalog, testkit) stays green.
+- `python3 <sdlc-lite scripts>/gate_lock.py run --need compute_units=2 --nice -- npm run test:a2ui-kit`: the test kit passes.
+- `python3 <sdlc-lite scripts>/gate_lock.py run --need compute_units=2 --nice -- npm run test:a2ui-kit:browser`: the kit browser leg passes.
+- `python3 <sdlc-lite scripts>/gate_lock.py run --need compute_units=2 --nice -- npm run check`: the standing gate exits 0.
 
 ## Outcome
 
