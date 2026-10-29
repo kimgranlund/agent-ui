@@ -30,6 +30,7 @@
 
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 import { parseAspectRatio, usageHintDefaults } from './image-model.ts'
+import { safeMediaSrc } from '../text/media-src.ts' // the media source gate (T-0553)
 // Generated from image.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs image` to
 // regenerate; never hand-edit image.props.gen.ts. The fleet drift gate
 // (descriptor/props-gen-driftwire.test.ts) keeps the two byte-identical.
@@ -45,7 +46,7 @@ export class UIImageElement extends UIElement {
 
   protected override connected(): void {
     this.effect(() => {
-      const src = this.src
+      const src = safeMediaSrc(this.src, document.baseURI) ?? ''
       const alt = this.alt
       const usageHint = this.usageHint
 

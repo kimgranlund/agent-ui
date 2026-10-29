@@ -22,6 +22,7 @@
 import { signal } from '../../reactive/index.ts'
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 import { initialsFrom } from './avatar-initials.ts'
+import { safeMediaSrc } from '../text/media-src.ts' // the media source gate (T-0553)
 import { UIIconElement } from '../icon/icon.ts' // sanctioned sibling-control import — self-defines ui-icon
 // Generated from avatar.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs avatar` to
 // regenerate; never hand-edit avatar.props.gen.ts. `identity` was renamed from `name` (TKT-0069 item 1
@@ -38,7 +39,7 @@ export class UIAvatarElement extends UIElement {
 
   protected override connected(): void {
     this.effect(() => {
-      const src = this.src
+      const src = safeMediaSrc(this.src, document.baseURI) ?? ''
       const name = this.identity
       const failedSrc = this.#failedSrc.value
 

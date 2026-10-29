@@ -26,6 +26,7 @@ import type { UIIconElement } from '../icon/icon.ts'
 import '../icon/icon.ts'
 import type { UIRatingElement } from '../rating/rating.ts'
 import '../rating/rating.ts'
+import { safeMediaSrc } from '../text/media-src.ts' // the media source gate (T-0553)
 // Generated from product-card.md's `attributes[]` (ADR-0173): `node scripts/generate-props.mjs
 // product-card` to regenerate; never hand-edit product-card.props.gen.ts.
 import { props } from './product-card.props.gen.ts'
@@ -88,7 +89,7 @@ export class UIProductCardElement extends UIElement {
     })
 
     this.effect(() => {
-      const image = this.image
+      const image = safeMediaSrc(this.image, document.baseURI) ?? ''
       const icon = this.icon
       const media = this.#media!
       if (image === '' && icon === '') {

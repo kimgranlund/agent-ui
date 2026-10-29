@@ -18,6 +18,7 @@
 
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
 import { parseAspectRatio } from '../image/image-model.ts'
+import { safeMediaSrc } from '../text/media-src.ts' // the media source gate (T-0553)
 // Generated from video.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs video` to
 // regenerate; never hand-edit video.props.gen.ts.
 import { props } from './video.props.gen.ts'
@@ -31,9 +32,9 @@ export class UIVideoElement extends UIElement {
 
   protected override connected(): void {
     this.effect(() => {
-      const src = this.src
+      const src = safeMediaSrc(this.src, document.baseURI) ?? ''
       const label = this.label
-      const poster = this.poster
+      const poster = safeMediaSrc(this.poster, document.baseURI) ?? ''
       const preload = this.preload
 
       if (src === '') {

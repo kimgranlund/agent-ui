@@ -206,6 +206,24 @@ function runIdOf(req: { headers?: Record<string, unknown> }): string | undefined
   return readRunId(req.headers?.[RUN_ID_HEADER])
 }
 
+/** T-0553: true when a browser-sent `Origin` (or, without one, `Referer`) names a host other than the request's
+ *  own `Host`, or is opaque or unparseable. A request with neither header (a Node tool, a route test) is not a
+ *  browser request and passes; a cross-site browser POST always carries `Origin`. Dev-only, so it compares
+ *  hosts rather than a configured origin, which keeps localhost, 127.0.0.1 and a LAN address working. */
+export function isCrossOriginDevRequest(headers: Record<string, unknown> | undefined): boolean {
+  const origin = headers?.['origin']
+  const referer = headers?.['referer']
+  const source = typeof origin === 'string' ? origin : typeof referer === 'string' ? referer : undefined
+  if (source === undefined) return false
+  const host = headers?.['host']
+  if (typeof host !== 'string') return true
+  try {
+    return new URL(source).host !== host
+  } catch {
+    return true
+  }
+}
+
 export function a2uiDevProxyPlugin(opts?: {
   /** Test-only injection (LLD §5.6) — replaces the real discovery pass wholesale. Production code
    *  and `vite.config.ts` never pass this; the default is the real `discoverMcpIntegrations` over
@@ -305,6 +323,12 @@ export function a2uiDevProxyPlugin(opts?: {
           // registry; once `mcpReady` is settled this is a zero-cost microtask on every later request.
           await mcpReady
           const url = req.url ?? '/'
+          // T-0553: both POST branches run a billed turn, so a cross-origin browser POST stops here,
+          // before the body is read.
+          if (req.method === 'POST' && isCrossOriginDevRequest(req.headers as Record<string, unknown> | undefined)) {
+            sendJson(res, 403, { error: 'forbidden-origin' })
+            return
+          }
           try {
             const config = loadConfig() // fresh per request — stays in lockstep with the HMR'd switcher
             // GET /status — which implemented providers have a key configured AND working? (a boolean +

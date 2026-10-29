@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 524 done, 5 dropped (git log or .NNNN-* folders)
+Closed: 527 done, 5 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -129,3 +129,5 @@ Closed: 524 done, 5 dropped (git log or .NNNN-* folders)
 - decide: .sdlc/tickets/0480-itinerary-missing-composite/handoff.md:19 note: the Repro line (`npm run chat:probe -- --replay .sdlc/evals/rounds/2026-10-26-r15-pattern/runs/reach-concierge-day-itinerary-haiku-3/fixture.json`) still exits 1 by design, as the builder reports: the recorded fixture has no third round to ship the repair; the authored replay under replays/ is the keyless proof (T-0479 precedent). (from T-0480: A day plan with timed stops answered with no Itinerary is a missing composite (2026-10-27))
 - decide: scripts/e2e-admin/probe/replays/concierge-haiku-itinerary-target-claim.test.mjs:22 note: that replay's say turn is the same day plan, so it now exercises ITINERARY_MISSING rather than SURFACE_CLAIMED's meta-target read; SURFACE_CLAIMED's own cases stay in packages/agent-ui/a2ui/src/live-agent/produce-narration.test.ts:268-282. (from T-0480: A day plan with timed stops answered with no Itinerary is a missing composite (2026-10-27))
 - decide: scripts/measure-size.mjs:779 the budget raise is an unattended measurement and the comment itself says ADR-0197 cl.5 closes upward drift bumps; it wants Kim's confirmation, as the builder flagged. (from T-0522: The @agent-ui/app root bundle fits its size budget again (61071 vs 59925 B gz) (2026-10-28))
+- decide: packages/agent-ui/a2ui/src/catalog/catalog.json: decide: the default catalog's media PropDefs (Image.src, Avatar.src, Video.src/poster, AudioPlayer.src, ProductCard.image) still carry no format, so the static validator admits any string and only the render-time gate denies; findings.md Medium 1 proposed a format too, and `safe-href` does not fit (it rejects data: and admits mailto:), so a media-specific validator format is a follow-up. (from T-0553: Media sources accept only allowed schemes, and the dev proxy checks request origin (2026-10-28))
+- decide: packages/agent-ui/components/src/controls/text/media-src.ts:44: note: with an origin allowlist set, `data:` and `blob:` sources always pass (by design, they fetch nothing remote); the browser shards that render `data:` media were not run here and the land gate covers them. (from T-0553: Media sources accept only allowed schemes, and the dev proxy checks request origin (2026-10-28))

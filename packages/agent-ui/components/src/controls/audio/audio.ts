@@ -11,6 +11,7 @@
 // block-size IS the geometry (audio.md). No custom chrome; autoplay/loop are deliberate v1 absences.
 
 import { UIElement, type ReactiveProps } from '../../dom/index.ts'
+import { safeMediaSrc } from '../text/media-src.ts' // the media source gate (T-0553)
 // Generated from audio.md's `attributes[]` (ADR-0173) — `node scripts/generate-props.mjs audio`.
 import { props } from './audio.props.gen.ts'
 
@@ -23,7 +24,7 @@ export class UIAudioElement extends UIElement {
 
   protected override connected(): void {
     this.effect(() => {
-      const src = this.src
+      const src = safeMediaSrc(this.src, document.baseURI) ?? ''
       const label = this.label
       const preload = this.preload
 
