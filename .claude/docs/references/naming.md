@@ -1,18 +1,18 @@
-# Naming — the per-namespace grammar (the master plan)
+# Naming: the per-namespace grammar (the master plan)
 
 > Status: authored 2026-07-12 (TKT-0025) from the sized inventory
-> (`../reports/naming-inventory-2026-07-12.md` — the evidence base; counts live THERE, rules live
+> (`../reports/naming-inventory-2026-07-12.md`: the evidence base; counts live THERE, rules live
 > HERE). Siblings: `geometry.md` (the size/scale law) · `anatomy.md` (position slots × content
 > roles) · `tokens.md` (color roles). The doc-ID namespace is `doc-standards`' (§3).
 > Domain vocabulary for the agent-admin surface (agent/persona/preset, roster, pack, Knowledge,
 > Instructions, GM, the four "harness" terms) is fixed in [`agent-model.md`](./agent-model.md) §3, not here.
-> Migration policy for every rule here: **fix-on-touch, never big-bang** — the Recorded
+> Migration policy for every rule here: **fix-on-touch, never big-bang**; the Recorded
 > Exceptions (§12) hold the standing deviations; gates are strict for NEW names from day one.
 
 ## 0 · The five principles (extracted from what the fleet already does)
 
 1. **One name, one meaning, everywhere.** A word means the same thing in every namespace it
-   appears (`size` IS the [sm,md,lg] widget enum — ADR-0032/0041; a pane's seed had to become
+   appears (`size` IS the [sm,md,lg] widget enum: ADR-0032/0041; a pane's seed had to become
    `initial`). Reserved-word lists per namespace are the mechanism (§3).
 2. **Closed vocabularies with an ADR-gated admission path.** Events, states, roles, tiers,
    region landmarks: closed sets an agent can be *taught*. A new member needs the current wave's
@@ -21,17 +21,17 @@
    consuming across a family is sanctioned, *declaring* across it is a gate failure
    (ADR-0081/0124). Names encode who may write them.
 4. **Names are machine-readable API.** Every public name lives in a descriptor/manifest a gate
-   derives from (the palette, the catalog, the docs, the drift gates all read them) — an
+   derives from (the palette, the catalog, the docs, the drift gates all read them): an
    undeclared name is invisible; an untruthful one is a red gate.
 5. **Grep-ability beats brevity.** `ui-master-detail-pane`, never `ui-md-pane`; names are search
    keys (the `^ui-` palette-anchor ruling exists because of this).
 
-## 1 · Element tags — `ui-{name}` · `ui-{family}-{part}`
+## 1 · Element tags: `ui-{name}` · `ui-{family}-{part}`
 
 - Kebab, `ui-` prefixed, everywhere agents can reach. The name is the FOLDER name; the class is
   `UI{PascalName}Element`; alignment is gate-locked (family-coherence C-group).
 - **The hyphen is deliberately overloaded** (compound names vs family members are undecidable
-  from the tag alone — inventory #1). The resolver is never the tag string: **the descriptor is**
+  from the tag alone: inventory #1). The resolver is never the tag string: **the descriptor is**
   (`{name}.md` frontmatter names its family root). Do not write code that parses tags into
   families; read the descriptor graph.
 - Family-member tags are `ui-{family}-{part}` with the part a single noun where possible; 4-hyphen
@@ -40,10 +40,10 @@
   namespace: un-prefixed = "not fleet, not agent-emittable, not descriptor-bound." A site element
   that graduates to the fleet takes the `ui-` name at promotion (theme-provider precedent).
 
-## 2 · Classes — `UI{Name}Element` + the base ladder
+## 2 · Classes: `UI{Name}Element` + the base ladder
 
 `UI{Name}Element` for every tagged element; bases come only from the sanctioned ladder
-(`UIElement · UIFormElement · UIContainerElement · UIIndicator/UIRange/UIListbox · UIWidget` —
+(`UIElement · UIFormElement · UIContainerElement · UIIndicator/UIRange/UIListbox · UIWidget`:
 seven classes; the inventory's "6-base" line undercounts, source is the authority).
 Site-local classes follow their own namespace (§1) but SHOULD still extend `UIElement` when they
 use fleet machinery (ComponentPreview's raw-HTMLElement shape is a recorded exception, §12).
@@ -51,8 +51,8 @@ use fleet machinery (ComponentPreview's raw-HTMLElement shape is a recorded exce
 ## 3 · Props & attributes
 
 - camelCase property; a multi-word prop declares its explicit kebab `attribute:` (the 8 existing
-  overrides are the template — `ui-nav-rail`'s `collapseContainer`/`collapse-container`, TKT-0035,
-  is the newest). Enum props are closed literal unions via `prop.enum` — values kebab/lowercase.
+  overrides are the template: `ui-nav-rail`'s `collapseContainer`/`collapse-container`, TKT-0035,
+  is the newest). Enum props are closed literal unions via `prop.enum`: values kebab/lowercase.
 - **Booleans are bare adjectives/participles** (`disabled`, `checked`, `persistent`), never
   `is-`/`has-`. A verb is not a boolean name (see `truncate`, §12).
 - **Reserved words** (one meaning fleet-wide): `size` ≡ the widget enum (GATED, A2/A2b) ·
@@ -61,74 +61,74 @@ use fleet machinery (ComponentPreview's raw-HTMLElement shape is a recorded exce
   committed selection state · `active` = the bindable identity (ADR-0019 family). New controls
   may not repurpose these; a colliding concept renames (the `initial` precedent).
 - **The orientation canon is `orientation`** (7:1 dominant; `axis` on ui-split is the
-  recorded exception — split-pane consumes it; fix-on-touch). One concept, one prop name — check the reserved/canon list
+  recorded exception: split-pane consumes it; fix-on-touch). One concept, one prop name: check the reserved/canon list
   before minting any prop whose concept exists elsewhere.
 - **`label` reflects, fleet-wide** (TKT-0069 item 2, Kim-ruled 2026-07-16): every `label` prop is
-  `reflect: true` — one policy, no per-control fork (the 20 non-reflecting controls were converted;
+  `reflect: true`: one policy, no per-control fork (the 20 non-reflecting controls were converted;
   the descriptor trip-wires pin it per control).
 - **The `scheme` inherit-ambient sentinel canon is `'auto'`** (TKT-0069 item 3, Kim-ruled
   2026-07-16): self-documenting in markup, matching `color-scheme: auto` semantics (ramp/swatch are
-  the shape). `ui-theme-provider`'s `''`-first sentinel is the recorded §12 exception — its
+  the shape). `ui-theme-provider`'s `''`-first sentinel is the recorded §12 exception: its
   empty-string-first contract is ADR-0117 load-bearing ("unset means inherit-ambient, never a
   forced default"), not drift.
 - **The `duration` canon is a MILLISECONDS NUMBER** (TKT-0069 item 4, Kim-ruled 2026-07-16): a JS
   timer quantity (`ui-toast` is the shape). `ui-swiper`'s CSS `<time>` STRING is the recorded §12
-  exception — it genuinely feeds CSS timing and reflects for that reason.
+  exception: it genuinely feeds CSS timing and reflects for that reason.
 - **`min`/`max` carry two sanctioned senses** (TKT-0070, Kim-ruled 2026-07-16): a **value-domain
-  bound** — numeric where the control's value is natively numeric (slider/slider-multi), or a
-  string-serialized bound with native-`<input min>` attribute-IDL parity (text-field, calendar —
-  already cross-cited to each other) — and a **layout-dimension bound**, an arbitrary CSS `<length>`
+  bound**: numeric where the control's value is natively numeric (slider/slider-multi), or a
+  string-serialized bound with native-`<input min>` attribute-IDL parity (text-field, calendar:
+  already cross-cited to each other), and a **layout-dimension bound**, an arbitrary CSS `<length>`
   (grid's `minmax()` track floor, split-pane's pane floor; CSS's own `minmax()` idiom overloads the
   words the same way). A new control picks the sense its concept matches; no third sense without a
   ruling.
 - **A navigation-URL `href` REFLECTS** (TKT-0070, Kim-ruled 2026-07-16): the real-`<a>` inspection
-  surface (nav-rail-item, ui-text — both ADR-0114-gated). `ui-attachment.href`'s `reflect: false` is
-  TEMPORARY-INERT (its rendering leg is deferred to its LLD-C6 wave; the descriptor says so in-file)
-  — that wave flips it to reflect per this canon rather than deciding silently.
+  surface (nav-rail-item, ui-text: both ADR-0114-gated). `ui-attachment.href`'s `reflect: false` is
+  TEMPORARY-INERT (its rendering leg is deferred to its LLD-C6 wave; the descriptor says so in-file):
+  that wave flips it to reflect per this canon rather than deciding silently.
 - `variant` is deliberately per-control (visual voice is context-bound); its VALUES still obey
   the closed-enum rule.
 
-## 4 · Events — the closed seven + `click`
+## 4 · Events: the closed seven + `click`
 
 `change · input · select · open · close · toggle · action` (+ native `click` for pure activation).
-`action` is the seventh member (GH #147/ADR-0153, 2026-07-20) — `ui-status-stream`'s inline retry
+`action` is the seventh member (GH #147/ADR-0153, 2026-07-20): `ui-status-stream`'s inline retry
 affordance emits it when a user clicks an entry's per-entry action button; none of the original six
 name "a user committed a per-entry action," and `select`'s own commit semantics (below) name a list
-selection, not an arbitrary action button. A new event name is an ADR-level decision (principle 2) —
+selection, not an arbitrary action button. A new event name is an ADR-level decision (principle 2):
 keep the vocabulary closed otherwise. Commit semantics: `change`/`select` are user commits, NEVER
 emitted from programmatic writes (the fleet law the codec/settings waves asserted); `input` is
 live; `open`/`close`/`toggle` are overlay/disclosure lifecycle; `action` is a user-committed,
 per-entry action click, never emitted from a programmatic `update()`/`appendEntry()` write. Detail
-shapes are per-event, documented in the descriptor's `events:` block — the descriptor allowlist is
+shapes are per-event, documented in the descriptor's `events:` block; the descriptor allowlist is
 gated; the emit-seam gate is the planned closure (§11).
 
-`toggle` carries TWO legal shapes, same name, opposite timing — a naming-vocabulary member is closed
+`toggle` carries TWO legal shapes, same name, opposite timing: a naming-vocabulary member is closed
 on NAME, not on timing/cancelability, and both shapes already satisfy every other rule in this
 section (a user commit, never programmatic). **Shape 1 (the original, overlay/disclosure lifecycle,
-POST-commit)**: announced AFTER the host's own state write has already settled (`traits/overlay.ts`
-— `host.emit('toggle')` fires once `isOpen`/`showPopover()` are done; ADR-0101's "sole announcer"
+POST-commit)**: announced AFTER the host's own state write has already settled (`traits/overlay.ts`;
+`host.emit('toggle')` fires once `isOpen`/`showPopover()` are done; ADR-0101's "sole announcer"
 rule). **Shape 2 (ADR-0179 GH #686 Amendment S7-a, `ui-toggle`, PRE-commit + cancelable)**: fired
 BEFORE the host's own `pressed` write, via the base `emit()` seam's existing `cancelable: true`
-default (`dom/element.ts`) — a listener's `preventDefault()` refuses the press (`pressed` never
+default (`dom/element.ts`): a listener's `preventDefault()` refuses the press (`pressed` never
 flips, no second event). This reproduces the platform `<input type=checkbox>` click-then-commit
 shape on the `toggle` name specifically because minting an eighth event name (a `beforetoggle`-
-shaped sibling) is the ADR-level move this vocabulary is deliberately closed against — `ui-toggle`
+shaped sibling) is the ADR-level move this vocabulary is deliberately closed against: `ui-toggle`
 reuses the existing member instead of widening the set. A future `toggle` emitter picks WHICHEVER
 shape its own commit semantics need (most will want Shape 1, the disclosure-lifecycle default); a
 consumer distinguishes the two only by which control it is listening to, never by inspecting the
-event itself (both are named identically, on purpose — the closed-vocabulary discipline this
+event itself (both are named identically, on purpose: the closed-vocabulary discipline this
 section states, not a design gap).
 
-## 5 · CSS custom properties — the two tiers, split by PREFIX (ADR-0140, 2026-07-17)
+## 5 · CSS custom properties: the two tiers, split by PREFIX (ADR-0140, 2026-07-17)
 
-The prefix IS the ownership boundary — no allowlist needed:
+The prefix IS the ownership boundary: no allowlist needed:
 
 - **Control tier** `--ui-{control}-{role}`: declared only by the owning folder; non-primary
   family descriptors may CONSUME the family-root prefix, never declare it (ADR-0124). Private
   intermediaries are `--_{name}` (file-local, never public API). JS-seam inline properties
   (`--value-pct`) are the sanctioned dynamic hook, exempt from the token gate. `--ui-` on a
-  declaration ALWAYS means "this control folder owns it" — never a foundation constant.
-- **System tier** `--md-sys-{family}-*`: everything global and shared — color (`--md-sys-color-*`),
+  declaration ALWAYS means "this control folder owns it", never a foundation constant.
+- **System tier** `--md-sys-{family}-*`: everything global and shared; color (`--md-sys-color-*`),
   typescale (`--md-sys-typescale-*`), and the dimensional foundation, which derives from one n per
   element (ADR-0245): the inputs `--md-sys-tier-*`, `--md-sys-scale-s`, `--md-sys-size-z`, `--md-sys-density-q`,
   the outputs `--md-sys-{n,m,c,control-margin,height,inset,radius,icon-box,glyph-box,glyph-stroke,corner-shape}`,
@@ -141,30 +141,30 @@ The prefix IS the ownership boundary — no allowlist needed:
   `--md-sys-motion-{duration-fast,easing-standard}`, `--md-sys-state-focus-ring-{width,offset}`,
   `--md-sys-control-line-height` and `--md-sys-typeface-{sans,mono}` stay constants in `dimensions.css`.
   Some families are real
-  Material 3 vocabulary (color, typescale, shape, motion, state — a `--md-sys-{family}` M3 already
+  Material 3 vocabulary (color, typescale, shape, motion, state: a `--md-sys-{family}` M3 already
   names); the dimensional-control families with no upstream M3 name (n/c/height/inset/icon-box/glyph-box/
   tier/scale-s/size-z and the container levels) are DELIBERATE agent-ui extensions of the
-  md-sys grammar — documented here as extensions, never presented as Material canon (the same
+  md-sys grammar: documented here as extensions, never presented as Material canon (the same
   extension discipline the typescale's four editorial voices already established). System-tier
   declarations land in `tokens.css` (color), `dimensions.css` (the constants) or the generated
   `foundations.gen.css` (every size), never inside a control folder.
 - **The `--ui-*`-vs-`--md-sys-*` split is PERMANENT** (Kim ruled 2026-07-12, reaffirmed + the
-  BOUNDARY MOVED 2026-07-17 — see §12): this file §5 owns the boundary; `--ui-` is control-owned,
+  BOUNDARY MOVED 2026-07-17: see §12): this file §5 owns the boundary; `--ui-` is control-owned,
   `--md-sys-` is system-owned. No convergence, no third tier.
 
 ## 6 · Parts, roles, states
 
 - **`data-part`** = control-CREATED anatomy; kebab NOUNS. Reuse a name across controls only for
   the same meaning (`panel` = the floating surface, everywhere). Every rendered part is declared
-  in the descriptor's `parts:` (truthful-to-the-DOM — the house rule; the gate is planned, §11).
-- **`data-slot`** = the CONSUMER-side composition-slot claim — which named owner slot a light-DOM
+  in the descriptor's `parts:` (truthful-to-the-DOM; the house rule; the gate is planned, §11).
+- **`data-slot`** = the CONSUMER-side composition-slot claim, which named owner slot a light-DOM
   child fills ([ADR-0157](../adr/0157-anatomy-attribute-axis-vocabulary.md); realized per-slot via
   the fleet's `[slot=…]` projection grammar, e.g. ADR-0158's `slot="summary"`).
 - **State/variant axes** (`data-side` · `data-active` · `data-segment` · `data-narrow-open` · …) =
-  orthogonal runtime state, each its OWN single data attribute — never overloaded onto `data-part` —
+  orthogonal runtime state, each its OWN single data attribute, never overloaded onto `data-part`:
   keeping the uniform (0,1,0) attribute-selector algebra (shell SPEC-R12, GH #197) intact
   ([ADR-0157](../adr/0157-anatomy-attribute-axis-vocabulary.md)).
-- **`part`** (native) = RESERVED for any future shadow-DOM surface; zero uses in `packages/` today —
+- **`part`** (native) = RESERVED for any future shadow-DOM surface; zero uses in `packages/` today:
   the only textual `::part` matches are descriptor comments disclaiming it
   ([ADR-0157](../adr/0157-anatomy-attribute-axis-vocabulary.md)).
 - **`data-role`** = author/content-model kinds inside a control's light DOM. The LIVE vocabulary
@@ -172,54 +172,54 @@ The prefix IS the ownership boundary — no allowlist needed:
   descriptor's `contentModel` + this file's registry: icon · caret · marker · detail · text ·
   list · label · numeric · currency · stepper · magnifier · description · timestamp · shortcut ·
   reveal · group-label · calendar · swatch · trailing · clear · before-sentinel · tag (ADR-0130
-  cl.7 — anatomy.md's reserved `tag` role realized, `ui-nav-rail-item`'s trailing name|tag row;
+  cl.7: anatomy.md's reserved `tag` role realized, `ui-nav-rail-item`'s trailing name|tag row;
   purely additive, no anatomy.md text change needed) (mechanism
-  artifact — rename candidates stay fix-on-touch). The registry covers control-emitted roles plus
-  named AUTHOR hooks a descriptor advertises (today: `empty` — command-modal's author hook; the gate pins that no data-role="command-modal" exists).
+  artifact: rename candidates stay fix-on-touch). The registry covers control-emitted roles plus
+  named AUTHOR hooks a descriptor advertises (today: `empty`; command-modal's author hook; the gate pins that no data-role="command-modal" exists).
   `ui-conversation`'s per-turn bubble speaker kind adds three: `user` · `agent` · `system`
-  (app-surfaces-m2.spec.md SPEC-R4 — the thread's own light-DOM content model; app-tier, not agent-emittable).
-  `ui-agent-admin`'s composed panes add: `canvas` · `tabs` (vision rev.5, Kim's Figma frame 33:1693 —
+  (app-surfaces-m2.spec.md SPEC-R4: the thread's own light-DOM content model; app-tier, not agent-emittable).
+  `ui-agent-admin`'s composed panes add: `canvas` · `tabs` (vision rev.5, Kim's Figma frame 33:1693;
   the chat pane plus the ONE {Settings, Context: System, Context: Dialog} tabs pane the old
   `prompts`/`settings`/`tabs-medium` trio dissolved into; the SAME "which pane is this" role category
-  `list`/`detail` already cover, above; app-tier, not agent-emittable) — plus `agent-content` ·
+  `list`/`detail` already cover, above; app-tier, not agent-emittable), plus `agent-content` ·
   `capabilities-content` · `surface-content` · `context-system-content` · `context-dialog-content`, the
   FIVE reparent-able content units that migrate between a split-layout tab panel and a narrow tab panel
   (the TKT-0085 `agent-content` wrapper discipline: `settings-content` first, renamed + tripled when the
   prompts column merged into Settings and the Context tab landed, then GH #161 split that one Context
-  content unit into the System/Dialog pair — one tab each, then GH #574 split `settings-content` ITSELF
-  into three ranked units — `agent-content`/`capabilities-content`/`surface-content` — one per new tab);
-  all app-tier, not agent-emittable. `ui-timeline-item` adds `nested` (ADR-0143 F1, TKT-0091) — a genuine nested
+  content unit into the System/Dialog pair, one tab each, then GH #574 split `settings-content` ITSELF
+  into three ranked units, `agent-content`/`capabilities-content`/`surface-content`, one per new tab);
+  all app-tier, not agent-emittable. `ui-timeline-item` adds `nested` (ADR-0143 F1, TKT-0091): a genuine nested
   `<ui-timeline>` adopted into the same shared disclosure `detail` uses, recursion at arbitrary
   authored depth; control-emitted, agent-emittable like `detail`. `ui-status-stream` adds `action`
-  (GH #147/ADR-0153 Fork 2) — the host-appended cell hosting an `error`-status entry's inline retry
+  (GH #147/ADR-0153 Fork 2): the host-appended cell hosting an `error`-status entry's inline retry
   `<ui-button>`; control-emitted, the SAME "host creates a plain cell outside the item's own anatomy"
-  shape `text` already uses. `ui-status-stream` also adds `source` (GH #240/ADR-0159 wave B) — the
+  shape `text` already uses. `ui-status-stream` also adds `source` (GH #240/ADR-0159 wave B): the
   mono `<pre>` inside an entry's per-step reveal, rendering the raw wire line(s) the step stands for
   (planted under a `[data-role="detail"]` child the item's own anatomy adopts into its shared
   disclosure); control-emitted, host-created like `action`/`text`, never author-composed.
-  `ui-drill` adds `drill-trigger` (ADR-0195, GH #954) — a named AUTHOR hook (the command-modal
+  `ui-drill` adds `drill-trigger` (ADR-0195, GH #954): a named AUTHOR hook (the command-modal
   `empty` precedent, not control-emitted): any descendant of the ACTIVE `ui-drill-panel` carrying
   `data-role="drill-trigger"` + `data-drill-key="<key>"` drills into that key on click/Enter/Space.
 - **Custom states** (`internals.states` / `:state()`) are ADJECTIVES/participles, lowercase,
   kebab: ready · user-invalid · checked · dragging · revealed · disabled · collapsed · truncated
-  · selected · indeterminate · pressed · settled (GH #722 — ui-status-stream's finalize()/fail()
-  face, a consumer-keyable public state) · pending (ADR-0191, GH #999 — the fleet-wide
+  · selected · indeterminate · pressed · settled (GH #722: ui-status-stream's finalize()/fail()
+  face, a consumer-keyable public state) · pending (ADR-0191, GH #999: the fleet-wide
   async-freshness state; `ui-status-stream`'s own first-consumer wiring composes it WITH
-  `settled` rather than clearing one on the other) · answered (ADR-0196, GH #1065 — the
+  `settled` rather than clearing one on the other) · answered (ADR-0196, GH #1065: the
   answered/settled-CHOICE state on the seven choice controls; presentation-only, composes under the
   precedence `disabled > pending > answered > focus > hover > filled > default`) · working (ADR-0199,
-  GH #1104 — the live-surface-mutation state: this surface is the live target of an in-flight
+  GH #1104: the live-surface-mutation state: this surface is the live target of an in-flight
   producer turn's in-place mutations, the INVERSE of `pending`'s stale-content message; first
   consumer `ui-surface-host`; precedence-slotted `disabled > pending > working > answered > …`,
-  interaction-states.md §7) · superseded (GH #1164 — the settled-history state: a LATER turn shifted
+  interaction-states.md §7) · superseded (GH #1164: the settled-history state: a LATER turn shifted
   the conversation's live focus to a newer surface, so this one must stop reading as live; NOT
-  presentation-only — flipping it runs a real, reversible disable sweep over interactive
+  presentation-only: flipping it runs a real, reversible disable sweep over interactive
   descendants; first consumer `ui-surface-host`, flipped by `ui-conversation`'s registry routing;
   visually it dims BELOW the disabled/pending/working rungs). A verb or noun is
   not a state name. `pressed`
-  (ADR-0179 GH #686 Amendment S7-a) — `ui-toggle`'s ARIA-pressed toggle-button state; distinct
+  (ADR-0179 GH #686 Amendment S7-a): `ui-toggle`'s ARIA-pressed toggle-button state; distinct
   from `checked` (an Indicator-class boolean form value/ARIA-checked pattern) and `selected`
-  (mutually-exclusive choice, e.g. radio/tab) — `ui-toggle` is neither: an independent, non-form
+  (mutually-exclusive choice, e.g. radio/tab); `ui-toggle` is neither: an independent, non-form
   boolean matching the native `aria-pressed` toggle-button pattern.
 
 ## 7 · A2UI catalog types
@@ -233,7 +233,7 @@ tag's name-words.
 
 `@agent-ui/{pkg}`. Subpath grammar is PER-PACKAGE by history (inventory #3): components =
 `./controls/{name}`; app/router = bare `./{name}`; code/icons = pack names. RULE for new
-packages: bare `./{name}` (the app/router shape — the `controls/` segment was components-era);
+packages: bare `./{name}` (the app/router shape; the `controls/` segment was components-era);
 existing packages never churn their public export map for naming's sake.
 
 ## 9 · Files, folders, traits
@@ -241,15 +241,15 @@ existing packages never churn their public export map for naming's sake.
 - The per-control set: `controls/{name}/{name}.{ts,css,md,test.ts,browser.test.ts}` (+ the probe
   variants). One folder per FAMILY: sub-elements nest in the family folder (card, tabs, swiper,
   split, toast, radio are the canon; timeline-item/segment/segmented-control/slider-multi are
-  recorded exceptions — fix-on-touch means a family's NEXT wave may consolidate, never a
+  recorded exceptions: fix-on-touch means a family's NEXT wave may consolidate, never a
   dedicated churn commit).
 - Traits: the file is the kebab of the exported camelCase verb-ish factory; prefer
   `{noun}-{verb}`/`{verb}-{noun}` compounds that read as capabilities (value-drag, pane-resize);
   bare adjectives only for predicates (tabbable).
 
-## 10 · The five-question rubric (run at every intake — folded into component-design)
+## 10 · The five-question rubric (run at every intake: folded into component-design)
 
-1. **Which namespace(s)** does this name enter? (A new control enters ~7 at once — derive the
+1. **Which namespace(s)** does this name enter? (A new control enters ~7 at once: derive the
    full set from the family name; §13's worked example.)
 2. **Does a reserved word collide?** (§3's list + the concept-canon check: does this concept
    already have a fleet name?)
@@ -257,7 +257,7 @@ existing packages never churn their public export map for naming's sake.
    the admission.)
 4. **Does the prefix match ownership?** (Who may declare it; who may only consume it.)
 5. **Is it derivable?** (Could a reader reconstruct it from the family name + this file? If it
-   needs explaining, rename it now — it will never be cheaper.)
+   needs explaining, rename it now: it will never be cheaper.)
 
 ## 11 · Gates (existing → planned)
 
@@ -265,7 +265,7 @@ Existing: tag↔class↔folder + the size enum + descriptor-event allowlist + to
 (family-coherence) · catalog UAX-31 (naming.test.ts) · doc IDs (docs-grammar). Planned closures
 (the TKT-0025 build slices): the **emit-seam event allowlist** (source-scan: `emit(`/`new
 CustomEvent(` ∈ §4), the **custom-state vocabulary** scan (§6's set), the **data-role registry**
-scan (§6's set), and the **descriptor↔DOM `parts[]` truthfulness** gate (render-and-compare —
+scan (§6's set), and the **descriptor↔DOM `parts[]` truthfulness** gate (render-and-compare:
 the color-picker L2 hole).
 
 ## 12 · Recorded exceptions (fix-on-touch; the gates exempt exactly these)
@@ -274,38 +274,38 @@ the color-picker L2 hole).
 `emphasis` as a boolean · `data-part="aria-label"` ×3 · ComponentPreview extends HTMLElement ·
 the foundation/control `--ui-` overlap (allowlist-managed) · anatomy.md's stale data-role list
 (repair owed) · the nested-vs-own-folder sub-element split · `open` declared with zero producers
-(keep: the vocabulary slot is real; producers arrive with future overlays) · **the two token dialects — RULED
+(keep: the vocabulary slot is real; producers arrive with future overlays) · **the two token dialects: RULED
 (Kim, 2026-07-12): permanent two-tier** (`--ui-*` control/foundation vs `--md-sys-*` system; §5
-owns the boundary; convergence — ≈2830 sites — rejected). The fork is closed — **PARTIALLY
+owns the boundary; convergence (≈2830 sites) rejected). The fork is closed: **PARTIALLY
 SUPERSEDED (Kim, 2026-07-17, ADR-0140, the THEMING intake):** the two-tier split itself STANDS
-(never converged to one prefix), but the BOUNDARY MOVED — the ~34 shared foundation constants
+(never converged to one prefix), but the BOUNDARY MOVED: the ~34 shared foundation constants
 (`dimensions.css`/`base.css`) that used to share `--ui-` "by history" migrated to `--md-sys-*`
 (TKT-0086, ~2260 sites), so the split is no longer allowlist-managed: `--ui-` now means
 control-owned, full stop. The 2026-07-12 rejection (converging ALL ~2830 sites incl. per-control
-tokens to one prefix) still stands — that fork stays closed; only the FOUNDATION half moved. ·
-`ui-theme-provider.scheme`'s `''` sentinel (canon: `'auto'`, §3) — ADR-0117 load-bearing, keep ·
-`ui-swiper.duration`'s CSS `<time>` string (canon: milliseconds number, §3) — feeds CSS timing,
-reflected for that reason, keep · **the `name`/`value` repurposers — RULED (Kim, 2026-07-16,
+tokens to one prefix) still stands: that fork stays closed; only the FOUNDATION half moved. ·
+`ui-theme-provider.scheme`'s `''` sentinel (canon: `'auto'`, §3); ADR-0117 load-bearing, keep ·
+`ui-swiper.duration`'s CSS `<time>` string (canon: milliseconds number, §3); feeds CSS timing,
+reflected for that reason, keep · **the `name`/`value` repurposers: RULED (Kim, 2026-07-16,
 TKT-0069 item 1) and EXECUTED same day: the fleet-wide §3 reservation STANDS; all EIGHT renamed**
 (`ui-icon.name`→`glyph`, later `symbol` (below) · `ui-avatar.name`→`identity` · `ui-attachment.name`→`filename` ·
 `ui-stat.value`→`figure` · `ui-swatch.value`→`color` · `ui-swiper-item.value`→`key` ·
-`ui-progress.value`→`current` · `ui-tab.value`→`key`, the eighth — found at execution, the
+`ui-progress.value`→`current` · `ui-tab.value`→`key`, the eighth: found at execution, the
 swiper-item comment's own cited precedent; ADR-0245 cl.4 then renamed `ui-icon.glyph`→`symbol`, shipped at the
 2026-10-13 cut: `symbol` is the prop of `ui-icon` (pack art) and of the new `ui-glyph` (a functional mark from
 the closed twelve-mark set), the deprecated `glyph` alias on `ui-icon` retired in T-0169, and the word
 "glyph" now names one thing, the functional-mark element and its box (`--md-sys-glyph-box`)). The A2UI catalog keeps its shipped WIRE field names
 (`Icon.name`, `Stat.value`, …): `catalog.json`'s `mapsTo` + `mappedAccessorFactory` translate
-wire→prop at apply time, so every corpus record and taught idiom stays valid — the ONE catalog-vs-
+wire→prop at apply time, so every corpus record and taught idiom stays valid: the ONE catalog-vs-
 component naming divergence class, deliberate (§7's namespace is the protocol surface, §3's is the
-DOM surface). · **`ui-otp-field`'s `otp` acronym — RULED (Kim, GH #490 comment
+DOM surface). · **`ui-otp-field`'s `otp` acronym: RULED (Kim, GH #490 comment
 [5221585741](https://github.com/kimgranlund/agent-ui/issues/490#issuecomment-5221585741),
-code-entry-control.lld.md §2 Tag row): the owner-accepted exception to §1's never-abbreviate law** —
+code-entry-control.lld.md §2 Tag row): the owner-accepted exception to §1's never-abbreviate law**;
 shorter and unambiguous in the auth domain, and `-field` places it in the entry family the way
 `text-field` already does; the working-title alternatives (`ui-code-entry` collided with the
 `@agent-ui/code`/`ui-code-editor`/catalog-`Code` concept canon, `ui-one-time-code` was the platform-canon
 spelling v0.1 recommended) were both superseded by this ruling. Closed, not re-litigable at build.
 
-## 13 · The worked example — deriving a family's names from ONE decision
+## 13 · The worked example: deriving a family's names from ONE decision
 
 Decision: the family is **`swiper`**. Derived, no further choices: folder `controls/swiper/`;
 tags `ui-swiper` + `ui-swiper-{item,label,paddles,pagination}`; classes `UISwiper{…}Element`;

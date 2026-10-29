@@ -1,9 +1,9 @@
-# Component packaging — folder, barrels, host page
+# Component packaging: folder, barrels, host page
 
 > Canonical how-to-apply standard for how an agent-ui component is laid out on disk, exposed by the
 > package, and consumed by a host page. **Derived** from the decisions [`ADR-0003`](../adr/0003-single-file-component-css-barrels-host-page.md)
 > (single-file CSS + barrels + host-page packaging) and [`ADR-0004`](../adr/0004-component-descriptor-md-frontmatter.md)
-> (the `{name}.md` frontmatter descriptor) — those carry the rationale; this doc is the resolved shape.
+> (the `{name}.md` frontmatter descriptor): those carry the rationale; this doc is the resolved shape.
 > The styling *content* rules live in [`geometry.md`](./geometry.md) + [`tokens.md`](./tokens.md); the
 > authoring procedure is the `make-component` skill, which points here. Distilled 2026-06-27.
 
@@ -11,44 +11,44 @@
 
 One folder per control, **self-defining on import**. A FACE control lives under its enforced layer
 `controls/{name}/`; the later display/pattern catalog is reserved `components/{name}/`. The folder is
-moved/renamed/deleted as a unit — nothing reaches across folders.
+moved/renamed/deleted as a unit: nothing reaches across folders.
 
 The exact file set is `{name}.{ts,css,md}` plus co-located tests:
 
 | File | Role |
 |---|---|
-| `{name}.ts` | **Behaviour only** — props (`static props`), role/ARIA via `ElementInternals`, traits, and the self-`define` at module end. No styling, no runtime style injection (plan §2). |
-| `{name}.css` | **One** stylesheet (ADR-0003) — two sectioned blocks: a `:where(ui-{name})` token block then an `@scope (ui-{name})` styles block. Standalone; never injected from the `.ts`. |
-| `{name}.md` | The descriptor (ADR-0004) — YAML frontmatter (the machine-checkable public surface) + a prose body (the `/site` doc). Replaces the former `{name}.api.json`. |
+| `{name}.ts` | **Behaviour only**: props (`static props`), role/ARIA via `ElementInternals`, traits, and the self-`define` at module end. No styling, no runtime style injection (plan §2). |
+| `{name}.css` | **One** stylesheet (ADR-0003): two sectioned blocks: a `:where(ui-{name})` token block then an `@scope (ui-{name})` styles block. Standalone; never injected from the `.ts`. |
+| `{name}.md` | The descriptor (ADR-0004): YAML frontmatter (the machine-checkable public surface) + a prose body (the `/site` doc). Replaces the former `{name}.api.json`. |
 | `{name}.test.ts` | jsdom unit/behaviour probes. |
-| `{name}-*.browser.test.ts` | Cross-engine (real-browser) probes — geometry/state behaviour jsdom can't see. |
+| `{name}-*.browser.test.ts` | Cross-engine (real-browser) probes: geometry/state behaviour jsdom can't see. |
 | `{name}-{css,geometry,descriptor,…}.test.ts` | Content-level trip-wire probes (token hygiene, geometry law, descriptor↔`static props`). |
 
 Worked reference: `packages/agent-ui/components/src/controls/button/` (the gold `ui-button` every later
 control copies).
 
-### The single `{name}.css` — two sectioned blocks
+### The single `{name}.css`: two sectioned blocks
 
 The CSS-trio (`{name}-tokens.css` + `{name}-styles.css` + a barrel) collapsed to **one file** (ADR-0003);
-the styling invariants are unchanged — only the file count dropped from three to one. The two layers must
+the styling invariants are unchanged, only the file count dropped from three to one. The two layers must
 stay visibly sectioned (a comment banner) so the token-hygiene probe can still tell the declaration layer
 from the consumption layer in one file:
 
-1. **`:where(ui-{name})` token block** (specificity 0,0,0) — *declares* `--ui-{name}-*` from the colour
+1. **`:where(ui-{name})` token block** (specificity 0,0,0): *declares* `--ui-{name}-*` from the colour
    roles (`--md-sys-color-{family}-{role}`) and the dimensional ramp (`--ui-{height,font,gap}-{size}`); `[variant]`/
-   `[size]`/state selectors repoint those tokens. No `color-mix` — colour opinions stay in the token layer.
-2. **`@scope (ui-{name})` styles block** — *consumes only* `--ui-{name}-*`. Geometry per `geometry.md`,
+   `[size]`/state selectors repoint those tokens. No `color-mix`: colour opinions stay in the token layer.
+2. **`@scope (ui-{name})` styles block**: *consumes only* `--ui-{name}-*`. Geometry per `geometry.md`,
    colour channels per `tokens.md`.
 
 ### The `{name}.md` descriptor
 
-The frontmatter is the **one** source of truth for the public surface — the same file is both the
+The frontmatter is the **one** source of truth for the public surface: the same file is both the
 machine-checkable contract and the human doc, so a contract file and a doc file cannot drift (they are the
 same file, ADR-0004). Frontmatter fields: `tag · tier · extends · attributes[type/reflect/default/values]
 · properties · events · slots · parts · customStates · face · aria · keyboard · geometry · forcedColors`;
 the markdown body below the fence is the prose `/site` page. Two consumers read it through the
-`@agent-ui/components/descriptor` parser — the contract↔props trip-wire (frontmatter `attributes[]` ≡ the
-live `finalize(Class)` table) and the `/site` doc generator — **one parser, never a forked dialect**.
+`@agent-ui/components/descriptor` parser: the contract↔props trip-wire (frontmatter `attributes[]` ≡ the
+live `finalize(Class)` table) and the `/site` doc generator: **one parser, never a forked dialect**.
 
 **The `uses:` field is derived, never hand-written** ([`ADR-0233`](../adr/0233-per-control-entries-and-generated-control-registry.md)).
 Every fleet descriptor (`controls/{folder}/{name}.md` outside a `_` folder) carries `uses:`, on the line after
@@ -79,24 +79,24 @@ pagination and radio sheets along. A control sheet never imports a `_` seam and 
 `src/controls/css-order.browser.test.ts` proves on both engines that control sheets load in any order.
 
 **The `description:` field describes, it doesn't cite provenance.** It flows verbatim into every `/site`
-T4 API page (`site-authoring`'s DERIVE-FIRST principle — one source, many consumers), so the same rule
+T4 API page (`site-authoring`'s DERIVE-FIRST principle: one source, many consumers), so the same rule
 `site-authoring`'s `best-practices.md` states for page prose applies here, at the source: say what the
-component *is* and *does* for a reader deciding whether to use it — never which `TKT-####`/`ADR-####`
+component *is* and *does* for a reader deciding whether to use it, never which `TKT-####`/`ADR-####`
 built or changed it. A **normative** citation is still fine if the description states a rule/contract the
 reader needs (rare for a one-line summary); a **provenance** citation (which ticket shipped this, which
-ADR record exists) never belongs here — link it from the component's own ADR/ticket instead, not the
+ADR record exists) never belongs here: link it from the component's own ADR/ticket instead, not the
 public-facing descriptor. `textarea.md`'s `description:` was the one fleet instance found carrying this
-(`"...the fleet's first long-form editable primitive (ADR-0134), a sibling of..."`) — fixed alongside this
+(`"...the fleet's first long-form editable primitive (ADR-0134), a sibling of..."`): fixed alongside this
 rule (TKT-0053).
 
-## The package exports map — the barrels
+## The package exports map: the barrels
 
 The package exposes its surface through `exports` subpaths, not deep file paths. Verified against
 `packages/agent-ui/components/package.json`:
 
 | Subpath | Target | What it is |
 |---|---|---|
-| `@agent-ui/components` | `src/index.ts` | Framework primitives (the `reactive` + `dom` layers — `UIElement`, props, template). No controls, no styles. |
+| `@agent-ui/components` | `src/index.ts` | Framework primitives (the `reactive` + `dom` layers: `UIElement`, props, template). No controls, no styles. |
 | `@agent-ui/components/descriptor` | `src/descriptor/index.ts` | The `{name}.md` frontmatter reader + schema + contract↔props trip-wire (ADR-0004). |
 | `@agent-ui/components/controls/{name}` | `src/controls/{folder}/{name}.ts` | **One control** (generated key): importing it self-defines that tag and the tags it `uses`, nothing else. |
 | `@agent-ui/components/controls/{name}.css` | `src/controls/{folder}/{name}.css` | **That control's sheet** (generated key): self-contained through its `uses` prologue; link `shared-styles.css` once before it. |
@@ -113,7 +113,7 @@ The package exposes its surface through `exports` subpaths, not deep file paths.
 | `@agent-ui/components/traits/scroll-fade` | `src/traits/scroll-fade.ts` | The edge-aware scroll-fade trait, opt-in; moved off the root barrel (T-0526). |
 | `@agent-ui/components/traits/scroll-spy` | `src/traits/scroll-spy.ts` | The scroll-spy trait, opt-in. |
 | `@agent-ui/components/shared-styles.css` | `src/shared-styles.css` | **The seam sheet** (ADR-0233): the cross-family `_surface/container.css`, `_surface/container-box.css` and `_chart/chart-axis.css` layers, in that order, loaded once before any control sheet. |
-| `@agent-ui/components/base-styles.css` | `src/base-styles.css` | **Document BASE barrel** (opt-in) — `@agent-ui/shared/base.css`: the foundational theme for a SHELL-LESS host page (body typeface `--ui-sans`, body leading, ambient ink/surface, font smoothing). A page composing a shell that sets its own document rule (the docs `_page.css`) does not need it. |
+| `@agent-ui/components/base-styles.css` | `src/base-styles.css` | **Document BASE barrel** (opt-in): `@agent-ui/shared/base.css`: the foundational theme for a SHELL-LESS host page (body typeface `--ui-sans`, body leading, ambient ink/surface, font smoothing). A page composing a shell that sets its own document rule (the docs `_page.css`) does not need it. |
 
 The CSS barrels chain across the one allowed cross-package edge: `foundation-styles.css` imports
 `@agent-ui/shared`'s `tokens.css`, `dimensions.css`, `foundations.css` + `foundations-bridge.css`, and `base-styles.css` imports its `base.css`
@@ -185,7 +185,7 @@ use the demo-only `all.css` (lines 2 and 3) and `all` (line 4) to get the whole 
 
 ## Resolution: the `exports` map, not bundler aliases
 
-Subpaths resolve through the package `exports` map (above) — **not** Vite path aliases. Under Vite 8's
+Subpaths resolve through the package `exports` map (above): **not** Vite path aliases. Under Vite 8's
 Rolldown engine, aliases mangle package subpaths (`@agent-ui/components/foundation-styles.css` and the
 `@agent-ui/shared/*` CSS subpaths in particular); the `exports` map is the resolver of record. Add a new
 control by adding its folder and descriptor, then running `node scripts/codemod-uses.mjs` to write its
@@ -195,7 +195,7 @@ existing public subpaths never change. A new cross-family seam goes in `shared-s
 
 ## Siblings
 
-- `make-component` (skill) — the procedure that *produces* this shape; points here for the layout.
-- [`tokens.md`](./tokens.md) — the colour-role channel pattern the `:where()` block declares.
-- [`geometry.md`](./geometry.md) — the geometry law the `@scope` block obeys.
-- [`ADR-0003`](../adr/0003-single-file-component-css-barrels-host-page.md) · [`ADR-0004`](../adr/0004-component-descriptor-md-frontmatter.md) — the decisions this doc applies.
+- `make-component` (skill): the procedure that *produces* this shape; points here for the layout.
+- [`tokens.md`](./tokens.md): the colour-role channel pattern the `:where()` block declares.
+- [`geometry.md`](./geometry.md): the geometry law the `@scope` block obeys.
+- [`ADR-0003`](../adr/0003-single-file-component-css-barrels-host-page.md) · [`ADR-0004`](../adr/0004-component-descriptor-md-frontmatter.md): the decisions this doc applies.

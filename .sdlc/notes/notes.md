@@ -1373,3 +1373,8 @@
 ## T-0580: The 0.2.1 release notes cover every PR merged through 2383 (2026-10-29)
 
 - note: .github/release-notes/v0.2.1.md:36 the Producer repairs bullet now chains three "and" clauses ("closed in place, and an unparseable..."), so it reads a little awkwardly.
+
+## T-0579: The daily-read docs carry no em dashes (2026-10-29)
+
+- note: .claude/docs/rubrics/genui-pack-idiom.md D2 row: the pack files under `packages/agent-ui/a2ui/src/agent/prompts/genui-packs/` still use the literal `Anatomy — a ...` heading; the rubric now says "named `Anatomy` sections" and "the `Anatomy` entries for a bar/column comparison". Meaning holds, but the quoted literal is no longer exact.
+- note: the solo report says `grep -c` exits 2 as written in the Done-when text because it names no pattern. The acceptance criterion #1 uses a valid grep and I judged that one.

@@ -1,13 +1,13 @@
-# Rubric — A2UI Corpus Quality (the tier-2 admission judge standard)
+# Rubric: A2UI Corpus Quality (the tier-2 admission judge standard)
 
 version: 1.5
 
 > Layer: rubric (a **runtime-consumed** judge standard, not a graded-once document) · 2026-07-03
-> **Version history (the ADR-0068 marker pattern — bump whenever a dimension or anchor moves):**
+> **Version history (the ADR-0068 marker pattern: bump whenever a dimension or anchor moves):**
 > 1.0 = the original five-dimension standard (2026-07-03) · 1.1 = D1's fold widened P1–P7 → P1–P8 when
 > `a2ui-payload.md` 1.1 added P8 (2026-08-06, GH #474/#747) · **1.2 = D1's fold widened P1–P8 → P1–P9
-> when `a2ui-payload.md` 1.2 added P9, card anatomy (2026-08-18, GH #1262 — Kim ruling on the PR #1261
-> judges' escalation; the P9 row itself is GH #1199) — D2–D5 text unchanged; the calibration record below
+> when `a2ui-payload.md` 1.2 added P9, card anatomy (2026-08-18, GH #1262: Kim ruling on the PR #1261
+> judges' escalation; the P9 row itself is GH #1199): D2–D5 text unchanged; the calibration record below
 > is re-read against P9 and now shows its example FAILING D1 (see the record).** Every VerdictsFile authored
 > from 2026-08-18 until the 1.3 bump cites `1.2`. **1.3 = the facet-scoped bump (2026-10-04, ADR-0231 cl.5,
 > GH #1739): the corpus gained the model-visible `multi-turn` and `repair` facets, so the dimensions table
@@ -31,23 +31,23 @@ version: 1.5
 > `a2ui-review-agent` critic scores each record against **these exact dimensions** and authors a
 > VerdictsFile; `createVerdictJudge` plumbs those verdicts into the pipeline; `import-seeds --verdicts`
 > and `rescore` consume them. Change a dimension name or the aggregation and you change what the corpus
-> admits — treat this document as load-bearing code, not prose.
+> admits: treat this document as load-bearing code, not prose.
 > Companions: the shards are `packages/agent-ui/a2ui/corpus/<facet>/v1_0/<catalogId>.jsonl`, one directory
 > per model-visible facet (`exemplar`, `multi-turn`, `repair`; ADR-0231 cl.1/cl.4); the record
-> schema is `src/corpus/record.ts` (SPEC §5.1 — this rubric never restates it). Scale 1–5; 1 = failure,
+> schema is `src/corpus/record.ts` (SPEC §5.1: this rubric never restates it). Scale 1–5; 1 = failure,
 > 3 = adequate, 5 = excellent.
 
-## Runtime role — why the shape is fixed (read before editing)
+## Runtime role: why the shape is fixed (read before editing)
 
 1. **The aggregation is the SPEC-R8 bar.** `qualityScore = MIN across the applicable [gate]-typed
    dimensions` on the 1–5 scale; `passed = (qualityScore ≥ 4)`. Because the score is a MIN, a record is
-   admitted only when **every** applicable gated dimension is ≥ 4 — one weak dimension sinks the record.
+   admitted only when **every** applicable gated dimension is ≥ 4: one weak dimension sinks the record.
    The critic's VerdictsFile records `{ qualityScore, passed, failingDimensions }` per record, where
    `failingDimensions` lists every gated dimension scoring < 4 (corpus SPEC-R8 AC2 · ADR-0068 cl.3).
 2. **The `version:` marker is a runtime contract.** The `version:` line above (currently `1.5`) is the rubric's
    identity. Every VerdictsFile MUST cite it as `rubricVersion` (ADR-0068 cl.1 · SPEC §5.3); the Node
    shell reads this marker and `parseVerdictsFile(text, expectedRubricVersion)` (build slice h11)
-   **rejects** any verdicts file whose `rubricVersion` ≠ this marker — a verdict is meaningless without
+   **rejects** any verdicts file whose `rubricVersion` ≠ this marker: a verdict is meaningless without
    the standard it scored against. Bump this version whenever a dimension or an anchor moves. Every
    prior VerdictsFile must be re-authored against the new version when a dimension or an anchor **that
    applies to the judged facet** moves (ADR-0231 cl.5): a bump that only adds facet-scoped dimensions
@@ -56,18 +56,18 @@ version: 1.5
    every archived verdict already applied moves no read, so it re-authors nothing either (1.4's D2 and D5
    rulings, GH #1769: Kim's "no rescore is needed"). The VerdictsFile also carries
    `rubric: "a2ui-corpus"` (the name) separately; `rubricVersion` is only this marker's value.
-3. **Tag semantics in this rubric.** `[gate]` marks a dimension whose score **gates admission** — it is
-   one of the terms of the `qualityScore` MIN; `[review]` (none used here — see below) would mark an
+3. **Tag semantics in this rubric.** `[gate]` marks a dimension whose score **gates admission**: it is
+   one of the terms of the `qualityScore` MIN; `[review]` (none used here: see below) would mark an
    advisory dimension scored but excluded from the MIN. Every `[gate]` dimension names a **deterministic
-   evidence floor** — a script/enum/CLI verdict that fixes its 1↔3 boundary — and the critic applies
+   evidence floor** (a script/enum/CLI verdict that fixes its 1↔3 boundary) and the critic applies
    judgment only above that floor. This specializes the rubric-for-rubrics `[gate]` (which reads "purely
    mechanical") for a tier-2 judge, where corpus SPEC-R8 requires the score itself to carry judgment; the
    floor keeps the tag honest, the judgment above it is what tier-2 is *for*. All seven dimensions (D6 and D7 facet-scoped) are
-   `[gate]` because a record failing **any one** of them is unfit for the corpus — there is no advisory
+   `[gate]` because a record failing **any one** of them is unfit for the corpus: there is no advisory
    quality axis here.
 4. **Cite, never re-judge a script.** Each gated dimension's floor **cites** a realized deterministic
-   verdict (the `validate-payload` CLI via `a2ui-payload.md`, `validateRecord`'s enum, the θ_dup index)
-   — it does not recompute it (`process.md` rule 1). A record that already failed tier-1 (`E_SCHEMA`,
+   verdict (the `validate-payload` CLI via `a2ui-payload.md`, `validateRecord`'s enum, the θ_dup index):
+   it does not recompute it (`process.md` rule 1). A record that already failed tier-1 (`E_SCHEMA`,
    `E_CATALOG`, `E_IDGRAPH`, `E_POINTER`) or dedup (`E_DUP`) never reaches this judge; the floors here
    are the *low anchors* those same mechanisms define, not a second implementation of them. D6 and D7 cite
    admission's own facet checks the same way (ADR-0231 cl.2/cl.3): action grounding plus the prior-seeded
@@ -99,11 +99,11 @@ version: 1.5
   cl.4).
 - **Top failure to look for first:** a record that is tier-1-green and looks clean but scores 1 on **D3**
   because a consumer read `target` raw instead of `target ?? description` (grading `undefined`), or on
-  **D2** because the `promptText` is an authoring stub rather than a real user request — both pass every
+  **D2** because the `promptText` is an authoring stub rather than a real user request: both pass every
   deterministic gate yet make the record useless as conditioning material. That is the whole reason tier 2
   exists.
 - **Calibration is mandatory (harness SPEC-R3 AC2):** two independent fresh-context scorings of the same record
-  MUST agree within **±1 on every gated dimension**. A wider spread means an anchor is ambiguous —
+  MUST agree within **±1 on every gated dimension**. A wider spread means an anchor is ambiguous:
   **repair the anchor (the source), never widen the tolerance** (harness LLD §8 discovered-reality note).
 
 ## Calibration record (harness SPEC-R3 AC2)
@@ -126,38 +126,38 @@ so the seven stand without a rescore: every multi-turn and repair read is D2 = 5
 is D5 = 4, now on the anchor rather than beside it.
 
 **Record scored:** `pattern-confirmation-card` from the 11-seed shelf
-(`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`) — an exemplar-facet record. Its
+(`packages/agent-ui/a2ui/corpus/exemplar/v1_0/agent-ui.jsonl`): an exemplar-facet record. Its
 `promptText` asks to "confirm deleting their workspace, with Cancel and Delete buttons"; its
-`description` is "A destructive-action confirmation card — two Buttons whose action names carry the
+`description` is "A destructive-action confirmation card: two Buttons whose action names carry the
 intent"; its `a2uiOutput` is a single-root `Card > CardContent > Column(title, body, actions)` with a
 soft **Cancel** and a solid **Delete workspace** button (`confirm_delete`, `wantResponse`); provenance is
 `authored`, origin `src/examples/patterns.ts`; no explicit `target` (so the effective target is the
 description). It was scored **twice in independent fresh reasoning** simulating two separate critic reads.
 
-**Tolerance:** the two scorings must agree within **±1 on every gated dimension** (harness SPEC-R3 AC2). They do —
+**Tolerance:** the two scorings must agree within **±1 on every gated dimension** (harness SPEC-R3 AC2). They do:
 see Δ below.
 
 **1.2 re-read (2026-08-18, GH #1262).** The 1.0/1.1 record scored D1 = 5 folding P1–P8. Under 1.2's P1–P9
 fold the SAME record reads **D1 = 2**: its two action Buttons ride a `Row` inside `CardContent` and the Card
-ships NO `CardFooter` — below P9's anchor 3 ("every action Button rides in `CardFooter` and nowhere else"),
+ships NO `CardFooter`: below P9's anchor 3 ("every action Button rides in `CardFooter` and nowhere else"),
 above anchor 1 (no populated footer exists for the loose buttons to be scattered AWAY from, and nothing
-interactive sits in a header). Both re-reads land on 2 (Δ 0), so `qualityScore` = MIN = **2, `passed` false** —
+interactive sits in a header). Both re-reads land on 2 (Δ 0), so `qualityScore` = MIN = **2, `passed` false**:
 the calibration example itself now FAILS admission, which is exactly what folding the card-anatomy law in
 does. The table below carries both columns per scoring (1.1 fold → 1.2 fold); D2–D5 are untouched by the bump.
 The record's admitted 1.1 verdict in the shard stands until a judged back-score/re-admission under 1.2 (a
-follow-up on GH #1262's Findings, not this document's job — a rubric never edits the corpus).
+follow-up on GH #1262's Findings, not this document's job: a rubric never edits the corpus).
 
-**P7 reconciliation (2026-08-18, GH #1262 — Kim's take-up of the judges' escalation 1; no anchor moved,
+**P7 reconciliation (2026-08-18, GH #1262: Kim's take-up of the judges' escalation 1; no anchor moved,
 so no version bump).** The judges escalated a conflict between `a2ui-payload.md` P7's Field-wrap anchor
 and the card-anatomy worked sketch (req-a2ui-patterns.md R1, realized as the `frontier-card-anatomy-ask`
-seed — P9's own anchor-3 reference shape), which put the group label in `CardHeader` and the `RadioGroup`
+seed: P9's own anchor-3 reference shape), which put the group label in `CardHeader` and the `RadioGroup`
 bare in `CardContent`. Ruled against the SHIPPED stack, the P7 anchor is RIGHT and stands unchanged: the
 default catalog's `RadioGroup` row declares no `label` prop, and the one programmatic group-name path is
-the `Field` wrap — the ADR-0051 labelling seam (`ui-radio-group` carries `internals.role='radiogroup'`,
+the `Field` wrap: the ADR-0051 labelling seam (`ui-radio-group` carries `internals.role='radiogroup'`,
 so the base `applyFieldLabelling` reflects `ariaLabelledByElements` from the wrapping `ui-field`'s label
 part); a `CardHeader` `Text` is visually adjacent but never programmatically associated. The sketch side
 was the wrong document: the SEED gained the `Field` wrap (`src/examples/catalog-frontier.ts`, same-day;
-the research doc's R1 sketch stays as-written — the seed carries current law, the established
+the research doc's R1 sketch stays as-written: the seed carries current law, the established
 pre-ADR-0201 convention). P7 gains no group-control clause: a bare `RadioGroup` reads 3 exactly as the
 anchor says, the read the admitted shard (25/26 Field-wrapped) already embodies.
 
@@ -169,7 +169,7 @@ anchor says, the read the admitted shard (25/26 Field-wrapped) already embodies.
 | Provenance integrity | 5 | 5 | 0 |
 | Dedup adjacency | 4 | 5 | 1 |
 | qualityScore (MIN of gated dims) | 4 → **2** | 4 → **2** | 0 |
-| passed (≥ 4) | true → **false** | true → **false** | — |
+| passed (≥ 4) | true → **false** | true → **false** | none |
 
 **Reasoning, per scoring:**
 
@@ -178,15 +178,15 @@ anchor says, the read the admitted shard (25/26 Field-wrapped) already embodies.
   destructive action), and the record ships tier-1-green (status `valid`, hash present), so `MIN` across
   `a2ui-payload.md` P1–P8 = 5. Folding P9 in (1.2): the Card has no `CardFooter` and both Buttons sit in
   `CardContent` → P9 = 2 on both reads (see the 1.2 re-read note above) → D1 = 2. The repair is the
-  `frontier-card-anatomy-ask` shape — move the action `Row` into a `CardFooter` (one solid primary + one
-  ghost/soft secondary) — after which P9 reads 5 and D1 returns to 5.
+  `frontier-card-anatomy-ask` shape: move the action `Row` into a `CardFooter` (one solid primary + one
+  ghost/soft secondary): after which P9 reads 5 and D1 returns to 5.
 - **Prompt/description quality (A 5 · B 5).** Both reads: `promptText` is a realistic user request and
   `description` names the concrete idiom ("action names carry the intent"), consistent with the output.
 - **Target-clarity (A 4 · B 4).** No `target`, so the effective target is `target ?? description` = the
   description. Both reads: it names *checkable* features (a confirmation card, two buttons, intent-named
-  actions) — above a bare topic label (3) — but does not enumerate every gradeable element (the copy, the
+  actions): above a bare topic label (3), but does not enumerate every gradeable element (the copy, the
   destructive styling), so short of 5. The tightened D3 anchors ("topic label" vs "gradeable criteria")
-  land both reads on 4; an earlier draft whose 3↔5 anchors were vaguer straddled the bar (A 4, B 3) — the
+  land both reads on 4; an earlier draft whose 3↔5 anchors were vaguer straddled the bar (A 4, B 3): the
   anchors were tightened until the reads converged, per the never-widen-tolerance discipline.
 - **Provenance integrity (A 5 · B 5).** Both reads: `source: authored` is in-enum and
   `origin: src/examples/patterns.ts` is a resolvable repo path.

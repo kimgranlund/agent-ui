@@ -1,4 +1,4 @@
-# Foundations — authoring a ui-* component
+# Foundations: authoring a ui-* component
 
 > The load-bearing mental models component-authoring assumes. Canonical depth lives in the cited docs;
 > this names the concepts so the procedure's judgements have ground to stand on. Distilled 2026-06-26
@@ -7,13 +7,13 @@
 ## The layered architecture
 
 `reactive` ← `dom` ← `traits` ← `controls`. Imports point **inward only**; cross-package, only
-`components` → `@agent-ui/shared`. A component is the top layer, built on the bases — it never reaches
+`components` → `@agent-ui/shared`. A component is the top layer, built on the bases: it never reaches
 into kernel internals. (`CLAUDE.md`, `.claude/docs/process.md`)
 
-## FACE — form-associated custom elements
+## FACE: form-associated custom elements
 
 Form controls participate in a real form via `ElementInternals` (`setFormValue`, `setValidity`, `role`,
-`aria*`), **not** a native `<input>`. ARIA is internals-only — never a host `role`/`aria-*` attribute.
+`aria*`), **not** a native `<input>`. ARIA is internals-only, never a host `role`/`aria-*` attribute.
 Light DOM by default. No native form elements. (`.claude/docs/plan.md` §5)
 
 ## Props are typed signals
@@ -21,7 +21,7 @@ Light DOM by default. No native form elements. (`.claude/docs/plan.md` §5)
 A declared prop **is** a kernel signal behind a prototype accessor: read inside an effect → it tracks;
 write → it invalidates. The stringly attribute surface crosses to typed values at exactly two functions
 under directional locks. Types flow from the schema via `ReactiveProps<typeof props>` + class/interface
-declaration-merge — **no decorators** (`erasableSyntaxOnly` bans them). (`.claude/docs/plan.md` §5)
+declaration-merge: **no decorators** (`erasableSyntaxOnly` bans them). (`.claude/docs/plan.md` §5)
 
 ## Traits vs controllers
 
@@ -50,7 +50,7 @@ interaction · fidelity). A clean API can't hide an inert build; the axes are ne
 ## Geometry & tokens
 
 Sizing follows the centering law and the five size-classes; color follows the role system. These are
-canonical elsewhere — never restate them: `.claude/docs/references/geometry.md`, `.claude/docs/references/tokens.md`.
+canonical elsewhere, never restate them: `.claude/docs/references/geometry.md`, `.claude/docs/references/tokens.md`.
 
 ## The two diseases
 
