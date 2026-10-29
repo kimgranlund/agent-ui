@@ -1098,3 +1098,8 @@
 ## T-0515: The remaining early exits in skill-pack-opt-in and persona-file tests pin ok before returning (2026-10-28)
 
 - note: redck.py deviations printed no process deviation lines.
+
+## T-0517: Accessibility sweep: every control's ARIA, focus order and keyboard paths against its descriptor (2026-10-28)
+
+- note: .sdlc/tickets/0517-a11y-sweep/handoff.md:57 says no control in `components` sets `listitem` except the charts and `timeline-item`; `source-list.ts`, `ladder.ts`, `ramp.ts`, `gauge.ts` and `timeline.ts` also match `listitem`. This does not affect the ui-list finding.
+- note: handoff.md:64 cites table.ts:150-152 for the region and tabindex; the `setAttribute` calls are at table.ts:151-152, a one-line drift.
