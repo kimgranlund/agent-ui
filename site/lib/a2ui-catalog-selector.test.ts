@@ -3,7 +3,8 @@
 // previews has an example seed or a documented exemption: the page-side mirror of the every-catalog coverage
 // gate (`packages/agent-ui/a2ui/src/examples/every-catalog-coverage.test.ts`).
 import { describe, it, expect } from 'vitest'
-import { createRenderer, A2UI_BASIC_CANONICAL_URI, SHIPPED_DOMAIN_CATALOGS, domainCatalogIdsFor, isDerivedCatalogId } from '@agent-ui/a2ui'
+import { createRenderer, A2UI_BASIC_CANONICAL_URI, domainCatalogIdsFor, isDerivedCatalogId } from '@agent-ui/a2ui'
+import { SHIPPED_DOMAIN_CATALOGS } from '@agent-ui/a2ui/catalogs'
 import { REGISTRY, catalogIds } from './capability-registry.ts'
 import { CATALOG_OPTIONS, catalogFromSearch, domainFor, exampleSeedFor, exemptionFor, typesFor } from './a2ui-catalog-selector.ts'
 

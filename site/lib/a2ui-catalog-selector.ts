@@ -5,7 +5,8 @@
 // the every-catalog coverage gate reads), or names its documented exemption. The registry carries no domain rows,
 // so the shipped single-domain ids (`<base>--<domain>`, `domainCatalogIdsFor`) join after it (T-0432).
 import { FLEET_CATALOG_ID } from '@agent-ui/a2ui/registry'
-import { SHIPPED_DOMAIN_CATALOGS, catalogIdDomains, domainCatalogIdsFor, isDerivedCatalogId } from '@agent-ui/a2ui'
+import { catalogIdDomains, domainCatalogIdsFor, isDerivedCatalogId } from '@agent-ui/a2ui'
+import { SHIPPED_DOMAIN_CATALOGS } from '@agent-ui/a2ui/catalogs'
 import { CATALOG_COVERAGE_EXEMPT, seedsForCatalog } from '@agent-ui/a2ui/examples'
 import { REGISTRY, catalogIds, pageModel } from './capability-registry.ts'
 import { typesInSeed } from './a2ui-catalog-tiers.ts'

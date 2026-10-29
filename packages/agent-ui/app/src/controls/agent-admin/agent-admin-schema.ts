@@ -27,15 +27,10 @@ import type { TargetDeclaration } from '@agent-ui/a2ui/agent/meta-line' // GH #1
 import type { ActivityStep, ActivityFooter } from '../conversation/activity-step.ts' // T-0016: the neutral step model the runner's `step`/`footer` events carry
 import type { TurnProgress } from '@agent-ui/a2ui/agent/meta-line' // ADR-0146 F1 — the live-turn progress vocabulary (type-only, from the PURE meta-line module, never the ./agent barrel); a cross-package specifier stays extensionless (the repo's own local-.ts-only convention) — a2ui/package.json exports this as its own subpath
 // M-D (SPEC-R3/R5) — the persona catalog compose-time overlay's static id-recognition inputs (the root
-// `@agent-ui/a2ui` barrel, catalog/index.ts's own re-export of `catalog/compose.ts` + `catalog/personas/index.ts`).
-import {
-  derivedCatalogId,
-  derivedCatalogIdsFor,
-  domainCatalogId,
-  resolveDomainCatalogId,
-  SHIPPED_DOMAIN_CATALOGS,
-  SHIPPED_PERSONA_CATALOGS,
-} from '@agent-ui/a2ui'
+// `@agent-ui/a2ui` barrel's re-export of `catalog/compose.ts`, plus the shipped packages from the
+// `./catalogs` subpath, T-0530).
+import { derivedCatalogId, derivedCatalogIdsFor, domainCatalogId, resolveDomainCatalogId } from '@agent-ui/a2ui'
+import { SHIPPED_DOMAIN_CATALOGS, SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui/catalogs'
 // ADR-0135 Piece A / Fork 2: the fail-closed guards + seed helper hoisted to `@agent-ui/shared` so app
 // and a2ui share ONE implementation. Re-exported here so `agent-admin.ts` keeps its current
 // `'./agent-admin-schema.ts'` import path unchanged.

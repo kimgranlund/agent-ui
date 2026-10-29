@@ -50,10 +50,10 @@ export { domainCatalogId, parseDomainCatalogId, catalogIdDomains, splitCatalogId
 export { gateChecksOnCatalog } from './semantic-check.ts'
 // ADR-0238: the contract a persona's `PersonaCatalogManifest.semanticChecks` is written against.
 export type { SemanticCheck, SemanticCheckInput, SemanticFinding, SurfaceView } from './semantic-check.ts'
-export { SHIPPED_PERSONA_CATALOGS } from './personas/index.ts'
-export { SHIPPED_DOMAIN_CATALOGS } from './domains/index.ts'
-// GH #516 — the Node/Workers-safe manifest twin (`compose.ts`'s `PersonaCatalogManifest` header): this
-// line ALONE does not make the whole `catalog/index.ts` barrel server-safe (the `SHIPPED_PERSONA_CATALOGS`
-// export above still pulls in `personas/index.ts`'s DOM-bearing factories), so `dev-proxy-plugin.ts`/
-// `worker/index.ts` import `personas/manifests.ts` directly, never through this barrel.
+// T-0530: `SHIPPED_PERSONA_CATALOGS` and `SHIPPED_DOMAIN_CATALOGS` live on the `./catalogs` subpath
+// (`shipped.ts`), not here, so a root import never carries their factories and semantic checks.
+// GH #516: the Node/Workers-safe manifest twin (`compose.ts`'s `PersonaCatalogManifest` header). This line
+// alone does not make the whole `catalog/index.ts` barrel server-safe (the default and a2ui-basic factory
+// tables above are DOM-bearing), so `dev-proxy-plugin.ts`/`worker/index.ts` import `personas/manifests.ts`
+// directly, never through this barrel.
 export { SHIPPED_PERSONA_CATALOG_MANIFESTS } from './personas/manifests.ts'

@@ -17,7 +17,8 @@
     "./agent/model-capabilities": "./src/agent/model-capabilities.ts",
     "./agent/agent-bundle": "./src/agent/agent-bundle.ts",
     "./agent/agent-transport": "./src/agent/agent-transport.ts",
-    "./registry": "./src/registry/index.ts"
+    "./registry": "./src/registry/index.ts",
+    "./catalogs": "./src/catalog/shipped.ts"
   },
   "dependencies": {
     "@agent-ui/components": "*",

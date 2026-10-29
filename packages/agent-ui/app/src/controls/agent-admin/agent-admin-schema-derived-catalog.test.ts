@@ -3,7 +3,8 @@
 // persona fragment targets, without regressing the base picker's existing 2-entry allowlist.
 
 import { describe, it, expect } from 'vitest'
-import { derivedCatalogIdsFor, SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui'
+import { derivedCatalogIdsFor } from '@agent-ui/a2ui'
+import { SHIPPED_PERSONA_CATALOGS } from '@agent-ui/a2ui/catalogs'
 import {
   sanitizeCatalog,
   sanitizeDomains,

@@ -12,7 +12,7 @@ import { DEFAULT_PROMPT_SECTIONS, ENTRY_KINDS, composeLiveSystemPrompt } from '@
 import { entriesStoreKey, type Entry } from '@agent-ui/app/entry-data'
 import { lintSectionContent } from '@agent-ui/app/agent-admin-prompt-lint'
 import { SELECTION_PROJECTION } from '@agent-ui/a2ui/registry'
-import { SHIPPED_DOMAIN_CATALOGS } from '@agent-ui/a2ui'
+import { SHIPPED_DOMAIN_CATALOGS } from '@agent-ui/a2ui/catalogs'
 import { committedSecretKeys, secretKeysNamedIn, type CorpusRecord } from '@agent-ui/a2ui/corpus'
 import {
   AGENT_PRESETS,

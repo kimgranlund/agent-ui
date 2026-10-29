@@ -1138,12 +1138,13 @@ console.log(
 // 512 B headroom (the registry row's rule above). The node-only subpaths (`@agent-ui/devtools/server`,
 // `./playwright`) and a2ui's single-module `./agent/*` leaves stay unmeasured: the first two never ship to a
 // browser, the leaves are reached through `./agent`.
-// Follow-up named by T-0528, not fixed here: the a2ui root barrel re-exports `SHIPPED_PERSONA_CATALOGS` and
-// `SHIPPED_DOMAIN_CATALOGS` (src/catalog/index.ts), so the `.` row below carries the persona checks and
-// domain factory modules statically; they belong behind a subpath.
+// T-0530 moved `SHIPPED_PERSONA_CATALOGS` and `SHIPPED_DOMAIN_CATALOGS` off the a2ui root barrel to the
+// `./catalogs` subpath, so the `.` row no longer carries the persona checks and domain factory modules
+// statically (60593 to 50571 B gz, re-pinned 2026-10-29 by the same rule); `./catalogs` carries them instead.
 const PACKAGE_ENTRY_ROWS = [
   // [label, package dir, entry file, budget]; each budget comment carries its 2026-10-28 measurement
-  ['@agent-ui/a2ui . (renderer + validator + catalogs, the root barrel)', 'a2ui', 'src/index.ts', 61184], // measured 60508 B gz
+  ['@agent-ui/a2ui . (renderer + validator + catalog model, the root barrel)', 'a2ui', 'src/index.ts', 51200], // measured 50571 B gz 2026-10-29 (T-0530)
+  ['@agent-ui/a2ui/catalogs (the shipped persona and domain packages)', 'a2ui', 'src/catalog/shipped.ts', 15360], // measured 14779 B gz 2026-10-29 (T-0530)
   ['@agent-ui/a2ui/registry', 'a2ui', 'src/registry/index.ts', 8448], // measured 7907 B gz
   ['@agent-ui/a2ui/agent (the producer toolkit, embedded prompt assets)', 'a2ui', 'src/agent/index.ts', 86784], // measured 86257 B gz
   ['@agent-ui/a2ui/examples', 'a2ui', 'src/examples/index.ts', 53760], // measured 53092 B gz
