@@ -9,6 +9,7 @@ import { mountPage, pageLead } from './_page.ts' // FIRST — foundation CSS cas
 import './getting-started.css'
 import { heading, codeCell, tableHead, tableRow, textCell } from '../lib/doc-page.ts'
 import { codeBlock } from '../lib/code-block.ts'
+import { controlModuleSubpaths } from '../lib/control-subpaths.ts'
 import { el, exampleSection } from '../lib/specimens.ts'
 import componentsPkgRaw from '../../packages/agent-ui/components/package.json?raw'
 
@@ -186,9 +187,7 @@ interface PackageJsonShape {
   readonly exports: Record<string, string>
 }
 const pkg = JSON.parse(componentsPkgRaw) as PackageJsonShape
-const controlSubpaths = Object.keys(pkg.exports)
-  .filter((k) => k.startsWith('./controls/'))
-  .sort()
+const controlSubpaths = controlModuleSubpaths(pkg.exports)
 if (controlSubpaths.length === 0) {
   throw new Error('getting-started.ts: 0 "./controls/*" exports found in @agent-ui/components/package.json')
 }
