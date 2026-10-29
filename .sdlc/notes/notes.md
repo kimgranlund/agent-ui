@@ -1244,3 +1244,8 @@
 - fix-now: scripts/measure-size.mjs:348 a stray `if (packageEntryOver) console.error(...)` sits inside the MIN_CONTROL_ENTRIES failure block, before `let packageEntryOver` (line 1113), so that path would throw a TDZ ReferenceError instead of printing; delete the line (the real one is at the end of the file).
 - note: `node scripts/measure-size.mjs` still exits 1 on rows owned by T-0525 and T-0522 (barrel, per-control marginal, @agent-ui/app, and code/markdown red at HEAD too); no criterion asks for exit 0.
 - note: a2ui `.` and `./agent` pins carry about 1% headroom (61184 vs 60508, 86784 vs 86257) under the ceil-256 plus 512 B rule, as the builder reported.
+
+## T-0562: The leak gate covers ui-agent-admin (2026-10-28)
+
+- note: `leak-gate.browser.test.ts` settle arm waits 1.5 s quiet window per mount round for ui-agent-admin; the solo's open item (about 106 listeners per round on detached CodeMirror nodes outside the host, GC reclaim unmeasured) is not covered by the gate and is not claimed by any criterion.
+- decide: redck deviations: no `process deviation:` lines printed.
