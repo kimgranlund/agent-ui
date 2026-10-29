@@ -135,7 +135,7 @@ describe('fleet leak gate: remove and reconnect leave nothing behind', () => {
     expect(bad).toEqual([])
   })
 
-  it('ui-status-stream: the ticking interval is cleared on removal and not re-armed on reconnect with no running entry', async () => {
+  it('ui-status-stream: the ticking interval is cleared on removal and a reconnect re-arms at most the one running entry interval', async () => {
     await CONTROLS['ui-status-stream'].load()
     const el = document.createElement('ui-status-stream') as HTMLElement & { appendEntry(e: Record<string, unknown>): unknown }
     inst.resetTimers()
