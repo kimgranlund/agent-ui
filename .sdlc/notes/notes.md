@@ -1354,3 +1354,8 @@
 - decide: packages/agent-ui/a2ui/src/catalog/regex-guard.ts:13 says the cap keeps "a sequence of repeats cheap at MAX_VALUE_LENGTH"; a node probe at the value cap (1023 a's plus x) measured `^a*a*b` 1.6 ms, unanchored `a*a*b` 544 ms, `^a*a*a*b` 582 ms, unanchored `a*a*a*b` 141786 ms. The cap of 2 refuses the last two shapes; an unanchored two-repeat pattern still costs about half a second per keystroke on an adversarial value. Whether that is cheap enough, or the cap should be 1 or the value cap lower, is Kim's call; no criterion names it.
 - note: packages/agent-ui/a2ui/src/catalog/regex-guard.test.ts:97 the census reads `process.cwd()` for the corpus dir, so the file passes only when vitest runs from the repo root (as every runner here does).
 - note: .sdlc/notes/notes.md:1266-1267 are the two T-0554 follow-ups this ticket resolves (the comment reword and the repeat cap); the close should clear them.
+
+## T-0572: Live round 18 measures the round after the October 29 A2UI changes (2026-10-29)
+
+- note: `.sdlc/evals/README.md` r15-recheck row ticket changed T-0483 to T-0551 as a side effect of regenerating the index (disclosed in the builder report); confirm it is intended.
+- note: report.md Process notes record that `run-capped.ts` skips the `live-commands.sh` copy for an absolute path; the file was hand-copied.
