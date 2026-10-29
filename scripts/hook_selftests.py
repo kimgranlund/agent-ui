@@ -96,5 +96,52 @@ def main() -> int:
     return 0 if failures == 0 else 1
 
 
+def selftest() -> int:
+    """T-0524: the intentional empty-state passes stay, and each real violation still fails the gate."""
+    import contextlib
+    import io
+    import tempfile
+
+    global REPO_ROOT, HOOKS_DIR
+    saved = (REPO_ROOT, HOOKS_DIR)
+    failed: "list[str]" = []
+
+    def case(label: str, expect: int, hooks: "dict[str, str] | None", registered: "list[str]") -> None:
+        global REPO_ROOT, HOOKS_DIR
+        with tempfile.TemporaryDirectory() as tmp:
+            os.makedirs(os.path.join(tmp, ".claude"))
+            REPO_ROOT = tmp
+            HOOKS_DIR = os.path.join(tmp, ".claude", "hooks")
+            if hooks is not None:
+                os.makedirs(HOOKS_DIR)
+                for name, body in hooks.items():
+                    with open(os.path.join(HOOKS_DIR, name), "w", encoding="utf-8") as f:
+                        f.write(body)
+            if registered:
+                entries = [{"hooks": [{"command": f"python3 .claude/hooks/{n}"} for n in registered]}]
+                with open(os.path.join(tmp, ".claude", "settings.json"), "w", encoding="utf-8") as f:
+                    json.dump({"hooks": {"PreToolUse": entries}}, f)
+            with contextlib.redirect_stderr(io.StringIO()):
+                got = main()
+        if got != expect:
+            failed.append(f"{label}: expected exit {expect}, got {got}")
+
+    quiet = "import sys\nsys.exit(0)\n"  # exit 0 and no trailer: the false-PASS shape
+    ok = f"import sys\nsys.stderr.write('{TRAILER}\\n')\n"
+    try:
+        case("no hooks dir, nothing registered passes (intentional empty state)", 0, None, [])
+        case("hooks dir exists but empty, nothing registered passes", 0, {}, [])
+        case("no hooks dir but settings register a hook fails", 1, None, ["a.py"])
+        case("empty hooks dir but settings register a hook fails", 1, {}, ["a.py"])
+        case("a hook with no selftest trailer fails", 1, {"a.py": quiet}, [])
+        case("a hook whose selftest prints the trailer passes", 0, {"a.py": ok}, [])
+    finally:
+        REPO_ROOT, HOOKS_DIR = saved
+    for line in failed:
+        print(f"hook_selftests selftest FAIL  {line}", file=sys.stderr)
+    print(f"hook_selftests selftest: {'FAILED' if failed else 'ALL PASS'}", file=sys.stderr)
+    return 1 if failed else 0
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(selftest() if sys.argv[1:] == ["selftest"] else main())

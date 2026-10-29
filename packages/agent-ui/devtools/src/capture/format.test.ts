@@ -99,11 +99,7 @@ describe('parseCapture failures (SPEC-R10 AC3) — a typed error NAMING the offe
 
   it('non-JSON → (root)', () => {
     expect(() => parseCapture('not json')).toThrowError(CaptureParseError)
-    try {
-      parseCapture('not json')
-    } catch (err) {
-      expect((err as CaptureParseError).field).toBe('(root)')
-    }
+    expect(() => parseCapture('not json')).toThrow(expect.objectContaining({ field: '(root)' }))
   })
 
   it('each malformed member is named precisely', () => {

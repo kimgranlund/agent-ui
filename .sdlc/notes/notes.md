@@ -1119,3 +1119,7 @@
 ## T-0520: The table scroll region is named or not a tab stop, and modal and drawer forward late accessible names (2026-10-28)
 
 - note: the table tabindex decision lives in `#syncFade` (table.ts:396-406), which runs on scroll and ResizeObserver only; a content change that overflows without resizing the observed nodes is covered because rows live inside the observed table, so no gap was found.
+
+## T-0524: The remaining low weak-test findings (T-0508 L3, L4, L6, L7) assert what they claim (2026-10-28)
+
+- note: site/pages/dogfood-render.browser.test.ts:1141 browser shard not run here; the change only adds a log line.

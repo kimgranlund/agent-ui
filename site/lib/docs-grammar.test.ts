@@ -266,6 +266,8 @@ describe('STRUCTURAL: S5-S9 (S5-S7 promoted at Phase 5, manifest M7-M10; S8 reti
   })
 })
 
+// H1 is a report, not a verdict: the split is logged while the LLD dialects are unified. What the test does assert is
+// that the scan still reads Layer spellings at all, so a drifted regex or a moved folder cannot pass in silence (T-0524).
 describe('HYGIENE — reported, non-failing (H1 pending the LLD-dialect unification)', () => {
   it('reports the LLD Layer-spelling split', () => {
     const spellings = new Map<string, number>()
@@ -276,6 +278,6 @@ describe('HYGIENE — reported, non-failing (H1 pending the LLD-dialect unificat
     // eslint-disable-next-line no-console
     if (spellings.size > 1)
       console.warn(`[docs-grammar HYGIENE] H1 LLD Layer spellings split: ${[...spellings].map(([k, v]) => `"${k}"×${v}`).join(' · ')}`)
-    expect(true).toBe(true)
+    expect(spellings.size, 'anti-vacuous: the H1 scan found no `Layer: LLD (...)` spelling under the LLD folder').toBeGreaterThan(0)
   })
 })
