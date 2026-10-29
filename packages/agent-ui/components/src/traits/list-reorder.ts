@@ -74,7 +74,7 @@ export interface ListReorderOptions {
    *  `refreshRoster` precedent, is exactly as well-supported as one that mutates in place). */
   onCommit: (from: number, to: number) => void
   /** Arrow-key axis for the keyboard fallback (ArrowUp/ArrowDown for `'vertical'`, ArrowLeft/ArrowRight for
-   *  `'horizontal'`) AND the pointer hit-test axis. Default: `'vertical'`. */
+   *  `'horizontal'`, swapped and mirrored under `direction: rtl`) AND the pointer hit-test axis. Default: `'vertical'`. */
   orientation?: ListReorderOrientation
   /** Live accessor for the element `data-reorder-mode` reflects onto. Default: `() => host`. */
   container?: () => HTMLElement | null
@@ -106,10 +106,12 @@ function isBeforeMidpoint(
   clientY: number,
   overRect: DOMRect,
   orientation: ListReorderOrientation,
+  rtl: boolean,
 ): boolean {
-  return orientation === 'vertical'
-    ? clientY < overRect.top + overRect.height / 2
-    : clientX < overRect.left + overRect.width / 2
+  if (orientation === 'vertical') return clientY < overRect.top + overRect.height / 2
+  // Horizontal: "before" is toward the inline start, which is the physical right under rtl (T-0540).
+  const left = clientX < overRect.left + overRect.width / 2
+  return rtl ? !left : left
 }
 
 /**
@@ -121,6 +123,8 @@ export function listReorder(host: UIElement, opts: ListReorderOptions): () => vo
   const orientation = opts.orientation ?? 'vertical'
   const keyboardTarget = opts.keyboardTarget ?? opts.handle
   let released = false
+  // Read live: the horizontal axis follows the host's reading direction (T-0540).
+  const isRtl = (): boolean => getComputedStyle(host).direction === 'rtl'
 
   // Reflect `data-reorder-mode` onto the container, live — a reactive `armed()` accessor (reading a signal)
   // keeps this current without the consumer re-invoking the trait; a plain accessor just applies once.
@@ -155,7 +159,7 @@ export function listReorder(host: UIElement, opts: ListReorderOptions): () => vo
       const over = itemAtPoint(opts.items(), moveEvent.clientX, moveEvent.clientY, orientation)
       if (!over || over === item) return
       const rect = over.getBoundingClientRect()
-      if (isBeforeMidpoint(moveEvent.clientX, moveEvent.clientY, rect, orientation)) over.before(item)
+      if (isBeforeMidpoint(moveEvent.clientX, moveEvent.clientY, rect, orientation, isRtl())) over.before(item)
       else over.after(item)
     }
 
@@ -186,8 +190,11 @@ export function listReorder(host: UIElement, opts: ListReorderOptions): () => vo
     // Modified arrows (⌥/⌃/⌘ + arrow) are the platform's own chords, and an already-handled press belongs to
     // whoever handled it — neither is a reorder request.
     if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return
-    const isNextKey = orientation === 'vertical' ? e.key === 'ArrowDown' : e.key === 'ArrowRight'
-    const isPrevKey = orientation === 'vertical' ? e.key === 'ArrowUp' : e.key === 'ArrowLeft'
+    // Horizontal: next is ArrowRight in ltr and ArrowLeft in rtl (the reading direction, T-0540).
+    const nextH = isRtl() ? 'ArrowLeft' : 'ArrowRight'
+    const prevH = isRtl() ? 'ArrowRight' : 'ArrowLeft'
+    const isNextKey = orientation === 'vertical' ? e.key === 'ArrowDown' : e.key === nextH
+    const isPrevKey = orientation === 'vertical' ? e.key === 'ArrowUp' : e.key === prevH
     if (!isNextKey && !isPrevKey) return
 
     const targetEl = e.target as Element | null

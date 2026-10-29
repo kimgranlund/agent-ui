@@ -285,7 +285,12 @@ export class UIRatingElement extends UIRangeElement {
       const current = this.#clamp(this.value ?? 0)
       let next: number | null = null
 
-      switch (e.key) {
+      // Under rtl the star row runs from the physical right (T-0540), so ArrowLeft steps toward max and
+      // ArrowRight toward min, the slider's rtl mapping (T-0538). Up/Down, Page and Home/End are direction-free.
+      const rtl = getComputedStyle(this).direction === 'rtl'
+      const key = rtl && e.key === 'ArrowLeft' ? 'ArrowRight' : rtl && e.key === 'ArrowRight' ? 'ArrowLeft' : e.key
+
+      switch (key) {
         case 'ArrowRight':
         case 'ArrowUp':
           next = this.#snap(current + step)

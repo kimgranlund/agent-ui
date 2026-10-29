@@ -99,3 +99,82 @@ describe('listReorder — keyboard focus survives a move (real engines, GH #952)
     expect(el.commits).toEqual([{ from: 2, to: 1 }, { from: 1, to: 0 }])
   })
 })
+
+// ── horizontal orientation under dir=rtl (T-0540): "next" is the reading direction, not the physical right ──
+class HorizontalReorderEl extends UIElement {
+  commits: Array<{ from: number; to: number }> = []
+  rows: HTMLElement[] = []
+  handles = new Map<HTMLElement, HTMLElement>()
+
+  protected connected(): void {
+    listReorder(this, {
+      items: () => [...this.children] as HTMLElement[],
+      armed: () => true,
+      handle: (item) => this.handles.get(item) ?? null,
+      onCommit: (from, to) => this.commits.push({ from, to }),
+      orientation: 'horizontal',
+    })
+  }
+}
+if (!customElements.get('ui-list-reorder-horizontal-test')) {
+  customElements.define('ui-list-reorder-horizontal-test', HorizontalReorderEl)
+}
+
+describe('listReorder horizontal under dir=rtl (T-0540)', () => {
+  function mountH(dir: 'ltr' | 'rtl'): { wrap: HTMLDivElement; el: HorizontalReorderEl } {
+    const wrap = document.createElement('div')
+    wrap.dir = dir
+    wrap.style.cssText = 'position: fixed; left: 0; top: 0; width: 400px'
+    const el = new HorizontalReorderEl()
+    el.style.cssText = 'display: flex'
+    for (let i = 0; i < 3; i++) {
+      const row = document.createElement('div')
+      row.style.cssText = 'inline-size: 100px; block-size: 32px'
+      const handle = document.createElement('button')
+      handle.type = 'button'
+      handle.textContent = String(i)
+      handle.style.cssText = 'inline-size: 100%; block-size: 100%'
+      row.append(handle)
+      el.append(row)
+      el.rows.push(row)
+      el.handles.set(row, handle)
+    }
+    wrap.append(el)
+    document.body.append(wrap)
+    return { wrap, el }
+  }
+  const key = (target: HTMLElement, k: string): void => {
+    target.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
+  }
+
+  it('keyboard: ArrowRight moves an item to the next slot under ltr, ArrowLeft under rtl', () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const { wrap, el } = mountH(dir)
+      const handle = el.handles.get(el.rows[0])!
+      handle.focus()
+      key(handle, dir === 'ltr' ? 'ArrowRight' : 'ArrowLeft')
+      expect(el.commits, `${dir}: reading-next key moves 0 -> 1`).toEqual([{ from: 0, to: 1 }])
+      key(handle, dir === 'ltr' ? 'ArrowLeft' : 'ArrowRight')
+      expect(el.commits, `${dir}: reading-previous key moves back`).toEqual([{ from: 0, to: 1 }, { from: 1, to: 0 }])
+      wrap.remove()
+    }
+  })
+
+  it('pointer: dragging item 0 past the midpoint of the item at the reading end puts it after that item', () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const { wrap, el } = mountH(dir)
+      const handle = el.handles.get(el.rows[0])!
+      handle.setPointerCapture = (): void => {}
+      handle.releasePointerCapture = (): void => {}
+      const last = el.rows[2].getBoundingClientRect()
+      // The point sits just past the last item's midpoint toward the reading end: right edge under ltr, left under rtl.
+      const x = dir === 'ltr' ? last.right - 5 : last.left + 5
+      const y = last.top + last.height / 2
+      handle.dispatchEvent(new PointerEvent('pointerdown', { pointerId: 1, clientX: 5, clientY: y, bubbles: true }))
+      handle.dispatchEvent(new PointerEvent('pointermove', { pointerId: 1, clientX: x, clientY: y, bubbles: true }))
+      handle.dispatchEvent(new PointerEvent('pointerup', { pointerId: 1, clientX: x, clientY: y, bubbles: true }))
+      expect([...el.children].indexOf(el.rows[0]), `${dir}: item 0 ends last`).toBe(2)
+      wrap.remove()
+    }
+  })
+})

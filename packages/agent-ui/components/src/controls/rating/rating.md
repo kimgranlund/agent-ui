@@ -125,9 +125,9 @@ aria:
 
 keyboard:
   - keys: ArrowRight / ArrowUp
-    action: Increment value by step (clamped to max). Emits input. focus → arrow → blur emits change. No-op while readonly or disabled.
+    action: Increment value by step (clamped to max). Emits input. focus → arrow → blur emits change. No-op while readonly or disabled. Under dir=rtl ArrowLeft increments instead (the star row runs from the right, T-0540).
   - keys: ArrowLeft / ArrowDown
-    action: Decrement value by step (clamped to min). Emits input. No-op while readonly or disabled.
+    action: Decrement value by step (clamped to min). Emits input. No-op while readonly or disabled. Under dir=rtl ArrowRight decrements instead.
   - keys: PageUp
     action: Increment value by largeStep (10×step, clamped to max). Emits input. No-op while readonly or disabled.
   - keys: PageDown

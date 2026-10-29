@@ -260,6 +260,9 @@ export class UISliderMultiElement extends UIRangeElement {
     // one the base's ARIA effect would use — default String(value); an override formats both ends
     // identically). ALWAYS visible at rest and live during scrub (Ruling 4: multi gets the same "lo – hi"
     // pattern in the value slot every layout provides); `readoutHidden` (GH #1136) is now the ONLY gate.
+    // RTL (T-0540, left as is): the text stays logical "lo – hi", and the bidi algorithm paints lo at the
+    // physical right under rtl, the same side as the lo thumb (T-0538), so the readout reads in the rtl
+    // reading order and agrees with the rail. Forcing `dir=ltr` or `<bdi>` would put lo on the wrong side.
     this.effect(() => {
       const lo = Math.min(this.#normalize(this.valueLo ?? 0), this.#normalize(this.valueHi ?? 100))
       const hi = Math.max(this.#normalize(this.valueLo ?? 0), this.#normalize(this.valueHi ?? 100))
