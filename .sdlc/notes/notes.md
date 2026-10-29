@@ -1189,3 +1189,8 @@
 ## T-0549: Unrouted notes follow-ups are triaged: fixed, stale or real, with at most five tickets proposed (2026-10-28)
 
 - note: .sdlc/tickets/roadmap.md: generated roadmap churn rides in the lane tree; the conductor should regenerate it at land rather than commit this copy.
+
+## T-0543: A standing browser test proves no control leaks listeners, observers, intervals or popovers after removal (2026-10-28)
+
+- decide: packages/agent-ui/app/src/leak-gate.browser.test.ts: ui-agent-admin is excluded from the app gate (host listener count drifts 1052 to 1133 between rounds); a follow-up could settle whether that is late render or a stack.
+- note: the ResizeObserver loop console errors are noisy in the run output but do not fail the suite.
