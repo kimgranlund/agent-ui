@@ -164,9 +164,9 @@ aria:
 
 keyboard:
   - keys: ArrowUp / ArrowRight
-    action: On the readout, increase by step (clamped to max). Emits input; change on blur.
+    action: On the readout, increase by step (clamped to max). Emits input; change on blur. Under dir=rtl ArrowLeft increases instead (T-0540).
   - keys: ArrowDown / ArrowLeft
-    action: On the readout, decrease by step (clamped to min). Emits input; change on blur.
+    action: On the readout, decrease by step (clamped to min). Emits input; change on blur. Under dir=rtl ArrowRight decreases instead.
   - keys: PageUp / PageDown
     action: On the readout, move by 10 steps. Emits input; change on blur.
   - keys: Home / End

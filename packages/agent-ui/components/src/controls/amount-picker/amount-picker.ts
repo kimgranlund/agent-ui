@@ -332,7 +332,11 @@ export class UIAmountPickerElement extends UIFormElement {
     const current = this.#normalized()
     const step = this.#stepSize()
     let next: number
-    switch (event.key) {
+    // Under rtl the horizontal arrows mirror like the slider's (ArrowLeft increments), so the keys follow the
+    // reading direction (T-0540). Up/Down, Page and Home/End are direction-free.
+    const rtl = getComputedStyle(this).direction === 'rtl'
+    const key = rtl && event.key === 'ArrowLeft' ? 'ArrowRight' : rtl && event.key === 'ArrowRight' ? 'ArrowLeft' : event.key
+    switch (key) {
       case 'ArrowUp':
       case 'ArrowRight':
         next = current + step

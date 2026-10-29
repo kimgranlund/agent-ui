@@ -147,6 +147,10 @@ own `role=slider` + `aria-roledescription="2D slider"` + a cross-announcing `ari
 channel values, and a bespoke two-axis keyboard (←/→ chroma, ↑/↓ lightness, Shift = coarse step, Home/End →
 chroma min/max, PageUp/PageDown → lightness min/max).
 
+The pad is deliberately physical under `dir=rtl` (T-0540): chroma runs left to right over a physical canvas,
+and the thumb position and the ←/→ keys follow that canvas, so the pad is consistent and not mirrored. The
+channel `ui-slider`s mirror with the reading direction as usual.
+
 ## Value model
 
 `value` is the serialized, form-facing surface; the internal OKLCH triple is ephemeral component state. Setting

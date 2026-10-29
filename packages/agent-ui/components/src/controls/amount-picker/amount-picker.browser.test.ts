@@ -182,6 +182,27 @@ describe('ui-amount-picker: geometry at widget md', () => {
   })
 })
 
+describe('ui-amount-picker: keyboard under dir=rtl (T-0540)', () => {
+  it('ArrowLeft increases and ArrowRight decreases under rtl; ltr keeps the opposite; ArrowUp stays an increase', async () => {
+    const run = async (dir: 'ltr' | 'rtl'): Promise<number[]> => {
+      const wrap = canvas()
+      wrap.dir = dir
+      const el = await picker({ min: '0', max: '100', step: '2', value: '10', label: 'Amount' }, wrap)
+      part(el, 'readout').focus()
+      const seen: number[] = []
+      await userEvent.keyboard('{ArrowLeft}')
+      seen.push(el.value as number)
+      await userEvent.keyboard('{ArrowRight}{ArrowRight}')
+      seen.push(el.value as number)
+      await userEvent.keyboard('{ArrowUp}')
+      seen.push(el.value as number)
+      return seen
+    }
+    expect(await run('ltr'), 'ltr: Left -2, Right +4, Up +2').toEqual([8, 12, 14])
+    expect(await run('rtl'), 'rtl: Left +2, Right -4, Up +2').toEqual([12, 8, 10])
+  })
+})
+
 describe('ui-amount-picker: sizing (ADR-0223)', () => {
   it('fills its container by default and hugs under inline', async () => {
     const wrap = canvas('360px')

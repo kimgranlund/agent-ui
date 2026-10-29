@@ -22,9 +22,10 @@
  *       variant. Both rows are `currentColor` — `color: var(--ui-rating-ink)` on the host lets the mark
  *       theme with the rest of the control (the `ui-icon` `currentColor` posture).
  *
- * RTL: NO mirroring rule for the fill clip (documented, not fixed — the slider.css `.rail::before`
- * `linear-gradient(to right, …)` precedent: Range-class value-fill visuals are physical-direction today
- * across the whole family, not just here).
+ * RTL (T-0540): the star row follows the reading direction. The flex rows already start at the inline
+ * start, so under `:dir(rtl)` star 1 sits at the physical right; the fill clip's `inset()` mirrors to the
+ * physical left edge to match, valueDrag measures the pointer from the right (T-0538) and the arrow keys
+ * swap (rating.ts), the slider.css `:dir(rtl)` lever precedent.
  *
  * Standalone stylesheet — linked via the host page per control or via shared-styles.css (ADR-0233, no barrel); NEVER injected from
  * rating.ts (behaviour-only `.ts`, no runtime style injection — plan §2).
@@ -169,12 +170,15 @@
   /* FILL row (ADR-0216 cl.3) — stacked exactly on top of the base row, full-ink, clipped to the
      `--value-pct` fraction of its OWN width (a whole-number percentage set by rating.ts on the host
      inline style — inherited down as a plain custom property, the slider.css `--value-pct` precedent).
-     Physical `inset()` (no RTL mirroring — see the file header). */
+     The `inset()` trims the far (inline-end) side, so it mirrors under `:dir(rtl)` (see the file header). */
   .stars-fill {
     position: absolute;
     inset-block-start: 0;
     inset-inline-start: 0;
     clip-path: inset(0 calc(100% - var(--value-pct, 0) * 1%) 0 0);
+  }
+  :scope:dir(rtl) .stars-fill {
+    clip-path: inset(0 0 0 calc(100% - var(--value-pct, 0) * 1%));
   }
 
   /* Focus ring (ADR-0009) — the shared fleet ring: `:focus-visible` (keyboard-only). The HOST is the one

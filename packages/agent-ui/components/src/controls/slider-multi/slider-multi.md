@@ -209,6 +209,10 @@ GH #1126 design (a transient label-end overlay that faded ~1.2s after the last l
 to guard, and Ruling 2 retired it outright (see `slider.md`'s "Value readout" section for the shared
 rationale).
 
+**RTL (T-0540):** the text stays the logical `"{lo} – {hi}"`. Under `dir=rtl` the bidi algorithm paints lo at
+the physical right, the same side as the lo thumb (T-0538), so the readout reads in the rtl reading order
+and agrees with the rail; it is deliberately not wrapped in `<bdi>` or forced `dir=ltr`.
+
 **Opt-out (GH #1136):** `readoutHidden` (default `false` — value visible) suppresses the value part
 entirely when `true` — at rest AND during scrub (GH #1141 widens the opt-out's scope, matching
 `ui-slider`'s own widened contract).

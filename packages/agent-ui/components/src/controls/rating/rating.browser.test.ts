@@ -231,3 +231,81 @@ describe('ui-rating browser smoke (forced-colors annotation)', () => {
     el.remove()
   })
 })
+
+// ── dir=rtl (T-0540): the filled stars, the pointer and the arrow keys all follow the reading direction ──
+//
+// Under rtl the star row starts at the physical right. The fill row's clip must keep the SAME stars the
+// pointer (valueDrag, T-0538) and the value mean: value 2 of 5 fills the two rightmost stars, and
+// ArrowLeft steps toward max. Each leg runs the ltr twin as its regression control.
+
+describe('ui-rating under dir=rtl (T-0540: fill clip and arrow keys mirror)', () => {
+  function mount(dir: 'ltr' | 'rtl', value: number): { wrap: HTMLDivElement; el: UIRatingElement } {
+    const wrap = document.createElement('div')
+    wrap.dir = dir
+    wrap.style.cssText = 'position: fixed; left: 0; top: 0; width: 400px'
+    const el = document.createElement('ui-rating') as UIRatingElement
+    el.max = 5
+    el.step = 1
+    el.value = value
+    wrap.append(el)
+    document.body.append(wrap)
+    stubCapture(el)
+    return { wrap, el }
+  }
+
+  /** Which of the five stars (by physical left-to-right position) the fill row paints, by hit-testing each centre. */
+  function filledPositions(el: UIRatingElement): boolean[] {
+    const svgs = [...el.querySelectorAll<SVGSVGElement>('.stars-base svg')]
+    return svgs
+      .map((svg) => svg.getBoundingClientRect())
+      .sort((a, b) => a.left - b.left)
+      .map((r) => {
+        const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+        return hit?.closest('.stars-fill') != null
+      })
+  }
+
+  it('value 2 fills the two stars at the reading start: the left two under ltr, the right two under rtl', () => {
+    const ltr = mount('ltr', 2)
+    expect(filledPositions(ltr.el), 'ltr').toEqual([true, true, false, false, false])
+    ltr.wrap.remove()
+    const rtl = mount('rtl', 2)
+    expect(filledPositions(rtl.el), 'rtl').toEqual([false, false, false, true, true])
+    rtl.wrap.remove()
+  })
+
+  it('a press at the physical right end picks 5 under ltr; under rtl the rightmost star picks 1', () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const { wrap, el } = mount(dir, 0)
+      const r = stars(el).getBoundingClientRect()
+      const x = dir === 'ltr' ? r.right - 1 : r.right - 0.2 * r.width // rtl: the first star spans the right fifth
+      ptr(el, 'pointerdown', x)
+      ptr(el, 'pointerup', x)
+      expect(el.value, dir).toBe(dir === 'ltr' ? 5 : 1)
+      wrap.remove()
+    }
+  })
+
+  it('ArrowLeft increments and ArrowRight decrements under rtl; ltr keeps the opposite; ArrowUp stays an increment', () => {
+    const key = (el: UIRatingElement, k: string): void => {
+      el.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }))
+    }
+    const ltr = mount('ltr', 2)
+    key(ltr.el, 'ArrowRight')
+    expect(ltr.el.value, 'ltr ArrowRight').toBe(3)
+    key(ltr.el, 'ArrowLeft')
+    key(ltr.el, 'ArrowLeft')
+    expect(ltr.el.value, 'ltr ArrowLeft').toBe(1)
+    ltr.wrap.remove()
+
+    const rtl = mount('rtl', 2)
+    key(rtl.el, 'ArrowLeft')
+    expect(rtl.el.value, 'rtl ArrowLeft steps toward max').toBe(3)
+    key(rtl.el, 'ArrowRight')
+    key(rtl.el, 'ArrowRight')
+    expect(rtl.el.value, 'rtl ArrowRight steps toward min').toBe(1)
+    key(rtl.el, 'ArrowUp')
+    expect(rtl.el.value, 'ArrowUp stays an increment under rtl').toBe(2)
+    rtl.wrap.remove()
+  })
+})
