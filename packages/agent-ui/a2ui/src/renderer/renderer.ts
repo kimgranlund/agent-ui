@@ -423,9 +423,9 @@ class Renderer implements RendererHost {
       surface.id,
       new SurfaceTree(surface, {
         createWidget: this.#createWidget,
-        // RSR-C2/C6 (renderer-structural-resend.lld.md §2): the three additional entry points structural-
+        // RSR-C2/C6 (renderer-structural-resend.lld.md §2): the additional entry points structural-
         // resend reconciliation needs beyond `createWidget` — mint-only (no wiring), wire-onto-an-EXISTING-
-        // element, and the narrowed identity-mapped omitted-prop reset. `create`/`rewireNode` compose the
+        // element, and the omitted-prop reset (identity-mapped here, non-identity through `resetMappedProp`). `create`/`rewireNode` compose the
         // SAME `#create`/`#wireNode` halves `#makeHostCreateWidget` itself composes below — one wiring path.
         create: (node, surface) => this.#create(node, surface),
         rewireNode: (el, node, surface, scope, itemScope, ac) => this.#wireNode(el, node, surface, scope, itemScope, ac),
@@ -434,6 +434,10 @@ class Renderer implements RendererHost {
           // variant-dispatched node lands on the SAME concrete factory the node was minted/wired with.
           const factory = resolveFactory(this.#registry.get(surface.catalogId)?.factories[node.component], node)
           factory?.applyProp(el, prop, value)
+        },
+        // T-0556: a dropped non-identity prop resets through the factory's own hook, on the same resolved factory.
+        resetMappedProp: (el, node, surface, prop) => {
+          resolveFactory(this.#registry.get(surface.catalogId)?.factories[node.component], node)?.resetProp?.(el, prop)
         },
         componentDefOf: (node, surface) => this.#registry.get(surface.catalogId)?.catalog?.components?.[node.component],
         onError: (error) => this.#onTreeError(surface.id, error),

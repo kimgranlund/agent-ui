@@ -10,7 +10,7 @@
 // them"); every other row is bespoke, matching its cl.9b "Factory shape" cell.
 
 import type { VariantDispatch, WidgetFactory } from '../types.ts'
-import { textFactory, cardFactory, sliderFactory, multiSelectFactory, textareaFactory } from '../default/factories.ts'
+import { textFactory, cardFactory, sliderFactory, multiSelectFactory, textareaFactory, pristineValue } from '../default/factories.ts'
 
 // ── cl.9a — the schema-wide common-prop decorator, shown verbatim in ADR-0169 §9a ──────────────────
 
@@ -112,6 +112,12 @@ export const imageFactory: WidgetFactory = withBasicCommon({
         setAttr(img, prop, value)
     }
   },
+  // T-0556: a dropped `url` or `description` removes the attribute, as on a fresh `<img>` (an empty `alt` would
+  // mark the image decorative).
+  resetProp: (el, prop) => {
+    if (prop === 'url') el.removeAttribute('src')
+    else if (prop === 'description') el.removeAttribute('alt')
+  },
 })
 
 // ── cl.9b row 3 — Icon → ui-icon (bespoke; the closed 59-identifier enum → Phosphor glyph table) ──────
@@ -188,6 +194,9 @@ export const iconFactory: WidgetFactory = withBasicCommon({
   applyProp: (el, prop, value) => {
     if (prop === 'name') setProp(el, 'symbol', ICON_NAME_TABLE[value as string] ?? value)
     else setAttr(el, prop, value)
+  },
+  resetProp: (el, prop) => {
+    if (prop === 'name') setProp(el, 'symbol', pristineValue('ui-icon', 'symbol')) // T-0556
   },
 })
 
@@ -316,6 +325,9 @@ export const textFieldFactory: WidgetFactory = withBasicCommon({
         setProp(el, prop, value)
     }
   },
+  resetProp: (el, prop) => {
+    if (prop === 'variant') el.removeAttribute('type') // T-0556: the reflected attribute drives the prop, back to `text`
+  },
 })
 
 /** TextField `variant: "longText"` → `ui-textarea` (T-0555): `ui-text-field` has no multi-line `type`, so the
@@ -327,6 +339,7 @@ export const textFieldLongTextFactory: WidgetFactory = withBasicCommon({
     if (prop === 'variant' || prop === 'validationRegexp') return
     textareaFactory.applyProp(el, prop, value)
   },
+  resetProp: () => {}, // T-0556: its one non-identity prop, `variant`, applies nothing here
 })
 
 /** The `TextField` catalog-table slot: a `VariantDispatch` (the ChoicePicker GH #545 shape). `longText`
@@ -346,6 +359,10 @@ export const checkBoxFactory: WidgetFactory = withBasicCommon({
     if (prop === 'label') el.textContent = value == null ? '' : String(value)
     else if (prop === 'value') setProp(el, 'checked', value)
     else setProp(el, prop, value)
+  },
+  resetProp: (el, prop) => {
+    if (prop === 'label') el.textContent = '' // T-0556
+    else if (prop === 'value') setProp(el, 'checked', pristineValue('ui-checkbox', 'checked'))
   },
   value: { prop: 'value', event: 'change', readProp: 'checked' },
 })
@@ -396,6 +413,9 @@ export const choicePickerFactory: WidgetFactory = withBasicCommon({
     }
   },
   value: { prop: 'value', event: 'select', marshal: 'singletonStringList' },
+  resetProp: (el, prop) => {
+    if (prop === 'label') el.removeAttribute('aria-label') // T-0556
+  },
 })
 
 // ── cl.9b row 16, SPEC-R10 — the E6 drain: ChoicePicker.variant:'multipleSelection' → ui-multi-select ──
@@ -420,6 +440,9 @@ export const choicePickerMultiFactory: WidgetFactory = withBasicCommon({
       default:
         multiSelectFactory.applyProp(el, prop, value) // options/value (array pass-through, no marshal) + anything else
     }
+  },
+  resetProp: (el, prop) => {
+    if (prop === 'label') el.removeAttribute('aria-label') // T-0556
   },
 })
 
@@ -447,6 +470,9 @@ export const basicSliderFactory: WidgetFactory = withBasicCommon({
     if (prop === 'label') setAttr(el, 'aria-label', value)
     else sliderFactory.applyProp(el, prop, value)
   },
+  resetProp: (el, prop) => {
+    if (prop === 'label') el.removeAttribute('aria-label') // T-0556
+  },
 })
 
 // ── cl.9b row 18 — DateTimeInput → ui-text-field (bespoke — the enableDate/enableTime → type table) ────
@@ -472,6 +498,9 @@ export const dateTimeInputFactory: WidgetFactory = withBasicCommon({
   applyProp: (el, prop, value) => {
     if (prop === 'enableDate' || prop === 'enableTime') dateTimeType(el, prop, value)
     else setProp(el, prop, value)
+  },
+  resetProp: (el, prop) => {
+    if (prop === 'enableDate' || prop === 'enableTime') dateTimeType(el, prop, undefined) // T-0556: back to the (F,F) arm
   },
   value: { prop: 'value', event: 'change' },
 })

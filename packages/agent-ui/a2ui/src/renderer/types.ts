@@ -50,10 +50,11 @@ export type CreateWidget = (
 
 // ── structural-resend reconciliation collaborators (RSR-C2/C6, renderer-structural-resend.lld.md §2) ──
 //
-// `SurfaceTree` (renderer LLD-C4, amended by RSR-C4..C7) needs three additional host-level entry points
+// `SurfaceTree` (renderer LLD-C4, amended by RSR-C4..C7) needs additional host-level entry points
 // beyond `CreateWidget` to reconcile an already-mounted node without ever re-minting its element: mint
 // ONLY (no wiring, reused for a throwaway pristine-default read), wire an EXISTING element's complete
-// prop/action/checks set, and reset one dropped, identity-mapped prop back to its factory default.
+// prop/action/checks set, and reset one dropped prop back to its factory default (identity-mapped from the
+// pristine read, non-identity through the factory's `resetProp` hook, T-0556).
 
 /** Mint only — no prop/input/action/checks wiring (the host's `create`, composing `widget.ts`'s `create`). */
 export type CreateOnly = (node: A2uiComponent, surface: Surface) => HTMLElement
@@ -73,6 +74,12 @@ export type RewireNode = (
  * `node`/`surface` (not a bare function) because `applyProp` is resolved PER FACTORY, not globally.
  */
 export type ResetProp = (el: HTMLElement, node: A2uiComponent, surface: Surface, prop: string, value: unknown) => void
+
+/**
+ * Resolve `node`'s factory and call its optional `resetProp(el, prop)` (T-0556): the reset for a dropped prop whose
+ * `mapsTo` is not identity, which a pristine element's own property cannot supply. No hook: nothing happens.
+ */
+export type ResetMappedProp = (el: HTMLElement, node: A2uiComponent, surface: Surface, prop: string) => void
 
 /** The catalog `ComponentDef` for `node.component` under `surface.catalogId`, or `undefined` if unresolved. */
 export type ComponentDefOf = (node: A2uiComponent, surface: Surface) => ComponentDef | undefined

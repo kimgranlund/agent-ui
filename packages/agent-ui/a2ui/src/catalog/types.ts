@@ -31,6 +31,13 @@ export interface WidgetFactory {
   /** Map one A2UI property (per the catalog `PropDef.mapsTo`) onto the control as a prop/attribute. */
   applyProp: (el: HTMLElement, prop: string, value: unknown) => void
   /**
+   * Restore one prop to the freshly created control's state after an `updateComponents` drops it (T-0556, the
+   * ADR-0128 reset capability). The renderer calls it only for a prop whose `PropDef.mapsTo` is not the prop name
+   * (`Stat.value -> figure`, `Button.label -> textContent`); an identity-mapped prop resets from a pristine
+   * element's own property instead. Absent: a dropped non-identity prop keeps its last value.
+   */
+  resetProp?: (el: HTMLElement, prop: string) => void
+  /**
    * Input widgets only: the DOM value property + commit event the renderer's input controller
    * (renderer LLD-C8) wires for two-way binding. Absent for non-input controls. Widened by
    * ADR-0161 from a single slot to one-or-more: a component whose commit gesture finalizes
