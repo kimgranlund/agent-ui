@@ -169,6 +169,9 @@ export function wireProps(
   const componentDef = entry?.catalog?.components?.[node.component] // the PropDefs — the enum authority for `applies` (absent in a stub catalog ⇒ unconstrained)
   for (const [prop, value] of Object.entries(node)) {
     if (RESERVED.has(prop)) continue
+    // Only catalog-declared props reach `applyProp`, the same allow-list `conformance.ts` validates
+    // against, so a stream that skipped validation cannot set an undeclared property on the element.
+    if (componentDef !== undefined && componentDef.properties[prop] === undefined) continue
     const members = enumOf(componentDef, prop) // the prop's declared enum (or undefined = unconstrained)
     if (isBinding(value)) bindProp(el, factory, prop, value, surface, resolveValue, scope, itemScope, members)
     else if (applies(members, value)) factory.applyProp(el, prop, value) // static literal → set once, IF a declared enum member

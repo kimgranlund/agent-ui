@@ -1224,3 +1224,8 @@
 
 - decide: `super-shell.css:55` the overlay scrim goes from 0.32 to 0.8 alpha to match ui-modal, as the Goal asks. The builder asks Kim to look at `shots/after/super-shell-scrim-*.png`.
 - note: `.sdlc/AGENTS.md` and `.sdlc/tickets/roadmap.md` modifications in the lane tree are not part of this ticket's diff and should not be committed with it.
+
+## T-0552: The A2UI renderer applies only catalog-declared props to rendered elements (2026-10-28)
+
+- decide: packages/agent-ui/a2ui/src/renderer/widget.ts:169-174: note: a catalog entry with factories but no `catalog.components` def (the stub-catalog carve-out, `componentDef === undefined`) stays unconstrained, as the findings' proposed fix specified; every shipped catalog carries defs, so this only matters for a host-registered factory-only catalog.
+- decide: packages/agent-ui/a2ui/src/renderer/renderer.test.ts:436: fix-now: `querySelector('[data-part="aria-label"]')?.textContent ?? ''` then `.not.toContain('Party size')` passes whether the undeclared label was skipped or the span is simply absent, so the line no longer discriminates; assert the `ui-select` element's `label` property is empty instead (or assert the span is non-null before the not-contains). The case still asserts the `VALIDATION_FAILED` error at `root.label`, and the T-0552 declared-props tests carry the real negative control.
