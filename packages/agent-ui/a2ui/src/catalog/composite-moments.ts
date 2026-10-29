@@ -7,7 +7,8 @@
 // `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
 // keeps a row on exactly the catalogs that can emit it: the booking and Itinerary rows ride `<base>--hospitality`, the games rows
 // ride `agent-ui` until the games types move to a domain, the ProductCard, ConfirmReceipt, AmountPicker and Swatch rows ride `agent-ui`, the
-// ContrastPair row (T-0377) rides `agent-ui--stylist`, and `a2ui-basic` gets none.
+// ContrastPair row (T-0377) rides `agent-ui--stylist`, the CardTable row (T-0586) rides the croupier's catalogs, and
+// `a2ui-basic` gets none.
 //
 // The link to the sidecar is a test, not an import (`composite-moments.test.ts`: every `moment` is one of its
 // composite's intents): the module imports no JSON, so plain Node (`scripts/e2e-admin/probe/trace.ts`) and both
@@ -90,10 +91,15 @@
 // two or more timed stops ("Plan my Saturday: breakfast at 08:00 ... dinner at 20:00") while no surface of the turn holds
 // an Itinerary is ITINERARY_MISSING, judged on a prose round too, since the recorded answer (a party-size ask deck) left
 // no hand-built plan on any surface to find.
+//
+// T-0586 (round 20 cluster G): the CardTable row reads a game pick, not a surface: a `pick_game` press (or one whose value
+// names a blackjack-family game) whose reply invites a bet or a deal, while no surface of the turn holds a CardTable or a
+// PlayingCard, is SURFACE_MISSING, asking for the table on a fresh surface. A poker pick is dealt on its Card and is never
+// judged.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
-import type { SemanticCheck, SemanticFinding, SurfaceView } from './semantic-check.ts'
+import type { SemanticAction, SemanticCheck, SemanticFinding, SurfaceView } from './semantic-check.ts'
 
 export interface CompositeMoment {
   /** The composite type; also the first `requires` entry. */
@@ -186,6 +192,10 @@ export interface CompositeMoment {
    *  no `composite` at all whose turn's reply matches `offer`, a pending `of` with no bound quantity still fires on a `rows`
    *  line whose path holds a number, named by path, or else on a literal item quantity, named by item label. */
   readonly unpickedLines?: { readonly of: string; readonly words: RegExp; readonly offer?: RegExp }
+  /** T-0586: on an action turn whose action name matches `action` or whose context value names a `game`, where the game
+   *  picked (the value, or the reply when the value names no game, as "random" does) names a `game` and no `other` game,
+   *  a reply matching `invite` while no surface of the turn holds the composite (or a `lacks` type) is SURFACE_MISSING. */
+  readonly picked?: { readonly action: RegExp; readonly game: RegExp; readonly other: RegExp; readonly invite: RegExp }
 }
 
 /** T-0333: the past-state words of a settled booking ("Booked" Badge, "Spa booking confirmed" title); the noun
@@ -340,6 +350,22 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
       skipWordTypes: ['Toast'],
     },
     words: /\b(game over|you win|you won|you lose|you lost|the word was|play again)\b/i,
+  },
+  {
+    // T-0586 (round 20 cluster G, pick-croupier-game-deck-haiku-2 and -3): the `pick_game` press for blackjack was answered
+    // by relabelling and disabling the OptionDeck, or by a Column of two Texts, while the reply said "Place your bet to
+    // deal", and no table opened. Hold'em, stud and draw are dealt on a Card of PlayingCards (T-0323), never a CardTable,
+    // so a pick of one of them is not judged, and a PlayingCard hand stands the turn aside.
+    composite: 'CardTable',
+    moment: 'a blackjack table: bet, hands, actions, result',
+    repair: 'on a fresh surface (table-1, table-2 and on) in phase "betting", bet and bankroll bound, "betAction":"deal".',
+    lacks: ['PlayingCard'],
+    picked: {
+      action: /^pick_game$/,
+      game: /\b(blackjack|black[- ]jack|twenty[- ]one|spanish[- ]21|pontoon)\b/i,
+      other: /\b(poker|stud|hold[- ]?['’]?em|omaha|razz|draw|baccarat|roulette|craps)\b/i,
+      invite: /\b(bet|bets|betting|wager|stake|deal|deals|dealt|dealing)\b/i,
+    },
   },
   {
     // T-0361: the quest-log skill keeps the scenes in a Timeline; Haiku 5.5 listed them as a Column of numbered Texts.
@@ -777,6 +803,18 @@ function plannedStops(m: CompositeMoment, intent: string | undefined): number {
   return stops.size >= planned.min ? stops.size : 0
 }
 
+/** T-0586: the game an action turn picks for `m` (its `picked` row) with no surface of the turn answering it, or undefined. */
+function pickedGame(m: CompositeMoment, surfaces: readonly SurfaceView[], action: SemanticAction | undefined, reply: string | undefined): string | undefined {
+  const picked = m.picked
+  if (picked === undefined || action === undefined || reply === undefined || !picked.invite.test(reply)) return undefined
+  const value = typeof action.context['value'] === 'string' ? action.context['value'] : ''
+  const valueNames = picked.game.test(value) || picked.other.test(value)
+  if (!picked.action.test(action.name) && !picked.game.test(value)) return undefined
+  const game = valueNames ? value : reply
+  if (!picked.game.test(game) || picked.other.test(game)) return undefined
+  return compositeAnswered(m, surfaces) ? undefined : valueNames ? value : picked.game.exec(game)![1]!
+}
+
 /** The one generator: a row of `COMPOSITE_MOMENTS` as a semantic check. */
 export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
   const code = `${upperSnake(m.composite)}_MISSING`
@@ -798,6 +836,19 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
             `The guest asked "${intent!.trim()}", a plan of ${stops} timed stops, and ` +
             `${ids.length === 0 ? 'this turn writes' : `${ids.join(', ')} ${ids.length === 1 ? 'holds' : 'hold'}`} no ${m.composite}, so the plan never reaches a surface. ` +
             `Make it ONE ${m.composite} ${m.repair}`,
+        })
+      }
+      const game = pickedGame(m, surfaces, action, reply)
+      if (game !== undefined) {
+        const first = surfaces[0]
+        const ids = surfaces.map((v) => v.surfaceId)
+        findings.push({
+          code: 'SURFACE_MISSING',
+          path: first === undefined ? `action:${action!.name}` : `${first.surfaceId}:${first.components.has('root') ? 'root' : [...first.components.keys()][0] ?? 'root'}`,
+          message:
+            `The player picked ${game} on ${action!.surfaceId} and the reply asks for a bet or a deal, but ` +
+            `${ids.length === 0 ? 'this turn writes' : `${ids.join(', ')} ${ids.length === 1 ? 'holds' : 'hold'}`} no ${m.composite}, so there is no table to play at. ` +
+            `Open ONE ${m.composite} ${m.repair}`,
         })
       }
       for (const view of surfaces) {

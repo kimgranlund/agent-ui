@@ -86,6 +86,13 @@ const BASIC_CONCIERGE = 'a2ui-basic--hospitality'
 const DAY_PLAN = 'Plan my Saturday 21 November 2026: breakfast at 08:00, the half-day coastal boat tour at 10:00 and dinner at Vela at 20:00.'
 const CROUPIER = 'agent-ui--croupier'
 const STYLIST = 'agent-ui--stylist'
+/** T-0586: the croupier's game pick deck (round 20 :130) and the blackjack press on it. */
+const PICK_OPTIONS = [
+  { value: 'blackjack', title: 'Blackjack', description: 'Beat the dealer to 21 without going bust.' },
+  { value: 'texas-holdem', title: "Texas Hold'em", description: 'Two hole cards, five community cards, best hand wins.' },
+]
+const PICK_DECK: A2uiOutput = surface('ask-1', CROUPIER, [{ id: 'root', component: 'OptionDeck', heading: 'Pick your game', actionName: 'pick_game', value: { path: '/pick' }, options: PICK_OPTIONS }], { pick: '' })
+const PICK_BLACKJACK: SemanticAction = { name: 'pick_game', surfaceId: 'ask-1', context: { value: 'blackjack' }, dataModel: { pick: 'blackjack' } }
 
 // T-0556: a Basic contact form, and a ConfirmReceipt read back on its own.
 const BASIC_CONTACT: Record<string, unknown>[] = [
@@ -401,6 +408,27 @@ const CONTRACTS: Record<string, Contract> = {
     code: 'RESULT_CARD_MISSING',
     pass: { catalog: UI, output: wordBoard({ ...WORD_OPEN, cells: graded(0, WORD), status: 'Solved' }, resultCard('win', 'The word was SLAIN, in one guess.'), ['result']) },
     fail: { catalog: UI, output: wordBoard({ ...WORD_OPEN, cells: graded(0, WORD), status: 'Solved' }, [{ id: 'over', component: 'Text', text: 'Game over: you won, the word was SLAIN.' }], ['over']) },
+  },
+  // T-0586: the croupier's blackjack pick opens a fresh table-1 with its CardTable (round 20 :116); restyling the deck
+  // while the reply invites the bet opens none (round 20 :131).
+  'composite-moment-card-table': {
+    code: 'SURFACE_MISSING',
+    pass: {
+      catalog: CROUPIER,
+      session: [{ say: 'What games can we play?', out: PICK_DECK }],
+      action: PICK_BLACKJACK,
+      reply: 'Blackjack it is. Place your bet to deal.',
+      output: surface('table-1', CROUPIER, [
+        { id: 'root', component: 'CardTable', title: 'Blackjack', bankroll: { path: '/bankroll' }, bet: { path: '/bet' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, status: { path: '/status' }, phase: { path: '/phase' }, betAction: 'deal' },
+      ], { bankroll: 1000, bet: 0, dealerHand: [], playerHand: [], status: 'Place your bet', phase: 'betting' }),
+    },
+    fail: {
+      catalog: CROUPIER,
+      session: [{ say: 'What games can we play?', out: PICK_DECK }],
+      action: PICK_BLACKJACK,
+      reply: 'Blackjack it is. Place your bet to deal.',
+      output: [comps('ask-1', [{ id: 'root', component: 'OptionDeck', heading: 'Blackjack selected', actionName: 'pick_game', value: { path: '/pick' }, disabled: true, options: PICK_OPTIONS }])],
+    },
   },
   // T-0361: a Dungeon Master quest log, its scenes in a Timeline or as a Column of Texts under a "Scenes" label.
   'composite-moment-timeline': {
@@ -718,7 +746,8 @@ const turnsOf = (f: Fixture): Turn[] => (f.session ?? []).flatMap(({ say, out })
 /** The input `produce()` builds for this round (a payload round, or a no-payload round of a client or say turn). */
 function inputOf(f: Fixture): SemanticCheckInput {
   const session = { turns: turnsOf(f) }
-  if (f.action !== undefined) return { surfaces: f.output.length === 0 ? [] : semanticSurfaceViews(session, f.output), action: f.action }
+  // T-0586: produce() hands a client turn its reply too, which the CardTable row's game pick reads.
+  if (f.action !== undefined) return { surfaces: f.output.length === 0 ? [] : semanticSurfaceViews(session, f.output), action: f.action, ...(f.reply !== undefined ? { reply: f.reply } : {}) }
   const open = f.intent !== undefined ? sessionSurfaceViews(session) : undefined
   const shownTypes = f.intent !== undefined ? sessionComponentTypes(session) : undefined
   const target = f.target !== undefined && open?.some((v) => v.surfaceId === f.target) ? f.target : undefined
@@ -987,6 +1016,7 @@ const ROW_PROPS: Record<string, readonly string[]> = {
   BoardGrid: ['rows', 'cols', 'cells', 'actionName'],
   GameHud: ['title', 'status', 'stats'],
   ResultCard: ['outcome', 'title', 'summary', 'stats'],
+  CardTable: ['phase', 'bet', 'bankroll', 'betAction'],
   Timeline: ['label'],
   ProductCard: ['title', 'price', 'priceNote', 'action'],
   ConfirmReceipt: ['title', 'items', 'totalLabel', 'totalPath', 'status', 'confirmAction', 'backAction'],

@@ -1,0 +1,406 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "croupier-haiku-pick-deck-text-column",
+  "agent": "croupier",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-29.jsonl:145,2026-10-29.jsonl:146 (catalog agent-ui--croupier)",
+  "steps": [
+    {
+      "say": "What games can we play?"
+    },
+    {
+      "click": "pick_game"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"I deal seven games: Blackjack, Spanish 21, Pontoon, Texas Hold'em, Omaha, Five-Card Draw and Seven-Card Stud. Which one do you want at the table? Pick a card below, or choose Surprise me and I'll pick one at random.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"I deal seven games: Blackjack, Spanish 21, Pontoon, Texas Hold'em, Omaha, Five-Card Draw and Seven-Card Stud. Pick one below, or choose Surprise me and I'll pick one at random.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What games can we play?\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"PARSE\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":150200,\"total\":51485,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22903},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":783}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":50702}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"game-pick-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"game-pick-1\",\"value\":{\"pick\":\"\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"game-pick-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Pick your game\",\"subheading\":\"Every table starts you with 1,000 chips.\",\"actionName\":\"pick_game\",\"allowRandom\":true,\"randomLabel\":\"Surprise me\",\"value\":{\"path\":\"/pick\"},\"options\":[{\"value\":\"blackjack\",\"title\":\"Blackjack\",\"description\":\"Beat the dealer to 21 without going bust.\",\"icon\":\"star\"},{\"value\":\"spanish-21\",\"title\":\"Spanish 21\",\"description\":\"Blackjack with no tens and bonus 21s.\",\"icon\":\"sparkle\"},{\"value\":\"pontoon\",\"title\":\"Pontoon\",\"description\":\"British blackjack: twist, stick, buy.\",\"icon\":\"star\"},{\"value\":\"texas-holdem\",\"title\":\"Texas Hold'em\",\"description\":\"Two hole cards and five community cards.\",\"icon\":\"heart\"},{\"value\":\"omaha\",\"title\":\"Omaha\",\"description\":\"Four hole cards, pot-limit betting.\",\"icon\":\"heart\"},{\"value\":\"five-card-draw\",\"title\":\"Five-Card Draw\",\"description\":\"Discard and draw once, then show down.\",\"icon\":\"sparkle\"},{\"value\":\"seven-card-stud\",\"title\":\"Seven-Card Stud\",\"description\":\"Up cards and down cards, no community board.\",\"icon\":\"sparkle\"}]}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"I deal seven games: Blackjack, Spanish 21, Pontoon, Texas Hold'em, Omaha, Five-Card Draw and Seven-Card Stud. Which one do you want at the table? Pick a card below, or choose Surprise me and I'll pick one at random.\",\"ask\":{\"surfaceId\":\"ask-1\"}}}\n\nI deal seven games: Blackjack, Spanish 21, Pontoon, Texas Hold'em, Omaha, Five-Card Draw and Seven-Card Stud. Which one do you want at the table? Pick a card below, or choose Surprise me and I'll pick one at random.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "I deal seven games. Which one do you want at the table, or should I pick one at random?",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"ask-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"ask-1\",\"value\":{\"pick\":\"\"}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"OptionDeck\",\"heading\":\"Pick your game\",\"subheading\":\"Every table starts you with 1,000 chips.\",\"actionName\":\"pick_game\",\"allowRandom\":true,\"randomLabel\":\"Surprise me\",\"value\":{\"path\":\"/pick\"},\"options\":[{\"value\":\"blackjack\",\"title\":\"Blackjack\",\"description\":\"Beat the dealer to 21 without going bust.\",\"icon\":\"star\"},{\"value\":\"spanish-21\",\"title\":\"Spanish 21\",\"description\":\"Blackjack with no tens and bonus 21s.\",\"icon\":\"sparkle\"},{\"value\":\"pontoon\",\"title\":\"Pontoon\",\"description\":\"British blackjack: twist, stick, buy.\",\"icon\":\"star\"},{\"value\":\"texas-holdem\",\"title\":\"Texas Hold'em\",\"description\":\"Two hole cards and five community cards.\",\"icon\":\"heart\"},{\"value\":\"omaha\",\"title\":\"Omaha\",\"description\":\"Four hole cards, pot-limit betting.\",\"icon\":\"heart\"},{\"value\":\"five-card-draw\",\"title\":\"Five-Card Draw\",\"description\":\"Discard and draw once, then show down.\",\"icon\":\"sparkle\"},{\"value\":\"seven-card-stud\",\"title\":\"Seven-Card Stud\",\"description\":\"Up cards and down cards, no community board.\",\"icon\":\"sparkle\"}]}]}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "I deal seven games: Blackjack, Spanish 21, Pontoon, Texas Hold'em, Omaha, Five-Card Draw and Seven-Card Stud. Pick one below, or choose Surprise me and I'll pick one at random.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "I deal seven games: Blackjack, Spanish 21, Pontoon, Texas Hold'em, Omaha, Five-Card Draw and Seven-Card Stud. Pick one below, or choose Surprise me and I'll pick one at random.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "game-pick-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "game-pick-1",
+                      "value": {
+                        "pick": ""
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "game-pick-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionDeck",
+                          "heading": "Pick your game",
+                          "subheading": "Every table starts you with 1,000 chips.",
+                          "actionName": "pick_game",
+                          "allowRandom": true,
+                          "randomLabel": "Surprise me",
+                          "value": {
+                            "path": "/pick"
+                          },
+                          "options": [
+                            {
+                              "value": "blackjack",
+                              "title": "Blackjack",
+                              "description": "Beat the dealer to 21 without going bust.",
+                              "icon": "star"
+                            },
+                            {
+                              "value": "spanish-21",
+                              "title": "Spanish 21",
+                              "description": "Blackjack with no tens and bonus 21s.",
+                              "icon": "sparkle"
+                            },
+                            {
+                              "value": "pontoon",
+                              "title": "Pontoon",
+                              "description": "British blackjack: twist, stick, buy.",
+                              "icon": "star"
+                            },
+                            {
+                              "value": "texas-holdem",
+                              "title": "Texas Hold'em",
+                              "description": "Two hole cards and five community cards.",
+                              "icon": "heart"
+                            },
+                            {
+                              "value": "omaha",
+                              "title": "Omaha",
+                              "description": "Four hole cards, pot-limit betting.",
+                              "icon": "heart"
+                            },
+                            {
+                              "value": "five-card-draw",
+                              "title": "Five-Card Draw",
+                              "description": "Discard and draw once, then show down.",
+                              "icon": "sparkle"
+                            },
+                            {
+                              "value": "seven-card-stud",
+                              "title": "Seven-Card Stud",
+                              "description": "Up cards and down cards, no community board.",
+                              "icon": "sparkle"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "What games can we play?"
+      },
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-option-deck-picker",
+          "restaurant-menu"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Blackjack it is. Quick rules: beat the dealer's hand by getting closer to 21 without going over. Aces count as 1 or 11, face cards as 10. A natural (two-card 21) pays 3:2. Place your bet to deal. Your bankroll starts at 1,000 chips.\",\"target\":{\"surfaceId\":\"game-pick-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"The user triggered the \\\"pick_game\\\" action (from component root). Action context: {\\\"value\\\":\\\"blackjack\\\"}. Current surface data model: {\\\"pick\\\":\\\"blackjack\\\"}. Continue the conversation by updating or replacing the surface as appropriate.\",\"k\":3},\"exemplarIds\":[],\"rounds\":2,\"healed\":0,\"failureCodes\":[\"OPTION_DECK_COUNT\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":150200,\"total\":53122,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22903},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2420}],\"over\":false},\"miniSkillIds\":[\"game-table-chrome\",\"option-deck\",\"variant-picker\"],\"cacheBoundary\":50702}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"game-pick-1\",\"catalogId\":\"agent-ui--croupier\",\"sendDataModel\":true}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"game-pick-1\",\"value\":{\"pick\":\"blackjack\",\"bankroll\":1000}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"game-pick-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"pick_heading\",\"pick_sub\"]},{\"id\":\"pick_heading\",\"component\":\"Text\",\"variant\":\"h4\",\"text\":\"Blackjack selected\"},{\"id\":\"pick_sub\",\"component\":\"Text\",\"variant\":\"body\",\"text\":\"Your bankroll is 1,000 chips.\"}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Blackjack it is. Quick rules: beat the dealer's hand by getting closer to 21 without going over. Aces count as 1 or 11, face cards as 10. A natural (two-card 21) pays 3:2. Place your bet to deal. Your bankroll starts at 1,000 chips.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "game-pick-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "OptionDeck",
+                          "heading": "Blackjack selected",
+                          "subheading": "Your bankroll is 1,000 chips.",
+                          "disabled": true,
+                          "actionName": "pick_game",
+                          "value": {
+                            "path": "/pick"
+                          },
+                          "options": [
+                            {
+                              "value": "blackjack",
+                              "title": "Blackjack",
+                              "description": "Beat the dealer to 21 without going bust.",
+                              "icon": "star"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Blackjack it is. Quick rules: beat the dealer's hand by getting closer to 21 without going over. Aces count as 1 or 11, face cards as 10. A natural (two-card 21) pays 3:2. Place your bet to deal. Your bankroll starts at 1,000 chips.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Blackjack it is. Quick rules: beat the dealer's hand by getting closer to 21 without going over. Aces count as 1 or 11, face cards as 10. A natural (two-card 21) pays 3:2. Place your bet to deal. Your bankroll starts at 1,000 chips.",
+                "target": "game-pick-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "game-pick-1",
+                      "catalogId": "agent-ui--croupier",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "game-pick-1",
+                      "value": {
+                        "pick": "blackjack",
+                        "bankroll": 1000
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "game-pick-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "pick_heading",
+                            "pick_sub"
+                          ]
+                        },
+                        {
+                          "id": "pick_heading",
+                          "component": "Text",
+                          "variant": "h4",
+                          "text": "Blackjack selected"
+                        },
+                        {
+                          "id": "pick_sub",
+                          "component": "Text",
+                          "variant": "body",
+                          "text": "Your bankroll is 1,000 chips."
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "client",
+        "message": {
+          "version": "v1.0",
+          "action": {
+            "surfaceId": "game-pick-1",
+            "actionId": "a2ui-action-1",
+            "name": "pick_game",
+            "sourceComponentId": "root",
+            "timestamp": "2026-10-29T21:02:43.027Z",
+            "context": {
+              "value": "blackjack"
+            },
+            "dataModel": {
+              "pick": "blackjack"
+            }
+          }
+        }
+      },
+      "routing": {
+        "domains": [
+          "croupier"
+        ],
+        "exemplars": [
+          "domain-croupier-card-table-round",
+          "frontier-option-compare-legs",
+          "agent-roster-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "card-layout",
+            "load": "index-only"
+          },
+          {
+            "name": "game-table-chrome",
+            "load": "index-only"
+          },
+          {
+            "name": "game-hud",
+            "load": "index-only"
+          },
+          {
+            "name": "round-loop",
+            "load": "index-only"
+          },
+          {
+            "name": "blackjack",
+            "load": "index-only"
+          },
+          {
+            "name": "spanish-21",
+            "load": "index-only"
+          },
+          {
+            "name": "pontoon",
+            "load": "index-only"
+          },
+          {
+            "name": "texas-holdem",
+            "load": "index-only"
+          },
+          {
+            "name": "omaha",
+            "load": "index-only"
+          },
+          {
+            "name": "five-card-draw",
+            "load": "index-only"
+          },
+          {
+            "name": "seven-card-stud",
+            "load": "index-only"
+          },
+          {
+            "name": "shuffle",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

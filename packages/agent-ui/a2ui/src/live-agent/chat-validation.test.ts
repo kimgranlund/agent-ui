@@ -142,6 +142,8 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
   // The base-catalog rows: the games rows, (T-0279) the ProductCard row, (T-0478) the ConfirmReceipt row, (T-0550) the AmountPicker row and (T-0359) the Swatch row; its ask check rides
   // the Stylist alone (Kim, 2026-10-18).
   const GAMES = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-confirm-receipt', 'composite-moment-amount-picker', 'composite-moment-swatch']
+  // T-0586: the croupier catalog also holds CardTable, so the CardTable row rides it after the ResultCard row.
+  const CROUPIER_GAMES = GAMES.flatMap((id) => (id === 'composite-moment-result-card' ? [id, 'composite-moment-card-table'] : [id]))
   // The hospitality rows: the booking rows and (T-0480) the Itinerary row.
   const BOOKING = ['composite-moment-booking-form', 'composite-moment-booking-confirmation', 'composite-moment-itinerary']
   const CROUPIER = croupierSemanticChecks.map((c) => c.id)
@@ -152,8 +154,8 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
   const RECEIPT = [receiptTotalCheck.id]
 
   it('a derived croupier catalog yields its checks, then the hidden-state and composite checks the catalog holds', () => {
-    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('agent-ui--croupier')!), ...GAMES, ...FRAMED, ...DECK, ...RECEIPT])
-    expect(ids(semanticChecksDeps(catalogs.get('a2ui-basic--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('a2ui-basic--croupier')!), ...FRAMED, ...INERT])
+    expect(ids(semanticChecksDeps(catalogs.get('agent-ui--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('agent-ui--croupier')!), ...CROUPIER_GAMES, ...FRAMED, ...DECK, ...RECEIPT])
+    expect(ids(semanticChecksDeps(catalogs.get('a2ui-basic--croupier')!))).toEqual([...CROUPIER, ...hidden(catalogs.get('a2ui-basic--croupier')!), 'composite-moment-card-table', ...FRAMED, ...INERT])
     expect(ids(semanticChecksDeps(catalog))).toEqual([...HIDDEN_STATE_CHECKS.map((c) => c.id), ...GAMES, ...FRAMED, ...DECK, ...RECEIPT])
     expect(ids(semanticChecksDeps(catalogs.get('agent-ui--hospitality')!))).toEqual(['concierge-surface-required', 'concierge-listing-surface-required', 'concierge-booking-field-paths', 'concierge-edit-applied', ...HIDDEN_STATE_CHECKS.map((c) => c.id), ...BOOKING, ...GAMES, ...FRAMED, ...DECK, ...RECEIPT])
     expect(ids(semanticChecksDeps(basicCatalog))).toEqual([...hidden(basicCatalog), ...FRAMED, ...INERT])
