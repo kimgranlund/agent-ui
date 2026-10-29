@@ -1414,3 +1414,10 @@
 - decide: packages/agent-ui/a2ui/src/agent/produce.ts:827 decide: `misplacedSurfaceIdNote` is now reachable only through an op whose own `surfaceId` is a non-string, the shape the builder reports crashes `failureAttribution` on base too; the T-0264 feedback-text test was folded into the T-0588 case, so that feedback path has no test left.
 - decide: .sdlc/tickets/0588-heal-stray-envelope-surface-id/handoff.md:30 note: the `## Acceptance criteria` block was authored by the builder (solo report line 10; the solo dispatch snapshot carries none); it covers every clause of the Intent's Done-when and adds the ruling-record check.
 - decide: packages/agent-ui/a2ui/src/corpus/heal.test.ts:124-191 note: criterion 1 says "four `(e)` heal cases"; the file has five `(e)`-labelled cases, four of which call `heal()`.
+
+## T-0586: A picked card game with no CardTable asks for its table (2026-10-29)
+
+- decide: .sdlc/tickets/0586-card-game-pick-needs-table/handoff.md:30: note: the `## Acceptance criteria` section was written by the builder (its report says so); judged as written since it is at least as strict as the Intent's Done-when.
+- decide: packages/agent-ui/a2ui/src/agent: note: `@agent-ui/a2ui/agent` sits at 87765 of 87808 B gz after this row, 43 B of headroom.
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:364: note: on a Surprise me pick the game is read from the reply, where "draw" as a verb matches `other` and silences the row (builder-disclosed).
+- decide: scripts/e2e-admin/probe/replays: note: round 19 :116 (the HUD-only answer to the pick) has no replay fixture; the any-surface gate covers it by construction, with no observed run.

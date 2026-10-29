@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest'
 import { COMPOSITE_MOMENTS, TOKEN_TYPES, askedCompositeMoment, proseColors, compositeAnswered, compositeMomentCheck, compositeMomentChecks, isSettledSignal } from './composite-moments.ts'
 import type { CompositeMoment } from './composite-moments.ts'
 import { gateChecksOnCatalog, runSemanticChecks, semanticSurfaceViews, sessionComponentTypes, sessionSurfaceViews } from './semantic-check.ts'
-import type { SurfaceView } from './semantic-check.ts'
+import type { SemanticAction, SurfaceView } from './semantic-check.ts'
 import type { A2uiComponent, A2uiOutput } from '../protocol.ts'
 import { loadCatalog } from './catalog.ts'
 import { composeCatalog, loadCatalogFragment } from './compose.ts'
@@ -18,6 +18,8 @@ import stylistFragmentRaw from './personas/stylist/catalog.json'
 import defaultSelection from './default/selection.json'
 import conciergeSelection from './domains/hospitality/selection.json'
 import stylistSelection from './personas/stylist/selection.json'
+import croupierSelection from './personas/croupier/selection.json'
+import { croupierFragment } from './personas/croupier/manifest.ts'
 
 const view = (components: A2uiComponent[], surfaceId = 's1'): SurfaceView => ({
   surfaceId,
@@ -44,6 +46,39 @@ const R17_154_PICKED: A2uiComponent[] = [
   ...R17_154_R2.slice(1),
   { id: 'qty_arc', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/lamp/qty' }, min: 1, step: 1 },
 ]
+
+/** T-0586: round 20 (`.sdlc/evals/rounds/2026-10-29-r20-pattern/`) :131 r1 (pick-croupier-game-deck-haiku-2), the
+ *  recorded answer to the blackjack pick: ask-1's OptionDeck relabelled "Blackjack selected" and disabled, no table. */
+const R20_131_DECK: A2uiComponent[] = [
+  {
+    id: 'root', component: 'OptionDeck', heading: 'Blackjack selected', subheading: 'Choose a different game below if you prefer.', actionName: 'pick_game', value: { path: '/pick' }, disabled: true,
+    options: [
+      { value: 'blackjack', title: 'Blackjack', description: 'Selected.', icon: 'star', index: 'A' },
+      { value: 'spanish-21', title: 'Spanish 21', description: 'Blackjack with no tens, bonus 21s and late surrender.', icon: 'sparkle', index: 'S' },
+      { value: 'pontoon', title: 'Pontoon', description: 'British blackjack: twist, stick, buy and the five-card trick.', icon: 'bolt', index: 'P' },
+      { value: 'texas-holdem', title: "Texas Hold'em", description: 'Two hole cards, five community cards, best hand wins.', icon: 'heart', index: 'K' },
+      { value: 'omaha', title: 'Omaha', description: 'Four hole cards; make your hand with exactly two plus three board cards.', icon: 'crown', index: 'O' },
+      { value: 'five-card-draw', title: 'Five-card draw', description: 'Discard and draw once, then show down.', icon: 'dice', index: '5' },
+      { value: 'seven-card-stud', title: 'Seven-card stud', description: 'Up and down cards, no community board.', icon: 'trophy', index: '7' },
+    ],
+  },
+]
+const R20_131_REPLY =
+  "Blackjack it is. Here's the table rules in brief: beat the dealer's hand without going over 21. Aces count 1 or 11, face cards count 10. A natural pays 3:2. Dealer hits to 16 and stands on 17. Your bankroll starts at 1,000. Place your bet to deal."
+/** T-0586: round 20 :146 r2 (pick-croupier-game-deck-haiku-3), game-pick-1 rebuilt as a Column of two Texts, no table. */
+const R20_146_COLUMN: A2uiComponent[] = [
+  { id: 'root', component: 'Column', gap: 'sm', children: ['pick_heading', 'pick_sub'] },
+  { id: 'pick_heading', component: 'Text', variant: 'h4', text: 'Blackjack selected' },
+  { id: 'pick_sub', component: 'Text', variant: 'body', text: 'Your bankroll is 1,000 chips.' },
+]
+const R20_146_REPLY =
+  "Blackjack it is. Quick rules: beat the dealer's hand by getting closer to 21 without going over. Aces count as 1 or 11, face cards as 10. A natural (two-card 21) pays 3:2. Place your bet to deal. Your bankroll starts at 1,000 chips."
+/** T-0586: round 20 :116 (pick-croupier-game-deck-haiku-1, the passing sample), the table its pick opened. */
+const R20_116_TABLE: A2uiComponent[] = [
+  { id: 'root', component: 'CardTable', title: 'Blackjack', bankroll: { path: '/bankroll' }, bet: { path: '/bet' }, dealerHand: { path: '/dealerHand' }, playerHand: { path: '/playerHand' }, dealerTotal: { path: '/dealerTotal' }, playerTotal: { path: '/playerTotal' }, status: { path: '/status' }, statusIntent: 'info', phase: { path: '/phase' }, betAction: 'deal' },
+]
+/** T-0586: the recorded `pick_game` press for blackjack on `surfaceId`. */
+const pickGame = (surfaceId: string, value = 'blackjack'): SemanticAction => ({ name: 'pick_game', surfaceId, context: { value }, dataModel: { pick: value } })
 
 const HAND_BUILT: Record<string, A2uiComponent[]> = {
   BookingForm: [
@@ -103,6 +138,7 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
   ],
   // T-0550: the round 17 :154 repair, a ConfirmReceipt whose quantity no AmountPicker binds.
   AmountPicker: R17_154_R2,
+  CardTable: R20_131_DECK,
   // T-0377: a wrap-only row; its hand-built shape is the composite inside a Card.
   ContrastPair: [
     { id: 'root', component: 'Card', children: ['pair'] },
@@ -147,6 +183,7 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
     { id: 'line', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/cart/qty' } },
   ],
   AmountPicker: R17_154_PICKED,
+  CardTable: R20_116_TABLE,
   ContrastPair: [
     { id: 'root', component: 'Column', children: ['pair'] },
     { id: 'pair', component: 'ContrastPair', label: 'Body on page', foreground: '#1f3a5f', background: '#ffffff' },
@@ -154,13 +191,15 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
 }
 
 /** T-0377: a row with `notInside` and no hand-built detector is wrap-only; its hand-built shape is the wrapped composite. */
-const DETECTORS = ['words', 'inputs', 'readBack', 'inputCue', 'logOf', 'gridOf', 'tableColumn', 'pricedRows', 'boardless', 'has', 'planned', 'unpickedLines'] as const
+const DETECTORS = ['words', 'inputs', 'readBack', 'inputCue', 'logOf', 'gridOf', 'tableColumn', 'pricedRows', 'boardless', 'has', 'planned', 'unpickedLines', 'picked'] as const
 const wrapOnly = (m: CompositeMoment): boolean => m.notInside !== undefined && DETECTORS.every((k) => m[k] === undefined)
 
 const codeOf = (composite: string): string => {
   const row = COMPOSITE_MOMENTS.find((m) => m.composite === composite)!
   // T-0550: an unpicked receipt line is SURFACE_MISSING, as the ticket names it.
   if (row.unpickedLines !== undefined) return 'SURFACE_MISSING'
+  // T-0586: a game picked with no table is SURFACE_MISSING, as the ticket names it.
+  if (row.picked !== undefined) return 'SURFACE_MISSING'
   return `${composite.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_${wrapOnly(row) ? 'WRAPPED' : 'MISSING'}`
 }
 
@@ -168,8 +207,10 @@ const codeOf = (composite: string): string => {
 const DAY_PLAN = 'Plan my Saturday 21 November 2026: breakfast at 08:00, the half-day coastal boat tour at 10:00 and dinner at Vela at 20:00.'
 /** T-0480: a `planned` row reads the guest's words, so its hand-built and composed surfaces are judged on that say turn. */
 const SAID: Record<string, string> = { Itinerary: DAY_PLAN }
+/** T-0586: a `picked` row reads the game pick and its reply, so its surfaces are judged on that action turn. */
+const ACTED: Record<string, { action: SemanticAction; reply: string }> = { CardTable: { action: pickGame('s1'), reply: R20_131_REPLY } }
 const saidCodes = (composite: string, components: A2uiComponent[]): string[] =>
-  runSemanticChecks(compositeMomentChecks, { surfaces: [view(components)], intent: SAID[composite] }).findings.map((f) => f.code)
+  runSemanticChecks(compositeMomentChecks, { surfaces: [view(components)], intent: SAID[composite], ...ACTED[composite] }).findings.map((f) => f.code)
 
 describe('composite moment checks (T-0208)', () => {
   for (const { composite } of COMPOSITE_MOMENTS) {
@@ -1286,7 +1327,7 @@ describe('composite moment checks (T-0208)', () => {
   })
 
   it("every row's moment is one of its composite's selection intents", () => {
-    const types = { ...defaultSelection.types, ...conciergeSelection.types, ...stylistSelection.types } as Record<string, { intents: string[] }>
+    const types = { ...defaultSelection.types, ...conciergeSelection.types, ...stylistSelection.types, ...croupierSelection.types } as Record<string, { intents: string[] }>
     for (const m of COMPOSITE_MOMENTS) expect(types[m.composite]?.intents, m.composite).toContain(m.moment)
   })
 
@@ -1298,6 +1339,7 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-board-grid',
       'composite-moment-game-hud',
       'composite-moment-result-card',
+      'composite-moment-card-table',
       'composite-moment-timeline',
       'composite-moment-product-card',
       'composite-moment-confirm-receipt',
@@ -1306,7 +1348,7 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-contrast-pair',
       'composite-prose-swatch',
     ])
-    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'ITINERARY_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'CONFIRM_RECEIPT_MISSING', 'SURFACE_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'ITINERARY_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'SURFACE_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'CONFIRM_RECEIPT_MISSING', 'SURFACE_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })
@@ -1967,5 +2009,75 @@ describe('T-0480: a day plan of timed stops answered with no Itinerary is ITINER
   it('the plan cue bites: with a cue that matches nothing, the day plan yields none', () => {
     const open = compositeMomentCheck({ ...row, planned: { ...row.planned!, cue: /$^/ } })
     expect(open.check({ surfaces: [], intent: DAY_PLAN })).toEqual([])
+  })
+})
+
+describe('T-0586: a picked card game answered with no CardTable asks for its table', () => {
+  const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'CardTable')!
+  const check = compositeMomentCheck(row)
+  const run = (surfaces: SurfaceView[], action: SemanticAction | undefined, reply: string | undefined) =>
+    check.check({ surfaces, ...(action !== undefined ? { action } : {}), ...(reply !== undefined ? { reply } : {}) }).map((f) => f.code)
+  /** The mentalist's question deck (T-0419: actionName "choose", its press is the answer) and its HUD update. */
+  const MENTALIST_DECK: A2uiComponent[] = [
+    { id: 'root', component: 'OptionDeck', heading: 'Question 4 of 20', subheading: 'Is it bigger than a breadbox?', actionName: 'choose', value: { path: '/answer' }, options: [{ value: 'yes', title: 'Yes' }, { value: 'no', title: 'No' }, { value: 'sometimes', title: 'Sometimes' }] },
+  ]
+  const MENTALIST_HUD: A2uiComponent[] = [{ id: 'root', component: 'GameHud', title: 'Twenty Questions', status: 'Question 4 of 20', stats: [{ label: 'Questions', value: '4 / 20' }] }]
+  const choose = (value: string): SemanticAction => ({ name: 'choose', surfaceId: 'ask-3', context: { value }, dataModel: { answer: value } })
+
+  it('round 20 :131 (the deck relabelled) and :146 r2 (a Column of two Texts) each draw SURFACE_MISSING, naming the pick and the surface', () => {
+    const [deck, ...rest] = check.check({ surfaces: [view(R20_131_DECK, 'ask-1')], action: pickGame('ask-1'), reply: R20_131_REPLY })
+    expect(rest).toEqual([])
+    expect(deck).toMatchObject({ code: 'SURFACE_MISSING', path: 'ask-1:root' })
+    expect(deck!.message).toContain('picked blackjack on ask-1')
+    expect(deck!.message).toContain('ask-1 holds no CardTable')
+    expect(deck!.message).toContain('Open ONE CardTable on a fresh surface (table-1, table-2 and on)')
+    const [column, ...more] = check.check({ surfaces: [view(R20_146_COLUMN, 'game-pick-1')], action: pickGame('game-pick-1'), reply: R20_146_REPLY })
+    expect(more).toEqual([])
+    expect(column).toMatchObject({ code: 'SURFACE_MISSING', path: 'game-pick-1:root' })
+  })
+
+  it('every composite-moment check on the turn yields only the one SURFACE_MISSING', () => {
+    const findings = runSemanticChecks(compositeMomentChecks, { surfaces: [view(R20_131_DECK, 'ask-1')], action: pickGame('ask-1'), reply: R20_131_REPLY }).findings
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', 'ask-1:root']])
+  })
+
+  it('a pick answered in prose alone, a Surprise me pick whose reply deals blackjack, and a blackjack value under another action name draw it too', () => {
+    expect(check.check({ surfaces: [], action: pickGame('ask-1'), reply: R20_131_REPLY })).toMatchObject([{ code: 'SURFACE_MISSING', path: 'action:pick_game' }])
+    expect(check.check({ surfaces: [view(R20_131_DECK, 'ask-1')], action: pickGame('ask-1', 'random'), reply: R20_131_REPLY })[0]!.message).toContain('picked Blackjack on ask-1')
+    expect(run([view(R20_131_DECK, 'ask-1')], { ...pickGame('ask-1', 'spanish-21'), name: 'choose_game' }, 'Spanish 21 it is. Place your bet to deal.')).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('negative controls: the same pick with a CardTable (on the pick surface or a fresh table-1) yields none', () => {
+    expect(run([view(R20_116_TABLE, 'ask-1')], pickGame('ask-1'), R20_131_REPLY)).toEqual([])
+    expect(run([view(R20_131_DECK, 'ask-1'), view(R20_116_TABLE, 'table-1')], pickGame('ask-1'), R20_131_REPLY)).toEqual([])
+  })
+
+  it('negative control: a mentalist answer pressed on its OptionDeck and answered with a GameHud yields none', () => {
+    expect(run([view(MENTALIST_DECK, 'ask-4'), view(MENTALIST_HUD, 'hud-1')], choose('yes'), 'Noted. Question 4: is it bigger than a breadbox?')).toEqual([])
+    // The action gate bites alone: even a reply that says "deal" on a press whose value names no card game stays clean.
+    expect(run([view(MENTALIST_HUD, 'hud-1')], choose('no'), "No deal yet. I'll ask again.")).toEqual([])
+  })
+
+  it("negative controls: a hold'em, stud or draw pick, a reply that invites no bet or deal, a PlayingCard hand, a say turn and no reply yield none", () => {
+    expect(run([view(R20_131_DECK, 'ask-1')], pickGame('ask-1', 'texas-holdem'), "Texas Hold'em it is. Place your bet to deal.")).toEqual([])
+    expect(run([view(R20_131_DECK, 'ask-1')], pickGame('ask-1', 'seven-card-stud'), 'Seven-card stud it is. Ante up and I deal.')).toEqual([])
+    expect(run([view(R20_131_DECK, 'ask-1')], pickGame('ask-1', 'five-card-draw'), 'Five-card draw it is. Place your bet.')).toEqual([])
+    expect(run([view(R20_131_DECK, 'ask-1')], pickGame('ask-1'), 'Blackjack it is. Here are the rules in brief.')).toEqual([])
+    const hand: A2uiComponent[] = [{ id: 'root', component: 'Card', children: ['c1'] }, { id: 'c1', component: 'PlayingCard', rank: 'A', suit: 'spades' }]
+    expect(run([view(hand, 'table-1')], pickGame('ask-1'), R20_131_REPLY)).toEqual([])
+    expect(check.check({ surfaces: [view(R20_131_DECK, 'ask-1')], intent: 'Blackjack please. Place your bet to deal.', reply: R20_131_REPLY })).toEqual([])
+    expect(run([view(R20_131_DECK, 'ask-1')], pickGame('ask-1'), undefined)).toEqual([])
+  })
+
+  it('the invite and game gates bite: with either matching nothing, :131 yields none', () => {
+    const quiet = (picked: Partial<NonNullable<CompositeMoment['picked']>>) => compositeMomentCheck({ ...row, picked: { ...row.picked!, ...picked } })
+    expect(quiet({ invite: /$^/ }).check({ surfaces: [view(R20_131_DECK, 'ask-1')], action: pickGame('ask-1'), reply: R20_131_REPLY })).toEqual([])
+    expect(quiet({ game: /$^/ }).check({ surfaces: [view(R20_131_DECK, 'ask-1')], action: pickGame('ask-1'), reply: R20_131_REPLY })).toEqual([])
+  })
+
+  it('the catalog gate keeps the row on agent-ui--croupier and off the base catalog', () => {
+    const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
+    expect(ids(composeCatalog(loadCatalog(defaultCatalogRaw), croupierFragment, 'croupier'))).toContain('composite-moment-card-table')
+    expect(ids(loadCatalog(defaultCatalogRaw))).not.toContain('composite-moment-card-table')
   })
 })
