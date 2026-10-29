@@ -1141,3 +1141,7 @@
 ## T-0522: The @agent-ui/app root bundle fits its size budget again (61071 vs 59925 B gz) (2026-10-28)
 
 - decide: scripts/measure-size.mjs:779 the budget raise is an unattended measurement and the comment itself says ADR-0197 cl.5 closes upward drift bumps; it wants Kim's confirmation, as the builder flagged.
+
+## T-0531: Descriptor contract sweep: each control's descriptor against its code and generated props (2026-10-28)
+
+- note: handoff.md `### Low` item 3 says card-content's scroll keys are documented "only inside a YAML comment" on `card.md`'s `keyboard: []` line, but card.md has a prose "Keyboard operability" section at card.md:268 and the :73 comment points to it. The drift is that no structured `keyboard:` row exists, not that the prose is missing.
