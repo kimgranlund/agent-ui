@@ -1249,3 +1249,8 @@
 
 - note: `leak-gate.browser.test.ts` settle arm waits 1.5 s quiet window per mount round for ui-agent-admin; the solo's open item (about 106 listeners per round on detached CodeMirror nodes outside the host, GC reclaim unmeasured) is not covered by the gate and is not claimed by any criterion.
 - decide: redck deviations: no `process deviation:` lines printed.
+
+## T-0539: Arrow keys and directional glyphs flip under dir=rtl (2026-10-28)
+
+- note: packages/agent-ui/components/src/controls/drill/drill.css:341-356 the opt-in View Transitions layer keeps its default animation under rtl; the builder named this as open and only the CSS-transform base slide was in scope.
+- note: packages/agent-ui/components/src/controls/glyph/glyph.css:50 the mirror also reaches step-flow and confirm-receipt carets (quoted-only in the ticket); no browser test covers those two, they are covered by the shared rule and the glyph test.

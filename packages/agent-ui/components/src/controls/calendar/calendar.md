@@ -142,9 +142,9 @@ aria:
 
 keyboard:
   - key: ArrowLeft
-    description: Move focus −1 day. Crosses month boundaries (rebuilds grid for new month). Range mode — also updates the in-progress preview band while selecting-end.
+    description: Move focus −1 day (+1 day under `dir="rtl"`, where the grid mirrors, so focus moves to the cell physically left, T-0539). Crosses month boundaries (rebuilds grid for new month). Range mode — also updates the in-progress preview band while selecting-end.
   - key: ArrowRight
-    description: Move focus +1 day. Crosses month boundaries (rebuilds grid for new month). Range mode — also updates the in-progress preview band while selecting-end.
+    description: Move focus +1 day (−1 day under `dir="rtl"`, so focus moves to the cell physically right, T-0539). Crosses month boundaries (rebuilds grid for new month). Range mode — also updates the in-progress preview band while selecting-end.
   - key: ArrowUp
     description: Move focus −7 days (one week back). May cross month boundary. Range mode preview as above.
   - key: ArrowDown

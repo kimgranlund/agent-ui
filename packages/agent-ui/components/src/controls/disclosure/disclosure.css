@@ -130,6 +130,11 @@
      part's OWN summary chevron. */
   :scope > [data-part='details'][open] > [data-part='summary'] > [data-part='chevron'] {
     rotate: 90deg; /* caret-right → visually caret-down; orientation IS the state, no colour/size change */
+
+    /* Under rtl the glyph mirrors the caret to point left (glyph.css, T-0539), so the open turn runs the other way. */
+    &:dir(rtl) {
+      rotate: -90deg;
+    }
   }
 
   /* The summary label — the fold's one-line text (the `summary` prop, textContent-only). */

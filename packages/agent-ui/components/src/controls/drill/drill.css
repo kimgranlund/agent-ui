@@ -339,13 +339,19 @@
     @starting-style {
       opacity: 0;
       transform: translateX(
-        calc(var(--ui-drill-slide-distance) * var(--_drill-dir-sign, 1))
+        calc(var(--ui-drill-slide-distance) * var(--_drill-dir-sign, 1) * var(--_drill-inline-sign, 1))
       );
     }
   }
 
   :scope:not([data-vt-active])[data-direction='back'] > ui-drill-panel:not([hidden]) {
     --_drill-dir-sign: -1;
+  }
+
+  /* translateX is physical, so under rtl a forward drill enters from the left, the inline end (T-0539; the
+     segmented-control precedent). A separate sign from the forward/back one, so back under rtl is +1. */
+  :scope:dir(rtl) {
+    --_drill-inline-sign: -1;
   }
 
   @media (prefers-reduced-motion: reduce) {

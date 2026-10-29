@@ -177,7 +177,9 @@ export class UIBoardGridElement extends UIElement {
     const step = STEPS[event.key]
     if (step) {
       event.preventDefault()
-      const next = this.#step(index, step[0], step[1])
+      // Under rtl the CSS grid mirrors (column 0 at the physical right), so the column step flips with it (T-0539).
+      const inline = getComputedStyle(this).direction === 'rtl' ? -1 : 1
+      const next = this.#step(index, step[0], step[1] * inline)
       if (next !== index) {
         this.#focus = next
         this.#syncTabStop()
