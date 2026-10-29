@@ -93,7 +93,8 @@ const BASIC_CONTACT: Record<string, unknown>[] = [
   { id: 'email', component: 'TextField', label: 'Email address', value: { path: '/contact/email' }, variant: 'shortText' },
   { id: 'topic', component: 'ChoicePicker', label: 'Topic', variant: 'mutuallyExclusive', options: [{ label: 'Billing', value: 'billing' }, { label: 'Technical issue', value: 'technical' }], value: { path: '/contact/topic' } },
 ]
-const RECEIPT = { id: 'root', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: { path: '/cart/qty' }, amount: { path: '/cart/amount' } }], status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back_to_shop' } }
+// T-0550: a literal quantity, since a bound one with no AmountPicker beside it is the AmountPicker row's SURFACE_MISSING.
+const RECEIPT = { id: 'root', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: 1, amount: { path: '/cart/amount' } }], status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back_to_shop' } }
 const RECEIPT_MODEL = { cart: { qty: 1, amount: '$189', total: '$189' } }
 
 // Palette (T-0359).
