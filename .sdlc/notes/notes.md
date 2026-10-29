@@ -1123,3 +1123,9 @@
 ## T-0524: The remaining low weak-test findings (T-0508 L3, L4, L6, L7) assert what they claim (2026-10-28)
 
 - note: site/pages/dogfood-render.browser.test.ts:1141 browser shard not run here; the change only adds a log line.
+
+## T-0523: Bundle size sweep: every package barrel and subpath against its budget, heavy imports on default entries (2026-10-28)
+
+- note: the builder's red-first/deviation check is moot here (no `(red)` criteria); `redck.py deviations` printed no process deviation lines.
+- note: the per-module culprit shares are the builder's own estimated attribution (attrib.mjs, scaled to the row total) and the handoff says so at line 37; I verified the row totals and cited file lines, not the per-module byte figures.
+- note: `.sdlc/tickets/roadmap.md` has a broken link to `0519-list-item-semantics/handoff.md` (builder-reported, pre-existing, not this ticket's scope).
