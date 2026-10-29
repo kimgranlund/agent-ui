@@ -1393,3 +1393,8 @@
 - decide: `scripts/e2e-admin/probe/replays/shopkeeper-haiku-receipt-rows-qty.test.mjs:21` note: the verbatim :154 fixture ships round 3 tallied `SEMANTIC_UNCORRECTED` (a finding on the last round never halts); the recovery leg drops the PARSE round to show the SURFACE_MISSING send-back. The ticket row anticipated a send-back on the recorded run itself.
 - decide: `packages/agent-ui/a2ui/src/catalog/composite-moments.ts:742` decide: the literal and rows branch runs only when no AmountPicker sits on the surface at all (`picked.length === 0`), a narrowing the ticket row did not ask for: a mixed receipt (one line picked, another literal, the reply offering a change) stays silent. Criterion #1's "a picker on the surface" negative endorses it; worth a conscious yes.
 - decide: `packages/agent-ui/a2ui/src/catalog/composite-moments.ts:758` note: a receipt with no `status` reads pending and fires (the descriptor default); pinned at `composite-moments.test.ts:1852`.
+
+## T-0584: Live round 20 measures the round 19 cluster fixes (2026-10-29)
+
+- note: the `red-checkpoint` deviation check printed no deviation lines; no `(red)` criteria exist.
+- note: the claim that the three T-0583 branches never fired live and that `note = reply` at `produce.ts` line 1893 hides the meta note is the report's own evidence (direct regex runs); I confirmed the :43 fixture replays red on the stated checks but did not re-run the regex. It is proposal text, not a criterion.
