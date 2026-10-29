@@ -1287,3 +1287,8 @@
 
 - note: the Basic exemplars (`packages/agent-ui/a2ui/src/examples/basic-exemplars.ts`) still use `validationRegexp` and `displayStyle`, which INERT_PROP now flags. No live path loads that shard, per the builder; re-admitting the seeds is a follow-up ticket.
 - note: no `red-checkpoint` deviation line was printed by `redck.py deviations`.
+
+## T-0534: Descriptor keyboard rows share one shape and placeholder part names are real (2026-10-29)
+
+- note: packages/agent-ui/components/src/controls/drill/drill.ts: `file` now reports UTF-8 text (was `data` at base), Low item 5 fixed.
+- note: packages/agent-ui/app/src/controls/agent-admin/agent-admin.md:110 the merged entry-section and drawer-trigger descriptions carry pre-existing em dashes.

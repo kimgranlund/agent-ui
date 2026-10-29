@@ -504,7 +504,7 @@ export class UIDrillElement extends UIContainerElement {
     // Skip the wholesale rebuild when the trail's own content hasn't changed — an unrelated re-render
     // (a panel appended/removed elsewhere, a prop unrelated to `path`) must never churn DOM that may be
     // holding focus (a crumb button or the heading itself).
-    const pathKey = resolvedPath.join(' ')
+    const pathKey = resolvedPath.join('\u0000')
     if (pathKey === this.#lastCrumbsPath) return
     this.#lastCrumbsPath = pathKey
     const ancestorButtons = resolvedPath.slice(0, -1).map((key, index) => {

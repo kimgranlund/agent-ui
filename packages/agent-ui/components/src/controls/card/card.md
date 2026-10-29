@@ -70,7 +70,13 @@ aria:
   labelSource: aria-label / aria-labelledby   # author-supplied accessible name; its presence opts the card into role=group
   childModel: ChildList — ui-card-header / ui-card-content / ui-card-footer sub-elements (regions = sub-elements; SPEC-R3/R4)
 
-keyboard: []           # ui-card itself is not interactive — no keyboard contract. Its ui-card-content SUB-ELEMENT DOES carry one in scroll mode (ADR-0046 Amendment 6): tabindex=0 + ArrowUp/Down (40px) · PageUp/Down (~90% viewport) · Home/End (start/end) — see the Keyboard section in the prose below
+keyboard:                # ui-card itself is not interactive; the one keyboard contract is its ui-card-content SUB-ELEMENT's, in scroll mode only (ADR-0046 Amendment 6)
+  - keys: ArrowUp / ArrowDown (ui-card-content focused, scroll mode)
+    action: Scrolls the content region by 40px per press. Acts only when the region itself is the key target (never hijacks a focused descendant's own arrow keys); preventDefault keeps the increment identical across engines.
+  - keys: PageUp / PageDown (ui-card-content focused, scroll mode)
+    action: Scrolls the content region by about 90% of its viewport height.
+  - keys: Home / End (ui-card-content focused, scroll mode)
+    action: Scrolls the content region to its start / end.
 
 geometry:
   sizeClass: container   # Container/layout — spacing off the container levels and --md-sys-space (generated over n); a card has NO control height (never reads --md-sys-height-*)

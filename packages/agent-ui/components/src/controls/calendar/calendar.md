@@ -141,32 +141,32 @@ aria:
   data-in-range: (range mode only) stamped on every cell strictly between the normalized [start,end] band, excluding the two endpoints — includes [data-outside] cells and spans month boundaries (ADR-0093 clause 5)
 
 keyboard:
-  - key: ArrowLeft
-    description: Move focus −1 day (+1 day under `dir="rtl"`, where the grid mirrors, so focus moves to the cell physically left, T-0539). Crosses month boundaries (rebuilds grid for new month). Range mode — also updates the in-progress preview band while selecting-end.
-  - key: ArrowRight
-    description: Move focus +1 day (−1 day under `dir="rtl"`, so focus moves to the cell physically right, T-0539). Crosses month boundaries (rebuilds grid for new month). Range mode — also updates the in-progress preview band while selecting-end.
-  - key: ArrowUp
-    description: Move focus −7 days (one week back). May cross month boundary. Range mode preview as above.
-  - key: ArrowDown
-    description: Move focus +7 days (one week forward). May cross month boundary. Range mode preview as above.
-  - key: Home
-    description: Move focus to Sunday of the current week. Range mode preview as above.
-  - key: End
-    description: Move focus to Saturday of the current week. Range mode preview as above.
-  - key: PageUp
-    description: Move focus −1 month (rebuilds the grid). Day clamped to new month's last day.
-  - key: Shift+PageUp
-    description: Move focus −1 year (rebuilds the grid). Day clamped to new month's last day.
-  - key: PageDown
-    description: Move focus +1 month (rebuilds the grid). Day clamped to new month's last day.
-  - key: Shift+PageDown
-    description: Move focus +1 year (rebuilds the grid). Day clamped to new month's last day.
-  - key: Enter
-    description: 'mode=single — commit the focused date (emits change + select). mode=range — first commit sets valueStart (emits select); second commit swap-completes the pair (emits select + change). No-op if aria-disabled. preventDefault so a calendar-inside-an-overlay doesn''t re-trigger its anchor button (ADR-0048 / ADR-0045 semantics).'
-  - key: Space
-    description: Same as Enter — commit the focused date (both modes). No-op if aria-disabled.
-  - key: Escape
-    description: NOT intercepted by ui-calendar in either mode (ADR-0045) — dismissal (e.g. closing an overlay this control is the popup body of) stays the platform/overlay's. An abandoned pending range start is simply superseded by the next pick.
+  - keys: ArrowLeft
+    action: Move focus −1 day (+1 day under `dir="rtl"`, where the grid mirrors, so focus moves to the cell physically left, T-0539). Crosses month boundaries (rebuilds grid for new month). Range mode — also updates the in-progress preview band while selecting-end.
+  - keys: ArrowRight
+    action: Move focus +1 day (−1 day under `dir="rtl"`, so focus moves to the cell physically right, T-0539). Crosses month boundaries (rebuilds grid for new month). Range mode — also updates the in-progress preview band while selecting-end.
+  - keys: ArrowUp
+    action: Move focus −7 days (one week back). May cross month boundary. Range mode preview as above.
+  - keys: ArrowDown
+    action: Move focus +7 days (one week forward). May cross month boundary. Range mode preview as above.
+  - keys: Home
+    action: Move focus to Sunday of the current week. Range mode preview as above.
+  - keys: End
+    action: Move focus to Saturday of the current week. Range mode preview as above.
+  - keys: PageUp
+    action: Move focus −1 month (rebuilds the grid). Day clamped to new month's last day.
+  - keys: Shift+PageUp
+    action: Move focus −1 year (rebuilds the grid). Day clamped to new month's last day.
+  - keys: PageDown
+    action: Move focus +1 month (rebuilds the grid). Day clamped to new month's last day.
+  - keys: Shift+PageDown
+    action: Move focus +1 year (rebuilds the grid). Day clamped to new month's last day.
+  - keys: Enter
+    action: 'mode=single — commit the focused date (emits change + select). mode=range — first commit sets valueStart (emits select); second commit swap-completes the pair (emits select + change). No-op if aria-disabled. preventDefault so a calendar-inside-an-overlay doesn''t re-trigger its anchor button (ADR-0048 / ADR-0045 semantics).'
+  - keys: Space
+    action: Same as Enter — commit the focused date (both modes). No-op if aria-disabled.
+  - keys: Escape
+    action: NOT intercepted by ui-calendar in either mode (ADR-0045) — dismissal (e.g. closing an overlay this control is the popup body of) stays the platform/overlay's. An abandoned pending range start is simply superseded by the next pick.
 
 geometry:
   tier: pattern                         # composite control; panel is Container/surface, cells are square targets

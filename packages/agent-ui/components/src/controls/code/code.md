@@ -50,12 +50,7 @@ aria:
   labelSource: textContent  # the light-DOM text is both the visible content and (via normal text-node accessible-name computation) what AT reads — no internals.ariaLabel is set
 
 keyboard:
-  - The host itself is the scroll container (no inner wrapper). Keyboard access to horizontal overflow
-    rides the platform's focusable-scroller behavior where an engine implements it (Chromium: Tab reaches
-    the scroller, ArrowRight scrolls it). No `tabindex` is minted (the zero-machinery ruling, SPEC-R5) —
-    on engines without a focusable scroller (WebKit, at time of writing) the residual is NAMED and
-    ACCEPTED: content stays complete in the DOM/AX tree regardless of scroll position; a `tabindex`
-    affordance is a foreseen extension on evidence, not shipped here.
+  - note: The host itself is the scroll container (no inner wrapper). Keyboard access to horizontal overflow rides the platform's focusable-scroller behavior where an engine implements it (Chromium, where Tab reaches the scroller, ArrowRight scrolls it). No `tabindex` is minted (the zero-machinery ruling, SPEC-R5) — on engines without a focusable scroller (WebKit, at time of writing) the residual is NAMED and ACCEPTED, so content stays complete in the DOM/AX tree regardless of scroll position; a `tabindex` affordance is a foreseen extension on evidence, not shipped here.
 
 geometry:
   sizeClass: display
