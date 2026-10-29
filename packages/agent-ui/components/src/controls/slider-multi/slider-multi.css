@@ -64,6 +64,15 @@
 
   /* GH #1141 — the label↔rail↔value row/column rhythm (matches ui-slider's --ui-slider-layout-gap). */
   --ui-slider-multi-layout-gap: var(--md-sys-space-xs);
+
+  /* RTL lever (T-0538): the thumbs ride `inset-inline-start`, which flips on its own; the physical
+     `translateX` that centres them needs the `:dir(rtl)` sign flip below (segmented-control bug #1380). */
+  --ui-slider-multi-direction: 1;
+}
+
+/* RTL flip (T-0538): plain selector, overrides the :where() token block's zero specificity. */
+ui-slider-multi:dir(rtl) {
+  --ui-slider-multi-direction: -1;
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the LITERAL per-[scale] table in dimensions.css
@@ -197,11 +206,13 @@
    *
    * Size:   thumb = box − 2×inset = box − 4px (the ADR-0041 2px-inset law).
    * Block:  top:50% + transform:translateY(-50%) centres the thumb on the rail's midline.
-   * Inline: left is set per data-thumb (lo/hi) using the --value-pct-* geometry custom property:
-   *           `left: calc(var(--value-pct-{thumb}) * 1%)`
-   *         translateX(-50%) on the transform centres the circle on the computed position.
+   * Inline: inset-inline-start is set per data-thumb (lo/hi) using the --value-pct-* geometry custom property:
+   *           `inset-inline-start: calc(var(--value-pct-{thumb}) * 1%)`
+   *         translateX(-50%) on the transform centres the circle on the computed position; under rtl the
+   *         box grows leftward from the physical right, so `--ui-slider-multi-direction` (-1) flips the
+   *         shift (T-0538, the segmented-control bug #1380 precedent).
    *
-   * Motion: `translate` / `left` transitions animate the thumb slide — paint-only transforms.
+   * Motion: `translate` / `inset-inline-start` transitions animate the thumb slide, paint-only transforms.
    *         Suppressed under prefers-reduced-motion. */
   .thumb {
     position: absolute;
@@ -214,22 +225,22 @@
     box-sizing: border-box;
 
     top: 50%;
-    transform: translateY(-50%) translateX(-50%);
+    transform: translateY(-50%) translateX(calc(var(--ui-slider-multi-direction, 1) * -50%));
 
     border: 2px solid var(--ui-slider-multi-thumb-border);
     background: var(--ui-slider-multi-thumb);
     cursor: pointer;
 
     transition:
-      left             var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
+      inset-inline-start var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
       background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
       border-color     var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard);
   }
 
   /* Per-thumb inline position — driven by the JS geometry seam (--value-pct-lo / --value-pct-hi set via
      element.style on the host; they cascade into this @scope as inherited custom properties). */
-  .thumb[data-thumb='lo'] { left: calc(var(--value-pct-lo, 0) * 1%); }
-  .thumb[data-thumb='hi'] { left: calc(var(--value-pct-hi, 100) * 1%); }
+  .thumb[data-thumb='lo'] { inset-inline-start: calc(var(--value-pct-lo, 0) * 1%); }
+  .thumb[data-thumb='hi'] { inset-inline-start: calc(var(--value-pct-hi, 100) * 1%); }
 
   /* Explicit [hidden] guard (matches slider.css's identical belt-and-suspenders rationale): neither part
      declares an unconditional `display` (grid auto-blockifies a bare span), so the UA `[hidden]` rule

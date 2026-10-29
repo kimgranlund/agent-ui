@@ -111,9 +111,9 @@ aria:
 
 keyboard:
   - keys: ArrowRight / ArrowUp
-    action: Increment value by step (clamped to max). Emits input. focus → arrow → blur emits change.
+    action: Increment value by step (clamped to max). Emits input. focus → arrow → blur emits change. Under dir=rtl ArrowLeft increments instead (the axis mirrors, T-0538).
   - keys: ArrowLeft / ArrowDown
-    action: Decrement value by step (clamped to min). Emits input.
+    action: Decrement value by step (clamped to min). Emits input. Under dir=rtl ArrowRight decrements instead.
   - keys: PageUp
     action: Increment value by largeStep (10×step, clamped to max). Emits input.
   - keys: PageDown
@@ -164,8 +164,9 @@ HTML spec exempts from `required` entirely.
 The host is a `grid` container (GH #1141) whose `layout` prop selects the label/rail/value template (see
 "Layout" below). The **rail** (`.rail`, its own light-DOM element as of #1141) has `block-size =
 --md-sys-compact-{size}` (the widget-box ramp). Its **fill** (`.rail::before`) is a thin horizontal bar;
-its `linear-gradient` background paints the fill (primary) from the left up to `--value-pct%` and the
-neutral track beyond. The **thumb** (`.rail::after`) is a circle `box − 4px` (the 2px-inset law, ADR-0041
+its `linear-gradient` background paints the fill (primary) from the inline-start edge (the left, or the
+right under `dir="rtl"`, T-0538) up to `--value-pct%` and the neutral track beyond. Under rtl the thumb,
+the pointer mapping and the arrow keys mirror with it, like the native range. The **thumb** (`.rail::after`) is a circle `box − 4px` (the 2px-inset law, ADR-0041
 cl.3) centred on the `--value-pct%` position along `.rail`, painted in **two layers**: a 2px **ring** border
 (`--ui-slider-thumb-ring`, `box-sizing: border-box` — the ring eats into the interior fill, so the outer
 diameter stays `box − 4px`) around the interior **fill** (`--ui-slider-thumb`). The ring covers the

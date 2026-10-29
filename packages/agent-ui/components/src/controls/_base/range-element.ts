@@ -152,8 +152,12 @@ export class UIRangeElement extends UIFormElement {
       const largeStep = step * 10
       const current = this.#normalize(this.value ?? 0)
       let next: number | null = null
+      // Under rtl the inline axis is mirrored: ArrowLeft steps toward max and ArrowRight toward min
+      // (the native range's rtl mapping, T-0538). Up/Down, Page and Home/End are direction-free.
+      const rtl = getComputedStyle(this).direction === 'rtl'
+      const key = rtl && e.key === 'ArrowLeft' ? 'ArrowRight' : rtl && e.key === 'ArrowRight' ? 'ArrowLeft' : e.key
 
-      switch (e.key) {
+      switch (key) {
         case 'ArrowRight':
         case 'ArrowUp':
           next = this.#normalize(current + step)

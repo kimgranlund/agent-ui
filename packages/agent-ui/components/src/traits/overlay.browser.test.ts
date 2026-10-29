@@ -605,3 +605,75 @@ describe('overlay — GH #1339 IACVT guard: an unresolvable anchor() demotes the
     }
   })
 })
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  T-0538: `*-start` / `*-end` are LOGICAL: under an rtl anchor a top/bottom popup's start edge is
+//  the anchor's physical RIGHT. Left/right sides align on the block axis, which rtl never mirrors.
+//  Both paths: the enhanced (CSS anchor) path and the forced JS path.
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+describe('overlay: logical align under dir=rtl (T-0538, both paths, both engines)', () => {
+  const RTL_CASES = [
+    ['bottom-start', 'right'],
+    ['bottom-end', 'left'],
+    ['top-start', 'right'],
+    ['top-end', 'left'],
+    ['right-start', 'top'],
+  ] as const
+
+  function place(anchor: HTMLElement): void {
+    anchor.dir = 'rtl'
+    anchor.style.position = 'fixed'
+    anchor.style.top = '430px'
+    anchor.style.left = '197px'
+    anchor.style.width = '20px'
+    anchor.style.height = '20px'
+  }
+
+  function expectEdge(p: DOMRect, a: DOMRect, edge: 'left' | 'right' | 'top', label: string): void {
+    expect(p[edge], `${server.browser}: ${label} must align the popup's ${edge} edge to the anchor's`).toBeCloseTo(a[edge], 0)
+  }
+
+  for (const [placement, edge] of RTL_CASES) {
+    it(`${server.browser}: enhanced path, rtl ${placement} aligns the ${edge} edges and reports ${placement}`, async () => {
+      const { el, popup, anchor } = makeHost({ placement })
+      place(anchor)
+      el.handle!.open()
+      expect(popup.getAttribute('data-placement'), `${server.browser}: rtl ${placement} data-placement`).toBe(placement)
+      await settle()
+      expectEdge(popup.getBoundingClientRect(), anchor.getBoundingClientRect(), edge, `rtl ${placement}`)
+    })
+  }
+
+  it(`${server.browser}: forced JS path, rtl bottom-start and bottom-end align to the anchor's right and left edges`, async () => {
+    const realSupports = CSS.supports.bind(CSS)
+    CSS.supports = ((prop: string, value?: string) =>
+      prop.includes('anchor-name') ? false : realSupports(prop, value as string)) as typeof CSS.supports
+    let forcedOverlay: typeof import('./overlay.ts')
+    try {
+      const specifier = './overlay.ts?forced-unsupported-rtl'
+      forcedOverlay = (await import(/* @vite-ignore */ specifier)) as typeof import('./overlay.ts')
+    } finally {
+      CSS.supports = realSupports
+    }
+
+    for (const [placement, edge] of [['bottom-start', 'right'], ['bottom-end', 'left']] as const) {
+      const host = new BareHostEl()
+      const popup = document.createElement('div')
+      const anchor = document.createElement('button')
+      popup.style.cssText = 'width: 150px; height: 80px; box-sizing: border-box; padding: 0; border: none'
+      place(anchor)
+      document.body.append(host, anchor, popup)
+      const handle = forcedOverlay.overlay(host, { popup, anchor, placement })
+      try {
+        handle.open()
+        expect(popup.getAttribute('data-placement'), `${server.browser}: forced JS rtl ${placement} data-placement`).toBe(placement)
+        expectEdge(popup.getBoundingClientRect(), anchor.getBoundingClientRect(), edge, `forced JS rtl ${placement}`)
+      } finally {
+        handle.cleanup()
+        host.remove()
+        anchor.remove()
+        popup.remove()
+      }
+    }
+  })
+})

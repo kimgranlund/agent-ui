@@ -36,10 +36,13 @@ function snapValue(ratio: number, min: number, max: number, step: number): numbe
   return Math.max(min, Math.min(max, snapped)) // clamp: handles last-step undershoot
 }
 
-/** Map a clientX coordinate to a [0,1] ratio along the track rect. */
-function ratioFromX(clientX: number, rect: DOMRect): number {
+/** Map a clientX coordinate to a [0,1] ratio along the track rect. Under `direction: rtl` the inline
+ *  axis runs from the physical right, so the ratio is measured from `rect.right` (the native range's
+ *  rtl mapping, T-0538). */
+function ratioFromX(clientX: number, rect: DOMRect, rtl = false): number {
   if (rect.width <= 0) return 0
-  return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+  const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+  return rtl ? 1 - ratio : ratio
 }
 
 /**
@@ -69,7 +72,9 @@ export function valueDrag(host: UIElement, opts: ValueDragOptions): () => void {
 
     // Snapshot the rect on press; re-snapshot on each move (accounts for scroll / resize).
     let rect = track.getBoundingClientRect()
-    opts.onValue(snapValue(ratioFromX(pe.clientX, rect), min, max, opts.step()))
+    // Direction is read once per drag from the track's computed style (jsdom reports '', i.e. ltr).
+    const rtl = getComputedStyle(track).direction === 'rtl'
+    opts.onValue(snapValue(ratioFromX(pe.clientX, rect, rtl), min, max, opts.step()))
 
     // Per-drag AbortController — aborted on any drag-end event, bounding all drag listeners.
     const dragAc = new AbortController()
@@ -79,7 +84,7 @@ export function valueDrag(host: UIElement, opts: ValueDragOptions): () => void {
       const me = e as PointerEvent
       if (me.pointerId !== pe.pointerId) return
       rect = track.getBoundingClientRect()
-      opts.onValue(snapValue(ratioFromX(me.clientX, rect), opts.min(), opts.max(), opts.step()))
+      opts.onValue(snapValue(ratioFromX(me.clientX, rect, rtl), opts.min(), opts.max(), opts.step()))
     }, { signal: dragAc.signal })
 
     track.addEventListener('pointerup', (e) => {

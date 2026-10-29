@@ -1198,3 +1198,9 @@
 ## T-0546: A2UI catalog conformance sweep: catalog components and props against renderer factories (2026-10-28)
 
 - note: the handoff does not record the exact `npm run test:a2ui-kit` exit evidence beyond the builder's claim; I did not rerun it (not a criterion).
+
+## T-0538: Range controls and overlays behave correctly under dir=rtl (2026-10-28)
+
+- decide: packages/agent-ui/app/src/controls/conversation/conversation-composer.ts:1329 and :1572 call `computePosition` without the new `rtl` argument, so the composer's two popups stay physical under rtl. The ticket Context names them in the fan-out, but its proposed scope excludes the app package and no criterion covers them; the builder disclosed it. Worth a follow-up ticket.
+- note: packages/agent-ui/components/src/traits/overlay.ts header comments (lines 1-27) carry pre-existing em dashes outside this diff.
+- note: WebKit's native range does not mirror arrow keys under rtl (builder measured), so native key parity is asserted in Chromium only and the mirrored mapping in both engines; the shipped behavior follows Chromium and the spec of the handoff.
