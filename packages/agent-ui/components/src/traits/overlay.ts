@@ -161,12 +161,28 @@ function splitPlacement(p: OverlayPlacement): [Side, Align] {
   return [p.slice(0, i) as Side, p.slice(i + 1) as Align]
 }
 
+/** The align opposite, `start`↔`end`. Paired with `FLIP_SIDE` to build the fuller candidate set
+ * below (flip-side, flip-align, flip-both); see the FLIP-CANDIDATES comment at the `overlay()`
+ * setup site for why a single side-flip (the JS path's own tactic) isn't enough on the enhanced
+ * path. Also the rtl inline mirror in `physicalAlign()`. */
+const FLIP_ALIGN = { start: 'end', end: 'start' } as const satisfies Record<Align, Align>
+
+/** `start`/`end` are LOGICAL (T-0538): on a top/bottom side they align on the inline axis, whose start
+ * edge is the physical right under `direction: rtl`. A left/right side aligns on the block axis, which
+ * rtl never mirrors. Positioning works in physical terms (`start` = left/top), so this maps the logical
+ * align to the physical one; being self-inverse, it also maps a decoded physical align back. */
+function physicalAlign(side: Side, align: Align, rtl: boolean): Align {
+  return rtl && (side === 'top' || side === 'bottom') ? FLIP_ALIGN[align] : align
+}
+
 // ── Zero-dep JS positioning controller (LLD-C3) ─────────────────────────────────────────────────
 
 /**
  * Measure the anchor + popup + viewport and compute the fixed `top`/`left` for the given `placement`.
  * Flips to the opposite side when the preferred side lacks space (flip). Clamps the result to the
- * viewport edges (shift). Returns the resolved placement for `data-placement`.
+ * viewport edges (shift). Returns the resolved placement for `data-placement`. `rtl` (the anchor's
+ * computed direction) makes a top/bottom `start` align to the anchor's right edge (T-0538); the
+ * returned placement stays logical.
  */
 export function computePosition(
   pref: OverlayPlacement,
@@ -175,6 +191,7 @@ export function computePosition(
   vw: number,
   vh: number,
   gap = 0,
+  rtl = false,
 ): { top: number; left: number; placement: OverlayPlacement } {
   let [side, align] = splitPlacement(pref)
   const pH = popupRect.height
@@ -198,13 +215,14 @@ export function computePosition(
   // from the anchor edge (a small breathing margin between the trigger and its dropdown).
   let top: number
   let left: number
+  const inlineAlign = physicalAlign(side, align, rtl)
 
   if (side === 'bottom') {
     top = anchorRect.bottom + gap
-    left = align === 'start' ? anchorRect.left : anchorRect.right - pW
+    left = inlineAlign === 'start' ? anchorRect.left : anchorRect.right - pW
   } else if (side === 'top') {
     top = anchorRect.top - pH - gap
-    left = align === 'start' ? anchorRect.left : anchorRect.right - pW
+    left = inlineAlign === 'start' ? anchorRect.left : anchorRect.right - pW
   } else if (side === 'right') {
     top = align === 'start' ? anchorRect.top : anchorRect.bottom - pH
     left = anchorRect.right + gap
@@ -308,12 +326,6 @@ function buildAnchorTryStylesheet(): string {
   }).join('\n')
 }
 
-/** The align opposite — `start`↔`end`. Paired with `FLIP_SIDE` to build the fuller candidate set
- * below (flip-side, flip-align, flip-both) — see the FLIP-CANDIDATES comment at the `overlay()`
- * setup site for why a single side-flip (the JS path's own tactic) isn't enough on the enhanced
- * path. */
-const FLIP_ALIGN = { start: 'end', end: 'start' } as const satisfies Record<Align, Align>
-
 const ANCHOR_TRY_STYLE_ID = 'ui-overlay-anchor-tries'
 
 /** Lazily inject the shared `@position-try` stylesheet into `document.head` — once per document (the
@@ -344,14 +356,26 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   const auto = opts.auto ?? true
   const focusOnOpen = opts.focusOnOpen ?? true
   const [prefSide, prefAlign] = splitPlacement(prefPlacement)
+  // The PHYSICAL preferred align for the current open session (T-0538): `prefAlign` mirrored when the
+  // anchor's computed direction is rtl. Re-read on every open (`readDirection()`), so a `dir` change
+  // between sessions is honoured; ltr leaves it equal to `prefAlign`.
+  let rtl = false
+  let physPrefAlign: Align = prefAlign
+  function readDirection(): void {
+    rtl = getComputedStyle(anchor).direction === 'rtl'
+    physPrefAlign = physicalAlign(prefSide, prefAlign, rtl)
+  }
 
   // The enhanced path's fallback candidate list (see the FLIP-CANDIDATES comment below for why all
-  // three flips) — computed up front so the GH #1339 IACVT fallback can neutralize it for one open
-  // session and `startAnchoredPositioning()` can restore it verbatim on the next.
-  const flipSidePlacement = `${FLIP_SIDE[prefSide]}-${prefAlign}` as OverlayPlacement
-  const flipAlignPlacement = `${prefSide}-${FLIP_ALIGN[prefAlign]}` as OverlayPlacement
-  const flipBothPlacement = `${FLIP_SIDE[prefSide]}-${FLIP_ALIGN[prefAlign]}` as OverlayPlacement
-  const tryFallbacksValue = [flipSidePlacement, flipAlignPlacement, flipBothPlacement].map(positionTryName).join(', ')
+  // three flips), named by PHYSICAL placement (the shared `@position-try` rules are physical), built
+  // per open session from `physPrefAlign`, so the GH #1339 IACVT fallback can neutralize it for one
+  // session and `startAnchoredPositioning()` can restore it on the next.
+  function tryFallbacksValue(): string {
+    const flipSidePlacement = `${FLIP_SIDE[prefSide]}-${physPrefAlign}` as OverlayPlacement
+    const flipAlignPlacement = `${prefSide}-${FLIP_ALIGN[physPrefAlign]}` as OverlayPlacement
+    const flipBothPlacement = `${FLIP_SIDE[prefSide]}-${FLIP_ALIGN[physPrefAlign]}` as OverlayPlacement
+    return [flipSidePlacement, flipAlignPlacement, flipBothPlacement].map(positionTryName).join(', ')
+  }
 
   // Set the popover type on the popup part (done once — the part is created once, ADR-0017 pattern).
   popup.setAttribute('popover', auto ? 'auto' : 'manual')
@@ -382,7 +406,7 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     // flip-side first (closest to the JS path's own tactic), then flip-align, then flip-both.
     // `resolveAnchoredPlacement()`'s geometry decode works identically regardless of which of the
     // four the compositor actually lands on — it reads resolved rects, never a try-option's name.
-    popup.style.setProperty('position-try-fallbacks', tryFallbacksValue)
+    popup.style.setProperty('position-try-fallbacks', tryFallbacksValue())
   }
 
   let isOpen = false
@@ -416,6 +440,7 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
       window.innerWidth,
       window.innerHeight,
       gap,
+      rtl,
     )
     popup.style.position = 'fixed'
     popup.style.top = `${top}px`
@@ -460,17 +485,19 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     // equidistant from both edges — default to the PREFERRED align on a tie rather than always
     // 'start', so a same-width `*-end` popup still reports the align it actually asked for instead
     // of a token a consumer's caret/transform-origin styling would read as the wrong side.
+    // The decode is PHYSICAL (`start` = the left/top edge); `physicalAlign()` maps it back to the
+    // logical align `data-placement` reports (T-0538, a no-op under ltr).
     let align: Align
     if (side === 'bottom' || side === 'top') {
       const dStart = Math.abs(p.left - a.left)
       const dEnd = Math.abs(p.right - a.right)
-      align = Math.abs(dStart - dEnd) <= EPS ? prefAlign : dStart < dEnd ? 'start' : 'end'
+      align = Math.abs(dStart - dEnd) <= EPS ? physicalAlign(side, prefAlign, rtl) : dStart < dEnd ? 'start' : 'end'
     } else {
       const dStart = Math.abs(p.top - a.top)
       const dEnd = Math.abs(p.bottom - a.bottom)
       align = Math.abs(dStart - dEnd) <= EPS ? prefAlign : dStart < dEnd ? 'start' : 'end'
     }
-    return `${side}-${align}` as OverlayPlacement
+    return `${side}-${physicalAlign(side, align, rtl)}` as OverlayPlacement
   }
 
   /** Apply the BASE (preferred) placement inline — the default state before any `@position-try`
@@ -511,7 +538,7 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   function applyAnchoredPlacement(): void {
     popup.style.position = 'fixed'
     popup.style.margin = '0'
-    const base = insetDeclarationsFor(prefSide, prefAlign)
+    const base = insetDeclarationsFor(prefSide, physPrefAlign)
     popup.style.top = base.top
     popup.style.right = base.right
     popup.style.bottom = base.bottom
@@ -547,10 +574,10 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     const EPS = 2
     const near = (actual: number, expected: number): boolean => Math.abs(actual - expected) <= EPS
     const candidates: ReadonlyArray<readonly [Side, Align]> = [
-      [prefSide, prefAlign],
-      [FLIP_SIDE[prefSide], prefAlign],
-      [prefSide, FLIP_ALIGN[prefAlign]],
-      [FLIP_SIDE[prefSide], FLIP_ALIGN[prefAlign]],
+      [prefSide, physPrefAlign],
+      [FLIP_SIDE[prefSide], physPrefAlign],
+      [prefSide, FLIP_ALIGN[physPrefAlign]],
+      [FLIP_SIDE[prefSide], FLIP_ALIGN[physPrefAlign]],
     ]
     for (const [side, align] of candidates) {
       let sideOk: boolean
@@ -641,7 +668,7 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
     // Restore what a prior open session's GH #1339 demotion may have severed/neutralized — the
     // enhanced path is retried fresh on every open.
     popup.style.setProperty('position-anchor', anchorName!) // non-null: only the anchorName branch calls this
-    popup.style.setProperty('position-try-fallbacks', tryFallbacksValue)
+    popup.style.setProperty('position-try-fallbacks', tryFallbacksValue())
     applyAnchoredPlacement()
     verifyAnchoredPlacement() // post-open IACVT verification (GH #1339) — synchronous, see its doc comment
     // The post-REVEAL verification signal (GH #1339): a ResizeObserver fires when the popup's box
@@ -687,6 +714,7 @@ export function overlay(host: UIElement, opts: OverlayOptions): OverlayHandle {
   }
 
   function startPositioning(): void {
+    readDirection() // T-0538: the open session's direction, read before either path places the popup
     if (anchorName) {
       startAnchoredPositioning()
       return

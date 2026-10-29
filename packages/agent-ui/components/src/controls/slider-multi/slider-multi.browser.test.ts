@@ -453,3 +453,65 @@ describe('ui-slider-multi geometry inside an opt-in data-tier region (ADR-0245)'
     }
   }
 })
+
+// T-0538: under dir=rtl the inline axis is mirrored: both thumbs, the fill, the pointer mapping and the
+// arrow keys must follow it, so value grows toward the physical LEFT (the native range's rtl mapping).
+// Each leg runs the ltr twin as its regression control.
+describe('ui-slider-multi under dir=rtl (T-0538: thumbs, pointer and keys mirror with the fill)', () => {
+  function mount(dir: 'ltr' | 'rtl'): { wrap: HTMLDivElement; el: UISliderMultiElement } {
+    const wrap = document.createElement('div')
+    wrap.dir = dir
+    wrap.style.cssText = 'position: fixed; left: 0; top: 0; width: 400px'
+    const el = document.createElement('ui-slider-multi') as UISliderMultiElement
+    el.min = 0
+    el.max = 100
+    el.step = 1
+    el.valueLo = 20
+    el.valueHi = 60
+    wrap.append(el)
+    document.body.append(wrap)
+    stubRailCapture(el)
+    return { wrap, el }
+  }
+  const part = (el: Element, sel: string): DOMRect => el.querySelector<HTMLElement>(sel)!.getBoundingClientRect()
+  const centre = (r: DOMRect): number => r.left + r.width / 2
+
+  it('lo 20 / hi 60: each thumb centre sits on its fill edge, measured from the physical right under rtl', () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const { wrap, el } = mount(dir)
+      const r = part(el, '.rail')
+      const at = (pct: number): number => (dir === 'rtl' ? r.right - pct * r.width : r.left + pct * r.width)
+      const fill = part(el, '.fill')
+      expect(centre(part(el, '.thumb[data-thumb="lo"]')), `${dir}: lo thumb centre`).toBeCloseTo(at(0.2), 0)
+      expect(centre(part(el, '.thumb[data-thumb="hi"]')), `${dir}: hi thumb centre`).toBeCloseTo(at(0.6), 0)
+      expect(Math.min(fill.left, fill.right), `${dir}: fill near edge`).toBeCloseTo(Math.min(at(0.2), at(0.6)), 0)
+      expect(Math.max(fill.left, fill.right), `${dir}: fill far edge`).toBeCloseTo(Math.max(at(0.2), at(0.6)), 0)
+      wrap.remove()
+    }
+  })
+
+  it('a press 25% from the rail\'s physical left moves hi to 75 under rtl, lo to 25 under ltr', () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const { wrap, el } = mount(dir)
+      const r = part(el, '.rail')
+      drag(el.querySelector<HTMLElement>('.rail')!, r.left + 0.25 * r.width, r.left + 0.25 * r.width)
+      if (dir === 'ltr') expect([el.valueLo, el.valueHi], 'ltr: the nearer thumb is lo').toEqual([25, 60])
+      else expect([el.valueLo, el.valueHi], 'rtl: the press maps to 75, nearer to hi').toEqual([20, 75])
+      wrap.remove()
+    }
+  })
+
+  it('ArrowLeft increments and ArrowRight decrements the focused thumb under rtl', () => {
+    const { wrap, el } = mount('rtl')
+    const lo = el.querySelector<HTMLElement>('.thumb[data-thumb="lo"]')!
+    const key = (k: string): void => { lo.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true })) }
+    key('ArrowLeft')
+    expect(el.valueLo, 'rtl ArrowLeft steps toward max').toBe(21)
+    key('ArrowRight')
+    key('ArrowRight')
+    expect(el.valueLo, 'rtl ArrowRight steps toward min').toBe(19)
+    key('ArrowUp')
+    expect(el.valueLo, 'ArrowUp stays an increment under rtl').toBe(20)
+    wrap.remove()
+  })
+})

@@ -715,3 +715,92 @@ describe('ui-slider geometry inside an opt-in data-tier region (ADR-0245)', () =
     }
   }
 })
+
+// T-0538: under dir=rtl the inline axis is mirrored, so ui-slider must mirror like the native range:
+// value grows toward the physical LEFT. Each leg compares an rtl slider against its ltr twin (or the
+// native <input type=range> in the same rtl container), so the ltr leg is the regression control.
+describe('ui-slider under dir=rtl (T-0538: fill, thumb, pointer and keys mirror like the native range)', () => {
+  function mount(dir: 'ltr' | 'rtl', value: number): { wrap: HTMLDivElement; el: UISliderElement } {
+    const wrap = document.createElement('div')
+    wrap.dir = dir
+    wrap.style.cssText = 'position: fixed; left: 0; top: 0; width: 400px'
+    const el = document.createElement('ui-slider') as UISliderElement
+    el.min = 0
+    el.max = 100
+    el.step = 1
+    el.value = value
+    wrap.append(el)
+    document.body.append(wrap)
+    stubCapture(el)
+    return { wrap, el }
+  }
+
+  /** The thumb (.rail::after) centre, in px from the rail's PHYSICAL left edge: the used `left` plus the
+   *  translate X plus half the thumb width (a pseudo-element has no getBoundingClientRect). */
+  function thumbCentre(el: UISliderElement): number {
+    const cs = getComputedStyle(rail(el), '::after')
+    const tx = new DOMMatrixReadOnly(cs.transform === 'none' ? undefined : cs.transform).m41
+    return parseFloat(cs.left) + tx + parseFloat(cs.width) / 2
+  }
+
+  it('the thumb centre sits 25% in from the physical RIGHT at value 25, the ltr twin 25% from the left', () => {
+    const rtl = mount('rtl', 25)
+    const ltr = mount('ltr', 25)
+    const w = rail(rtl.el).getBoundingClientRect().width
+    expect(thumbCentre(ltr.el), 'ltr control: thumb centre at 25% of the rail').toBeCloseTo(0.25 * w, 0)
+    expect(thumbCentre(rtl.el), 'rtl: thumb centre must sit at 75% from the physical left').toBeCloseTo(0.75 * w, 0)
+    rtl.wrap.remove()
+    ltr.wrap.remove()
+  })
+
+  it('the fill gradient runs toward the physical left under rtl (the thumb side), toward the right under ltr', () => {
+    const rtl = mount('rtl', 25)
+    const ltr = mount('ltr', 25)
+    expect(getComputedStyle(rail(ltr.el), '::before').backgroundImage, 'ltr control').toMatch(/^linear-gradient\(to right,/)
+    expect(getComputedStyle(rail(rtl.el), '::before').backgroundImage, 'rtl: fill must start at the physical right').toMatch(/^linear-gradient\(to left,/)
+    rtl.wrap.remove()
+    ltr.wrap.remove()
+  })
+
+  it('a press 25% from the rail\'s physical left gives 75 under rtl (the native mapping), 25 under ltr', () => {
+    const rtl = mount('rtl', 50)
+    const ltr = mount('ltr', 50)
+    for (const [m, expected] of [[ltr, 25], [rtl, 75]] as const) {
+      const r = rail(m.el).getBoundingClientRect()
+      ptr(m.el, 'pointerdown', r.left + 0.25 * r.width)
+      ptr(m.el, 'pointerup', r.left + 0.25 * r.width)
+      expect(m.el.value, `${m.wrap.dir}: press at 25% from the physical left`).toBe(expected)
+    }
+    rtl.wrap.remove()
+    ltr.wrap.remove()
+  })
+
+  // Native parity is pinned in Chromium (and Firefox), whose rtl range steps ArrowLeft toward max. WebKit's
+  // native range does not mirror its arrow keys (measured: ArrowLeft decrements under rtl there), so the
+  // mirrored mapping is asserted in both engines and the native comparison runs where native mirrors.
+  it('ArrowLeft increments and ArrowRight decrements under rtl, in the same direction as the native range', async () => {
+    const { userEvent, server } = await import('vitest/browser')
+    const rtl = mount('rtl', 50)
+    const native = document.createElement('input')
+    native.type = 'range'
+    native.min = '0'
+    native.max = '100'
+    native.step = '1'
+    native.value = '50'
+    rtl.wrap.append(native)
+
+    native.focus()
+    await userEvent.keyboard('{ArrowLeft}')
+    const nativeLeft = Number(native.value) - 50
+    rtl.el.focus()
+    await userEvent.keyboard('{ArrowLeft}')
+    if (server.browser === 'chromium') expect((rtl.el.value ?? 0) - 50, 'rtl ArrowLeft: same direction as the native range').toBe(nativeLeft)
+    expect(rtl.el.value, 'rtl ArrowLeft steps toward max').toBe(51)
+
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}')
+    expect(rtl.el.value, 'rtl ArrowRight steps toward min').toBe(49)
+    await userEvent.keyboard('{ArrowUp}')
+    expect(rtl.el.value, 'ArrowUp stays an increment under rtl').toBe(50)
+    rtl.wrap.remove()
+  })
+})

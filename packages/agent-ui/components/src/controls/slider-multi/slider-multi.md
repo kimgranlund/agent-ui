@@ -133,9 +133,9 @@ aria:
 
 keyboard:
   - keys: ArrowRight, ArrowUp
-    action: Focused thumb increments by step. Lo clamps at hi; hi can reach max.
+    action: Focused thumb increments by step. Lo clamps at hi; hi can reach max. Under dir=rtl ArrowLeft increments instead (the axis mirrors, T-0538).
   - keys: ArrowLeft, ArrowDown
-    action: Focused thumb decrements by step. Lo can reach min; hi clamps at lo.
+    action: Focused thumb decrements by step. Lo can reach min; hi clamps at lo. Under dir=rtl ArrowRight decrements instead.
   - keys: PageUp
     action: Focused thumb increments by 10×step (large step), clamped at sibling.
   - keys: PageDown

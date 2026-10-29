@@ -105,6 +105,18 @@
      label↔control↔description rhythm), not a raw `--md-sys-space-*` read (styling-gates.test.ts). */
   --ui-slider-layout-gap: var(--md-sys-space-xs);
   --ui-slider-inline-gap: var(--md-sys-space-sm); /* the inline layout column gap: n inside a data-tier region (the bridge maps space-sm to the inset) */
+
+  /* RTL levers (T-0538). The thumb rides `inset-inline-start`, which flips on its own; the physical
+     `translate` X that centres it and the fill gradient's physical `to <side>` need the `:dir(rtl)`
+     override below (the segmented-control bug #1380 precedent). */
+  --ui-slider-direction: 1;
+  --ui-slider-fill-to: right;
+}
+
+/* RTL flip (T-0538): plain selector, overrides the :where() token block's zero specificity. */
+ui-slider:dir(rtl) {
+  --ui-slider-direction: -1;
+  --ui-slider-fill-to: left;
 }
 
 /* [size] → compact widget ramp repoint (ADR-0041: the per-[scale] table in dimensions.css re-tables
@@ -232,7 +244,8 @@
 
   /* RAIL FILL (.rail::before) — thin horizontal bar, full-width, centred in .rail's block dimension.
      A single `background: linear-gradient` paints BOTH the fill (primary, from 0 to --value-pct%)
-     and the remaining rail (neutral, from --value-pct% to 100%). `--value-pct` is a unitless number
+     and the remaining rail (neutral, from --value-pct% to 100%), running from the inline-start edge
+     (`--ui-slider-fill-to`: right, or left under rtl, T-0538). `--value-pct` is a unitless number
      (0–100, set on the HOST by UIRangeElement — inherited down to `.rail`) so
      `calc(var(--value-pct, 0) * 1%)` converts it to a CSS percentage. No `color-mix` — fill and rail
      are distinct colour roles (ADR-0008). No position transition: the fill updates in real-time during
@@ -247,7 +260,7 @@
     block-size: var(--ui-slider-rail-height);
     border-radius: calc(var(--ui-slider-rail-height) / 2);
     background: linear-gradient(
-      to right,
+      to var(--ui-slider-fill-to, right),
       var(--ui-slider-fill) calc(var(--value-pct, 0) * 1%),
       var(--ui-slider-rail) calc(var(--value-pct, 0) * 1%)
     );
@@ -263,6 +276,8 @@
    *           the -50% X component of the same translate() centres the circle on that point. At value-pct=0
    *           and 100 the thumb centre is exactly on .rail's own edge (slight overhang of radius; standard
    *           slider behaviour, no overflow clipping needed for the interaction — .rail's hit area covers it).
+   *           Under rtl the start edge is the physical right and the box grows leftward from it, so the X
+   *           shift takes `--ui-slider-direction` (-1) to centre on the same point (T-0538).
    *
    * Motion: NO position transition (drag lag). Background-color transitions for disabled/enabled state.
    *         Transition is zeroed under prefers-reduced-motion (accessibility non-negotiable).
@@ -288,7 +303,7 @@
     /* Centre the thumb circle on the point (--value-pct% of .rail's width, 50% of .rail's height). */
     inset-block-start: 50%;
     inset-inline-start: calc(var(--value-pct, 0) * 1%);
-    transform: translate(-50%, -50%);
+    transform: translate(calc(var(--ui-slider-direction, 1) * -50%), -50%);
 
     transition:
       background-color var(--md-sys-motion-duration-fast) var(--md-sys-motion-easing-standard),
@@ -327,7 +342,7 @@
   @media (forced-colors: active) {
     .rail::before {
       background: linear-gradient(
-        to right,
+        to var(--ui-slider-fill-to, right),
         Highlight calc(var(--value-pct, 0) * 1%),
         ButtonText calc(var(--value-pct, 0) * 1%)
       );

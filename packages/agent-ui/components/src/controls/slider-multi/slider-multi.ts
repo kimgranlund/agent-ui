@@ -295,9 +295,11 @@ export class UISliderMultiElement extends UIRangeElement {
       if (!rail) return
       const pe = event as PointerEvent
       const rect = rail.getBoundingClientRect()
-      const ratio = rect.width > 0
+      const physical = rect.width > 0
         ? Math.max(0, Math.min(1, (pe.clientX - rect.left) / rect.width))
         : 0
+      // Under rtl the rail runs from the physical right (T-0538), matching valueDrag's own mapping.
+      const ratio = getComputedStyle(rail).direction === 'rtl' ? 1 - physical : physical
       const loPct = this.#valuePct(this.#normalize(this.valueLo ?? 0)) / 100
       const hiPct = this.#valuePct(this.#normalize(this.valueHi ?? 100)) / 100
       const distLo = Math.abs(ratio - loPct)
@@ -354,12 +356,16 @@ export class UISliderMultiElement extends UIRangeElement {
       const max  = this.max  ?? 100
       const step = this.step ?? 1
       const largeStep = step * 10
+      // Under rtl the inline axis is mirrored: ArrowLeft steps toward max and ArrowRight toward min
+      // (the native range's rtl mapping, T-0538). Up/Down, Page and Home/End are direction-free.
+      const rtl = getComputedStyle(this).direction === 'rtl'
+      const key = rtl && e.key === 'ArrowLeft' ? 'ArrowRight' : rtl && e.key === 'ArrowRight' ? 'ArrowLeft' : e.key
 
       if (isLo) {
         const current = this.#normalize(this.valueLo ?? 0)
         const hi      = this.#normalize(this.valueHi ?? 100)
         let next: number | null = null
-        switch (e.key) {
+        switch (key) {
           case 'ArrowRight': case 'ArrowUp':   next = this.#normalize(current + step);      break
           case 'ArrowLeft':  case 'ArrowDown':  next = this.#normalize(current - step);      break
           case 'PageUp':                        next = this.#normalize(current + largeStep);  break
@@ -377,7 +383,7 @@ export class UISliderMultiElement extends UIRangeElement {
         const lo      = this.#normalize(this.valueLo ?? 0)
         const current = this.#normalize(this.valueHi ?? 100)
         let next: number | null = null
-        switch (e.key) {
+        switch (key) {
           case 'ArrowRight': case 'ArrowUp':   next = this.#normalize(current + step);      break
           case 'ArrowLeft':  case 'ArrowDown':  next = this.#normalize(current - step);      break
           case 'PageUp':                        next = this.#normalize(current + largeStep);  break
