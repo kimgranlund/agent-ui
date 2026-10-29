@@ -32,8 +32,93 @@
 import { rolldown } from 'rolldown'
 import { gzipSync, brotliCompressSync } from 'node:zlib'
 import { fileURLToPath } from 'node:url'
-import { readFileSync } from 'node:fs'
-import { dirname, resolve as resolvePath } from 'node:path'
+import { readFileSync, readdirSync, lstatSync, realpathSync, mkdtempSync, mkdirSync, writeFileSync, symlinkSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join, resolve as resolvePath } from 'node:path'
+
+// T-0564: the same tree must measure the same bytes in a lane worktree as on main. A lane links each
+// top-level `node_modules/*` entry to the main checkout (seat-map Dispatch laws), and Rolldown realpaths
+// module ids by default, so a third-party module's id lands under the MAIN checkout while first-party ids
+// stay under the lane. Module order follows those ids, and `agent-ui.worktrees/` sorts before `agent-ui/`,
+// so the lane reordered modules and drifted the minified bytes (1 B on the app row, 17 B on its lazy figure).
+// This plugin maps any resolved id under a node_modules link that leaves `root` back to the link path
+// inside `root`, so every id has the same shape in both layouts. On main nothing leaves the root, so it is
+// a no-op there. It must run first, ahead of every other plugin (the `?url`/`?raw` stub included).
+const layoutLocalPlugin = (root) => {
+  const realRoot = realpathSync(root)
+  const remaps = [] // [realPrefix, linkPrefix]
+  const scan = (dir) => {
+    let names = []
+    try {
+      names = readdirSync(dir)
+    } catch {
+      return
+    }
+    for (const name of names) {
+      const link = join(dir, name)
+      const st = lstatSync(link)
+      if (st.isSymbolicLink()) {
+        const real = realpathSync(link)
+        if (real !== realRoot && !real.startsWith(realRoot + '/')) remaps.push([real, link])
+      } else if (st.isDirectory() && name.startsWith('@')) {
+        scan(link)
+      }
+    }
+  }
+  scan(join(root, 'node_modules'))
+  remaps.sort((a, b) => b[0].length - a[0].length)
+  const toLocal = (id) => {
+    for (const [real, link] of remaps) if (id === real || id.startsWith(real + '/')) return link + id.slice(real.length)
+    return id
+  }
+  return {
+    name: 'measure-size-layout-local',
+    async resolveId(source, importer, opts) {
+      const r = await this.resolve(source, importer, { ...opts, skipSelf: true })
+      if (!r || r.external) return r
+      const id = toLocal(r.id)
+      return id === r.id ? r : { ...r, id }
+    },
+  }
+}
+const ROOT = fileURLToPath(new URL('..', import.meta.url)).replace(/\/$/, '')
+/** Every bundle in this script goes through here, so every row measures layout-local ids (T-0564). */
+const bundleOf = (opts, root = ROOT) => rolldown({ ...opts, plugins: [layoutLocalPlugin(root), ...(opts.plugins ?? [])] })
+
+// `node scripts/measure-size.mjs selftest`: a fixture whose node_modules dependency links OUTSIDE its root
+// (the lane layout) must bundle with every module id inside the root. Without the plugin above the dep's id
+// is its realpath outside the root, which is what reordered the lane's bundles.
+if (process.argv[2] === 'selftest') {
+  const base = realpathSync(mkdtempSync(join(tmpdir(), 'measure-size-selftest-')))
+  try {
+    const root = join(base, 'lane')
+    const outside = join(base, 'main-node_modules', 'dep')
+    mkdirSync(join(root, 'src'), { recursive: true })
+    mkdirSync(join(root, 'node_modules'), { recursive: true })
+    mkdirSync(join(outside, 'lib'), { recursive: true })
+    writeFileSync(join(outside, 'package.json'), JSON.stringify({ name: 'dep', type: 'module', main: 'index.js' }))
+    writeFileSync(join(outside, 'index.js'), "import { inner } from './lib/inner.js'\nglobalThis.depLoaded = true\nexport const dep = () => inner\n")
+    writeFileSync(join(outside, 'lib', 'inner.js'), "export const inner = 'inner'\n")
+    symlinkSync(outside, join(root, 'node_modules', 'dep'))
+    writeFileSync(join(root, 'src', 'index.js'), "import { dep } from 'dep'\nconsole.log(dep())\n")
+    const bundle = await bundleOf({ input: join(root, 'src', 'index.js'), cwd: root }, root)
+    const { output } = await bundle.generate({ format: 'esm' })
+    await bundle.close()
+    const ids = output.filter((c) => c.type === 'chunk').flatMap((c) => c.moduleIds)
+    const leaked = ids.filter((id) => !id.startsWith(root + '/'))
+    const expected = [join(root, 'node_modules', 'dep', 'index.js'), join(root, 'node_modules', 'dep', 'lib', 'inner.js')]
+    const missing = expected.filter((id) => !ids.includes(id))
+    if (leaked.length || missing.length) {
+      console.error(`measure-size selftest: FAIL, ids outside the root: ${JSON.stringify(leaked)}; expected ids missing: ${JSON.stringify(missing)}`)
+      process.exitCode = 1
+    } else {
+      console.log(`measure-size selftest: ok (${ids.length} module ids, all inside the fixture root)`)
+    }
+  } finally {
+    rmSync(base, { recursive: true, force: true })
+  }
+  process.exit()
+}
 
 const KB = 1024
 const targets = [
@@ -309,7 +394,7 @@ let over = false
 const gzByLabel = new Map() // captured so the @agent-ui/app section below can compute its marginal against the foundation figure without re-bundling it
 for (const [label, rel, budget] of targets) {
   const input = fileURLToPath(new URL(rel, import.meta.url))
-  const bundle = await rolldown({ input })
+  const bundle = await bundleOf({ input })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
   const code = output
@@ -348,7 +433,7 @@ const registryEntries = [
       if (id === VIRTUAL_ID) return src
     },
   }
-  const bundle = await rolldown({ input: 'virtual:measure-size-registry-entry', plugins: [plugin] })
+  const bundle = await bundleOf({ input: 'virtual:measure-size-registry-entry', plugins: [plugin] })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
   const chunks = output.filter((c) => c.type === 'chunk')
@@ -398,7 +483,7 @@ const gzOfEntries = async (paths) => {
       if (id === VIRTUAL_ID) return src
     },
   }
-  const bundle = await rolldown({ input: 'virtual:measure-size-entry', plugins: [plugin] })
+  const bundle = await bundleOf({ input: 'virtual:measure-size-entry', plugins: [plugin] })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
   const code = output
@@ -866,7 +951,7 @@ const appCssQuerySuffixPlugin = {
 // was found to cut. The measured 61117 B gz plus 1024 B gz headroom.
 const APP_MARGINAL_BUDGET = 62141
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
-const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
+const appBundle = await bundleOf({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
 await appBundle.close()
 const appChunks = appOutput.filter((c) => c.type === 'chunk')
@@ -923,7 +1008,7 @@ if (appCatalogLazyGz > 0) {
 // are an ordinary dependency PR, ADR-0202 cl.4d — the same treatment ADR-0139 cl.8d gave CodeMirror).
 const PDF_EXTRACTOR_BUDGET = 1 * KB // measured 561 B gz at the ADR-0202 build wave (ADR-0080 discipline) — pinned with headroom; a thin registrar + a timeout-raced dynamic import, well under a single control's worth of code. The lazy pdf.js chunk (~125 KB gz, worker asset included) is informational, NEVER gated.
 const pdfExtractorEntry = fileURLToPath(new URL('../packages/agent-ui/app/src/lib/pdf-extractor.ts', import.meta.url))
-const pdfExtractorBundle = await rolldown({ input: pdfExtractorEntry, plugins: [appCssQuerySuffixPlugin] })
+const pdfExtractorBundle = await bundleOf({ input: pdfExtractorEntry, plugins: [appCssQuerySuffixPlugin] })
 const { output: pdfExtractorOutput } = await pdfExtractorBundle.generate({ format: 'esm', minify: true })
 await pdfExtractorBundle.close()
 const pdfExtractorChunks = pdfExtractorOutput.filter((c) => c.type === 'chunk')
@@ -959,7 +1044,7 @@ const routerVirtualSrc = [
   `import ${JSON.stringify(`${routerPkgDir}/src/controls/router-link/router-link.ts`)}`,
 ].join('\n') + '\n'
 const routerVirtualId = '\0virtual:measure-size-router-entry'
-const routerBundle = await rolldown({
+const routerBundle = await bundleOf({
   input: 'virtual:measure-size-router-entry',
   plugins: [
     {
@@ -1002,7 +1087,7 @@ const codePkgDir = fileURLToPath(new URL('../packages/agent-ui/code', import.met
 /** Bundle a single real entry file (no synthetic virtual wrapper needed — one target each) and return its
  *  gz byte size. Mirrors the T5/router/app sections' minify+gzip pipeline. */
 const gzOfEntry = async (entryPath) => {
-  const bundle = await rolldown({ input: entryPath })
+  const bundle = await bundleOf({ input: entryPath })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
   const code = output
@@ -1054,7 +1139,7 @@ console.log(
 // headroom). History of
 // the retired marginal budget, 2 KB: measured 247 B gz marginal at the ADR-0139 build wave, 517 B gz after the ADR-0147 richtext-mode wave (ADR-0080 discipline), pinned with headroom; the CM-free wrapper is a single control's worth of code on top of the foundation. The lazy CM chunk (~172 KB gz post-ADR-0147, cm-richtext.ts's decoration engine joined it, below) is informational, NEVER gated.
 const CODE_EDITOR_BUDGET = 3.5 * KB
-const editorBundle = await rolldown({ input: `${codePkgDir}/src/editor/index.ts` })
+const editorBundle = await bundleOf({ input: `${codePkgDir}/src/editor/index.ts` })
 const { output: editorOutput } = await editorBundle.generate({ format: 'esm', minify: true })
 await editorBundle.close()
 const editorChunks = editorOutput.filter((c) => c.type === 'chunk')
@@ -1095,7 +1180,7 @@ const DATA_BUDGETS = {
 }
 /** Bundle one real entry; return min/gz/br byte sizes + the included module ids (the tree-shake shape). */
 const measureDataEntry = async (entryPath) => {
-  const bundle = await rolldown({ input: entryPath })
+  const bundle = await bundleOf({ input: entryPath })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
   const chunks = output.filter((c) => c.type === 'chunk')
@@ -1163,7 +1248,7 @@ let packageEntryOver = false
 console.log('')
 for (const [label, pkgName, rel, budget] of PACKAGE_ENTRY_ROWS) {
   const input = fileURLToPath(new URL(`../packages/agent-ui/${pkgName}/${rel}`, import.meta.url))
-  const bundle = await rolldown({ input })
+  const bundle = await bundleOf({ input })
   const { output } = await bundle.generate({ format: 'esm', minify: true })
   await bundle.close()
   const chunks = output.filter((c) => c.type === 'chunk')
