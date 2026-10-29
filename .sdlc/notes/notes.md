@@ -1387,6 +1387,7 @@
 ## T-0583: CHANGE_CLAIM_IN_REPLY catches order and total phrasings (2026-10-29)
 
 - note: the regex branch for "have got" excludes "nothing|no" and questions via the `(?![^.!?]*\?)` lookahead; verified by the negative test, which the base regex also passes, so those guards are only protective against the new branch (not red on base by design).
+
 ## T-0582: The AmountPicker and order-receipt rows read literal and rows quantities and the reply's words (2026-10-29)
 
 - decide: `.sdlc/tickets/0582-receipt-rows-cover-literals-and-reply/handoff.md:27` note: the P4b row says "SURFACE_MISSING for ConfirmReceipt"; the row's code is `CONFIRM_RECEIPT_MISSING`, which the acceptance criterion and the tests name.
@@ -1402,3 +1403,7 @@
 ## T-0585: The change-claim check also reads the reply's meta-line note (2026-10-29)
 
 - note: produce.ts `metaNote` is set only when a text or capture reply replaced the peeled note (`reply !== '' && note !== reply`); a legacy-shape reply whose note IS the reply is still tested once via `note`, so no gap found.
+
+## T-0587: ProductCard actionLabel binds like title and price (2026-10-29)
+
+- note: factories.ts:1493 doc comment updated; no renderer change was needed, so product-card-action.test.ts is a regression guard that is green on base too.
