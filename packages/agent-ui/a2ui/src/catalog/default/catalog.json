@@ -985,7 +985,7 @@
         "badgeIntent": { "type": { "type": "string", "enum": ["neutral", "info", "success", "warning", "danger"] }, "bindable": true, "mapsTo": "badgeIntent" },
         "selected": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "selected" },
         "disabled": { "type": { "type": "boolean" }, "bindable": true, "mapsTo": "disabled" },
-        "actionLabel": { "type": { "type": "string" }, "mapsTo": "actionLabel" },
+        "actionLabel": { "type": { "type": "string" }, "bindable": true, "mapsTo": "actionLabel" },
         "action": {
           "type": {
             "type": "object",

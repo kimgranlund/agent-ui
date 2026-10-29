@@ -4,6 +4,7 @@ import { demoCatalog } from '../fixtures.ts'
 import { loadCatalog } from './catalog.ts'
 import { defaultCatalog } from './default/index.ts'
 import { a2uiBasicCatalog } from './a2ui-basic/index.ts'
+import { validateA2ui } from '../renderer/validate.ts'
 import type { A2uiComponent } from '../protocol.ts'
 import { SAFE_HREF_SCHEMES as COMPONENTS_SAFE_HREF_SCHEMES, MEDIA_SRC_SCHEMES as COMPONENTS_MEDIA_SRC_SCHEMES } from '@agent-ui/components/controls/text'
 
@@ -380,5 +381,62 @@ describe('conformance.ts\'s MEDIA_SRC_SCHEMES stays in sync with the canonical t
   it('the local copy is value-identical to @agent-ui/components/controls/text\'s real export', () => {
     expect(COMPONENTS_MEDIA_SRC_SCHEMES).toBeDefined()
     expect([...MEDIA_SRC_SCHEMES]).toEqual([...COMPONENTS_MEDIA_SRC_SCHEMES])
+  })
+})
+
+// ── ProductCard.actionLabel binds like title and price (T-0587, round 20 cluster S) ─────────────────────
+//
+// A templated Grid of ProductCards carries a per-item action word ("Book", "Request") in the data model, so
+// `actionLabel` takes a `{path}` binding the way its bindable siblings do. The payload below is the
+// regress-concierge-facilities-then-tour-haiku-3 round 3 reply (r20 trace :98), trimmed to two items.
+describe('ProductCard.actionLabel binds in a templated Grid (T-0587)', () => {
+  const services = [
+    { id: 'swedish-massage', title: 'Swedish massage', subtitle: 'Full-body relaxation massage', price: '\u20ac120', priceNote: '60 min', actionLabel: 'Book' },
+    { id: 'late-check-out', title: 'Late check-out', subtitle: 'Until 14:00, subject to availability', actionLabel: 'Request' },
+  ]
+  const card = {
+    id: 'service-card', component: 'ProductCard',
+    title: { path: 'title' }, subtitle: { path: 'subtitle' }, price: { path: 'price' }, priceNote: { path: 'priceNote' },
+    actionLabel: { path: 'actionLabel' },
+    action: { action: 'select_service', context: { serviceId: { path: 'id' } } },
+  }
+  const payload = [
+    { version: 'v1.0', createSurface: { surfaceId: 'stay-services', catalogId: 'agent-ui', sendDataModel: true } },
+    { version: 'v1.0', updateDataModel: { surfaceId: 'stay-services', value: { services } } },
+    {
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 'stay-services',
+        components: [{ id: 'root', component: 'Grid', gap: 'md', min: '16rem', children: { path: '/services', componentId: 'service-card' } }, card],
+      },
+    },
+  ]
+
+  it('the default catalog marks actionLabel bindable, like title and price', () => {
+    const props = defaultCatalog.components.ProductCard.properties
+    expect(props.title?.bindable).toBe(true)
+    expect(props.price?.bindable).toBe(true)
+    expect(props.actionLabel?.bindable).toBe(true)
+  })
+
+  it('a {path}-bound actionLabel on the templated card conforms', () => {
+    expect(validateCatalogConformance(comp(card), defaultCatalog)).toEqual([])
+  })
+
+  it('the whole templated-Grid payload validates', () => {
+    expect(validateA2ui(payload, defaultCatalog)).toEqual({ valid: true, failures: [] })
+  })
+
+  it('negative control: a literal actionLabel of the wrong type still fails CATALOG', () => {
+    expect(validateCatalogConformance(comp({ ...card, actionLabel: 7 }), defaultCatalog)).toEqual([{ code: 'CATALOG', path: 'service-card.actionLabel' }])
+  })
+
+  it('negative control: ServiceCard.actionLabel and AmountPicker.actionLabel stay set-once and still reject a {path} binding', () => {
+    expect(
+      validateCatalogConformance(comp({ id: 'amt', component: 'AmountPicker', actionLabel: { path: 'label' } }), defaultCatalog),
+    ).toEqual([{ code: 'CATALOG', path: 'amt.actionLabel' }])
+    expect(
+      validateCatalogConformance(comp({ id: 'svc', component: 'ServiceCard', name: 'Claims', path: '/claims', actionLabel: { path: 'label' } }), defaultCatalog),
+    ).toEqual([{ code: 'CATALOG', path: 'svc.actionLabel' }])
   })
 })

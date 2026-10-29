@@ -112,4 +112,41 @@ describe('ProductCard action on the wire (ADR-0243, T-0072)', () => {
     expect(sent.filter((m) => m.action !== undefined)).toHaveLength(1)
     cleanup()
   })
+
+  it('a templated Grid reads each card\'s bound actionLabel from its item (T-0587)', async () => {
+    const { r, mount, sent, cleanup } = harness()
+    r.ingestMessage({
+      version: 'v1.0',
+      updateDataModel: {
+        surfaceId: 's1',
+        value: {
+          services: [
+            { id: 'swedish-massage', title: 'Swedish massage', price: '\u20ac120', actionLabel: 'Book' },
+            { id: 'late-check-out', title: 'Late check-out', actionLabel: 'Request' },
+          ],
+        },
+      },
+    })
+    r.ingestMessage({
+      version: 'v1.0',
+      updateComponents: {
+        surfaceId: 's1',
+        components: [
+          { id: 'root', component: 'Grid', children: { path: '/services', componentId: 'service-card' } },
+          { id: 'service-card', component: 'ProductCard', title: { path: 'title' }, price: { path: 'price' }, actionLabel: { path: 'actionLabel' }, action: { action: 'select_service', context: { serviceId: { path: 'id' } } } },
+        ],
+      },
+    })
+    await settle()
+    const cards = [...mount.querySelectorAll('ui-product-card')] as Array<HTMLElement & { actionLabel: string }>
+    expect(cards.map((c) => c.actionLabel)).toEqual(['Book', 'Request'])
+    const buttons = cards.map((c) => c.querySelector('button[data-part="action"]') as HTMLButtonElement)
+    expect(buttons.map((b) => b.textContent?.trim())).toEqual(['Book', 'Request'])
+    cards[1]!.click()
+    await settle()
+    const acts = sent.filter((m) => m.action !== undefined)
+    expect(acts).toHaveLength(1)
+    expect(acts[0]!.action!.context).toEqual({ serviceId: 'late-check-out' })
+    cleanup()
+  })
 })

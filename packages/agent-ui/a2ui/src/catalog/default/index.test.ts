@@ -2138,13 +2138,12 @@ describe('default catalog - ProductCard via the shared validator (ADR-0243, T-00
     expect(validateOne({ component: 'ProductCard', title: 'Lobby mural', icon: 'image' }).valid).toBe(true)
   })
 
-  it('every prop but actionLabel and action is bindable; the action prop maps to the renderer action wiring', () => {
+  it('every prop but action is bindable, actionLabel included (T-0587); the action prop maps to the renderer action wiring', () => {
     const props = defaultCatalog.components.ProductCard.properties
-    for (const p of ['title', 'subtitle', 'image', 'imageAlt', 'icon', 'price', 'priceNote', 'rating', 'badge', 'badgeIntent']) {
+    for (const p of ['title', 'subtitle', 'image', 'imageAlt', 'icon', 'price', 'priceNote', 'rating', 'badge', 'badgeIntent', 'actionLabel']) {
       expect(props[p]?.bindable, p).toBe(true)
       expect(props[p]?.mapsTo, p).toBe(p)
     }
-    expect(props.actionLabel?.bindable).toBeFalsy()
     expect(props.action?.mapsTo).toBe('action')
     expect(props.action?.bindable).toBeFalsy()
   })
