@@ -47,12 +47,14 @@ properties: []         # no manual accessors beyond the attributes-as-API (a str
 
 events: []             # a structural layout container fires no events of its own
 
-slots:                 # the list ITEMS are the default/unnamed light-DOM children (the ChildList child model) — no item element is imposed
+slots:                 # the list ITEMS are the default/unnamed light-DOM children (the ChildList child model); each is slotted into its own listitem part
   - name: items
     optional: false
-    description: The list items — the default/unnamed light-DOM children (no `slot` attribute needed). The list imposes no item element; the agent composes ui-* item children as a ChildList. They flow through untouched (render() stays void) and stack vertically (flex column).
+    description: The list items, the default/unnamed light-DOM children (no `slot` attribute needed). The agent composes ui-* item children as a ChildList. They stay untouched light DOM (render() stays void, no attribute is stamped on them), each slotted by manual assignment into its own `item` part, and stack vertically (flex column).
 
-parts: []              # light-DOM, no shadow parts exposed (the surface + layout are host-level CSS)
+parts:                 # list-owned anatomy in a manual-slot shadow root (T-0519); the surface + layout stay host-level CSS
+  - name: item
+    description: One `<div part="item" role="listitem">` per element or non-blank text child, in child order, holding a slot manually assigned that one child. Kept in step with the children by a MutationObserver (created for a new child, dropped with a removed one). It carries the listitem role ARIA's `list` requires of its owned elements, so no `role` attribute ever lands on a child (which would override a ui-* child's own internals role). `display: contents` (list.css), so it generates no box and each child stays the flex item.
 customStates: []       # no interaction states — a structural container has no hover/active/focus treatment of its own
 
 face:
@@ -62,7 +64,7 @@ aria:
   role: list           # set via the host's ElementInternals — never a host role/aria-* attribute (the family discipline, ADR-0010)
   roleSource: internals  # internals.role='list' on the host (set in connected()); the host carries NO `role` attribute
   labelSource: none    # no built-in accessible name; an author names the list via aria-label/aria-labelledby on the host through ElementInternals if needed
-  childRole: listitem  # the children are the list items — an item carries its own listitem semantics (the list does not impose them)
+  childRole: listitem  # each child is wrapped by its own list-owned `item` part carrying role=listitem (T-0519); the child keeps its own role
 
 keyboard: []           # no keyboard interaction — a list is a structural container; its items handle their own keys
 
@@ -80,8 +82,9 @@ forcedColors: Owned by the shared controls/_surface/container.css — its `@medi
 a structural container (`extends UIContainerElement`, ADR-0015): a `display:flex` column whose host carries
 the ARIA `role="list"`, set through `ElementInternals` (never a host `role`/`aria-*` attribute). It is **not**
 form-associated; it contributes no value or validity. Its children are the **list items** — composed directly
-as light-DOM children (the ChildList child model); `ui-list` imposes no item element and never re-renders the
-children (`render()` stays void).
+as light-DOM children (the ChildList child model); `ui-list` never re-renders the children (`render()` stays
+void) and stamps nothing on them. Each child is slotted into its own `item` part, a listitem, in a manual-slot
+shadow root the list owns.
 
 ```html
 <ui-list gap="sm">
@@ -128,7 +131,9 @@ an externally-sized ancestor boundary provides query context for any descendant 
 
 ## Accessibility
 
-`role="list"` is set via the host's `ElementInternals` (no host `role`/`aria-*` attribute), so assistive
-technology reads the host as a list and its children as the list items. Give the list an accessible name with
+`role="list"` is set via the host's `ElementInternals` (no host `role`/`aria-*` attribute), and each child sits
+in its own `item` part with `role="listitem"`, so assistive technology reads the host as a list of exactly as
+many items as it has children. The child keeps its own role inside the item (a `ui-card` stays a group), and
+the part generates no box, so layout is unchanged. Give the list an accessible name with
 `aria-label`/`aria-labelledby` through `ElementInternals` when one is warranted. Because the list carries no
 colour of its own, high-contrast (forced-colors) survival is handled by the shared container surface sheet.

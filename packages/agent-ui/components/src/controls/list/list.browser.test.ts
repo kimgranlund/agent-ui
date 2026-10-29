@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { server, cdp } from 'vitest/browser'
 
 // G9 s5 — the ui-list cross-engine smoke (Chromium + WebKit via Playwright; npm run test:browser). jsdom
 // can't compute flex/gap or honour the [density] ramp — a REAL engine resolves `display:flex; flex-direction
@@ -23,6 +24,44 @@ class ProbeList extends UIListElement {
   }
 }
 if (!customElements.get('ui-list-probe')) customElements.define('ui-list-probe', ProbeList)
+
+/** Minimal CDP surface (the breadcrumb.browser.test.ts precedent): `cdp()`'s public type is empty. */
+interface CdpSession {
+  send(method: string, params?: Record<string, unknown>): Promise<unknown>
+}
+interface AxNode {
+  nodeId: string
+  ignored?: boolean
+  role?: { value?: string }
+  name?: { value?: string }
+  childIds?: string[]
+}
+
+/** The unignored AX children of the list named `name`, read from Chromium's full AX tree of the test frame. */
+async function axListChildren(name: string): Promise<AxNode[]> {
+  const session = cdp() as unknown as CdpSession
+  const frameTree = (await session.send('Page.getFrameTree')) as { frameTree: { childFrames?: Array<{ frame: { id: string } }> } }
+  const frameId = frameTree.frameTree.childFrames?.[0]?.frame.id
+  expect(frameId, 'anti-vacuous: the vitest-iframe child frame must be found to scope the AX query').toBeDefined()
+  await session.send('Accessibility.enable')
+  const ax = (await session.send('Accessibility.getFullAXTree', { frameId })) as { nodes: AxNode[] }
+  await session.send('Accessibility.disable')
+  const byId = new Map(ax.nodes.map((n) => [n.nodeId, n]))
+  const list = ax.nodes.find((n) => n.role?.value === 'list' && n.name?.value === name)
+  expect(list, `no AX node with role=list named "${name}"`).toBeDefined()
+  // Flatten ignored wrappers so a generic or ignored node between the list and its items cannot hide them.
+  const out: AxNode[] = []
+  const walk = (ids: string[] | undefined): void => {
+    for (const id of ids ?? []) {
+      const n = byId.get(id)
+      if (!n) continue
+      if (n.ignored) walk(n.childIds)
+      else out.push(n)
+    }
+  }
+  walk(list?.childIds)
+  return out
+}
 
 /** Mount a ui-list with two items under an optional data-scale wrapper; returns the list + a cleanup. */
 function mount(tag: string, attrs: Record<string, string>, scale?: string): { el: HTMLElement; done: () => void } {
@@ -178,6 +217,64 @@ describe('ui-list cross-engine smoke (s5)', () => {
 
     compact.done()
     spacious.done()
+  })
+})
+
+describe('ui-list: every direct child is exposed as a listitem (T-0519)', () => {
+  it('each child is slotted into its own listitem part, which generates no box (the child stays the flex item)', () => {
+    const { el, done } = mount('ui-list', { gap: 'md' })
+    const parts = [...(el.shadowRoot?.querySelectorAll('[part="item"]') ?? [])] as HTMLElement[]
+    expect(parts).toHaveLength(2)
+    parts.forEach((part, i) => {
+      expect(part.getAttribute('role')).toBe('listitem')
+      expect(getComputedStyle(part).display).toBe('contents')
+      expect((part.querySelector('slot') as HTMLSlotElement).assignedNodes()).toEqual([el.children[i]])
+    })
+    done()
+  })
+
+  it('a focused child keeps focus when a sibling is appended or removed (a sync never detaches its part)', async () => {
+    const { el, done } = mount('ui-list', {})
+    const button = document.createElement('button')
+    button.textContent = 'Focus me'
+    el.prepend(button)
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    button.focus()
+    expect(document.activeElement, 'precondition: the button took focus').toBe(button)
+    el.append(document.createElement('span'))
+    el.lastElementChild?.previousElementSibling?.remove()
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    expect(el.shadowRoot?.children).toHaveLength(3)
+    expect(document.activeElement, 'the focused child lost focus across a sync').toBe(button)
+    done()
+  })
+
+  it('the list owns exactly one listitem per child, the children carry no role attribute, and a new child joins', async () => {
+    if (server.browser !== 'chromium') {
+      // WebKit exposes no CDP Accessibility domain (the breadcrumb/table/pagination precedent).
+      return
+    }
+    const el = document.createElement('ui-list-probe') as ProbeList
+    el.probeInternals.ariaLabel = 'T-0519 items'
+    for (const text of ['One', 'Two', 'Three']) {
+      const child = document.createElement('div')
+      child.textContent = text
+      el.append(child)
+    }
+    document.body.append(el)
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+
+    const items = await axListChildren('T-0519 items')
+    expect(items.map((n) => n.role?.value)).toEqual(['listitem', 'listitem', 'listitem'])
+    for (const child of el.children) expect(child.getAttribute('role'), 'a light child gained a role attribute').toBeNull()
+
+    const fourth = document.createElement('div')
+    fourth.textContent = 'Four'
+    el.append(fourth)
+    await new Promise((r) => requestAnimationFrame(() => r(null)))
+    const grown = await axListChildren('T-0519 items')
+    expect(grown.map((n) => n.role?.value)).toEqual(['listitem', 'listitem', 'listitem', 'listitem'])
+    el.remove()
   })
 })
 

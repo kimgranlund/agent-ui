@@ -7,7 +7,7 @@ import { UIListElement } from './list.ts'
 //
 // `ui-list` is a `ui-column` specialization carrying LIST SEMANTICS: `role=list` rides the host's
 // ElementInternals (NEVER a host `role` attribute — the family discipline), and the children are the list
-// items (a ChildList — no item element imposed, render() stays void). It is a STRUCTURAL container
+// items (a ChildList, each slotted into its own listitem part; render() stays void). It is a STRUCTURAL container
 // (UIContainerElement, NOT form-associated) with no interaction state of its own → zero connection residue.
 
 // A throwaway subclass that re-exposes the protected `internals`, so a probe can read the role set via it
@@ -92,8 +92,26 @@ describe('UIListElement (s5)', () => {
     const el = new UIListElement()
     el.innerHTML = '<ui-row>one</ui-row><ui-row>two</ui-row><ui-row>three</ui-row>' // the list items (ChildList)
     document.body.append(el) // connect → render effect runs render() → void → no commit
-    expect(el.childElementCount).toBe(3) // the items flow through untouched (no item element imposed)
+    expect(el.childElementCount).toBe(3) // the items flow through untouched (the listitem parts live in the shadow root)
     expect(el.children[0].textContent).toBe('one')
+    el.remove()
+  })
+
+  it('list-item-parts: one listitem part per element or non-blank text child, kept in step with the children (T-0519)', async () => {
+    const el = document.createElement('ui-list')
+    el.innerHTML = '<ui-row>one</ui-row> <ui-row>two</ui-row>\n<ui-row>three</ui-row>' // blank text between items
+    document.body.append(el)
+    const parts = (): Element[] => [...(el.shadowRoot?.children ?? [])]
+    expect(parts()).toHaveLength(3)
+    for (const part of parts()) {
+      expect(part.getAttribute('part')).toBe('item')
+      expect(part.getAttribute('role')).toBe('listitem')
+    }
+    for (const child of el.children) expect(child.getAttribute('role')).toBeNull() // no role on a child
+    el.append(document.createElement('ui-row'))
+    el.firstElementChild?.remove()
+    await new Promise((r) => setTimeout(r)) // the MutationObserver re-syncs
+    expect(parts()).toHaveLength(3)
     el.remove()
   })
 

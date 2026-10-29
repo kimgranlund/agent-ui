@@ -955,6 +955,37 @@ describe('default catalog factories — List / Grid (ADR-0087 Wave C, Fork A RES
     expect(target.wrap).toBe(true)
   })
 
+  it('a rendered List exposes one listitem part per ChildList child, with no role attribute on a child (T-0519)', async () => {
+    const r = createRenderer()
+    const mount = document.createElement('div')
+    document.body.appendChild(mount)
+    r.mount(mount)
+    const line = (message: A2uiServerMessage): string => JSON.stringify(message)
+    r.ingest(line({ version: 'v1.0', createSurface: { surfaceId: 'ls', catalogId: 'agent-ui' } }))
+    r.ingest(
+      line({
+        version: 'v1.0',
+        updateComponents: {
+          surfaceId: 'ls',
+          components: [
+            { id: 'root', component: 'List', children: ['a', 'b', 'c'] },
+            { id: 'a', component: 'Text', text: 'Alpha' },
+            { id: 'b', component: 'Text', text: 'Beta' },
+            { id: 'c', component: 'Text', text: 'Gamma' },
+          ],
+        },
+      }),
+    )
+    await whenFlushed()
+    const list = mount.querySelector('ui-list') as HTMLElement
+    expect(list.children).toHaveLength(3)
+    for (const child of list.children) expect(child.getAttribute('role')).toBeNull()
+    const items = list.shadowRoot?.querySelectorAll('[part="item"][role="listitem"]') ?? []
+    expect(items).toHaveLength(3)
+    r.dispose()
+    mount.remove()
+  })
+
   it('Grid → ui-grid maps the surface axes + gap + the minmax() min floor onto accessors; not an input', () => {
     expect(gridFactory.tag).toBe('ui-grid')
     expect(gridFactory.value).toBeUndefined() // a structural container, not a bindable component

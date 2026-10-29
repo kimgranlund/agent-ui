@@ -123,3 +123,10 @@
     text-align: inherit;
   }
 }
+
+/* The listitem part (T-0519): one per child in the list's manual-slot shadow root, carrying the role only.
+   It generates no box, so each slotted child stays the flex item the align/justify/gap grammar lays out.
+   Outside @scope: WebKit drops a `:scope::part()` rule. */
+ui-list::part(item) {
+  display: contents;
+}
