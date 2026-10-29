@@ -8,6 +8,8 @@
 // document (never a `.ts` module the frame imports). `window`/`document`/`ResizeObserver` are the
 // ambient sandboxed-frame globals this script runs against; `targetOrigin: '*'` is the only legal
 // target for an opaque origin (SPEC-R7 — recorded so nobody "tightens" it into breakage).
+// Inbound, the listener applies a message only when `event.source` is `window.parent`, the host that owns
+// this frame.
 
 export const BOOTSTRAP_SCRIPT = `
 (function () {
@@ -24,6 +26,7 @@ export const BOOTSTRAP_SCRIPT = `
     } catch (e) {}
   }
   window.addEventListener('message', function (event) {
+    if (event.source !== window.parent) return;
     var data = event.data;
     if (!data || typeof data !== 'object') return;
     if (data.type === 'initialized' || data.type === 'host-context-changed') applyContext(data);

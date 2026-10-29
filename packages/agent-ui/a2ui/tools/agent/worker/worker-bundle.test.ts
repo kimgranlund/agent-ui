@@ -70,13 +70,18 @@ const request = new Request('https://ui.nonoun.io/__a2ui/agent/chat', {
   headers: { origin: 'https://ui.nonoun.io', 'content-type': 'application/json' },
   body: JSON.stringify({ system: 's', model: 'claude-sonnet-5-5', messages: [{ role: 'user', content: 'hi' }] }),
 })
-const res = await mod.default.fetch(request, { ASSETS: { fetch: async () => new Response('') }, ANTHROPIC_API_KEY: 'sk-test-value' })
+const res = await mod.default.fetch(request, {
+  ASSETS: { fetch: async () => new Response('') },
+  ANTHROPIC_API_KEY: 'sk-test-value',
+  AGENT_RATE_LIMITER: { limit: async () => ({ success: true }) },
+})
 console.log('CHAT_RESULT ' + JSON.stringify({ status: res.status, body: await res.json() }))
 process.exit(0)
 `
 
 // T-0430: the arena mount fails closed in the bundle as deployed with no `ARENA_RATE_LIMITER` in env. A key is
 // present, and `fetch` throws if reached, so the leg proves `/status` answers before any upstream key check.
+// T-0554: the same runner then proves the `/__a2ui/agent` mount fails closed without `AGENT_RATE_LIMITER`.
 const ARENA_RUNNER = `
 import { register } from 'node:module'
 import { pathToFileURL } from 'node:url'
@@ -99,6 +104,13 @@ const post = await mod.default.fetch(new Request('https://ui.nonoun.io/__a2a/are
   body: JSON.stringify({ seats: { X: { provider: 'anthropic', model: 'claude-sonnet-5-5' }, O: { provider: 'anthropic', model: 'claude-haiku-5-5' } } }),
 }), env)
 console.log('ARENA_RESULT ' + JSON.stringify({ status: status.status, body: await status.json(), postStatus: post.status, fetched }))
+const agentStatus = await mod.default.fetch(new Request('https://ui.nonoun.io/__a2ui/agent/status'), env)
+const agentPost = await mod.default.fetch(new Request('https://ui.nonoun.io/__a2ui/agent/chat', {
+  method: 'POST',
+  headers: { origin: 'https://ui.nonoun.io', 'content-type': 'application/json' },
+  body: JSON.stringify({ system: 's', model: 'claude-sonnet-5-5', messages: [{ role: 'user', content: 'hi' }] }),
+}), env)
+console.log('AGENT_RESULT ' + JSON.stringify({ status: agentStatus.status, body: await agentStatus.json(), postStatus: agentPost.status, fetched }))
 process.exit(0)
 `
 
@@ -157,5 +169,12 @@ describe('the bundled Worker evaluates its top level (the deploy-time module loa
     const line = run.stdout.split('\n').find((l) => l.startsWith('ARENA_RESULT '))
     expect(line, `no ARENA_RESULT line; stderr: ${run.stderr}`).toBeDefined()
     expect(JSON.parse(line!.slice('ARENA_RESULT '.length))).toEqual({ status: 200, body: { available: false, providers: 0 }, postStatus: 503, fetched: 0 })
+  })
+
+  it('/__a2ui/agent: with no rate limiter bound, /status reports unavailable and POST is a 503, with no upstream call (T-0554)', () => {
+    const run = spawnSync(process.execPath, [join(scratch, 'run-arena.mjs'), bundle], { cwd: scratch, encoding: 'utf8', timeout: 30_000 })
+    const line = run.stdout.split('\n').find((l) => l.startsWith('AGENT_RESULT '))
+    expect(line, `no AGENT_RESULT line; stderr: ${run.stderr}`).toBeDefined()
+    expect(JSON.parse(line!.slice('AGENT_RESULT '.length))).toEqual({ status: 200, body: { available: false, providers: 0 }, postStatus: 503, fetched: 0 })
   })
 })

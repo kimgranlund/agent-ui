@@ -65,3 +65,24 @@ export async function readBodyCapped(request: Request, maxBytes: number): Promis
   }
   return new TextDecoder().decode(merged)
 }
+
+/** A Workers Rate Limiting binding's call shape (`ratelimits` in wrangler.jsonc). */
+export interface RateLimiter {
+  limit(opts: { key: string }): Promise<{ success: boolean }>
+}
+
+/** The limiter bound as `name` in the RAW env, or `undefined` when none is (duck-typed: an object with a
+ *  `limit` function). */
+export function rateLimiterFrom(env: Record<string, unknown>, name: string): RateLimiter | undefined {
+  const candidate = env[name]
+  if (candidate === null || typeof candidate !== 'object') return undefined
+  return typeof (candidate as { limit?: unknown }).limit === 'function' ? (candidate as RateLimiter) : undefined
+}
+
+/** One visitor's turn against `limiter`, keyed by `cf-connecting-ip`: `'unbound'` when no limiter is
+ *  bound (the caller fails closed), `'limited'` when the window is spent, else `'ok'`. */
+export async function checkRateLimit(request: Request, limiter: RateLimiter | undefined): Promise<'ok' | 'limited' | 'unbound'> {
+  if (limiter === undefined) return 'unbound'
+  const { success } = await limiter.limit({ key: request.headers.get('cf-connecting-ip') ?? 'unknown' })
+  return success ? 'ok' : 'limited'
+}

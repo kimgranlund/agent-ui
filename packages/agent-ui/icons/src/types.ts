@@ -67,7 +67,8 @@ export const ICON_NAMES = [
 export type IconName = (typeof ICON_NAMES)[number]
 
 /** An inert, swappable pack. `icons[name]` is the INNER SVG body (the `<path>`/`<rect>` markup,
- *  NO outer `<svg>`); `viewBox` is pack-wide (Phosphor = '0 0 256 256'). */
+ *  NO outer `<svg>`); `viewBox` is pack-wide (Phosphor = '0 0 256 256'). Bodies are parsed as markup
+ *  (resolve.ts), so a pack is trusted code the host installs, never remote or user-supplied data. */
 export interface IconPack {
   readonly id: string
   readonly viewBox: string

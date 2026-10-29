@@ -26,6 +26,8 @@ Then any `ui-icon` from `@agent-ui-kit/components` resolves its `symbol` through
 
 The core entry (`@agent-ui-kit/icons`) carries only the adapter seam — bring your own pack by registering one instead of (or alongside) Phosphor.
 
+Pack bodies and `overrideIcon` bodies are parsed as SVG markup, so treat them as code: register only packs you ship or trust, and never pass remote or user-supplied strings to `registerPack` or `overrideIcon`.
+
 ## CDN (no build step)
 
 ```html

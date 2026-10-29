@@ -112,7 +112,10 @@ describe('a client disconnect aborts the in-flight provider call in workerd (T-0
           compatibilityDate: wrangler.compatibility_date,
           compatibilityFlags: flags,
           bindings: { ANTHROPIC_API_KEY: 'sk-test-value' },
-          ratelimits: { ARENA_RATE_LIMITER: { namespace_id: '4300', simple: { limit: 10, period: 60 } } },
+          ratelimits: {
+            ARENA_RATE_LIMITER: { namespace_id: '4300', simple: { limit: 10, period: 60 } },
+            AGENT_RATE_LIMITER: { namespace_id: '4301', simple: { limit: 10, period: 60 } },
+          },
           serviceBindings: { ASSETS: () => new Response('') },
           outboundService: 'upstream',
         },

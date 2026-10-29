@@ -14,6 +14,8 @@
 // Zero dependencies beyond platform globals (`Intl` — zero-dep per SPEC-N5, a browser platform API,
 // not a package dependency).
 
+import { guardedRegexTest } from '../regex-guard.ts'
+
 type NamedArgs = Record<string, unknown>
 
 /** `formatString` — the heavy lifting already exists: `renderer/functions.ts`'s `evaluate()` resolves
@@ -34,15 +36,13 @@ export function required(args: NamedArgs): boolean {
 }
 
 /** `regex` — boolean dialect of the shared `regex` (catalog/functions.ts): a malformed pattern
- *  degrades to `false`, never a throw (the evaluator's own fault-isolation posture, SPEC-N4). */
+ *  degrades to `false`, never a throw (the evaluator's own fault-isolation posture, SPEC-N4). The same
+ *  bounded evaluation (`guardedRegexTest`, ../regex-guard.ts): a refused pattern or an over-cap value is
+ *  `false`. */
 export function regex(args: NamedArgs): boolean {
   const { value, pattern } = args
   if (typeof value !== 'string' || typeof pattern !== 'string') return false
-  try {
-    return new RegExp(pattern).test(value)
-  } catch {
-    return false
-  }
+  return guardedRegexTest(pattern, value) === 'match'
 }
 
 /** `length` — string length within `[min, max]` (either bound optional per the schema, "at least one

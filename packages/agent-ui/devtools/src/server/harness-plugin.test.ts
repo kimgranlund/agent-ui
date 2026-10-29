@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import type { TurnInput } from '@agent-ui/a2ui/agent/agent-transport'
-import { createDevtoolsMiddleware, devtoolsHarnessPlugin, seamPeerTransport, DEVTOOLS_MOUNT, MAX_BODY } from './harness-plugin.ts'
+import { createDevtoolsMiddleware, defaultProxyUrl, devtoolsHarnessPlugin, seamPeerTransport, DEVTOOLS_MOUNT, MAX_BODY } from './harness-plugin.ts'
 import type { DevtoolsHarnessOptions, HarnessFetch } from './harness-plugin.ts'
 import type { DevtoolsEvent } from '../timeline/events.ts'
 import type { DevtoolsCapture } from '../capture/format.ts'
@@ -19,6 +19,7 @@ const input: TurnInput = { kind: 'intent', text: 'seam turn', session: { turns: 
 // ── fabricated req/res ────────────────────────────────────────────────────────────────────────────────
 class FakeReq {
   headers: Record<string, string> = { host: 'localhost:5173' }
+  socket: { localAddress?: string; localPort?: number } = { localAddress: '127.0.0.1', localPort: 5173 }
   method: string
   url: string
   destroyed = false // L3: the handler destroys an oversize request — observable here
@@ -217,7 +218,7 @@ describe('POST /turn (SPEC-R6 AC1/AC2)', () => {
 describe('GET /status (SPEC-R6)', () => {
   it('serves the three backend rows; the proxy row maps the mount probe through', async () => {
     const probing: HarnessFetch = (url) => {
-      expect(url).toBe('http://localhost:5173/__a2ui/agent/status') // same-origin default via Host
+      expect(url).toBe('http://127.0.0.1:5173/__a2ui/agent/status') // the server's own socket address
       return Promise.resolve({
         ok: true,
         status: 200,
@@ -243,6 +244,39 @@ describe('GET /status (SPEC-R6)', () => {
     const body = res.json() as { backends: Array<{ id: string; available: boolean }> }
     expect(body.backends.find((b) => b.id === 'proxy')?.available).toBe(false)
     expect(body.backends.find((b) => b.id === 'replay')?.available).toBe(true)
+  })
+})
+
+describe('defaultProxyUrl: the live target comes from the server, not the request', () => {
+  it('ignores the Host header and reads the accepted socket address', () => {
+    const req = new FakeReq('GET', '/status')
+    req.headers.host = 'elsewhere.example:8080'
+    expect(defaultProxyUrl(req.asReq())).toBe('http://127.0.0.1:5173/__a2ui/agent')
+  })
+
+  it('brackets an IPv6 address and falls back to localhost with no socket address', () => {
+    const v6 = new FakeReq('GET', '/status')
+    v6.socket = { localAddress: '::1', localPort: 5173 }
+    expect(defaultProxyUrl(v6.asReq())).toBe('http://[::1]:5173/__a2ui/agent')
+    const none = new FakeReq('GET', '/status')
+    none.socket = {}
+    expect(defaultProxyUrl(none.asReq())).toBe('http://localhost/__a2ui/agent')
+  })
+
+  it('a status probe with a foreign Host header still targets the server address', async () => {
+    const seen: string[] = []
+    const probing: HarnessFetch = (url) => {
+      seen.push(url)
+      return Promise.reject(new Error('down'))
+    }
+    const mw = createDevtoolsMiddleware({ fetch: probing })
+    const req = new FakeReq('GET', '/status')
+    req.headers.host = 'elsewhere.example:8080'
+    const res = new FakeRes()
+    mw(req.asReq(), res.asRes())
+    await res.whenEnded()
+    expect(seen.length).toBeGreaterThan(0)
+    expect(seen.every((u) => u.startsWith('http://127.0.0.1:5173/'))).toBe(true)
   })
 })
 
