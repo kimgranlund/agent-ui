@@ -7,7 +7,8 @@
 // failure (the security allowlist, SPEC-R9). A `PropDef.format: 'safe-href'` (content-family LLD-C13,
 // ADR-0114 cl.3 — `Text.href`/`Attachment.href`) adds one more static-literal check: an ABSOLUTE href
 // literal naming a disallowed scheme also fails `CATALOG` here, defense-in-depth ahead of the component
-// gate that resolves every href (including relatives) at render.
+// gate that resolves every href (including relatives) at render. `format: 'media-src'` (T-0563, the media
+// props) is the same check against the media scheme allowlist.
 
 import type { A2uiComponent, Failure } from '../protocol.ts'
 import type { Catalog, JsonSchema, PropDef } from './catalog.ts'
@@ -27,6 +28,11 @@ import type { Catalog, JsonSchema, PropDef } from './catalog.ts'
 // vitest's transform pipeline) so drift is caught even though the runtime values are two separate
 // literals. Exported (not `const` module-private) so that sync test can compare it directly.
 export const SAFE_HREF_SCHEMES = ['https:', 'http:', 'mailto:'] as const
+
+// A LOCAL copy of `@agent-ui/components/controls/text`'s `MEDIA_SRC_SCHEMES` (`text/media-src.ts`), kept
+// local for the same Node-native-load reason as `SAFE_HREF_SCHEMES` above; `conformance.test.ts` asserts the
+// two arrays stay equal. Backs `format: 'media-src'` (T-0563).
+export const MEDIA_SRC_SCHEMES = ['https:', 'http:', 'data:', 'blob:'] as const
 
 // Structural keys owned by the adjacency model — not catalog-declared properties.
 // `checks` is a component-level array (ADR-0029, SPEC-R4) — a renderer-layer construct like `action`,
@@ -112,6 +118,7 @@ function matchesType(value: unknown, pd: PropDef): boolean {
   if (pd.bindable && isBinding(value)) return true // deferred resolution at render (LLD-C5/LLD-C10)
   if (!matchesSchemaType(value, pd.type)) return false
   if (pd.format === 'safe-href' && typeof value === 'string') return matchesSafeHref(value)
+  if (pd.format === 'media-src' && typeof value === 'string') return matchesMediaSrc(value)
   if (pd.rejectFunctionCall && isFunctionCallAction(value)) return false
   return true
 }
@@ -142,6 +149,23 @@ function matchesSafeHref(value: string): boolean {
     return true // relative / unparseable-without-base — defer to the component gate (SPEC-R12)
   }
   return (SAFE_HREF_SCHEMES as readonly string[]).includes(url.protocol)
+}
+
+/**
+ * The `format: 'media-src'` validator (T-0563): the static twin of the render-time media gate
+ * (`safeMediaSrc`, `controls/text/media-src.ts`). Same shape as `matchesSafeHref`: an ABSOLUTE literal must
+ * name a scheme in `MEDIA_SRC_SCHEMES`; a relative or unparseable-without-base literal defers to the
+ * component gate, which resolves it at render. The host origin allowlist (`setMediaOrigins`) is runtime
+ * configuration and stays with the component gate.
+ */
+function matchesMediaSrc(value: string): boolean {
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    return true // relative / unparseable-without-base: defer to the component gate
+  }
+  return (MEDIA_SRC_SCHEMES as readonly string[]).includes(url.protocol)
 }
 
 /** Minimal JSON-Schema primitive-type check: the `type` keyword vs the JS runtime type. */

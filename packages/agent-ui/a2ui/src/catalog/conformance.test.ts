@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { validateCatalogConformance, SAFE_HREF_SCHEMES } from './conformance.ts'
+import { validateCatalogConformance, SAFE_HREF_SCHEMES, MEDIA_SRC_SCHEMES } from './conformance.ts'
 import { demoCatalog } from '../fixtures.ts'
 import { loadCatalog } from './catalog.ts'
 import { defaultCatalog } from './default/index.ts'
 import type { A2uiComponent } from '../protocol.ts'
-import { SAFE_HREF_SCHEMES as COMPONENTS_SAFE_HREF_SCHEMES } from '@agent-ui/components/controls/text'
+import { SAFE_HREF_SCHEMES as COMPONENTS_SAFE_HREF_SCHEMES, MEDIA_SRC_SCHEMES as COMPONENTS_MEDIA_SRC_SCHEMES } from '@agent-ui/components/controls/text'
 
 const comp = (c: Record<string, unknown>): A2uiComponent => c as A2uiComponent
 
@@ -294,5 +294,71 @@ describe('validateCatalogConformance — the children-model check (ADR-0226 cl.4
 describe('conformance.ts\'s SAFE_HREF_SCHEMES stays in sync with the canonical text/href.ts source', () => {
   it('the local copy is value-identical to @agent-ui/components/controls/text\'s real export', () => {
     expect([...SAFE_HREF_SCHEMES]).toEqual([...COMPONENTS_SAFE_HREF_SCHEMES])
+  })
+})
+
+// ── PropDef.format: 'media-src', the static twin of the render-time media gate (T-0563) ─────────────────
+//
+// The default catalog's media props declare `format: 'media-src'`, so an ABSOLUTE literal outside the media
+// scheme allowlist fails CATALOG here, ahead of `safeMediaSrc` (controls/text/media-src.ts) at render. A
+// relative literal defers to that gate, and the host origin allowlist stays a render-time concern.
+describe('validateCatalogConformance: PropDef.format media-src (T-0563)', () => {
+  const MEDIA_PROPS: readonly (readonly [string, string, Record<string, unknown>])[] = [
+    ['Image', 'src', { alt: 'A photo' }],
+    ['Avatar', 'src', {}],
+    ['Video', 'src', {}],
+    ['Video', 'poster', {}],
+    ['AudioPlayer', 'src', {}],
+    ['ProductCard', 'image', {}],
+  ]
+  const propFailures = (component: string, prop: string, extra: Record<string, unknown>, value: unknown) =>
+    validateCatalogConformance(comp({ id: 'm', component, ...extra, [prop]: value }), defaultCatalog)
+      .filter((f) => f.path === `m.${prop}`)
+
+  for (const [component, prop, extra] of MEDIA_PROPS) {
+    it(`${component}.${prop} declares format media-src`, () => {
+      expect(defaultCatalog.components[component]?.properties[prop]?.format).toBe('media-src')
+    })
+
+    it(`${component}.${prop}: an absolute literal outside the media scheme allowlist fails CATALOG`, () => {
+      expect(propFailures(component, prop, extra, 'ftp://example.com/a.png')).toEqual([{ code: 'CATALOG', path: `m.${prop}` }])
+      expect(propFailures(component, prop, extra, 'mailto:someone@example.com')).toEqual([{ code: 'CATALOG', path: `m.${prop}` }])
+    })
+
+    it(`${component}.${prop}: allowed schemes, relative literals and bindings pass (non-vacuous)`, () => {
+      for (const ok of ['https://example.com/a.png', 'http://example.com/a.png', 'data:image/png;base64,AAAA', 'blob:https://example.com/0f1e', '/media/a.png', 'a.png']) {
+        expect(propFailures(component, prop, extra, ok), ok).toEqual([])
+      }
+      expect(propFailures(component, prop, extra, { path: '/media/src' })).toEqual([])
+    })
+  }
+
+  it('is scoped to the declaring PropDef: safe-href still admits mailto: and rejects data:', () => {
+    const fmtCatalog = loadCatalog({
+      catalogId: 'format-demo',
+      protocolVersion: 'v1.0',
+      components: {
+        Widget: {
+          properties: {
+            media: { type: { type: 'string' }, mapsTo: 'media', format: 'media-src' },
+            link: { type: { type: 'string' }, mapsTo: 'link', format: 'safe-href' },
+          },
+        },
+      },
+      functions: {},
+    })
+    const run = (props: Record<string, unknown>) => validateCatalogConformance(comp({ id: 'w', component: 'Widget', ...props }), fmtCatalog)
+    expect(run({ link: 'mailto:someone@example.com', media: 'data:image/png;base64,AAAA' })).toEqual([])
+    expect(run({ link: 'data:image/png;base64,AAAA', media: 'mailto:someone@example.com' })).toEqual([
+      { code: 'CATALOG', path: 'w.link' },
+      { code: 'CATALOG', path: 'w.media' },
+    ])
+  })
+})
+
+describe('conformance.ts\'s MEDIA_SRC_SCHEMES stays in sync with the canonical text/media-src.ts source', () => {
+  it('the local copy is value-identical to @agent-ui/components/controls/text\'s real export', () => {
+    expect(COMPONENTS_MEDIA_SRC_SCHEMES).toBeDefined()
+    expect([...MEDIA_SRC_SCHEMES]).toEqual([...COMPONENTS_MEDIA_SRC_SCHEMES])
   })
 })

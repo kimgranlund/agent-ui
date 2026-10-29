@@ -66,10 +66,12 @@ export interface PropDef {
   type: JsonSchema
   bindable?: boolean
   mapsTo: string
-  /** A default-catalog PropDef extension (our schema, not A2UI wire vocabulary) — currently only
-   *  `'safe-href'` (ADR-0114 cl.3, content-family LLD-C13): the shared validator's first line runs the
+  /** A default-catalog PropDef extension (our schema, not A2UI wire vocabulary): `'safe-href'`
+   *  (ADR-0114 cl.3, content-family LLD-C13): the shared validator's first line runs the
    *  ADR-0114 scheme allowlist over an ABSOLUTE static string literal; a relative/unparseable-without-base
-   *  literal defers to the component gate (`safeHref`, `controls/text/href.ts`), which resolves at render. */
+   *  literal defers to the component gate (`safeHref`, `controls/text/href.ts`), which resolves at render.
+   *  `'media-src'` (T-0563) is the same check for media props against the media scheme allowlist, deferring
+   *  relatives to `safeMediaSrc` (`controls/text/media-src.ts`). */
   format?: string
   /**
    * A catalog-declared extension (ADR-0169 E7 row / GH #429), absent everywhere but

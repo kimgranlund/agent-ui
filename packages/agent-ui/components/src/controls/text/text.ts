@@ -68,6 +68,8 @@ import { safeHref, LINK_REL, LINK_TARGET } from './href.ts'
 // validator (content-family LLD-C13, ADR-0114 cl.3) can reach `SAFE_HREF_SCHEMES` off that SAME subpath,
 // with no package-boundary violation and no second exports-map entry.
 export { SAFE_HREF_SCHEMES, safeHref, LINK_REL, LINK_TARGET } from './href.ts'
+// The media scheme allowlist rides the same subpath for the validator's `format: 'media-src'` sync test (T-0563).
+export { MEDIA_SRC_SCHEMES } from './media-src.ts'
 
 const props = {
   // The visual type ROLE (which --md-sys-typescale-* block text.css repoints to) — the five M3 roles +
