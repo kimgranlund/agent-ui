@@ -1296,3 +1296,8 @@
 ## T-0530: The a2ui root barrel stops re-exporting the shipped persona and domain catalogs, which move to a subpath (2026-10-29)
 
 - note: `packages/agent-ui/a2ui/src/catalog/index.ts:53` and `scripts/measure-size.mjs` comments are accurate to the new layout; no stale text found.
+
+## T-0529: npm run size gates in check:scripts (2026-10-29)
+
+- decide: scripts/measure-size.mjs:266 overlay budget raised to 2688 on the builder's own reading of the ADR-0197 cl.5 precedent; Kim to confirm the bump or trim overlay.ts.
+- note: in a throwaway worktree with a symlinked node_modules, measure-size also reported app, code/markdown and code/editor OVER; the wave tree reports them within budget, so the result depends on install layout (worktree symlink recipe), worth knowing for lanes that now run check.
