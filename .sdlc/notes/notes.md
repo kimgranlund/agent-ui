@@ -1378,3 +1378,8 @@
 
 - note: .claude/docs/rubrics/genui-pack-idiom.md D2 row: the pack files under `packages/agent-ui/a2ui/src/agent/prompts/genui-packs/` still use the literal `Anatomy — a ...` heading; the rubric now says "named `Anatomy` sections" and "the `Anatomy` entries for a bar/column comparison". Meaning holds, but the quoted literal is no longer exact.
 - note: the solo report says `grep -c` exits 2 as written in the Done-when text because it names no pattern. The acceptance criterion #1 uses a valid grep and I judged that one.
+
+## T-0581: Live round 19 measures the cluster R fix (2026-10-29)
+
+- note: the red-checkpoint deviation script printed no `process deviation:` lines; there are no `(red)` criteria.
+- note: `.sdlc/evals/rounds/2026-10-29-r19-pattern/report.md` "Is R closed" reports the forced render_surface at :154 r3 as inferred from code, not trace; the report states this plainly.
