@@ -281,3 +281,13 @@ describe('ui-router-link — descriptor (ADR-0004, LLD-C8)', () => {
     )
   })
 })
+
+// T-0560: the active link ink is the fleet primary text ink that clears 4.5:1 on every elevation plane in both schemes
+// (pinned in tokens.test.ts); primary-high's dark 400 leg read 4.39:1 on n-800.
+describe('ui-router-link: active ink stays AA as text (T-0560)', () => {
+  const css = readFileSync(`${process.cwd()}/packages/agent-ui/router/src/controls/router-link/router-link.css`, 'utf8') as string
+  it('the active ink token reads --md-sys-color-primary-on-surface-variant, not primary-high', () => {
+    expect(css).toMatch(/--ui-router-link-active-ink:\s*var\(--md-sys-color-primary-on-surface-variant\)\s*;/)
+    expect(css).toMatch(/\[aria-current='page'\]\s*\{\s*color:\s*var\(--ui-router-link-active-ink\)/) // anti-vacuous: the token is what the active anchor paints
+  })
+})

@@ -3,7 +3,8 @@
  *
  *   [1] TOKEN BLOCK — `:where(ui-router-link)` (specificity 0,0,0) declares the two `--ui-router-link-*`
  *       component tokens from the fleet `--md-sys-color-{family}-{role}` roles: the fleet link ink
- *       `primary-placeholder` (the ui-text link role, AA as text, T-0557) and the `primary-high` active ink.
+ *       `primary-placeholder` (the ui-text link role, AA as text, T-0557) and the `primary-on-surface-variant`
+ *       active ink (AA as text on every plane in both schemes; `primary-high`'s dark leg was 4.39:1 on n-800, T-0560).
  *   [2] STYLES BLOCK — `@scope (ui-router-link)` consumes ONLY `--ui-router-link-*`. The stamped `<a>`
  *       carries native anchor semantics (role, keyboard, copy, AT announcement free — the ADR-0114 stamp
  *       doctrine); underline is ALWAYS present, never hue-only (ADR-0057 — the ui-text link-leg
@@ -18,7 +19,7 @@
 
 :where(ui-router-link) {
   --ui-router-link-ink: var(--md-sys-color-primary-placeholder); /* the fleet link ink (the ui-text --ui-text-link-ink role, T-0557: AA as text on every surface plane) */
-  --ui-router-link-active-ink: var(--md-sys-color-primary-high);
+  --ui-router-link-active-ink: var(--md-sys-color-primary-on-surface-variant); /* T-0560: AA as text on every plane, distinct from the idle ink */
 }
 
 /* ════════════════ [2] STYLES BLOCK — @scope (ui-router-link) consumes ONLY --ui-router-link-* ════════════════ */

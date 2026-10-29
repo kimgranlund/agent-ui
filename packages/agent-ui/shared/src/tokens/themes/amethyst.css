@@ -66,7 +66,7 @@
   --md-sys-color-neutral-on-surface-hover: light-dark(var(--md-sys-color-neutral-950), var(--md-sys-color-neutral-050));
   --md-sys-color-neutral-on-surface-active: light-dark(var(--md-sys-color-neutral-950), var(--md-sys-color-neutral-050));
   --md-sys-color-neutral-on-surface-disabled: light-dark(var(--md-sys-color-neutral-scrim-400), var(--md-sys-color-neutral-scrim-400));
-  --md-sys-color-neutral-placeholder: light-dark(var(--md-sys-color-neutral-650), var(--md-sys-color-neutral-350));
+  --md-sys-color-neutral-placeholder: light-dark(var(--md-sys-color-neutral-700), var(--md-sys-color-neutral-350));
   --md-sys-color-neutral-outline: light-dark(var(--md-sys-color-neutral-scrim-600), var(--md-sys-color-neutral-scrim-600));
   --md-sys-color-neutral-outline-variant: light-dark(var(--md-sys-color-neutral-scrim-300), var(--md-sys-color-neutral-scrim-300));
   --md-sys-color-neutral-outline-hover: light-dark(var(--md-sys-color-neutral-scrim-700), var(--md-sys-color-neutral-scrim-700));

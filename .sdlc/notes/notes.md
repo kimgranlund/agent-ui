@@ -1278,3 +1278,7 @@
 ## T-0563: Catalog media props declare a media URL format (2026-10-29)
 
 - decide: packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json:16 `Image.url` (mapsTo `src`) still declares `safe-href`, which admits `mailto:` and rejects `data:`, the opposite of the render gate for a media prop; the handoff names only the default catalog, and the builder disclosed it. A follow-up could move it to `media-src`. The persona and domain catalogs carry no own media props.
+
+## T-0560: Fields on dim planes, dark active links and theme packs meet AA (2026-10-29)
+
+- note: residual `primary-high` as text on planes stays under 4.5:1 (dark n-800 in default 4.39, amethyst 4.36, indigo 4.45, meadow 4.39, ocean 4.30, orchid 4.23, ruby 4.19; light n-200 in ember 4.46, lagoon 4.45); the handoff scopes it out as open items, so a role-level follow-up ticket is the home.

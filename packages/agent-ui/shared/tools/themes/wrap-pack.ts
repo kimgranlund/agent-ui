@@ -8,7 +8,7 @@
 // Run via Node type-stripping from the repo root:
 //
 //   node --experimental-strip-types packages/agent-ui/shared/tools/themes/wrap-pack.ts <name> <export.css>
-//   node --experimental-strip-types packages/agent-ui/shared/tools/themes/wrap-pack.ts --repoint [name...]
+//   node --experimental-strip-types packages/agent-ui/shared/tools/themes/wrap-pack.ts --repoint [name...]   (re-derive fill and text legs)
 //
 // Validates the input is UT's export grammar (a single `:root { … }` block, `--md-sys-color-*` custom
 // properties only, `color-scheme: light dark;` present — the same scheme-completeness marker the
@@ -153,11 +153,83 @@ export function repointFill(body: string): string {
   return out.replace(anchor[0], [anchor[0], ...decl.map((d) => `${anchor[1]}${d}`)].join('\n'))
 }
 
+// T-0560: a stock UT export's placeholder (`neutral-placeholder`) and link (`primary-placeholder`) inks are 650 / 350,
+// which fall under 4.5:1 on the dimmest light planes (n-175, n-200; the placeholder also sits on the idle field fill,
+// `neutral-container-low` composited over the plane). Each leg is the first stop, walking from TEXT_START away from
+// its planes (darker for light, lighter for dark), that clears 4.5:1 as text on every elevation plane of its scheme,
+// and the placeholder also on the field fill over each. Nothing is tabled; tokens.css is held to the same rule.
+export const TEXT_START = { light: 650, dark: 350 } as const
+export const TEXT_PLANES = { light: [50, 75, 100, 125, 150, 175, 200], dark: [950, 925, 900, 875, 850, 825, 800] } as const
+const TEXT_ROLES = [['neutral-placeholder', 'neutral', true], ['primary-placeholder', 'primary', false]] as const
+
+/** OKLCH to gamma-encoded sRGB (gamut-clamped), for alpha compositing the field fill over a plane. */
+function gammaOf([L, C, H]: Oklch): number[] {
+  const h = (H * Math.PI) / 180, a = C * Math.cos(h), b = C * Math.sin(h)
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3
+  const m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3
+  const s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ].map((c) => { c = Math.min(1, Math.max(0, c)); return c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055 })
+}
+const gammaLum = (g: number[]): number => {
+  const [r, gg, b] = g.map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+  return 0.2126 * r! + 0.7152 * gg! + 0.0722 * b!
+}
+const gammaContrast = (x: number[], y: number[]): number => {
+  const a = gammaLum(x), b = gammaLum(y)
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
+}
+
+/** Repoint the `neutral-placeholder` and `primary-placeholder` legs in a pack body (or tokens.css) to the derived
+ *  stops, in place. A body without those roles is returned as is; a ramp with no passing stop refuses. */
+export function repointText(body: string): string {
+  if (!/--md-sys-color-neutral-placeholder:/.test(body)) return body
+  const stop = (family: string, n: number): { c: Oklch; a: number } | undefined => {
+    const m = body.match(new RegExp(`--md-sys-color-${family}-${pad(n)}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)(?:\\s*/\\s*([\\d.]+)%)?\\)`))
+    return m ? { c: [Number(m[1]), Number(m[2]), Number(m[3])], a: m[4] ? Number(m[4]) / 100 : 1 } : undefined
+  }
+  const fillLegs = body.match(/--md-sys-color-neutral-container-low:\s*light-dark\(var\(--md-sys-color-neutral-scrim-(\d{3})\),\s*var\(--md-sys-color-neutral-scrim-(\d{3})\)\);/)
+  if (!fillLegs) throw new Error('wrap-pack: --md-sys-color-neutral-container-low is not a two-leg neutral scrim light-dark() role')
+  const fillMix = (k: 0 | 1): { c: Oklch; a: number } => {
+    const m = body.match(new RegExp(`--md-sys-color-neutral-scrim-${fillLegs[k + 1]}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)\\s*/\\s*([\\d.]+)%\\)`))
+    if (!m) throw new Error(`wrap-pack: the field fill scrim neutral-scrim-${fillLegs[k + 1]} has no primitive`)
+    return { c: [Number(m[1]), Number(m[2]), Number(m[3])], a: Number(m[4]) / 100 }
+  }
+  let out = body
+  for (const [role, family, onField] of TEXT_ROLES) {
+    const legs: string[] = []
+    ;(['light', 'dark'] as const).forEach((scheme, k) => {
+      const fill = fillMix(k as 0 | 1)
+      const backs = TEXT_PLANES[scheme].flatMap((p) => {
+        const plane = stop('neutral', p)
+        if (!plane) throw new Error(`wrap-pack: the neutral ramp has no ${pad(p)} plane`)
+        const g = gammaOf(plane.c)
+        if (!onField) return [g]
+        const f = gammaOf(fill.c)
+        return [g, g.map((c, i) => fill.a * f[i]! + (1 - fill.a) * c)]
+      })
+      const walk: number[] = []
+      for (let n = TEXT_START[scheme]; n >= 50 && n <= 950; n += scheme === 'light' ? 50 : -50) walk.push(n)
+      const hit = walk.find((n) => { const ink = stop(family, n); return ink !== undefined && backs.every((b) => gammaContrast(gammaOf(ink.c), b) >= AA_TEXT) })
+      if (hit === undefined) throw new Error(`wrap-pack: no ${family} stop from ${TEXT_START[scheme]} clears ${AA_TEXT}:1 for --md-sys-color-${role} on every ${scheme} plane; this pack needs a hand-picked ink`)
+      legs.push(pad(hit))
+    })
+    const decl = `--md-sys-color-${role}: light-dark(var(--md-sys-color-${family}-${legs[0]}), var(--md-sys-color-${family}-${legs[1]}));`
+    const re = new RegExp(`--md-sys-color-${role}:[^;]*;`)
+    if (!re.test(out)) throw new Error(`wrap-pack: no --md-sys-color-${role} declaration to repoint`)
+    out = out.replace(re, decl)
+  }
+  return out
+}
+
 /** Wrap a UT export's `:root` body under `[theme='<name>']`, 2-space re-indented to match this repo's
  *  CSS convention (ADR-0003 — the same indent every hand-authored token block already uses). */
 export function wrapPack(name: string, exportCss: string): string {
   if (!NAME_RE.test(name)) throw new Error(`wrap-pack: "${name}" is not a legal theme name (kebab, lowercase, [a-z0-9-]+)`)
-  const body = repointFill(extractRootBody(exportCss))
+  const body = repointText(repointFill(extractRootBody(exportCss)))
   const lines = body
     .split('\n')
     .map((l) => l.trim())
@@ -176,7 +248,7 @@ export function wrapPack(name: string, exportCss: string): string {
   )
 }
 
-/** `--repoint [name...]`: apply repointFill to committed packs (all of them when none is named), for
+/** `--repoint [name...]`: apply repointFill and repointText to committed packs (all of them when none is named), for
  *  packs wrapped before the repoint existed; idempotent, so a re-run leaves the files byte-identical. */
 function repointCommitted(names: string[]): void {
   const bad = names.filter((n) => !NAME_RE.test(n))
@@ -188,7 +260,7 @@ function repointCommitted(names: string[]): void {
   for (const file of files) {
     const path = `${THEMES_DIR}/${file}`
     const before = readFileSync(path, 'utf8')
-    const after = repointFill(before)
+    const after = repointText(repointFill(before))
     if (after !== before) writeFileSync(path, after)
     console.log(`wrap-pack: ${after === before ? 'unchanged' : 'repointed'} ${path}`)
   }
