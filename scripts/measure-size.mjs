@@ -464,7 +464,6 @@ const CONTROL_ENTRIES = Object.entries(pkg.exports)
 const MIN_CONTROL_ENTRIES = 60
 if (CONTROL_ENTRIES.length < MIN_CONTROL_ENTRIES) {
   console.error(`size: found ${CONTROL_ENTRIES.length} ./controls/* JS entries in the components exports map, expected at least ${MIN_CONTROL_ENTRIES}`)
-  if (packageEntryOver) console.error('size: an @agent-ui/a2ui, a2a, icons or devtools entry exceeds its budget')
   process.exit(1)
 }
 
