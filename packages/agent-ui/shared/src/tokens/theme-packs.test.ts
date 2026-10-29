@@ -205,11 +205,11 @@ describe('theme-packs.test.ts: each pack primary fill ladder clears 4.5:1 under 
     return out
   }
   // The ink and indicator legs every pack was wrapped with before T-0340 (the stock UT export's role legs, identical
-  // across all ten packs at commit 3ddba942c). T-0340 adds fill roles; it never moves these.
+  // across all ten packs at commit 3ddba942c). T-0340 adds fill roles; it never moves these. `primary-high` left this
+  // table in T-0567: its legs are now derived per pack by wrap-pack.ts repointText (pinned in the text-ink block below).
   const PRE_T0340_LEGS = {
     'primary': ['550', '450'],
     'primary-dim': ['650', '700'],
-    'primary-high': ['650', '400'],
     'primary-hover': ['650', '350'],
     'primary-active': ['750', '250'],
   } as const
@@ -245,6 +245,7 @@ describe('theme-packs.test.ts: each pack primary fill ladder clears 4.5:1 under 
 // T-0560: each pack's text inks clear WCAG-AA 4.5:1 as text on every elevation plane of both schemes: the neutral
 // on-surface, on-surface-variant and placeholder inks, the primary placeholder (link) and on-surface-variant (the
 // active ui-router-link) inks, and the placeholder also on the idle field fill (neutral-container-low over the plane).
+// T-0567 adds `primary-high` (the selected-row, active-item and soft or ghost button ink).
 // The math is a second derivation, independent of wrap-pack.ts repointText: OKLCH -> gamma sRGB, composite, WCAG.
 describe('theme-packs.test.ts: each pack text inks clear 4.5:1 on every plane (T-0560)', () => {
   const AA = 4.5
@@ -255,6 +256,7 @@ describe('theme-packs.test.ts: each pack text inks clear 4.5:1 on every plane (T
     ['neutral-placeholder', 'neutral'],
     ['primary-placeholder', 'primary'],
     ['primary-on-surface-variant', 'primary'],
+    ['primary-high', 'primary'],
   ] as const
   const gamma = ([L, C, H]: number[]): number[] => {
     const h = ((H as number) * Math.PI) / 180, a = (C as number) * Math.cos(h), b = (C as number) * Math.sin(h)
@@ -307,7 +309,7 @@ describe('theme-packs.test.ts: each pack text inks clear 4.5:1 on every plane (T
       it('every text ink clears 4.5:1 on every plane, light and dark, and the placeholder on the field fill over each', () => {
         expect(textMisses(css)).toEqual([])
       })
-      it('is a fixed point of wrap-pack.ts repointText (the derived placeholder and link legs, not a hand edit)', () => {
+      it('is a fixed point of wrap-pack.ts repointText (the derived placeholder, link and primary-high legs, not a hand edit)', () => {
         expect(repointText(css)).toBe(css)
       })
     })
@@ -322,5 +324,11 @@ describe('theme-packs.test.ts: each pack text inks clear 4.5:1 on every plane (T
   it('NEGATIVE control: a pack whose light placeholder is the stock 650 is NOT a fixed point (repointText moves it)', () => {
     const bad = sample.replace(/(--md-sys-color-neutral-placeholder: light-dark\(var\(--md-sys-color-)neutral-\d+/, '$1neutral-650')
     expect(repointText(bad)).not.toBe(bad)
+  })
+  it('NEGATIVE control: the stock primary-high legs (650 / 400) fail as text in ruby dark and lagoon light, and are NOT a fixed point', () => {
+    const stock = (file: string) => readFileSync(`${THEMES_DIR}/${file}`, 'utf8').replace(/--md-sys-color-primary-high: light-dark\([^;]*;/, '--md-sys-color-primary-high: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-400));')
+    expect(textMisses(stock('ruby.css')).join(' ')).toMatch(/primary-high dark primary-400 on n-800/)
+    expect(textMisses(stock('lagoon.css')).join(' ')).toMatch(/primary-high light primary-650 on n-200/)
+    expect(repointText(stock('ruby.css'))).not.toBe(stock('ruby.css'))
   })
 })

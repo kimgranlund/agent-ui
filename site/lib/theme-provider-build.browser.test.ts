@@ -40,7 +40,7 @@ function independentExpected(scheme: 'light' | 'dark'): string {
 describe('ui-theme-provider built-output — a REAL ui-button under a built ui-theme-provider resolves the correct per-scheme token (LLD-C11 browser-side proof)', () => {
   it('scheme="dark" and scheme="light" providers give a real ui-button[variant=soft] GENUINELY DIFFERENT, and CORRECT, ink', () => {
     // variant=soft/ghost is the vehicle (not solid): --ui-button-ink resolves --md-sys-color-primary-high,
-    // whose light/dark branches map to DIFFERENT palette steps (primary-650 vs primary-400) — a genuine,
+    // whose light/dark branches map to DIFFERENT palette steps (primary-650 vs primary-350, T-0567) — a genuine,
     // real per-scheme divergence. (--md-sys-color-primary itself — the SOLID variant's bg/ink — is a
     // DELIBERATELY scheme-invariant brand accent in this token set, so it cannot prove per-scheme
     // resolution; this is a named, deliberate LLD-C11 vehicle correction, not the LLD's literal

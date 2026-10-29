@@ -1321,3 +1321,7 @@
 ## T-0570: Rendered docs stop teaching the retired scale and density attributes (2026-10-29)
 
 - note: site/pages/bar-chart-demo.ts:5, site/pages/layout-permutations.ts:70, site/pages/tokens.ts (LIVE resolution comment), packages/agent-ui/components/src/controls/icon/icon.md:72 keep em dashes already on the touched lines.
+
+## T-0567: primary-high meets AA as text in every theme pack (2026-10-29)
+
+- note: tests-red-on-base.txt is builder-recorded; I confirmed base redness by running the probe at base, not by re-running the 18 vitest failures.

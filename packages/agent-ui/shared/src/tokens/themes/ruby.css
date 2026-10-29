@@ -145,7 +145,7 @@
   --md-sys-color-primary-dim: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-700));
   --md-sys-color-primary-bright: light-dark(var(--md-sys-color-primary-350), var(--md-sys-color-primary-400));
   --md-sys-color-primary-low: light-dark(var(--md-sys-color-primary-350), var(--md-sys-color-primary-700));
-  --md-sys-color-primary-high: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-400));
+  --md-sys-color-primary-high: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-350));
   --md-sys-color-primary-hover: light-dark(var(--md-sys-color-primary-650), var(--md-sys-color-primary-350));
   --md-sys-color-primary-active: light-dark(var(--md-sys-color-primary-750), var(--md-sys-color-primary-250));
   --md-sys-color-primary-fill: light-dark(var(--md-sys-color-primary-550), var(--md-sys-color-primary-600));

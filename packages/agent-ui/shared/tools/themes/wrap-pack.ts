@@ -158,9 +158,16 @@ export function repointFill(body: string): string {
 // `neutral-container-low` composited over the plane). Each leg is the first stop, walking from TEXT_START away from
 // its planes (darker for light, lighter for dark), that clears 4.5:1 as text on every elevation plane of its scheme,
 // and the placeholder also on the field fill over each. Nothing is tabled; tokens.css is held to the same rule.
+// T-0567: `primary-high` (the selected-row, active-item and soft or ghost button ink) walks the same way from its stock
+// 650 / 400 legs, which read 4.19 to 4.46 on light n-200 or dark n-800 in most packs.
 export const TEXT_START = { light: 650, dark: 350 } as const
+export const HIGH_START = { light: 650, dark: 400 } as const
 export const TEXT_PLANES = { light: [50, 75, 100, 125, 150, 175, 200], dark: [950, 925, 900, 875, 850, 825, 800] } as const
-const TEXT_ROLES = [['neutral-placeholder', 'neutral', true], ['primary-placeholder', 'primary', false]] as const
+const TEXT_ROLES = [
+  ['neutral-placeholder', 'neutral', true, TEXT_START],
+  ['primary-placeholder', 'primary', false, TEXT_START],
+  ['primary-high', 'primary', false, HIGH_START],
+] as const
 
 /** OKLCH to gamma-encoded sRGB (gamut-clamped), for alpha compositing the field fill over a plane. */
 function gammaOf([L, C, H]: Oklch): number[] {
@@ -183,7 +190,7 @@ const gammaContrast = (x: number[], y: number[]): number => {
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 }
 
-/** Repoint the `neutral-placeholder` and `primary-placeholder` legs in a pack body (or tokens.css) to the derived
+/** Repoint the `neutral-placeholder`, `primary-placeholder` and `primary-high` legs in a pack body (or tokens.css) to the derived
  *  stops, in place. A body without those roles is returned as is; a ramp with no passing stop refuses. */
 export function repointText(body: string): string {
   if (!/--md-sys-color-neutral-placeholder:/.test(body)) return body
@@ -199,7 +206,7 @@ export function repointText(body: string): string {
     return { c: [Number(m[1]), Number(m[2]), Number(m[3])], a: Number(m[4]) / 100 }
   }
   let out = body
-  for (const [role, family, onField] of TEXT_ROLES) {
+  for (const [role, family, onField, start] of TEXT_ROLES) {
     const legs: string[] = []
     ;(['light', 'dark'] as const).forEach((scheme, k) => {
       const fill = fillMix(k as 0 | 1)
@@ -212,9 +219,9 @@ export function repointText(body: string): string {
         return [g, g.map((c, i) => fill.a * f[i]! + (1 - fill.a) * c)]
       })
       const walk: number[] = []
-      for (let n = TEXT_START[scheme]; n >= 50 && n <= 950; n += scheme === 'light' ? 50 : -50) walk.push(n)
+      for (let n = start[scheme]; n >= 50 && n <= 950; n += scheme === 'light' ? 50 : -50) walk.push(n)
       const hit = walk.find((n) => { const ink = stop(family, n); return ink !== undefined && backs.every((b) => gammaContrast(gammaOf(ink.c), b) >= AA_TEXT) })
-      if (hit === undefined) throw new Error(`wrap-pack: no ${family} stop from ${TEXT_START[scheme]} clears ${AA_TEXT}:1 for --md-sys-color-${role} on every ${scheme} plane; this pack needs a hand-picked ink`)
+      if (hit === undefined) throw new Error(`wrap-pack: no ${family} stop from ${start[scheme]} clears ${AA_TEXT}:1 for --md-sys-color-${role} on every ${scheme} plane; this pack needs a hand-picked ink`)
       legs.push(pad(hit))
     })
     const decl = `--md-sys-color-${role}: light-dark(var(--md-sys-color-${family}-${legs[0]}), var(--md-sys-color-${family}-${legs[1]}));`

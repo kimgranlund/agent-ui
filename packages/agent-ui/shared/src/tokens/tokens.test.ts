@@ -390,7 +390,8 @@ describe('tokens.css: the 3:1 field-boundary outline role (ADR-0245 Amendment 7)
 // clears 4.5:1 on every elevation plane in both schemes, and the placeholder also on the idle field fill
 // (--md-sys-color-neutral-container-low composited over each plane, T-0560: the 650 light leg read 4.22 over n-200).
 // The active ui-router-link reads --md-sys-color-primary-on-surface-variant (T-0560), because primary-high's dark leg
-// falls under 4.5:1 on n-800. Recomputed from the declared legs.
+// then fell under 4.5:1 on n-800; T-0567 derives primary-high by the same walk (650 / 400 start), so it clears too.
+// Recomputed from the declared legs.
 describe('tokens.css: placeholder and link text inks stay WCAG-AA (T-0557)', () => {
   const AA = 4.5
   const oklchOf = (family: string, stop: string): [number, number, number] => {
@@ -467,13 +468,16 @@ describe('tokens.css: placeholder and link text inks stay WCAG-AA (T-0557)', () 
     expect(w.ratio, `worst cell: ${w.where} = ${w.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
   })
 
-  it('NEGATIVE control: --md-sys-color-primary-high falls under 4.5:1 on dark n-800 (why the active router link moved off it)', () => {
+  it('--md-sys-color-primary-high (selected-row, active-item and soft or ghost button ink) clears 4.5:1 on every elevation plane in BOTH schemes (T-0567)', () => {
     const w = worstOnPlanes('primary-high', 'primary')
-    expect(w.where).toBe('dark primary-400 on n-800')
-    expect(w.ratio).toBeLessThan(AA)
+    expect(w.ratio, `worst cell: ${w.where} = ${w.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
   })
 
-  it('the placeholder and link legs are a fixed point of wrap-pack.ts repointText (one derivation rule with the theme packs)', () => {
+  it('NEGATIVE control: the stock primary-high dark leg (400) falls under 4.5:1 on dark n-800 (why T-0567 walked it)', () => {
+    expect(contrast(gammaOf('primary', '400'), gammaOf('neutral', '800'))).toBeLessThan(AA)
+  })
+
+  it('the placeholder, link and primary-high legs are a fixed point of wrap-pack.ts repointText (one derivation rule with the theme packs)', () => {
     expect(repointText(css)).toBe(css)
   })
 
