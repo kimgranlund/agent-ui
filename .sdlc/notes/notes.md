@@ -1192,7 +1192,7 @@
 
 ## T-0543: A standing browser test proves no control leaks listeners, observers, intervals or popovers after removal (2026-10-28)
 
-- decide: packages/agent-ui/app/src/leak-gate.browser.test.ts: ui-agent-admin is excluded from the app gate (host listener count drifts 1052 to 1133 between rounds); a follow-up could settle whether that is late render or a stack.
+- decide: packages/agent-ui/app/src/leak-gate.browser.test.ts: ui-agent-admin is excluded from the app gate (host listener count drifts 1052 to 1133 between rounds); a follow-up could settle whether that is late render or a stack. -> fixed T-0562: the leak gate covers ui-agent-admin by settling its lazy editors before counting (triage 2026-10-29)
 - note: the ResizeObserver loop console errors are noisy in the run output but do not fail the suite.
 
 ## T-0546: A2UI catalog conformance sweep: catalog components and props against renderer factories (2026-10-28)
@@ -1201,7 +1201,7 @@
 
 ## T-0538: Range controls and overlays behave correctly under dir=rtl (2026-10-28)
 
-- decide: packages/agent-ui/app/src/controls/conversation/conversation-composer.ts:1329 and :1572 call `computePosition` without the new `rtl` argument, so the composer's two popups stay physical under rtl. The ticket Context names them in the fan-out, but its proposed scope excludes the app package and no criterion covers them; the builder disclosed it. Worth a follow-up ticket.
+- decide: packages/agent-ui/app/src/controls/conversation/conversation-composer.ts:1329 and :1572 call `computePosition` without the new `rtl` argument, so the composer's two popups stay physical under rtl. The ticket Context names them in the fan-out, but its proposed scope excludes the app package and no criterion covers them; the builder disclosed it. Worth a follow-up ticket. -> fixed T-0561: both composer popups pass the rtl argument to computePosition (triage 2026-10-29)
 - note: packages/agent-ui/components/src/traits/overlay.ts header comments (lines 1-27) carry pre-existing em dashes outside this diff.
 - note: WebKit's native range does not mirror arrow keys under rtl (builder measured), so native key parity is asserted in Chromium only and the mirrored mapping in both engines; the shipped behavior follows Chromium and the spec of the handoff.
 
@@ -1217,18 +1217,18 @@
 
 ## T-0553: Media sources accept only allowed schemes, and the dev proxy checks request origin (2026-10-28)
 
-- decide: packages/agent-ui/a2ui/src/catalog/catalog.json: decide: the default catalog's media PropDefs (Image.src, Avatar.src, Video.src/poster, AudioPlayer.src, ProductCard.image) still carry no format, so the static validator admits any string and only the render-time gate denies; findings.md Medium 1 proposed a format too, and `safe-href` does not fit (it rejects data: and admits mailto:), so a media-specific validator format is a follow-up.
-- decide: packages/agent-ui/components/src/controls/text/media-src.ts:44: note: with an origin allowlist set, `data:` and `blob:` sources always pass (by design, they fetch nothing remote); the browser shards that render `data:` media were not run here and the land gate covers them.
+- decide: packages/agent-ui/a2ui/src/catalog/catalog.json: decide: the default catalog's media PropDefs (Image.src, Avatar.src, Video.src/poster, AudioPlayer.src, ProductCard.image) still carry no format, so the static validator admits any string and only the render-time gate denies; findings.md Medium 1 proposed a format too, and `safe-href` does not fit (it rejects data: and admits mailto:), so a media-specific validator format is a follow-up. -> fixed T-0563: the default catalog's media props declare format media-src (triage 2026-10-29)
+- decide: packages/agent-ui/components/src/controls/text/media-src.ts:44: note: with an origin allowlist set, `data:` and `blob:` sources always pass (by design, they fetch nothing remote); the browser shards that render `data:` media were not run here and the land gate covers them. -> stale, informational: by-design data: and blob: pass, nothing owed (triage 2026-10-29)
 
 ## T-0558: Secondary text leaves the neutral fill role, dark primary-high text meets AA, and the super-shell scrim uses the backdrop token (2026-10-28)
 
-- decide: `super-shell.css:55` the overlay scrim goes from 0.32 to 0.8 alpha to match ui-modal, as the Goal asks. The builder asks Kim to look at `shots/after/super-shell-scrim-*.png`.
+- decide: `super-shell.css:55` the overlay scrim goes from 0.32 to 0.8 alpha to match ui-modal, as the Goal asks. The builder asks Kim to look at `shots/after/super-shell-scrim-*.png`. -> fixed T-0558: the scrim now reads ui-modal's dialog-backdrop role (triage 2026-10-29)
 - note: `.sdlc/AGENTS.md` and `.sdlc/tickets/roadmap.md` modifications in the lane tree are not part of this ticket's diff and should not be committed with it.
 
 ## T-0552: The A2UI renderer applies only catalog-declared props to rendered elements (2026-10-28)
 
-- decide: packages/agent-ui/a2ui/src/renderer/widget.ts:169-174: note: a catalog entry with factories but no `catalog.components` def (the stub-catalog carve-out, `componentDef === undefined`) stays unconstrained, as the findings' proposed fix specified; every shipped catalog carries defs, so this only matters for a host-registered factory-only catalog.
-- decide: packages/agent-ui/a2ui/src/renderer/renderer.test.ts:436: fix-now: `querySelector('[data-part="aria-label"]')?.textContent ?? ''` then `.not.toContain('Party size')` passes whether the undeclared label was skipped or the span is simply absent, so the line no longer discriminates; assert the `ui-select` element's `label` property is empty instead (or assert the span is non-null before the not-contains). The case still asserts the `VALIDATION_FAILED` error at `root.label`, and the T-0552 declared-props tests carry the real negative control.
+- decide: packages/agent-ui/a2ui/src/renderer/widget.ts:169-174: note: a catalog entry with factories but no `catalog.components` def (the stub-catalog carve-out, `componentDef === undefined`) stays unconstrained, as the findings' proposed fix specified; every shipped catalog carries defs, so this only matters for a host-registered factory-only catalog. -> stale, informational: the stub-catalog carve-out is by design, every shipped catalog carries defs (triage 2026-10-29)
+- decide: packages/agent-ui/a2ui/src/renderer/renderer.test.ts:436: fix-now: `querySelector('[data-part="aria-label"]')?.textContent ?? ''` then `.not.toContain('Party size')` passes whether the undeclared label was skipped or the span is simply absent, so the line no longer discriminates; assert the `ui-select` element's `label` property is empty instead (or assert the span is non-null before the not-contains). The case still asserts the `VALIDATION_FAILED` error at `root.label`, and the T-0552 declared-props tests carry the real negative control. -> T-0573 finding G1, real: the aria-label assertion is still non-discriminating on main, proposed ticket pending Kim (triage 2026-10-29)
 
 ## T-0557: Placeholders and links meet AA contrast, and ui-pagination marks the current page in forced colors (2026-10-28)
 
@@ -1241,14 +1241,14 @@
 
 ## T-0528: The size cluster is re-derived with a gated slider row, and router, code/editor, a2ui, a2a, icons and devtools get budgeted rows (2026-10-28)
 
-- fix-now: scripts/measure-size.mjs:348 a stray `if (packageEntryOver) console.error(...)` sits inside the MIN_CONTROL_ENTRIES failure block, before `let packageEntryOver` (line 1113), so that path would throw a TDZ ReferenceError instead of printing; delete the line (the real one is at the end of the file).
+- fix-now: scripts/measure-size.mjs:348 a stray `if (packageEntryOver) console.error(...)` sits inside the MIN_CONTROL_ENTRIES failure block, before `let packageEntryOver` (line 1113), so that path would throw a TDZ ReferenceError instead of printing; delete the line (the real one is at the end of the file). -> T-0573 finding G2, real: the stray console.error is still on main (now measure-size.mjs:467, before the let at :1247), proposed ticket pending Kim (triage 2026-10-29)
 - note: `node scripts/measure-size.mjs` still exits 1 on rows owned by T-0525 and T-0522 (barrel, per-control marginal, @agent-ui/app, and code/markdown red at HEAD too); no criterion asks for exit 0.
 - note: a2ui `.` and `./agent` pins carry about 1% headroom (61184 vs 60508, 86784 vs 86257) under the ceil-256 plus 512 B rule, as the builder reported.
 
 ## T-0562: The leak gate covers ui-agent-admin (2026-10-28)
 
 - note: `leak-gate.browser.test.ts` settle arm waits 1.5 s quiet window per mount round for ui-agent-admin; the solo's open item (about 106 listeners per round on detached CodeMirror nodes outside the host, GC reclaim unmeasured) is not covered by the gate and is not claimed by any criterion.
-- decide: redck deviations: no `process deviation:` lines printed.
+- decide: redck deviations: no `process deviation:` lines printed. -> stale, informational: a no-deviation report, nothing owed (triage 2026-10-29)
 
 ## T-0539: Arrow keys and directional glyphs flip under dir=rtl (2026-10-28)
 
@@ -1263,8 +1263,8 @@
 
 ## T-0554: Hardening batch: payload regex cap, frame bridge source check, harness proxy URL, worker limiter, icon pack note (2026-10-28)
 
-- fix-now: `packages/agent-ui/a2ui/src/catalog/regex-guard.ts:6` says the two length caps bound whatever the structural rule misses; measured `^a*a*a*a*b$` at 529 ms on 200 chars (polynomial toward the 1024 cap), so reword to "bound the cost of simple patterns".
-- decide: sequential unbounded quantifiers (`a*a*a*a*b`) and overlapping alternation (`(a|aa)+`, 99 ms at 35 chars) pass `hasNestedQuantifier`; whether a count cap on unbounded quantifiers per pattern is worth a follow-up.
+- fix-now: `packages/agent-ui/a2ui/src/catalog/regex-guard.ts:6` says the two length caps bound whatever the structural rule misses; measured `^a*a*a*a*b$` at 529 ms on 200 chars (polynomial toward the 1024 cap), so reword to "bound the cost of simple patterns". -> T-0573 finding G3, real: the regex-guard header comment still overstates what the length caps bound (hardening), proposed ticket pending Kim (triage 2026-10-29)
+- decide: sequential unbounded quantifiers (`a*a*a*a*b`) and overlapping alternation (`(a|aa)+`, 99 ms at 35 chars) pass `hasNestedQuantifier`; whether a count cap on unbounded quantifiers per pattern is worth a follow-up. -> T-0573 finding G3, real: whether to cap unbounded quantifiers per pattern is still undecided (hardening), proposed ticket pending Kim (triage 2026-10-29)
 - note: `/__a2ui/agent` now fails closed without `AGENT_RATE_LIMITER`; `wrangler.jsonc` ships the binding so `wrangler deploy` provisions it, but a deploy from an older config leaves `/status` unavailable and POST at 503 on the live demo.
 
 ## T-0559: Theme hygiene: dead fallback colors, a toast shadow token, forced-colors polish (2026-10-29)
@@ -1277,7 +1277,7 @@
 
 ## T-0563: Catalog media props declare a media URL format (2026-10-29)
 
-- decide: packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json:16 `Image.url` (mapsTo `src`) still declares `safe-href`, which admits `mailto:` and rejects `data:`, the opposite of the render gate for a media prop; the handoff names only the default catalog, and the builder disclosed it. A follow-up could move it to `media-src`. The persona and domain catalogs carry no own media props.
+- decide: packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json:16 `Image.url` (mapsTo `src`) still declares `safe-href`, which admits `mailto:` and rejects `data:`, the opposite of the render gate for a media prop; the handoff names only the default catalog, and the builder disclosed it. A follow-up could move it to `media-src`. The persona and domain catalogs carry no own media props. -> fixed T-0565: a2ui-basic Image.url declares media-src (triage 2026-10-29)
 
 ## T-0560: Fields on dim planes, dark active links and theme packs meet AA (2026-10-29)
 
@@ -1299,12 +1299,12 @@
 
 ## T-0529: npm run size gates in check:scripts (2026-10-29)
 
-- decide: scripts/measure-size.mjs:266 overlay budget raised to 2688 on the builder's own reading of the ADR-0197 cl.5 precedent; Kim to confirm the bump or trim overlay.ts.
+- decide: scripts/measure-size.mjs:266 overlay budget raised to 2688 on the builder's own reading of the ADR-0197 cl.5 precedent; Kim to confirm the bump or trim overlay.ts. -> fixed T-0529: the 2688 overlay row is re-based citing Kim's ADR-0197 cl.5 confirmation, the same ruling as T-0525 (triage 2026-10-29)
 - note: in a throwaway worktree with a symlinked node_modules, measure-size also reported app, code/markdown and code/editor OVER; the wave tree reports them within budget, so the result depends on install layout (worktree symlink recipe), worth knowing for lanes that now run check.
 
 ## T-0550: A cart's ConfirmReceipt with a bound quantity ships its AmountPicker (round 17 cluster P5) (2026-10-29)
 
-- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:779 decide: the row emits `SURFACE_MISSING` as the ticket pins, not a `<COMPOSITE>_MISSING` code; the builder reports it therefore gets no T-0299 cross-round bind. No criterion names it and the replay heals in one repair round, so it is left open here, not verified.
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:779 decide: the row emits `SURFACE_MISSING` as the ticket pins, not a `<COMPOSITE>_MISSING` code; the builder reports it therefore gets no T-0299 cross-round bind. No criterion names it and the replay heals in one repair round, so it is left open here, not verified. -> stale, by design: the ticket pins SURFACE_MISSING for this row and the replay heals in one repair round (triage 2026-10-29)
 
 ## T-0565: a2ui-basic Image.url uses the media URL format (2026-10-29)
 
@@ -1336,3 +1336,7 @@
 - note: `packages/agent-ui/a2ui/src/renderer/renderer.ts:29-31` (a code header comment) still says `wireProps` applies every prop key without checking it is declared, which T-0552 made false. It is outside this docs-only scope.
 - note: the builder-reported older drift stays open: a2ui-catalog.spec.md §5.2 and SPEC-R10 AC1 still list Image, Video and AudioPlayer as excluded or without a control, though the default catalog has rows for them with `format: media-src`. It needs a follow-up ticket. T-0565 and T-0550 (PR 2364) had not merged, so those docs are not covered, as the report says.
 - note: added lines contain no em dashes. The per-file em-dash counts only go down (renderer-structural-resend.spec.md 56 to 52).
+
+## T-0573: Unrouted notes follow-ups are triaged, round 2 (2026-10-29)
+
+- note: .sdlc/runtime/tasks/0573-notes-triage-2/0573-solo-L1.md: redck deviations printed no lines; no (red) criteria in this ticket.
