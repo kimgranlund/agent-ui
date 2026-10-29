@@ -795,7 +795,18 @@ const appCssQuerySuffixPlugin = {
 // registry out of the eager closure: measured 57878 B gz marginal (-9542), and the informational lazy-catalog line
 // below grows 6985 -> 12136 B gz. RE-BASED DOWN under ADR-0197 cl.5 (ordinary): 69250 -> 59925 B gz, the measured
 // 57878 B gz plus 2047 B gz headroom.
-const APP_MARGINAL_BUDGET = 59925
+// RE-BASED 2026-10-28 (T-0522, an unattended solo dispatch measured this, NOT a live Kim ruling; flagged for
+// confirmation, the GH #1208 precedent's wording): 59925 -> 62141 B gz. ADR-0197 cl.5 closes upward drift bumps,
+// so this is booked as reviewed feature weight, attributed commit by commit over `git archive` trees (tsconfig
+// included, since `verbatimModuleSyntax` keeps text-field's static ui-swatch import): 57936 at 92dfd1a0b (the
+// re-base above) -> 61117 on main@7ec42c18. The movers: 1546ed040 the ADR-0245 foundations cut (+692, ui-glyph
+// and its paths join the eager controls), 7932b6f50 T-0081 renderer action forwarding (+162), 76ba06d15 T-0129
+// slider snap (+100), 4bece84ea T-0135 the text-field date input (+423), a14d176f3 T-0202 multi-domain catalog
+// ids (+472, catalog-id.ts in the renderer; the commit that crossed the line, 59636 -> 60108), 12dbb2083 Lane D
+// (+270, the renderer's component-merge.ts), and ~1060 B of small renderer, composer and menu steps after them.
+// Every new eager module is imported by the renderer or a control that renders eagerly; no stray barrel import
+// was found to cut. The measured 61117 B gz plus 1024 B gz headroom.
+const APP_MARGINAL_BUDGET = 62141
 const appInput = fileURLToPath(new URL('../packages/agent-ui/app/src/index.ts', import.meta.url))
 const appBundle = await rolldown({ input: appInput, plugins: [appCssQuerySuffixPlugin] })
 const { output: appOutput } = await appBundle.generate({ format: 'esm', minify: true })
