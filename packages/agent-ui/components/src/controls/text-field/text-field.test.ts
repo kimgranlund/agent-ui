@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest'
 import { signal, effect, inspect, whenFlushed, type Signal } from '@agent-ui/components'
 import { UITextFieldElement } from './text-field.ts'
 import { currencySymbol, unitLabel } from '../../traits/value-codec.ts'
@@ -1788,6 +1788,23 @@ function openColorPickerPopup(el: Element): HTMLElement {
 }
 
 describe('ui-text-field type=color — swatch affordance + codec + typeMismatch (ADR-0123 LLD-C9)', () => {
+  // T-0527: the codec and ui-swatch load lazily on the first color use. This runs FIRST in the file's color
+  // block, so the kit is still loading when the blur lands; the verdict must arrive once it does. It also
+  // leaves the kit loaded, so the synchronous probes below see the codec as an eager import would.
+  it('a blur before the lazy color kit lands is still validated once it arrives (T-0527)', async () => {
+    const { el, editor } = makeTyped('color')
+    expect(customElements.get('ui-swatch'), 'anti-vacuous: the kit must still be loading when the blur lands').toBeUndefined()
+    expect(el.querySelector('[data-part="swatch-button"] ui-swatch'), 'the preview exists before the kit lands').not.toBeNull()
+    el.value = 'not-a-color'
+    editor.textContent = 'not-a-color'
+    editor.dispatchEvent(new Event('blur'))
+    await vi.waitFor(() => expect(el.formValidityProbe().valid).toBe(false), { timeout: 5000 })
+    const verdict = el.formValidityProbe()
+    if (!verdict.valid) expect(verdict.flags).toEqual({ typeMismatch: true })
+    expect(customElements.get('ui-swatch'), 'the kit registered ui-swatch on arrival').toBeDefined()
+    el.remove()
+  })
+
   it('has a trailing swatch affordance (data-role=swatch) containing a composed ui-swatch', async () => {
     const { el } = makeTyped('color')
     await whenFlushed()

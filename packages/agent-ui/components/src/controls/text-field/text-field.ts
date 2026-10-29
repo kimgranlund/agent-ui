@@ -47,7 +47,7 @@
 // associates.
 
 import { prop, type PropsSchema, type ReactiveProps } from '../../dom/index.ts'
-import { untracked } from '../../reactive/index.ts'
+import { signal, untracked } from '../../reactive/index.ts'
 import { UIFormElement, type FormValue, type ValidityResult, type FieldLabelling } from '../../dom/form.ts'
 import { trackUserInvalid, type TrackUserInvalidController } from '../../traits/track-user-invalid.ts'
 import {
@@ -62,15 +62,24 @@ import {
   type ValueCodecController,
 } from '../../traits/value-codec.ts'
 import { overlay, type OverlayHandle } from '../../traits/overlay.ts'
-// ADR-0123 LLD-C9 — the color codec (pure, zero-DOM; color.ts is import-free) reused verbatim by the
-// type=color leg. NOT the color-picker.ts CONTROL itself (that stays a LAZY dynamic import, below, so a
-// type=text field ships no picker bytes — the tree-shake proof, SPEC-R11 AC1). ui-swatch IS imported
-// statically (a tiny, zero-dep Display-class leaf, not the picker's pad/canvas/codec machinery) so the
-// trailing swatch-button preview renders immediately, before the lazy picker has ever loaded.
-import { colorCodecOptions } from '../color-picker/color.ts'
-import { UISwatchElement } from '../swatch/swatch.ts'
+// ADR-0123 LLD-C9, the type=color leg: the color codec (color.ts) and ui-swatch load together from
+// `./text-field-color.ts` on first color use (T-0527), so a field that never takes type=color ships neither.
+// The color-picker.ts CONTROL is a separate LAZY dynamic import, below, on the swatch button's first click
+// (the tree-shake proof, SPEC-R11 AC1). The swatch-button preview is created synchronously as a plain
+// `<ui-swatch>` and upgrades in place when the kit registers it (a pre-upgrade `.color` replays, dom/element.ts).
 import { setIcon } from '@agent-ui/icons'
 import { createGlyph } from '../glyph/glyph.ts' // the clear and stepper marks are library marks, pictorial icons stay setIcon (ADR-0245 cl.5, T-0351)
+
+// The swatch-button preview, typed structurally: no import of swatch.ts at all here, not even `import type`,
+// so the static graph stays swatch-free (T-0527).
+type SwatchPreview = HTMLElement & { color: string }
+
+// T-0527: the type=color kit (color codec + ui-swatch), loaded once on first color use by any field.
+type ColorKit = typeof import('./text-field-color.ts')
+let colorKit: ColorKit | null = null
+let colorKitLoad: Promise<ColorKit> | null = null
+const loadColorKit = (): Promise<ColorKit> =>
+  (colorKitLoad ??= import('./text-field-color.ts').then((kit) => (colorKit = kit)))
 
 // The editor's editable mode (ADR-0014 cl.1) and a per-instance id seed for aria-describedby.
 const EDITABLE = 'plaintext-only'
@@ -184,6 +193,9 @@ export class UITextFieldElement extends UIFormElement {
   // The active value-codec controller for number/currency/unit/percent types. Null for all other types.
   // formValue() returns codec.canonical.value when set; formValidity() checks codec.hasError.
   #codec: ValueCodecController | null = null
+  // T-0527: bumped when the lazy type=color codec lands, so formValue()/formValidity() (which read the plain
+  // #codec field) re-run and start tracking the new codec's signals.
+  readonly #codecInstalled = signal(0)
 
   // Password reveal state: tracks whether -webkit-text-security is suppressed.
   // Drives :state(revealed) on internals and aria-pressed on the reveal button.
@@ -192,7 +204,7 @@ export class UITextFieldElement extends UIFormElement {
   // ADR-0123 LLD-C9 — the type=color swatch-button's composed ui-swatch preview, for the CURRENT type-effect
   // run only (torn down on type change/disconnect via the effect cleanup, the calendar-popup precedent).
   // The model→surface effect below keeps its `value` synced to `this.value`.
-  #colorSwatchPreview: UISwatchElement | null = null
+  #colorSwatchPreview: SwatchPreview | null = null
 
   // T-0135: the type=date editor keys (Enter / Alt+ArrowDown open the calendar, Escape closes it), set by the
   // type-effect's date branch for its run only. Returns true when it handled the key.
@@ -532,8 +544,8 @@ export class UITextFieldElement extends UIFormElement {
       // Codec: number/currency/unit/percent get the numeric display↔canonical split (ADR-0047).
       // date/time get the locale display↔ISO-canonical split (ADR-0048). color gets the hex/oklch
       // display↔canonical split (ADR-0123, reusing colorCodecOptions verbatim — the standalone control's
-      // own dialect). typeAc.signal is passed so the codec's focus/blur listeners die on the NEXT type
-      // change (the M1-fix seam). Local variable captures config.codec so TypeScript can narrow the
+      // own dialect), built below once the lazy color kit loads (T-0527). typeAc.signal is passed so the
+      // codec's focus/blur listeners die on the NEXT type change (the M1-fix seam). Local variable captures config.codec so TypeScript can narrow the
       // literal union correctly through the ternary chain (narrowing through `config.codec` on a union
       // config type is fragile).
       const codecKind = config.codec
@@ -548,10 +560,40 @@ export class UITextFieldElement extends UIFormElement {
                 ? valueCodec(this, { ...dateCodecOptions(), formatOnWrite: true }, typeAc.signal) // T-0135: an ISO write shows as the locale date
                 : codecKind === 'time'
                   ? valueCodec(this, timeCodecOptions(), typeAc.signal)
-                  : codecKind === 'color'
-                    ? valueCodec(this, colorCodecOptions(this.format ?? 'hex'), typeAc.signal)
-                    : null
+                  : null
       this.#codec = codec
+
+      // type=color (T-0527): the codec arrives with the lazy color kit. Reading this.format here keeps the
+      // effect reactive to format ONLY for type=color (the currency/unit precedent); the kit's codec is
+      // built once it resolves, unless this type run was torn down first. An edit the codec missed while
+      // loading (a blur, or a value write) is parsed on arrival, so the verdict matches an eager codec.
+      // Once the kit has loaded (any field, first use), every later color run builds its codec synchronously.
+      let colorCodec: ValueCodecController | null = null
+      if (codecKind === 'color') {
+        const format = this.format ?? 'hex'
+        if (colorKit !== null) {
+          colorCodec = valueCodec(this, colorKit.colorCodecOptions(format), typeAc.signal)
+          this.#codec = colorCodec
+        } else {
+          const seed = untracked(() => this.value)
+          let focused = false
+          let blurred = false
+          editor.addEventListener('focus', () => { focused = true }, { signal: typeAc.signal })
+          editor.addEventListener('blur', () => { focused = false; blurred = true }, { signal: typeAc.signal })
+          void loadColorKit().then((kit) => {
+            if (typeAc.signal.aborted) return
+            const opts = kit.colorCodecOptions(format)
+            colorCodec = valueCodec(this, opts, typeAc.signal)
+            this.#codec = colorCodec
+            // An emptied unfocused value is known-good, as the codec's own unfocused-write resync treats it.
+            if (!focused && (blurred || (this.value !== seed && this.value !== ''))) {
+              colorCodec.commit()
+              if (blurred && !colorCodec.hasError.value) this.value = opts.format(colorCodec.canonical.value) // the blur's reformat
+            }
+            this.#codecInstalled.value++
+          })
+        }
+      }
 
       // Clear reveal state on type change so switching away from 'password' doesn't leave ghost state.
       if (type !== 'password') {
@@ -571,6 +613,7 @@ export class UITextFieldElement extends UIFormElement {
         this.#colorSwatchPreview = null
         this.#calendarKeys = null
         codec?.release()
+        colorCodec?.release()
         this.#codec = null
       }
     })
@@ -692,6 +735,7 @@ export class UITextFieldElement extends UIFormElement {
   protected formValue(): FormValue {
     // An empty display is an empty value at once (T-0135): a programmatic clear must not submit the last
     // canonical until the codec's resync catches up on the next flush.
+    this.#codecInstalled.value // tracked: re-run once the lazy color codec lands (T-0527)
     if (this.#codec !== null && this.value === '') return ''
     return this.#codec?.canonical.value ?? this.value
   }
@@ -720,6 +764,7 @@ export class UITextFieldElement extends UIFormElement {
     const type = this.type
 
     // Codec parse error: hasError is set by the valueCodec controller on blur (all codec types).
+    this.#codecInstalled.value // tracked: re-run once the lazy color codec lands (T-0527)
     // date/time/color → typeMismatch (the platform validity flag for wrong-format entry — ADR-0048/ADR-0123);
     // numeric types → customError (a free-form parse failure, not a native input-type mismatch).
     if (this.#codec?.hasError.value) {
@@ -976,7 +1021,7 @@ export class UITextFieldElement extends UIFormElement {
       btn.setAttribute('data-part', 'swatch-button')
       btn.setAttribute('aria-label', 'Open color picker')
       btn.setAttribute('aria-haspopup', 'dialog')
-      const swatchPreview = document.createElement('ui-swatch') as UISwatchElement
+      const swatchPreview = document.createElement('ui-swatch') as SwatchPreview
       // untracked: a one-time creation-time seed, not a live binding — a plain read here would make
       // `value` a dependency of the WHOLE type-effect (this call runs synchronously inside its scope),
       // rebuilding the entire adornment/codec/overlay wiring on every keystroke (the bug this untracked()
