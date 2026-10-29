@@ -1,6 +1,10 @@
 // resolve.ts — resolve an IconName to a fresh <svg> + the imperative inject helper (LLD-C3,
 // ADR-0065 clauses 2-3). Zero-dep, jsdom + browser safe: `createElementNS` + `innerHTML = body`
 // parses the body in the SVG namespace (the svg element itself carries the namespace).
+//
+// Trust boundary (T-0554): a body is markup, parsed as such, so packs and `overrideIcon` bodies are
+// trusted code the host installs, never data. A future runtime pack loader must not feed remote or
+// user-supplied strings here; it would need its own sanitizing parse first.
 
 import { iconRegistry, type IconRegistry } from './registry.ts'
 import type { IconName } from './types.ts'

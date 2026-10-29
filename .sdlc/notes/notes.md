@@ -1260,3 +1260,9 @@
 - note: dependents of the changed overlay trait outside the criteria (app conversation-composer, nav-rail, text-field) also pass: `npx vitest run packages/agent-ui/app/src/controls/conversation packages/agent-ui/app/src/controls/nav-rail packages/agent-ui/components/src/controls/text-field packages/agent-ui/components/src/layering.test.ts` exit 0, 12 files, 515 tests.
 - note: criteria #2 and #4 named gate_lock; the queue never granted a slot in 1800 s because of external machine load, so both ran direct. Re-running through the queue when load drops is optional.
 - note: packages/agent-ui/components/src/leak-gate.browser.test.ts status-stream case title ("not re-armed on reconnect with no running entry") is inaccurate, as the builder already flagged; left as is.
+
+## T-0554: Hardening batch: payload regex cap, frame bridge source check, harness proxy URL, worker limiter, icon pack note (2026-10-28)
+
+- fix-now: `packages/agent-ui/a2ui/src/catalog/regex-guard.ts:6` says the two length caps bound whatever the structural rule misses; measured `^a*a*a*a*b$` at 529 ms on 200 chars (polynomial toward the 1024 cap), so reword to "bound the cost of simple patterns".
+- decide: sequential unbounded quantifiers (`a*a*a*a*b`) and overlapping alternation (`(a|aa)+`, 99 ms at 35 chars) pass `hasNestedQuantifier`; whether a count cap on unbounded quantifiers per pattern is worth a follow-up.
+- note: `/__a2ui/agent` now fails closed without `AGENT_RATE_LIMITER`; `wrangler.jsonc` ships the binding so `wrangler deploy` provisions it, but a deploy from an older config leaves `/status` unavailable and POST at 503 on the live demo.

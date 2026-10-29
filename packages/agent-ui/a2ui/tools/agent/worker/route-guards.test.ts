@@ -3,7 +3,8 @@
 // index.ts stays untested in this project (it statically imports the corpus `.jsonl` shard as Wrangler
 // Text, plus `providers.json` and catalog JSON, which only the Wrangler bundle loads).
 import { describe, it, expect } from 'vitest'
-import { isSameOriginRequest, isMountedPath, isValidTurnInput } from './route-guards.ts'
+import { readFileSync } from 'node:fs'
+import { checkRateLimit, isSameOriginRequest, isMountedPath, isValidTurnInput, rateLimiterFrom } from './route-guards.ts'
 
 const ALLOWED = 'https://ui.nonoun.io'
 
@@ -86,5 +87,34 @@ describe('isValidTurnInput — GH #103 pre-first-yield shape guard', () => {
   it('rejects a session whose turns is not an array', () => {
     expect(isValidTurnInput({ kind: 'intent', session: { turns: 'nope' } })).toBe(false)
     expect(isValidTurnInput({ kind: 'intent', session: {} })).toBe(false)
+  })
+})
+
+describe('rate limiting (T-0554)', () => {
+  const allow = { limit: async () => ({ success: true }) }
+
+  it('finds a bound limiter by name and answers undefined for none or a non-binding value', () => {
+    expect(rateLimiterFrom({ AGENT_RATE_LIMITER: allow }, 'AGENT_RATE_LIMITER')).toBe(allow)
+    expect(rateLimiterFrom({}, 'AGENT_RATE_LIMITER')).toBeUndefined()
+    expect(rateLimiterFrom({ AGENT_RATE_LIMITER: 'not-a-binding' }, 'AGENT_RATE_LIMITER')).toBeUndefined()
+  })
+
+  it('no limiter is unbound; a spent window is limited, keyed by cf-connecting-ip', async () => {
+    expect(await checkRateLimit(req(), undefined)).toBe('unbound')
+    const keys: string[] = []
+    const refuse = { limit: async ({ key }: { key: string }) => (keys.push(key), { success: false }) }
+    expect(await checkRateLimit(req({ 'cf-connecting-ip': '203.0.113.7' }), refuse)).toBe('limited')
+    expect(keys).toEqual(['203.0.113.7'])
+    expect(await checkRateLimit(req(), allow)).toBe('ok')
+  })
+
+  it('wrangler.jsonc binds AGENT_RATE_LIMITER at 20 turns per 60 s (ADR-0152)', () => {
+    const raw = readFileSync(new URL('../../../../../../wrangler.jsonc', import.meta.url), 'utf8')
+    const wrangler = JSON.parse(raw.split('\n').filter((l) => !l.trim().startsWith('//')).join('\n')) as {
+      ratelimits: Array<{ name: string; namespace_id: string; simple: { limit: number; period: number } }>
+    }
+    const agent = wrangler.ratelimits.find((r) => r.name === 'AGENT_RATE_LIMITER')
+    expect(agent?.simple).toEqual({ limit: 20, period: 60 })
+    expect(new Set(wrangler.ratelimits.map((r) => r.namespace_id)).size).toBe(wrangler.ratelimits.length)
   })
 })

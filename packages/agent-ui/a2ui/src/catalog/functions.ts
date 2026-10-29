@@ -16,7 +16,10 @@
 // return arbitrary values — not the `{valid, message?}` shape. The binding-eval consumer always
 // treats the result as `unknown` via `checkPassed`, so the widening does not change behavior.
 //
-// Zero dependencies: no imports. Bottom-of-stack; renderer imports downward (renderer → catalog).
+// Zero dependencies: one sibling import (regex-guard.ts, itself import-free). Bottom-of-stack; renderer
+// imports downward (renderer → catalog).
+
+import { guardedRegexTest } from './regex-guard.ts'
 
 /** The return shape of every catalog function (the `{valid, message?}` check result). */
 export interface FunctionResult {
@@ -56,16 +59,18 @@ export function email(args: NamedArgs): FunctionResult {
  * `regex` — validates that `args.value` matches `args.pattern` (a JS-compatible regex string).
  * Non-string value or pattern passes silently (type contract is the prop's `type` schema, not this
  * function's job). A malformed pattern yields `{valid:false}` with an explanatory message rather
- * than throwing, so a bad pattern in the catalog does not break the entire widget.
+ * than throwing, so a bad pattern in the catalog does not break the entire widget. Evaluation runs
+ * through `guardedRegexTest` (regex-guard.ts): an over-cap or refused pattern reads as malformed, and an
+ * over-cap value is invalid.
  */
 export function regex(args: NamedArgs): FunctionResult {
   const { value, pattern } = args
   if (typeof value !== 'string' || typeof pattern !== 'string') return { valid: true }
-  try {
-    return new RegExp(pattern).test(value) ? { valid: true } : { valid: false, message: `Must match pattern` }
-  } catch {
-    return { valid: false, message: `Invalid pattern: ${String(pattern)}` }
-  }
+  const result = guardedRegexTest(pattern, value)
+  if (result === 'match') return { valid: true }
+  if (result === 'no-match') return { valid: false, message: `Must match pattern` }
+  if (result === 'too-long') return { valid: false, message: `Value too long to check` }
+  return { valid: false, message: `Invalid pattern: ${String(pattern)}` }
 }
 
 /**

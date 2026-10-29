@@ -63,8 +63,9 @@ export type HarnessFetch = (
 }>
 
 export interface DevtoolsHarnessOptions {
-  /** The dev-proxy mount the live backend targets over HTTP. Default: same-origin via the incoming
-   *  request's own Host header (`http://<host>/__a2ui/agent`) — the origin the client already reached. */
+  /** The dev-proxy mount the live backend targets over HTTP. Default: this server's own bound address,
+   *  read from the accepted socket (`http://<local address>:<local port>/__a2ui/agent`), never from a
+   *  request header (`defaultProxyUrl`). */
   proxyUrl?: string
   /** Injected fetch (live turns + availability probes); defaults to `globalThis.fetch`. */
   fetch?: HarnessFetch
@@ -189,6 +190,19 @@ export function seamPeerTransport(
 }
 
 /**
+ * The default live-backend target: the address and port this server accepted the request on, which the
+ * request cannot choose. An IPv6 address is bracketed; no socket address (a fabricated request) falls back
+ * to `localhost` with no port.
+ */
+export function defaultProxyUrl(req: IncomingMessage): string {
+  const address = req.socket?.localAddress
+  const port = req.socket?.localPort
+  if (typeof address !== 'string' || address === '' || typeof port !== 'number') return `http://localhost${DEFAULT_PROXY_MOUNT}`
+  const host = address.includes(':') ? `[${address}]` : address
+  return `http://${host}:${port}${DEFAULT_PROXY_MOUNT}`
+}
+
+/**
  * The connect handler behind the plugin — exported separately so the route suite drives it with
  * fabricated req/res (the dev-proxy test idiom; the SAME function `configureServer` mounts).
  * Routes (SPEC-R6): `GET /status` · `POST /turn` · `GET /captures` · `POST /captures` ·
@@ -201,7 +215,7 @@ export function createDevtoolsMiddleware(opts?: DevtoolsHarnessOptions): (req: I
   return (req: IncomingMessage, res: ServerResponse) => {
     void (async () => {
       const url = req.url ?? '/'
-      const proxyUrl = opts?.proxyUrl ?? `http://${req.headers.host ?? 'localhost'}${DEFAULT_PROXY_MOUNT}`
+      const proxyUrl = opts?.proxyUrl ?? defaultProxyUrl(req)
       try {
         // GET /status — the backend availability rows (SPEC-R6): one source with the page's switcher.
         if (req.method === 'GET' && url.startsWith('/status')) {

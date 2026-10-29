@@ -151,6 +151,26 @@ describe('BOOTSTRAP_SCRIPT — the frame-side bridge home (SPEC §2 Bootstrap)',
     expect(BOOTSTRAP_SCRIPT).toContain("postMessage(msg, '*')")
   })
 
+  it('applies host context only from window.parent, never from another sender', () => {
+    const root = document.documentElement
+    root.style.removeProperty('--bridge-probe')
+    const sent: unknown[] = []
+    const realPost = window.postMessage
+    window.postMessage = ((msg: unknown) => sent.push(msg)) as typeof window.postMessage
+    try {
+      new Function(BOOTSTRAP_SCRIPT)()
+      const msg = { type: 'host-context-changed', tokens: { '--bridge-probe': 'other' } }
+      window.dispatchEvent(new MessageEvent('message', { data: msg, source: null }))
+      expect(root.style.getPropertyValue('--bridge-probe')).toBe('')
+      // jsdom's top window is its own parent, so `source: window` is the host sender here.
+      window.dispatchEvent(new MessageEvent('message', { data: { ...msg, tokens: { '--bridge-probe': 'host' } }, source: window }))
+      expect(root.style.getPropertyValue('--bridge-probe')).toBe('host')
+    } finally {
+      window.postMessage = realPost
+      root.style.removeProperty('--bridge-probe')
+    }
+  })
+
   it('never references a raw eval/tools-call-shaped channel', () => {
     expect(BOOTSTRAP_SCRIPT).not.toContain('eval(')
     expect(BOOTSTRAP_SCRIPT).not.toContain('tools/call')

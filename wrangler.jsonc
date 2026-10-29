@@ -38,5 +38,11 @@
 	// visitor IP per minute (counted per Cloudflare location). The route FAILS CLOSED without this binding:
 	// `/status` reports unavailable and POST answers 503. The ADR-0152 zone Rate Limiting Rule covers only
 	// `/__a2ui/agent`, so until it is extended in the dashboard this binding is the arena's only throttle.
-	"ratelimits": [{ "name": "ARENA_RATE_LIMITER", "namespace_id": "4300", "simple": { "limit": 1, "period": 60 } }]
+	// T-0554: `/__a2ui/agent` also carries its own binding, so its cap lives in the repo beside the dashboard
+	// rule (the same 20 turns per visitor IP per minute, ADR-0152). Its POST routes and `/status` fail closed
+	// without it, as the arena does.
+	"ratelimits": [
+		{ "name": "ARENA_RATE_LIMITER", "namespace_id": "4300", "simple": { "limit": 1, "period": 60 } },
+		{ "name": "AGENT_RATE_LIMITER", "namespace_id": "4301", "simple": { "limit": 20, "period": 60 } }
+	]
 }

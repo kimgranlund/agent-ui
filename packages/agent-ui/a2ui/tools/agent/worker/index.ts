@@ -27,7 +27,7 @@ import { loadCatalog } from '../../../src/catalog/catalog.ts'
 import type { Catalog } from '../../../src/catalog/catalog.ts'
 import type { TurnInput, Effort } from '../../../src/agent/agent-transport.ts'
 import { buildToolDispatch, listIntegrations, resolveIntegrations } from '../integrations/index.ts'
-import { isSameOriginRequest, isMountedPath, isValidTurnInput, readBodyCapped } from './route-guards.ts'
+import { checkRateLimit, isSameOriginRequest, isMountedPath, isValidTurnInput, rateLimiterFrom, readBodyCapped } from './route-guards.ts'
 import { arenaLimiterFrom, handleArenaRequest } from './arena-route.ts'
 import { projectEnv } from './env-projection.ts'
 // GH #108 (review finding): validateMode/isChatBody/EFFORT_VALUES/resolveChatDispatch used to be
@@ -82,6 +82,11 @@ const CHAT_HEARTBEAT_MS = 1000 // the `/chat` heartbeat interval (T-0444, see ha
 // isSameOriginRequest) blocks every drive-by/cross-site trigger while leaving the site's own same-origin
 // fetches (which always send one or the other) untouched.
 const ALLOWED_ORIGIN = 'https://ui.nonoun.io'
+// T-0554: the header gate above stops browsers, not scripted clients, so both POST routes also take one
+// turn from the `AGENT_RATE_LIMITER` binding (wrangler.jsonc), keyed by visitor IP, before any body read.
+// No binding fails closed: `/status` reports unavailable and a POST answers 503, as the arena route does.
+const AGENT_LIMITER = 'AGENT_RATE_LIMITER'
+const AGENT_RATE_WINDOW_S = 60 // wrangler.jsonc's `simple.period`
 
 const config = providersConfigRaw as ProvidersConfig
 validateProvidersConfig(config) // fail fast at cold start, same as loadConfig()'s boot check in dev
@@ -119,8 +124,8 @@ function envVars(env: Env): Record<string, string | undefined> {
   return projectEnv(env, Object.values(config.providers), listIntegrations())
 }
 
-function json(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
+function json(status: number, body: unknown, headers: Record<string, string> = {}): Response {
+  return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } })
 }
 
 // GH #111: the body cap is enforced WHILE reading (`readBodyCapped`, route-guards.ts, shared with the arena
@@ -133,6 +138,7 @@ function readBody(request: Request): Promise<string> {
 // non-empty-string check only) — now a live, TTL-cached round-trip (`validateProviderKeyCached`, the
 // SAME dispatch the dev proxy uses) confirms the key actually authenticates before counting it.
 async function handleStatus(env: Env): Promise<Response> {
+  if (rateLimiterFrom(env, AGENT_LIMITER) === undefined) return json(200, { available: false, providers: 0 })
   const env2 = envVars(env)
   const checks = await Promise.all(
     Object.entries(config.providers)
@@ -450,6 +456,11 @@ export default {
       if (request.method === 'GET' && sub.startsWith('/status')) return await handleStatus(env)
       // Both POST routes dispatch a real, billed LLM call — gate BEFORE any body is read (GH #101).
       if (request.method === 'POST' && !isSameOriginRequest(request, ALLOWED_ORIGIN)) return json(403, { error: 'forbidden-origin' })
+      if (request.method === 'POST') {
+        const rate = await checkRateLimit(request, rateLimiterFrom(env, AGENT_LIMITER))
+        if (rate === 'unbound') return json(503, { error: 'live agent unavailable' })
+        if (rate === 'limited') return json(429, { error: 'rate-limited' }, { 'retry-after': String(AGENT_RATE_WINDOW_S) })
+      }
       if (request.method === 'POST' && sub.startsWith('/chat')) return await handleChat(request, env)
       if (request.method === 'POST') return await handleProduce(request, env)
       return new Response(null, { status: 404 })
