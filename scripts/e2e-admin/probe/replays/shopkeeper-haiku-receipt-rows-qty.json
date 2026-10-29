@@ -1,0 +1,398 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "shopkeeper-haiku-receipt-rows-qty",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-29.jsonl:153,2026-10-29.jsonl:154 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "What lamps do you have?"
+    },
+    {
+      "say": "Add two of the first one to my order and show me my cart."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are our lamps. Prices and stock are illustrative demo values.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are our lamps. Prices and stock are illustrative demo values.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":50501,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":783}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"storefront-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"tiles\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"tiles\",\"component\":\"Row\",\"wrap\":true,\"gap\":\"md\",\"children\":[\"p_brass\",\"p_oak\",\"p_ceramic\",\"p_paper\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, 180 cm\",\"price\":\"$189\",\"badge\":\"New\",\"badgeIntent\":\"success\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"brass-arc-floor-lamp\",\"price\":189}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak and Linen Table Lamp\",\"subtitle\":\"Oak base, linen shade, 45 cm\",\"price\":\"$96\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"oak-linen-table-lamp\",\"price\":96}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Sage Glaze Ceramic Lamp\",\"subtitle\":\"Hand-thrown stoneware, 38 cm\",\"price\":\"$68\",\"badge\":\"Sale\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"sage-glaze-ceramic-lamp\",\"price\":68}}},{\"id\":\"p_paper\",\"component\":\"ProductCard\",\"title\":\"Washi Paper Pendant\",\"subtitle\":\"Washi paper, cotton cord, 40 cm\",\"price\":\"$42\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"disabled\":true,\"actionLabel\":\"Sold out\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"washi-paper-pendant\",\"price\":42}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here are our lamps. Prices and stock are illustrative demo values.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are the lamps we have in the shop right now. Tap Add to order on any of them to start your order.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "storefront-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "tiles"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "wrap": true,
+                          "gap": "md",
+                          "children": [
+                            "p_brass",
+                            "p_oak",
+                            "p_ceramic",
+                            "p_paper"
+                          ]
+                        },
+                        {
+                          "id": "p_brass",
+                          "component": "ProductCard",
+                          "title": "Brass Arc Floor Lamp",
+                          "subtitle": "Solid brass, 180 cm",
+                          "price": "$189",
+                          "badge": "New",
+                          "badgeIntent": "success",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "product": "brass-arc-floor-lamp",
+                              "price": 189
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak and Linen Table Lamp",
+                          "subtitle": "Oak base, linen shade, 45 cm",
+                          "price": "$96",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "product": "oak-linen-table-lamp",
+                              "price": 96
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Sage Glaze Ceramic Lamp",
+                          "subtitle": "Hand-thrown stoneware, 38 cm",
+                          "price": "$68",
+                          "badge": "Sale",
+                          "badgeIntent": "warning",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "product": "sage-glaze-ceramic-lamp",
+                              "price": 68
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_paper",
+                          "component": "ProductCard",
+                          "title": "Washi Paper Pendant",
+                          "subtitle": "Washi paper, cotton cord, 40 cm",
+                          "price": "$42",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "disabled": true,
+                          "actionLabel": "Sold out",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "product": "washi-paper-pendant",
+                              "price": 42
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "What lamps do you have?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "frontier-amount-picker-bet",
+          "travel-itinerary"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Your order has two Brass Arc Floor Lamps at $189 each, a total of $378. Adjust the quantity below, or confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add two of the first one to my order and show me my cart.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"CHANGE_CLAIMED\",\"PARSE\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":52092,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2374}],\"over\":false},\"miniSkillIds\":[\"confirm-receipt\",\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"tiles\",\"order\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"tiles\",\"component\":\"Row\",\"wrap\":true,\"gap\":\"md\",\"children\":[\"p_brass\",\"p_oak\",\"p_ceramic\",\"p_paper\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, 180 cm\",\"price\":\"$189\",\"badge\":\"New\",\"badgeIntent\":\"success\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"brass-arc-floor-lamp\",\"price\":189}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak and Linen Table Lamp\",\"subtitle\":\"Oak base, linen shade, 45 cm\",\"price\":\"$96\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"oak-linen-table-lamp\",\"price\":96}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Sage Glaze Ceramic Lamp\",\"subtitle\":\"Hand-thrown stoneware, 38 cm\",\"price\":\"$68\",\"badge\":\"Sale\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"sage-glaze-ceramic-lamp\",\"price\":68}}},{\"id\":\"p_paper\",\"component\":\"ProductCard\",\"title\":\"Washi Paper Pendant\",\"subtitle\":\"Washi paper, cotton cord, 40 cm\",\"price\":\"$42\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"disabled\":true,\"actionLabel\":\"Sold out\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"washi-paper-pendant\",\"price\":42}}},{\"id\":\"order\",\"component\":\"ConfirmReceipt\",\"title\":\"Your order\",\"rows\":[{\"label\":\"Brass Arc Floor Lamp\",\"path\":\"/order/brass\"}],\"data\":{\"order\":{\"brass\":2}},\"totalLabel\":\"Total\",\"totalPath\":\"/order/total\",\"status\":\"pending\",\"confirmAction\":{\"action\":\"confirm_order\"},\"backAction\":{\"action\":\"back\"}}]}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-1\",\"path\":\"/order\",\"value\":{\"brass\":2,\"total\":\"$378\"}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Added two Brass Arc Floor Lamps. Your order comes to $378. You can change the quantity below, or confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-1\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Your order has two Brass Arc Floor Lamps at $189 each, a total of $378. Adjust the quantity below, or confirm when you're ready.",
+                "target": "storefront-1",
+                "messages": "[{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"tiles\",\"order\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"tiles\",\"component\":\"Row\",\"wrap\":true,\"gap\":\"md\",\"children\":[\"p_brass\",\"p_oak\",\"p_ceramic\",\"p_paper\"]},{\"id\":\"p_brass\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, 180 cm\",\"price\":\"$189\",\"badge\":\"New\",\"badgeIntent\":\"success\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"brass-arc-floor-lamp\",\"price\":189}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak and Linen Table Lamp\",\"subtitle\":\"Oak base, linen shade, 45 cm\",\"price\":\"$96\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"oak-linen-table-lamp\",\"price\":96}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Sage Glaze Ceramic Lamp\",\"subtitle\":\"Hand-thrown stoneware, 38 cm\",\"price\":\"$68\",\"badge\":\"Sale\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Add to order\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"sage-glaze-ceramic-lamp\",\"price\":68}}},{\"id\":\"p_paper\",\"component\":\"ProductCard\",\"title\":\"Washi Paper Pendant\",\"subtitle\":\"Washi paper, cotton cord, 40 cm\",\"price\":\"$42\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"disabled\":true,\"actionLabel\":\"Sold out\",\"action\":{\"action\":\"buy\",\"context\":{\"product\":\"washi-paper-pendant\",\"price\":42}}},{\"id\":\"order\",\"component\":\"ConfirmReceipt\",\"title\":\"Your order\",\"rows\":[{\"label\":\"Brass Arc Floor Lamp\",\"path\":\"/order/brass\"}],\"data\":{\"order\":{\"brass\":2}},\"totalLabel\":\"Total\",\"totalPath\":\"/order/total\",\"status\":\"pending\",\"confirmAction\":{\"action\":\"confirm_order\"},\"backAction\":{\"action\":\"back\"}}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"storefront-1\",\"path\":\"/order\",\"value\":{\"brass\":2,\"total\":\"$378\"}}}]}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "target": "storefront-1",
+                "reply": "Your order has two Brass Arc Floor Lamps at $189 each, a total of $378. Adjust the quantity below, or confirm when you're ready.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "tiles",
+                            "order"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "wrap": true,
+                          "gap": "md",
+                          "children": [
+                            "p_brass",
+                            "p_oak",
+                            "p_ceramic",
+                            "p_paper"
+                          ]
+                        },
+                        {
+                          "id": "p_brass",
+                          "component": "ProductCard",
+                          "title": "Brass Arc Floor Lamp",
+                          "subtitle": "Solid brass, 180 cm",
+                          "price": "$189",
+                          "badge": "New",
+                          "badgeIntent": "success",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "product": "brass-arc-floor-lamp",
+                              "price": 189
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak and Linen Table Lamp",
+                          "subtitle": "Oak base, linen shade, 45 cm",
+                          "price": "$96",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "product": "oak-linen-table-lamp",
+                              "price": 96
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Sage Glaze Ceramic Lamp",
+                          "subtitle": "Hand-thrown stoneware, 38 cm",
+                          "price": "$68",
+                          "badge": "Sale",
+                          "badgeIntent": "warning",
+                          "actionLabel": "Add to order",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "product": "sage-glaze-ceramic-lamp",
+                              "price": 68
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_paper",
+                          "component": "ProductCard",
+                          "title": "Washi Paper Pendant",
+                          "subtitle": "Washi paper, cotton cord, 40 cm",
+                          "price": "$42",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "disabled": true,
+                          "actionLabel": "Sold out",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "product": "washi-paper-pendant",
+                              "price": 42
+                            }
+                          }
+                        },
+                        {
+                          "id": "order",
+                          "component": "ConfirmReceipt",
+                          "title": "Your order",
+                          "rows": [
+                            {
+                              "label": "Brass Arc Floor Lamp",
+                              "path": "/order/brass"
+                            }
+                          ],
+                          "data": {
+                            "order": {
+                              "brass": 2
+                            }
+                          },
+                          "totalLabel": "Total",
+                          "totalPath": "/order/total",
+                          "status": "pending",
+                          "confirmAction": {
+                            "action": "confirm_order"
+                          },
+                          "backAction": {
+                            "action": "back"
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "storefront-1",
+                      "path": "/order",
+                      "value": {
+                        "brass": 2,
+                        "total": "$378"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Add two of the first one to my order and show me my cart."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "wallet-summary-card",
+          "crud-entry-list-drawer",
+          "frontier-round-outcome"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

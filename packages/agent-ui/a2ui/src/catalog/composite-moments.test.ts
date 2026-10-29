@@ -1799,6 +1799,125 @@ describe('T-0550: an order ConfirmReceipt whose bound quantity no AmountPicker b
   })
 })
 
+/** T-0582: round 19 (`.sdlc/evals/rounds/2026-10-29-r19-pattern/`) :139 r2 (reach-shopkeeper-cart-amount-haiku-2), the
+ *  recorded `order` ConfirmReceipt with a literal item quantity and no AmountPicker; the product tiles are dropped. */
+const R19_139_R2: A2uiComponent[] = [
+  { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'order'] },
+  { id: 'heading', component: 'Text', text: 'Lamps', variant: 'h4' },
+  { id: 'order', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: 2, amount: '$378' }], totalLabel: 'Total', totalPath: '/order/total', data: { order: { total: '$378' } }, status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back' } },
+]
+const R19_139_REPLY = 'Added two Brass Arc Floor Lamps to your order, $378 in total. You can change the quantity below or keep browsing.'
+/** T-0582: round 19 :154 r3 (reach-shopkeeper-cart-amount-haiku-3), the recorded receipt whose quantity is a `rows` path. */
+const R19_154_R3: A2uiComponent[] = [
+  { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'order'] },
+  { id: 'heading', component: 'Text', text: 'Lamps', variant: 'h4' },
+  { id: 'order', component: 'ConfirmReceipt', title: 'Your order', rows: [{ label: 'Brass Arc Floor Lamp', path: '/order/brass' }], data: { order: { brass: 2 } }, totalLabel: 'Total', totalPath: '/order/total', status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back' } },
+]
+const R19_154_REPLY = "Your order has two Brass Arc Floor Lamps at $189 each, a total of $378. Adjust the quantity below, or confirm when you're ready."
+
+describe("T-0582: a cart receipt's literal or rows quantity with a quantity-change reply asks for its AmountPicker", () => {
+  const run = (components: A2uiComponent[], reply?: string, dataModel?: unknown) =>
+    runSemanticChecks(compositeMomentChecks, { surfaces: [{ ...view(components, 'storefront-1'), dataModel }], ...(reply === undefined ? {} : { reply }) }).findings
+  const NO_OFFER = 'Your order has two Brass Arc Floor Lamps, $378 in total. Confirm when you are ready.'
+
+  it('round 19 :139 r2, a literal quantity, with its reply draws SURFACE_MISSING on order naming the line', () => {
+    const findings = run(R19_139_R2, R19_139_REPLY)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', 'storefront-1:order']])
+    expect(findings[0]!.message).toContain('Brass Arc Floor Lamp')
+    expect(findings[0]!.message).toContain('AmountPicker')
+  })
+
+  it('round 19 :154 r3, a rows quantity, with its reply draws SURFACE_MISSING on order naming /order/brass', () => {
+    const findings = run(R19_154_R3, R19_154_REPLY)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', 'storefront-1:order']])
+    expect(findings[0]!.message).toContain('/order/brass')
+    // The recorded turn also wrote /order in the data model; the line reads from there too.
+    const bare = R19_154_R3.map((c) => (c.id === 'order' ? { ...c, data: undefined } : c))
+    expect(run(bare, R19_154_REPLY, { order: { brass: 2, total: '$378' } }).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('negative controls: the same payloads with no reply, or a reply that offers no quantity change, yield none', () => {
+    for (const comps of [R19_139_R2, R19_154_R3]) {
+      expect(run(comps)).toEqual([])
+      expect(run(comps, NO_OFFER)).toEqual([])
+    }
+  })
+
+  it('negative controls: a receipt whose status is not pending yields none', () => {
+    for (const [comps, reply] of [[R19_139_R2, R19_139_REPLY], [R19_154_R3, R19_154_REPLY]] as const) {
+      for (const status of ['confirmed', { path: '/order/status' }]) {
+        expect(run(comps.map((c) => (c.id === 'order' ? { ...c, status } : c)), reply)).toEqual([])
+      }
+      // A receipt with no status renders pending, so it still fires.
+      expect(run(comps.map((c) => (c.id === 'order' ? { ...c, status: undefined } : c)), reply).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+    }
+  })
+
+  it('negative controls: a rows line that is no quantity, and round 17 :139 beside its AmountPicker, yield none', () => {
+    const total = R19_154_R3.map((c) => (c.id === 'order' ? { ...c, rows: [{ label: 'Total', path: '/order/total' }], data: { order: { total: '$378' } } } : c))
+    expect(run(total, R19_154_REPLY)).toEqual([])
+    const R17_139: A2uiComponent[] = [
+      { id: 'root', component: 'Column', gap: 'md', children: ['qty_brass', 'receipt'] },
+      { id: 'qty_brass', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/cart/brassQty' }, min: 0, max: 10, step: 1, currency: 'USD' },
+      { id: 'receipt', component: 'ConfirmReceipt', title: 'Your order', data: { cart: { brassLine: 2 } }, rows: [{ label: 'Brass Arc Floor Lamp', path: '/cart/brassLine' }], items: [{ label: 'Brass Arc Floor Lamp', quantity: 2, amount: '$378' }], totalPath: '/cart/total', status: 'pending', confirmAction: { action: 'confirm_order' } },
+    ]
+    expect(run(R17_139, 'You can change the quantity below.')).toEqual([])
+  })
+
+  it('negative control: no order, cart or basket word yields none', () => {
+    const stay = R19_139_R2.map((c) => (c.id === 'order' ? { ...c, title: 'Your stay', totalLabel: 'Due' } : c))
+    expect(run(stay, 'You can change the quantity below.')).toEqual([])
+  })
+})
+
+/** T-0582: round 19 :43 r2 (smoke-shopkeeper-browse-and-add-haiku-2), the recorded `order` Card read back by hand; the
+ *  product grid is dropped. No surface word names an order: only the ids and the reply do. */
+const R19_43_R2: A2uiComponent[] = [
+  { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'order'] },
+  { id: 'heading', component: 'Text', text: 'Lamps at Lantern & Loom', variant: 'h4' },
+  { id: 'order', component: 'Card', children: ['order_content'] },
+  { id: 'order_content', component: 'CardContent', children: ['order_lines', 'order_picker', 'order_total'] },
+  { id: 'order_lines', component: 'DescriptionList', rows: [{ label: 'Brass Desk Lamp', value: '$68' }] },
+  { id: 'order_picker', component: 'AmountPicker', label: 'Brass Desk Lamp quantity', value: 1, min: 1, max: 10, step: 1, currency: 'USD', actionName: 'set_quantity', actionLabel: 'Update', name: 'qty_brass' },
+  { id: 'order_total', component: 'Text', text: 'Total: $68', variant: 'label' },
+]
+const R19_43_REPLY = 'Added the Brass Desk Lamp at $68. Your order summary is below the shelf, and you can change the quantity with the picker.'
+
+describe('T-0582: an order the reply names asks for its ConfirmReceipt even when the surface words do not', () => {
+  const run = (components: A2uiComponent[], reply?: string) =>
+    runSemanticChecks(compositeMomentChecks, { surfaces: [view(components, 'shop-1')], ...(reply === undefined ? {} : { reply }) }).findings
+
+  it('round 19 :43 r2 with its reply draws CONFIRM_RECEIPT_MISSING on the AmountPicker line', () => {
+    expect(run(R19_43_R2, R19_43_REPLY).map((f) => [f.code, f.path])).toEqual([['CONFIRM_RECEIPT_MISSING', 'shop-1:order_picker']])
+  })
+
+  it('negative control: the same payload with no reply, or a reply naming no order, cart or basket, yields none', () => {
+    expect(run(R19_43_R2)).toEqual([])
+    expect(run(R19_43_R2, 'Added the Brass Desk Lamp at $68. Change the quantity with the picker.')).toEqual([])
+  })
+
+  it('negative controls: the T-0480 tip bill with a reply naming no order, and a negotiator deal sheet whose reply names an order, stay clean', () => {
+    const BILL: A2uiComponent[] = [
+      { id: 'root', component: 'Column', children: ['title', 'tip', 'total'] },
+      { id: 'title', component: 'Text', text: 'Your bill', variant: 'h5' },
+      { id: 'tip', component: 'AmountPicker', label: 'Tip ($)', value: 6, name: 'tip' },
+      { id: 'total', component: 'Text', text: 'Total: $54.00' },
+    ]
+    expect(run(BILL, 'Here is your bill. Pick a tip and the total updates.')).toEqual([])
+    const DEAL_SHEET: A2uiComponent[] = [
+      { id: 'root', component: 'Column', children: ['hud', 'offer'] },
+      { id: 'hud', component: 'GameHud', title: 'The brass lantern', status: 'Round 1' },
+      { id: 'offer', component: 'AmountPicker', label: 'Your offer ($)', value: 20, name: 'offer' },
+    ]
+    expect(run(DEAL_SHEET, 'Make your offer for the order: the lantern is $40.')).toEqual([])
+  })
+
+  it('the reply opens only the T-0478 row: a guess TextField with a reply naming a word draws no hand-built word game', () => {
+    const guess: A2uiComponent[] = [{ id: 'g', component: 'TextField', label: 'Your guess' }, { id: 't', component: 'Text', text: 'Riddle time' }]
+    expect(run(guess, 'Guess the word in the box.')).toEqual(run(guess))
+  })
+})
+
 describe('T-0480: a day plan of timed stops answered with no Itinerary is ITINERARY_MISSING', () => {
   const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'Itinerary')!
   const check = compositeMomentCheck(row)

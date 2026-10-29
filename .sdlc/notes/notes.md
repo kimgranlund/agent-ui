@@ -1387,3 +1387,9 @@
 ## T-0583: CHANGE_CLAIM_IN_REPLY catches order and total phrasings (2026-10-29)
 
 - note: the regex branch for "have got" excludes "nothing|no" and questions via the `(?![^.!?]*\?)` lookahead; verified by the negative test, which the base regex also passes, so those guards are only protective against the new branch (not red on base by design).
+## T-0582: The AmountPicker and order-receipt rows read literal and rows quantities and the reply's words (2026-10-29)
+
+- decide: `.sdlc/tickets/0582-receipt-rows-cover-literals-and-reply/handoff.md:27` note: the P4b row says "SURFACE_MISSING for ConfirmReceipt"; the row's code is `CONFIRM_RECEIPT_MISSING`, which the acceptance criterion and the tests name.
+- decide: `scripts/e2e-admin/probe/replays/shopkeeper-haiku-receipt-rows-qty.test.mjs:21` note: the verbatim :154 fixture ships round 3 tallied `SEMANTIC_UNCORRECTED` (a finding on the last round never halts); the recovery leg drops the PARSE round to show the SURFACE_MISSING send-back. The ticket row anticipated a send-back on the recorded run itself.
+- decide: `packages/agent-ui/a2ui/src/catalog/composite-moments.ts:742` decide: the literal and rows branch runs only when no AmountPicker sits on the surface at all (`picked.length === 0`), a narrowing the ticket row did not ask for: a mixed receipt (one line picked, another literal, the reply offering a change) stays silent. Criterion #1's "a picker on the surface" negative endorses it; worth a conscious yes.
+- decide: `packages/agent-ui/a2ui/src/catalog/composite-moments.ts:758` note: a receipt with no `status` reads pending and fires (the descriptor default); pinned at `composite-moments.test.ts:1852`.
