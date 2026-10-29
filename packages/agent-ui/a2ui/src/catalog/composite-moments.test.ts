@@ -26,6 +26,25 @@ const view = (components: A2uiComponent[], surfaceId = 's1'): SurfaceView => ({
 })
 const codes = (components: A2uiComponent[]): string[] => runSemanticChecks(compositeMomentChecks, { surfaces: [view(components)] }).findings.map((f) => f.code)
 
+/** T-0550: round 17 :154 r2 (reach-shopkeeper-cart-amount-haiku-3, Haiku 5.5), the recorded components: an `order`
+ *  ConfirmReceipt whose item quantity binds `/lamp/qty`, and no AmountPicker on shop-lamps-1. */
+const R17_154_R2: A2uiComponent[] = [
+  { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'order', 'tiles'] },
+  { id: 'heading', component: 'Text', text: 'Lamps', variant: 'h4' },
+  { id: 'order', component: 'ConfirmReceipt', title: 'Your order', data: { lamp: { qty: 2 } }, items: [{ label: 'Brass Arc Floor Lamp', quantity: { path: '/lamp/qty' }, amount: '$149' }], totalLabel: 'Total', totalPath: '/lamp/total', status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back' } },
+  { id: 'tiles', component: 'Row', gap: 'md', wrap: true, children: ['p_arc', 'p_ceramic', 'p_pendant', 'p_rattan'] },
+  { id: 'p_arc', component: 'ProductCard', title: 'Brass Arc Floor Lamp', subtitle: 'Solid brass, 160 cm, in stock', price: '$149', badge: 'New', badgeIntent: 'info', actionLabel: 'Buy', action: { action: 'buy', context: { sku: 'lamp-brass-arc' } } },
+  { id: 'p_ceramic', component: 'ProductCard', title: 'Speckled Ceramic Table Lamp', subtitle: 'Hand-glazed stoneware, 45 cm, in stock', price: '$68', priceOld: '$85', badge: 'Sale', badgeIntent: 'success', actionLabel: 'Buy', action: { action: 'buy', context: { sku: 'lamp-ceramic-speckle' } } },
+  { id: 'p_pendant', component: 'ProductCard', title: 'Linen Drum Pendant', subtitle: 'Natural linen shade, 35 cm, in stock', price: '$92', actionLabel: 'Buy', action: { action: 'buy', context: { sku: 'lamp-linen-drum' } } },
+  { id: 'p_rattan', component: 'ProductCard', title: 'Woven Rattan Lantern', subtitle: 'Hand-woven rattan, 30 cm', price: '$54', badge: 'Sold out', badgeIntent: 'danger', actionLabel: 'Sold out', disabled: true, action: { action: 'buy', context: { sku: 'lamp-rattan-lantern' } } },
+]
+/** T-0550: :154 r2 with the picker the repair asks for, its value bound to the receipt's quantity path. */
+const R17_154_PICKED: A2uiComponent[] = [
+  { ...R17_154_R2[0]!, children: ['heading', 'order', 'qty_arc', 'tiles'] },
+  ...R17_154_R2.slice(1),
+  { id: 'qty_arc', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/lamp/qty' }, min: 1, step: 1 },
+]
+
 const HAND_BUILT: Record<string, A2uiComponent[]> = {
   BookingForm: [
     { id: 'root', component: 'Card', children: ['t', 'date', 'party', 'go'] },
@@ -82,6 +101,8 @@ const HAND_BUILT: Record<string, A2uiComponent[]> = {
     { id: 'line', component: 'AmountPicker', label: 'Brass Arc Floor Lamp ($189 each)', value: 2, name: 'qty_arc' },
     { id: 'total', component: 'Text', text: 'Total: $378' },
   ],
+  // T-0550: the round 17 :154 repair, a ConfirmReceipt whose quantity no AmountPicker binds.
+  AmountPicker: R17_154_R2,
   // T-0377: a wrap-only row; its hand-built shape is the composite inside a Card.
   ContrastPair: [
     { id: 'root', component: 'Card', children: ['pair'] },
@@ -125,6 +146,7 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
     { id: 'receipt', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: { path: '/cart/qty' }, amount: { path: '/cart/amount' } }], totalPath: '/cart/total', status: 'pending' },
     { id: 'line', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/cart/qty' } },
   ],
+  AmountPicker: R17_154_PICKED,
   ContrastPair: [
     { id: 'root', component: 'Column', children: ['pair'] },
     { id: 'pair', component: 'ContrastPair', label: 'Body on page', foreground: '#1f3a5f', background: '#ffffff' },
@@ -132,11 +154,13 @@ const COMPOSED: Record<string, A2uiComponent[]> = {
 }
 
 /** T-0377: a row with `notInside` and no hand-built detector is wrap-only; its hand-built shape is the wrapped composite. */
-const DETECTORS = ['words', 'inputs', 'readBack', 'inputCue', 'logOf', 'gridOf', 'tableColumn', 'pricedRows', 'boardless', 'has', 'planned'] as const
+const DETECTORS = ['words', 'inputs', 'readBack', 'inputCue', 'logOf', 'gridOf', 'tableColumn', 'pricedRows', 'boardless', 'has', 'planned', 'unpickedLines'] as const
 const wrapOnly = (m: CompositeMoment): boolean => m.notInside !== undefined && DETECTORS.every((k) => m[k] === undefined)
 
 const codeOf = (composite: string): string => {
   const row = COMPOSITE_MOMENTS.find((m) => m.composite === composite)!
+  // T-0550: an unpicked receipt line is SURFACE_MISSING, as the ticket names it.
+  if (row.unpickedLines !== undefined) return 'SURFACE_MISSING'
   return `${composite.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}_${wrapOnly(row) ? 'WRAPPED' : 'MISSING'}`
 }
 
@@ -1249,12 +1273,12 @@ describe('composite moment checks (T-0208)', () => {
     })
   }
 
-  it('the catalog gate keeps the booking and Itinerary rows only on agent-ui--hospitality, the games, ProductCard and ConfirmReceipt rows on agent-ui, and none on a2ui-basic', () => {
+  it('the catalog gate keeps the booking and Itinerary rows only on agent-ui--hospitality, the games, ProductCard, ConfirmReceipt and AmountPicker rows on agent-ui, and none on a2ui-basic', () => {
     const base = loadCatalog(defaultCatalogRaw)
     const concierge = composeCatalog(base, loadCatalogFragment(hospitalityFragmentRaw), 'hospitality')
     const basic = loadCatalog(basicCatalogRaw)
     const ids = (catalog: { components: Readonly<Record<string, unknown>> }) => gateChecksOnCatalog(compositeMomentChecks, catalog).map((c) => c.id)
-    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-confirm-receipt', 'composite-moment-swatch']
+    const games = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-confirm-receipt', 'composite-moment-amount-picker', 'composite-moment-swatch']
     expect(ids(base)).toEqual(games)
     expect(concierge.catalogId).toBe('agent-ui--hospitality')
     expect(ids(concierge)).toEqual(['composite-moment-booking-form', 'composite-moment-booking-confirmation', 'composite-moment-itinerary', ...games])
@@ -1277,11 +1301,12 @@ describe('composite moment checks (T-0208)', () => {
       'composite-moment-timeline',
       'composite-moment-product-card',
       'composite-moment-confirm-receipt',
+      'composite-moment-amount-picker',
       'composite-moment-swatch',
       'composite-moment-contrast-pair',
       'composite-prose-swatch',
     ])
-    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'ITINERARY_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'CONFIRM_RECEIPT_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
+    expect(COMPOSITE_MOMENTS.map((m) => codeOf(m.composite))).toEqual(['BOOKING_FORM_MISSING', 'BOOKING_CONFIRMATION_MISSING', 'ITINERARY_MISSING', 'BOARD_GRID_MISSING', 'GAME_HUD_MISSING', 'RESULT_CARD_MISSING', 'TIMELINE_MISSING', 'PRODUCT_CARD_MISSING', 'CONFIRM_RECEIPT_MISSING', 'SURFACE_MISSING', 'SWATCH_MISSING', 'CONTRAST_PAIR_WRAPPED'])
     for (const [i, m] of COMPOSITE_MOMENTS.entries()) expect(compositeMomentChecks[i]!.requires).toEqual([m.composite, ...(m.requires ?? [])])
   })
 })
@@ -1695,6 +1720,83 @@ describe('T-0478: an order or cart built by hand is CONFIRM_RECEIPT_MISSING', ()
       expect(open.check({ surfaces: [view([...comps])] }).map((f) => f.code)).toEqual(['CONFIRM_RECEIPT_MISSING'])
     })
   }
+})
+
+describe('T-0550: an order ConfirmReceipt whose bound quantity no AmountPicker binds is SURFACE_MISSING', () => {
+  const row = COMPOSITE_MOMENTS.find((m) => m.composite === 'AmountPicker')!
+  const run = (components: A2uiComponent[], surfaceId = 'shop-lamps-1') => runSemanticChecks(compositeMomentChecks, { surfaces: [view(components, surfaceId)] }).findings
+  /** One cart line: a receipt titled `title` whose item quantity binds `qty`, beside a picker bound to `picked`, if any. */
+  const cart = (qty: unknown, picked?: unknown, title = 'Your cart'): A2uiComponent[] => [
+    { id: 'root', component: 'Column', children: picked === undefined ? ['receipt'] : ['receipt', 'qty'] },
+    { id: 'receipt', component: 'ConfirmReceipt', title, items: [{ label: 'Linen Drum Pendant', quantity: qty, amount: '$92' }], totalPath: '/cart/total', status: 'pending' },
+    ...(picked === undefined ? [] : [{ id: 'qty', component: 'AmountPicker', label: 'Quantity', value: picked }]),
+  ]
+
+  it('round 17 :154 r2 draws the finding on order, naming /lamp/qty and asking for ONE AmountPicker per line beside the receipt', () => {
+    const findings = run(R17_154_R2)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', 'shop-lamps-1:order']])
+    const [f] = findings
+    expect(f!.message).toContain('order (a ConfirmReceipt)')
+    expect(f!.message).toContain('/lamp/qty')
+    expect(f!.message).toContain('Add ONE AmountPicker per such line, its value bound to that quantity path')
+    expect(f!.message).toContain('beside the ConfirmReceipt')
+  })
+
+  it('negative control: round 17 :139, a ConfirmReceipt beside its AmountPicker, yields none', () => {
+    // :139 (reach-shopkeeper-cart-amount-haiku-2), the recorded storefront-lamps update.
+    const R17_139: A2uiComponent[] = [
+      { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'tiles', 'qty_brass', 'receipt'] },
+      { id: 'qty_brass', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/cart/brassQty' }, min: 0, max: 10, step: 1, currency: 'USD' },
+      { id: 'receipt', component: 'ConfirmReceipt', title: 'Your order', data: { path: '/cart' }, rows: [{ label: 'Brass Arc Floor Lamp', path: '/cart/brassLine' }], totalLabel: 'Total', totalPath: '/cart/total', status: { path: '/cart/status' }, confirmAction: { action: 'confirm_order', context: { total: '$378' } }, backAction: { action: 'back_to_shop' } },
+    ]
+    expect(run(R17_139, 'storefront-lamps')).toEqual([])
+  })
+
+  it('negative control: the same receipt with an AmountPicker bound to /lamp/qty yields none, and one bound elsewhere still fires', () => {
+    expect(run(R17_154_PICKED)).toEqual([])
+    const elsewhere = R17_154_PICKED.map((c) => (c.id === 'qty_arc' ? { ...c, value: { path: '/lamp/count' } } : c))
+    expect(run(elsewhere).map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', 'shop-lamps-1:order']])
+  })
+
+  it('a cart or basket word opens the gate too, and a line with its picker is not named beside one without', () => {
+    expect(run(cart({ path: '/cart/qty' })).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+    expect(run(cart({ path: '/cart/qty' }, undefined, 'Your basket')).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+    const two: A2uiComponent[] = [
+      { id: 'root', component: 'Column', children: ['receipt', 'qty_a'] },
+      { id: 'receipt', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Lamp', quantity: { path: '/cart/a' }, amount: '$1' }, { label: 'Shade', quantity: { path: '/cart/b' }, amount: '$2' }], status: 'pending' },
+      { id: 'qty_a', component: 'AmountPicker', label: 'Lamp quantity', value: { path: '/cart/a' } },
+    ]
+    const [f] = run(two)
+    expect(f!.message).toContain('/cart/b')
+    expect(f!.message).not.toContain('/cart/a')
+  })
+
+  it('negative controls: no order word, a literal quantity, bound items and a templated picker yield none', () => {
+    expect(run(cart({ path: '/stay/nights' }, undefined, 'Your stay'))).toEqual([])
+    expect(run(cart(2))).toEqual([])
+    expect(run([{ id: 'receipt', component: 'ConfirmReceipt', title: 'Your order', items: { path: '/cart/items' }, totalPath: '/cart/total', status: 'pending' }])).toEqual([])
+    expect(run([...cart({ path: '/cart/items/0/qty' }), { id: 'lines', component: 'List', children: { path: '/cart/items', componentId: 'line' } }, { id: 'line', component: 'AmountPicker', label: 'Quantity', value: { path: 'qty' } }])).toEqual([])
+  })
+
+  it('a relative quantity path reads under the receipt data path', () => {
+    const rel: A2uiComponent[] = [{ id: 'receipt', component: 'ConfirmReceipt', title: 'Your order', data: { path: '/cart' }, items: [{ label: 'Lamp', quantity: { path: 'qty' }, amount: '$1' }], status: 'pending' }]
+    expect(run(rel)[0]!.message).toContain('/cart/qty')
+    expect(run([...rel, { id: 'q', component: 'AmountPicker', label: 'Quantity', value: { path: '/cart/qty' } }])).toEqual([])
+  })
+
+  // Each guard of the T-0478 row: a negotiator deal sheet, a room booking walk, a booking form and a settled booking.
+  for (const guard of ['GameHud', 'StepFlow', 'BookingForm', 'BookingConfirmation']) {
+    it(`the ${guard} guard bites: the cart beside a ${guard} yields none, and with ${guard} out of lacks it fires`, () => {
+      const comps = [...cart({ path: '/cart/qty' }), { id: 'guard', component: guard }]
+      expect(compositeMomentCheck(row).check({ surfaces: [view(comps)] })).toEqual([])
+      const open = compositeMomentCheck({ ...row, lacks: row.lacks.filter((t) => t !== guard) })
+      expect(open.check({ surfaces: [view(comps)] }).map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+    })
+  }
+
+  it("the row's AmountPicker words still open the T-0478 gate: a quantity line labelled with a cart word draws CONFIRM_RECEIPT_MISSING", () => {
+    expect(codes([{ id: 'q', component: 'AmountPicker', label: 'Lamps in your cart', name: 'quantity' }])).toEqual(['CONFIRM_RECEIPT_MISSING'])
+  })
 })
 
 describe('T-0480: a day plan of timed stops answered with no Itinerary is ITINERARY_MISSING', () => {

@@ -1,0 +1,551 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "shopkeeper-haiku-receipt-no-picker",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "T-0550: turn 0 and turn 1 rounds 1 and 2 are reach-shopkeeper-cart-amount-haiku-3 verbatim (round .sdlc/evals/rounds/2026-10-29-r17-pattern/, traces 2026-10-29.jsonl:153,2026-10-29.jsonl:154); turn 1 round 3 is authored, round 2 with one AmountPicker bound to /lamp/qty beside the ConfirmReceipt (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "What lamps do you have?",
+      "expect": [
+        "ProductCard"
+      ]
+    },
+    {
+      "say": "Add two of the first one to my order and show me my cart.",
+      "expect": [
+        "ConfirmReceipt",
+        "AmountPicker"
+      ]
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are the lamps on the shelves right now. The prices are illustrative demo values.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are the lamps on the shelves right now. The prices are illustrative demo values.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":50501,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":783}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"shop-lamps-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"shop-lamps-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"tiles\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p_arc\",\"p_ceramic\",\"p_pendant\",\"p_rattan\"]},{\"id\":\"p_arc\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, 160 cm, in stock\",\"price\":\"$149\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-arc\"}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Speckled Ceramic Table Lamp\",\"subtitle\":\"Hand-glazed stoneware, 45 cm, in stock\",\"price\":\"$68\",\"priceOld\":\"$85\",\"badge\":\"Sale\",\"badgeIntent\":\"success\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-ceramic-speckle\"}}},{\"id\":\"p_pendant\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Pendant\",\"subtitle\":\"Natural linen shade, 35 cm, in stock\",\"price\":\"$92\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-drum\"}}},{\"id\":\"p_rattan\",\"component\":\"ProductCard\",\"title\":\"Woven Rattan Lantern\",\"subtitle\":\"Hand-woven rattan, 30 cm\",\"price\":\"$54\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"actionLabel\":\"Sold out\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-rattan-lantern\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here are the lamps on the shelves right now. The prices are illustrative demo values.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are our lamps. Tell me which one catches your eye.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "shop-lamps-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "shop-lamps-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "tiles"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p_arc",
+                            "p_ceramic",
+                            "p_pendant",
+                            "p_rattan"
+                          ]
+                        },
+                        {
+                          "id": "p_arc",
+                          "component": "ProductCard",
+                          "title": "Brass Arc Floor Lamp",
+                          "subtitle": "Solid brass, 160 cm, in stock",
+                          "price": "$149",
+                          "badge": "New",
+                          "badgeIntent": "info",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-arc"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Speckled Ceramic Table Lamp",
+                          "subtitle": "Hand-glazed stoneware, 45 cm, in stock",
+                          "price": "$68",
+                          "priceOld": "$85",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-ceramic-speckle"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_pendant",
+                          "component": "ProductCard",
+                          "title": "Linen Drum Pendant",
+                          "subtitle": "Natural linen shade, 35 cm, in stock",
+                          "price": "$92",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-drum"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_rattan",
+                          "component": "ProductCard",
+                          "title": "Woven Rattan Lantern",
+                          "subtitle": "Hand-woven rattan, 30 cm",
+                          "price": "$54",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "actionLabel": "Sold out",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-rattan-lantern"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "What lamps do you have?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "frontier-amount-picker-bet",
+          "travel-itinerary"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Two Brass Arc Floor Lamps are in your order at $149 each, $298 total. Adjust the quantity below, or confirm when you're ready. Prices are illustrative demo values.\",\"target\":{\"surfaceId\":\"shop-lamps-1\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add two of the first one to my order and show me my cart.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"SURFACE_MISSING\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":52092,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2374}],\"over\":false},\"miniSkillIds\":[\"confirm-receipt\",\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"shop-lamps-1\",\"path\":\"/lamp\",\"value\":{\"qty\":2,\"total\":\"$298\"}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"shop-lamps-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"order\",\"qty_arc\",\"tiles\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"order\",\"component\":\"ConfirmReceipt\",\"title\":\"Your order\",\"data\":{\"lamp\":{\"qty\":2}},\"items\":[{\"label\":\"Brass Arc Floor Lamp\",\"quantity\":{\"path\":\"/lamp/qty\"},\"amount\":\"$149\"}],\"totalLabel\":\"Total\",\"totalPath\":\"/lamp/total\",\"status\":\"pending\",\"confirmAction\":{\"action\":\"confirm_order\"},\"backAction\":{\"action\":\"back\"}},{\"id\":\"qty_arc\",\"component\":\"AmountPicker\",\"label\":\"Brass Arc Floor Lamp quantity\",\"value\":{\"path\":\"/lamp/qty\"},\"min\":1,\"max\":10,\"step\":1},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p_arc\",\"p_ceramic\",\"p_pendant\",\"p_rattan\"]},{\"id\":\"p_arc\",\"component\":\"ProductCard\",\"title\":\"Brass Arc Floor Lamp\",\"subtitle\":\"Solid brass, 160 cm, in stock\",\"price\":\"$149\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-arc\"}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Speckled Ceramic Table Lamp\",\"subtitle\":\"Hand-glazed stoneware, 45 cm, in stock\",\"price\":\"$68\",\"priceOld\":\"$85\",\"badge\":\"Sale\",\"badgeIntent\":\"success\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-ceramic-speckle\"}}},{\"id\":\"p_pendant\",\"component\":\"ProductCard\",\"title\":\"Linen Drum Pendant\",\"subtitle\":\"Natural linen shade, 35 cm, in stock\",\"price\":\"$92\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-drum\"}}},{\"id\":\"p_rattan\",\"component\":\"ProductCard\",\"title\":\"Woven Rattan Lantern\",\"subtitle\":\"Hand-woven rattan, 30 cm\",\"price\":\"$54\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"actionLabel\":\"Sold out\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-rattan-lantern\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Two Brass Arc Floor Lamps are in your order at $149 each, $298 total. Adjust the quantity below, or confirm when you're ready. Prices are illustrative demo values.\",\"target\":{\"surfaceId\":\"shop-lamps-1\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Two Brass Arc Floor Lamps are in your order at $149 each, $298 total. Adjust the quantity below, or confirm when you're ready. Prices are illustrative demo values.",
+                "target": "shop-lamps-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "shop-lamps-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "order",
+                            "tiles"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "order",
+                          "component": "ConfirmReceipt",
+                          "title": "Your order",
+                          "data": {
+                            "lamp": {
+                              "qty": 2
+                            }
+                          },
+                          "items": [
+                            {
+                              "label": "Brass Arc Floor Lamp",
+                              "quantity": {
+                                "path": "/lamp/qty"
+                              },
+                              "amount": "$149"
+                            }
+                          ],
+                          "totalLabel": "Total",
+                          "totalPath": "/lamp/total",
+                          "status": "pending",
+                          "confirmAction": {
+                            "action": "confirm_order"
+                          },
+                          "backAction": {
+                            "action": "back"
+                          }
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p_arc",
+                            "p_ceramic",
+                            "p_pendant",
+                            "p_rattan"
+                          ]
+                        },
+                        {
+                          "id": "p_arc",
+                          "component": "ProductCard",
+                          "title": "Brass Arc Floor Lamp",
+                          "subtitle": "Solid brass, 160 cm, in stock",
+                          "price": "$149",
+                          "badge": "New",
+                          "badgeIntent": "info",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-arc"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Speckled Ceramic Table Lamp",
+                          "subtitle": "Hand-glazed stoneware, 45 cm, in stock",
+                          "price": "$68",
+                          "priceOld": "$85",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-ceramic-speckle"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_pendant",
+                          "component": "ProductCard",
+                          "title": "Linen Drum Pendant",
+                          "subtitle": "Natural linen shade, 35 cm, in stock",
+                          "price": "$92",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-drum"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_rattan",
+                          "component": "ProductCard",
+                          "title": "Woven Rattan Lantern",
+                          "subtitle": "Hand-woven rattan, 30 cm",
+                          "price": "$54",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "actionLabel": "Sold out",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-rattan-lantern"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "shop-lamps-1",
+                      "path": "/lamp/total",
+                      "value": "$298"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Two Brass Arc Floor Lamps are in your order at $149 each, $298 total. Adjust the quantity below, or confirm when you're ready. Prices are illustrative demo values.\",\"target\":{\"surfaceId\":\"shop-lamps-1\"}}}",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Two Brass Arc Floor Lamps are in your order at $149 each, $298 total. Adjust the quantity below, or confirm when you're ready. Prices are illustrative demo values.",
+                "target": "shop-lamps-1",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "shop-lamps-1",
+                      "path": "/lamp",
+                      "value": {
+                        "qty": 2,
+                        "total": "$298"
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "shop-lamps-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "order",
+                            "qty_arc",
+                            "tiles"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "order",
+                          "component": "ConfirmReceipt",
+                          "title": "Your order",
+                          "data": {
+                            "lamp": {
+                              "qty": 2
+                            }
+                          },
+                          "items": [
+                            {
+                              "label": "Brass Arc Floor Lamp",
+                              "quantity": {
+                                "path": "/lamp/qty"
+                              },
+                              "amount": "$149"
+                            }
+                          ],
+                          "totalLabel": "Total",
+                          "totalPath": "/lamp/total",
+                          "status": "pending",
+                          "confirmAction": {
+                            "action": "confirm_order"
+                          },
+                          "backAction": {
+                            "action": "back"
+                          }
+                        },
+                        {
+                          "id": "qty_arc",
+                          "component": "AmountPicker",
+                          "label": "Brass Arc Floor Lamp quantity",
+                          "value": {
+                            "path": "/lamp/qty"
+                          },
+                          "min": 1,
+                          "max": 10,
+                          "step": 1
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p_arc",
+                            "p_ceramic",
+                            "p_pendant",
+                            "p_rattan"
+                          ]
+                        },
+                        {
+                          "id": "p_arc",
+                          "component": "ProductCard",
+                          "title": "Brass Arc Floor Lamp",
+                          "subtitle": "Solid brass, 160 cm, in stock",
+                          "price": "$149",
+                          "badge": "New",
+                          "badgeIntent": "info",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-arc"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Speckled Ceramic Table Lamp",
+                          "subtitle": "Hand-glazed stoneware, 45 cm, in stock",
+                          "price": "$68",
+                          "priceOld": "$85",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-ceramic-speckle"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_pendant",
+                          "component": "ProductCard",
+                          "title": "Linen Drum Pendant",
+                          "subtitle": "Natural linen shade, 35 cm, in stock",
+                          "price": "$92",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-drum"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_rattan",
+                          "component": "ProductCard",
+                          "title": "Woven Rattan Lantern",
+                          "subtitle": "Hand-woven rattan, 30 cm",
+                          "price": "$54",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "actionLabel": "Sold out",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-rattan-lantern"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Add two of the first one to my order and show me my cart."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "wallet-summary-card",
+          "crud-entry-list-drawer",
+          "frontier-round-outcome"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

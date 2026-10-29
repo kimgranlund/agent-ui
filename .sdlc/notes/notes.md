@@ -1301,3 +1301,7 @@
 
 - decide: scripts/measure-size.mjs:266 overlay budget raised to 2688 on the builder's own reading of the ADR-0197 cl.5 precedent; Kim to confirm the bump or trim overlay.ts.
 - note: in a throwaway worktree with a symlinked node_modules, measure-size also reported app, code/markdown and code/editor OVER; the wave tree reports them within budget, so the result depends on install layout (worktree symlink recipe), worth knowing for lanes that now run check.
+
+## T-0550: A cart's ConfirmReceipt with a bound quantity ships its AmountPicker (round 17 cluster P5) (2026-10-29)
+
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:779 decide: the row emits `SURFACE_MISSING` as the ticket pins, not a `<COMPOSITE>_MISSING` code; the builder reports it therefore gets no T-0299 cross-round bind. No criterion names it and the replay heals in one repair round, so it is left open here, not verified.

@@ -139,9 +139,9 @@ describe('semanticChecksDeps (ADR-0238; GH #1795): the selected catalog decides 
   // framed-choice check, each kept only where its `requires` types exist.
   const ids = (deps: ReturnType<typeof semanticChecksDeps>): string[] => (deps.semanticChecks ?? []).map((c) => c.id)
   const hidden = (c: Catalog): string[] => gateChecksOnCatalog(HIDDEN_STATE_CHECKS, c).map((x) => x.id)
-  // The base-catalog rows: the games rows, (T-0279) the ProductCard row, (T-0478) the ConfirmReceipt row and (T-0359) the Swatch row; its ask check rides
+  // The base-catalog rows: the games rows, (T-0279) the ProductCard row, (T-0478) the ConfirmReceipt row, (T-0550) the AmountPicker row and (T-0359) the Swatch row; its ask check rides
   // the Stylist alone (Kim, 2026-10-18).
-  const GAMES = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-confirm-receipt', 'composite-moment-swatch']
+  const GAMES = ['composite-moment-board-grid', 'composite-moment-game-hud', 'composite-moment-result-card', 'composite-moment-timeline', 'composite-moment-product-card', 'composite-moment-confirm-receipt', 'composite-moment-amount-picker', 'composite-moment-swatch']
   // The hospitality rows: the booking rows and (T-0480) the Itinerary row.
   const BOOKING = ['composite-moment-booking-form', 'composite-moment-booking-confirmation', 'composite-moment-itinerary']
   const CROUPIER = croupierSemanticChecks.map((c) => c.id)

@@ -6,7 +6,7 @@
 // surface ONE composite. A row's `notInside` also sends back a composite wrapped in a card of its own (T-0262,
 // `<COMPOSITE>_WRAPPED`). The check `requires` the composite (and any type it reads), so `gateChecksOnCatalog`
 // keeps a row on exactly the catalogs that can emit it: the booking and Itinerary rows ride `<base>--hospitality`, the games rows
-// ride `agent-ui` until the games types move to a domain, the ProductCard, ConfirmReceipt and Swatch rows ride `agent-ui`, the
+// ride `agent-ui` until the games types move to a domain, the ProductCard, ConfirmReceipt, AmountPicker and Swatch rows ride `agent-ui`, the
 // ContrastPair row (T-0377) rides `agent-ui--stylist`, and `a2ui-basic` gets none.
 //
 // The link to the sidecar is a test, not an import (`composite-moments.test.ts`: every `moment` is one of its
@@ -77,6 +77,11 @@
 // (its label, name or bound path names a quantity, "each" or a price) on a surface whose words name an order, a cart or a
 // total, with no ConfirmReceipt on it, the shape a shopkeeper add turn shipped after its CHANGE_CLAIMED repair.
 // T-0480: "total" no longer opens that gate (a bill's tip AmountPicker beside a "Total" Text is no order).
+// T-0550 (round 17 cluster P5): the AmountPicker row reads the inverse shape: on a surface whose words name an order, a
+// cart or a basket (the receipt's own title and total label counted), a ConfirmReceipt item whose `quantity` binds a path
+// no AmountPicker on the surface binds is SURFACE_MISSING, asking for one AmountPicker per such line. A Haiku add turn's
+// CHANGE_CLAIMED repair shipped that receipt while its reply said "Adjust the quantity below". The row stands aside for
+// the T-0478 row's guards, and an AmountPicker stays an input whose label counts as words for the other rows.
 //
 // T-0480 (round 15 cluster Y): the Itinerary row reads the guest's words, not a surface: a say turn that plans a day of
 // two or more timed stops ("Plan my Saturday: breakfast at 08:00 ... dinner at 20:00") while no surface of the turn holds
@@ -170,6 +175,11 @@ export interface CompositeMoment {
   /** T-0359: the moment written out in the reply prose instead of shown: `listed` reads the reply, `types` answer it (a
    *  catalog must hold them all for the check to ride it), and `surface` is what the repair asks for. */
   readonly prose?: { readonly moment: string; readonly types: readonly string[]; readonly listed: (reply: string) => number; readonly surface: string }
+  /** T-0550: a component of `of` whose literal `items` bind a `quantity` path (a relative one read under its bound `data`)
+   *  that no `composite` on the surface binds as its `value`, while the surface words, with the `of` component's own title
+   *  and total label, match `words`. One SURFACE_MISSING per surface names every such path; the composite's presence alone
+   *  never answers it, and a templated `composite` (a relative `value`) stands the surface aside. */
+  readonly unpickedLines?: { readonly of: string; readonly words: RegExp }
 }
 
 /** T-0333: the past-state words of a settled booking ("Booked" Badge, "Spa booking confirmed" title); the noun
@@ -360,6 +370,20 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     lacks: ['BookingForm', 'BookingConfirmation', 'StepFlow', 'GameHud'],
     // T-0480: no "total": a bill's tip AmountPicker beside a "Total" Text is no order.
     inputCue: { types: ['AmountPicker'], cue: /qty|quantity|\beach\b|\$/i, words: /\b(order|cart|basket)\b/i },
+  },
+  {
+    // T-0550 (round 17 cluster P5, reach-shopkeeper-cart-amount-haiku-3): the inverse of the row above. A CHANGE_CLAIMED
+    // repair resent shop-lamps-1 with an `order` ConfirmReceipt whose item quantity binds `/lamp/qty` and no AmountPicker
+    // writing it, while the reply said "Adjust the quantity below". The shopkeeper's cart-summary asks for one AmountPicker
+    // per cart line bound to its quantity; the same guards stand aside.
+    composite: 'AmountPicker',
+    moment: 'pick a quantity or amount with plus and minus',
+    repair:
+      'per such line, its value bound to that quantity path (min 1, step 1, no slider, no actionName: the receipt\'s Confirm ' +
+      'commits), beside the ConfirmReceipt; keep the ConfirmReceipt and its items as they are.',
+    requires: ['ConfirmReceipt'],
+    lacks: ['BookingForm', 'BookingConfirmation', 'StepFlow', 'GameHud'],
+    unpickedLines: { of: 'ConfirmReceipt', words: /\b(order|cart|basket)\b/i },
   },
   {
     // T-0359: a palette is shown, never listed: hex values written in Text are the hand-built moment, and (on the Stylist)
@@ -560,8 +584,11 @@ function logStrays(log: NonNullable<CompositeMoment['logOf']>, comps: readonly A
   })
 }
 
-/** T-0361 review: every composite type of the rows, with the types each reads; none of their props count as words. */
-const COMPOSITE_TYPES: ReadonlySet<string> = new Set(COMPOSITE_MOMENTS.flatMap((m) => [m.composite, ...(m.requires ?? []), ...(m.has ?? [])]))
+/** T-0361 review: every composite type of the rows, with the types each reads; none of their props count as words.
+ *  T-0550: an `unpickedLines` row's composite (AmountPicker) is an input, so its label still counts (T-0478 reads it). */
+const COMPOSITE_TYPES: ReadonlySet<string> = new Set(
+  COMPOSITE_MOMENTS.flatMap((m) => [...(m.unpickedLines === undefined ? [m.composite] : []), ...(m.requires ?? []), ...(m.has ?? [])]),
+)
 
 /** T-0361 review: a row's `end` and `restart` phrases as one global pattern, built once per row, taken out of the game words. */
 function endPhrases(m: CompositeMoment): RegExp | undefined {
@@ -687,6 +714,30 @@ function wrappers(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
   return [...found.values()]
 }
 
+/** T-0550: the quantity paths a `of` component's literal items bind that no `m.composite` binds, with that component, or
+ *  undefined when the row does not fire on `view`. */
+function unpickedLines(m: CompositeMoment, view: SurfaceView): { at: A2uiComponent; paths: string[] } | undefined {
+  const lines = m.unpickedLines!
+  const comps = [...view.components.values()]
+  if (comps.some((c) => m.lacks.includes(c.component))) return undefined
+  const picked = comps.filter((c) => c.component === m.composite).map((c) => boundPath(c['value']))
+  // A templated picker binds each line relative to its item, which no absolute quantity path can be matched to.
+  if (picked.some((p) => p !== '' && !p.startsWith('/'))) return undefined
+  const words = comps.filter((c) => !COMPOSITE_TYPES.has(c.component)).map(wordsOf).join(' ')
+  for (const c of comps) {
+    if (c.component !== lines.of || !Array.isArray(c['items'])) continue
+    if (!lines.words.test([words, stringOf(c['title'], view), stringOf(c['totalLabel'], view)].join(' '))) continue
+    const data = boundPath(c['data'])
+    const paths = (c['items'] as unknown[])
+      .map((item) => boundPath(typeof item === 'object' && item !== null ? (item as Record<string, unknown>)['quantity'] : undefined))
+      .filter((p) => p !== '')
+      .map((p) => (p.startsWith('/') || data === '' ? p : `${data.replace(/\/$/, '')}/${p}`))
+      .filter((p, i, all) => !picked.includes(p) && all.indexOf(p) === i)
+    if (paths.length > 0) return { at: c, paths }
+  }
+  return undefined
+}
+
 /** T-0480: the distinct timed stops a say turn's words plan for `m` (its `planned` row), or 0 below its `min`. */
 function plannedStops(m: CompositeMoment, intent: string | undefined): number {
   const planned = m.planned
@@ -719,6 +770,21 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
         })
       }
       for (const view of surfaces) {
+        if (m.unpickedLines !== undefined) {
+          const unpicked = unpickedLines(m, view)
+          if (unpicked === undefined) continue
+          const { at, paths } = unpicked
+          const one = paths.length === 1
+          findings.push({
+            code: 'SURFACE_MISSING',
+            path: `${view.surfaceId}:${at.id}`,
+            message:
+              `${view.surfaceId} reads back ${at.id} (a ${at.component}) with ${one ? 'a quantity' : 'quantities'} bound to ${paths.join(', ')}, ` +
+              `which no ${m.composite} on the surface binds, so the line ${one ? 'quantity' : 'quantities'} cannot be changed. ` +
+              `Add ONE ${m.composite} ${m.repair}`,
+          })
+          continue
+        }
         const wrapped = wrappers(m, view)
         if (wrapped.length > 0) {
           findings.push({
