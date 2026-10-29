@@ -50,6 +50,9 @@ class ProbeNavRail extends UINavRailElement {
   get internalsRole(): string | null {
     return this.internals.role
   }
+  get internalsAriaOrientation(): string | null {
+    return this.internals.ariaOrientation
+  }
 }
 customElements.define('ui-nav-rail-probe', ProbeNavRail)
 
@@ -204,6 +207,78 @@ describe('ui-nav-rail — ARIA role derives from item shape, via internals (both
     mountRail(el, '900px')
     await el.updateComplete
     expect(el.internalsRole, `${server.browser}: expected tablist`).toBe('tablist')
+  })
+})
+
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+//  [1a] T-0521: a bare (tablist) rail delivers the APG tabs keyboard model its role promises
+// ════════════════════════════════════════════════════════════════════════════════════════════════
+
+describe('ui-nav-rail: a bare rail is ONE tab stop with vertical arrow roving (T-0521, both engines)', () => {
+  /** Two groups so roving is proven to cross the group boundary the activators sit behind. */
+  function mountBareRail(): { el: ProbeNavRail; tabs: HTMLButtonElement[] } {
+    const el = document.createElement('ui-nav-rail-probe') as ProbeNavRail
+    el.setAttribute('collapse', 'drill-in')
+    const groupA = document.createElement('ui-nav-rail-group') as UINavRailGroupElement
+    groupA.label = 'General'
+    groupA.append(makeItem('', 'Profile'), makeItem('', 'Account', true))
+    const groupB = document.createElement('ui-nav-rail-group') as UINavRailGroupElement
+    groupB.label = 'Advanced'
+    groupB.append(makeItem('', 'Billing'), makeItem('', 'Security'))
+    el.append(groupA, groupB)
+    mountRail(el, '900px')
+    const tabs = [...el.querySelectorAll<HTMLButtonElement>('ui-nav-rail-item > [data-part="activator"]')]
+    return { el, tabs }
+  }
+
+  const tabStops = (tabs: HTMLElement[]): HTMLElement[] => tabs.filter((t) => t.tabIndex === 0)
+
+  it('exactly the selected tab is tabindex=0, the rest -1, and the tablist is vertical', async () => {
+    const { el, tabs } = mountBareRail()
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+    expect(tabs).toHaveLength(4)
+    expect(tabs.every((t) => t.getAttribute('role') === 'tab')).toBe(true)
+    expect(tabStops(tabs), `${server.browser}: expected ONE tab stop, on the selected tab`).toEqual([tabs[1]])
+    expect(el.internalsAriaOrientation, `${server.browser}: tablist must say it roves vertically`).toBe('vertical')
+  })
+
+  it('ArrowDown/ArrowUp rove real focus (wrapping), Home/End jump, and the tab stop follows focus', async () => {
+    const { el, tabs } = mountBareRail()
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+    tabs[1].focus()
+
+    await userEvent.keyboard('{ArrowDown}')
+    expect(document.activeElement, `${server.browser}: ArrowDown did not cross into the next group`).toBe(tabs[2])
+    expect(tabStops(tabs)).toEqual([tabs[2]])
+    await userEvent.keyboard('{End}')
+    expect(document.activeElement, `${server.browser}: End`).toBe(tabs[3])
+    await userEvent.keyboard('{ArrowDown}')
+    expect(document.activeElement, `${server.browser}: ArrowDown did not wrap`).toBe(tabs[0])
+    await userEvent.keyboard('{ArrowUp}')
+    expect(document.activeElement, `${server.browser}: ArrowUp did not wrap`).toBe(tabs[3])
+    await userEvent.keyboard('{Home}')
+    expect(document.activeElement, `${server.browser}: Home`).toBe(tabs[0])
+    expect(tabStops(tabs)).toEqual([tabs[0]])
+  })
+
+  it('manual activation: arrows only move focus, Enter commits the focused tab', async () => {
+    const { el, tabs } = mountBareRail()
+    await el.updateComplete
+    await new Promise((r) => requestAnimationFrame(() => r(undefined)))
+    const selects: string[] = []
+    el.addEventListener('select', (e) => selects.push((e as CustomEvent<string>).detail))
+    tabs[1].focus()
+
+    await userEvent.keyboard('{ArrowDown}')
+    expect(selects, `${server.browser}: an arrow must not commit a selection`).toEqual([])
+    expect(tabs[1].getAttribute('aria-selected')).toBe('true')
+
+    await userEvent.keyboard('{Enter}')
+    expect(selects).toEqual(['Billing'])
+    expect(tabs[2].getAttribute('aria-selected')).toBe('true')
+    expect(tabs[1].getAttribute('aria-selected')).toBe('false')
   })
 })
 

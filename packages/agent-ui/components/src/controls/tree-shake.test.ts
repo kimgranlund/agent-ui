@@ -379,3 +379,30 @@ describe('traits/scroll-spy tree-shake — the opt-in subpath is a type-only LEA
     )
   })
 })
+
+// ── T-0521: the `./traits/roving-focus` subpath's tree-shake half (the traits/scroll-spy precedent above) ──
+//
+// Published so @agent-ui/app's ui-nav-rail can rove a bare (tablist) rail; the root-barrel trial measured the
+// foundation row at 8427 B gz against its 7680 B gz budget, so it ships as its own opt-in subpath.
+// `scripts/measure-size.mjs` gates its ABSOLUTE size, honest only while the trait pulls no kernel at runtime.
+// `ROVING_ITEM_ATTR` is a same-layer export (tabbable.ts imports it), not an import, so the leaf shape holds.
+const ROVING_FOCUS_ENTRY = 'traits/roving-focus.ts'
+describe('traits/roving-focus tree-shake: the opt-in subpath is a type-only LEAF (T-0521)', () => {
+  it('the glob reached the trait source (anti-vacuous: a missing key makes the scan below trivially empty)', () => {
+    expect(sources.has(ROVING_FOCUS_ENTRY), `${ROVING_FOCUS_ENTRY} is not in the crawled source map`).toBe(true)
+    expect((sources.get(ROVING_FOCUS_ENTRY) ?? '').length, 'the trait source is empty').toBeGreaterThan(500)
+  })
+
+  it('carries ZERO value imports: every import is erased, so its runtime graph is empty', () => {
+    const src = sources.get(ROVING_FOCUS_ENTRY) as string
+    const valueFrom = [...src.matchAll(/(?:^|\n)\s*(?:import|export)(?!\s+type\b)[^;'"]*?\bfrom\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+    const bare = [...src.matchAll(/(?:^|\n)\s*import\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
+    expect(
+      [...valueFrom, ...bare],
+      "traits/roving-focus gained a RUNTIME import: the subpath now drags real modules, and measure-size.mjs's absolute framing (plus its 1.5 KB cap) no longer holds",
+    ).toEqual([])
+    expect(src, 'the type-only dom import vanished, so this suite would then be asserting nothing').toMatch(
+      /import type \{[^}]*\} from '\.\.\/dom\/index\.ts'/,
+    )
+  })
+})
