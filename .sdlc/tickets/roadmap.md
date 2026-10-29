@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 553 done, 5 dropped (git log or .NNNN-* folders)
+Closed: 551 done, 5 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -131,4 +131,4 @@ Closed: 553 done, 5 dropped (git log or .NNNN-* folders)
 - decide: redck deviations: no `process deviation:` lines printed. (from T-0562: The leak gate covers ui-agent-admin (2026-10-28))
 - decide: sequential unbounded quantifiers (`a*a*a*a*b`) and overlapping alternation (`(a|aa)+`, 99 ms at 35 chars) pass `hasNestedQuantifier`; whether a count cap on unbounded quantifiers per pattern is worth a follow-up. (from T-0554: Hardening batch: payload regex cap, frame bridge source check, harness proxy URL, worker limiter, icon pack note (2026-10-28))
 - decide: packages/agent-ui/a2ui/src/catalog/a2ui-basic/catalog.json:16 `Image.url` (mapsTo `src`) still declares `safe-href`, which admits `mailto:` and rejects `data:`, the opposite of the render gate for a media prop; the handoff names only the default catalog, and the builder disclosed it. A follow-up could move it to `media-src`. The persona and domain catalogs carry no own media props. (from T-0563: Catalog media props declare a media URL format (2026-10-29))
-- decide: scripts/measure-size.mjs:266 overlay budget raised to 2688 on the builder's own reading of the ADR-0197 cl.5 precedent; Kim to confirm the bump or trim overlay.ts. (from T-0529: npm run size gates in check:scripts (2026-10-29))
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:779 decide: the row emits `SURFACE_MISSING` as the ticket pins, not a `<COMPOSITE>_MISSING` code; the builder reports it therefore gets no T-0299 cross-round bind. No criterion names it and the replay heals in one repair round, so it is left open here, not verified. (from T-0550: A cart's ConfirmReceipt with a bound quantity ships its AmountPicker (round 17 cluster P5) (2026-10-29))

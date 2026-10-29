@@ -457,6 +457,28 @@ const CONTRACTS: Record<string, Contract> = {
       ]),
     },
   },
+  // T-0550: a cart ConfirmReceipt whose line quantity is bound ships the AmountPicker that writes it (round 17 :154).
+  'composite-moment-amount-picker': {
+    code: 'SURFACE_MISSING',
+    pass: {
+      catalog: UI,
+      intent: 'Add two of the first one to my order and show me my cart.',
+      output: surface('shop-lamps-1', UI, [
+        { id: 'root', component: 'Column', gap: 'md', children: ['order', 'qty_arc'] },
+        { id: 'order', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: { path: '/lamp/qty' }, amount: '$149' }], totalLabel: 'Total', totalPath: '/lamp/total', status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back' } },
+        { id: 'qty_arc', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: { path: '/lamp/qty' }, min: 1, step: 1 },
+      ], { lamp: { qty: 2, total: '$298' } }),
+    },
+    fail: {
+      catalog: UI,
+      intent: 'Add two of the first one to my order and show me my cart.',
+      output: surface('shop-lamps-1', UI, [
+        { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'order'] },
+        { id: 'heading', component: 'Text', text: 'Lamps', variant: 'h4' },
+        { id: 'order', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: { path: '/lamp/qty' }, amount: '$149' }], totalLabel: 'Total', totalPath: '/lamp/total', status: 'pending', confirmAction: { action: 'confirm_order' }, backAction: { action: 'back' } },
+      ], { lamp: { qty: 2, total: '$298' } }),
+    },
+  },
   // T-0359: a palette is shown on a Swatch and a Ramp, never written out, and a palette ask is answered on one.
   'composite-moment-swatch': {
     code: 'SWATCH_MISSING',
@@ -967,6 +989,7 @@ const ROW_PROPS: Record<string, readonly string[]> = {
   Timeline: ['label'],
   ProductCard: ['title', 'price', 'priceNote', 'action'],
   ConfirmReceipt: ['title', 'items', 'totalLabel', 'totalPath', 'status', 'confirmAction', 'backAction'],
+  AmountPicker: ['value', 'min', 'step', 'slider', 'actionName'],
   Swatch: ['label', 'value'],
   ContrastPair: ['foreground', 'background', 'label'],
 }
