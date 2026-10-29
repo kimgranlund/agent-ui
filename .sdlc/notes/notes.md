@@ -1161,3 +1161,7 @@
 
 - note: text-field.ts:~548-550 the codec comment block now has one over-long line ("typeAc.signal is passed so the codec's focus/blur listeners die ... Local variable captures config.codec so TypeScript can narrow the"), a reflow nit only.
 - note: the browser tests import `@agent-ui/components/all`, so they only exercise the already-loaded kit path; the lazy window is covered by the jsdom test alone (the builder reports the same).
+
+## T-0533: super-shell.md meets the schema under a props drift gate, every created part is declared, and a PART_UNDOCUMENTED gate catches new ones (2026-10-28)
+
+- note: `collectCreatedParts` (component-descriptor.ts:672-683) skips computed part names such as agent-team-pane's `button(part)`. The solo report says this is by design. The gate is also opt-in per test: a helper-module part is caught only when the control's test passes that helper's source, as agent-admin and settings now do. sandbox-frame/dogfood/dogfood-assets.ts is not covered.

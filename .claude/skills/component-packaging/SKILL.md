@@ -41,7 +41,8 @@ consumers. Routing + reading order only; each row's owner doc/source is the sing
   subpaths under vitest), so a new subpath needs no alias edit.
 - The descriptor is **trip-wired against source, permanently** (`compareDescriptorToSource`):
   `customStates` must match the `internals.states` calls + `:state()` CSS; every styled slot must
-  be declared. Declare truthfully or the gate reds. It is also trip-wired against props
+  be declared, and so must every literal `data-part` the .ts creates (`PART_UNDOCUMENTED`, T-0533;
+  pass a helper module's source too when it builds the control's parts). Declare truthfully or the gate reds. It is also trip-wired against props
   (`compareDescriptorToProps`) **for unconverted controls only** — see the ratchet below; a
   converted control's props are checked by the generator-drift gate instead.
 - New site-visible surfaces (a doc/demo page) drag standing site gates with them — nav/TOC

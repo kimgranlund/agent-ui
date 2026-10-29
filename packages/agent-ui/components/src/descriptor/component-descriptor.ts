@@ -662,8 +662,27 @@ export function collectStyledRoles(css: string): Set<string> {
   return names
 }
 
+/**
+ * The PARTS a component's .ts CREATES: every literal `data-part="X"` written into markup (an html template or a
+ * string, never a `[data-part="X"]` selector, which reads a part rather than creating one), every
+ * `.dataset.part = 'X'` and every `setAttribute('data-part', 'X')`. A computed name (`data-part="${x}"`) is not
+ * a literal and is not collected. Comment lines (`//`, `/*`, ` *`) are skipped: prose that cites another
+ * control's part (`ui-menu` stamps `data-part="trigger"`) creates nothing.
+ */
+export function collectCreatedParts(source: string): Set<string> {
+  const names = new Set<string>()
+  const ts = source
+    .split('\n')
+    .filter((line) => !/^\s*(?:\/\/|\/\*|\*)/.test(line))
+    .join('\n')
+  for (const m of ts.matchAll(/(?<!\[\s*)data-part\s*=\s*\\?['"]([A-Za-z][\w-]*)\\?['"]/g)) names.add(m[1])
+  for (const m of ts.matchAll(/\.dataset\.part\s*=\s*['"`]([A-Za-z][\w-]*)['"`]/g)) names.add(m[1])
+  for (const m of ts.matchAll(/setAttribute\(\s*['"]data-part['"]\s*,\s*['"`]([A-Za-z][\w-]*)['"`]\s*\)/g)) names.add(m[1])
+  return names
+}
+
 /** The drift defects compareDescriptorToSource reports (the descriptor disagrees with the component .ts/.css). */
-export const SOURCE_DRIFT_CODES = ['STATE_UNDOCUMENTED', 'STATE_UNUSED', 'SLOT_UNDOCUMENTED'] as const
+export const SOURCE_DRIFT_CODES = ['STATE_UNDOCUMENTED', 'STATE_UNUSED', 'SLOT_UNDOCUMENTED', 'PART_UNDOCUMENTED'] as const
 export type SourceDriftCode = (typeof SOURCE_DRIFT_CODES)[number]
 
 /** One source-drift defect: a stable code + the descriptor path it occurred at + a human message. */
@@ -683,13 +702,26 @@ function declaredSlotNames(desc: ParsedDescriptor): Set<string> {
   return names
 }
 
+/** The part names a descriptor declares (the `parts[]` sequence rows' `name:` values, or bare-scalar items). */
+function declaredPartNames(desc: ParsedDescriptor): Set<string> {
+  const names = new Set<string>(scalarSeq(desc, 'parts'))
+  for (const item of desc.sequences.get('parts') ?? []) {
+    const name = item.get('name')
+    if (typeof name === 'string' && name !== '') names.add(name)
+  }
+  return names
+}
+
 /**
- * The contract↔source trip-wire: assert the descriptor's customStates/slots tell the truth about where the fact
+ * The contract↔source trip-wire: assert the descriptor's customStates/slots/parts tell the truth about where the fact
  * ACTUALLY lives (the component .ts/.css). TOTAL — never throws; every disagreement is a structured
  * SourceDriftFailure. STATES (bidirectional): used-states (collectUsedStates) ≡ descriptor.customStates —
  * STATE_UNDOCUMENTED for a used state the descriptor omits, STATE_UNUSED for a documented state no source uses.
  * SLOTS (one-directional): every CSS-styled slot (collectStyledSlots) must be IN descriptor.slots —
  * SLOT_UNDOCUMENTED otherwise; a documented-but-unstyled slot (`label`, the default cell) is NOT a defect.
+ * PARTS (one-directional, the slot shape): every part the .ts creates (collectCreatedParts) must be IN
+ * descriptor.parts, PART_UNDOCUMENTED otherwise; a declared part the passed .ts never creates (a helper module
+ * builds it, or a computed name) is NOT a defect.
  */
 export function compareDescriptorToSource(desc: ParsedDescriptor, source: { ts: string; css: string }): SourceDriftFailure[] {
   const failures: SourceDriftFailure[] = []
@@ -709,6 +741,12 @@ export function compareDescriptorToSource(desc: ParsedDescriptor, source: { ts: 
   const declaredSlots = declaredSlotNames(desc)
   for (const s of collectStyledSlots(source.css)) {
     if (!declaredSlots.has(s)) add('SLOT_UNDOCUMENTED', `slots.${s}`, `slot "${s}" is styled in css but absent from slots`)
+  }
+
+  // PARTS: one-directional, every part the .ts creates must be declared (an undeclared created part is the drift).
+  const declaredParts = declaredPartNames(desc)
+  for (const p of collectCreatedParts(source.ts)) {
+    if (!declaredParts.has(p)) add('PART_UNDOCUMENTED', `parts.${p}`, `part "${p}" is created in ts but absent from parts`)
   }
 
   return failures

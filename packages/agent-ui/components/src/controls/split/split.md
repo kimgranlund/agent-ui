@@ -35,10 +35,10 @@ events:                 # both carry the PROPOSED ratio vector (number[]) as det
 
 slots: []               # host-as-flex: the light-DOM `ui-split-pane` children ARE the flex items — no NAMED slots (the ui-row precedent)
 
-parts:                   # NOT shadow-DOM ::part() (agent-ui is light-DOM only) — the light-DOM `[data-separator]`
-                          # marker CSS/JS use to identify the control-rendered separator divs; documented here for
-                          # completeness (compareDescriptorToSource does not mechanically check `parts:` — no
-                          # `collectStyledParts` extractor exists, matching bar-chart's `[data-part]` convention)
+parts:                   # NOT shadow-DOM ::part() (agent-ui is light-DOM only): the light-DOM `[data-separator]`
+                          # marker CSS/JS use to identify the control-rendered separator divs. compareDescriptorToSource
+                          # checks only `data-part` names the .ts creates (PART_UNDOCUMENTED, T-0533), so this
+                          # `data-separator` marker is documented by hand
   - name: separator
     description: One control-rendered `<div data-separator role="separator" tabindex="0">` per adjacent pane pair (N panes ⇒ N−1). Never authored — the slider-thumb precedent.
 
