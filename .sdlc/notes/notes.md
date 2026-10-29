@@ -1340,3 +1340,7 @@
 ## T-0573: Unrouted notes follow-ups are triaged, round 2 (2026-10-29)
 
 - note: .sdlc/runtime/tasks/0573-notes-triage-2/0573-solo-L1.md: redck deviations printed no lines; no (red) criteria in this ticket.
+
+## T-0575: Removed CodeMirror editors in ui-agent-admin leave no listeners after garbage collection (2026-10-29)
+
+- note: agent-admin-gc.browser.test.ts:2-4 and the handoff say about 100 to 106 listeners per mount; the measured count is 60 on CodeMirror nodes (builder report discloses it as an unreconciled counter difference).
