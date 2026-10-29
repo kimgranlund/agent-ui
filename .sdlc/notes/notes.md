@@ -1233,3 +1233,8 @@
 ## T-0557: Placeholders and links meet AA contrast, and ui-pagination marks the current page in forced colors (2026-10-28)
 
 - note: the solo report's open item stands: a field on the dimmest light planes (n-175 4.50, n-200 4.22 under the field fill) misses AA, and router-link active ink `primary-high` is 4.39 on dark n-800. The tokens.test.ts field-fill gate is on the page surface only, matching the criterion wording.
+
+## T-0519: ui-list children carry listitem semantics (2026-10-28)
+
+- note: redck.py deviations printed no `process deviation:` lines.
+- note: the Chromium AX leg returns early on WebKit (no CDP Accessibility domain), so the AX-tree criterion is Chromium-only by design, as the criterion states.

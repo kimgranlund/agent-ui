@@ -5,10 +5,13 @@
 // `ui-list` is a `ui-column` SPECIALIZATION that adds LIST SEMANTICS: it is a `display:flex` vertical stack
 // (the surface base `UIContainerElement`, ADR-0015 — NOT form-associated) whose host carries the ARIA
 // `role="list"`. The role is set THROUGH the protected `internals` (the family discipline, ADR-0010 /
-// element.ts) — NEVER a host `role` attribute, so the host stays free of `role`/`aria-*`. The list imposes
-// NO item element: its children are the list items, composed by the agent as a ChildList (the A2UI child
-// model) — so `render()` stays the inherited VOID (returning nothing → the host render effect commits
-// nothing → the user's light-DOM children are never clobbered).
+// element.ts), NEVER a host `role` attribute, so the host stays free of `role`/`aria-*`. Its children are
+// the list items, composed by the agent as a ChildList (the A2UI child model), and stay untouched light DOM
+// (`render()` stays the inherited VOID). The listitem role (T-0519) rides a list-owned part: a manual-slot
+// shadow root holds one `<div part="item" role="listitem">` per child, each slotting exactly that child, so
+// ARIA's required owned listitems exist without a `role` attribute on a child (which would override a ui-*
+// child's own internals role, ui-card's `group` say). list.css sets the part to `display: contents`, so the
+// flex layout still sees the children as its items.
 //
 // It consumes the two shared spreadable prop sets the container family declares (no static-props prototype
 // merge — the ADR-0013 `formProps` precedent): `surfaceProps` (elevation/brightness, the surface axes) and
@@ -42,12 +45,56 @@ export interface UIListElement extends ReactiveProps<typeof props> {}
 export class UIListElement extends UIContainerElement {
   static props = props
 
+  #items = new Map<Node, HTMLElement>() // light child -> its listitem part in the shadow root
+  #observer: MutationObserver | null = null
+
+  constructor() {
+    super()
+    // Manual assignment: each item part's slot takes exactly one child, with no `slot` attribute on it.
+    this.attachShadow({ mode: 'open', slotAssignment: 'manual' })
+  }
+
   protected connected(): void {
     // LIST SEMANTICS — `role=list` rides the host's ElementInternals, never a host `role` attribute (the
     // family discipline). A constant semantic role, so it is set DIRECTLY (not in an effect); re-set on each
-    // connect (idempotent). The children are the list items — no item element is imposed, and `render()`
-    // stays void so the ChildList children flow through untouched.
+    // connect (idempotent). `render()` stays void so the ChildList children flow through untouched.
     this.internals.role = 'list'
+    this.#sync()
+    this.#observer = new MutationObserver(() => this.#sync())
+    this.#observer.observe(this, { childList: true })
+  }
+
+  protected disconnected(): void {
+    this.#observer?.disconnect()
+    this.#observer = null
+  }
+
+  /** One listitem part per element or non-blank text child, in child order; parts of removed children go.
+   *  Incremental: a part already in place is never detached, so a focused child keeps focus across a sync. */
+  #sync(): void {
+    const root = this.shadowRoot
+    if (!root) return
+    const next = new Map<Node, HTMLElement>()
+    let at = 0
+    for (const child of this.childNodes) {
+      const isItem = child.nodeType === Node.ELEMENT_NODE || (child.nodeType === Node.TEXT_NODE && child.textContent?.trim())
+      if (!isItem) continue
+      let item = this.#items.get(child)
+      if (!item) {
+        item = document.createElement('div')
+        item.setAttribute('part', 'item')
+        item.setAttribute('role', 'listitem') // a real attribute on this list-owned part; internals is host-only
+        item.append(document.createElement('slot'))
+      }
+      const slot = item.firstElementChild as HTMLSlotElement
+      if (typeof slot.assign === 'function') slot.assign(child as Element | Text) // jsdom has no manual slots
+      next.set(child, item)
+      const here = root.children[at] ?? null
+      if (here !== item) root.insertBefore(item, here)
+      at++
+    }
+    for (const [child, item] of this.#items) if (!next.has(child)) item.remove()
+    this.#items = next
   }
 }
 

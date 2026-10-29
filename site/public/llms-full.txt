@@ -3357,8 +3357,9 @@ the `axes` state above (ADR-0229 cl.3) — the ADR-0205 cl.7 later-list items th
 a structural container (`extends UIContainerElement`, ADR-0015): a `display:flex` column whose host carries
 the ARIA `role="list"`, set through `ElementInternals` (never a host `role`/`aria-*` attribute). It is **not**
 form-associated; it contributes no value or validity. Its children are the **list items** — composed directly
-as light-DOM children (the ChildList child model); `ui-list` imposes no item element and never re-renders the
-children (`render()` stays void).
+as light-DOM children (the ChildList child model); `ui-list` never re-renders the children (`render()` stays
+void) and stamps nothing on them. Each child is slotted into its own `item` part, a listitem, in a manual-slot
+shadow root the list owns.
 
 ```html
 <ui-list gap="sm">
@@ -3405,8 +3406,10 @@ an externally-sized ancestor boundary provides query context for any descendant 
 
 ## Accessibility
 
-`role="list"` is set via the host's `ElementInternals` (no host `role`/`aria-*` attribute), so assistive
-technology reads the host as a list and its children as the list items. Give the list an accessible name with
+`role="list"` is set via the host's `ElementInternals` (no host `role`/`aria-*` attribute), and each child sits
+in its own `item` part with `role="listitem"`, so assistive technology reads the host as a list of exactly as
+many items as it has children. The child keeps its own role inside the item (a `ui-card` stays a group), and
+the part generates no box, so layout is unchanged. Give the list an accessible name with
 `aria-label`/`aria-labelledby` through `ElementInternals` when one is warranted. Because the list carries no
 colour of its own, high-contrast (forced-colors) survival is handled by the shared container surface sheet.
 
