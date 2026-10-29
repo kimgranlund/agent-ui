@@ -1383,3 +1383,7 @@
 
 - note: the red-checkpoint deviation script printed no `process deviation:` lines; there are no `(red)` criteria.
 - note: `.sdlc/evals/rounds/2026-10-29-r19-pattern/report.md` "Is R closed" reports the forced render_surface at :154 r3 as inferred from code, not trace; the report states this plainly.
+
+## T-0583: CHANGE_CLAIM_IN_REPLY catches order and total phrasings (2026-10-29)
+
+- note: the regex branch for "have got" excludes "nothing|no" and questions via the `(?![^.!?]*\?)` lookahead; verified by the negative test, which the base regex also passes, so those guards are only protective against the new branch (not red on base by design).

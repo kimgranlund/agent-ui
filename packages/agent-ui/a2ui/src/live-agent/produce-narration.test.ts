@@ -359,6 +359,31 @@ describe('produce(): a targeted claim with no surface id, or a target never crea
     }
   })
 
+  // T-0583 (round 2026-10-29-r19-pattern cluster Z, :124 and :84): "you've got ... in your order", "total is $N" and
+  // "come down to $N" are change claims too.
+  it('a targeted "you\'ve got ... in your order", "total is $N" or "come down to $N" claim gets CHANGE_CLAIMED with render_surface offered', async () => {
+    for (const text of [
+      "You've got two Brass Desk Lamps in your order, at $68 each. Your cart total is $136. The prices are illustrative demo values.",
+      "Twenty? Friend, that is not an offer, it is an insult to my grandmother's lantern. I will come down to $165, and not one coin lower until you show me something more serious.",
+      'You have got the lamp in your cart.',
+      'Your total is $54.',
+    ]) {
+      const r = await runRounds([{ text: targeted(text, 'table-3') }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }])
+      expect(r.reqs, text).toHaveLength(2)
+      expect(r.reqs[1]!.toolChoice, text).toEqual({ name: 'render_surface' })
+      expect(lastUser(r.reqs[1]!), text).toContain('CHANGE_CLAIMED at table-3')
+      expect(r.trace, text).toMatchObject({ rounds: 2, failureCodes: ['CHANGE_CLAIMED'] })
+    }
+  })
+
+  it('a targeted plain informational reply, or a question or empty order in "got" wording, claims nothing', async () => {
+    for (const text of ['Is there anything in your order you want to change?', 'Late check-out is possible until 13:00.', "You've got nothing in your order yet.", "Have you got everything you need in your cart?", "You've got a lamp in your order already?", 'The total price depends on the quantity.']) {
+      const r = await runRounds([{ text: targeted(text, 'table-3') }])
+      expect(r.reqs, text).toHaveLength(1)
+      expect(r.trace.failureCodes, text).toEqual([])
+    }
+  })
+
   it('a targeted reply that only mentions an earlier add, or a thing that comes to mind, claims nothing', async () => {
     for (const text of ['Which lamp would you like added?', 'What comes to mind when you think of brass?', 'The Oak Column lamp is $98.', 'Added fees may apply.', 'Added taxes will apply at checkout.']) {
       const r = await runRounds([{ text: targeted(text, 'table-3') }])
