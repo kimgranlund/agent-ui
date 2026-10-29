@@ -119,6 +119,30 @@ describe('ui-conversation-dialog — followTail() (GH #365 — three distinguish
     await vi.advanceTimersByTimeAsync(25 * 40)
     expect(await p).toBe('exhausted')
   })
+
+  it("a dialog removed mid-follow stops polling: resolves 'skipped' and writes no more scrollTop", async () => {
+    vi.useFakeTimers()
+    const el = mount(document.createElement('ui-conversation-dialog') as UIConversationDialogElement)
+    let writes = 0
+    let top = 0
+    Object.defineProperty(el, 'clientHeight', { value: 300, configurable: true })
+    Object.defineProperty(el, 'scrollHeight', { value: 500, configurable: true })
+    Object.defineProperty(el, 'scrollTop', {
+      configurable: true,
+      get: () => top,
+      set(v: number) {
+        writes += 1
+        top = v + writes // never stable, so only the connection guard can end the poll early
+      },
+    })
+    const p = el.followTail(true)
+    expect(writes).toBe(1)
+    el.remove()
+    await vi.advanceTimersByTimeAsync(40)
+    expect(await p).toBe('skipped')
+    expect(writes).toBe(1)
+    expect(vi.getTimerCount()).toBe(0)
+  })
 })
 
 // ── descriptor — ADR-0004 (structural + contract↔props, the ui-toast-region/ui-form-provider empty-bijection precedent) ──

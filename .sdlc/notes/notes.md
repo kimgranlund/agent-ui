@@ -1165,3 +1165,8 @@
 ## T-0533: super-shell.md meets the schema under a props drift gate, every created part is declared, and a PART_UNDOCUMENTED gate catches new ones (2026-10-28)
 
 - note: `collectCreatedParts` (component-descriptor.ts:672-683) skips computed part names such as agent-team-pane's `button(part)`. The solo report says this is by design. The gate is also opt-in per test: a helper-module part is caught only when the control's test passes that helper's source, as agent-admin and settings now do. sandbox-frame/dogfood/dogfood-assets.ts is not covered.
+
+## T-0542: Timers and deferred turns stop acting on a detached host (2026-10-28)
+
+- note: packages/agent-ui/app/src/controls/agent-admin/agent-admin.ts:2932 the error-turn guard has no test; builder reports agent-admin needs keys to probe.
+- note: the builder used git stash for its mutation check (0542-solo-L1.md), against the no-stash rule; stack reported unchanged.

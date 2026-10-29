@@ -82,6 +82,11 @@ export class UIConversationDialogElement extends UIElement {
       let stableStreak = 0
       let checks = 0
       const tick = (): void => {
+        // A removed dialog stops writing scrollTop: the poll resolves 'skipped' instead of running out its ~1s.
+        if (!this.isConnected) {
+          resolve('skipped')
+          return
+        }
         this.scrollTop = this.scrollHeight
         const top = this.scrollTop
         stableStreak = top === prevTop ? stableStreak + 1 : 0

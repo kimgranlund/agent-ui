@@ -957,7 +957,7 @@ export class UITextFieldElement extends UIFormElement {
    * is wired by the CALLER (the type-effect) after overlay creation — this method only creates the
    * button element. Returns the container for the effect cleanup to remove.
    */
-  #createAffordanceAdornment(role: AffordanceRole, typeAc: AbortSignal): HTMLElement {
+  #createAffordanceAdornment(role: AffordanceRole, typeSignal: AbortSignal): HTMLElement {
     const container = document.createElement('span')
     container.setAttribute('slot', 'trailing')
     container.setAttribute('data-part', 'trailing-adornment')
@@ -976,7 +976,7 @@ export class UITextFieldElement extends UIFormElement {
         this.emit('input')
         this.emit('change')
         this.#editor?.focus()
-      }, { signal: typeAc })
+      }, { signal: typeSignal })
       container.append(btn)
     } else if (role === 'reveal') {
       // reveal: toggle password masking via :state(revealed) (ADR-0044). The glyph itself carries the
@@ -998,7 +998,7 @@ export class UITextFieldElement extends UIFormElement {
           this.internals.states?.delete('revealed')
         }
         this.emit('toggle')
-      }, { signal: typeAc })
+      }, { signal: typeSignal })
       container.append(btn)
     } else if (role === 'calendar') {
       // trailing icon button that opens the date picker popup.
@@ -1044,7 +1044,7 @@ export class UITextFieldElement extends UIFormElement {
    * The trailing container's data-role is 'numeric' when a suffix is present, 'stepper' otherwise —
    * both are flex ROWS; 'numeric' additionally carries the suffix span before the button pair.
    */
-  #createNumericAdornment(suffixText: string | null, typeAc: AbortSignal): HTMLElement {
+  #createNumericAdornment(suffixText: string | null, typeSignal: AbortSignal): HTMLElement {
     const container = document.createElement('span')
     container.setAttribute('slot', 'trailing')
     container.setAttribute('data-part', 'trailing-adornment')
@@ -1064,14 +1064,14 @@ export class UITextFieldElement extends UIFormElement {
     down.setAttribute('data-part', 'step-down')
     down.setAttribute('aria-label', 'Decrease')
     down.append(createGlyph('minus')) // the library mark, not pack art (ADR-0245 cl.5)
-    down.addEventListener('click', () => { this.#step(-1) }, { signal: typeAc })
+    down.addEventListener('click', () => { this.#step(-1) }, { signal: typeSignal })
 
     const up = document.createElement('button')
     up.type = 'button'
     up.setAttribute('data-part', 'step-up')
     up.setAttribute('aria-label', 'Increase')
     up.append(createGlyph('plus')) // the library mark, not pack art (ADR-0245 cl.5)
-    up.addEventListener('click', () => { this.#step(1) }, { signal: typeAc })
+    up.addEventListener('click', () => { this.#step(1) }, { signal: typeSignal })
 
     container.append(down, up) // − before + (minus left of plus — GH #1406, Kim's 2026-08-19 ruling)
     this.append(container)
