@@ -24,7 +24,7 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for avatar.
     default: ''
     reflect: false      # NOT reflected — property-only render input; a load error falls back without ever
                          # exposing the failed URL as a host attribute
-    description: An image URL for the fallback chain's first link; a load error falls back without ever painting a broken-image box.
+    description: An image URL for the fallback chain's first link; a load error falls back without ever painting a broken-image box. The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL is tried, and a denied one falls back as if empty.
   - name: identity
     type: string
     default: ''

@@ -3,7 +3,7 @@
 import { prop, type PropsSchema } from '../../dom/index.ts'
 
 export const props = {
-  // The image URL. Renders no <img> at all when empty (never a broken-image box). — generated from image.md attributes.src — edit the descriptor, not this file.
+  // The image URL. Renders no <img> at all when empty (never a broken-image box). The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL renders, and a denied one renders as empty. — generated from image.md attributes.src — edit the descriptor, not this file.
   src: prop.string(''),
   // REQUIRED in spirit (the a2ui catalog enforces it at admission; this component never coerces or hides an empty value) — the interior <img>'s accessible name. Never synthesized, never defaulted to decorative empty-alt (contrast with ui-avatar's own interior-node empty-alt posture, which is a DIFFERENT contract for a DIFFERENT component: avatar's img is one link in a decorative-by-default fallback chain; ui-image's img IS the content). — generated from image.md attributes.alt — edit the descriptor, not this file.
   alt: prop.string(''),

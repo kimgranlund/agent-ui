@@ -24,7 +24,7 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for video.t
     default: ''
     reflect: false      # property-only render input (the image.md `src` posture); a URL only —
                          # no upload/hosting (ADR-0073 trust boundary untouched)
-    description: The video URL. Renders no <video> at all when empty (never a dead player shell).
+    description: The video URL. Renders no <video> at all when empty (never a dead player shell). The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL renders, and a denied one renders as empty.
   - name: label
     type: string
     default: ''
@@ -34,7 +34,7 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for video.t
     type: string
     default: ''
     reflect: false      # property-only render input, same posture as src
-    description: Optional poster-frame URL shown before playback starts (the native <video poster> attribute, passed through verbatim; empty ⇒ no poster attribute at all).
+    description: Optional poster-frame URL shown before playback starts (the native <video poster> attribute; empty or denied by the media gate, as for `src`, gives no poster attribute at all).
   - name: aspect
     type: string
     default: '16/9'

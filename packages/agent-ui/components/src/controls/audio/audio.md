@@ -19,7 +19,7 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for audio.t
     type: string
     default: ''
     reflect: false      # property-only render input (the image.md/video.md `src` posture); URL only
-    description: The audio URL. Renders no <audio> at all when empty (never a dead player bar).
+    description: The audio URL. Renders no <audio> at all when empty (never a dead player bar). The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL renders, and a denied one renders as empty.
   - name: label
     type: string
     default: ''

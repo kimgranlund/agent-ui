@@ -101,7 +101,8 @@ export interface TreeDeps {
   createWidget: CreateWidget                 // unchanged — mint + wire a NEW element
   create: CreateOnly                         // NEW — mint only (no wiring); reused by RSR-C6's pristine-default lookup
   rewireNode: RewireNode                     // NEW — wire props/action/checks onto an EXISTING element
-  resetProp: ResetProp                       // NEW — resolve the node's factory and call its applyProp (§7's narrowed reset)
+  resetProp: ResetProp                       // NEW — resolve the node's factory and call its applyProp (§7's identity-mapped reset)
+  resetMappedProp?: ResetMappedProp          // T-0556: resolve the node's factory and call its optional resetProp hook (§7's non-identity reset)
   onError: (error: A2uiError) => void
 }
 export type CreateOnly = (node: A2uiComponent, surface: Surface) => HTMLElement
@@ -109,6 +110,7 @@ export type RewireNode = (el: HTMLElement, node: A2uiComponent, surface: Surface
 // resetProp needs node+surface (not just el/prop/value) because applyProp is resolved PER FACTORY
 // (registry.get(surface.catalogId)?.factories[node.component]?.applyProp) — it is not a bare function.
 export type ResetProp = (el: HTMLElement, node: A2uiComponent, surface: Surface, prop: string, value: unknown) => void
+export type ResetMappedProp = (el: HTMLElement, node: A2uiComponent, surface: Surface, prop: string) => void // T-0556
 ```
 
 ## 3. Per-node scope registry + surface-teardown carrier (RSR-C1)
@@ -378,8 +380,10 @@ correct, not a guess:
   const componentDef = this.#deps.componentDefOf(next, this.#surface)   // registry.get(catalogId)?.catalog?.components?.[next.component]
   const pristine = this.#deps.create(next, this.#surface)               // never connected, never appended, GC'd on return
   for (const key of droppedKeys) {
-    if (componentDef?.properties[key]?.mapsTo !== key) continue  // NON-identity (bespoke) mapping: narrowed scope, see below
-    this.#deps.resetProp(el, next, this.#surface, key, (pristine as unknown as Record<string, unknown>)[key])
+    const def = componentDef?.properties[key]
+    if (def === undefined) continue                              // undeclared (T-0552): never applied, nothing to reset
+    if (def.mapsTo !== key) this.#deps.resetMappedProp?.(el, next, this.#surface, key) // bespoke mapping: the factory's hook (T-0556)
+    else this.#deps.resetProp(el, next, this.#surface, key, (pristine as unknown as Record<string, unknown>)[key])
   }
 }
 ```
@@ -394,7 +398,7 @@ excludes it for a different, sufficient reason (an action-mapped key's `mapsTo` 
 `'action'`, never equal to the key itself unless a prop happens to be literally named `action` AND
 identity-mapped, which no shipped row does).
 
-**The narrowed scope, honestly stated:** a DROPPED prop whose catalog mapping is non-identity (a bespoke
+**The narrowed scope as first built (v0.1 to v0.3; closed by T-0556, below):** a DROPPED prop whose catalog mapping is non-identity (a bespoke
 factory — e.g. `Button.label`, `Checkbox`/`Switch`/`Radio`'s non-identity `label`, `MenuItem`'s `data-value`
 attribute) is NOT reset by this mechanism — its last-applied value lingers on the element. This is a real,
 narrower gap than SPEC-R2 AC3's literal text implies for the FULL catalog, though it covers the large majority
@@ -454,7 +458,7 @@ packages/agent-ui/a2ui/src/renderer/
                 #wireNode exported to TreeDeps as rewireNode; #create exported as create; resetProp added
                 (resolves the node's factory, calls its applyProp)
   types.ts    — TreeDeps gains create/rewireNode/resetProp/componentDefOf (new exported CreateOnly/RewireNode/
-                ResetProp types)
+                ResetProp types; T-0556 adds the optional resetMappedProp and its ResetMappedProp type)
 ```
 
 No changes to `binding.ts`, `functions.ts`, `input.ts`, `list.ts`, `protocol.ts`, `dispatch.ts`, or
@@ -481,7 +485,7 @@ No changes to `binding.ts`, `functions.ts`, `input.ts`, `list.ts`, `protocol.ts`
 5. **Prop reconcile (RSR-C6)** — SPEC-R2's rewire-onto-existing-element path, including the narrowed
    identity-mapped omitted-prop reset (§7); gate: focus survives a sibling-only reconcile, a prop-only resend
    re-applies without touching children (SPEC-R2 AC1/AC2), and an omitted IDENTITY-mapped prop resets to its
-   factory-declared default (AC3, narrowed scope stated explicitly in the test name).
+   factory-declared default (AC3; the non-identity arm followed in T-0556, `reset-mapped-props.test.ts`).
 6. **Consumer upgrades** (build slices, dispatched after the renderer core is green):
    - `round-trip.test.ts` (a2ui-live) — add a present-**after-turn-3**, before-turn-5 assertion (the DOM
      contains the new "status"/"READY" content once turn 3 lands, not only "gone after turn 5") — closes the
@@ -517,8 +521,9 @@ No changes to `binding.ts`, `functions.ts`, `input.ts`, `list.ts`, `protocol.ts`
   `Object.is` design would have failed this exact case).
 - **Prop-only resend, no child change**: a static IDENTITY-mapped literal prop change and a `{path}`
   rebind-target change both land on the SAME element (SPEC-R2 AC1/AC2); an omitted identity-mapped prop resets
-  to the factory's pristine default (AC3, narrowed scope); an omitted NON-identity-mapped (bespoke-factory)
-  prop is asserted to KEEP LINGERING (the documented, narrower limitation, proven rather than assumed).
+  to the factory's pristine default (AC3); an omitted NON-identity-mapped (bespoke-factory) prop resets through
+  the factory's `resetProp` hook (T-0556, `reset-mapped-props.test.ts`; before T-0556 this case asserted the
+  value lingered).
 - **No-op resend** (SPEC-R3): a byte-identical resend of an already-mounted id disposes nothing (assert the
   node scope's `Scope` object reference is unchanged — no dispose/recreate cycle fired).
 - **Root carve-out** (SPEC-R4, revised by T-0172): resending `"root"` with another type still emits `IDGRAPH`

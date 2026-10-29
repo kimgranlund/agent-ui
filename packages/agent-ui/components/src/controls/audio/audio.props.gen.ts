@@ -3,7 +3,7 @@
 import { prop, type PropsSchema } from '../../dom/index.ts'
 
 export const props = {
-  // The audio URL. Renders no <audio> at all when empty (never a dead player bar). — generated from audio.md attributes.src — edit the descriptor, not this file.
+  // The audio URL. Renders no <audio> at all when empty (never a dead player bar). The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL renders, and a denied one renders as empty. — generated from audio.md attributes.src — edit the descriptor, not this file.
   src: prop.string(''),
   // REQUIRED in spirit (the a2ui catalog enforces it at admission, the Image `alt` discipline) — written as the interior <audio>'s aria-label, its accessible name. Never synthesized. — generated from audio.md attributes.label — edit the descriptor, not this file.
   label: prop.string(''),

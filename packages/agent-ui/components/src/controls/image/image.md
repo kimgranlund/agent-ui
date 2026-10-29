@@ -27,7 +27,7 @@ attributes:            # attributes-as-API — the GENERATION SOURCE for image.t
     default: ''
     reflect: false      # NOT reflected — property-only render input (the avatar.md `src` posture); a URL only,
                          # no upload/hosting (ADR-0073 trust boundary untouched)
-    description: The image URL. Renders no <img> at all when empty (never a broken-image box).
+    description: The image URL. Renders no <img> at all when empty (never a broken-image box). The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL renders, and a denied one renders as empty.
   - name: alt
     type: string
     default: ''

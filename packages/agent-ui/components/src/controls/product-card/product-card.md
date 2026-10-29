@@ -28,7 +28,7 @@ attributes:             # attributes-as-API: the GENERATION SOURCE for UIProduct
     type: string
     default: ''
     reflect: false
-    description: The image src; when set the media part holds a 16:10 image and wins over icon.
+    description: The image src; when set the media part holds a 16:10 image and wins over icon. The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL renders, and a denied one counts as empty (the icon header shows when icon is set).
   - name: imageAlt
     type: string
     default: ''

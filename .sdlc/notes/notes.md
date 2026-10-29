@@ -1329,3 +1329,10 @@
 ## T-0547: Release notes and a dry run for 0.2.1, the first publish that includes @agent-ui-kit/data (2026-10-29)
 
 - note: package READMEs and CDN recipes still name 0.2.0 as the latest release (builder report); bump them to 0.2.1 at or after publish.
+
+## T-0568: A2UI specs, overviews and skills match the October 29 renderer and catalog changes (2026-10-29)
+
+- note: `.claude/docs/spec/a2ui-catalog.spec.md` §5.1 types `PropDef.format` as `'safe-href' | 'media-src'`, while `packages/agent-ui/a2ui/src/catalog/catalog.ts:75` types it `string`. This is a documentation simplification; the conformance code only acts on those two values.
+- note: `packages/agent-ui/a2ui/src/renderer/renderer.ts:29-31` (a code header comment) still says `wireProps` applies every prop key without checking it is declared, which T-0552 made false. It is outside this docs-only scope.
+- note: the builder-reported older drift stays open: a2ui-catalog.spec.md §5.2 and SPEC-R10 AC1 still list Image, Video and AudioPlayer as excluded or without a control, though the default catalog has rows for them with `format: media-src`. It needs a follow-up ticket. T-0565 and T-0550 (PR 2364) had not merged, so those docs are not covered, as the report says.
+- note: added lines contain no em dashes. The per-file em-dash counts only go down (renderer-structural-resend.spec.md 56 to 52).

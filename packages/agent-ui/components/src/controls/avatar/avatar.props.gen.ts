@@ -3,7 +3,7 @@
 import { prop, type PropsSchema } from '../../dom/index.ts'
 
 export const props = {
-  // An image URL for the fallback chain's first link; a load error falls back without ever painting a broken-image box. — generated from avatar.md attributes.src — edit the descriptor, not this file.
+  // An image URL for the fallback chain's first link; a load error falls back without ever painting a broken-image box. The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL is tried, and a denied one falls back as if empty. — generated from avatar.md attributes.src — edit the descriptor, not this file.
   src: prop.string(''),
   // The identity the initials derive from; NOT announced by default (SPEC-R6). — generated from avatar.md attributes.identity — edit the descriptor, not this file.
   identity: prop.string(''),

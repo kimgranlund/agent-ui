@@ -7,7 +7,7 @@ export const props = {
   title: prop.string(''),
   // One supporting line under the title; empty renders no box. — generated from product-card.md attributes.subtitle — edit the descriptor, not this file.
   subtitle: prop.string(''),
-  // The image src; when set the media part holds a 16:10 image and wins over icon. — generated from product-card.md attributes.image — edit the descriptor, not this file.
+  // The image src; when set the media part holds a 16:10 image and wins over icon. The source passes the fleet media gate first (`controls/text/media-src.ts`, T-0553): only an http(s), data: or blob: URL renders, and a denied one counts as empty (the icon header shows when icon is set). — generated from product-card.md attributes.image — edit the descriptor, not this file.
   image: prop.string(''),
   // The image alt text; empty marks the image decorative (alt=""). — generated from product-card.md attributes.imageAlt — edit the descriptor, not this file.
   imageAlt: { ...prop.string(''), attribute: 'image-alt' },

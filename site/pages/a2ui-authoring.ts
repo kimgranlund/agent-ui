@@ -89,13 +89,13 @@ content.append(
   p(
     'A catalog row is the whole contract between the wire and a control: its existence puts the type on ' +
       'the security allowlist (only catalogued types render), its properties define what the validator ' +
-      'accepts, and the derived system prompt advertises it to the model automatically (prompt drift is ' +
+      'accepts and what the renderer applies (an undeclared key never reaches the element), and the derived system prompt advertises it to the model automatically (prompt drift is ' +
       'gated, so a new row is taught the moment it lands). Authoring one is five decisions:',
   ),
   steps([
     'NAME the type UpperCamelCase and bind it to exactly one ui-* widget via a factory entry — the table-parity gate demands one factory per type, no gap, no extra.',
     'NAME each bindable prop by the CONTROL’S OWN prop name (the naming law) — the wire vocabulary follows the component, never an adapter’s.',
-    'TYPE each prop, and mark data-drivable props "bindable": true. A prop that is per-instance INTENT rather than data state omits the bindable key entirely (never "bindable": false) — the presentation-intent idiom Text.truncate and Text.emphasis established (ADR-0106/0109).',
+    'TYPE each prop, and mark data-drivable props "bindable": true. A prop that is per-instance INTENT rather than data state omits the bindable key entirely (never "bindable": false) — the presentation-intent idiom Text.truncate and Text.emphasis established (ADR-0106/0109). A URL prop also carries a format: safe-href for a link, media-src for a media source, so the validator rejects an absolute URL with a disallowed scheme before the control’s own gate sees it.',
     'Give an input control at most ONE two-way slot: the value: {prop, event} mark. Display-only rows carry none.',
     'Declare the child model: a children list, a single child, or none — the renderer’s adjacency walk follows it.',
   ]),
