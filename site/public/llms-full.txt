@@ -2409,7 +2409,8 @@ trigger keeps it, the child column opens beside it.
 ## Motion
 
 The CSS-transform base (`@starting-style` + `allow-discrete`, sliding a FULL pane-width — `--ui-drill-
-slide-distance` defaults to `100%`, ADR-0195 Amendment cl.A5) and the ADR-0183 View Transitions layer are
+slide-distance` defaults to `100%`, ADR-0195 Amendment cl.A5; a forward drill enters from the inline end, so from the left under `dir="rtl"`,
+T-0539) and the ADR-0183 View Transitions layer are
 mutually exclusive per swap: `viewTransitions` (opt-in, default off) enables the VT layer for a swap only when
 the platform actually supports it (`viewTransitionAvailable()`). The shared `view-transition-name` sits on the
 RESOLVED-ACTIVE panel only, cleared elsewhere (the GH#958 named-morph pairing law corrected for the contained
@@ -2922,6 +2923,10 @@ swappable pack, a glyph is library geometry with its own, smaller box. Both take
 as `eye` or `calendar-blank` stay icons. A new mark joins the set only by amending ADR-0245. An empty
 `symbol` clears the host; a name outside the set renders an empty `<svg data-glyph-missing>` rather than a
 guess.
+
+Under `dir="rtl"` the two inline-axis marks, `caret-left` and `caret-right`, mirror on their svg, so a
+previous, next or collapsed caret points the way the text runs (T-0539). `caret-up` and `caret-down` never
+mirror. A host that rotates a caret composes its rotation after the mirror.
 
 One path table owns every mark (`glyph-paths.ts`). Each mark is a stroke path in a fixed 16-unit square,
 drawn with `currentColor` and a non-scaling stroke, so the stroke width is a token rather than a property of

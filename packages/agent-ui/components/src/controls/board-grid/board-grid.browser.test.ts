@@ -212,3 +212,25 @@ describe('ui-board-grid: ADR-0245 derived foundations, dark launch', () => {
     expect(lengthOf(inside, '--ui-board-grid-cell-size')).toBe(sm.height + sm.iconBox) // 6n = height 24 + icon box 12
   })
 })
+
+// T-0539: the CSS grid mirrors under dir=rtl (column 0 at the physical right), so the column step flips
+// with it: ArrowLeft moves to the cell physically to the left, which is the NEXT column.
+describe('ui-board-grid under dir=rtl: the column arrows follow the mirrored grid (T-0539)', () => {
+  it('ArrowLeft moves one cell physically left (col + 1), ArrowRight one cell right (col - 1)', async () => {
+    const el = mount('<div dir="rtl"><ui-board-grid rows="3" cols="3" action-name="fire"></ui-board-grid></div>').firstElementChild as Board
+    await el.updateComplete
+    const all = cells(el)
+    all[0]!.focus()
+
+    await userEvent.keyboard('{ArrowLeft}')
+    expect(document.activeElement, 'rtl ArrowLeft goes to (0,1)').toBe(all[1])
+    expect(rect(all[1]!).left, 'the move is physically leftward').toBeLessThan(rect(all[0]!).left)
+
+    await userEvent.keyboard('{ArrowRight}')
+    expect(document.activeElement, 'rtl ArrowRight goes back to (0,0)').toBe(all[0])
+    await userEvent.keyboard('{ArrowRight}') // the start edge, no wrap
+    expect(document.activeElement).toBe(all[0])
+    await userEvent.keyboard('{ArrowDown}') // the block axis never mirrors
+    expect(document.activeElement).toBe(all[3])
+  })
+})

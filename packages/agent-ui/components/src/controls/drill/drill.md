@@ -223,7 +223,8 @@ trigger keeps it, the child column opens beside it.
 ## Motion
 
 The CSS-transform base (`@starting-style` + `allow-discrete`, sliding a FULL pane-width — `--ui-drill-
-slide-distance` defaults to `100%`, ADR-0195 Amendment cl.A5) and the ADR-0183 View Transitions layer are
+slide-distance` defaults to `100%`, ADR-0195 Amendment cl.A5; a forward drill enters from the inline end, so from the left under `dir="rtl"`,
+T-0539) and the ADR-0183 View Transitions layer are
 mutually exclusive per swap: `viewTransitions` (opt-in, default off) enables the VT layer for a swap only when
 the platform actually supports it (`viewTransitionAvailable()`). The shared `view-transition-name` sits on the
 RESOLVED-ACTIVE panel only, cleared elsewhere (the GH#958 named-morph pairing law corrected for the contained

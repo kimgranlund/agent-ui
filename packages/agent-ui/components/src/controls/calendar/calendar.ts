@@ -881,12 +881,16 @@ export class UICalendarElement extends UIFormElement {
     // ── Navigation path — compute the target date ────────────────────────────────────────
     let target: { y: number; m: number; d: number }
 
+    // Under rtl the grid mirrors (Sunday at the physical right), so the inline arrows follow the visual move:
+    // ArrowRight steps to the previous day and ArrowLeft to the next (T-0539). Up/Down and Home/End are logical.
+    const inline = getComputedStyle(this).direction === 'rtl' ? -1 : 1
+
     switch (key) {
       case 'ArrowLeft':
-        target = advanceDate(cur.y, cur.m, cur.d, -1)
+        target = advanceDate(cur.y, cur.m, cur.d, -inline)
         break
       case 'ArrowRight':
-        target = advanceDate(cur.y, cur.m, cur.d, 1)
+        target = advanceDate(cur.y, cur.m, cur.d, inline)
         break
       case 'ArrowUp':
         target = advanceDate(cur.y, cur.m, cur.d, -7)

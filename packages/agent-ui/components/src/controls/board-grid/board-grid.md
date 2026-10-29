@@ -79,7 +79,7 @@ aria:
 
 keyboard:
   - note: ONE tab stop in both modes, a roving tabindex. Exactly one cell has tabindex 0 (the first enabled cell until focus moves) and every other cell has tabindex -1.
-  - note: ArrowLeft and ArrowRight move one cell; ArrowUp and ArrowDown move one row. A move skips disabled cells in its direction and stays put at the edge (no wrap).
+  - note: ArrowLeft and ArrowRight move one cell toward that physical side (under `dir="rtl"` the grid mirrors, so ArrowLeft steps to the next column, T-0539); ArrowUp and ArrowDown move one row. A move skips disabled cells in its direction and stays put at the edge (no wrap).
   - note: Enter and Space activate the focused enabled cell on an interactive board, emitting one `action` event. A read-only board keeps the roving tab stop but never activates.
   - note: The roving position survives a `cells` update; a rows or cols change rebuilds the board and keeps the position when it is still on the board.
 

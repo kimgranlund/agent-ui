@@ -1608,3 +1608,30 @@ describe('ui-calendar: struck disabled days, glyph carets (T-0149)', () => {
     expect(el.querySelector('[data-part="next"] > ui-glyph')?.getAttribute('symbol')).toBe('caret-right')
   })
 })
+
+// T-0539: the day grid mirrors under dir=rtl (Sunday at the physical right), so the inline arrows must
+// follow the visual: ArrowRight moves focus to the cell physically to the right, which is the PREVIOUS day.
+describe('ui-calendar under dir=rtl: inline arrows follow the mirrored grid (T-0539, both engines)', () => {
+  it('ArrowRight moves focus one cell physically right (the 14th), ArrowLeft one cell left (the 16th)', async () => {
+    const wrap = document.createElement('div')
+    wrap.dir = 'rtl'
+    wrap.innerHTML = '<ui-calendar value="2026-07-15"></ui-calendar>'
+    document.body.append(wrap)
+    mounted.push(wrap)
+    const el = wrap.querySelector('ui-calendar') as UICalendarElement
+    await el.updateComplete
+    const cell = (iso: string): HTMLElement => el.querySelector<HTMLElement>(`[data-date="${iso}"]`)!
+
+    const c15 = cell('2026-07-15')
+    c15.focus()
+    await userEvent.keyboard('{ArrowRight}')
+    await el.updateComplete
+    expect(document.activeElement, `${server.browser}: rtl ArrowRight focuses the 14th`).toBe(cell('2026-07-14'))
+    expect(cell('2026-07-14').getBoundingClientRect().left, 'the move is physically rightward').toBeGreaterThan(c15.getBoundingClientRect().left)
+
+    await userEvent.keyboard('{ArrowLeft}{ArrowLeft}')
+    await el.updateComplete
+    expect(document.activeElement, `${server.browser}: rtl ArrowLeft focuses the 16th`).toBe(cell('2026-07-16'))
+    expect(cell('2026-07-16').getBoundingClientRect().left, 'the move is physically leftward').toBeLessThan(c15.getBoundingClientRect().left)
+  })
+})

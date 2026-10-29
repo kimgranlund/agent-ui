@@ -71,6 +71,10 @@ as `eye` or `calendar-blank` stay icons. A new mark joins the set only by amendi
 `symbol` clears the host; a name outside the set renders an empty `<svg data-glyph-missing>` rather than a
 guess.
 
+Under `dir="rtl"` the two inline-axis marks, `caret-left` and `caret-right`, mirror on their svg, so a
+previous, next or collapsed caret points the way the text runs (T-0539). `caret-up` and `caret-down` never
+mirror. A host that rotates a caret composes its rotation after the mirror.
+
 One path table owns every mark (`glyph-paths.ts`). Each mark is a stroke path in a fixed 16-unit square,
 drawn with `currentColor` and a non-scaling stroke, so the stroke width is a token rather than a property of
 the drawing; `dot` and `more` are filled.

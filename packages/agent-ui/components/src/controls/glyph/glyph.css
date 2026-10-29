@@ -45,6 +45,12 @@
     overflow: visible;
   }
 
+  /* An inline-axis caret mirrors under rtl so prev/next and collapsed carets point the way the text runs
+     (T-0539). It sits on the svg, not the host, so a host's own rotate or transform composes after it. */
+  :scope:is([symbol='caret-left'], [symbol='caret-right']):dir(rtl) svg {
+    scale: -1 1;
+  }
+
   :scope path {
     stroke-width: var(--ui-glyph-stroke);
     stroke-linecap: round;

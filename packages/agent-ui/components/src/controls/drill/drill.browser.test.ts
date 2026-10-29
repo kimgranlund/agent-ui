@@ -526,3 +526,23 @@ describe('ui-drill — narrow-host auto-degrade to stack (ADR-0195 Amendment cl.
     expect(settingsRect.left).toBeGreaterThanOrEqual(rootRect.right) // side by side again
   })
 })
+
+// T-0539: the CSS-transform base slide follows the reading direction. A forward drill enters from the
+// inline END (the right in ltr, the left in rtl), so the starting translateX sign flips under dir=rtl.
+describe('ui-drill under dir=rtl: the forward slide enters from the inline end (T-0539)', () => {
+  it('the entering panel starts at a positive translateX in ltr and a negative one in rtl', async () => {
+    const startX: Record<string, number> = {}
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const { wrap, host, settingsTrigger } = mount()
+      wrap.dir = dir
+      host.style.setProperty('--ui-drill-motion-duration', '10s')
+      host.style.setProperty('--ui-drill-motion-easing', 'linear')
+      ;(host.querySelector('[key="root"]') as HTMLElement).style.transition = 'none'
+      await userEvent.click(settingsTrigger)
+      const settings = host.querySelector('[key="settings"]') as HTMLElement
+      startX[dir] = new DOMMatrix(getComputedStyle(settings).transform).m41
+    }
+    expect(startX['ltr'], 'ltr: enters from the right').toBeGreaterThan(0)
+    expect(startX['rtl'], 'rtl: enters from the left').toBeLessThan(0)
+  })
+})

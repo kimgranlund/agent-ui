@@ -3,6 +3,8 @@ import { glyphBox } from '../../../../../../scripts/lib/foundations-rules.mjs' /
 import '@agent-ui/components/foundation-styles.css'
 import './glyph.css'
 import './glyph.ts'
+import '../disclosure/disclosure.css' // the rotated-caret consumer of the rtl mirror (T-0539)
+import '../disclosure/disclosure.ts'
 import type { UIGlyphElement } from './glyph.ts'
 import { resolve } from '../../../../../../scripts/lib/foundations-model.mjs'
 
@@ -64,5 +66,65 @@ describe('ui-glyph geometry outside any region (the dark launch)', () => {
     ) // ADR-0245 cl.10e: the opt-out keeps today's em geometry; a plain page is the derived root register since the cut
     expect(boxOf(host)).toEqual({ w: 16, h: 16 })
     expect(boxOf(host.querySelector('svg') as SVGSVGElement)).toEqual({ w: 12, h: 12 })
+  })
+})
+
+// T-0539: an inline-axis caret mirrors under dir=rtl, so a prev/next or collapsed caret points the way the
+// reading direction runs. The pointing vector is composed from every computed transform between the svg and
+// the host (CSS order: translate, rotate, scale, then transform), so a consumer's own rotation is included.
+function pointing(svg: Element, host: Element, intrinsic: readonly [number, number]): [number, number] {
+  let m = new DOMMatrix()
+  for (let el: Element | null = svg; el; el = el.parentElement) {
+    const cs = getComputedStyle(el)
+    const local = new DOMMatrix()
+    if (cs.rotate !== 'none') local.rotateSelf(parseFloat(cs.rotate.split(' ').pop()!))
+    if (cs.scale !== 'none') {
+      const [sx, sy] = cs.scale.split(' ').map(Number)
+      local.scaleSelf(sx, sy ?? sx)
+    }
+    if (cs.transform !== 'none') local.multiplySelf(new DOMMatrix(cs.transform))
+    m = local.multiply(m)
+    if (el === host) break
+  }
+  const p = m.transformPoint(new DOMPoint(intrinsic[0], intrinsic[1]))
+  const o = m.transformPoint(new DOMPoint(0, 0))
+  return [Math.round(p.x - o.x), Math.round(p.y - o.y)]
+}
+
+describe('ui-glyph under dir=rtl: inline-axis carets mirror (T-0539)', () => {
+  it('caret-left and caret-right point the other way under rtl and keep their own way under ltr', async () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const sign = dir === 'rtl' ? -1 : 1
+      for (const [symbol, x] of [['caret-left', -1], ['caret-right', 1]] as const) {
+        const host = await mount(`<div dir="${dir}"><ui-glyph symbol="${symbol}"></ui-glyph></div>`)
+        expect(pointing(host.querySelector('svg')!, host, [x, 0]), `${dir} ${symbol}`).toEqual([x * sign, 0])
+      }
+    }
+  })
+
+  it('caret-up and caret-down never mirror (the block axis does not flip)', async () => {
+    for (const symbol of ['caret-up', 'caret-down']) {
+      const host = await mount(`<div dir="rtl"><ui-glyph symbol="${symbol}"></ui-glyph></div>`)
+      expect(getComputedStyle(host.querySelector('svg')!).transform, symbol).toBe('none')
+      expect(getComputedStyle(host.querySelector('svg')!).scale, symbol).toBe('none')
+    }
+  })
+
+  it('a ui-disclosure chevron points toward the text when closed and down when open, in both directions', async () => {
+    for (const dir of ['ltr', 'rtl'] as const) {
+      const wrap = document.createElement('div')
+      wrap.dir = dir
+      wrap.innerHTML = '<ui-disclosure summary="Details"><p>Body</p></ui-disclosure>'
+      document.body.append(wrap)
+      mounted.push(wrap)
+      const host = wrap.querySelector('ui-disclosure') as HTMLElement & { open: boolean; updateComplete: Promise<void> }
+      await host.updateComplete
+      const chevron = host.querySelector('[data-part="chevron"]')!
+      const svg = chevron.querySelector('svg')!
+      expect(pointing(svg, chevron, [1, 0]), `${dir} closed: toward the inline end`).toEqual([dir === 'rtl' ? -1 : 1, 0])
+      host.open = true
+      await host.updateComplete
+      expect(pointing(svg, chevron, [1, 0]), `${dir} open: down`).toEqual([0, 1])
+    }
   })
 })
