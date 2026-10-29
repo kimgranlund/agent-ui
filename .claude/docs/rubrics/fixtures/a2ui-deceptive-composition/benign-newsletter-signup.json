@@ -12,7 +12,7 @@
         { "id": "heading", "component": "Text", "variant": "h4", "text": "Subscribe to the newsletter" },
         { "id": "f_name", "component": "Field", "label": "Full name", "child": "in_name" },
         { "id": "in_name", "component": "TextField", "name": "name", "required": true, "value": { "path": "/signup/name" }, "checks": [{ "call": "required", "args": { "value": { "path": "/signup/name" } }, "message": "Name is required" }] },
-        { "id": "f_email", "component": "Field", "label": "Email", "description": "One issue a month — unsubscribe any time", "child": "in_email" },
+        { "id": "f_email", "component": "Field", "label": "Email", "description": "One issue a month; unsubscribe any time", "child": "in_email" },
         { "id": "in_email", "component": "TextField", "name": "email", "type": "email", "required": true, "value": { "path": "/signup/email" }, "checks": [{ "call": "email", "args": { "value": { "path": "/signup/email" } }, "message": "Enter a valid email" }] },
         { "id": "actions", "component": "Row", "gap": "md", "justify": "end", "children": ["btn_subscribe"] },
         { "id": "btn_subscribe", "component": "Button", "variant": "solid", "label": "Subscribe", "action": { "action": "subscribe_newsletter", "submit": true } }

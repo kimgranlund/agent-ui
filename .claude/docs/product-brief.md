@@ -1,20 +1,20 @@
-# agent-ui — product brief (the WHY/WHAT layer)
+# agent-ui: product brief (the WHY/WHAT layer)
 
-> Status: **accepted** — ratified by Kim 2026-08-17 at the fleet-bootstrap Phase-3 hard gate (incl. the identity sentence; roadmap synthesis deferred until the first lane ships). Authored 2026-08-17 (Phase 2, product seat); originally drafted noting nothing here is
+> Status: **accepted**; ratified by Kim 2026-08-17 at the fleet-bootstrap Phase-3 hard gate (incl. the identity sentence; roadmap synthesis deferred until the first lane ships). Authored 2026-08-17 (Phase 2, product seat); originally drafted noting nothing here is
 > ratified until Kim says so. Vocabulary follows the repo dialect (`proposed · accepted ·
-> superseded`; owner-only flips — the ADR-0149 discipline applies to this doc and to the `idr/`
+> superseded`; owner-only flips: the ADR-0149 discipline applies to this doc and to the `idr/`
 > tier it introduces). Companions: [`plan.md`](./plan.md) (architecture, closed) ·
 > [`roadmap.md`](./roadmap.md) (living Now/Next/Later) · [`goals.md`](./goals.md) (dated ledger) ·
-> [`idr/`](./idr/) (intent decision records, this brief's decision spine — same no-index rule as
+> [`idr/`](./idr/) (intent decision records, this brief's decision spine: same no-index rule as
 > the ADR log). Method note: lifecycle-position and doc-type judgments below are **manually
 > narrated** (the `docs` plugin's mechanized census was not available to this seat this turn).
 
 ## 1 · What this product is now
 
 `agent-ui` began as a zero-dependency, signals-based web-component library and delivered that
-north star completely (foundation G0–G9 + Control Suite, closed 2026-07-05 — `plan.md`,
-`goals.md`). What it has since become — through the A2UI/A2A layers, the live producer toolkit,
-`ui-agent-admin`, GenUI, and the 2026-08 milestone arcs — is a second, larger identity that no
+north star completely (foundation G0–G9 + Control Suite, closed 2026-07-05: `plan.md`,
+`goals.md`). What it has since become: through the A2UI/A2A layers, the live producer toolkit,
+`ui-agent-admin`, GenUI, and the 2026-08 milestone arcs: is a second, larger identity that no
 intent doc yet states in one place:
 
 **agent-ui is an agent-product platform: users build agents in the browser, and those agents
@@ -24,7 +24,7 @@ The component library is the foundation tier of that product, not the product it
 exists to make that identity explicit and to tie the 2026-08-17 exploration campaign's four lanes
 into it.
 
-## 2 · Product principles (Kim's revealed intent, 2026-08-17 session — cited, not inferred)
+## 2 · Product principles (Kim's revealed intent, 2026-08-17 session: cited, not inferred)
 
 1. **Generative UI is the primary conversation medium.** Chat leans toward A2UI surfaces for ANY
    input; prose asks are the exception (ruled + shipped as grammar law, GH #1182). → IDR-0003.
@@ -33,7 +33,7 @@ into it.
    courtesy close → flowEnd → done/start-over). (GH #1101/#1104/#1164 arc, driven from live
    pixels.) → IDR-0003.
 3. **Domain realism over demos.** Playbooks model real arcs (realistic booking, humanized
-   receipts — GH #1171, GH #1174/ADR-0201); a flow that feels like a demo is a filed bug.
+   receipts: GH #1171, GH #1174/ADR-0201); a flow that feels like a demo is a filed bug.
    → IDR-0003 clause 4.
 4. **Component semantics honesty.** Outcomes are toasts, not badges; a glyph never impersonates
    an affordance; segment labels never wrap; library rows carry enough context to choose from.
@@ -43,36 +43,36 @@ into it.
 6. **The zero-dep law holds; exceptions are ruled, one at a time.** CodeMirror (ADR-0139) is the
    precedent; pdf.js is the one candidate second exception, ADR-gated. → IDR-0002, IDR-0004.
 7. **Verification culture.** Pixel-truth over repo-truth; live self-tests through the real
-   producer; gates judged by exit codes. (Operating law, not new — restated because the intent
+   producer; gates judged by exit codes. (Operating law, not new: restated because the intent
    layer inherits it: an intent decision is proven on Kim's live surface, not by a merged PR.)
 
 ## 3 · Loop position (the product seat's reading, 2026-08-17)
 
 Three nested loops; the reading of which is turning:
 
-- **North-star loop — just completed a turn, closing with this brief.** The 2026-08-17
+- **North-star loop: just completed a turn, closing with this brief.** The 2026-08-17
   exploration campaign (four research lanes → four Kim-approved requirements docs under
   [`research/`](./research/)) WAS a north-star-loop turn: it re-asked "what is this product"
   and answered with the four strategic lanes. This brief + the four IDRs are that turn's harvest.
   The loop parks again once Kim ratifies or corrects them.
-- **Foundation loop — stable, not turning.** The component/kernel foundation is closed
+- **Foundation loop: stable, not turning.** The component/kernel foundation is closed
   (`plan.md`) and tonight's evidence held: 12 same-day bug fixes shipped without architectural
   strain. No foundation-tier decision is open.
-- **Releases loop — TURNING; this is the active loop.** The campaign minted its mobilization
+- **Releases loop: TURNING; this is the active loop.** The campaign minted its mobilization
   backlog (GH #1189–#1215) same-day, against Kim-approved requirements. Loop authority: **Kim**
   rules WHY/WHAT (ratifications, forks); the fleet marshal owns dispatch; this product seat owns
   the loop-position/spec-lock reading and the intent records.
 
-### Spec-lock reading per lane (reading, not enforcement — dispatch gating is the marshal's)
+### Spec-lock reading per lane (reading, not enforcement: dispatch gating is the marshal's)
 
 | Lane | Requirements | Intent lock state |
 |---|---|---|
 | Agent Teams ([req](./research/req-agent-teams.md)) | approved | **Partially locked.** R1–R3/R5/R6 buildable on existing seams; R4 (builder one-shot team grammar) names its own ADR; R3's mapper home is an OPEN placement decision (site-side recommended). |
-| A2UI patterns ([req](./research/req-a2ui-patterns.md)) | approved, all three forks RULED 2026-08-17 (greet = mini-skill; greet embeds via exempt ask-id class; settle SHARES the closing turn) | **Locked pending ONE bundled ADR-0198 amendment** (mid-flow carve-out + closing-turn settle carve-out, amended once not twice — the req doc's own mandate). Grammar work should not land before that amendment is ratified. |
+| A2UI patterns ([req](./research/req-a2ui-patterns.md)) | approved, all three forks RULED 2026-08-17 (greet = mini-skill; greet embeds via exempt ask-id class; settle SHARES the closing turn) | **Locked pending ONE bundled ADR-0198 amendment** (mid-flow carve-out + closing-turn settle carve-out, amended once not twice: the req doc's own mandate). Grammar work should not land before that amendment is ratified. |
 | Widget library ([req](./research/req-a2ui-library.md)) | approved | **Locked for the now-tier.** `ui-image` is the gate-opener; seeds/composition items buildable; the later-tier chart rows each carry their own future ADR. |
 | Doc ingestion ([req](./research/req-doc-ingestion.md)) | approved | **Locked EXCEPT pdf.** The pdf.js dependency ADR must be Kim-ratified before any `pdfjs-dist` bytes land (req R3); everything else (txt/md/docx, composer UX, budgets) is buildable. |
 
-Two ADR ratifications are separately pending as of tonight (ADR-0201, the ADR-0112 amendment) —
+Two ADR ratifications are separately pending as of tonight (ADR-0201, the ADR-0112 amendment):
 they are release-loop state, tracked on their PRs, not re-tracked here.
 
 ## 4 · The four strategic lanes, tied to the north star
@@ -81,16 +81,16 @@ Each lane is a WHAT that serves the §1 identity; each carries one intent decisi
 
 | Lane | North-star tie | IDR |
 |---|---|---|
-| **Agent Teams** | The builder one-shots N agents + a team record — a stated differentiator (no shipped product does this). The platform's unit of product grows from agent to **team**, declaration-first. | [IDR-0001](./idr/0001-agents-ship-with-declared-teams.md) |
-| **Document ingestion** | Users make agents knowledgeable from their own documents, entirely in the browser — the trust boundary (ADR-0073) is product law, not an implementation detail. | [IDR-0002](./idr/0002-documents-become-agent-knowledge.md) |
-| **Refined A2UI patterns** | Conversation conduct (bookends, backable flows, settled receipts) is codified, testable law — produced agents behave well by grammar, not per-persona prompt luck. | [IDR-0003](./idr/0003-generative-ui-is-the-primary-medium.md) |
+| **Agent Teams** | The builder one-shots N agents + a team record: a stated differentiator (no shipped product does this). The platform's unit of product grows from agent to **team**, declaration-first. | [IDR-0001](./idr/0001-agents-ship-with-declared-teams.md) |
+| **Document ingestion** | Users make agents knowledgeable from their own documents, entirely in the browser: the trust boundary (ADR-0073) is product law, not an implementation detail. | [IDR-0002](./idr/0002-documents-become-agent-knowledge.md) |
+| **Refined A2UI patterns** | Conversation conduct (bookends, backable flows, settled receipts) is codified, testable law: produced agents behave well by grammar, not per-persona prompt luck. | [IDR-0003](./idr/0003-generative-ui-is-the-primary-medium.md) |
 | **Expanded widget library** | The catalog speaks the generative-UI ecosystem's table-stakes vocabulary, composition-first; Image is the one new media primitive that unblocks the rest. | [IDR-0004](./idr/0004-widget-vocabulary-parity-composition-first.md) |
 
 ## 5 · Doc-map note (how this layer relates to the existing grammar)
 
 This repo's realized intent stack maps the classical PRD/plan bundle as: **requirements docs +
 PLAN/ROADMAP + GitHub Issues** (ADR-0145). The additions this brief proposes: this file as the
-standing WHY/WHAT record, and `idr/` as the intent-decision tier ABOVE ADRs — an IDR states a
+standing WHY/WHAT record, and `idr/` as the intent-decision tier ABOVE ADRs: an IDR states a
 product intent; ADRs/SPECs/LLDs realize it; when build reality falsifies an ADR repeatedly, the
 owning IDR is what gets revised (escalation rides the citations upward). IDRs follow the ADR
 dialect exactly: blockquote status table, `proposed · accepted · superseded`, owner-only
@@ -102,14 +102,14 @@ this arc; they are not duplicated into `prd/`.
 
 1. **Ratify the identity sentence** (§1 bold)? It governs future scope dials: work that grows
    the agent-product loop outranks work that only grows the component catalog.
-2. **Accept the `idr/` tier at all** — or fold IDR content into ADRs/this brief and delete the
+2. **Accept the `idr/` tier at all**: or fold IDR content into ADRs/this brief and delete the
    folder? (The tier only earns its place if intent decisions keep arriving; four exist today.)
 3. **Ratify IDR-0001…0004 individually** (each is one flip; see each file's own question line).
 4. **Roadmap synthesis**: should `roadmap.md` §2/§3 gain the four-lane arc as its next synthesis
    pass (this brief cited as the arc's WHY), or does the roadmap wait until the first lane ships?
-   This seat drafted nothing into `roadmap.md` — it is a living doc and the arc is unratified.
+   This seat drafted nothing into `roadmap.md`: it is a living doc and the arc is unratified.
 
-## 7 · Addendum (2026-08-18) — central-Intent role + the doc-tier ruling
+## 7 · Addendum (2026-08-18): central-Intent role + the doc-tier ruling
 
 Kim's 2026-08-18 rulings, verbatim: *"IDR should not be made for features. Intent is at the
 global app/project level. PRD docs should be created for apps (like agent-admin-app) and that PRD
@@ -117,23 +117,23 @@ would document the teams feature (along all the other agent features)"* · *"Age
 platform/system should have central Intent and organized structured IDR documents"* · *"PRDs can
 exist at various levels of granularity."*
 
-This section amends §5's tier description by dated addendum (this brief is accepted — the body
+This section amends §5's tier description by dated addendum (this brief is accepted: the body
 above stays untouched):
 
 - **This brief is the platform's central Intent record.** The `idr/` tier is its decision spine,
-  now restricted to PLATFORM-global intent only — identity, medium, trust boundary, unit of
+  now restricted to PLATFORM-global intent only: identity, medium, trust boundary, unit of
   product. Feature-scoped intent lives in the owning app/family PRD, never in an IDR.
 - **The platform IDR set (proposed, Kim ratifies):**
   [IDR-0005](./idr/0005-agent-product-platform-identity.md) (the §1 identity sentence's citable
   home) · [IDR-0006](./idr/0006-conversation-medium-generative-ui.md) (the medium claim) ·
   [IDR-0007](./idr/0007-user-knowledge-browser-trust-boundary.md) (knowledge + the trust
   boundary) · [IDR-0008](./idr/0008-team-is-the-unit-of-product.md) (team as unit of product).
-- **The four feature IDRs (0001–0004) are proposed for supersession** — each carries its own
+- **The four feature IDRs (0001–0004) are proposed for supersession**: each carries its own
   dated relocation note naming its owning PRD ([agent-admin-app](./prd/agent-admin-app.prd.md) /
   [a2ui-expert-system](./prd/a2ui-expert-system.prd.md) §8) and, where one exists, its platform
   restatement. Status flips are Kim's alone.
 - **PRD granularity is multi-level by rule:** platform-area, app, family, and feature PRDs are
-  all legitimate, finer citing coarser — codified in `doc-standards` §1d (the canonical home);
+  all legitimate, finer citing coarser: codified in `doc-standards` §1d (the canonical home);
   this addendum is the pointer, not a second copy.
 - §6's open fork 2 ("accept the `idr/` tier at all") is answered by these rulings: the tier
   stays, restructured to platform altitude.
@@ -142,31 +142,31 @@ above stays untouched):
 > target is [IDR-0005](idr/0005-agent-product-platform-identity.md); §1 here is the narrative
 > home and defers to it.
 
-## 8 · Addendum (2026-08-23) — the four 2026-08-17 lanes' buildable-now scope has shipped
+## 8 · Addendum (2026-08-23) · the four 2026-08-17 lanes' buildable-now scope has shipped
 
 Ratified by Kim at the 2026-08-23 `/fleet-bootstrap` Phase 3 gate (live AskUserQuestion, session
 `agent-ui-90`; recorded in the retired ops ledger's rulings file, in git history), from the product
-seat's dated review pass. This amends §3 by dated addendum, per this doc's own §7 precedent —
+seat's dated review pass. This amends §3 by dated addendum, per this doc's own §7 precedent:
 §3's per-lane table stays as the historical 2026-08-17 reading; current state lives here and in
 [`roadmap.md`](./roadmap.md) / the owning PRDs' own goal tables.
 
-- **Agent Teams** — fully built. [ADR-0203](adr/0203-agentteam-declaration-first-record.md) + its
+- **Agent Teams**: fully built. [ADR-0203](adr/0203-agentteam-declaration-first-record.md) + its
   ratified 2026-08-18 amendment, [ADR-0204](adr/0204-team-meta-line-arm.md) (the one-shot builder
   arm); GH #1191/#1194/#1195/#1196/#1197/#1277/#1282 all closed 2026-08-18, plus ADR-0227's
   wave-2 DataSource adoption (GH #1545) closed 2026-08-23. Realized at
-  [agent-admin-app](prd/agent-admin-app.prd.md) PRD-G4 — that PRD's own goal-table State cell
+  [agent-admin-app](prd/agent-admin-app.prd.md) PRD-G4: that PRD's own goal-table State cell
   stays `building`, held pending a witnessed end-to-end run in `goals.md` (Kim's 2026-08-23
-  ruling, held separately — not a build gap).
-- **Document ingestion** — fully built. [ADR-0202](adr/0202-pdfjs-second-runtime-dependency-exception.md)
+  ruling, held separately, not a build gap).
+- **Document ingestion**: fully built. [ADR-0202](adr/0202-pdfjs-second-runtime-dependency-exception.md)
   (the pdf.js gate) accepted; GH #1190/#1210/#1211/#1212/#1214/#1215 all closed 2026-08-18.
-  Realized at agent-admin-app PRD-G5 — same held-State-cell note as above.
-- **Refined A2UI patterns** — the bundled [ADR-0198](adr/0198-ask-flow-completion-flowend-meta-signal.md)
+  Realized at agent-admin-app PRD-G5: same held-State-cell note as above.
+- **Refined A2UI patterns**: the bundled [ADR-0198](adr/0198-ask-flow-completion-flowend-meta-signal.md)
   amendment is accepted and cited as shipped grammar law in `agent-admin-app.prd.md` §3.6.
-- **Expanded widget library** — the gate-opener shipped: `ui-image`
+- **Expanded widget library**: the gate-opener shipped: `ui-image`
   (`packages/agent-ui/components/src/controls/image/`) and the `Image` catalog row both exist and
   are tested.
 
-None of the above falsifies IDR-0005–0008 or reopens a north-star fork — the loop that turned on
+None of the above falsifies IDR-0005–0008 or reopens a north-star fork: the loop that turned on
 2026-08-17 stays parked, per §3's own framing ("the loop parks again once Kim ratifies or
 corrects them"). The four `research/req-*.md` docs' frontmatter `status` fields are synced
 `approved` to match, per the same ruling.

@@ -1,4 +1,4 @@
-# agent-ui — foundation plan
+# agent-ui: foundation plan
 
 > Status: built; the architecture of record, revised 2026-10-15 (T-0251). Companion: [`goals.md`](./goals.md) (the milestone/DoD ledger).
 > Reference standards (canonical, distilled): [`references/geometry.md`](./references/geometry.md) ·
@@ -12,7 +12,7 @@
 
 `agent-ui` is a zero-dependency, reactive **web-component library** authored in modern, advanced
 TypeScript. It carries over the proven architecture of the `rce` prototype
-(`/Users/kimba/Projects/fable-tests/reactive-components`) — but the foundation is **re-authored
+(`/Users/kimba/Projects/fable-tests/reactive-components`), but the foundation is **re-authored
 here as TS-native code**, not consumed as a package. We keep rce's algorithms of record (the signal
 graph, the scheduler budget, the FACE element host, the template part-system, the trait contract)
 and re-express them with first-class types.
@@ -39,7 +39,7 @@ the derived foundations of ADR-0245 (§8): see `goals.md` and the roadmap.)*
 - **Signals, not a VDOM.** Updates are value-diffs against a cached template instance; one render
   effect per host, per-part `Object.is` below it. No diff of unchanged subtrees, no framework runtime.
 - **FACE over `<input>` wrappers.** Controls participate in forms via `ElementInternals`
-  (`setFormValue`, `setValidity`, `role`, `aria*`) with zero native form elements — full control of
+  (`setFormValue`, `setValidity`, `role`, `aria*`) with zero native form elements: full control of
   geometry, ARIA, and styling. (One sanctioned exception class exists in rce: `<input type=password>`
   for OS masking; we adopt the same allow-listed-exception discipline rather than a blanket ban.)
 - **Pure-CSS `@scope` distribution.** Behaviour-only `.ts` + external `{name}-styles.css` /
@@ -60,37 +60,37 @@ now **ten packages**: the framework (`components`), `shared` for tokens, utility
 
 ```
 packages/agent-ui/
-  components/                  # @agent-ui/components — the whole framework
+  components/                  # @agent-ui/components: the whole framework
     src/
       reactive/
         graph.ts        # Signal / Computed / Effect / Scope, untracked, unowned, inspect, CycleError
         scheduler.ts    # microtask queue, write-loop budget, whenFlushed
         index.ts        # public reactive surface (signal, computed, effect, createScope, …)
       dom/
-        element.ts      # UIElement — the FACE host (graph ∘ props ∘ template)
+        element.ts      # UIElement: the FACE host (graph ∘ props ∘ template)
         props.ts        # typed props-as-signals, the attribute↔value reflection boundary
         template.ts     # html / svg / render + parts
         directives.ts   # repeat, watch, classMap, ref, unsafeHTML
-        form.ts         # UIFormElement — form participation over UIElement
-        component.ts    # UIComponent — orchestration helpers pre-wired (later)
+        form.ts         # UIFormElement: form participation over UIElement
+        component.ts    # UIComponent: orchestration helpers pre-wired (later)
       traits/
         press-activation.ts, tabbable.ts, roving-tabindex.ts, track-user-invalid.ts, …
       controls/
-        button/  text-field/  checkbox/  switch/  listbox/  select/  field/  … (37+ folders — the full
+        button/  text-field/  checkbox/  switch/  listbox/  select/  field/  … (37+ folders: the full
         FACE Control Suite plus the G9 container family and the report/content/feed/chart families)
           <name>.ts  <name>.css  <name>.md  <name>.test.ts    # single-file CSS + md-frontmatter descriptor (ADR-0003/0004)
       index.ts          # the package barrel (@agent-ui/components)
-  shared/                      # @agent-ui/shared — tokens, styles, utility types
+  shared/                      # @agent-ui/shared: tokens, styles, utility types
     src/
       tokens/  tokens.css (barrel)  dimensions.css  foundations.gen.css  foundations-bridge.gen.css  scale.mjs  themes/
       index.ts
-  a2ui/                        # @agent-ui/a2ui — A2UI layer, team-led (.claude/docs/{spec,lld,prd}/); depends on @agent-ui/components
-  a2a/                         # @agent-ui/a2a — A2A protocol layer (wire types + validation, spec v0.3.0),
+  a2ui/                        # @agent-ui/a2ui: A2UI layer, team-led (.claude/docs/{spec,lld,prd}/); depends on @agent-ui/components
+  a2a/                         # @agent-ui/a2a: A2A protocol layer (wire types + validation, spec v0.3.0),
                                 #   the tic-tac-toe isolation-proof arena, its own concepts-corpus shards; zero deps
-  icons/                       # @agent-ui/icons — swappable icon-pack adapter (pure core + ./phosphor subpath); zero deps
-  app/                         # @agent-ui/app — app-surface compositions (ui-super-shell + presets, ADR-0151);
+  icons/                       # @agent-ui/icons: swappable icon-pack adapter (pure core + ./phosphor subpath); zero deps
+  app/                         # @agent-ui/app: app-surface compositions (ui-super-shell + presets, ADR-0151);
                                 #   depends on components + a2ui + shared
-  router/                      # @agent-ui/router — SPA router (ADR-0115); depends on components
+  router/                      # @agent-ui/router: SPA router (ADR-0115); depends on components
   code/                        # @agent-ui/code: code + prose (ADR-0119); ./editor carries CodeMirror 6 (ADR-0139)
   data/                        # @agent-ui/data: headless data layer (ADR-0192); depends on components
   devtools/                    # @agent-ui/devtools: dev/debug harness (ADR-0200); depends on a2ui + a2a
@@ -105,7 +105,7 @@ package's own `src/layering.test.ts` trip-wire enforces it.
 
 ## 4. The reactivity kernel (port + re-type)
 
-Preserve these invariants exactly — they are the correctness core and rce found real bugs proving them:
+Preserve these invariants exactly: they are the correctness core and rce found real bugs proving them:
 
 - **Push possible-staleness, pull values, cut on equality.** A write bumps `_version` only when the
   value actually changes (`Object.is`); staleness propagates eagerly; recomputation is lazy and
@@ -113,14 +113,14 @@ Preserve these invariants exactly — they are the correctness core and rce foun
   its body).
 - **Ownership scopes make disposal provable.** Computeds/effects created inside a scope die with it
   (`scope.dispose()` ⇒ zero subscribers). Signals are inert boxes, safe to hold.
-- **`untracked` / `unowned`** — read without subscribing / create outside any scope (the latter is
+- **`untracked` / `unowned`**: read without subscribing / create outside any scope (the latter is
   load-bearing: lazily-created module singletons must not be adopted by whichever component's
   connection scope happened to trigger first touch).
 - **Scheduler**: a `Set`-deduped microtask queue, a ~100-wave write-loop budget that throws rather
   than hang, and a settled promise behind `whenFlushed()`.
 - **`CycleError`** on re-entrant computed read; a throwing computed/effect stays dirty and retries
   (failure poisons verification so the retry recomputes).
-- **`inspect(node)`** — a pure, graph-inert readonly snapshot; the public face of the internal
+- **`inspect(node)`**: a pure, graph-inert readonly snapshot; the public face of the internal
   instrumentation.
 
 ### TS surface
@@ -139,7 +139,7 @@ export function inspect(node: ReadonlySignal<unknown>): NodeSnapshot
 ```
 
 The internal producer/consumer protocol (a Computed reading another node's subscriber set and
-version) cannot use `#private` — same-class-only access does not span `Signal`/`Computed`/`Effect`.
+version) cannot use `#private`: same-class-only access does not span `Signal`/`Computed`/`Effect`.
 Model it as explicit interfaces and back them with documented internal fields:
 
 ```ts
@@ -153,10 +153,10 @@ Everything outside that protocol uses `#private`. This is the typed equivalent o
 ## 5. The FACE element layer
 
 Two base elements, matching the descriptor schema's `BASE_CLASSES` (`['UIElement', 'UIFormElement']`) and
-a control's `extends:` descriptor field (which names exactly one): **`UIElement`** — the reactive *display*
-control host (the realized base today; `ui-button` extends it directly) — and **`UIFormElement`** — the
+a control's `extends:` descriptor field (which names exactly one): **`UIElement`**, the reactive *display*
+control host (the realized base today; `ui-button` extends it directly), and **`UIFormElement`**, the
 FACE *form-associated* control host that the value-carrying controls extend (planned for G4; not yet
-shipped — only `UIElement` exists in `dom/` so far). A third orchestration base, `UIComponent`
+shipped, only `UIElement` exists in `dom/` so far). A third orchestration base, `UIComponent`
 (`component.ts`, §3), is future/unscheduled and deliberately absent from `BASE_CLASSES`.
 
 ### `UIElement` (the host)
@@ -171,11 +171,11 @@ Maps the four platform callbacks onto the graph's two lifetimes:
 - Helpers: `this.effect(fn)` (scope-owned), `this.listen(target, type, fn)` (rides `{ signal }`),
   `this.emit(type, detail)` (composed/bubbling/cancelable `CustomEvent`), `updateComplete`.
 - **Light DOM by default**; `static shadow` opts a single shadow root (a class-level, all-instances seam).
-  *(No fleet component uses this seam today — `static shadow` stays UNUSED, available for a genuine all-instances-shadow class. The one **per-instance** alternative ever built, `ui-app-shell`'s connect-time `isolated` opt-in ([ADR-0082](adr/0082-app-shell-per-instance-isolation.md), superseded), retired with that component — [ADR-0156](adr/0156-deprecate-app-shell-for-super-shell-family.md); nothing in the fleet calls `attachShadow` outside this seam now.)*
+  *(No fleet component uses this seam today: `static shadow` stays UNUSED, available for a genuine all-instances-shadow class. The one **per-instance** alternative ever built, `ui-app-shell`'s connect-time `isolated` opt-in ([ADR-0082](adr/0082-app-shell-per-instance-isolation.md), superseded), retired with that component: [ADR-0156](adr/0156-deprecate-app-shell-for-super-shell-family.md); nothing in the fleet calls `attachShadow` outside this seam now.)*
 - ARIA via `attachInternals()`, never host attributes.
 - The lazy-property upgrade dance (`upgradeProps` at connect; `upgradeProperty(...)` for manual
-  array/object accessors) — a `.prop=` binding set before upgrade otherwise shadows the accessor.
-  **Precedence: property-wins** (ADR-0005) — a pre-upgrade property beats an initial attribute.
+  array/object accessors): a `.prop=` binding set before upgrade otherwise shadows the accessor.
+  **Precedence: property-wins** (ADR-0005): a pre-upgrade property beats an initial attribute.
 
 ### Props as typed signals (the headline TS pattern)
 
@@ -184,7 +184,7 @@ effect tracks it, writing it invalidates and (when declared `reflect`) crosses b
 under directional locks so the platform's echo can't loop. The string↔typed boundary lives at exactly
 two functions.
 
-We make the **schema a typed dict** and infer the instance's accessor types from it — no decorators
+We make the **schema a typed dict** and infer the instance's accessor types from it: no decorators
 (banned by `erasableSyntaxOnly`), no hand-written duplication:
 
 ```ts
@@ -218,12 +218,12 @@ const props = {
 export interface UIButtonElement extends ReactiveProps<typeof props> {} // declaration merge → typed accessors
 export class UIButtonElement extends UIElement {           // the reference control is a display control (not form-associated); form controls swap the base to UIFormElement
   static props = props
-  // `this.variant` is 'solid'|'soft'|'ghost', `this.disabled` is boolean — inferred, runtime-installed by finalize()
+  // `this.variant` is 'solid'|'soft'|'ghost', `this.disabled` is boolean: inferred, runtime-installed by finalize()
 }
 ```
 
 The class + same-name `interface` merge gives fully-typed, fully-inferred prop accessors that the base
-class installs at runtime via `finalize()` — the modern, decorator-free expression of rce's pattern.
+class installs at runtime via `finalize()`: the modern, decorator-free expression of rce's pattern.
 `enum`/`json` use a `const` type parameter so literal unions are preserved.
 
 ### `UIFormElement` (form participation)
@@ -234,7 +234,7 @@ a `value` signal-prop, and connection-scoped effects wiring `setFormValue` and (
 make reset and disabled reactive. User-invalid timing (`aria-invalid` only after interaction) is a
 small shared trait. This is the base the **form-associated** controls extend (`ui-text-field` /
 `ui-checkbox` / `ui-switch` / `ui-select` / `ui-listbox`); the reference control `ui-button` is a
-*display* control and extends `UIElement` directly (`formAssociated: false`). Planned for G4 — not yet
+*display* control and extends `UIElement` directly (`formAssociated: false`). Planned for G4, not yet
 realized (only `UIElement` ships today), though `BASE_CLASSES` already enumerates both.
 
 ## 6. Templating & directives
@@ -252,7 +252,7 @@ realized (only `UIElement` ships today), though `BASE_CLASSES` already enumerate
 ## 7. Traits
 
 Contract: `trait(host, config?) => release()`. Attach in `connected()`, store the release, call it in
-`disconnected()` (idempotent — safe even if never attached, safe to call twice). A trait owns at most
+`disconnected()` (idempotent: safe even if never attached, safe to call twice). A trait owns at most
 one internal signal and reflects only to its declared `data-*` hooks; all listeners ride
 `this.listen` and all effects ride `this.effect`, so the trait's lifetime is the component's.
 
@@ -293,15 +293,15 @@ reflected `inline` boolean hugs (ADR-0223). The old hand-tabled ramp, `--ui-scal
 
 ## 9. Naming & TypeScript conventions
 
-This section is itself a deliverable — the foundation's job is to set the patterns everything copies.
+This section is itself a deliverable: the foundation's job is to set the patterns everything copies.
 
 **Identifiers**
 - Tags: `ui-{name}` (kebab). Classes: `UI{Name}Element` (Pascal). Files: kebab-case `.ts`, one folder
   per component. Tokens: `--ui-{name}-{prop}`; color roles `--md-sys-color-{family}-{role}`; scales `--space-*`,
   `--radius-*`, `--ui-{height,font,ind}-{sm,md,lg}`.
-- Events: simple names only — `change`, `input`, `select`, `open`, `close`, `toggle` (no `ui-`-prefixed
+- Events: simple names only; `change`, `input`, `select`, `open`, `close`, `toggle` (no `ui-`-prefixed
   compounds). **Carve-out (ADR-0081 Amendment 2, Kim):** native `click` is additionally sanctioned for a
-  **pure activation control** — `extends: UIElement` (not form-associated) whose descriptor declares no
+  **pure activation control**: `extends: UIElement` (not form-associated) whose descriptor declares no
   event other than `click` (`pressActivation` fires the platform `host.click()`, never a synthetic
   compound; `ui-button` is the instance, per the `rubrics/component.md` C1 precedent). Typed via a
   `CustomEvent<Detail>` map and an `HTMLElementEventMap` augmentation.
@@ -325,9 +325,9 @@ This section is itself a deliverable — the foundation's job is to set the patt
   type Tag = Brand<string, 'tag'>; type TokenName = Brand<string, 'token'>
   ```
 - **Discriminated unions** for state (validity `{ valid: true } | { valid: false; message: string }`,
-  part kinds, directive results) — exhaustiveness checked via `noFallthroughCasesInSwitch` + a `never`
+  part kinds, directive results): exhaustiveness checked via `noFallthroughCasesInSwitch` + a `never`
   default.
-- **`declare`-merged accessors** (class + same-name interface) for runtime-installed props — the only
+- **`declare`-merged accessors** (class + same-name interface) for runtime-installed props: the only
   way to get inferred typed accessors without decorators. `declare` is fully erasable.
 - **Encapsulation**: `#private` fields by default; the reactive graph's cross-node protocol is the one
   documented exception (modeled as `Producer`/`Consumer` interfaces, §4). Expose introspection through
@@ -340,35 +340,35 @@ This section is itself a deliverable — the foundation's job is to set the patt
 
 Three instruments, ported from rce's discipline:
 
-1. **API contract** — each control ships `{name}.md` with YAML frontmatter (ADR-0004): an
+1. **API contract**: each control ships `{name}.md` with YAML frontmatter (ADR-0004): an
    "attributes-as-API" descriptor (tag · tier · extends · attributes[type/reflect/default] ·
    properties[manual/readonly] · events · slots · parts · customStates · face[formAssociated/value/validity] ·
    aria[role/labelSource] · keyboard · geometry · forcedColors) in the frontmatter, the prose doc in the
-   body. Machine-checkable (frontmatter schema + contract↔props trip-wire) and the `/site` doc source —
+   body. Machine-checkable (frontmatter schema + contract↔props trip-wire) and the `/site` doc source:
    one artifact, two consumers; keeps the public surface from drifting.
-2. **Evaluation rubric** — two crossing axes scored separately: **COMPOSE** (layer/anatomy/API/
+2. **Evaluation rubric**: two crossing axes scored separately: **COMPOSE** (layer/anatomy/API/
    composition/coherence) and **REALIZE** (geometry/element/semantics/interaction/fidelity). Shippable =
    both review axes ≥ 4 and zero gate fails. A clean API can't hide an inert build.
 3. **Per-component definition of done** (see `goals.md`): probes green, `tsc` clean, budget held,
    browser-truth smoke green, contrast re-validated, forced-colors survived.
 
 **Budgets** (gz; confirmed by `npm run size` / `scripts/measure-size.mjs`): reactive+dom kernel ≤ ~7 kB
-consumer (re-based 6→7 kB, **ADR-0040** — legitimate ADR-0023 public-API growth: `mount` + the
-directive-authoring trio + `repeat`/`watch`; re-based again to 7.5 kB at ADR-0155 — the barrel measures
+consumer (re-based 6→7 kB, **ADR-0040**: legitimate ADR-0023 public-API growth: `mount` + the
+directive-authoring trio + `repeat`/`watch`; re-based again to 7.5 kB at ADR-0155: the barrel measures
 7659 B gz against 7680 on 2026-08-16, 21 B headroom); the self-defining `ui-*` family barrel ≤ 58 KB (the
-worst-case every-control ceiling — re-based rung by rung, each a recorded ruling, in
+worst-case every-control ceiling: re-based rung by rung, each a recorded ruling, in
 `scripts/measure-size.mjs`'s own comment ladder; latest: **ADR-0040 Amendment 2026-08-16**, proposed,
 measured 58485 B gz); per-control marginal ≤ ~1.5–2 kB; a keep-all library ratchet that
 is shrink-only **above the re-based floor**. Tree-shake proof: importing one control drags only it + real deps.
-*(Recommended — ADR-0040: wire `npm run size` into the standard gate so a budget regression FAILS rather than
+*(Recommended: ADR-0040: wire `npm run size` into the standard gate so a budget regression FAILS rather than
 going silent.)*
 
-**Test strategy.** agent-ui has no runner yet. **Recommendation: Vitest** (Vite-native, TS-native) —
+**Test strategy.** agent-ui has no runner yet. **Recommendation: Vitest** (Vite-native, TS-native);
 jsdom/happy-dom for the fast structural/behaviour probes, `@vitest/browser` (Playwright) for the
 **browser-truth** layer that jsdom cannot judge (`@scope`, `light-dark()`, container queries, top
 layer, real focus, computed geometry px, the AX tree). `tsc --noEmit` (already the `build` gate) stays
 the type gate. Zero-dep alternative: node:test `--experimental-strip-types` + a custom Playwright
-smoke (rce's approach) — chosen if we want to keep `devDependencies` minimal. **Open decision, see §12.**
+smoke (rce's approach): chosen if we want to keep `devDependencies` minimal. **Open decision, see §12.**
 
 ## 11. Phasing (maps to `goals.md`)
 
@@ -378,9 +378,9 @@ G1  Reactivity kernel                (graph + scheduler, probe-backed)
 G2  Element + typed props            (UIElement, props-as-signals, reflection, the ReactiveProps pattern)
 G3  Templating + directives          (html/svg/render/parts, repeat/watch/classMap/ref)
 G4  FACE base + control traits       (UIFormElement; pressActivation/tabbable/trackUserInvalid)
-G5  ui-button — the reference control (end-to-end: CSS trio, dimensional tokens, api.json, rubric)
+G5  ui-button: the reference control (end-to-end: CSS trio, dimensional tokens, api.json, rubric)
 G6  ui-text-field / ui-checkbox / ui-switch
-G7  ui-listbox / ui-select / ui-field (+ form-provider) — first family complete
+G7  ui-listbox / ui-select / ui-field (+ form-provider): first family complete
 G8  Gallery demo + release-readiness pass
 G9  Container/layout family              (row/column/list/grid/card/tabs/modal + the A2UI catalog flip,
                                            LLD-C8 two-way input binding)
@@ -394,37 +394,37 @@ what is next, and the work items are SDLC Lite tickets (`.sdlc/tickets/roadmap.m
 
 ## 12. Open decisions & risks
 
-> **Dispositioned at G8** (2026-07-05, the release-readiness pass — decomp `g8-gallery-release-readiness`):
+> **Dispositioned at G8** (2026-07-05, the release-readiness pass: decomp `g8-gallery-release-readiness`):
 > every item is RESOLVED or explicitly DEFERRED with its reason and revisit trigger. The section stays as
 > the ledger of record; a future open decision appends here.
 
 - **Test runner** (§10): **RESOLVED → Vitest** (jsdom inner loop; `@vitest/browser` + Playwright for the
   browser-truth layer at G5). `tsc` (`npm run check`) stays the type gate.
-- **App build/dev entry**: **RESOLVED — the docs site IS the app entry.** `site/index.html` + the per-page
+- **App build/dev entry**: **RESOLVED; the docs site IS the app entry.** `site/index.html` + the per-page
   shells landed with the docs-site waves; `vite build` has been green since the ADR-0077 wave, and the G8
   gallery (`gallery.html`, ADR-0079) joined an already-live build. (The earlier "no entry until the
-  gallery" reading is retired — the entry arrived before the gallery did.)
-- **Library emit**: **DEFERRED with reason (Kim confirmed, 2026-07-05 — G8 fork F2a).** No external
+  gallery" reading is retired: the entry arrived before the gallery did.)
+- **Library emit**: **DEFERRED with reason (Kim confirmed, 2026-07-05; G8 fork F2a).** No external
   consumer or publish target exists yet. The G8 per-control `exports` (ADR-0080) are authored emit-ready
-  on the TS source; at first publish the targets flip to `dist/` + `.d.ts` via a `tsconfig.build.json` —
+  on the TS source; at first publish the targets flip to `dist/` + `.d.ts` via a `tsconfig.build.json`:
   mechanical, no API redesign. Revisit trigger: the first out-of-repo consumer, or a publish decision.
   **SINCE:** the publish decision came. `npm run publish:packages` builds through `tsconfig.build.json` and
   releases nine packages in lockstep as `@agent-ui-kit/*` (tags `v0.0.2` to `v0.2.0`; `data` joins at
   v0.2.0, T-0489); `devtools` is not in that set yet.
-- **Password exception**: **RESOLVED — the strict zero-native line HELD.** `ui-text-field type=password`
+- **Password exception**: **RESOLVED; the strict zero-native line HELD.** `ui-text-field type=password`
   shipped on the contenteditable surface with masking (ADR-0044); the rce allow-listed
   `<input type=password>` exception was never needed. Accepted residual (documented in ADR-0044):
   OS/password-manager autofill does not engage.
-- **Shadow vs light boundary for the eventual app shell**: **RESOLVED — light DOM the default; the app-shell
+- **Shadow vs light boundary for the eventual app shell**: **RESOLVED; light DOM the default; the app-shell
   gets an opt-in PER-INSTANCE isolation ([ADR-0082](adr/0082-app-shell-per-instance-isolation.md), 2026-07-05).**
   The site shell is deliberately CSS-only light-DOM (`site/pages/_page.ts` SHELL NOTE); the reserved class-level
-  `static shadow` seam stays UNUSED — the app-shell family (agent-app-surfaces M1) instead isolates per instance
+  `static shadow` seam stays UNUSED: the app-shell family (agent-app-surfaces M1) instead isolates per instance
   via an `isolated` opt-in that `attachShadow`s at connect and injects the fleet CSS inside the boundary. The
   NEXT-tier scope dial that would revisit this is now chosen (agent-app-surfaces, `prd/agent-app-surfaces.prd.md`).
   **SINCE (2026-07-26):** `ui-app-shell` and its `isolated` opt-in were REMOVED
-  ([ADR-0156](adr/0156-deprecate-app-shell-for-super-shell-family.md)) — the light-DOM default and the unused
+  ([ADR-0156](adr/0156-deprecate-app-shell-for-super-shell-family.md)): the light-DOM default and the unused
   `static shadow` seam both HELD, and no fleet component isolates per instance any more (see §"Light DOM by
   default" above). The record above stands as what was decided on 2026-07-05.
-- **Risk — the `declare`-merge prop pattern**: **RESOLVED / CLOSED at G2.** Validated against the strict
+- **Risk: the `declare`-merge prop pattern**: **RESOLVED / CLOSED at G2.** Validated against the strict
   tsconfig (`props-typing.test.ts`, negative-control-proven) and load-bearing fleet-wide since.
 ```
