@@ -1138,6 +1138,8 @@ describe('render lint: the gate itself (T-0136)', () => {
     // a filtered run (-t) judges only the subjects it visited; the anti-vacuous count needs the whole sweep
     if (visited.size === Object.keys(DEMOS).length + browsableNames().length + PERSONA_SEEDS.length) {
       for (const r of RULES.render) expect(measured[r.id], `anti-vacuous: rule ${r.id} measured no element in the whole sweep`).toBeGreaterThan(0)
+    } else {
+      console.log(`DOGFOOD_SKIPPED anti-vacuous per-rule check: ${visited.size} subjects visited, not the whole sweep (a filtered run)`)
     }
     const stale = [...allowed].filter((k) => visited.has(k.split('#')[0]!) && !found.has(k))
     expect(stale, 'an allowlist entry this engine no longer finds: delete its line (or add @chromium / @webkit)').toEqual([])

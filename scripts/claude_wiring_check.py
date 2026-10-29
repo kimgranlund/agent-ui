@@ -129,5 +129,57 @@ def main() -> int:
     return 0
 
 
+def selftest() -> int:
+    """T-0524: the empty-agents pass and the advisory tier stay permissive, and each real violation still fails."""
+    import contextlib
+    import io
+    import tempfile
+
+    global AGENTS_DIR, SKILLS_DIR
+    saved = (AGENTS_DIR, SKILLS_DIR)
+    failed: "list[str]" = []
+
+    def case(label: str, expect: int, agents: "dict[str, str] | None", skills: "dict[str, str]") -> None:
+        global AGENTS_DIR, SKILLS_DIR
+        with tempfile.TemporaryDirectory() as tmp:
+            AGENTS_DIR = os.path.join(tmp, "agents")
+            SKILLS_DIR = os.path.join(tmp, "skills")
+            if agents is not None:
+                os.makedirs(AGENTS_DIR)
+                for name, body in agents.items():
+                    with open(os.path.join(AGENTS_DIR, name), "w", encoding="utf-8") as f:
+                        f.write(body)
+            for name, body in skills.items():
+                os.makedirs(os.path.join(SKILLS_DIR, name))
+                with open(os.path.join(SKILLS_DIR, name, "SKILL.md"), "w", encoding="utf-8") as f:
+                    f.write(body)
+            with contextlib.redirect_stderr(io.StringIO()):
+                got = main()
+        if got != expect:
+            failed.append(f"{label}: expected exit {expect}, got {got}")
+
+    agent = "---\nname: a\nskills: [good]\n---\nbody\n"
+    good = "---\nname: good\n---\nbody\n"
+    anchored = "---\nname: good\n---\nsee foo.ts:123 for it\n"
+    try:
+        case("no agents dir passes (the preload check is vacuous by design)", 0, None, {})
+        case("an agent preloading a reachable skill passes", 0, {"a.md": agent}, {"good": good})
+        case("an agent preloading a skill that does not exist fails", 1, {"a.md": agent}, {})
+        case(
+            "an agent preloading a disable-model-invocation skill fails",
+            1,
+            {"a.md": agent},
+            {"good": "---\nname: good\ndisable-model-invocation: true\n---\nbody\n"},
+        )
+        case("an agents dir with zero repo-resolvable preloads fails", 1, {"a.md": "---\nname: a\n---\nbody\n"}, {})
+        case("a line-number anchor is advisory and never fails the gate", 0, {"a.md": agent}, {"good": anchored})
+    finally:
+        AGENTS_DIR, SKILLS_DIR = saved
+    for line in failed:
+        print(f"claude_wiring_check selftest FAIL  {line}", file=sys.stderr)
+    print(f"claude_wiring_check selftest: {'FAILED' if failed else 'ALL PASS'}", file=sys.stderr)
+    return 1 if failed else 0
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(selftest() if sys.argv[1:] == ["selftest"] else main())

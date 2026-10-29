@@ -26,11 +26,7 @@ describe('asset-source', () => {
   it('readAsset throws AgentAssetError naming the regen script on an unknown key', () => {
     expect(() => readAsset('agent/prompts/no-such-prompt.md')).toThrow(AgentAssetError)
     expect(() => readAsset('agent/prompts/no-such-prompt.md')).toThrow(/generate-agent-assets\.mjs/)
-    try {
-      readAsset('agent/prompts/no-such-prompt.md')
-    } catch (e) {
-      expect((e as Error).name).toBe('AgentAssetError')
-    }
+    expect(() => readAsset('agent/prompts/no-such-prompt.md')).toThrow(expect.objectContaining({ name: 'AgentAssetError' }))
   })
 
   it('listAssets(mini-skills) equals the sorted on-disk .md names', () => {
