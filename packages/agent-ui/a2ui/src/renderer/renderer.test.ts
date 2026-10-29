@@ -422,20 +422,20 @@ describe('renderer host — stream faults + lifecycle (renderer LLD §9, SPEC-N3
           updateComponents: {
             surfaceId: 's-lbl',
             // NOT wrapped in `Field` — the taught, correct shape (see `booking-reservation`/every shipped
-            // form seed). `ui-select` DOES have its own `label` accessor (bare-usage aria-only, ADR-0085 —
-            // select.md), so the widget resolver happily sets it; the catalog deliberately declares NO
-            // `label` PropDef for Select (unlike TextField/ComboBox/MultiSelect), so this is CATALOG-invalid.
+            // form seed). `ui-select` has its own `label` accessor (bare-usage aria-only, ADR-0085, select.md),
+            // but the catalog deliberately declares NO `label` PropDef for Select (unlike TextField/ComboBox/
+            // MultiSelect), so this is CATALOG-invalid and the renderer never applies it (T-0552).
             components: [{ id: 'root', component: 'Select', name: 'size', label: 'Party size', children: ['o1'] }, { id: 'o1', component: 'Option', value: '2', label: '2 people' }],
           },
         }),
       )
       r.finalize()
 
-      // Renders — but "Party size" lands ONLY in the control-created, visually-hidden aria-label span
-      // (select.md's `[data-part=aria-label]`, ADR-0085), never in the REAL visible trigger label
-      // (`[data-part=label]`, which shows the placeholder/selection text) — the reported "no labels" shape.
+      // Renders, but the undeclared `label` is never applied (T-0552): "Party size" lands in neither the
+      // visually-hidden aria-label span (select.md's `[data-part=aria-label]`, ADR-0085) nor the visible
+      // trigger label (`[data-part=label]`, which shows the placeholder/selection text).
       expect(mount.querySelector('ui-select')).not.toBeNull()
-      expect(mount.querySelector('[data-part="aria-label"]')?.textContent).toBe('Party size')
+      expect(mount.querySelector('[data-part="aria-label"]')?.textContent ?? '').not.toContain('Party size')
       expect(mount.querySelector('[data-part="label"]')?.textContent).not.toContain('Party size')
 
       const errors = sent.filter(isError)
