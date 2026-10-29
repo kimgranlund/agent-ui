@@ -38,7 +38,7 @@
   --ui-toast-surface: var(--md-sys-color-neutral-surface-brightest);
   --ui-toast-ink: var(--md-sys-color-neutral-on-surface); /* TKT-0066: was a direct role read in @scope */
   --ui-toast-border: var(--md-sys-color-neutral-outline);
-  --ui-toast-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+  --ui-toast-shadow: var(--ui-overlay-shadow); /* T-0559: the shared overlay elevation, was a literal rgb() */
 
   /* TKT-0066 item 5 ruling: dimensional constants route through the own chain, never read raw in @scope. */
   --ui-toast-gap: var(--md-sys-widget-gutter, var(--md-sys-space-sm)); /* shared shell-spacing step — the ui-menu panel precedent */

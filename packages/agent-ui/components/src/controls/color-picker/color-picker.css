@@ -42,14 +42,14 @@
      cell precedent: a bespoke token, not a §1 geometry-lookup row). */
   --ui-color-picker-pad-block-size: 10rem;
   --ui-color-picker-pad-radius: var(--md-sys-shape-corner-base, 0.375rem);
-  --ui-color-picker-pad-outline: var(--md-sys-color-neutral-outline-variant, #c4c4c4);
+  --ui-color-picker-pad-outline: var(--md-sys-color-neutral-outline-variant);
 
   /* Thumb geometry — a small ringed circle, visible against any painted hue (a light ring + a dark ring
      stacked, so the thumb reads on both light and dark pad colors — the swatch/calendar thumb-vs-any-
      backdrop lesson, ADR-0094). */
   --ui-color-picker-thumb-size: 1rem;
-  --ui-color-picker-thumb-ring: var(--md-sys-color-neutral-on-surface, #1c1c1e);
-  --ui-color-picker-thumb-ring-inner: var(--md-sys-color-neutral-surface-brightest, #fff);
+  --ui-color-picker-thumb-ring: var(--md-sys-color-neutral-on-surface);
+  --ui-color-picker-thumb-ring-inner: var(--md-sys-color-neutral-surface-brightest);
   --ui-color-picker-label-font: var(--md-sys-type-control, var(--md-sys-font-sm, 13px)); /* TKT-0066 item 5 ruling: constants route through the own chain — the shared small-text size for channel labels, value readouts, and the format toggle */
 }
 

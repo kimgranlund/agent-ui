@@ -41,7 +41,7 @@ describe('dimensions.css: the hand-tabled ramp retired at the cut (ADR-0245 clau
 // tok-focus (ADR-0009) — the shared focus-ring geometry. Width + offset are CONSTANTS (no var() over a
 // subtree-repointable multiplier), so they belong on :root, NOT on the `*` ramp: ADR-0007's universal-
 // selector rule covers only DERIVED tokens. The probe pins them ON :root and OFF `*`.
-describe('dimensions.css — the shared focus-ring geometry constants (ADR-0009)', () => {
+describe('dimensions.css: the shared focus-ring geometry constants (ADR-0009)', () => {
   it('declares --md-sys-state-focus-ring-width/-offset (2px/2px) on :root — constants, not on the `*` ramp', () => {
     expect(rootBlock).toMatch(/--md-sys-state-focus-ring-width:\s*2px\s*;/)
     expect(rootBlock).toMatch(/--md-sys-state-focus-ring-offset:\s*2px\s*;/)
@@ -90,10 +90,21 @@ describe('dimensions.css — the working/live-mutation constants (ADR-0199)', ()
   })
 })
 
+// tok-overlay-shadow (T-0559): the one elevation shadow for a floating card (ui-super-shell overlay, ui-toast).
+// It reads the scheme-invariant dialog-backdrop role, so no literal rgb() carries a light-only value.
+describe('dimensions.css: the shared --ui-overlay-shadow elevation constant (T-0559)', () => {
+  it('declares --ui-overlay-shadow on :root as a color-mix of the dialog-backdrop role, off the `*` ramp', () => {
+    expect(rootBlock).toMatch(
+      /--ui-overlay-shadow:\s*0 0\.25rem 1\.5rem color-mix\(in oklch, var\(--md-sys-color-dialog-backdrop\) 31\.25%, transparent\)\s*;/,
+    )
+    expect(universalBlock).not.toMatch(/--ui-overlay-shadow/)
+  })
+})
+
 // tok-mono — the shared monospace FONT-FAMILY constant (code blocks, inline-code chips, captions). A
 // :root constant like the focus-ring constants. Named --md-sys-typeface-mono (NOT --md-sys-font-*) to stay
 // clear of the --md-sys-font-{sm,md,lg} SIZE names (bridge aliases since the ADR-0245 cut).
-describe('dimensions.css — the shared --md-sys-typeface-mono font-family constant', () => {
+describe('dimensions.css: the shared --md-sys-typeface-mono font-family constant', () => {
   it('declares --md-sys-typeface-mono (the ui-monospace stack) on :root — a constant, not on the `*` ramp', () => {
     expect(rootBlock).toMatch(/--md-sys-typeface-mono:\s*ui-monospace,\s*SFMono-Regular,\s*Menlo,\s*monospace\s*;/)
     expect(universalBlock).not.toMatch(/--md-sys-typeface-mono/) // a constant stays off the derived `*` ramp

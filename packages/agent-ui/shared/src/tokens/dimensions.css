@@ -80,6 +80,14 @@
   --ui-working-opacity-max: 0.55;
   --ui-working-blur: 24px;
 
+  /* Overlay elevation shadow (T-0559): the ONE drop shadow for a floating card over page content
+     (ui-super-shell's overlay card, ui-toast). A :root constant like the focus-ring and motion constants:
+     no [scale]/[density] participation. The color is the scheme-invariant ui-modal backdrop role at
+     31.25% (0.8 x 0.3125 = 0.25 alpha), so a theme that repaints the backdrop repaints every shadow and no
+     control carries a literal rgb(). A consuming control routes it through its OWN chain, e.g.
+     `--ui-toast-shadow: var(--ui-overlay-shadow);` in the control's `:where()` block (TKT-0066 item 5). */
+  --ui-overlay-shadow: 0 0.25rem 1.5rem color-mix(in oklch, var(--md-sys-color-dialog-backdrop) 31.25%, transparent);
+
 
   /* Monospace family — the shared typeface CONSTANT for code/figure surfaces (code blocks, inline-code
      chips, captions). A :root constant like the focus-ring / radius constants, NOT the `*` ramp: a

@@ -5022,6 +5022,7 @@ simultaneously.
 
 Without a `ui-segmented-control` (or `ui-radio-group`) ancestor, `ui-segment` behaves like a boolean
 checkbox — valid for a single-item "accept" pattern, but not the intended use.
+It also shows no checked state in any mode (light, dark, forced colors): the selected fill and ink belong to the host `ui-segmented-control`, so `checked` flips the form value and `aria-checked` but paints nothing on a bare segment.
 
 ---
 
