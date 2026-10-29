@@ -1359,3 +1359,8 @@
 
 - note: `.sdlc/evals/README.md` r15-recheck row ticket changed T-0483 to T-0551 as a side effect of regenerating the index (disclosed in the builder report); confirm it is intended.
 - note: report.md Process notes record that `run-capped.ts` skips the `live-commands.sh` copy for an absolute path; the file was hand-copied.
+
+## T-0571: A2UI docs cover the AmountPicker receipt check, Basic Image.url media format and the Basic media rows (2026-10-29)
+
+- note: .claude/docs/spec/a2ui-catalog.spec.md SPEC-R10 AC1 and the 5.2 intro: edited lines keep pre-existing em dashes.
+- note: packages/agent-ui/a2ui/src/catalog/a2ui-basic/index.test.ts:26 keeps the stale "no fleet media control" reason string.

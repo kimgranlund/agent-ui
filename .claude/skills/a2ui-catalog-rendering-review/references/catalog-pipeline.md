@@ -49,7 +49,9 @@ control's own surface must change (a prop the catalog wants to expose does not e
   reverse edge on the sibling's entry, and the edit recaptures the prompt baseline (Layer 4).
 - Persona fragments `catalog/personas/{concierge,croupier,fixture-demo}/{catalog.json,factories.ts,manifest.ts}`
   merge via `compose.ts` (`CATALOG_COMPOSE_COLLISION` on a name already in the base). `catalog/a2ui-basic/`
-  is the upstream-pinned catalog (SPEC-R10/N5), reusing default factories via `withBasicCommon`.
+  is the upstream-pinned catalog (SPEC-R10/N5), reusing default factories via `withBasicCommon`. Its `Image.url`
+  declares `format: "media-src"` like the default catalog's media `src` props (T-0565; hardening: an absolute
+  literal outside the media scheme allowlist fails `CATALOG`).
 - `factories.ts` — one `WidgetFactory {tag, create, applyProp, resetProp?, value?, submitGate?}` (`types.ts`).
   The renderer applies only props the row declares (T-0552); `resetProp` restores a dropped non-identity prop
   on a later `updateComponents` (T-0556).

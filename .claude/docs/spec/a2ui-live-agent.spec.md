@@ -529,7 +529,7 @@ PRD-G4; realizes streaming SPEC-R2, harness SPEC-R6)*
 **Persona semantic checks (ADR-0238).** When the host passes `ProduceDeps.semanticChecks` (resolved
 for the SELECTED catalog by `semanticChecksForCatalog`, so a derived `<base>--<persona>` id carries its persona's
 checks; the shipped hosts' `semanticChecksDeps` also adds catalog-wide checks gated on the types each reads,
-among them `INERT_PROP` and `RECEIPT_TOTAL_PATH` since T-0556, `src/catalog/inert-prop-checks.ts`), `produce()` MUST run them on a round whose payload passed
+among them `INERT_PROP` and `RECEIPT_TOTAL_PATH` since T-0556, `src/catalog/inert-prop-checks.ts`, and the composite-moment rows, among them the AmountPicker row's `SURFACE_MISSING` for a cart or order ConfirmReceipt whose line quantity no AmountPicker binds, T-0550, `src/catalog/composite-moments.ts`), `produce()` MUST run them on a round whose payload passed
 `validateA2ui` and the FEED_SCOPE gate, before anything streams. A finding is a self-correct round fed back
 through the same feedback turn, `CODE at path: message`; rounds are spent while any remain. On the last round
 a finding MUST NOT halt: the structurally valid payload ships and `trace.failureCodes` gains

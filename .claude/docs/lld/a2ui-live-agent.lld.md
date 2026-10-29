@@ -564,7 +564,9 @@ which adds the persona's and domains' checks plus the catalog-wide ones, each ke
 declares the types it reads (`gateChecksOnCatalog`), and spreads `{}` when none applies. The catalog-wide list
 includes, since T-0556, `inertPropCheck` (`INERT_PROP`: a Basic prop kept for interop that renders nothing) and
 `receiptTotalCheck` (`RECEIPT_TOTAL_PATH`: a ConfirmReceipt `totalLabel` with no `totalPath`), both in
-`src/catalog/inert-prop-checks.ts`.
+`src/catalog/inert-prop-checks.ts`. The composite-moment rows (`src/catalog/composite-moments.ts`) ride the same gate;
+the AmountPicker row (T-0550) sends back as `SURFACE_MISSING` a cart or order ConfirmReceipt whose line quantity binds
+a path no AmountPicker on the surface binds, asking for one picker per such line (agent-closed-loop spec, composite moments).
 
 **Catalog load under Node** mirrors the real
 `validate-payload.ts` / `import-seeds.ts` mechanism: `loadCatalog` reads `catalog.json` via
