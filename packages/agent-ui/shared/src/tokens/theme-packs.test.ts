@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync } from 'node:fs'
-import { repointFill } from '../../tools/themes/wrap-pack.ts'
+import { repointFill, repointText } from '../../tools/themes/wrap-pack.ts'
 declare const process: { cwd(): string }
 
 // theme-packs.test.ts — ADR-0141/TKT-0087's STANDING parity gate: every `[theme='<name>']` pack under
@@ -239,5 +239,88 @@ describe('theme-packs.test.ts: each pack primary fill ladder clears 4.5:1 under 
     const stock = sample.replace(/^\s*--md-sys-color-primary-fill(-hover|-active)?:[^;]*;\n/gm, '')
     expect(stock).not.toBe(sample)
     expect(repointFill(stock)).not.toBe(stock)
+  })
+})
+
+// T-0560: each pack's text inks clear WCAG-AA 4.5:1 as text on every elevation plane of both schemes: the neutral
+// on-surface, on-surface-variant and placeholder inks, the primary placeholder (link) and on-surface-variant (the
+// active ui-router-link) inks, and the placeholder also on the idle field fill (neutral-container-low over the plane).
+// The math is a second derivation, independent of wrap-pack.ts repointText: OKLCH -> gamma sRGB, composite, WCAG.
+describe('theme-packs.test.ts: each pack text inks clear 4.5:1 on every plane (T-0560)', () => {
+  const AA = 4.5
+  const PLANES = { light: ['050', '075', '100', '125', '150', '175', '200'], dark: ['950', '925', '900', '875', '850', '825', '800'] } as const
+  const INKS = [
+    ['neutral-on-surface', 'neutral'],
+    ['neutral-on-surface-variant', 'neutral'],
+    ['neutral-placeholder', 'neutral'],
+    ['primary-placeholder', 'primary'],
+    ['primary-on-surface-variant', 'primary'],
+  ] as const
+  const gamma = ([L, C, H]: number[]): number[] => {
+    const h = ((H as number) * Math.PI) / 180, a = (C as number) * Math.cos(h), b = (C as number) * Math.sin(h)
+    const l = ((L as number) + 0.3963377774 * a + 0.2158037573 * b) ** 3
+    const m = ((L as number) - 0.1055613458 * a - 0.0638541728 * b) ** 3
+    const s = ((L as number) - 0.0894841775 * a - 1.291485548 * b) ** 3
+    return [
+      4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+      -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+      -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+    ].map((c) => { c = Math.min(1, Math.max(0, c)); return c <= 0.0031308 ? 12.92 * c : 1.055 * c ** (1 / 2.4) - 0.055 })
+  }
+  const lum = (g: number[]) => { const [r, gg, b] = g.map((c) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4)); return 0.2126 * (r as number) + 0.7152 * (gg as number) + 0.0722 * (b as number) }
+  const ratio = (f: number[], b: number[]) => { const x = lum(f), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) }
+  const prim = (css: string, name: string): { g: number[]; a: number } => {
+    const m = css.match(new RegExp(`--md-sys-color-${name}:\\s*oklch\\(([-\\d.]+)\\s+([-\\d.]+)\\s+([-\\d.]+)(?:\\s*/\\s*([\\d.]+)%)?\\)`))
+    if (!m) throw new Error(`primitive ${name} not found`)
+    return { g: gamma([Number(m[1]), Number(m[2]), Number(m[3])]), a: m[4] ? Number(m[4]) / 100 : 1 }
+  }
+  const legs = (css: string, role: string): [string, string] => {
+    const m = css.match(new RegExp(`--md-sys-color-${role}:\\s*light-dark\\(\\s*var\\(--md-sys-color-([\\w-]+)\\)\\s*,\\s*var\\(--md-sys-color-([\\w-]+)\\)\\s*\\)`))
+    if (!m) throw new Error(`role ${role} not a two-leg light-dark()`)
+    return [m[1] as string, m[2] as string]
+  }
+  /** Every text cell below 4.5:1, as `role scheme ink on backdrop = ratio`. */
+  const textMisses = (css: string): string[] => {
+    const out: string[] = []
+    const fillLegs = legs(css, 'neutral-container-low')
+    for (const [role] of INKS) {
+      ;(['light', 'dark'] as const).forEach((scheme, k) => {
+        const ink = legs(css, role)[k] as string
+        const fill = prim(css, fillLegs[k] as string)
+        for (const p of PLANES[scheme]) {
+          const plane = prim(css, `neutral-${p}`).g
+          const backs: [string, number[]][] = [[`n-${p}`, plane]]
+          if (role === 'neutral-placeholder') backs.push([`the field fill over n-${p}`, plane.map((c, i) => fill.a * (fill.g[i] as number) + (1 - fill.a) * c)])
+          for (const [where, back] of backs) {
+            const r = ratio(prim(css, ink).g, back)
+            if (r < AA) out.push(`${role} ${scheme} ${ink} on ${where} = ${r.toFixed(2)}:1`)
+          }
+        }
+      })
+    }
+    return out
+  }
+
+  for (const file of packFiles()) {
+    describe(`themes/${file}`, () => {
+      const css = readFileSync(`${THEMES_DIR}/${file}`, 'utf8')
+      it('every text ink clears 4.5:1 on every plane, light and dark, and the placeholder on the field fill over each', () => {
+        expect(textMisses(css)).toEqual([])
+      })
+      it('is a fixed point of wrap-pack.ts repointText (the derived placeholder and link legs, not a hand edit)', () => {
+        expect(repointText(css)).toBe(css)
+      })
+    })
+  }
+
+  const sample = readFileSync(`${THEMES_DIR}/${packFiles()[0]}`, 'utf8')
+  it('NEGATIVE control: a pack whose light placeholder is the stock 650 fails on the field fill over n-200', () => {
+    const bad = sample.replace(/(--md-sys-color-neutral-placeholder: light-dark\(var\(--md-sys-color-)neutral-\d+/, '$1neutral-650')
+    expect(bad).not.toBe(sample)
+    expect(textMisses(bad).join(' ')).toMatch(/neutral-placeholder light neutral-650 on the field fill over n-200/)
+  })
+  it('NEGATIVE control: a pack whose light placeholder is the stock 650 is NOT a fixed point (repointText moves it)', () => {
+    const bad = sample.replace(/(--md-sys-color-neutral-placeholder: light-dark\(var\(--md-sys-color-)neutral-\d+/, '$1neutral-650')
+    expect(repointText(bad)).not.toBe(bad)
   })
 })

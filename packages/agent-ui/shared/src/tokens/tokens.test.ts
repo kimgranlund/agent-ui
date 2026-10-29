@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest'
 // trip-wire's `?raw` glob can't be used for stylesheets. Node GLOBALS stay out of the root graph
 // (`types` lists only vite/client), so declare the one global we touch.
 import { readFileSync } from 'node:fs'
+import { repointText } from '../../tools/themes/wrap-pack.ts'
 declare const process: { cwd(): string }
 
 // tok-focus (ADR-0009) — the shared focus-ring COLOUR role. A STATIC structural check on tokens.css: the
@@ -387,7 +388,9 @@ describe('tokens.css: the 3:1 field-boundary outline role (ADR-0245 Amendment 7)
 // text (ui-text, ui-source-list, ui-router-link, the ui-service-card path) reads --md-sys-color-primary-placeholder,
 // both because the plain --md-sys-color-neutral / --md-sys-color-primary anchors fall under 4.5:1 as text. Each role
 // clears 4.5:1 on every elevation plane in both schemes, and the placeholder also on the idle field fill
-// (--md-sys-color-neutral-container-low composited over the page surface). Recomputed from the declared legs.
+// (--md-sys-color-neutral-container-low composited over each plane, T-0560: the 650 light leg read 4.22 over n-200).
+// The active ui-router-link reads --md-sys-color-primary-on-surface-variant (T-0560), because primary-high's dark leg
+// falls under 4.5:1 on n-800. Recomputed from the declared legs.
 describe('tokens.css: placeholder and link text inks stay WCAG-AA (T-0557)', () => {
   const AA = 4.5
   const oklchOf = (family: string, stop: string): [number, number, number] => {
@@ -442,17 +445,36 @@ describe('tokens.css: placeholder and link text inks stay WCAG-AA (T-0557)', () 
     })
   }
 
-  it('--md-sys-color-neutral-placeholder clears 4.5:1 on the idle field fill over the page surface in BOTH schemes', () => {
+  it('--md-sys-color-neutral-placeholder clears 4.5:1 on the idle field fill over every elevation plane in BOTH schemes', () => {
     const ink = legs('neutral-placeholder', 'neutral')
-    const page = legs('neutral-surface', 'neutral')
     const [fillL, fillD] = legs('neutral-container-low', 'neutral')
     expect([fillL, fillD]).toEqual(['scrim-100', 'scrim-100']) // anti-vacuous: the fill really is the 10% neutral wash
     const alpha = parseInt(fillL.slice('scrim-'.length), 10) / 1000
-    for (const i of [0, 1]) {
-      const fill = over(gammaOf('neutral', '500'), alpha, gammaOf('neutral', page[i]))
-      const r = contrast(gammaOf('neutral', ink[i]), fill)
-      expect(r, `${i ? 'dark' : 'light'}: n-${ink[i]} on the field fill over n-${page[i]} = ${r.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+    let cells = 0
+    for (const [i, scheme] of [[0, 'light'], [1, 'dark']] as const) {
+      for (const plane of elev[scheme]) {
+        const fill = over(gammaOf('neutral', '500'), alpha, gammaOf('neutral', plane))
+        const r = contrast(gammaOf('neutral', ink[i]), fill)
+        expect(r, `${scheme}: n-${ink[i]} on the field fill over n-${plane} = ${r.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+        cells++
+      }
     }
+    expect(cells).toBe(14) // anti-vacuous: seven planes per scheme
+  })
+
+  it('--md-sys-color-primary-on-surface-variant (the active ui-router-link ink) clears 4.5:1 on every elevation plane in BOTH schemes', () => {
+    const w = worstOnPlanes('primary-on-surface-variant', 'primary')
+    expect(w.ratio, `worst cell: ${w.where} = ${w.ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(AA)
+  })
+
+  it('NEGATIVE control: --md-sys-color-primary-high falls under 4.5:1 on dark n-800 (why the active router link moved off it)', () => {
+    const w = worstOnPlanes('primary-high', 'primary')
+    expect(w.where).toBe('dark primary-400 on n-800')
+    expect(w.ratio).toBeLessThan(AA)
+  })
+
+  it('the placeholder and link legs are a fixed point of wrap-pack.ts repointText (one derivation rule with the theme packs)', () => {
+    expect(repointText(css)).toBe(css)
   })
 
   it('NEGATIVE control: the plain --md-sys-color-neutral and --md-sys-color-primary anchors FAIL 4.5:1 as text (why both inks moved)', () => {
