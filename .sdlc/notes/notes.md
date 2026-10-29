@@ -1344,3 +1344,7 @@
 ## T-0575: Removed CodeMirror editors in ui-agent-admin leave no listeners after garbage collection (2026-10-29)
 
 - note: agent-admin-gc.browser.test.ts:2-4 and the handoff say about 100 to 106 listeners per mount; the measured count is 60 on CodeMirror nodes (builder report discloses it as an unreconciled counter difference).
+
+## T-0574: Drill transitions follow dir=rtl, the leak-gate title is accurate, and the dark primary-high tone is settled (2026-10-29)
+
+- note: part 3 is a report with no token change; dark primary-high is 400 on this base, the equal-350 state lives only in the unlanded T-0567 lane.
