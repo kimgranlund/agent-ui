@@ -50,6 +50,9 @@ const props = {
   persistent: { ...prop.boolean(false), reflect: true },
 } satisfies PropsSchema
 
+// The author accessible-name attributes forwarded off the host onto the dialog part (ADR-0017 cl.5).
+const NAME_ATTRS = ['aria-labelledby', 'aria-label'] as const
+
 export interface UIModalElement extends ReactiveProps<typeof props> {}
 export class UIModalElement extends UIContainerElement {
   static props = props
@@ -60,6 +63,17 @@ export class UIModalElement extends UIContainerElement {
 
   // The element focused when the modal opened — restored on close (the one platform gap, ADR-0017 cl.4).
   #opener: HTMLElement | null = null
+
+  // A name written AFTER the dialog exists (a binding, a renderer update, a reopen with a new title) is
+  // re-forwarded on every change (T-0520), connected or not, so the host never keeps an aria-* attribute.
+  static get observedAttributes(): string[] {
+    return [...super.observedAttributes, ...NAME_ATTRS]
+  }
+
+  attributeChangedCallback(attr: string, old: string | null, next: string | null): void {
+    super.attributeChangedCallback(attr, old, next)
+    if (this.#dialog && (NAME_ATTRS as readonly string[]).includes(attr)) this.#forwardName(this.#dialog, attr)
+  }
 
   protected connected(): void {
     const dialog = this.#ensureDialog()
@@ -141,16 +155,7 @@ export class UIModalElement extends UIContainerElement {
     dialog.setAttribute('data-box', '') // adopt the shared container box-model (region padding + inset margins, ADR-0046 revised 2026-07-04)
 
     // Forward the accessible name onto the dialog part, then strip it from the host (host carries no aria-*).
-    const labelledby = this.getAttribute('aria-labelledby')
-    if (labelledby !== null) {
-      dialog.setAttribute('aria-labelledby', labelledby)
-      this.removeAttribute('aria-labelledby')
-    }
-    const label = this.getAttribute('aria-label')
-    if (label !== null) {
-      dialog.setAttribute('aria-label', label)
-      this.removeAttribute('aria-label')
-    }
+    for (const attr of NAME_ATTRS) this.#forwardName(dialog, attr)
 
     // Move the author content into the dialog (the dialog is detached here, so firstChild is real content).
     while (this.firstChild) dialog.appendChild(this.firstChild)
@@ -158,6 +163,14 @@ export class UIModalElement extends UIContainerElement {
 
     this.#dialog = dialog
     return dialog
+  }
+
+  /** Move one host naming attribute onto the dialog part (a no-op while the host does not carry it). */
+  #forwardName(dialog: HTMLDialogElement, attr: string): void {
+    const value = this.getAttribute(attr)
+    if (value === null) return
+    dialog.setAttribute(attr, value)
+    this.removeAttribute(attr) // re-enters attributeChangedCallback with null, which forwards nothing
   }
 }
 

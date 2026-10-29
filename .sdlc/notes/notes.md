@@ -1115,3 +1115,7 @@
 ## T-0511: Assert-in-loop tests assert their item count first (2026-10-28)
 
 - note: no em dashes in added lines (the em dashes in the diff context are pre-existing describe titles).
+
+## T-0520: The table scroll region is named or not a tab stop, and modal and drawer forward late accessible names (2026-10-28)
+
+- note: the table tabindex decision lives in `#syncFade` (table.ts:396-406), which runs on scroll and ResizeObserver only; a content change that overflows without resizing the observed nodes is covered because rows live inside the observed table, so no gap was found.

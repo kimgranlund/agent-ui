@@ -70,7 +70,8 @@
 //     longer exist in the CURRENT `rows` (cl.7's "a rows swap reconciles `selected` by dropping identities
 //     that no longer exist, never throws"); never fires `select` (not a user commit).
 //   • LABEL (reads `label` — the ONLY effect that tracks it) — the `<caption>`/`aria-labelledby` pair
-//     (SPEC-R2 AC3, unchanged from the display-only contract) PLUS, when a footer `ui-pagination` currently
+//     (SPEC-R2 AC3, unchanged from the display-only contract) and the scroll part's `role="region"`, set
+//     only while that name exists (T-0520) PLUS, when a footer `ui-pagination` currently
 //     exists, its `label`'s ongoing upkeep (`footerLabel()`, the SAME derivation VIEW seeds it with).
 // `render()` stays the inherited no-op.
 //
@@ -148,8 +149,8 @@ export class UITableElement extends UIElement {
       this.#built = true
       this.#scroll = document.createElement('div')
       this.#scroll.setAttribute('data-part', 'scroll')
-      this.#scroll.setAttribute('role', 'region')
-      this.#scroll.setAttribute('tabindex', '0')
+      // `role="region"` rides the LABEL effect (only a named region, T-0520) and `tabindex="0"` rides
+      // `#syncFade` (a Tab stop only while something overflows), so neither is minted here.
       this.#table = document.createElement('table')
       this.#thead = document.createElement('thead')
       this.#tbody = document.createElement('tbody')
@@ -373,6 +374,7 @@ export class UITableElement extends UIElement {
         this.#caption?.remove()
         this.#caption = null
         this.#scroll.removeAttribute('aria-labelledby')
+        this.#scroll.removeAttribute('role') // an unlabelled region would be a nameless landmark (T-0520)
       } else {
         if (!this.#caption) {
           this.#caption = document.createElement('caption')
@@ -380,6 +382,7 @@ export class UITableElement extends UIElement {
           this.#table.insertBefore(this.#caption, this.#table.firstChild)
         }
         this.#caption.textContent = label
+        this.#scroll.setAttribute('role', 'region')
         this.#scroll.setAttribute('aria-labelledby', this.#caption.id)
       }
       if (this.#pagination) this.#pagination.label = footerLabel(label)
@@ -396,6 +399,11 @@ export class UITableElement extends UIElement {
     const offset = Math.abs(s.scrollLeft)
     s.toggleAttribute('data-fade-start', hidden > 1 && offset > 1)
     s.toggleAttribute('data-fade-end', hidden > 1 && offset < hidden - 1)
+    // The keyboard-scroll Tab stop (T-0520): present only while the container overflows on either axis, so
+    // a table that fits adds no empty stop to the page's tab sequence.
+    const overflows = hidden > 1 || s.scrollHeight - s.clientHeight > 1
+    if (overflows) s.setAttribute('tabindex', '0')
+    else s.removeAttribute('tabindex')
   }
 
   #thCol(): HTMLTableCellElement {

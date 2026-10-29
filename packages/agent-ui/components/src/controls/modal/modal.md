@@ -50,7 +50,7 @@ slots: []                 # no NAMED slots — the modal's children are MOVED in
 
 parts:                    # the native <dialog> is a control-owned PART, not a user slot (ADR-0017 cl.1)
   - name: dialog
-    description: The control-created light-DOM `<dialog data-part="dialog">` the modal renders into. Created ONCE (idempotent guard) and NEVER re-rendered (render() stays the inherited void — re-creating the dialog would drop the top-layer + focus state; ADR-0017 cl.1). It carries the dialog role natively; aria-modal is set by showModal(); an author aria-label/aria-labelledby is forwarded onto it. The host carries no role/aria-* attribute.
+    description: The control-created light-DOM `<dialog data-part="dialog">` the modal renders into. Created ONCE (idempotent guard) and NEVER re-rendered (render() stays the inherited void: re-creating the dialog would drop the top-layer + focus state; ADR-0017 cl.1). It carries the dialog role natively; aria-modal is set by showModal(); an author aria-label/aria-labelledby is forwarded onto it, on first build and again on every later change (T-0520). The host carries no role/aria-* attribute.
 
 customStates: []          # none — the modal uses no :state() custom states (the open/closed visibility is the native dialog's [open]/top-layer, not a custom state)
 
@@ -60,7 +60,7 @@ face:
 aria:
   role: dialog            # the native <dialog> PART carries the dialog role implicitly; showModal() sets aria-modal — NOT set on the host (the host carries no role/aria-* attribute)
   roleSource: native <dialog> part
-  labelSource: aria-label / aria-labelledby   # an author accessible name is FORWARDED off the host onto the dialog part (ADR-0017 cl.5); a labelling heading child is the common pattern
+  labelSource: aria-label / aria-labelledby   # an author accessible name is FORWARDED off the host onto the dialog part (ADR-0017 cl.5), re-forwarded on every later change (T-0520); a labelling heading child is the common pattern
   modal: aria-modal is set by showModal() (the platform), never an author/host attribute
 
 keyboard:
@@ -137,8 +137,9 @@ dialog). The platform does **not** restore focus to the invoking element on clos
 ## Accessibility
 
 The `<dialog>` part carries the **dialog** role natively and `aria-modal` is set by `showModal()`. An author
-accessible name (`aria-label` / `aria-labelledby`) is **forwarded** off the host onto the dialog part, so the
-host stays free of `role`/`aria-*` (the family's `internals`-only ARIA discipline) and the name rides the
+accessible name (`aria-label` / `aria-labelledby`) is **forwarded** off the host onto the dialog part, and a
+name written later (a binding, a renderer update, a reopen with a new title) is forwarded again on every
+change, so the host stays free of `role`/`aria-*` (the family's `internals`-only ARIA discipline) and the name rides the
 semantic element; a labelling heading child is the common pattern.
 
 ## Surface

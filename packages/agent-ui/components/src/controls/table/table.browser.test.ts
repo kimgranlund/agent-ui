@@ -296,3 +296,43 @@ describe('ui-table: the scroll edge cue (T-0149)', () => {
     expect(maskOf(scroll)).toBe('none')
   })
 })
+
+describe('ui-table: the scroll region is named or not a region, and a tab stop only while it overflows (T-0520)', () => {
+  const WIDE = JSON.stringify(
+    ['Account', 'Plan', 'Region', 'Seats', 'MRR', 'Signed up'].map((label, i) => ({ key: `c${i}`, label, type: 'number' })),
+  )
+  const WIDE_ROW = JSON.stringify([
+    Object.fromEntries([1200000, 2400000, 3600000, 4800000, 6000000, 7200000].map((v, i) => [`c${i}`, v])),
+  ])
+  const frame = (): Promise<number> => new Promise<number>((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+  it('an unlabelled table that fits is neither a region nor a tab stop', async () => {
+    const table = mount(`<ui-table columns='${COLUMNS}' rows='${ROWS}'></ui-table>`)
+    const scroll = table.querySelector('[data-part="scroll"]') as HTMLElement
+    await frame()
+    expect(scroll.scrollWidth, 'precondition: the table must fit').toBeLessThanOrEqual(scroll.clientWidth)
+    expect(scroll.hasAttribute('role'), 'an unlabelled scroll container is a nameless region').toBe(false)
+    expect(scroll.hasAttribute('tabindex'), 'a container that does not overflow is a Tab stop').toBe(false)
+  })
+
+  it('an overflowing table is a tab stop; labelled it is a named region, and it drops the stop once it fits again', async () => {
+    const wrap = mount(`<div style="inline-size:300px"><ui-table label="Accounts" columns='${WIDE}' rows='${WIDE_ROW}'></ui-table></div>`)
+    const table = wrap.querySelector('ui-table') as HTMLElement & { label: string }
+    const scroll = table.querySelector('[data-part="scroll"]') as HTMLElement
+    await frame()
+    expect(scroll.scrollWidth, 'precondition: the table must overflow').toBeGreaterThan(scroll.clientWidth)
+    expect(scroll.getAttribute('tabindex')).toBe('0')
+    expect(scroll.getAttribute('role')).toBe('region')
+    expect(scroll.getAttribute('aria-labelledby')).toBe(table.querySelector('caption')?.id)
+
+    table.label = ''
+    await frame()
+    expect(scroll.hasAttribute('role'), 'clearing the label must drop the nameless region').toBe(false)
+    expect(scroll.getAttribute('tabindex'), 'an overflowing container stays keyboard-scrollable').toBe('0')
+
+    wrap.style.inlineSize = '2000px'
+    await frame()
+    expect(scroll.scrollWidth, 'precondition: the widened table must fit').toBeLessThanOrEqual(scroll.clientWidth)
+    expect(scroll.hasAttribute('tabindex'), 'the Tab stop must go once nothing overflows').toBe(false)
+  })
+})

@@ -623,3 +623,30 @@ describe('ui-drawer cross-engine — GH #918/#920: the content-scoped scroll reg
     expect(dialog.scrollTop, `${server.browser}: still genuinely scrollable`).toBeGreaterThan(0)
   })
 })
+
+describe('ui-drawer: an accessible name written after first connect still reaches the dialog (T-0520, both engines)', () => {
+  it('renaming an open drawer forwards the new aria-label/aria-labelledby onto the dialog and leaves none on the host', async () => {
+    const { wrap, drawer, dialog } = mount('<ui-drawer aria-label="Old name"><h2 id="t0520-drawer-title">Agents</h2></ui-drawer>')
+    drawer.open = true
+    await drawer.updateComplete
+    expect(dialog.open, 'precondition: the drawer is open').toBe(true)
+    expect(dialog.getAttribute('aria-label')).toBe('Old name')
+
+    drawer.setAttribute('aria-label', 'New name')
+    expect(dialog.getAttribute('aria-label'), 'the late aria-label never reached the dialog').toBe('New name')
+    expect(drawer.hasAttribute('aria-label'), 'the late aria-label stayed on the host').toBe(false)
+
+    drawer.setAttribute('aria-labelledby', 't0520-drawer-title')
+    expect(dialog.getAttribute('aria-labelledby'), 'the late aria-labelledby never reached the dialog').toBe('t0520-drawer-title')
+    expect(drawer.hasAttribute('aria-labelledby'), 'the late aria-labelledby stayed on the host').toBe(false)
+
+    // A rename while detached (a reopen with a new title) lands too.
+    drawer.open = false
+    await drawer.updateComplete
+    wrap.remove()
+    drawer.setAttribute('aria-label', 'Reopened name')
+    document.body.append(wrap)
+    expect(dialog.getAttribute('aria-label')).toBe('Reopened name')
+    expect(drawer.hasAttribute('aria-label')).toBe(false)
+  })
+})

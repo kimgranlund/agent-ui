@@ -333,17 +333,22 @@ describe('UITableElement — the re-render contract: node identity (SPEC-R4.3)',
 })
 
 describe('UITableElement — the interior scroll region (SPEC-R5 AC2)', () => {
-  it('the scroll container carries role=region + tabindex=0', () => {
+  it('a labelled table: the scroll container is a region named by the caption', async () => {
     const el = mount(new UITableElement()) as UITableElement
+    el.columns = [{ key: 'a', label: 'A' }]
+    el.label = 'Revenue'
+    await el.updateComplete
     const scroll = el.querySelector('[data-part="scroll"]') as HTMLElement
     expect(scroll.getAttribute('role')).toBe('region')
-    expect(scroll.getAttribute('tabindex')).toBe('0')
+    expect(scroll.getAttribute('aria-labelledby')).toBe(el.querySelector('caption')?.id)
   })
 
-  it('an unlabeled table yields an unnamed scroll region — accepted residual, not a violation', () => {
+  it('an unlabelled table is not a region and, with nothing overflowing (jsdom), not a Tab stop (T-0520)', () => {
     const el = mount(new UITableElement()) as UITableElement
     const scroll = el.querySelector('[data-part="scroll"]') as HTMLElement
     expect(scroll.hasAttribute('aria-labelledby')).toBe(false)
+    expect(scroll.hasAttribute('role')).toBe(false)
+    expect(scroll.hasAttribute('tabindex')).toBe(false)
   })
 })
 
