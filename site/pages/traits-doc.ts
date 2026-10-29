@@ -1,5 +1,6 @@
-// site/pages/traits-doc.ts — the @agent-ui/components TRAITS guide: the three public trait subpaths
-// (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy) plus the ./dogfood-frame asset pair.
+// site/pages/traits-doc.ts: the @agent-ui/components TRAITS guide, the four public trait subpaths
+// (./traits/overlay, ./traits/list-reorder, ./traits/scroll-spy, ./traits/roving-focus) plus the
+// ./dogfood-frame asset pair.
 // Traits live in components/src/traits/ — NOT controls/ — so they carry no descriptor `.md` and sit
 // OUTSIDE the site-coverage/site-toc/site-canon descriptor-driven gates (those walk controls/src/
 // controls only, AGENTS.md's Packages section): this is an ungrouped site-level GUIDE page, the SAME
@@ -32,6 +33,7 @@ import traitsIndexRaw from '../../packages/agent-ui/components/src/traits/index.
 import overlaySrc from '../../packages/agent-ui/components/src/traits/overlay.ts?raw'
 import listReorderSrc from '../../packages/agent-ui/components/src/traits/list-reorder.ts?raw'
 import scrollSpySrc from '../../packages/agent-ui/components/src/traits/scroll-spy.ts?raw'
+import rovingFocusSrc from '../../packages/agent-ui/components/src/traits/roving-focus.ts?raw'
 
 // ── local derivation helpers — used only on this page (no other page slices a trait's own source) ─────────────
 
@@ -117,8 +119,8 @@ const { content } = mountPage({
     'Traits are the layer BELOW controls (AGENTS.md’s Packages section: reactive ← dom ← traits ← controls) — ' +
     'stateless `(host, opts) => cleanup` behaviours (and a couple of stateful controllers) invoked directly ' +
     'from a control’s own `connected()`. Most traits live entirely inside `components/src/traits/` with no ' +
-    'subpath export at all; exactly three are published as their own `@agent-ui/components/traits/*` ' +
-    'entries for a consumer outside the fleet to reuse directly. This page documents those three, plus the ' +
+    'subpath export at all; exactly four are published as their own `@agent-ui/components/traits/*` ' +
+    'entries for a consumer outside the fleet to reuse directly. This page documents those four, plus the ' +
     'unrelated `./dogfood-frame` asset pair.',
 })
 
@@ -142,8 +144,8 @@ content.append(
   ),
 )
 
-// ════════════════ 2 · The three public subpaths ════════════════
-content.append(heading(2, 'The three public subpaths'))
+// ════════════════ 2 · The four public subpaths ════════════════
+content.append(heading(2, 'The four public subpaths'))
 content.append(
   para(
     'Read straight from ',
@@ -160,6 +162,7 @@ content.append(
     './traits/overlay': 'Top-layer, light-dismissable anchored popup positioning — the non-modal overlay controller.',
     './traits/list-reorder': 'Pointer-drag + keyboard-fallback list reordering (WCAG 2.2 SC 2.5.7).',
     './traits/scroll-spy': 'IntersectionObserver-based heading-activation for a sticky TOC nav.',
+    './traits/roving-focus': 'One tab stop plus arrow, Home and End roving focus over a set of items.',
   }
   const table = document.createElement('table')
   const thead = document.createElement('thead')
@@ -328,7 +331,46 @@ content.append(
   ),
 )
 
-// ════════════════ 6 · @agent-ui/components/dogfood-frame ════════════════
+// ════════════════ 6 · roving-focus ════════════════
+content.append(heading(2, '@agent-ui/components/traits/roving-focus'))
+content.append(
+  para(
+    'Keyboard plus tabindex roving focus over any ordered set of items (listbox-roving LLD-C1): exactly one ' +
+      'item holds ',
+    code('tabindex=0'),
+    ', the rest ',
+    code('-1'),
+    ', and the arrow keys on the chosen axis plus Home and End move both the tab stop and real focus. ',
+    code('onMove'),
+    ' lets a host couple selection to focus (tabs, listbox) or keep them apart (menu: focus moves, Enter commits).',
+  ),
+)
+content.append(heading(3, 'RovingFocusOptions, derived from source'))
+content.append(codeBlock(extractBlock(rovingFocusSrc, 'export type RovingOrientation ='), 'ts'))
+content.append(codeBlock(extractInterface(rovingFocusSrc, 'RovingFocusOptions'), 'ts'))
+content.append(codeBlock(extractSignature(rovingFocusSrc, 'rovingFocus'), 'ts'))
+content.append(
+  para(
+    'Inside the fleet it backs ',
+    code('ui-tabs'),
+    ', ',
+    code('ui-listbox'),
+    ', ',
+    code('ui-menu'),
+    ', ',
+    code('ui-radio-group'),
+    ' and ',
+    code('ui-toolbar'),
+    '. Published as a subpath (T-0521) so ',
+    code('@agent-ui/app'),
+    '’s ',
+    code('ui-nav-rail'),
+    ' can give a bare (tablist) rail the APG tabs keyboard model without a deep import; landing it on the ' +
+      'components root barrel would have broken the foundation row’s size budget.',
+  ),
+)
+
+// ════════════════ 7 · @agent-ui/components/dogfood-frame ════════════════
 content.append(heading(2, '@agent-ui/components/dogfood-frame'))
 content.append(
   para(

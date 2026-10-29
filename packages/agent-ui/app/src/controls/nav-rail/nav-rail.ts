@@ -14,6 +14,16 @@
 // its OWN `role=tab` on ITS OWN activator — LLD-C3 — no cross-element internals reach needed here). A
 // mixed or empty rail defaults to `navigation` (SPEC §7 non-goal, never throws).
 //
+// Tablist keyboard (T-0521, the APG tabs model the tablist role promises, `ui-tabs`' precedent): a bare
+// rail is ONE tab stop: the selected tab's activator holds tabindex=0 (the first tab when none is selected),
+// the rest -1, re-seeded by the role-derivation observer (which also watches `selected`) and whenever focus
+// leaves the tablist. ArrowUp/ArrowDown (wrapping), Home and End rove real focus through the shared
+// `rovingFocus` trait (its own `./traits/roving-focus` subpath, ADR-0167's measured route). MANUAL
+// activation: arrows only move focus; Enter or Space commits through the native `<button>` click below,
+// because a select loads a section (and under `collapse="drill-in"` narrow, drills in), which must not
+// happen on every arrow. The trait only sees the activators while one of them has focus, so the
+// `collapse="menu"` trigger and the icon-popover `ui-menu` keep their own keys.
+//
 // Selection commit (SPEC-R3/R2) — ONE delegated `click` listener on the host: a bare (button-shaped)
 // item's activation sets its `selected`, clears siblings, and emits the rail's own `select`/`change`
 // (never intercepting a link-shaped item's native navigation — no `preventDefault`, the `href` check gates
@@ -55,6 +65,8 @@ import { UIElement, prop, type PropsSchema, type ReactiveProps } from '@agent-ui
 // measured +945 B gz on the reactive+dom foundation row every consumer pays for (7442 → 8387 against a
 // 7680 B gz budget, GH #368). Same shape as the `controls/menu` import below.
 import { overlay } from '@agent-ui/components/traits/overlay'
+// Same subpath shape: the root-barrel trial measured 8427 B gz on the 7680 B gz foundation row (T-0521).
+import { rovingFocus } from '@agent-ui/components/traits/roving-focus'
 import { createGlyph } from '@agent-ui/components/controls/glyph' // the trigger chevron, a caret-down functional mark (ADR-0245 cl.5)
 import type { UIMenuElement } from '@agent-ui/components/controls/menu'
 import { SHELL_NARROW_BREAKPOINT_REM } from '../../shell-breakpoint.ts'
@@ -107,8 +119,25 @@ export class UINavRailElement extends UIElement {
       const recompute = (): void => this.#deriveRole()
       recompute()
       const observer = new MutationObserver(recompute)
-      observer.observe(this, { childList: true, subtree: true, attributes: true, attributeFilter: ['href'] })
+      observer.observe(this, { childList: true, subtree: true, attributes: true, attributeFilter: ['href', 'selected'] })
       return () => observer.disconnect()
+    })
+
+    // Tablist keyboard (T-0521), see the header. `items()` is empty unless focus sits on a bare tab, so
+    // the trait's own init and settle passes are no-ops and the tab stop stays the observer's to seed.
+    rovingFocus(this, {
+      items: () => {
+        const tabs = this.#tabs()
+        return tabs.includes(document.activeElement as HTMLButtonElement) ? tabs : []
+      },
+      orientation: 'vertical',
+      loop: true,
+      typeAhead: false,
+      syncIndex: () => this.#tabs().indexOf(document.activeElement as HTMLButtonElement),
+    })
+    this.listen(this, 'focusout', (event) => {
+      const next = (event as FocusEvent).relatedTarget
+      if (!(next instanceof HTMLElement) || !this.#tabs().includes(next as HTMLButtonElement)) this.#seedTabStop()
     })
 
     // Selection commit — delegated click, button-shaped (bare-href) items only.
@@ -158,6 +187,29 @@ export class UINavRailElement extends UIElement {
     const items = [...this.querySelectorAll('ui-nav-rail-item')] as UINavRailItemElement[]
     const allBare = items.length > 0 && items.every((item) => item.href === '')
     this.internals.role = allBare ? 'tablist' : 'navigation' // mixed/empty ⇒ navigation (SPEC §7 non-goal)
+    this.internals.ariaOrientation = allBare ? 'vertical' : null
+    this.#seedTabStop()
+  }
+
+  /** The bare items' `[data-part=activator]` buttons in document order, or none unless the rail is a tablist. */
+  #tabs(): HTMLButtonElement[] {
+    if (this.internals.role !== 'tablist') return []
+    return [...this.querySelectorAll<HTMLButtonElement>('ui-nav-rail-item > button[data-part="activator"]')]
+  }
+
+  /** One tab stop: the selected tab (else the first) is tabindex=0, every other tab -1 (T-0521). Off the
+   *  tablist shape, a leftover button activator drops its roving tabindex and is a native Tab stop again. */
+  #seedTabStop(): void {
+    const tabs = this.#tabs()
+    if (tabs.length === 0) {
+      for (const button of this.querySelectorAll('ui-nav-rail-item > button[data-part="activator"]')) {
+        button.removeAttribute('tabindex')
+      }
+      return
+    }
+    const selected = tabs.findIndex((tab) => (tab.parentElement as UINavRailItemElement).selected)
+    const stop = selected === -1 ? 0 : selected
+    tabs.forEach((tab, i) => (tab.tabIndex = i === stop ? 0 : -1))
   }
 
   /** Idempotent DOM construction ONLY (persists across reconnect) — never re-run once the parts are set.

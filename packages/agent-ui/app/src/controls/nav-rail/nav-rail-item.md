@@ -51,7 +51,7 @@ aria:
   labelSource: the item's light-DOM children (re-expressed into the activator's [data-part=label] span)
 
 keyboard:
-  - note: The activator IS a real `<a>`/`<button>` — native Tab/Enter/Space/click all work natively, no bespoke trait needed.
+  - note: The activator IS a real `<a>`/`<button>`, so native Enter/Space/click all work natively. A link-shaped activator is its own Tab stop; a bare one (role=tab) is one tab stop for the whole tablist, roved by the parent `ui-nav-rail` with ArrowUp/ArrowDown/Home/End (T-0521, see nav-rail.md `keyboard:`).
 
 geometry:
   sizeClass: pattern

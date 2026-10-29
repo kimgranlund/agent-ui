@@ -1129,3 +1129,7 @@
 - note: the builder's red-first/deviation check is moot here (no `(red)` criteria); `redck.py deviations` printed no process deviation lines.
 - note: the per-module culprit shares are the builder's own estimated attribution (attrib.mjs, scaled to the row total) and the handoff says so at line 37; I verified the row totals and cited file lines, not the per-module byte figures.
 - note: `.sdlc/tickets/roadmap.md` has a broken link to `0519-list-item-semantics/handoff.md` (builder-reported, pre-existing, not this ticket's scope).
+
+## T-0521: A bare ui-nav-rail delivers the keyboard model its tablist role promises, or drops the role (2026-10-28)
+
+- note: `site/lib/site-manifest.json` and `site/public/llms.txt` still say "three published trait subpaths" (the builder reported it as open, outside scope); a follow-up should refresh them.

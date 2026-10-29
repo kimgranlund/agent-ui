@@ -52,13 +52,21 @@ face:
 aria:
   role: navigation | tablist   # DERIVED from item SHAPE, never from `collapse` (ADR-0130 cl.4): every descendant item link-shaped (non-empty href) ⇒ navigation; every one bare ⇒ tablist. A mixed/empty rail defaults to navigation (SPEC §7 non-goal, never throws).
   roleSource: internals        # set via ElementInternals, never a host role attribute; re-derived on every subtree mutation (a MutationObserver, so later-added children re-derive too, SPEC-R2 AC2)
+  orientation: vertical        # tablist shape only, `internals.ariaOrientation` (null under navigation); the tablist roves on the Up/Down axis (T-0521)
+  tabStop: one                 # tablist shape only: the selected tab's activator is tabindex=0 (the first tab when none is selected), every other tab -1, re-seeded when selection changes and whenever focus leaves the tablist (T-0521, the ui-tabs model)
 
 keyboard:
+  - keys: ArrowDown / ArrowUp
+    action: 'Tablist (every item bare) only. With a tab focused, move focus and the one tab stop to the next / previous tab across group boundaries, wrapping at the ends (T-0521, the shared `rovingFocus` trait from `@agent-ui/components/traits/roving-focus`). MANUAL activation: an arrow never commits a selection.'
+  - keys: Home / End
+    action: 'Tablist only. Move focus and the tab stop to the first / last tab.'
+  - keys: Enter or Space (on a tab)
+    action: 'Tablist only. Commit the focused tab: it becomes `selected`, its siblings clear, and the rail emits `select` and `change`. Both keys come free from the real `<button>` activator, which delivers each as one `click`. Manual rather than ui-tabs'' automatic activation, because a select loads a section (and drills in under `collapse="drill-in"` narrow).'
   - keys: Enter or Space
     action: 'collapse="menu" only — with the narrow `trigger` focused, opens the flyout panel and moves focus to its first focusable row (SPEC-R5 AC2). Both keys come free from the real `<button>` trigger, which delivers each as one `click`.'
   - keys: Escape
     action: 'collapse="menu" only — closes the open narrow flyout and returns focus to the trigger (SPEC-R5 AC2). PLATFORM-owned via `popover="auto"` light-dismiss (GH #368), not a hand-rolled key handler; the focus return is `overlay()`''s own contract.'
-  - note: Outside-click also closes the open `collapse="menu"` narrow flyout, by the same platform light-dismiss (SPEC-R5 AC2). Every other keyboard contract (item activation, `ui-menu`'s roving focus in `collapse="icon-popover"`) is each composed part's OWN, inherited unchanged.
+  - note: Outside-click also closes the open `collapse="menu"` narrow flyout, by the same platform light-dismiss (SPEC-R5 AC2). Every other keyboard contract (a link-shaped item's native activation, `ui-menu`'s roving focus in `collapse="icon-popover"`) is each composed part's OWN, inherited unchanged.
 
 geometry:
   sizeClass: pattern

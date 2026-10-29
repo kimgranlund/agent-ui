@@ -269,6 +269,13 @@ const targets = [
   // is the tree-shake proof (controls/tree-shake.test.ts's structural half covers the rest of the barrel).
   // Measured 421 B gz 2026-08-16 (GH #964); pinned at 1 KB (ADR-0080's measure-first-then-pin discipline).
   ['@agent-ui/components/traits/scroll-spy (opt-in subpath)', '../packages/agent-ui/components/src/traits/scroll-spy.ts', 1 * KB],
+  // T-0521: the FOURTH `./traits/*` subpath (`traits/roving-focus`, package.json), published so @agent-ui/app's
+  // ui-nav-rail can give a bare (tablist) rail the APG tabs keyboard. ADR-0167's measured route again: the
+  // root-barrel trial measured the foundation row at 8427 B gz against its 7680 B gz budget, so the trait
+  // ships as its own opt-in subpath, the overlay/scroll-spy precedent above. Same tree-shake shape: its only
+  // import is `import type { UIElement } from '../dom/index.ts'` (erased), so the absolute figure is the
+  // proof. Measured 981 B gz 2026-10-28; pinned at 1.5 KB (measure-first-then-pin, ADR-0080).
+  ['@agent-ui/components/traits/roving-focus (opt-in subpath)', '../packages/agent-ui/components/src/traits/roving-focus.ts', 1.5 * KB],
 ]
 
 let over = false
