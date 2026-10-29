@@ -1107,3 +1107,7 @@
 ## T-0518: Split separators announce their own orientation and each carries a distinct name (2026-10-28)
 
 - note: packages/agent-ui/components/src/controls/split/split.md:124 contract line has no em dash added; the pre-existing em dash on the following line is untouched.
+
+## T-0513: The a2ui-live render-lint negative control picks a fixed literal that is not the 12px card radius, so it passes again on main (2026-10-28)
+
+- note: scripts/reap-scratch-clones.mjs selftest discovery count flaked once under concurrent load (9 vs 17); not caused by this diff.

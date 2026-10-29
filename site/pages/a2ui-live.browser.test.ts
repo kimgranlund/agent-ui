@@ -236,10 +236,15 @@ describe('a2ui-live pane radius stays CONCENTRIC with its shell wrapper (GH #253
     expect(getComputedStyle(canvas).borderRadius).not.toBe('0px')
   })
 
-  it('negative control: an unrelated fixed 12px literal (the OLD hardcoded radius) is NOT what either pane computes today — the concentric assertions above are not vacuously true', () => {
+  it('negative control: a fixed 7px literal (off the radius ramp, neither pane computes it) is not what either pane computes, and forcing it on one pane breaks the concentric equality — the assertions above are not vacuously true', () => {
+    // 7px, not 12px: 12px is the card radius (T-0497), so the panes legitimately compute it now.
     const { chat, canvas } = mountChrome(1200)
-    expect(getComputedStyle(chat).borderRadius).not.toBe('12px')
-    expect(getComputedStyle(canvas).borderRadius).not.toBe('12px')
+    expect(getComputedStyle(chat).borderRadius).not.toBe('7px')
+    expect(getComputedStyle(canvas).borderRadius).not.toBe('7px')
+    chat.style.borderRadius = '7px' // simulates re-introducing an unrelated hardcoded literal
+    expect(getComputedStyle(chat).borderRadius).toBe('7px')
+    expect(getComputedStyle(chat).borderRadius).not.toBe(getComputedStyle(chat.parentElement as HTMLElement).borderRadius)
+    expect(getComputedStyle(chat).borderRadius).not.toBe(getComputedStyle(canvas).borderRadius)
   })
 })
 
