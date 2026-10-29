@@ -156,7 +156,7 @@ describe('textarea.css — the filled/container state law (TKT-0062)', () => {
     expect(b).toMatch(/--ui-textarea-border:\s*var\(--md-sys-color-neutral-field-outline\)/) // default: the 3:1 resting boundary (ADR-0245 Amendment 7)
     expect(b).toMatch(/--ui-textarea-border-hover:\s*var\(--md-sys-color-neutral-field-outline\)/) // hover; never lighter than idle
     expect(b).toMatch(/--ui-textarea-border-focus:\s*transparent/) // focus = transparent (the outline ring is the sole indicator)
-    expect(b).toMatch(/--ui-textarea-ink:\s*var\(--md-sys-color-neutral\)/) // default
+    expect(b).toMatch(/--ui-textarea-ink:\s*var\(--md-sys-color-neutral-placeholder\)/) // default (the AA placeholder role, T-0557)
     expect(b).toMatch(/--ui-textarea-ink-filled:\s*var\(--md-sys-color-neutral-on-surface-variant\)/) // filled
     expect(b).toMatch(/--ui-textarea-ink-hover:\s*var\(--md-sys-color-neutral-on-surface-variant\)/) // hover
     expect(b).toMatch(/--ui-textarea-ink-focus:\s*var\(--md-sys-color-neutral-on-surface\)/) // focus
@@ -170,7 +170,7 @@ describe('textarea.css — the filled/container state law (TKT-0062)', () => {
 
   it('the placeholder is PINNED to the default-state ink role directly (GH #858) — NOT an alias of the live, state-repointed ink token', () => {
     const b = whereBlock(':where(ui-textarea) {')
-    expect(b).toMatch(/--ui-textarea-placeholder:\s*var\(--md-sys-color-neutral\)/)
+    expect(b).toMatch(/--ui-textarea-placeholder:\s*var\(--md-sys-color-neutral-placeholder\)/)
     // anti-regression: the alias shape that caused GH #858 (focus/hover forwarding into the placeholder)
     expect(b).not.toMatch(/--ui-textarea-placeholder:\s*var\(--ui-textarea-ink\)/)
   })

@@ -90,7 +90,7 @@
      UNCHANGED/orthogonal to the table above — never touches bg. */
   --ui-combo-box-border-invalid: var(--md-sys-color-danger);
   --ui-combo-box-border-invalid-hover: var(--md-sys-color-danger-high);
-  --ui-combo-box-ink: var(--md-sys-color-neutral); /* default — empty, idle */
+  --ui-combo-box-ink: var(--md-sys-color-neutral-placeholder); /* default: empty, idle */
   --ui-combo-box-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-combo-box-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-combo-box-ink-focus: var(--md-sys-color-neutral-on-surface);
@@ -101,7 +101,7 @@
      its own EXPLICIT repoint below (unchanged — the model this fix generalized to the other four
      files). Because this is now a fixed role, not a live alias, the editor part no longer needs
      its own re-declaration either (see the removed TKT-0065 re-resolution hack, below). */
-  --ui-combo-box-placeholder: var(--md-sys-color-neutral);
+  --ui-combo-box-placeholder: var(--md-sys-color-neutral-placeholder);
 
   /* Disabled state (TKT-0062's disabled row) — an indirection layer of -disabled-suffixed tokens
      fed to the base bg/border/ink trio by the [disabled] block below (keeps the TKT-0047 shape). */

@@ -31,7 +31,7 @@
   --ui-code-editor-border-focus: transparent; /* the shared outline ring is the SOLE focus indicator */
   --ui-code-editor-border-invalid: var(--md-sys-color-danger);
   --ui-code-editor-border-invalid-hover: var(--md-sys-color-danger-high);
-  --ui-code-editor-ink: var(--md-sys-color-neutral);
+  --ui-code-editor-ink: var(--md-sys-color-neutral-placeholder);
   --ui-code-editor-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-code-editor-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-code-editor-ink-focus: var(--md-sys-color-neutral-on-surface);
@@ -40,7 +40,7 @@
      hover/focus), and an alias re-resolves WITH it, so focusing or hovering an EMPTY editor
      silently brightened the placeholder to the focus/hover ink. Disabled gets its own EXPLICIT
      repoint below instead. */
-  --ui-code-editor-placeholder: var(--md-sys-color-neutral);
+  --ui-code-editor-placeholder: var(--md-sys-color-neutral-placeholder);
 
   /* Geometry — the MULTI-LINE law (ADR-0134). Fixed font (this control carries no [size] lever); padding /
      line-box DERIVE from it via calc(). rows is a growable MINIMUM, never a fixed §1-row height. */

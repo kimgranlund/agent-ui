@@ -211,10 +211,10 @@ describe('text.css — [truncate] (ADR-0106, CSS-only single-line ellipsis)', ()
 })
 
 describe('text.css — the hyperlink capability (ADR-0114, SPEC-R13; LLD-C3)', () => {
-  it('the token block declares --ui-text-link-ink from --md-sys-color-primary', () => {
+  it('the token block declares --ui-text-link-ink from --md-sys-color-primary-placeholder (AA as text, T-0557)', () => {
     const rule = (tokenBlock.match(/:where\(ui-text\)\s*\{[^}]*--ui-text-link-ink:[^}]*\}/) ?? [''])[0]
     expect(rule.length).toBeGreaterThan(0)
-    expect(rule).toMatch(/--ui-text-link-ink:\s*var\(--md-sys-color-primary\)/)
+    expect(rule).toMatch(/--ui-text-link-ink:\s*var\(--md-sys-color-primary-placeholder\)/)
   })
 
   it('the link leg is attribute-gated on :scope > a[href] — a denied stamp (no href) gets no link paint', () => {

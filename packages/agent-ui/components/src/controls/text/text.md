@@ -262,7 +262,7 @@ law, and no frame — its lever is the type scale, not `--md-sys-height-*`. It c
 fleet `--md-sys-typescale-{role}-{size}-*` scale (ADR-0078 cl.2/cl.3) — the role-pure two-block pattern every
 control uses; `ui-text` holds zero scale opinion. `kicker`/`overline` add `text-transform: uppercase` (`kicker` reads the group-kicker size, the same as `overline`, so it stays the small label over a group);
 `quote` adds italic + an inline-start rule + an indent. An allowed link (`--ui-text-link-ink`, defaulting to
-`--md-sys-color-primary`) always pairs an underline with its ink — never a color-only signifier (ADR-0057)
+`--md-sys-color-primary-placeholder`, the primary step that clears 4.5:1 as text on every surface plane, T-0557) always pairs an underline with its ink, never a color-only signifier (ADR-0057)
 — and keeps the fleet's shared `:focus-visible` ring. Text is **selectable** (`user-select` is enabled —
 the deliberate inverse of `ui-button`). A `forced-colors` block keeps the text visible (`CanvasText`); the
 link additionally paints in the system `LinkText` ink, underline intact.

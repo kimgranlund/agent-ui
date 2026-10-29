@@ -48,6 +48,16 @@ describe('pagination.css — structure + token hygiene', () => {
     expect(bad).toEqual([])
   })
 
+  it('forced-colors marks the current page with the system selection pair, opted out of forcing (T-0557)', () => {
+    const bare = stylesBlock.replace(/\/\*[\s\S]*?\*\//g, '')
+    const media = bare.slice(bare.indexOf('@media (forced-colors: active)'))
+    const rule = (media.match(/:scope > ui-button\[aria-current='page'\]\s*\{[^}]*\}/) ?? [''])[0]
+    expect(rule.length).toBeGreaterThan(0) // anti-vacuous: the rule sits inside the forced-colors block
+    expect(rule).toMatch(/forced-color-adjust:\s*none/)
+    expect(rule).toMatch(/background-color:\s*Highlight;/)
+    expect(rule).toMatch(/(?<!-)color:\s*HighlightText;/)
+  })
+
   it('the host lays stops out as a block-level flex row with a token-driven gap (ADR-0223 fill by default)', () => {
     const baseRule = (stylesBlock.match(/:scope\s*\{[^}]*\}/) ?? [''])[0]
     expect(baseRule).toMatch(/display:\s*flex/)

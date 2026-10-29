@@ -62,7 +62,7 @@
      text-field precedent, on the trigger's border channel — UNCHANGED, orthogonal to the table above. */
   --ui-select-border-invalid: var(--md-sys-color-danger);
   --ui-select-border-invalid-hover: var(--md-sys-color-danger-high);
-  --ui-select-ink: var(--md-sys-color-neutral); /* default — showing the placeholder */
+  --ui-select-ink: var(--md-sys-color-neutral-placeholder); /* default: showing the placeholder */
   --ui-select-ink-filled: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-ink-hover: var(--md-sys-color-neutral-on-surface-variant);
   --ui-select-ink-focus: var(--md-sys-color-neutral-on-surface);

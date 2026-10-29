@@ -31,7 +31,7 @@
   --ui-source-list-index-gap: var(--md-sys-space-sm); /* index marker → title */
   --ui-source-list-index-ink: var(--md-sys-color-neutral-on-surface-variant); /* the secondary plane (ui-description-list label-ink precedent) */
   --ui-source-list-index-min-inline-size: 1.5em; /* keeps single- and double-digit markers from shifting titles out of column */
-  --ui-source-list-link-ink: var(--md-sys-color-primary); /* the fleet link-role primitive, own-chain routed (ADR-0124) — the ui-text ADR-0114 precedent */
+  --ui-source-list-link-ink: var(--md-sys-color-primary-placeholder); /* the fleet link ink (the ui-text --ui-text-link-ink role, T-0557: AA as text on every surface plane), own-chain routed (ADR-0124) */
   --ui-source-list-snippet-ink: var(--md-sys-color-neutral-on-surface-variant); /* the secondary plane, one register down from the title */
 }
 

@@ -2,8 +2,8 @@
  * Two sectioned blocks (component-packaging.md, ADR-0003):
  *
  *   [1] TOKEN BLOCK — `:where(ui-router-link)` (specificity 0,0,0) declares the two `--ui-router-link-*`
- *       component tokens from the fleet `--md-sys-color-{family}-{role}` roles — the SAME `primary` /
- *       `primary-high` pair `ui-button`'s solid variant ladders through on `:hover`/`:active`.
+ *       component tokens from the fleet `--md-sys-color-{family}-{role}` roles: the fleet link ink
+ *       `primary-placeholder` (the ui-text link role, AA as text, T-0557) and the `primary-high` active ink.
  *   [2] STYLES BLOCK — `@scope (ui-router-link)` consumes ONLY `--ui-router-link-*`. The stamped `<a>`
  *       carries native anchor semantics (role, keyboard, copy, AT announcement free — the ADR-0114 stamp
  *       doctrine); underline is ALWAYS present, never hue-only (ADR-0057 — the ui-text link-leg
@@ -17,7 +17,7 @@
 /* ════════════════ [1] TOKEN BLOCK — :where(ui-router-link) declares --ui-router-link-* ════════════════ */
 
 :where(ui-router-link) {
-  --ui-router-link-ink: var(--md-sys-color-primary);
+  --ui-router-link-ink: var(--md-sys-color-primary-placeholder); /* the fleet link ink (the ui-text --ui-text-link-ink role, T-0557: AA as text on every surface plane) */
   --ui-router-link-active-ink: var(--md-sys-color-primary-high);
 }
 

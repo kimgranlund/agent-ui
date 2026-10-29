@@ -54,4 +54,17 @@
     color: var(--ui-pagination-ellipsis-ink);
     user-select: none;
   }
+
+  /* forced-colors (T-0557): the soft/ghost split is a background wash the UA forces away, and ui-button gives
+     every variant the same ButtonText border, so the current page would read like its siblings. It takes the
+     system selection pair instead (Highlight fill, HighlightText ink), opted out of forcing so both paint. */
+  @media (forced-colors: active) {
+    :scope > ui-button[aria-current='page'] {
+      forced-color-adjust: none;
+      --ui-button-ink: HighlightText;
+      background-color: Highlight;
+      border-color: Highlight;
+      color: HighlightText;
+    }
+  }
 }
