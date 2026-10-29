@@ -1214,3 +1214,8 @@
 ## T-0555: a2ui-basic factories honor upstream defaults on omitted props, and TextField longText is multi-line (2026-10-28)
 
 - note: the diff covers H1, H2, M1, M2 and M3 as the handoff Intent asks: Divider, Button (including the update-drop map-back to soft), DateTimeInput and Image are seeded in `create()`, and TextField is now a `VariantDispatch` with a `longText` arm that reuses `textareaFactory`.
+
+## T-0553: Media sources accept only allowed schemes, and the dev proxy checks request origin (2026-10-28)
+
+- decide: packages/agent-ui/a2ui/src/catalog/catalog.json: decide: the default catalog's media PropDefs (Image.src, Avatar.src, Video.src/poster, AudioPlayer.src, ProductCard.image) still carry no format, so the static validator admits any string and only the render-time gate denies; findings.md Medium 1 proposed a format too, and `safe-href` does not fit (it rejects data: and admits mailto:), so a media-specific validator format is a follow-up.
+- decide: packages/agent-ui/components/src/controls/text/media-src.ts:44: note: with an origin allowlist set, `data:` and `blob:` sources always pass (by design, they fetch nothing remote); the browser shards that render `data:` media were not run here and the land gate covers them.
