@@ -1210,3 +1210,7 @@
 - note: handoff Findings High #2 says the computed diff in forced colors is a faint `background-color rgba(255,255,255,0.1)` vs `0`; `states/states.json` records `diffs: []` (fully collapsed) for the same buttons in forced mode. The conclusion (current page invisible) holds either way.
 - note: the theme packs are unswept (default theme only), as the report states; a possible follow-up.
 - note: No `(red)` criteria; `redck.py deviations` printed no process deviation.
+
+## T-0555: a2ui-basic factories honor upstream defaults on omitted props, and TextField longText is multi-line (2026-10-28)
+
+- note: the diff covers H1, H2, M1, M2 and M3 as the handoff Intent asks: Divider, Button (including the update-drop map-back to soft), DateTimeInput and Image are seeded in `create()`, and TextField is now a `VariantDispatch` with a `longText` arm that reuses `textareaFactory`.

@@ -10,7 +10,7 @@
 // them"); every other row is bespoke, matching its cl.9b "Factory shape" cell.
 
 import type { VariantDispatch, WidgetFactory } from '../types.ts'
-import { textFactory, cardFactory, sliderFactory, multiSelectFactory } from '../default/factories.ts'
+import { textFactory, cardFactory, sliderFactory, multiSelectFactory, textareaFactory } from '../default/factories.ts'
 
 // ── cl.9a — the schema-wide common-prop decorator, shown verbatim in ADR-0169 §9a ──────────────────
 
@@ -62,7 +62,8 @@ export const basicTextFactory: WidgetFactory = withBasicCommon(textFactory)
 // ── cl.9b row 2 — Image → <img> (bespoke, sanctioned non-`ui-*` primitive — the Option precedent) ─────
 
 // The guide's §1 suggested dims per `variant` (an inline-style literal table — R1, no `ui-image`
-// control to lean on yet). `mediumFeature` is the schema default.
+// control to lean on yet). `mediumFeature` is the schema default, seeded at `create()` (T-0555) so an
+// omitted `variant` still gets its dims.
 const IMAGE_VARIANT_DIMS: Record<string, Partial<CSSStyleDeclaration>> = {
   icon: { inlineSize: '24px', blockSize: '24px' },
   avatar: { inlineSize: '40px', blockSize: '40px', borderRadius: '50%', objectFit: 'cover' },
@@ -82,7 +83,11 @@ const IMAGE_STYLE_KEYS = ['inlineSize', 'blockSize', 'maxInlineSize', 'maxBlockS
  */
 export const imageFactory: WidgetFactory = withBasicCommon({
   tag: 'img',
-  create: () => document.createElement('img'),
+  create: () => {
+    const img = document.createElement('img')
+    Object.assign(img.style, IMAGE_VARIANT_DIMS.mediumFeature)
+    return img
+  },
   applyProp: (el, prop, value) => {
     const img = el as HTMLImageElement
     switch (prop) {
@@ -240,30 +245,34 @@ export const basicCardFactory: WidgetFactory = withBasicCommon(cardFactory)
 
 // ── cl.9b row 11 — Divider → div[role=separator] (bespoke, sanctioned non-`ui-*` primitive) ────────────
 
+// `axis` defaults to `horizontal` (ADR-0169 row 11): `create()` applies that arm (T-0555), so a Divider
+// with no `axis` still draws its rule.
+function applyDividerAxis(el: HTMLElement, value: unknown): void {
+  const vertical = value === 'vertical'
+  el.setAttribute('aria-orientation', vertical ? 'vertical' : 'horizontal')
+  el.style.backgroundColor = 'var(--md-sys-color-outline-variant)'
+  if (vertical) {
+    el.style.inlineSize = '1px'
+    el.style.blockSize = ''
+    el.style.alignSelf = 'stretch'
+  } else {
+    el.style.blockSize = '1px'
+    el.style.inlineSize = '100%'
+    el.style.alignSelf = ''
+  }
+}
+
 export const dividerFactory: WidgetFactory = withBasicCommon({
   tag: 'div[role=separator]',
   create: () => {
     const el = document.createElement('div')
     el.setAttribute('role', 'separator')
+    applyDividerAxis(el, 'horizontal')
     return el
   },
   applyProp: (el, prop, value) => {
-    if (prop !== 'axis') {
-      setAttr(el, prop, value)
-      return
-    }
-    const vertical = value === 'vertical'
-    el.setAttribute('aria-orientation', vertical ? 'vertical' : 'horizontal')
-    el.style.backgroundColor = 'var(--md-sys-color-outline-variant)'
-    if (vertical) {
-      el.style.inlineSize = '1px'
-      el.style.blockSize = ''
-      el.style.alignSelf = 'stretch'
-    } else {
-      el.style.blockSize = '1px'
-      el.style.inlineSize = '100%'
-      el.style.alignSelf = ''
-    }
+    if (prop === 'axis') applyDividerAxis(el, value)
+    else setAttr(el, prop, value)
   },
 })
 
@@ -271,13 +280,20 @@ export const dividerFactory: WidgetFactory = withBasicCommon({
 
 const BUTTON_VARIANT_MAP: Record<string, string> = { primary: 'solid', default: 'soft', borderless: 'ghost' }
 
+// `variant` defaults to upstream `default` (`soft`, ADR-0169 row 13), not ui-button's own `solid` (T-0555):
+// `create()` seeds it, and any non-wire value maps back to it. That covers the omitted-prop reset too,
+// which re-applies the pristine element's `variant` when an update drops the prop (renderer/tree.ts).
 export const basicButtonFactory: WidgetFactory = withBasicCommon({
   tag: 'ui-button',
-  create: () => document.createElement('ui-button'),
+  create: () => {
+    const el = document.createElement('ui-button')
+    setProp(el, 'variant', BUTTON_VARIANT_MAP.default)
+    return el
+  },
   applyProp: (el, prop, value) => {
     // `action` never routes through applyProp — the renderer's action controller strips it before
     // widget resolution runs (renderer.ts `#actionPropsOf`, gated on `PropDef.mapsTo === 'action'`).
-    if (prop === 'variant') setProp(el, 'variant', value == null ? value : (BUTTON_VARIANT_MAP[value as string] ?? value))
+    if (prop === 'variant') setProp(el, 'variant', BUTTON_VARIANT_MAP[value as string] ?? BUTTON_VARIANT_MAP.default)
     else setProp(el, prop, value)
   },
 })
@@ -301,6 +317,25 @@ export const textFieldFactory: WidgetFactory = withBasicCommon({
     }
   },
 })
+
+/** TextField `variant: "longText"` → `ui-textarea` (T-0555): `ui-text-field` has no multi-line `type`, so the
+ *  long-text arm REUSEs the default catalog's `textareaFactory` (`label`/`value` 1:1 accessors, the
+ *  `change` value mark). `variant` (the dispatch key) and `validationRegexp` (v1-inert) apply nothing. */
+export const textFieldLongTextFactory: WidgetFactory = withBasicCommon({
+  ...textareaFactory,
+  applyProp: (el, prop, value) => {
+    if (prop === 'variant' || prop === 'validationRegexp') return
+    textareaFactory.applyProp(el, prop, value)
+  },
+})
+
+/** The `TextField` catalog-table slot: a `VariantDispatch` (the ChoicePicker GH #545 shape). `longText`
+ *  routes to `ui-textarea`; every other variant, and an absent or bound one, keeps `ui-text-field`. */
+export const textFieldVariants: VariantDispatch = {
+  variantProp: 'variant',
+  variants: { longText: textFieldLongTextFactory },
+  fallback: textFieldFactory,
+}
 
 // ── cl.9b row 15 — CheckBox → ui-checkbox (bespoke — the readProp:'checked' consumer, cl.7) ────────────
 
@@ -425,9 +460,15 @@ function dateTimeType(el: HTMLElement, prop: 'enableDate' | 'enableTime', value:
   setProp(el, 'type', enableTime && !enableDate ? 'time' : 'date')
 }
 
+// With neither flag applied the type is still `date` (ADR-0169 row 18, the (F,F) arm): `create()` seeds it
+// (T-0555), not ui-text-field's own `text`.
 export const dateTimeInputFactory: WidgetFactory = withBasicCommon({
   tag: 'ui-text-field',
-  create: () => document.createElement('ui-text-field'),
+  create: () => {
+    const el = document.createElement('ui-text-field')
+    setProp(el, 'type', 'date')
+    return el
+  },
   applyProp: (el, prop, value) => {
     if (prop === 'enableDate' || prop === 'enableTime') dateTimeType(el, prop, value)
     else setProp(el, prop, value)
@@ -438,7 +479,8 @@ export const dateTimeInputFactory: WidgetFactory = withBasicCommon({
 /** The a2ui-basic catalog's factory table — keyed by upstream A2UI type (ADR-0169 cl.9b). Every type
  *  declared in `catalog.json` MUST appear here — a gap is `CATALOG_FACTORY_MISSING` at `register`
  *  (SPEC-R7 AC1, the same registry-enforced coverage `default/factories.ts` relies on). `ChoicePicker`
- *  is a `VariantDispatch` (GH #545, SPEC-R10) — every other row is a plain `WidgetFactory`, unchanged. */
+ *  (GH #545, SPEC-R10) and `TextField` (T-0555) are `VariantDispatch` tables; every other row is a plain
+ *  `WidgetFactory`. */
 export const a2uiBasicFactories: Record<string, WidgetFactory | VariantDispatch> = {
   Text: basicTextFactory,
   Image: imageFactory,
@@ -449,7 +491,7 @@ export const a2uiBasicFactories: Record<string, WidgetFactory | VariantDispatch>
   Card: basicCardFactory,
   Divider: dividerFactory,
   Button: basicButtonFactory,
-  TextField: textFieldFactory,
+  TextField: textFieldVariants,
   CheckBox: checkBoxFactory,
   ChoicePicker: choicePickerVariants,
   Slider: basicSliderFactory,
