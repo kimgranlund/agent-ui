@@ -1103,3 +1103,7 @@
 
 - note: .sdlc/tickets/0517-a11y-sweep/handoff.md:57 says no control in `components` sets `listitem` except the charts and `timeline-item`; `source-list.ts`, `ladder.ts`, `ramp.ts`, `gauge.ts` and `timeline.ts` also match `listitem`. This does not affect the ui-list finding.
 - note: handoff.md:64 cites table.ts:150-152 for the region and tabindex; the `setAttribute` calls are at table.ts:151-152, a one-line drift.
+
+## T-0518: Split separators announce their own orientation and each carries a distinct name (2026-10-28)
+
+- note: packages/agent-ui/components/src/controls/split/split.md:124 contract line has no em dash added; the pre-existing em dash on the following line is untouched.
