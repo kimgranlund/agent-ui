@@ -10,10 +10,12 @@ import { offlineReplay } from '../trace.ts'
 // give-up are answered in prose aimed at word-forge with no update ("I've put the result on the board"), so the board
 // never moves and no ResultCard ships. The word-move check now sends both back with ACTION_NOT_APPLIED, and the probe's
 // action-updates-surface judges the targeted say turns. The fixture records no repaired round, so both stay red here.
+// T-0585: the give-up's meta-line note "The board now shows the result." is a change claim the reply never sent, so its
+// last round also tallies CHANGE_CLAIM_UNCORRECTED.
 it('lexicographer-haiku-guess-prose: the prose-only guess and give-up get ACTION_NOT_APPLIED and fail action-updates-surface', async () => {
   const fixture = parseProbeFixture(readFileSync(new URL('./lexicographer-haiku-guess-prose.json', import.meta.url), 'utf8'))
   const report = await offlineReplay(fixture, process.cwd())
   expect(report.failed.map((c) => `${c.check}:${c.turn}`)).toEqual(['action-updates-surface:1', 'action-updates-surface:3'])
   const traces = report.records.map((r) => r.lines.map((l) => JSON.parse(l).a2uiMeta?.trace).find((t) => t !== undefined))
-  expect(traces.map((t) => t.failureCodes)).toEqual([[], ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'], [], ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED']])
+  expect(traces.map((t) => t.failureCodes)).toEqual([[], ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED'], [], ['ACTION_NOT_APPLIED', 'SEMANTIC_UNCORRECTED', 'CHANGE_CLAIM_UNCORRECTED']])
 })
