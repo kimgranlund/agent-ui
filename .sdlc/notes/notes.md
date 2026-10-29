@@ -1266,3 +1266,7 @@
 - fix-now: `packages/agent-ui/a2ui/src/catalog/regex-guard.ts:6` says the two length caps bound whatever the structural rule misses; measured `^a*a*a*a*b$` at 529 ms on 200 chars (polynomial toward the 1024 cap), so reword to "bound the cost of simple patterns".
 - decide: sequential unbounded quantifiers (`a*a*a*a*b`) and overlapping alternation (`(a|aa)+`, 99 ms at 35 chars) pass `hasNestedQuantifier`; whether a count cap on unbounded quantifiers per pattern is worth a follow-up.
 - note: `/__a2ui/agent` now fails closed without `AGENT_RATE_LIMITER`; `wrangler.jsonc` ships the binding so `wrangler deploy` provisions it, but a deploy from an older config leaves `/status` unavailable and POST at 503 on the live demo.
+
+## T-0559: Theme hygiene: dead fallback colors, a toast shadow token, forced-colors polish (2026-10-29)
+
+- note: packages/agent-ui/shared/src/tokens/dimensions.test.ts:44 also swapped em dashes in two unrelated describe titles to colons (harmless, repo rule).

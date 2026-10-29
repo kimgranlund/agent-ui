@@ -91,16 +91,16 @@
 
   /* ── Panel surface — inherits the container/surface tokens for bg/border/radius.
      The panel is a Container/surface (NOT a Control-class surface), so it uses bg + outline. */
-  --ui-calendar-panel-bg:      var(--md-sys-color-neutral-surface, #fff);
-  --ui-calendar-panel-ink:     var(--md-sys-color-neutral-on-surface, #1c1c1e);
-  --ui-calendar-panel-outline: var(--md-sys-color-neutral-outline-variant, #c4c4c4);
+  --ui-calendar-panel-bg:      var(--md-sys-color-neutral-surface);
+  --ui-calendar-panel-ink:     var(--md-sys-color-neutral-on-surface);
+  --ui-calendar-panel-outline: var(--md-sys-color-neutral-outline-variant);
   --ui-calendar-panel-radius:  var(--md-sys-shape-corner-base, 0.375rem);
 
   /* ── Weekday column-header ink (muted row above the cells). */
-  --ui-calendar-header-ink: var(--md-sys-color-neutral-on-surface-variant, #767676);
+  --ui-calendar-header-ink: var(--md-sys-color-neutral-on-surface-variant);
 
   /* ── Cell hover background (non-selected, non-disabled). */
-  --ui-calendar-cell-hover-bg: var(--md-sys-color-neutral-surface-high, #f0f0f0);
+  --ui-calendar-cell-hover-bg: var(--md-sys-color-neutral-surface-high);
 
   /* ── Range interior wash (ADR-0093 clause 4, ERRATUM 2026-07-07) — the SQUARE fill for
      [data-in-range] cells (endpoints reuse --ui-calendar-selected-fill/-ink above, unchanged).
@@ -114,8 +114,8 @@
      --md-sys-color-primary-on-surface: ink-vs-fill contrast is 12.70:1 (light) / 12.16:1 (dark),
      comfortably past the AA 4.5:1 floor a text/numeral pairing needs (see the erratum on
      .claude/docs/adr/0093-calendar-range-selection.md for the full measurement). */
-  --ui-calendar-range-fill: var(--md-sys-color-primary-surface-highest, #dde6f4);
-  --ui-calendar-range-ink:  var(--md-sys-color-primary-on-surface, #1c1c1e);
+  --ui-calendar-range-fill: var(--md-sys-color-primary-surface-highest);
+  --ui-calendar-range-ink:  var(--md-sys-color-primary-on-surface);
 
   /* ── user-invalid (ADR-0051) — the danger border repoint, the text-field precedent. Appears only
      AFTER the first interaction (the trackUserInvalid controller owns that timing; calendar.ts
@@ -139,7 +139,7 @@
 
 /* Disabled host — mute the nav-button ink (day cells carry their own aria-disabled state). */
 :where(ui-calendar[disabled]) {
-  --ui-calendar-panel-ink: var(--md-sys-color-neutral-on-surface-variant, #767676);
+  --ui-calendar-panel-ink: var(--md-sys-color-neutral-on-surface-variant);
 }
 
 /* ══════════════════════ [2] STYLES BLOCK — @scope (ui-calendar) ════════════════════════════ */
@@ -361,11 +361,11 @@
      mode. `color` stays on the BUTTON (inherited by the real day-number text, centred over the
      circle) — `forced-color-adjust:none` keeps the fill in WHCM. */
   :scope [data-part='grid'] [role='gridcell'][aria-selected='true']:not([data-in-range]) {
-    color: var(--ui-calendar-selected-ink, #fff);
+    color: var(--ui-calendar-selected-ink);
     forced-color-adjust: none;
   }
   :scope [data-part='grid'] [role='gridcell'][aria-selected='true']:not([data-in-range])::before {
-    background-color: var(--ui-calendar-selected-fill, #0057d8);
+    background-color: var(--ui-calendar-selected-fill);
     forced-color-adjust: none;
   }
 
@@ -379,8 +379,8 @@
      layer, untouched by forced-colors) left as the sole endpoint-vs-interior signifier (ADR-0057
      non-colour-signifier rule). */
   :scope [data-part='grid'] [role='gridcell'][data-in-range] {
-    background-color: var(--ui-calendar-range-fill, #dde6f4);
-    color: var(--ui-calendar-range-ink, #1c1c1e);
+    background-color: var(--ui-calendar-range-fill);
+    color: var(--ui-calendar-range-ink);
     forced-color-adjust: none;
   }
 
@@ -413,7 +413,7 @@
     content: '';
     position: absolute;
     inset-block: 0;
-    background-color: var(--ui-calendar-range-fill, #dde6f4);
+    background-color: var(--ui-calendar-range-fill);
     z-index: -2;
     pointer-events: none;
     forced-color-adjust: none;
@@ -429,14 +429,14 @@
 
   /* ── Adjacent-month cells (data-outside) — muted ink; still clickable (navigates month). */
   :scope [data-part='grid'] [role='gridcell'][data-outside] {
-    color: var(--ui-calendar-outside-ink, #767676);
+    color: var(--ui-calendar-outside-ink);
   }
 
   /* ── Disabled / out-of-range cells (aria-disabled=true) — pointer-inert; muted. opacity applies
      to the whole stacking context (button + both pseudo layers together), so a disabled endpoint's
      circle/wash mute along with its numeral — no separate pseudo overrides needed. */
   :scope [data-part='grid'] [role='gridcell'][aria-disabled='true'] {
-    color: var(--ui-calendar-disabled-ink, #767676);
+    color: var(--ui-calendar-disabled-ink);
     /* the non-colour cue (ADR-0057, T-0149): a disabled day and an adjacent-month day landed on near-identical
        greys, so "you may not pick this" read the same as "this is another month" */
     text-decoration: line-through;

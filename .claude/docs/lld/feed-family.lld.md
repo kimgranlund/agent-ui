@@ -278,7 +278,7 @@ const props = {
   --ui-toast-inline-size: 20em;
   --ui-toast-surface: var(--md-sys-color-neutral-surface-brightest);
   --ui-toast-border: var(--md-sys-color-neutral-outline);
-  --ui-toast-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+  --ui-toast-shadow: var(--ui-overlay-shadow); /* T-0559: the shared overlay elevation (dimensions.css), was 0 4px 12px rgb(0 0 0 / 0.15) */
 }
 @scope (ui-toast) {
   :scope { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--ui-space-sm);

@@ -50,9 +50,9 @@
   --ui-super-shell-radius-block-end: var(--ui-super-shell-radius);
   --ui-super-shell-surface: var(--md-sys-color-neutral-surface);
   /* T-0558: the overlay scrim reads ui-modal's backdrop role, so a theme repaints both and the three
-     scrim sites below cannot drift; the card shadow is the same role at 31.25% (0.8 x 0.3125 = 0.25 alpha). */
+     scrim sites below cannot drift; the card shadow is the shared `--ui-overlay-shadow` (T-0559), the same role at 31.25%. */
   --ui-super-shell-scrim: var(--md-sys-color-dialog-backdrop);
-  --ui-super-shell-overlay-shadow: 0 0.25rem 1.5rem color-mix(in oklch, var(--ui-super-shell-scrim) 31.25%, transparent);
+  --ui-super-shell-overlay-shadow: var(--ui-overlay-shadow);
   /* GH #381 — the floating overlay card's OUTLINE, cast in the `--ui-super-shell-bar-seam` mold above:
      ONE composite value, not a width/style/color trio, so the TKT-0062 repoint law gives a consumer
      exactly one site to retune it (`0 solid transparent` for none, `2px dashed …` for a louder edge).
