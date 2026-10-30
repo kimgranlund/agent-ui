@@ -493,7 +493,7 @@ export const gameAskHudCheck: SemanticCheck = {
         path: `${ask.v.surfaceId}:hud`,
         message:
           `${ask.v.surfaceId} opens ${what} with no GameHud anywhere, so the game's progress and status have no strip. ` +
-          `Keep ${ask.v.surfaceId} as it is and, in this same answer, create the game's HUD surface beside it (for example hud-1) holding ONE GameHud with its title, status and stats bound to the data model.`,
+          `Resend ${ask.v.surfaceId} whole, its createSurface included, and in this same answer create the game's HUD surface beside it (for example hud-1) holding ONE GameHud with its title, status and stats bound to the data model.`,
       },
     ]
   },
