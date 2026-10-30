@@ -668,8 +668,8 @@ const TOOL_PARSE_HINT =
 /** T-0344: the PARSE ask when the round's `messages` was any string, in place of TOOL_PARSE_HINT and ahead of the
  *  `messagesParseNote` pinpoint when there is one. Round 10 :193 got the pinpoint then the reminder three times and
  *  resent a hand-edited string each time, one `}` short again; the harness never edits such a string (Kim 2026-10-17).
- *  T-0469: the one exception, a string whose only defect is one named unclosed array, is closed in place
- *  (`stringifiedMessages`) and never reaches this hint.
+ *  T-0469 and T-0591: the exceptions, a string whose only defect is one named unclosed array or one surplus closer, are
+ *  closed in place (`stringifiedMessages`) and never reach this hint.
  *  When the round before also sent a string, the ask says so once. */
 const ARRAY_ASK = '`messages` as an array of A2UI message objects, one object per entry, not as a string or JSONL text.'
 const stringParseHint = (again: boolean, parseNote: string | undefined): string =>

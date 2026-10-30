@@ -1,0 +1,91 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "stylist-haiku-palette-string-surplus",
+  "agent": "stylist",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-29.jsonl:129 (catalog agent-ui--stylist)",
+  "steps": [
+    {
+      "say": "Propose a calm blue palette for a banking app."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"A calm blue works best with a deep navy for text and primary actions, a softer steel blue for supporting elements, and a light sky accent. The primary navy and the white and tint backgrounds all clear WCAG AA for body text. The steel blue reaches only about 3.5:1 on white, so I'd keep it for large text, icons and graphics, not body copy.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Here's a calm blue palette for the banking app: a deep navy for text and primary actions, a softer steel blue for supporting elements, and a light sky accent. The navy text and button pairings clear WCAG AA. Steel blue is only about 3.5:1 on white, so keep it for large text, icons and graphics rather than body copy.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"Propose a calm blue palette for a banking app.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"PARSE\",\"SURFACE_DEGRADED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":150200,\"total\":50056,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":22257},{\"id\":\"functions\",\"chars\":145}],\"over\":false},\"miniSkillIds\":[],\"cacheBoundary\":50056}}}"
+      ],
+      "rounds": [
+        {
+          "text": "A calm blue works best with a deep navy for text and primary actions, a softer steel blue for supporting elements, and a light sky accent. The primary navy and the white and tint backgrounds all clear WCAG AA for body text. The steel blue reaches only about 3.5:1 on white, so I'd keep it for large text, icons and graphics, not body copy.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's a calm blue palette for a banking app, with the tonal range and the text pairings that pass AA.",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"palette-calm-blue\",\"catalogId\":\"agent-ui--stylist\"}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"palette-calm-blue\",\"value\":{\"title\":\"Calm blue banking palette\",\"primary\":{\"label\":\"Primary (navy)\",\"value\":\"#1F4E79\"},\"secondary\":{\"label\":\"Secondary (steel)\",\"value\":\"#5B8DB8\"},\"accent\":{\"label\":\"Accent (sky)\",\"value\":\"#4FB3D9\"},\"tonal\":[{\"label\":\"100\",\"value\":\"#EAF2F9\"},{\"label\":\"300\",\"value\":\"#9EC1E0\"},{\"label\":\"500\",\"value\":\"#2F6A9E\"},{\"label\":\"700\",\"value\":\"#1F4E79\"},{\"label\":\"900\",\"value\":\"#12304D\"}]}}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"palette-calm-blue\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"root_content\"]},{\"id\":\"root_content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"title\",\"roles_row\",\"tonal_caption\",\"tonal_ramp\",\"pairs_caption\",\"pairs_row\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":{\"path\":\"/title\"},\"variant\":\"h3\"},{\"id\":\"roles_row\",\"component\":\"Row\",\"gap\":\"lg\",\"wrap\":true,\"children\":[\"sw_primary\",\"sw_secondary\",\"sw_accent\"]},{\"id\":\"sw_primary\",\"component\":\"Swatch\",\"label\":{\"path\":\"/primary/label\"},\"value\":{\"path\":\"/primary/value\"}},{\"id\":\"sw_secondary\",\"component\":\"Swatch\",\"label\":{\"path\":\"/secondary/label\"},\"value\":{\"path\":\"/secondary/value\"}},{\"id\":\"sw_accent\",\"component\":\"Swatch\",\"label\":{\"path\":\"/accent/label\"},\"value\":{\"path\":\"/accent/value\"}},{\"id\":\"tonal_caption\",\"component\":\"Text\",\"text\":\"Primary tonal range\",\"variant\":\"caption\"},{\"id\":\"tonal_ramp\",\"component\":\"Ramp\",\"label\":\"Primary tonal range\",\"steps\":{\"path\":\"/tonal\"}},{\"id\":\"pairs_caption\",\"component\":\"Text\",\"text\":\"Text pairings (AA)\",\"variant\":\"caption\"},{\"id\":\"pairs_row\",\"component\":\"Row\",\"gap\":\"lg\",\"wrap\":true,\"children\":[\"cp_body\",\"cp_button\",\"cp_tint\",\"cp_dark\"]},{\"id\":\"cp_body\",\"component\":\"ContrastPair\",\"label\":\"Body text on white\",\"foreground\":\"#1F4E79\",\"background\":\"#FFFFFF\",\"sample\":\"Your balance\"},{\"id\":\"cp_button\",\"component\":\"ContrastPair\",\"label\":\"Button label\",\"foreground\":\"#FFFFFF\",\"background\":\"#2F6A9E\",\"sample\":\"Transfer\"},{\"id\":\"cp_tint\",\"component\":\"ContrastPair\",\"label\":\"Ink on tint\",\"foreground\":\"#12304D\",\"background\":\"#EAF2F9\",\"sample\":\"Recent activity\"},{\"id\":\"cp_dark\",\"component\":\"ContrastPair\",\"label\":\"Accent on navy\",\"foreground\":\"#4FB3D9\",\"background\":\"#12304D\",\"sample\":\"New statement\"}]}}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's a calm blue palette for the banking app: a deep navy for text and primary actions, a softer steel blue for supporting elements, and a light sky accent. The navy text and button pairings clear WCAG AA. Steel blue is only about 3.5:1 on white, so keep it for large text, icons and graphics rather than body copy.",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"palette-calm-blue\",\"catalogId\":\"agent-ui--stylist\"}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"palette-calm-blue\",\"value\":{\"title\":\"Calm blue banking palette\",\"primary\":{\"label\":\"Primary (navy)\",\"value\":\"#1F4E79\"},\"secondary\":{\"label\":\"Secondary (steel)\",\"value\":\"#5B8DB8\"},\"accent\":{\"label\":\"Accent (sky)\",\"value\":\"#4FB3D9\"},\"tonal\":[{\"label\":\"100\",\"value\":\"#EAF2F9\"},{\"label\":\"300\",\"value\":\"#9EC1E0\"},{\"label\":\"500\",\"value\":\"#2F6A9E\"},{\"label\":\"700\",\"value\":\"#1F4E79\"},{\"label\":\"900\",\"value\":\"#12304D\"}]}}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"palette-calm-blue\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"root_content\"]},{\"id\":\"root_content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"title\",\"roles_row\",\"tonal_caption\",\"tonal_ramp\",\"pairs_caption\",\"pairs_row\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":{\"path\":\"/title\"},\"variant\":\"h3\"},{\"id\":\"roles_row\",\"component\":\"Row\",\"gap\":\"lg\",\"wrap\":true,\"children\":[\"sw_primary\",\"sw_secondary\",\"sw_accent\"]},{\"id\":\"sw_primary\",\"component\":\"Swatch\",\"label\":{\"path\":\"/primary/label\"},\"value\":{\"path\":\"/primary/value\"}},{\"id\":\"sw_secondary\",\"component\":\"Swatch\",\"label\":{\"path\":\"/secondary/label\"},\"value\":{\"path\":\"/secondary/value\"}},{\"id\":\"sw_accent\",\"component\":\"Swatch\",\"label\":{\"path\":\"/accent/label\"},\"value\":{\"path\":\"/accent/value\"}},{\"id\":\"tonal_caption\",\"component\":\"Text\",\"text\":\"Primary tonal range\",\"variant\":\"caption\"},{\"id\":\"tonal_ramp\",\"component\":\"Ramp\",\"label\":\"Primary tonal range\",\"steps\":{\"path\":\"/tonal\"}},{\"id\":\"pairs_caption\",\"component\":\"Text\",\"text\":\"Text pairings (AA)\",\"variant\":\"caption\"},{\"id\":\"pairs_row\",\"component\":\"Row\",\"gap\":\"lg\",\"wrap\":true,\"children\":[\"cp_body\",\"cp_button\",\"cp_tint\",\"cp_dark\"]},{\"id\":\"cp_body\",\"component\":\"ContrastPair\",\"label\":\"Body text on white\",\"foreground\":\"#1F4E79\",\"background\":\"#FFFFFF\",\"sample\":\"Your balance\"},{\"id\":\"cp_button\",\"component\":\"ContrastPair\",\"label\":\"Button label\",\"foreground\":\"#FFFFFF\",\"background\":\"#2F6A9E\",\"sample\":\"Transfer\"},{\"id\":\"cp_tint\",\"component\":\"ContrastPair\",\"label\":\"Ink on tint\",\"foreground\":\"#12304D\",\"background\":\"#EAF2F9\",\"sample\":\"Recent activity\"},{\"id\":\"cp_dark\",\"component\":\"ContrastPair\",\"label\":\"Accent on navy\",\"foreground\":\"#4FB3D9\",\"background\":\"#12304D\",\"sample\":\"New statement\"}]}}]"
+              }
+            }
+          ]
+        },
+        {
+          "text": "Here's a calm blue palette for the banking app: a deep navy for text and primary actions, a softer steel blue for supporting elements, and a light sky accent. The navy text and button pairings clear WCAG AA. Steel blue is only about 3.5:1 on white, so keep it for large text, icons and graphics rather than body copy.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here's a calm blue palette for the banking app: a deep navy for text and primary actions, a softer steel blue for supporting elements, and a light sky accent. The navy text and button pairings clear WCAG AA. Steel blue is only about 3.5:1 on white, so keep it for large text, icons and graphics rather than body copy.",
+                "messages": "[{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"palette-calm-blue\",\"catalogId\":\"agent-ui--stylist\"}},{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"palette-calm-blue\",\"value\":{\"title\":\"Calm blue banking palette\",\"primary\":{\"label\":\"Primary (navy)\",\"value\":\"#1F4E79\"},\"secondary\":{\"label\":\"Secondary (steel)\",\"value\":\"#5B8DB8\"},\"accent\":{\"label\":\"Accent (sky)\",\"value\":\"#4FB3D9\"},\"tonal\":[{\"label\":\"100\",\"value\":\"#EAF2F9\"},{\"label\":\"300\",\"value\":\"#9EC1E0\"},{\"label\":\"500\",\"value\":\"#2F6A9E\"},{\"label\":\"700\",\"value\":\"#1F4E79\"},{\"label\":\"900\",\"value\":\"#12304D\"}]}}}},{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"palette-calm-blue\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"root_content\"]},{\"id\":\"root_content\",\"component\":\"CardContent\",\"children\":[\"col\"]},{\"id\":\"col\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"title\",\"roles_row\",\"tonal_caption\",\"tonal_ramp\",\"pairs_caption\",\"pairs_row\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":{\"path\":\"/title\"},\"variant\":\"h3\"},{\"id\":\"roles_row\",\"component\":\"Row\",\"gap\":\"lg\",\"wrap\":true,\"children\":[\"sw_primary\",\"sw_secondary\",\"sw_accent\"]},{\"id\":\"sw_primary\",\"component\":\"Swatch\",\"label\":{\"path\":\"/primary/label\"},\"value\":{\"path\":\"/primary/value\"}},{\"id\":\"sw_secondary\",\"component\":\"Swatch\",\"label\":{\"path\":\"/secondary/label\"},\"value\":{\"path\":\"/secondary/value\"}},{\"id\":\"sw_accent\",\"component\":\"Swatch\",\"label\":{\"path\":\"/accent/label\"},\"value\":{\"path\":\"/accent/value\"}},{\"id\":\"tonal_caption\",\"component\":\"Text\",\"text\":\"Primary tonal range\",\"variant\":\"caption\"},{\"id\":\"tonal_ramp\",\"component\":\"Ramp\",\"label\":\"Primary tonal range\",\"steps\":{\"path\":\"/tonal\"}},{\"id\":\"pairs_caption\",\"component\":\"Text\",\"text\":\"Text pairings (AA)\",\"variant\":\"caption\"},{\"id\":\"pairs_row\",\"component\":\"Row\",\"gap\":\"lg\",\"wrap\":true,\"children\":[\"cp_body\",\"cp_button\",\"cp_tint\",\"cp_dark\"]},{\"id\":\"cp_body\",\"component\":\"ContrastPair\",\"label\":\"Body text on white\",\"foreground\":\"#1F4E79\",\"background\":\"#FFFFFF\",\"sample\":\"Your balance\"},{\"id\":\"cp_button\",\"component\":\"ContrastPair\",\"label\":\"Button label\",\"foreground\":\"#FFFFFF\",\"background\":\"#2F6A9E\",\"sample\":\"Transfer\"},{\"id\":\"cp_tint\",\"component\":\"ContrastPair\",\"label\":\"Ink on tint\",\"foreground\":\"#12304D\",\"background\":\"#EAF2F9\",\"sample\":\"Recent activity\"},{\"id\":\"cp_dark\",\"component\":\"ContrastPair\",\"label\":\"Accent on navy\",\"foreground\":\"#4FB3D9\",\"background\":\"#12304D\",\"sample\":\"New statement\"}]}}]"
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Propose a calm blue palette for a banking app."
+      },
+      "routing": {
+        "domains": [
+          "stylist"
+        ],
+        "exemplars": [
+          "brand-palette",
+          "color-picker-form",
+          "pattern-schedule-picker"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "palette-presentation",
+            "load": "index-only"
+          },
+          {
+            "name": "contrast-floors",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

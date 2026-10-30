@@ -1430,3 +1430,10 @@
 
 - decide: scripts/e2e-admin/probe/replays/smoke-negotiator-first-offer-haiku-r21-h.test.mjs:9: note: the pin passes at base too, so only the next live round measures cluster H; flip to `toEqual([])` on a recapture that resends ask-1 with its createSurface.
 - decide: packages/agent-ui/a2ui/src/agent/produce.ts:1238: decide: `SEMANTIC_HINT` ("keep every other line as it was") still rides every `GAME_HUD_MISSING` round beside the new "Resend ask-1 whole"; if the next live round shows the model still dropping the createSurface, that generic sentence is the next suspect.
+
+## T-0591: A messages string with one surplus closer is healed and named (2026-10-29)
+
+- fix-now: `.claude/docs/spec/response-type-selection.spec.md:20` still ends its REV chain at "REV 2026-10-26, T-0469: the one exception to never editing a string"; the build adds a second exception (one surplus closer dropped when the rest parses as an array of message objects, `withoutSurplus`) and no T-0591 REV sentence was appended, though every earlier change to `stringifiedMessages` (T-0304, T-0344, T-0450, T-0469) added one.
+- decide: `.sdlc/tickets/0591-surplus-closer-parse-heal/handoff.md:30` note: the `## Acceptance criteria` section was authored by the builder (report line 8; the solo dispatch snapshot carries no such heading); judged as written since it covers every clause of the Intent's Done-when (red on base, replays, a2ui suites and probe replays, `npm run check`, `measure-size`) plus the negative guards.
+- note: `packages/agent-ui/a2ui/src/agent` sits at 88060 of 88832 B gz after this row, 772 B of headroom.
+- note: `scripts/e2e-admin/probe/replays/stylist-haiku-palette-string-surplus.test.mjs:17` and `shopkeeper-haiku-cart-string-surplus.test.mjs:18`: both replays still end `SEMANTIC_UNCORRECTED` on later recorded rounds (stylist `CONTRAST_PAIR_WRAPPED`; shopkeeper r1 `SURFACE_MISSING`), outside cluster J, builder-disclosed; each turn ships its surface and `report.failed` is empty.
