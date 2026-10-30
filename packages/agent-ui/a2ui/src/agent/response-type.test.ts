@@ -100,16 +100,48 @@ describe('renderSurfaceTool', () => {
     const missing = deck.replace('}]}]}}]', '}]}}}]') // round 13 :145: the `]` of `components` is missing
     const surplus = deck.replace('}]}]}}]', '}]}}]}}]') // round 14 :33: one `}` too many where that `]` belongs
     for (const s of [missing, surplus]) {
-      expect(messagesParseNote({ messages: s })).toMatch(/its `components` array is still open/)
       expect(stringifiedMessages({ messages: s })).toEqual(JSON.parse(deck))
       expect(renderSurfaceJsonl({ messages: s })).toBe(renderSurfaceJsonl({ messages: JSON.parse(deck) }))
     }
+    expect(messagesParseNote({ messages: missing })).toMatch(/its `components` array is still open/)
+    expect(messagesParseNote({ messages: surplus })).toMatch(/^Your `messages` was not valid JSON: it has one \} too many at character \d+, in message 2 \(its updateComponents\)/) // T-0591
     // Any other break is never edited: a truncated string, a break before the closers, a `}` missing between messages.
     expect(stringifiedMessages({ messages: deck.slice(0, -2) })).toBeUndefined()
     const early = deck.replace('"actionName"', '"tags":["a"},"actionName"')
     expect(messagesParseNote({ messages: early })).toMatch(/its `tags` array is still open/)
     expect(stringifiedMessages({ messages: early })).toBeUndefined()
     expect(stringifiedMessages({ messages: deck.replace('"agent-ui--croupier"}},', '"agent-ui--croupier"},') })).toBeUndefined()
+  })
+  it('T-0591: a string whose only defect is one surplus closer drops it and is named (round 21 :129, :139)', () => {
+    // Round 21 :129 (all three rounds byte for byte): one `}` too many after message 2, the updateDataModel.
+    const palette =
+      '[{"version":"v1.0","createSurface":{"surfaceId":"palette-calm-blue","catalogId":"agent-ui--stylist"}},{"version":"v1.0","updateDataModel":{"surfaceId":"palette-calm-blue","value":{"title":"Calm blue banking palette","primary":{"label":"Primary (navy)","value":"#1F4E79"},"secondary":{"label":"Secondary (steel)","value":"#5B8DB8"},"accent":{"label":"Accent (sky)","value":"#4FB3D9"},"tonal":[{"label":"100","value":"#EAF2F9"},{"label":"300","value":"#9EC1E0"},{"label":"500","value":"#2F6A9E"},{"label":"700","value":"#1F4E79"},{"label":"900","value":"#12304D"}]}}}},{"version":"v1.0","updateComponents":{"surfaceId":"palette-calm-blue","components":[{"id":"root","component":"Card","elevation":"1","children":["root_content"]},{"id":"root_content","component":"CardContent","children":["col"]},{"id":"col","component":"Column","gap":"md","children":["title","roles_row","tonal_caption","tonal_ramp","pairs_caption","pairs_row"]},{"id":"title","component":"Text","text":{"path":"/title"},"variant":"h3"},{"id":"roles_row","component":"Row","gap":"lg","wrap":true,"children":["sw_primary","sw_secondary","sw_accent"]},{"id":"sw_primary","component":"Swatch","label":{"path":"/primary/label"},"value":{"path":"/primary/value"}},{"id":"sw_secondary","component":"Swatch","label":{"path":"/secondary/label"},"value":{"path":"/secondary/value"}},{"id":"sw_accent","component":"Swatch","label":{"path":"/accent/label"},"value":{"path":"/accent/value"}},{"id":"tonal_caption","component":"Text","text":"Primary tonal range","variant":"caption"},{"id":"tonal_ramp","component":"Ramp","label":"Primary tonal range","steps":{"path":"/tonal"}},{"id":"pairs_caption","component":"Text","text":"Text pairings (AA)","variant":"caption"},{"id":"pairs_row","component":"Row","gap":"lg","wrap":true,"children":["cp_body","cp_button","cp_tint","cp_dark"]},{"id":"cp_body","component":"ContrastPair","label":"Body text on white","foreground":"#1F4E79","background":"#FFFFFF","sample":"Your balance"},{"id":"cp_button","component":"ContrastPair","label":"Button label","foreground":"#FFFFFF","background":"#2F6A9E","sample":"Transfer"},{"id":"cp_tint","component":"ContrastPair","label":"Ink on tint","foreground":"#12304D","background":"#EAF2F9","sample":"Recent activity"},{"id":"cp_dark","component":"ContrastPair","label":"Accent on navy","foreground":"#4FB3D9","background":"#12304D","sample":"New statement"}]}}]'
+    // Round 21 :139 (rounds 2 and 3 byte for byte): one `}` too many after the ConfirmReceipt's backAction, before `]`.
+    const cart =
+      '[{"version":"v1.0","updateComponents":{"surfaceId":"storefront-1","components":[{"id":"root","component":"Column","gap":"md","children":["heading","grid","order"]},{"id":"heading","component":"Text","text":"Lamps","variant":"h4"},{"id":"grid","component":"Row","gap":"md","wrap":true,"children":["lamp_brass","lamp_linen","lamp_ceramic","lamp_rattan"]},{"id":"lamp_brass","component":"ProductCard","title":"Brass Arc Floor Lamp","subtitle":"Brass, 140 cm tall","price":"$189","priceNote":"In stock","badge":"New","badgeIntent":"info","actionLabel":"Add to order","action":{"action":"buy","context":{"sku":"lamp-brass-arc"}}},{"id":"lamp_linen","component":"ProductCard","title":"Linen Drum Pendant","subtitle":"Linen shade, 35 cm wide","price":"$96","priceOld":"$120","priceNote":"In stock","badge":"Sale","badgeIntent":"success","actionLabel":"Add to order","action":{"action":"buy","context":{"sku":"lamp-linen-drum"}}},{"id":"lamp_ceramic","component":"ProductCard","title":"Glazed Ceramic Table Lamp","subtitle":"Stoneware, 42 cm tall","price":"$64","priceNote":"Sold out","badge":"Sold out","badgeIntent":"danger","disabled":true,"actionLabel":"Sold out","action":{"action":"buy","context":{"sku":"lamp-ceramic-table"}}},{"id":"lamp_rattan","component":"ProductCard","title":"Rattan Lantern Lamp","subtitle":"Rattan, 30 cm tall","price":"$48","priceNote":"In stock","actionLabel":"Add to order","action":{"action":"buy","context":{"sku":"lamp-rattan-lantern"}}},{"id":"order","component":"ConfirmReceipt","title":"Your order","items":[{"label":"Brass Arc Floor Lamp","quantity":2,"amount":"$378"}],"totalLabel":"Total","totalPath":"/order/total","data":{"order":{"total":"$378"}},"status":"pending","confirmAction":{"action":"confirm_order"},"backAction":{"action":"back"}}}]}},{"version":"v1.0","updateDataModel":{"surfaceId":"storefront-1","path":"/order","value":{"total":"$378"}}}]'
+    for (const [s, at, count] of [[palette, 565, 3], [cart, 1778, 2]] as const) {
+      expect(s[at]).toBe('}')
+      expect(stringifiedMessages({ messages: s })).toEqual(JSON.parse(s.slice(0, at) + s.slice(at + 1)))
+      expect(stringifiedMessages({ messages: s })).toHaveLength(count)
+    }
+    expect(renderSurfaceJsonl({ messages: palette }).split('\n')).toHaveLength(3)
+    expect(messagesParseNote({ messages: palette })).toBe(
+      'Your `messages` was not valid JSON: it has one } too many at character 565, after message 2 (its updateDataModel) ends, here: `"},{"label":"900","value":"#12304D"}]}}}},{"version":"v1.0",`.',
+    )
+    expect(messagesParseNote({ messages: cart })).toBe(
+      'Your `messages` was not valid JSON: it has one } too many at character 1778, in message 1 (its updateComponents), here: `_order"},"backAction":{"action":"back"}}}]}},{"version":"v1.`.',
+    )
+    // Two defects are never edited: a second surplus closer, a surplus closer and a missing one, a truncated tail.
+    const twice = palette.replace('"sample":"New statement"}]}}]', '"sample":"New statement"}}]}}]')
+    const andShort = cart.replace('"value":{"total":"$378"}}}]', '"value":{"total":"$378"}}]')
+    for (const s of [twice, andShort, cart.slice(0, -2)]) {
+      expect(stringifiedMessages({ messages: s })).toBeUndefined()
+      expect(renderSurfaceJsonl({ messages: s })).toBe('')
+    }
+    // Dropping the closer must leave an array of messages: a bare object or a non-object entry stays unparsed.
+    expect(stringifiedMessages({ messages: '{"version":"v1.0"}}' })).toBeUndefined()
+    expect(stringifiedMessages({ messages: '[1,2]]' })).toBeUndefined()
+    expect(messagesParseNote({ messages: '[1,2]]' })).not.toMatch(/too many/)
   })
   it('T-0206: the note names every open surface; the stable description gates on a structure and prefers an update', () => {
     expect(openSurfacesNote(['main', 'quiz-7'])).toBe('[Open surfaces: main, quiz-7.]')

@@ -64,8 +64,9 @@ export function renderSurfaceJsonl(input: Record<string, unknown>): string {
 /** T-0304: the array a `messages` sent as one JSON string holds, or undefined. Haiku and Sonnet 5.5 sent the list as a
  *  string on every round of a turn despite the tool description (round 7 :16, :95, :96), so every round was PARSE and
  *  the turn shipped text. T-0469: a string whose only defect is one named unclosed array (the `messagesParseNote` arm
- *  that names it) is closed in place by `closedInPlace`. Any other string that does not parse as an array stays the
- *  empty payload (a PARSE round), never edited, and `messagesParseNote` tells the model where it broke. */
+ *  that names it) is closed in place by `closedInPlace`; T-0591: so is one whose only defect is one surplus closer.
+ *  Any other string that does not parse as an array stays the empty payload (a PARSE round), never edited, and
+ *  `messagesParseNote` tells the model where it broke. */
 export function stringifiedMessages(input: Record<string, unknown>): unknown[] | undefined {
   const { messages } = input
   if (typeof messages !== 'string') return undefined
@@ -81,7 +82,8 @@ export function stringifiedMessages(input: Record<string, unknown>): unknown[] |
  *  stopped on a `}` where an array is the innermost open bracket (the unclosed array `messagesParseNote` names) and
  *  nothing but `]`, `}` and whitespace follows the last value: the closers after that value are then rewritten from the
  *  brackets still open, the one order valid JSON allows. Round 14 :33 sent one `}` too many where the `]` of
- *  `components` belongs, byte for byte on all three rounds after the T-0450 pinpoint; round 13 :145 left that `]` out. */
+ *  `components` belongs, byte for byte on all three rounds after the T-0450 pinpoint; round 13 :145 left that `]` out.
+ *  T-0591: else the array of messages left once the one closer JSON.parse stopped on is dropped (`withoutSurplus`). */
 function closedInPlace(text: string): unknown[] | undefined {
   let pos: number | undefined
   try {
@@ -91,15 +93,30 @@ function closedInPlace(text: string): unknown[] | undefined {
     const m = /position (\d+)/.exec(err instanceof Error ? err.message : '')
     pos = m === null ? undefined : Number(m[1])
   }
-  if (pos === undefined || unclosedArray(text, pos, openAt(text, pos)) === undefined) return undefined
-  let start = text.length
-  while (start > 0 && /[\s\]}]/.test(text[start - 1]!)) start--
-  if (start > pos) return undefined
-  const open = openAt(text, start).open
-  const closers = open.map((b) => (b === '{' ? '}' : ']')).reverse().join('')
+  if (pos === undefined) return undefined
+  if (unclosedArray(text, pos, openAt(text, pos)) !== undefined) {
+    let start = text.length
+    while (start > 0 && /[\s\]}]/.test(text[start - 1]!)) start--
+    const open = openAt(text, start).open
+    const closers = open.map((b) => (b === '{' ? '}' : ']')).reverse().join('')
+    try {
+      const parsed: unknown = start > pos ? undefined : JSON.parse(text.slice(0, start) + closers)
+      if (Array.isArray(parsed)) return parsed
+    } catch {
+      // not closable from the brackets still open: try the surplus closer below
+    }
+  }
+  return withoutSurplus(text, pos)
+}
+
+/** T-0591: the array of messages `text` holds once the one `}` or `]` at `pos` (where JSON.parse stopped) is dropped,
+ *  or undefined. Round 21 :129 sent one `}` too many after a message and :139 one before the `]` of `components`, each
+ *  byte for byte on every round after the pinpoint; any second defect still fails the parse. */
+function withoutSurplus(text: string, pos: number): unknown[] | undefined {
+  if (text[pos] !== '}' && text[pos] !== ']') return undefined
   try {
-    const parsed: unknown = JSON.parse(text.slice(0, start) + closers)
-    return Array.isArray(parsed) ? parsed : undefined
+    const parsed: unknown = JSON.parse(text.slice(0, pos) + text.slice(pos + 1))
+    return Array.isArray(parsed) && parsed.every((m) => typeof m === 'object' && m !== null && !Array.isArray(m)) ? parsed : undefined
   } catch {
     return undefined
   }
@@ -108,7 +125,8 @@ function closedInPlace(text: string): unknown[] | undefined {
 /** T-0304: one model-facing sentence naming where a `messages` string stopped being JSON, or undefined when `messages`
  *  is not a string or parses. The position is JSON.parse's own; when a new `{"version"` message begins there while
  *  objects of the one before are still open (every recorded round 7 string), the sentence names that message, its kind
- *  and how many `}` it lacks, else it quotes the text at the position. */
+ *  and how many `}` it lacks, else it quotes the text at the position. T-0591: a closer there that parses once dropped
+ *  is named as one too many, ahead of the T-0450 unclosed-array arm (round 21 :139 got "a closing ] is missing"). */
 export function messagesParseNote(input: Record<string, unknown>): string | undefined {
   const { messages } = input
   if (typeof messages !== 'string') return undefined
@@ -122,6 +140,12 @@ export function messagesParseNote(input: Record<string, unknown>): string | unde
   }
   if (pos === undefined || pos > messages.length) return 'Your `messages` was not valid JSON.'
   const scan = openAt(messages, pos)
+  const near = messages.slice(Math.max(0, pos - 40), pos + 20)
+  if (withoutSurplus(messages, pos) !== undefined && scan.message > 0) {
+    const where = scan.open.length > 1 ? `in message ${scan.message}` : `after message ${scan.message}`
+    const kind = scan.kind === undefined ? '' : ` (its ${scan.kind})`
+    return `Your \`messages\` was not valid JSON: it has one ${messages[pos]} too many at character ${pos}, ${where}${kind}${scan.open.length > 1 ? '' : ' ends'}, here: \`${near}\`.`
+  }
   const extra = scan.open.slice(1)
   if (scan.open[0] === '[' && extra.length > 0 && extra.every((b) => b === '{') && /^\s*\{\s*"version"\s*:/.test(messages.slice(pos))) {
     const missing = extra.length === 1 ? 'a closing } is missing' : `${extra.length} closing } are missing`
@@ -133,7 +157,6 @@ export function messagesParseNote(input: Record<string, unknown>): string | unde
     const kind = scan.kind === undefined ? '' : ` (its ${scan.kind})`
     return `Your \`messages\` was not valid JSON: a closing ] is missing in message ${scan.message}${kind}: its \`${unclosed}\` array is still open at character ${pos}, where a } comes instead.`
   }
-  const near = messages.slice(Math.max(0, pos - 40), pos + 20)
   return `Your \`messages\` was not valid JSON at character ${pos}${scan.message > 0 ? ` (message ${scan.message})` : ''}, here: \`${near}\`.`
 }
 
