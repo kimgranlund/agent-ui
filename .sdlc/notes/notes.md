@@ -1437,3 +1437,11 @@
 - decide: `.sdlc/tickets/0591-surplus-closer-parse-heal/handoff.md:30` note: the `## Acceptance criteria` section was authored by the builder (report line 8; the solo dispatch snapshot carries no such heading); judged as written since it covers every clause of the Intent's Done-when (red on base, replays, a2ui suites and probe replays, `npm run check`, `measure-size`) plus the negative guards.
 - note: `packages/agent-ui/a2ui/src/agent` sits at 88060 of 88832 B gz after this row, 772 B of headroom.
 - note: `scripts/e2e-admin/probe/replays/stylist-haiku-palette-string-surplus.test.mjs:17` and `shopkeeper-haiku-cart-string-surplus.test.mjs:18`: both replays still end `SEMANTIC_UNCORRECTED` on later recorded rounds (stylist `CONTRAST_PAIR_WRAPPED`; shopkeeper r1 `SURFACE_MISSING`), outside cluster J, builder-disclosed; each turn ships its surface and `report.failed` is empty.
+
+## T-0590: Order receipts and product browses built by hand are sent back (2026-10-29)
+
+- note: .sdlc/tickets/0590-order-receipt-and-product-card-gaps/handoff.md:34 the `## Acceptance criteria` block was authored by the builder (its report says so; `0590-solo-L2.dispatch.json` carries no "Acceptance criteria"); judged as written since it covers every clause of the Intent's Done-when.
+- note: .sdlc/tickets/0590-order-receipt-and-product-card-gaps/handoff.md:24 the P4b row says :80 fires `SURFACE_MISSING` for ConfirmReceipt; the ConfirmReceipt row's code is `CONFIRM_RECEIPT_MISSING`, which criterion 1 names; the Context wording is stale.
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:431 `currency` is read through the cue's `\$` only, so an ISO code (USD, EUR) on an AmountPicker does not open the ConfirmReceipt row (builder-disclosed, by choice).
+- note: scripts/e2e-admin/probe/replays/shopkeeper-haiku-receipt-asked-qty.test.mjs:38 the handoff row's `--expect-component AmountPicker` rides the fixture's `expect.components` in the authored-round test (`--from-trace` refuses the flag per the builder); the `expect-component` check is asserted `pass`.
+- note: packages/agent-ui/a2ui/src/agent: `@agent-ui/a2ui/agent` sits at 88671 of 88832 B gz, 161 B of headroom.

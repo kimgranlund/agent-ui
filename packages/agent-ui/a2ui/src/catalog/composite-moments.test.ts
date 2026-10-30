@@ -2081,3 +2081,169 @@ describe('T-0586: a picked card game answered with no CardTable asks for its tab
     expect(ids(loadCatalog(defaultCatalogRaw))).not.toContain('composite-moment-card-table')
   })
 })
+
+/** T-0590: round 21 (`.sdlc/evals/rounds/2026-10-29-r21-pattern/`) :80 r2 (smoke-shopkeeper-browse-and-add-haiku-3), the
+ *  recorded order Card around an AmountPicker whose label names only the lamp; its `actionName` and `currency` name the
+ *  quantity and the price. The product tiles are cut to one. */
+const R21_80_R2: A2uiComponent[] = [
+  { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'tiles', 'order'] },
+  { id: 'heading', component: 'Text', text: 'Lamps', variant: 'h4' },
+  { id: 'tiles', component: 'Row', gap: 'md', wrap: true, children: ['p_desk'] },
+  { id: 'p_desk', component: 'ProductCard', title: 'Brass Desk Lamp', subtitle: 'Solid brass, 42 cm arm', price: '$68', badge: 'In your order', badgeIntent: 'info', actionLabel: 'Added', disabled: true, action: { action: 'buy', context: { sku: 'lamp-brass-desk', name: 'Brass Desk Lamp', price: 68 } } },
+  { id: 'order', component: 'Card', children: ['order_content'] },
+  { id: 'order_content', component: 'CardContent', children: ['order_list', 'order_total'] },
+  { id: 'order_list', component: 'Column', gap: 'sm', children: ['line_desk'] },
+  { id: 'line_desk', component: 'AmountPicker', label: 'Brass Desk Lamp', value: 1, min: 0, max: 10, step: 1, currency: '$', actionName: 'set_quantity', actionLabel: 'Update' },
+  { id: 'order_total', component: 'Text', text: 'Total: $68', variant: 'label', emphasis: true },
+]
+const R21_80_REPLY = "Added the Brass Desk Lamp ($68) to your order. Set the quantity below, or pick more lamps. Confirm when you're ready."
+
+describe("T-0590: an order Card's AmountPicker named only by its actionName or currency asks for its ConfirmReceipt", () => {
+  const run = (components: A2uiComponent[], reply?: string) =>
+    runSemanticChecks(compositeMomentChecks, { surfaces: [view(components, 'storefront-lamps')], ...(reply === undefined ? {} : { reply }) }).findings
+
+  it('round 21 :80 r2 with its reply draws CONFIRM_RECEIPT_MISSING on the AmountPicker line', () => {
+    expect(run(R21_80_R2, R21_80_REPLY).map((f) => [f.code, f.path])).toEqual([['CONFIRM_RECEIPT_MISSING', 'storefront-lamps:line_desk']])
+  })
+
+  it('the actionName alone, or the currency alone, is the cue', () => {
+    const only = (props: Record<string, unknown>) => R21_80_R2.map((c) => (c.id === 'line_desk' ? { id: c.id, component: 'AmountPicker', label: 'Brass Desk Lamp', value: 1, ...props } : c))
+    expect(run(only({ actionName: 'set_quantity' }), R21_80_REPLY).map((f) => f.code)).toEqual(['CONFIRM_RECEIPT_MISSING'])
+    expect(run(only({ currency: '$' }), R21_80_REPLY).map((f) => f.code)).toEqual(['CONFIRM_RECEIPT_MISSING'])
+    expect(run(only({ actionName: 'set_lamp' }), R21_80_REPLY)).toEqual([])
+  })
+
+  it('negative controls: :80 r2 with no reply, the T-0480 tip bill with a currency and actionName, and the negotiator deal sheet stay clean', () => {
+    expect(run(R21_80_R2)).toEqual([])
+    const BILL: A2uiComponent[] = [
+      { id: 'root', component: 'Column', children: ['title', 'tip', 'total'] },
+      { id: 'title', component: 'Text', text: 'Your bill', variant: 'h5' },
+      { id: 'tip', component: 'AmountPicker', label: 'Tip', value: 6, name: 'tip', currency: '$', actionName: 'set_quantity' },
+      { id: 'total', component: 'Text', text: 'Total: $54.00' },
+    ]
+    expect(run(BILL, 'Here is your bill. Pick a tip and the total updates.')).toEqual([])
+    const DEAL_SHEET: A2uiComponent[] = [
+      { id: 'root', component: 'Column', children: ['hud', 'offer'] },
+      { id: 'hud', component: 'GameHud', title: 'The brass lantern', status: 'Round 1' },
+      { id: 'offer', component: 'AmountPicker', label: 'Your offer', value: 20, currency: '$', actionName: 'set_quantity' },
+    ]
+    expect(run(DEAL_SHEET, 'Make your offer for the order: the lantern is $40.')).toEqual([])
+  })
+
+  it('the extra props ride the ConfirmReceipt row alone: a guess TextField named only by its actionName draws no hand-built word game', () => {
+    const guess: A2uiComponent[] = [{ id: 'g', component: 'TextField', label: 'Letter', actionName: 'guess_letter' }, { id: 't', component: 'Text', text: 'Pick a letter for the word' }]
+    expect(run(guess)).toEqual([])
+  })
+})
+
+/** T-0590: round 21 :124 r2 (reach-shopkeeper-cart-amount-haiku-1), the recorded order receipt with a literal quantity of 2
+ *  and no AmountPicker; the product tiles are cut to one. */
+const R21_124_R2: A2uiComponent[] = [
+  { id: 'root', component: 'Column', gap: 'md', children: ['heading', 'tiles', 'order_card'] },
+  { id: 'heading', component: 'Text', text: 'Lamps', variant: 'h4' },
+  { id: 'tiles', component: 'Row', gap: 'md', wrap: true, children: ['lamp_brass'] },
+  { id: 'lamp_brass', component: 'ProductCard', title: 'Brass Arc Floor Lamp', subtitle: 'Solid brass, 180 cm tall', price: '$189', priceOld: '$220', badge: 'Sale', badgeIntent: 'success', actionLabel: 'Add to order', action: { action: 'buy', context: { sku: 'lamp-brass-arc' } } },
+  { id: 'order_card', component: 'ConfirmReceipt', title: 'Your order', items: [{ label: 'Brass Arc Floor Lamp', quantity: 2, amount: '$378' }], totalLabel: 'Total', totalPath: '/order/total', status: 'pending', data: { order: { total: '$378' } } },
+]
+const R21_124_REPLY = "Two Brass Arc Floor Lamps are in your order at $189 each, so $378 total. Here's your order summary."
+const R21_124_ASK = 'Add two of the first one to my order and show me my cart.'
+
+describe('T-0590: a literal receipt quantity the user asked for asks for its AmountPicker with no reply offer', () => {
+  const run = (components: A2uiComponent[], intent?: string, reply: string = R21_124_REPLY) =>
+    runSemanticChecks(compositeMomentChecks, { surfaces: [view(components, 'storefront-lamps')], reply, ...(intent === undefined ? {} : { intent }) }).findings
+
+  it('round 21 :124 r2 with its ask draws SURFACE_MISSING on order_card naming the line', () => {
+    const findings = run(R21_124_R2, R21_124_ASK)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['SURFACE_MISSING', 'storefront-lamps:order_card']])
+    expect(findings[0]!.message).toContain('fixed quantity for Brass Arc Floor Lamp after the user asked for a quantity')
+    expect(findings[0]!.message).toContain('add ONE AmountPicker per line')
+  })
+
+  it('other quantity asks count; the round 19 :139 receipt fires on the ask with no reply offer', () => {
+    for (const ask of ["I'll take 3 of the brass lamp.", 'Add a couple to my cart.', 'Make it four.', 'Order 2 of the arc lamps.']) {
+      expect(run(R21_124_R2, ask).map((f) => f.code), ask).toEqual(['SURFACE_MISSING'])
+    }
+    expect(run(R19_139_R2, R21_124_ASK, 'Your order is ready.').map((f) => f.code)).toEqual(['SURFACE_MISSING'])
+  })
+
+  it('negative controls: no ask, an ask for one, a price, or a pronoun yield none', () => {
+    for (const ask of [undefined, 'Add the first one to my order.', 'Add one Brass Arc Floor Lamp.', 'Add the $189 lamp to my order.', 'Show me my cart.']) {
+      expect(run(R21_124_R2, ask), String(ask)).toEqual([])
+    }
+  })
+
+  it('negative controls: a confirmed receipt, a booking receipt and a receipt beside its AmountPicker yield none on the ask', () => {
+    expect(run(R21_124_R2.map((c) => (c.id === 'order_card' ? { ...c, status: 'confirmed' } : c)), R21_124_ASK)).toEqual([])
+    const booking = R21_124_R2.map((c) => (c.id === 'order_card' ? { ...c, title: 'Your stay', totalLabel: 'Due', items: [{ label: 'Guests', quantity: 2, amount: '$480' }] } : c))
+    expect(run(booking, 'Book two nights for two guests.', 'Here is your stay.')).toEqual([])
+    expect(run(booking, R21_124_ASK, 'Here is your stay.')).toEqual([])
+    const picked = [...R21_124_R2, { id: 'qty', component: 'AmountPicker', label: 'Brass Arc Floor Lamp quantity', value: 2, min: 1, step: 1 }]
+    expect(run(picked, R21_124_ASK)).toEqual([])
+  })
+})
+
+/** T-0590: round 21 :42 r1 (smoke-shopkeeper-browse-and-add-haiku-2), the recorded answer to "What lamps do you have?":
+ *  four Cards, each a CardHeader name, a price Text and a CardFooter Button, and no ProductCard. */
+const priced = (n: number, name: string, price: string, button = 'Add to order'): A2uiComponent[] => [
+  { id: `p${n}`, component: 'Card', elevation: '1', children: [`p${n}_hd`, `p${n}_ct`, `p${n}_ft`] },
+  { id: `p${n}_hd`, component: 'CardHeader', children: [`p${n}_name`] },
+  { id: `p${n}_name`, component: 'Text', text: name, variant: 'h4' },
+  { id: `p${n}_ct`, component: 'CardContent', children: [`p${n}_price`] },
+  { id: `p${n}_price`, component: 'Text', text: price, variant: 'body', emphasis: true },
+  { id: `p${n}_ft`, component: 'CardFooter', children: [`p${n}_btn`] },
+  { id: `p${n}_btn`, component: 'Button', label: button, variant: 'solid', action: { action: 'buy', context: { sku: `lamp-${n}` } } },
+]
+const R21_42_R1: A2uiComponent[] = [
+  { id: 'root', component: 'Column', gap: 'md', children: ['intro', 'tiles'] },
+  { id: 'intro', component: 'Text', text: "Our lamps, all in the shop's current catalog:", variant: 'body' },
+  { id: 'tiles', component: 'Row', gap: 'md', wrap: true, children: ['p1', 'p2', 'p3', 'p4'] },
+  ...priced(1, 'Brass Arc Floor Lamp', '$189'),
+  ...priced(2, 'Sage Ceramic Table Lamp', '$64'),
+  ...priced(3, 'Linen Drum Pendant', '$112'),
+  ...priced(4, 'Oak Reading Lamp', '$78', 'Sold out'),
+]
+const R21_42_ASK = 'What lamps do you have?'
+
+describe('T-0590: a product browse answered with hand-made priced Cards is PRODUCT_CARD_MISSING', () => {
+  const run = (components: A2uiComponent[], intent?: string) =>
+    runSemanticChecks(compositeMomentChecks, { surfaces: [view(components, 'storefront-1')], ...(intent === undefined ? {} : { intent }) }).findings
+
+  it('round 21 :42 r1 on its ask draws PRODUCT_CARD_MISSING naming the four Cards', () => {
+    const findings = run(R21_42_R1, R21_42_ASK)
+    expect(findings.map((f) => [f.code, f.path])).toEqual([['PRODUCT_CARD_MISSING', 'storefront-1:p1']])
+    expect(findings[0]!.message).toContain('p1 (a Card), p2 (a Card), p3 (a Card), p4 (a Card)')
+    expect(findings[0]!.message).toContain('Make it ONE ProductCard per item')
+    expect(findings[0]!.message).toContain('drop the hand-built priced rows or cards')
+  })
+
+  it('other product asks and a services ask count', () => {
+    for (const ask of ['Do you sell rugs?', 'Show me your vases.', 'Which lamps does the shop carry?', 'What spa services can I book?']) {
+      expect(run(R21_42_R1, ask).map((f) => f.code), ask).toEqual(['PRODUCT_CARD_MISSING'])
+    }
+  })
+
+  it('negative controls: no ask, an add ask, a single order Card with a total, cards with no price or no Button, and ProductCards yield none', () => {
+    expect(run(R21_42_R1)).toEqual([])
+    expect(run(R21_42_R1, 'Add the first one to my order.')).toEqual([])
+    const ORDER: A2uiComponent[] = [
+      { id: 'root', component: 'Column', children: ['tiles', 'order'] },
+      { id: 'tiles', component: 'Row', children: ['p1'] },
+      ...priced(1, 'Brass Arc Floor Lamp', '$189'),
+      { id: 'order', component: 'Card', children: ['order_ct'] },
+      { id: 'order_ct', component: 'CardContent', children: ['order_total', 'order_btn'] },
+      { id: 'order_total', component: 'Text', text: 'Total: $189' },
+      { id: 'order_btn', component: 'Button', label: 'Confirm order', action: { action: 'confirm_order' } },
+    ]
+    expect(run(ORDER, R21_42_ASK)).toEqual([])
+    const unpriced = R21_42_R1.map((c) => (c.id.endsWith('_price') ? { ...c, text: 'In stock' } : c))
+    expect(run(unpriced, R21_42_ASK)).toEqual([])
+    const unbuttoned = R21_42_R1.map((c) => (c.id.endsWith('_ft') ? { ...c, children: [] } : c))
+    expect(run(unbuttoned, R21_42_ASK)).toEqual([])
+    expect(run([...R21_42_R1, ...COMPOSED['ProductCard']!.map((c) => ({ ...c, id: `pc-${c.id}` }))], R21_42_ASK)).toEqual([])
+  })
+
+  it('a Card holding the priced Cards is no product card itself: the inner Cards are named', () => {
+    const wrapped: A2uiComponent[] = [{ id: 'shelf', component: 'Card', children: ['root'] }, ...R21_42_R1]
+    expect(run(wrapped, R21_42_ASK)[0]!.message).not.toContain('shelf (a Card)')
+  })
+})

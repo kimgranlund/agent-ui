@@ -762,7 +762,7 @@ function messagesFor(
       (failures.some((f) => f.code === 'SURFACE_DROPPED') ? SURFACE_DROPPED_HINT + droppedNote : '') + // T-0281: resend a dropped surface; T-0330: fixed
       (failures.some((f) => f.code === 'SURFACE_NOT_CREATED') ? SURFACE_NOT_CREATED_HINT : '') + // T-0305: create before update
       (failures.some((f) => f.code === 'SURFACE_CLAIMED') ? SURFACE_CLAIMED_HINT : '') + // T-0442: create the surface the reply names
-      (failures.some((f) => f.code === 'CHANGE_CLAIMED') ? CHANGE_CLAIMED_HINT : '') + // T-0448: send the update the reply claims
+      (failures.some((f) => f.code === 'CHANGE_CLAIMED') ? CHANGE_CLAIMED_HINT + changeClaimedOrderHint(input, catalog) : '') + // T-0448: send the update the reply claims; T-0590: an add to an order names its receipt
       (failures.some((f) => f.code === 'FEED_SCOPE') ? (hudOnAsk(failures) ? FEED_SCOPE_HUD_HINT : FEED_SCOPE_HINT) : '') + // T-0290: keep the surface, drop the ask; T-0363: a game moves its HUD beside the ask
       (failures.some((f) => f.detail !== undefined) ? SEMANTIC_HINT : '') + // ADR-0238: a semantic-finding round's guidance
       keepSurfacesHint(keep) // T-0172: never lose a surface the failed round created
@@ -1203,6 +1203,19 @@ const SURFACE_CLAIMED_HINT =
 const CHANGE_CLAIMED_HINT =
   ' CHANGE_CLAIMED means your reply says a change is made on the surface it targets, but this answer sends no update ' +
   'to it, so the user would read about a change that is not there. Send that update in this answer.'
+
+/** T-0590 (round 21 cluster P4c, :80 and :43): an add turn's CHANGE_CLAIMED repair shipped the order as a Card built by hand
+ *  around an AmountPicker, with no ConfirmReceipt. The user's words adding to an order, cart or basket, on a catalog that
+ *  holds ConfirmReceipt and AmountPicker, name the receipt in the repair. */
+const ADD_TO_ORDER = /\b(add|put)\b[^.?!]*\b(order|cart|basket)\b/i
+const CHANGE_CLAIMED_ORDER_HINT =
+  ' The user added to their order, so read the order back as ONE ConfirmReceipt (status "pending", each item quantity ' +
+  'bound to the path its AmountPicker binds) beside one AmountPicker per line, never as a Card built by hand.'
+
+function changeClaimedOrderHint(input: TurnInput, catalog: Catalog): string {
+  if (input.kind !== 'intent' || catalog.components['ConfirmReceipt'] === undefined || catalog.components['AmountPicker'] === undefined) return ''
+  return ADD_TO_ORDER.test(typedWords(input.text)) ? CHANGE_CLAIMED_ORDER_HINT : ''
+}
 
 /** T-0290: the self-correct sentence for a FEED_SCOPE round. The recorded Haiku 5.5 booking turn built its BookingForm
  *  as the ask surface; the generic re-emit wording sent it back with no way out, the next rounds dropped the form, and

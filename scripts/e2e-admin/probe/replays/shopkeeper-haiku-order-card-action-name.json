@@ -1,0 +1,434 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "shopkeeper-haiku-order-card-action-name",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-29.jsonl:79,2026-10-29.jsonl:80 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "What lamps do you have?"
+    },
+    {
+      "say": "Add the first one to my order."
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"We have five lamps in stock right now. Pick one to add it to your order.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[],\"rounds\":1,\"healed\":0,\"failureCodes\":[],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":50501,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":783}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"storefront-lamps\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-lamps\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"tiles\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p_desk\",\"p_ceramic\",\"p_pendant\",\"p_oak\",\"p_lantern\"]},{\"id\":\"p_desk\",\"component\":\"ProductCard\",\"title\":\"Brass Desk Lamp\",\"subtitle\":\"Solid brass, 42 cm arm\",\"price\":\"$68\",\"badge\":\"New\",\"badgeIntent\":\"info\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-desk\",\"name\":\"Brass Desk Lamp\",\"price\":68}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Ceramic Table Lamp\",\"subtitle\":\"Glazed stoneware, 35 cm\",\"price\":\"$54\",\"priceOld\":\"$64\",\"badge\":\"Sale\",\"badgeIntent\":\"success\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-ceramic-table\",\"name\":\"Ceramic Table Lamp\",\"price\":54}}},{\"id\":\"p_pendant\",\"component\":\"ProductCard\",\"title\":\"Linen Pendant\",\"subtitle\":\"Natural linen shade, 40 cm\",\"price\":\"$89\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-pendant\",\"name\":\"Linen Pendant\",\"price\":89}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Floor Lamp\",\"subtitle\":\"Solid oak, 160 cm tall\",\"price\":\"$120\",\"badge\":\"Low stock\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-oak-floor\",\"name\":\"Oak Floor Lamp\",\"price\":120}}},{\"id\":\"p_lantern\",\"component\":\"ProductCard\",\"title\":\"Glass Lantern\",\"subtitle\":\"Hand-blown glass, 28 cm\",\"price\":\"$38\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"actionLabel\":\"Sold out\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-glass-lantern\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "We have five lamps in stock right now. Pick one to add it to your order.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "storefront-lamps",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-lamps",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "tiles"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p_desk",
+                            "p_ceramic",
+                            "p_pendant",
+                            "p_oak",
+                            "p_lantern"
+                          ]
+                        },
+                        {
+                          "id": "p_desk",
+                          "component": "ProductCard",
+                          "title": "Brass Desk Lamp",
+                          "subtitle": "Solid brass, 42 cm arm",
+                          "price": "$68",
+                          "badge": "New",
+                          "badgeIntent": "info",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-desk",
+                              "name": "Brass Desk Lamp",
+                              "price": 68
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Ceramic Table Lamp",
+                          "subtitle": "Glazed stoneware, 35 cm",
+                          "price": "$54",
+                          "priceOld": "$64",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-ceramic-table",
+                              "name": "Ceramic Table Lamp",
+                              "price": 54
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_pendant",
+                          "component": "ProductCard",
+                          "title": "Linen Pendant",
+                          "subtitle": "Natural linen shade, 40 cm",
+                          "price": "$89",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-pendant",
+                              "name": "Linen Pendant",
+                              "price": 89
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak Floor Lamp",
+                          "subtitle": "Solid oak, 160 cm tall",
+                          "price": "$120",
+                          "badge": "Low stock",
+                          "badgeIntent": "warning",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-oak-floor",
+                              "name": "Oak Floor Lamp",
+                              "price": 120
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_lantern",
+                          "component": "ProductCard",
+                          "title": "Glass Lantern",
+                          "subtitle": "Hand-blown glass, 28 cm",
+                          "price": "$38",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "actionLabel": "Sold out",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-glass-lantern"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "What lamps do you have?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "frontier-amount-picker-bet",
+          "travel-itinerary"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    },
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Added the Brass Desk Lamp ($68) to your order. Set the quantity below, or pick more lamps. Confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-lamps\"},\"trace\":{\"turnIndex\":2,\"query\":{\"intent\":\"Add the first one to my order.\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"CONFIRM_RECEIPT_MISSING\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":52092,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":2374}],\"over\":false},\"miniSkillIds\":[\"confirm-receipt\",\"nested-record-editor\",\"crud-entry-list\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-lamps\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"heading\",\"tiles\",\"order\"]},{\"id\":\"heading\",\"component\":\"Text\",\"text\":\"Lamps\",\"variant\":\"h4\"},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p_desk\",\"p_ceramic\",\"p_pendant\",\"p_oak\",\"p_lantern\"]},{\"id\":\"p_desk\",\"component\":\"ProductCard\",\"title\":\"Brass Desk Lamp\",\"subtitle\":\"Solid brass, 42 cm arm\",\"price\":\"$68\",\"badge\":\"In your order\",\"badgeIntent\":\"info\",\"actionLabel\":\"Added\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-desk\",\"name\":\"Brass Desk Lamp\",\"price\":68}}},{\"id\":\"p_ceramic\",\"component\":\"ProductCard\",\"title\":\"Ceramic Table Lamp\",\"subtitle\":\"Glazed stoneware, 35 cm\",\"price\":\"$54\",\"priceOld\":\"$64\",\"badge\":\"Sale\",\"badgeIntent\":\"success\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-ceramic-table\",\"name\":\"Ceramic Table Lamp\",\"price\":54}}},{\"id\":\"p_pendant\",\"component\":\"ProductCard\",\"title\":\"Linen Pendant\",\"subtitle\":\"Natural linen shade, 40 cm\",\"price\":\"$89\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-pendant\",\"name\":\"Linen Pendant\",\"price\":89}}},{\"id\":\"p_oak\",\"component\":\"ProductCard\",\"title\":\"Oak Floor Lamp\",\"subtitle\":\"Solid oak, 160 cm tall\",\"price\":\"$120\",\"badge\":\"Low stock\",\"badgeIntent\":\"warning\",\"actionLabel\":\"Buy\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-oak-floor\",\"name\":\"Oak Floor Lamp\",\"price\":120}}},{\"id\":\"p_lantern\",\"component\":\"ProductCard\",\"title\":\"Glass Lantern\",\"subtitle\":\"Hand-blown glass, 28 cm\",\"price\":\"$38\",\"badge\":\"Sold out\",\"badgeIntent\":\"danger\",\"actionLabel\":\"Sold out\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-glass-lantern\"}}},{\"id\":\"order\",\"component\":\"Card\",\"children\":[\"order_content\"]},{\"id\":\"order_content\",\"component\":\"CardContent\",\"children\":[\"order_list\",\"order_total\"]},{\"id\":\"order_list\",\"component\":\"Column\",\"gap\":\"sm\",\"children\":[\"line_desk\"]},{\"id\":\"line_desk\",\"component\":\"AmountPicker\",\"label\":\"Brass Desk Lamp\",\"value\":1,\"min\":0,\"max\":10,\"step\":1,\"currency\":\"$\",\"actionName\":\"set_quantity\",\"actionLabel\":\"Update\"},{\"id\":\"order_total\",\"component\":\"Text\",\"text\":\"Total: $68\",\"variant\":\"label\",\"emphasis\":true}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Added the Brass Desk Lamp ($68) to your order. Set the quantity below, or pick more lamps. Confirm when you're ready.\",\"target\":{\"surfaceId\":\"storefront-lamps\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Added the Brass Desk Lamp ($68) to your order. Set the quantity below, or pick more lamps. Confirm when you're ready.",
+                "target": "storefront-lamps",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-lamps",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "heading",
+                            "tiles",
+                            "order"
+                          ]
+                        },
+                        {
+                          "id": "heading",
+                          "component": "Text",
+                          "text": "Lamps",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p_desk",
+                            "p_ceramic",
+                            "p_pendant",
+                            "p_oak",
+                            "p_lantern"
+                          ]
+                        },
+                        {
+                          "id": "p_desk",
+                          "component": "ProductCard",
+                          "title": "Brass Desk Lamp",
+                          "subtitle": "Solid brass, 42 cm arm",
+                          "price": "$68",
+                          "badge": "In your order",
+                          "badgeIntent": "info",
+                          "actionLabel": "Added",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-desk",
+                              "name": "Brass Desk Lamp",
+                              "price": 68
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_ceramic",
+                          "component": "ProductCard",
+                          "title": "Ceramic Table Lamp",
+                          "subtitle": "Glazed stoneware, 35 cm",
+                          "price": "$54",
+                          "priceOld": "$64",
+                          "badge": "Sale",
+                          "badgeIntent": "success",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-ceramic-table",
+                              "name": "Ceramic Table Lamp",
+                              "price": 54
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_pendant",
+                          "component": "ProductCard",
+                          "title": "Linen Pendant",
+                          "subtitle": "Natural linen shade, 40 cm",
+                          "price": "$89",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-pendant",
+                              "name": "Linen Pendant",
+                              "price": 89
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_oak",
+                          "component": "ProductCard",
+                          "title": "Oak Floor Lamp",
+                          "subtitle": "Solid oak, 160 cm tall",
+                          "price": "$120",
+                          "badge": "Low stock",
+                          "badgeIntent": "warning",
+                          "actionLabel": "Buy",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-oak-floor",
+                              "name": "Oak Floor Lamp",
+                              "price": 120
+                            }
+                          }
+                        },
+                        {
+                          "id": "p_lantern",
+                          "component": "ProductCard",
+                          "title": "Glass Lantern",
+                          "subtitle": "Hand-blown glass, 28 cm",
+                          "price": "$38",
+                          "badge": "Sold out",
+                          "badgeIntent": "danger",
+                          "actionLabel": "Sold out",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-glass-lantern"
+                            }
+                          }
+                        },
+                        {
+                          "id": "order",
+                          "component": "Card",
+                          "children": [
+                            "order_content"
+                          ]
+                        },
+                        {
+                          "id": "order_content",
+                          "component": "CardContent",
+                          "children": [
+                            "order_list",
+                            "order_total"
+                          ]
+                        },
+                        {
+                          "id": "order_list",
+                          "component": "Column",
+                          "gap": "sm",
+                          "children": [
+                            "line_desk"
+                          ]
+                        },
+                        {
+                          "id": "line_desk",
+                          "component": "AmountPicker",
+                          "label": "Brass Desk Lamp",
+                          "value": 1,
+                          "min": 0,
+                          "max": 10,
+                          "step": 1,
+                          "currency": "$",
+                          "actionName": "set_quantity",
+                          "actionLabel": "Update"
+                        },
+                        {
+                          "id": "order_total",
+                          "component": "Text",
+                          "text": "Total: $68",
+                          "variant": "label",
+                          "emphasis": true
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "Add the first one to my order."
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "wallet-summary-card",
+          "frontier-round-outcome",
+          "crud-entry-list-drawer"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -1235,7 +1235,7 @@ const PACKAGE_ENTRY_ROWS = [
   ['@agent-ui/a2ui . (renderer + validator + catalog model, the root barrel)', 'a2ui', 'src/index.ts', 52224], // measured 51334 B gz 2026-10-29 after T-0530 and the hardening merges; 51 KiB plus 1 KiB headroom (Kim 2026-10-29)
   ['@agent-ui/a2ui/catalogs (the shipped persona and domain packages)', 'a2ui', 'src/catalog/shipped.ts', 15360], // measured 14779 B gz 2026-10-29 (T-0530)
   ['@agent-ui/a2ui/registry', 'a2ui', 'src/registry/index.ts', 8448], // measured 7907 B gz
-  ['@agent-ui/a2ui/agent (the producer toolkit, embedded prompt assets)', 'a2ui', 'src/agent/index.ts', 88832], // measured 87765 B gz 2026-10-29 after T-0586; plus 1 KiB headroom (Kim 2026-10-29); earlier 86784 B gz after T-0578; earlier: measured 86257 B gz
+  ['@agent-ui/a2ui/agent (the producer toolkit, embedded prompt assets)', 'a2ui', 'src/agent/index.ts', 90112], // measured 88671 B gz 2026-10-29 after T-0590 (about 89050 with T-0591 and T-0592); 88 KiB, Kim 2026-10-29, trim filed as T-0593
   ['@agent-ui/a2ui/examples', 'a2ui', 'src/examples/index.ts', 53760], // measured 53092 B gz
   ['@agent-ui/a2ui/corpus', 'a2ui', 'src/corpus/index.ts', 12800], // measured 12080 B gz
   ['@agent-ui/a2a . (wire types + validation + arena)', 'a2a', 'src/index.ts', 7936], // measured 7267 B gz

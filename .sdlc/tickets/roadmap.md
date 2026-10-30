@@ -7,7 +7,7 @@ New ticket: `/ticket new <feature|bug|chore|spike|idea> <slug> "title"`. Build p
 |---|---|---|---|---|---|---|---|
 | T-0353 | [0353-foundations-final-cleanup](0353-foundations-final-cleanup/handoff.md) | ADR-0245 W7 cleanup after the first published release: drop the glyph alias, old-name bridge, [scale], [density] and the legacy opt-out (GH #1937) | chore | L3 | P2 | none | 🔴 blocked |
 
-Closed: 583 done, 5 dropped (git log or .NNNN-* folders)
+Closed: 585 done, 5 dropped (git log or .NNNN-* folders)
 
 ## Open follow-ups
 
@@ -144,4 +144,7 @@ Closed: 583 done, 5 dropped (git log or .NNNN-* folders)
 - decide: packages/agent-ui/a2ui/src/agent: note: `@agent-ui/a2ui/agent` sits at 87765 of 87808 B gz after this row, 43 B of headroom. (from T-0586: A picked card game with no CardTable asks for its table (2026-10-29))
 - decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:364: note: on a Surprise me pick the game is read from the reply, where "draw" as a verb matches `other` and silences the row (builder-disclosed). (from T-0586: A picked card game with no CardTable asks for its table (2026-10-29))
 - decide: scripts/e2e-admin/probe/replays: note: round 19 :116 (the HUD-only answer to the pick) has no replay fixture; the any-surface gate covers it by construction, with no observed run. (from T-0586: A picked card game with no CardTable asks for its table (2026-10-29))
+- decide: scripts/e2e-admin/probe/replays/smoke-negotiator-first-offer-haiku-r21-h.test.mjs:9: note: the pin passes at base too, so only the next live round measures cluster H; flip to `toEqual([])` on a recapture that resends ask-1 with its createSurface. (from T-0592: The GAME_HUD_MISSING repair asks to resend ask-1 whole (2026-10-29))
+- decide: packages/agent-ui/a2ui/src/agent/produce.ts:1238: decide: `SEMANTIC_HINT` ("keep every other line as it was") still rides every `GAME_HUD_MISSING` round beside the new "Resend ask-1 whole"; if the next live round shows the model still dropping the createSurface, that generic sentence is the next suspect. (from T-0592: The GAME_HUD_MISSING repair asks to resend ask-1 whole (2026-10-29))
 - decide: `.sdlc/tickets/0591-surplus-closer-parse-heal/handoff.md:30` note: the `## Acceptance criteria` section was authored by the builder (report line 8; the solo dispatch snapshot carries no such heading); judged as written since it covers every clause of the Intent's Done-when (red on base, replays, a2ui suites and probe replays, `npm run check`, `measure-size`) plus the negative guards. (from T-0591: A messages string with one surplus closer is healed and named (2026-10-29))
+- decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:431 `currency` is read through the cue's `\$` only, so an ISO code (USD, EUR) on an AmountPicker does not open the ConfirmReceipt row (builder-disclosed, by choice). (from T-0590: Order receipts and product browses built by hand are sent back (2026-10-29))
