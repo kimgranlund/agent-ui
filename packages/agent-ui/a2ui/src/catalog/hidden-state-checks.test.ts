@@ -396,6 +396,15 @@ describe('T-0468: game-ask-hud', () => {
     expect(asPersona('mentalist', deck('ask-1'))).toEqual(['GAME_HUD_MISSING ask-1:hud'])
   })
 
+  // T-0592 (live round 21 :46): the repair said "Keep ask-1 as it is", and the last round sent only updateComponents
+  // for ask-1, which the rejected round had created, so SURFACE_NOT_CREATED degraded the turn to text.
+  it('T-0592: the repair asks to resend the ask surface whole, its createSurface included, beside the HUD', () => {
+    const message = gameAskHudCheck.check({ surfaces: semanticSurfaceViews({ turns: [] }, offer('ask-1')), intent: 'Hi.', persona: 'negotiator' })[0]?.message ?? ''
+    expect(message).toMatch(/Resend ask-1 whole, its createSurface included/)
+    expect(message).toMatch(/create the game's HUD surface beside it/)
+    expect(message).not.toMatch(/as it is/)
+  })
+
   it('T-0479: stays silent for a persona with no game, with no persona and no game word, and with a GameHud anywhere', () => {
     expect(asPersona('shopkeeper', offer('ask-1'))).toEqual([])
     expect(asPersona('quizmaster', offer('ask-1'))).toEqual([])

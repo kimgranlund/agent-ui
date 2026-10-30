@@ -1425,3 +1425,8 @@
 ## T-0589: Live round 21 measures the round 20 cluster fixes (2026-10-29)
 
 - note: the report's 5 proposed tickets (J1, P4c, P5c, H1, Q1) are unfiled by design, as the handoff asks for proposals only.
+
+## T-0592: The GAME_HUD_MISSING repair asks to resend ask-1 whole (2026-10-29)
+
+- decide: scripts/e2e-admin/probe/replays/smoke-negotiator-first-offer-haiku-r21-h.test.mjs:9: note: the pin passes at base too, so only the next live round measures cluster H; flip to `toEqual([])` on a recapture that resends ask-1 with its createSurface.
+- decide: packages/agent-ui/a2ui/src/agent/produce.ts:1238: decide: `SEMANTIC_HINT` ("keep every other line as it was") still rides every `GAME_HUD_MISSING` round beside the new "Resend ask-1 whole"; if the next live round shows the model still dropping the createSurface, that generic sentence is the next suspect.

@@ -1,0 +1,169 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "smoke-negotiator-first-offer-haiku-r21-h",
+  "agent": "negotiator",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-29.jsonl:46 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "I'd like to buy your brass lantern. What's your price?"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"note\":\"Ah, the brass lantern, my most cherished piece. I'm asking $120, and it has never once gone out in a sandstorm. Use the picker below to name your offer, then send it. I'll weigh it and counter.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"I'd like to buy your brass lantern. What's your price?\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"SURFACE_NOT_CREATED\",\"TEXT_JSONL_ROUTED\",\"SURFACE_DEGRADED\",\"SURFACE_REPLACED\"],\"replaced\":[{\"surfaceId\":\"ask-1\",\"by\":\"hud-1\"}],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":51212,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":1494}],\"over\":false},\"miniSkillIds\":[\"product-presentation\",\"greeting-card\"],\"cacheBoundary\":49718}}}"
+      ],
+      "rounds": [
+        {
+          "text": "{\"a2uiMeta\":{\"note\":\"Ah, the brass lantern! Sharp eye, friend. Its asking price is $120, and it's worth every coin of it: it has never once gone out in a sandstorm. Tell me your offer for it. Will you start at $60, or do you have something braver in mind?\",\"ask\":{\"surfaceId\":\"ask-1\"}}}",
+          "tools": []
+        },
+        {
+          "text": "",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Ah, the brass lantern! Sharp eye, friend. Its asking price is $120, and it has never once gone out in a sandstorm. What will you offer? Name your number below.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "ask-1",
+                      "catalogId": "agent-ui",
+                      "sendDataModel": true
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateDataModel": {
+                      "surfaceId": "ask-1",
+                      "value": {
+                        "offer": 60
+                      }
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "ask-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "hd",
+                            "ct",
+                            "ft"
+                          ]
+                        },
+                        {
+                          "id": "hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "title"
+                          ]
+                        },
+                        {
+                          "id": "title",
+                          "component": "Text",
+                          "text": "Brass lantern — asking $120",
+                          "variant": "h5"
+                        },
+                        {
+                          "id": "ct",
+                          "component": "CardContent",
+                          "children": [
+                            "amt"
+                          ]
+                        },
+                        {
+                          "id": "amt",
+                          "component": "AmountPicker",
+                          "value": {
+                            "path": "/offer"
+                          },
+                          "min": 20,
+                          "max": 120,
+                          "step": 5,
+                          "presets": [
+                            60,
+                            90,
+                            110
+                          ],
+                          "currency": "$",
+                          "label": "Your offer",
+                          "actionName": "offer",
+                          "actionLabel": "Send offer"
+                        },
+                        {
+                          "id": "ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "send"
+                          ]
+                        },
+                        {
+                          "id": "send",
+                          "component": "Button",
+                          "label": "Send offer",
+                          "variant": "solid",
+                          "action": {
+                            "action": "offer",
+                            "context": {
+                              "amount": {
+                                "path": "/offer"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "text": "Ah, the brass lantern, my most cherished piece. I'm asking $120, and it has never once gone out in a sandstorm. Use the picker below to name your offer, then send it. I'll weigh it and counter.\n\n{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"hud-1\",\"catalogId\":\"agent-ui\",\"sendDataModel\":true}}\n{\"version\":\"v1.0\",\"updateDataModel\":{\"surfaceId\":\"hud-1\",\"value\":{\"status\":\"Your move\",\"offer\":60}}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"hud-1\",\"components\":[{\"id\":\"root\",\"component\":\"GameHud\",\"title\":\"Brass lantern — haggle\",\"status\":{\"path\":\"/status\"},\"statusIntent\":\"info\",\"stats\":[{\"label\":\"Asking\",\"value\":\"$120\"},{\"label\":\"Round\",\"value\":\"1\"}]}]}}\n{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"ask-1\",\"components\":[{\"id\":\"root\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"hd\",\"ct\",\"ft\"]},{\"id\":\"hd\",\"component\":\"CardHeader\",\"children\":[\"title\"]},{\"id\":\"title\",\"component\":\"Text\",\"text\":\"Brass lantern — asking $120\",\"variant\":\"h5\"},{\"id\":\"ct\",\"component\":\"CardContent\",\"children\":[\"amt\"]},{\"id\":\"amt\",\"component\":\"AmountPicker\",\"value\":{\"path\":\"/offer\"},\"min\":20,\"max\":120,\"step\":5,\"presets\":[60,90,110],\"currency\":\"$\",\"label\":\"Your offer\",\"actionName\":\"offer\",\"actionLabel\":\"Send offer\"},{\"id\":\"ft\",\"component\":\"CardFooter\",\"children\":[\"send\"]},{\"id\":\"send\",\"component\":\"Button\",\"label\":\"Send offer\",\"variant\":\"solid\",\"action\":{\"action\":\"offer\",\"context\":{\"amount\":{\"path\":\"/offer\"}}}}]}}",
+          "tools": []
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "I'd like to buy your brass lantern. What's your price?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "travel-itinerary",
+          "five-day-weather",
+          "comparison-pricing-table"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "deal-sheet",
+            "load": "index-only"
+          },
+          {
+            "name": "negotiation-loop",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}
