@@ -104,10 +104,10 @@ function scriptedRounds(rounds: Round[]): { provider: AgentProvider; reqs: Req[]
   return { provider, reqs }
 }
 
-async function runRounds(rounds: Round[], maxRounds = 3): Promise<{ reqs: Req[]; trace: { rounds: number; failureCodes: string[] }; note: string | undefined; wire: string[] }> {
+async function runRounds(rounds: Round[], maxRounds = 3, turn: TurnInput = input): Promise<{ reqs: Req[]; trace: { rounds: number; failureCodes: string[] }; note: string | undefined; wire: string[] }> {
   const s = scriptedRounds(rounds)
   const lines: string[] = []
-  for await (const line of produce(input, { provider: s.provider, retrieve: () => [], catalog }, { maxRounds })) lines.push(line)
+  for await (const line of produce(turn, { provider: s.provider, retrieve: () => [], catalog }, { maxRounds })) lines.push(line)
   const meta = lines.map((l) => readMetaLine(l)?.a2uiMeta).find((m) => m?.trace !== undefined)
   return { reqs: s.reqs, trace: { rounds: meta?.trace?.rounds ?? 0, failureCodes: [...(meta?.trace?.failureCodes ?? [])] }, note: meta?.note, wire: lines.filter((l) => readMetaLine(l) === undefined) }
 }
@@ -404,6 +404,28 @@ describe('produce(): a targeted claim with no surface id, or a target never crea
       expect(lastUser(r.reqs[1]!), text).toContain('CHANGE_CLAIMED at table-3')
       expect(r.wire, text).toEqual([UPDATE])
       expect(r.trace, text).toMatchObject({ rounds: 2, failureCodes: ['CHANGE_CLAIMED'] })
+    }
+  })
+
+  // T-0590 (round 2026-10-29-r21-pattern cluster P4c, :80 and :43): an add turn's CHANGE_CLAIMED repair shipped the order
+  // as a Card built by hand around an AmountPicker; the repair now names the ConfirmReceipt when the user added to an order.
+  it('a CHANGE_CLAIMED repair on a turn that adds to an order, cart or basket names ONE ConfirmReceipt beside its AmountPicker lines', async () => {
+    expect(catalog.components['ConfirmReceipt']).toBeDefined()
+    for (const text of ['Add the first one to my order.', 'Add two of the first one to my order and show me my cart.', 'Put the oak lamp in my basket.']) {
+      const turn: TurnInput = { kind: 'intent', text, session }
+      const r = await runRounds([{ text: targeted('Added the Brass Desk Lamp ($68) to your order.', 'table-3') }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }], 3, turn)
+      expect(lastUser(r.reqs[1]!), text).toContain('CHANGE_CLAIMED at table-3')
+      expect(lastUser(r.reqs[1]!), text).toContain('read the order back as ONE ConfirmReceipt (status "pending"')
+      expect(lastUser(r.reqs[1]!), text).toContain('beside one AmountPicker per line, never as a Card built by hand')
+    }
+  })
+
+  it('a CHANGE_CLAIMED repair on a turn that adds nothing to an order keeps the T-0448 ask alone', async () => {
+    for (const text of ['Check, or call if there is a bet.', 'Rename the table to Kim\'s table.', 'What is in my order?']) {
+      const turn: TurnInput = { kind: 'intent', text, session }
+      const r = await runRounds([{ text: CLAIM }, { text: CLEAN, call: { reply: 'I check behind.', target: 'table-3', messages: [UPDATE_OBJ] } }], 3, turn)
+      expect(lastUser(r.reqs[1]!), text).toContain('CHANGE_CLAIMED at table-3')
+      expect(lastUser(r.reqs[1]!), text).not.toContain('ConfirmReceipt')
     }
   })
 

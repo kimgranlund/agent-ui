@@ -1,0 +1,389 @@
+{
+  "kind": "agent-ui-chat-probe",
+  "version": 1,
+  "name": "shopkeeper-haiku-browse-priced-cards",
+  "agent": "shopkeeper",
+  "model": "claude-haiku-5-5",
+  "effort": "medium",
+  "source": "2026-10-29.jsonl:42 (catalog agent-ui)",
+  "steps": [
+    {
+      "say": "What lamps do you have?"
+    }
+  ],
+  "turns": [
+    {
+      "lines": [
+        "{\"a2uiMeta\":{\"textDelta\":\"Here are the lamps we have in stock right now. Tell me which one you'd like to add to an order.\"}}",
+        "{\"a2uiMeta\":{\"note\":\"Here are the lamps we have in stock right now. Tell me which one you'd like to add to an order.\",\"trace\":{\"turnIndex\":0,\"query\":{\"intent\":\"What lamps do you have?\",\"k\":3},\"exemplarIds\":[],\"rounds\":3,\"healed\":0,\"failureCodes\":[\"PRODUCT_CARD_MISSING\",\"SEMANTIC_UNCORRECTED\"],\"model\":\"claude-sonnet-5-5\",\"prompt\":{\"limit\":149200,\"total\":50501,\"sections\":[{\"id\":\"grammar\",\"chars\":27654},{\"id\":\"components\",\"chars\":21919},{\"id\":\"functions\",\"chars\":145},{\"id\":\"mini-skills\",\"chars\":783}],\"over\":false},\"miniSkillIds\":[\"greeting-card\"],\"cacheBoundary\":49718}}}",
+        "{\"version\":\"v1.0\",\"createSurface\":{\"surfaceId\":\"storefront-1\",\"catalogId\":\"agent-ui\"}}",
+        "{\"version\":\"v1.0\",\"updateComponents\":{\"surfaceId\":\"storefront-1\",\"components\":[{\"id\":\"root\",\"component\":\"Column\",\"gap\":\"md\",\"children\":[\"intro\",\"tiles\"]},{\"id\":\"intro\",\"component\":\"Text\",\"text\":\"Our lamps, all in the shop's current catalog:\",\"variant\":\"body\"},{\"id\":\"tiles\",\"component\":\"Row\",\"gap\":\"md\",\"wrap\":true,\"children\":[\"p1\",\"p2\",\"p3\",\"p4\"]},{\"id\":\"p1\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p1_hd\",\"p1_ct\",\"p1_ft\"]},{\"id\":\"p1_hd\",\"component\":\"CardHeader\",\"children\":[\"p1_name\",\"p1_badge\"]},{\"id\":\"p1_name\",\"component\":\"Text\",\"text\":\"Brass Arc Floor Lamp\",\"variant\":\"h4\"},{\"id\":\"p1_badge\",\"component\":\"Badge\",\"label\":\"New\",\"intent\":\"info\"},{\"id\":\"p1_ct\",\"component\":\"CardContent\",\"children\":[\"p1_price\",\"p1_desc\"]},{\"id\":\"p1_price\",\"component\":\"Text\",\"text\":\"$189\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p1_desc\",\"component\":\"Text\",\"text\":\"Solid brass, 190 cm arc, linen shade.\",\"variant\":\"caption\"},{\"id\":\"p1_ft\",\"component\":\"CardFooter\",\"children\":[\"p1_btn\"]},{\"id\":\"p1_btn\",\"component\":\"Button\",\"label\":\"Add to order\",\"variant\":\"solid\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-brass-arc\"}}},{\"id\":\"p2\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p2_hd\",\"p2_ct\",\"p2_ft\"]},{\"id\":\"p2_hd\",\"component\":\"CardHeader\",\"children\":[\"p2_name\"]},{\"id\":\"p2_name\",\"component\":\"Text\",\"text\":\"Sage Ceramic Table Lamp\",\"variant\":\"h4\"},{\"id\":\"p2_ct\",\"component\":\"CardContent\",\"children\":[\"p2_price\",\"p2_desc\"]},{\"id\":\"p2_price\",\"component\":\"Text\",\"text\":\"$64\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p2_desc\",\"component\":\"Text\",\"text\":\"Hand-glazed stoneware, 35 cm, natural linen shade.\",\"variant\":\"caption\"},{\"id\":\"p2_ft\",\"component\":\"CardFooter\",\"children\":[\"p2_btn\"]},{\"id\":\"p2_btn\",\"component\":\"Button\",\"label\":\"Add to order\",\"variant\":\"solid\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-sage-ceramic\"}}},{\"id\":\"p3\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p3_hd\",\"p3_ct\",\"p3_ft\"]},{\"id\":\"p3_hd\",\"component\":\"CardHeader\",\"children\":[\"p3_name\",\"p3_badge\"]},{\"id\":\"p3_name\",\"component\":\"Text\",\"text\":\"Linen Drum Pendant\",\"variant\":\"h4\"},{\"id\":\"p3_badge\",\"component\":\"Badge\",\"label\":\"On sale\",\"intent\":\"success\"},{\"id\":\"p3_ct\",\"component\":\"CardContent\",\"children\":[\"p3_price\",\"p3_desc\"]},{\"id\":\"p3_price\",\"component\":\"Text\",\"text\":\"$112\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p3_desc\",\"component\":\"Text\",\"text\":\"Cotton-linen drum, 40 cm wide, brass fitting.\",\"variant\":\"caption\"},{\"id\":\"p3_ft\",\"component\":\"CardFooter\",\"children\":[\"p3_btn\"]},{\"id\":\"p3_btn\",\"component\":\"Button\",\"label\":\"Add to order\",\"variant\":\"solid\",\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-linen-drum\"}}},{\"id\":\"p4\",\"component\":\"Card\",\"elevation\":\"1\",\"children\":[\"p4_hd\",\"p4_ct\",\"p4_ft\"]},{\"id\":\"p4_hd\",\"component\":\"CardHeader\",\"children\":[\"p4_name\",\"p4_badge\"]},{\"id\":\"p4_name\",\"component\":\"Text\",\"text\":\"Oak Reading Lamp\",\"variant\":\"h4\"},{\"id\":\"p4_badge\",\"component\":\"Badge\",\"label\":\"Sold out\",\"intent\":\"danger\"},{\"id\":\"p4_ct\",\"component\":\"CardContent\",\"children\":[\"p4_price\",\"p4_desc\"]},{\"id\":\"p4_price\",\"component\":\"Text\",\"text\":\"$78\",\"variant\":\"body\",\"emphasis\":true},{\"id\":\"p4_desc\",\"component\":\"Text\",\"text\":\"Oiled oak base, adjustable arm.\",\"variant\":\"caption\"},{\"id\":\"p4_ft\",\"component\":\"CardFooter\",\"children\":[\"p4_btn\"]},{\"id\":\"p4_btn\",\"component\":\"Button\",\"label\":\"Sold out\",\"variant\":\"ghost\",\"disabled\":true,\"action\":{\"action\":\"buy\",\"context\":{\"sku\":\"lamp-oak-reading\"}}}]}}"
+      ],
+      "rounds": [
+        {
+          "text": "Here are the lamps we have in stock right now. Tell me which one you'd like to add to an order.",
+          "tools": [
+            {
+              "name": "render_surface",
+              "input": {
+                "reply": "Here are our lamps. Tap \"Add to order\" on any you like.",
+                "messages": [
+                  {
+                    "version": "v1.0",
+                    "createSurface": {
+                      "surfaceId": "storefront-1",
+                      "catalogId": "agent-ui"
+                    }
+                  },
+                  {
+                    "version": "v1.0",
+                    "updateComponents": {
+                      "surfaceId": "storefront-1",
+                      "components": [
+                        {
+                          "id": "root",
+                          "component": "Column",
+                          "gap": "md",
+                          "children": [
+                            "intro",
+                            "tiles"
+                          ]
+                        },
+                        {
+                          "id": "intro",
+                          "component": "Text",
+                          "text": "Our lamps, all in the shop's current catalog:",
+                          "variant": "body"
+                        },
+                        {
+                          "id": "tiles",
+                          "component": "Row",
+                          "gap": "md",
+                          "wrap": true,
+                          "children": [
+                            "p1",
+                            "p2",
+                            "p3",
+                            "p4"
+                          ]
+                        },
+                        {
+                          "id": "p1",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p1_hd",
+                            "p1_ct",
+                            "p1_ft"
+                          ]
+                        },
+                        {
+                          "id": "p1_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p1_name",
+                            "p1_badge"
+                          ]
+                        },
+                        {
+                          "id": "p1_name",
+                          "component": "Text",
+                          "text": "Brass Arc Floor Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p1_badge",
+                          "component": "Badge",
+                          "label": "New",
+                          "intent": "info"
+                        },
+                        {
+                          "id": "p1_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p1_price",
+                            "p1_desc"
+                          ]
+                        },
+                        {
+                          "id": "p1_price",
+                          "component": "Text",
+                          "text": "$189",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p1_desc",
+                          "component": "Text",
+                          "text": "Solid brass, 190 cm arc, linen shade.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p1_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p1_btn"
+                          ]
+                        },
+                        {
+                          "id": "p1_btn",
+                          "component": "Button",
+                          "label": "Add to order",
+                          "variant": "solid",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-brass-arc"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p2",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p2_hd",
+                            "p2_ct",
+                            "p2_ft"
+                          ]
+                        },
+                        {
+                          "id": "p2_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p2_name"
+                          ]
+                        },
+                        {
+                          "id": "p2_name",
+                          "component": "Text",
+                          "text": "Sage Ceramic Table Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p2_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p2_price",
+                            "p2_desc"
+                          ]
+                        },
+                        {
+                          "id": "p2_price",
+                          "component": "Text",
+                          "text": "$64",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p2_desc",
+                          "component": "Text",
+                          "text": "Hand-glazed stoneware, 35 cm, natural linen shade.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p2_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p2_btn"
+                          ]
+                        },
+                        {
+                          "id": "p2_btn",
+                          "component": "Button",
+                          "label": "Add to order",
+                          "variant": "solid",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-sage-ceramic"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p3",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p3_hd",
+                            "p3_ct",
+                            "p3_ft"
+                          ]
+                        },
+                        {
+                          "id": "p3_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p3_name",
+                            "p3_badge"
+                          ]
+                        },
+                        {
+                          "id": "p3_name",
+                          "component": "Text",
+                          "text": "Linen Drum Pendant",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p3_badge",
+                          "component": "Badge",
+                          "label": "On sale",
+                          "intent": "success"
+                        },
+                        {
+                          "id": "p3_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p3_price",
+                            "p3_desc"
+                          ]
+                        },
+                        {
+                          "id": "p3_price",
+                          "component": "Text",
+                          "text": "$112",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p3_desc",
+                          "component": "Text",
+                          "text": "Cotton-linen drum, 40 cm wide, brass fitting.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p3_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p3_btn"
+                          ]
+                        },
+                        {
+                          "id": "p3_btn",
+                          "component": "Button",
+                          "label": "Add to order",
+                          "variant": "solid",
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-linen-drum"
+                            }
+                          }
+                        },
+                        {
+                          "id": "p4",
+                          "component": "Card",
+                          "elevation": "1",
+                          "children": [
+                            "p4_hd",
+                            "p4_ct",
+                            "p4_ft"
+                          ]
+                        },
+                        {
+                          "id": "p4_hd",
+                          "component": "CardHeader",
+                          "children": [
+                            "p4_name",
+                            "p4_badge"
+                          ]
+                        },
+                        {
+                          "id": "p4_name",
+                          "component": "Text",
+                          "text": "Oak Reading Lamp",
+                          "variant": "h4"
+                        },
+                        {
+                          "id": "p4_badge",
+                          "component": "Badge",
+                          "label": "Sold out",
+                          "intent": "danger"
+                        },
+                        {
+                          "id": "p4_ct",
+                          "component": "CardContent",
+                          "children": [
+                            "p4_price",
+                            "p4_desc"
+                          ]
+                        },
+                        {
+                          "id": "p4_price",
+                          "component": "Text",
+                          "text": "$78",
+                          "variant": "body",
+                          "emphasis": true
+                        },
+                        {
+                          "id": "p4_desc",
+                          "component": "Text",
+                          "text": "Oiled oak base, adjustable arm.",
+                          "variant": "caption"
+                        },
+                        {
+                          "id": "p4_ft",
+                          "component": "CardFooter",
+                          "children": [
+                            "p4_btn"
+                          ]
+                        },
+                        {
+                          "id": "p4_btn",
+                          "component": "Button",
+                          "label": "Sold out",
+                          "variant": "ghost",
+                          "disabled": true,
+                          "action": {
+                            "action": "buy",
+                            "context": {
+                              "sku": "lamp-oak-reading"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "input": {
+        "kind": "intent",
+        "text": "What lamps do you have?"
+      },
+      "routing": {
+        "domains": [],
+        "exemplars": [
+          "frontier-greet-card",
+          "frontier-amount-picker-bet",
+          "travel-itinerary"
+        ],
+        "sections": [
+          "grammar",
+          "components",
+          "functions",
+          "few-shot",
+          "mini-skills",
+          "persona"
+        ],
+        "references": [
+          {
+            "name": "product-grid",
+            "load": "index-only"
+          },
+          {
+            "name": "cart-summary",
+            "load": "index-only"
+          },
+          {
+            "name": "shop-policies",
+            "load": "index-only"
+          }
+        ]
+      }
+    }
+  ]
+}

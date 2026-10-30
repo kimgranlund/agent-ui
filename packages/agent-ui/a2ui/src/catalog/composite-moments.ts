@@ -96,6 +96,12 @@
 // names a blackjack-family game) whose reply invites a bet or a deal, while no surface of the turn holds a CardTable or a
 // PlayingCard, is SURFACE_MISSING, asking for the table on a fresh surface. A poker pick is dealt on its Card and is never
 // judged.
+//
+// T-0590 (round 21 clusters P4c, P5c and Q): the ConfirmReceipt row's quantity cue also reads an AmountPicker's
+// `actionName` and `currency` (a "Brass Desk Lamp" picker with `set_quantity` and "$" on an order Card); the AmountPicker
+// row's literal and rows quantities also fire when the user asked for a quantity ("Add two of the first one"), with no
+// reply offer; and the ProductCard row reads a browse of hand-made priced Cards (a price in its words and a Button) on a
+// product ask ("What lamps do you have?") or a services ask.
 
 import type { A2uiComponent } from '../protocol.ts'
 import { readPointer } from './semantic-check.ts'
@@ -148,8 +154,8 @@ export interface CompositeMoment {
   /** Types the surface must not hold. */
   readonly noInputs?: readonly string[]
   /** An input of `types` whose label, name or bound path matches `cue`, while the surface words match `words` (T-0582: with
-   *  `reply`, the turn's reply words open the gate too). */
-  readonly inputCue?: { readonly types: readonly string[]; readonly cue: RegExp; readonly words: RegExp; readonly reply?: boolean }
+   *  `reply`, the turn's reply words open the gate too; T-0590: `props` names more string props the cue reads). */
+  readonly inputCue?: { readonly types: readonly string[]; readonly cue: RegExp; readonly words: RegExp; readonly reply?: boolean; readonly props?: readonly string[] }
   /** T-0361: a container of `types` whose entries (explicit Texts or Rows of Texts, or a Text template) all take one shape:
    *  the first of `shapes` they match (`shapes[0]` is the scene shape), or plain. Under its nearest heading matching
    *  `heading` it fires on a template, one shaped entry or two plain ones; with no such heading, on two `shapes[0]` entries. */
@@ -163,6 +169,9 @@ export interface CompositeMoment {
   /** T-0322: on a turn whose words match `ask.cue`, a component of `types` that lists a row matching `cue` (a priced
    *  DescriptionList row, a priced List item), while the surface words match `words`. */
   readonly pricedRows?: { readonly types: readonly string[]; readonly cue: RegExp }
+  /** T-0590: on a turn whose words match one of `asks`, at least `min` sibling Cards (none holding another Card) whose words
+   *  carry a price (`cue`) and whose subtree holds a Button: a browse of hand-made product cards. Read before the row's `words`. */
+  readonly pricedCards?: { readonly asks: readonly RegExp[]; readonly cue: RegExp; readonly min: number }
   /** T-0333: read `words` only from settled-status signals (a Badge, a Card or CardHeader title, a heading Text h1 to h5,
    *  T-0399: a literal "confirmed" ConfirmReceipt), never caption or body Text, so a note that says "can be confirmed with the front desk" is no settled booking. */
   readonly settledSignals?: boolean
@@ -190,8 +199,9 @@ export interface CompositeMoment {
    *  and total label, match `words`. One SURFACE_MISSING per surface names every such path; the composite's presence alone
    *  never answers it, and a templated `composite` (a relative `value`) stands the surface aside. T-0582: on a surface with
    *  no `composite` at all whose turn's reply matches `offer`, a pending `of` with no bound quantity still fires on a `rows`
-   *  line whose path holds a number, named by path, or else on a literal item quantity, named by item label. */
-  readonly unpickedLines?: { readonly of: string; readonly words: RegExp; readonly offer?: RegExp }
+   *  line whose path holds a number, named by path, or else on a literal item quantity, named by item label. T-0590: so it
+   *  does on a turn whose user words match `asked`, a quantity asked for ("Add two"), with no reply offer. */
+  readonly unpickedLines?: { readonly of: string; readonly words: RegExp; readonly offer?: RegExp; readonly asked?: RegExp }
   /** T-0586: on an action turn whose action name matches `action` or whose context value names a `game`, where the game
    *  picked (the value, or the reply when the value names no game, as "random" does) names a `game` and no `other` game,
    *  a reply matching `invite` while no surface of the turn holds the composite (or a `lacks` type) is SURFACE_MISSING. */
@@ -215,6 +225,15 @@ const BOOK_ASK = /\b(book|reserve|reservation)\b|\b(i'?d|i would|we'?d|we would)
  *  quantity below", "the quantity can be updated"). */
 const QUANTITY_OFFER =
   /\b(change|adjust|update|edit|set|pick|increase|decrease)\b[^.!?]{0,40}\b(quantity|quantities|qty|how many)\b|\b(quantity|quantities|qty)\b[^.!?]{0,30}\b(changed|adjusted|updated|edited)\b/i
+/** T-0590: the user asks for a quantity of two or more ("Add two of the first one", "I'll take 3"); "one" is a pronoun as
+ *  often ("Add the first one") and a price ("$189") is no count. */
+const QUANTITY_ASK =
+  /\b(add|order|buy|get|take|want|need|like|make it|make that)\s+(?:(?:a|another)\s+)?(?:(?<![$€£¥])\b\d+\b(?![.,]\d)|two|three|four|five|six|seven|eight|nine|ten|a couple|a pair|a dozen|dozen)\b/i
+/** T-0590: the user asks what the shop has ("What lamps do you have?", "Do you sell rugs?", "Show me your vases"). */
+const PRODUCT_ASK =
+  /\b(what|which)\b[^.?!]{0,40}\b(do|does|can)\s+(you|they|the\s+(shop|store))\s+(have|sell|carry|stock|offer)\b|\b(do|does)\s+(you|the\s+(shop|store))\s+(have|sell|carry|stock)\b|\b(show|see)\s+(me\s+)?(your|some|all|any)\b|\b(browse|in stock|for sale)\b/i
+/** T-0322: a price in words ("€120", "$189", "95 EUR"). */
+const PRICE = /[€$£¥]\s?\d|\d\s?(?:€|eur|usd|gbp)\b/i
 
 /** T-0358, T-0364: the words that name a game on a surface with no board. Generic words (player, level, round, turn)
  *  name none: a podcast player or a Gold level is no game. T-0409: nor do game, games and adventure (a travel adventure,
@@ -383,12 +402,14 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     moment: 'one product, room or offer to buy or book',
     repair:
       'per item, templated in a Grid over the list in the data model (title, price, the duration or unit as priceNote, and one ' +
-      'action with the item id in its context), and drop the hand-built priced rows.',
+      'action with the item id in its context), and drop the hand-built priced rows or cards.',
     // Not `requires: ['Table']`: required types' props never count as words, and the Table's label carries them.
     lacks: ['BookingForm', 'BookingConfirmation', 'ConfirmReceipt', 'CardTable'],
     tableColumn: { cue: /\b(price|prices|cost|rate|fee)\b/i },
     // T-0322: a services ask answered with priced DescriptionList rows (round 8 :90) or a priced List is this moment too.
-    pricedRows: { types: ['DescriptionList', 'List'], cue: /[€$£¥]\s?\d|\d\s?(?:€|eur|usd|gbp)\b/i },
+    pricedRows: { types: ['DescriptionList', 'List'], cue: PRICE },
+    // T-0590 (round 21 cluster Q, :42): "What lamps do you have?" answered with four Cards, each a name, a price Text and a Button.
+    pricedCards: { asks: [SERVICES_ASK, PRODUCT_ASK], cue: PRICE, min: 2 },
     words: /\b(book|bookable|treatment|treatments|service|services|spa|massage|room|rooms|offer|offers)\b/i,
     ask: { moment: 'services', cue: SERVICES_ASK, rank: 1, surface: 'one ProductCard per service the guest can book, templated in a Grid, each with its price and book action' },
   },
@@ -406,7 +427,8 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     lacks: ['BookingForm', 'BookingConfirmation', 'StepFlow', 'GameHud'],
     // T-0480: no "total": a bill's tip AmountPicker beside a "Total" Text is no order.
     // T-0582 (round 19 cluster P4b): the reply's words open the gate too ("Your order summary is below the shelf").
-    inputCue: { types: ['AmountPicker'], cue: /qty|quantity|\beach\b|\$/i, words: /\b(order|cart|basket)\b/i, reply: true },
+    // T-0590 (round 21 cluster P4c, :80): the cue reads the picker's actionName ("set_quantity") and currency ("$") too.
+    inputCue: { types: ['AmountPicker'], cue: /qty|quantity|\beach\b|\$/i, words: /\b(order|cart|basket)\b/i, reply: true, props: ['actionName', 'currency'] },
   },
   {
     // T-0550 (round 17 cluster P5, reach-shopkeeper-cart-amount-haiku-3): the inverse of the row above. A CHANGE_CLAIMED
@@ -422,7 +444,8 @@ export const COMPOSITE_MOMENTS: readonly CompositeMoment[] = [
     lacks: ['BookingForm', 'BookingConfirmation', 'StepFlow', 'GameHud'],
     // T-0582 (round 19 cluster P5b): a literal or rows quantity counts while the reply offers to change it ("You can change
     // the quantity below", "Adjust the quantity below").
-    unpickedLines: { of: 'ConfirmReceipt', words: /\b(order|cart|basket)\b/i, offer: QUANTITY_OFFER },
+    // T-0590 (round 21 cluster P5c, :124): or while the user asked for a quantity ("Add two of the first one").
+    unpickedLines: { of: 'ConfirmReceipt', words: /\b(order|cart|basket)\b/i, offer: QUANTITY_OFFER, asked: QUANTITY_ASK },
   },
   {
     // T-0359: a palette is shown, never listed: hex values written in Text are the hand-built moment, and (on the Stylist)
@@ -686,9 +709,15 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
     const cued =
       inputCue === undefined || !(inputCue.words.test(surfaceWords) || (inputCue.reply === true && reply !== undefined && inputCue.words.test(reply)))
         ? []
-        : comps.filter((c) => inputCue.types.includes(c.component) && [c['label'], c['name'], boundPath(c['value'])].some((v) => typeof v === 'string' && inputCue.cue.test(v)))
+        : comps.filter(
+            (c) =>
+              inputCue.types.includes(c.component) &&
+              [c['label'], c['name'], boundPath(c['value']), ...(inputCue.props ?? []).map((k) => c[k])].some((v) => typeof v === 'string' && inputCue.cue.test(v)),
+          )
     return [...grids, ...cued]
   }
+  const cards = m.pricedCards !== undefined && intent !== undefined && m.pricedCards.asks.some((re) => re.test(intent)) ? pricedCards(m.pricedCards, comps, view) : []
+  if (cards.length > 0) return cards
   if (m.words !== undefined && !m.words.test(surfaceWords)) return []
   if (m.tableColumn !== undefined) {
     const { cue } = m.tableColumn
@@ -716,6 +745,38 @@ function strays(m: CompositeMoment, view: SurfaceView, intent: string | undefine
     return rows.length > 0 && confirms.length > 0 ? [...rows, ...confirms] : []
   }
   return m.words === undefined ? [] : worded.filter((c) => m.words!.test(wordsOf(c)) || (end !== undefined && ended(wordsOf(c))))
+}
+
+/** T-0590: the Cards (none holding another Card) whose words, literal or bound, carry a price and whose subtree holds a
+ *  Button, in each parent holding at least `min` of them (a browse lists its cards side by side; an order Card beside one
+ *  product card is none), or `[]`. */
+function pricedCards(spec: NonNullable<CompositeMoment['pricedCards']>, comps: readonly A2uiComponent[], view: SurfaceView): A2uiComponent[] {
+  const subtree = (c: A2uiComponent): A2uiComponent[] => {
+    const out: A2uiComponent[] = []
+    const seen = new Set<string>([c.id])
+    const walk = (at: A2uiComponent): void => {
+      for (const id of childIds(at)) {
+        const k = view.components.get(id)
+        if (k === undefined || seen.has(id)) continue
+        seen.add(id)
+        out.push(k)
+        walk(k)
+      }
+    }
+    walk(c)
+    return out
+  }
+  const parent = parentsOf(view)
+  const byParent = new Map<string, A2uiComponent[]>()
+  for (const c of comps) {
+    if (c.component !== 'Card') continue
+    const inner = subtree(c)
+    if (inner.some((k) => k.component === 'Card') || !inner.some((k) => k.component === 'Button')) continue
+    if (![c, ...inner].some((k) => WORD_PROPS.some((p) => spec.cue.test(stringOf(k[p], view))))) continue
+    const at = parent.get(c.id)?.id ?? ''
+    byParent.set(at, [...(byParent.get(at) ?? []), c])
+  }
+  return [...byParent.values()].filter((cards) => cards.length >= spec.min).flat()
 }
 
 /** The ids a component lists as `child` or explicit `children` (a template ChildList names no fixed ids). */
@@ -756,7 +817,12 @@ function wrappers(m: CompositeMoment, view: SurfaceView): A2uiComponent[] {
 /** T-0550: the quantity paths a `of` component's literal items bind that no `m.composite` binds, with that component, or
  *  undefined when the row does not fire on `view`. T-0582: or, behind `offer`, its numeric `rows` paths, else the labels of
  *  its literal item quantities (`fixed`). */
-function unpickedLines(m: CompositeMoment, view: SurfaceView, reply: string | undefined): { at: A2uiComponent; paths: string[]; fixed: string[] } | undefined {
+function unpickedLines(
+  m: CompositeMoment,
+  view: SurfaceView,
+  reply: string | undefined,
+  intent: string | undefined,
+): { at: A2uiComponent; paths: string[]; fixed: string[]; asked: boolean } | undefined {
   const lines = m.unpickedLines!
   const comps = [...view.components.values()]
   if (comps.some((c) => m.lacks.includes(c.component))) return undefined
@@ -766,6 +832,8 @@ function unpickedLines(m: CompositeMoment, view: SurfaceView, reply: string | un
   const words = comps.filter((c) => !COMPOSITE_TYPES.has(c.component)).map(wordsOf).join(' ')
   // T-0582: a reply offering a quantity change on a surface with no picker at all.
   const offered = lines.offer !== undefined && reply !== undefined && lines.offer.test(reply) && picked.length === 0
+  // T-0590: or the user asked for a quantity, with no picker at all.
+  const asked = !offered && lines.asked !== undefined && intent !== undefined && lines.asked.test(intent) && picked.length === 0
   const records = (v: unknown): Record<string, unknown>[] =>
     Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => typeof x === 'object' && x !== null) : []
   for (const c of comps) {
@@ -779,18 +847,18 @@ function unpickedLines(m: CompositeMoment, view: SurfaceView, reply: string | un
       .filter((p) => p !== '')
       .map(under)
       .filter((p, i, all) => !picked.includes(p) && all.indexOf(p) === i)
-    if (paths.length > 0) return { at: c, paths, fixed: [] }
+    if (paths.length > 0) return { at: c, paths, fixed: [], asked: false }
     const status = c['status']
-    if (!offered || (status !== undefined && status !== 'pending')) continue
+    if (!(offered || asked) || (status !== undefined && status !== 'pending')) continue
     // A rows line counts when its path holds a number, read from the data model or the receipt's literal `data`.
     const own = data === '' ? c['data'] : undefined
     const count = (v: unknown): boolean => (typeof v === 'number' && Number.isFinite(v)) || (typeof v === 'string' && /^\d+$/.test(v.trim()))
     const rows = records(c['rows'])
       .map((r) => (typeof r['path'] === 'string' ? under(r['path']) : ''))
       .filter((p, i, all) => p !== '' && all.indexOf(p) === i && count(readPointer(view.dataModel, p) ?? readPointer(own, p)))
-    if (rows.length > 0) return { at: c, paths: rows, fixed: [] }
+    if (rows.length > 0) return { at: c, paths: rows, fixed: [], asked }
     const fixed = items.filter((item) => count(item['quantity'])).map((item) => (typeof item['label'] === 'string' ? item['label'] : 'a line'))
-    if (fixed.length > 0) return { at: c, paths: [], fixed }
+    if (fixed.length > 0) return { at: c, paths: [], fixed, asked }
   }
   return undefined
 }
@@ -853,9 +921,9 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
       }
       for (const view of surfaces) {
         if (m.unpickedLines !== undefined) {
-          const unpicked = unpickedLines(m, view, reply)
+          const unpicked = unpickedLines(m, view, reply, intent)
           if (unpicked === undefined) continue
-          const { at, paths, fixed } = unpicked
+          const { at, paths, fixed, asked } = unpicked
           if (fixed.length > 0) {
             const single = fixed.length === 1
             findings.push({
@@ -863,7 +931,9 @@ export function compositeMomentCheck(m: CompositeMoment): SemanticCheck {
               path: `${view.surfaceId}:${at.id}`,
               message:
                 `${view.surfaceId} reads back ${at.id} (a ${at.component}) with a fixed ${single ? 'quantity' : 'quantities'} for ${fixed.join(', ')} ` +
-                `while the reply offers to change ${single ? 'it' : 'them'}, and no ${m.composite} on the surface can. ` +
+                (asked
+                ? `after the user asked for a quantity, and no ${m.composite} on the surface can change ${single ? 'it' : 'them'}. `
+                : `while the reply offers to change ${single ? 'it' : 'them'}, and no ${m.composite} on the surface can. `) +
                 `Bind each such item's quantity to a data path, and add ONE ${m.composite} per line, its value bound to that path ` +
                 `(min 1, step 1, no slider, no actionName: the receipt's Confirm commits), beside the ${at.component}.`,
             })
