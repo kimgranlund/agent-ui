@@ -1445,3 +1445,8 @@
 - decide: packages/agent-ui/a2ui/src/catalog/composite-moments.ts:431 `currency` is read through the cue's `\$` only, so an ISO code (USD, EUR) on an AmountPicker does not open the ConfirmReceipt row (builder-disclosed, by choice).
 - note: scripts/e2e-admin/probe/replays/shopkeeper-haiku-receipt-asked-qty.test.mjs:38 the handoff row's `--expect-component AmountPicker` rides the fixture's `expect.components` in the authored-round test (`--from-trace` refuses the flag per the builder); the `expect-component` check is asserted `pass`.
 - note: packages/agent-ui/a2ui/src/agent: `@agent-ui/a2ui/agent` sits at 88671 of 88832 B gz, 161 B of headroom.
+
+## T-0593: The producer's semantic-check rows load lazily, so new checks stop growing the eager agent bundle (2026-10-29)
+
+- note: `redck.py deviations` printed no process deviation lines; no `(red)` criteria in the handoff.
+- note: the .sdlc/notes/notes.md:1447 line still cites the old 88671 headroom note (builder reported it, historical).

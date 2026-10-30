@@ -119,7 +119,8 @@ import { flowHeldOpen, runSemanticChecks, semanticActionOf, semanticSurfaceViews
 import type { SemanticCheckInput } from '../catalog/semantic-check.ts'
 import type { SemanticCheck } from '../catalog/semantic-check.ts'
 import type { SemanticFinding, SurfaceView } from '../catalog/semantic-check.ts'
-import { compositeAnswered, missingCompositeMoment } from '../catalog/composite-moments.ts'
+// T-0593: the composite-moment rows load lazily (`compositeRows()`), so new rows stop growing the eager agent bundle.
+type CompositeRows = Pick<typeof import('../catalog/composite-moments.ts'), 'compositeAnswered' | 'missingCompositeMoment'>
 import { RENDER_SURFACE_TOOL_NAME, detectUserOverride, isLegacyShape, openSurfacesNote, renderSurfaceJsonl, renderSurfaceReply, renderSurfaceTool, stringifiedMessages, messagesParseNote, wireLineParseNote } from './response-type.ts'
 import type { ResponsePreference } from './response-type.ts'
 
@@ -1290,11 +1291,17 @@ function narratedMechanics(reply: string | undefined, surfaceIds: Iterable<strin
 const CHANGE_CLAIM_IN_REPLY =
   /(?:(?<!\b(?:nothing|what|that|which|who|everything|anything|whatever)\s?)(?<!\bno\s+(?:[\w-]+\s+){0,2})(?:\b(?:is|are)|['’]s|['’]re)\s+(?:now\s+)?in your (?:order|cart|basket)\b(?![^.!?]*\?)|\bdone\s*[:.!,]|\b(?:is|are) now\b|\bnow (?:titled|called|named|shows?|reads?|says?|displays?)\b|\b(?:updated|renamed|changed|switched|converted|relabell?ed)\b|(?:^|[.!:]\s*)added\b(?!(?:\s+[\w-]+){1,2}\s+(?:may|might|can|could|will|would|shall|should|apply|applies)\b)|\bI(?:'ve| have)? added\b|\bcomes? to \$?\d|(?:['’]ve|\bhave) got (?!(?:nothing|no)\b)[^.!?]*\bin your (?:order|cart|basket)\b(?![^.!?]*\?)|\btotal is (?:now )?\$?\d|\bcom(?:e|es|ing) down to \$?\d|\b(?:I['’]ve|I have) started your (?:order|cart|basket)\b)/i
 
+/** T-0593: the composite-moment module, imported once on first use. A turn with no semantic checks never reads it
+ *  (every caller sits behind a non-empty `deps.semanticChecks`), so it gets `NO_COMPOSITE_ROWS` and loads nothing. */
+let compositeModule: Promise<CompositeRows> | undefined
+const compositeRows = (): Promise<CompositeRows> => (compositeModule ??= import('../catalog/composite-moments.ts'))
+const NO_COMPOSITE_ROWS: CompositeRows = { compositeAnswered: () => false, missingCompositeMoment: () => undefined }
+
 /** T-0299: `findings` plus every missing-composite finding an earlier round of this turn got (`bound`, by code) that
  *  `views` still leave unanswered, worded as still binding; then each new missing-composite finding is bound. A round
  *  cannot drop the composite its moment asks for by building something no row detects (round 6 :161, a Card holding a
  *  DescriptionList after PRODUCT_CARD_MISSING). */
-function withBoundComposites(findings: readonly SemanticFinding[], bound: Map<string, SemanticFinding>, views: readonly SurfaceView[]): SemanticFinding[] {
+function withBoundComposites(findings: readonly SemanticFinding[], bound: Map<string, SemanticFinding>, views: readonly SurfaceView[], { compositeAnswered, missingCompositeMoment }: CompositeRows): SemanticFinding[] {
   const out = [...findings]
   for (const [code, first] of bound) {
     const m = missingCompositeMoment(code)
@@ -1599,8 +1606,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       .map((f) => {
         const view = builtViews.get(f.path)
         const finding = compositeFindings.findLast((c) => c.path === f.path || c.path.startsWith(`${f.path}:`))
-        const m = finding !== undefined ? missingCompositeMoment(finding.code) : undefined
-        if (view === undefined || m === undefined || compositeAnswered(m, [view])) return ''
+        const m = finding !== undefined ? composites.missingCompositeMoment(finding.code) : undefined
+        if (view === undefined || m === undefined || composites.compositeAnswered(m, [view])) return ''
         return ` Earlier this turn \`${f.path}\` failed: ${finding!.message.replace(/\.?$/, '.')} Resend it fixed, not as it was.`
       })
       .join('')
@@ -1625,7 +1632,7 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if (deps.semanticChecks === undefined || deps.semanticChecks.length === 0) return { fb, errored: false }
       const surfaces = semanticSurfaceViews(input.session, fb.output)
       const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(fb.roundTarget !== undefined ? { target: fb.roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}), ...(deps.persona !== undefined ? { persona: deps.persona } : {}), ...(fb.note !== undefined ? { reply: fb.note } : {}) })
-      if (withBoundComposites(semantic.findings, boundComposites, surfaces).length === 0) return { fb, errored: semantic.errored.length > 0 }
+      if (withBoundComposites(semantic.findings, boundComposites, surfaces, composites).length === 0) return { fb, errored: semantic.errored.length > 0 }
     }
     return undefined
   }
@@ -1658,6 +1665,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       text += frag
     return narrationReplyOf(text)
   }
+  // T-0593: awaited once, after every synchronous setup line and before the first round, so nothing yields across it.
+  const composites = deps.semanticChecks !== undefined && deps.semanticChecks.length > 0 ? await compositeRows() : NO_COMPOSITE_ROWS
   for (let round = 0; round < opts.maxRounds; round++) {
     let failuresFedBack = failures // what THIS round's prompt carried back, the trace's failureCodes (T-0332: plus a held narration repair)
     let narrationRound = 0 // T-0332: 1 once this round's reply was rewritten by a text-only narration repair call
@@ -2011,8 +2020,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
           deps.semanticChecks,
           turnAction !== undefined ? { surfaces: [], action: turnAction } : sayInput!,
         )
-        const findings = withBoundComposites(semantic.findings, boundComposites, []) // T-0299
-        compositeFindings.push(...semantic.findings.filter((f) => missingCompositeMoment(f.code) !== undefined)) // T-0330
+        const findings = withBoundComposites(semantic.findings, boundComposites, [], composites) // T-0299
+        compositeFindings.push(...semantic.findings.filter((f) => composites.missingCompositeMoment(f.code) !== undefined)) // T-0330
         if (findings.length > 0 && round < opts.maxRounds - 1) {
           failures = findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           lastCaptureRound = offeredTools !== undefined
@@ -2193,8 +2202,8 @@ async function* produceTurn(input: TurnInput, deps: ProduceDeps, opts: ProduceOp
       if (deps.semanticChecks !== undefined && deps.semanticChecks.length > 0) {
         const surfaces = semanticSurfaceViews(input.session, assembled.output)
         const semantic = runSemanticChecks(deps.semanticChecks, { surfaces, round, ...(turnAction !== undefined ? { action: turnAction } : {}), ...(turnIntent !== undefined ? { intent: turnIntent } : {}), ...(roundTarget !== undefined ? { target: roundTarget } : {}), ...(turnOpen !== undefined ? { open: turnOpen } : {}), ...(turnShown !== undefined ? { shownTypes: turnShown } : {}), ...(deps.persona !== undefined ? { persona: deps.persona } : {}), ...(note !== undefined ? { reply: note } : {}) })
-        const findings = withBoundComposites(semantic.findings, boundComposites, surfaces) // T-0299
-        compositeFindings.push(...semantic.findings.filter((f) => missingCompositeMoment(f.code) !== undefined)) // T-0330
+        const findings = withBoundComposites(semantic.findings, boundComposites, surfaces, composites) // T-0299
+        compositeFindings.push(...semantic.findings.filter((f) => composites.missingCompositeMoment(f.code) !== undefined)) // T-0330
         if (findings.length > 0 && round < opts.maxRounds - 1) {
           failures = findings.map((f) => ({ code: f.code, path: f.path, detail: f.message }))
           continue
